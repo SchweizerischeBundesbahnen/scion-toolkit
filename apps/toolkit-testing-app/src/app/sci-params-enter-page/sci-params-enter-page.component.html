@@ -1,0 +1,9 @@
+<h1>sci-params-enter (ɵ)</h1>
+
+<sci-params-enter [title]="'title'"
+                  [removable]="true"
+                  [addable]="true"
+                  [paramsFormArray]="formArray">
+</sci-params-enter>
+<button class="print" (click)="onPrint()">Print</button>
+<output *ngIf="output">{{output | json}}</output>

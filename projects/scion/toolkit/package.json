@@ -1,0 +1,32 @@
+{
+  "name": "@scion/toolkit",
+  "version": "9.0.0-beta.1",
+  "description": "Provides components and utilities used in the SCION libraries.",
+  "license": "EPL-2.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit",
+  "bugs": {
+    "url": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues"
+  },
+  "author": {
+    "name": "SCION contributors",
+    "url": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit"
+  },
+  "dependencies": {
+  },
+  "peerDependencies": {
+    "@angular/common": "^9.0.0-rc.0 || ^9.0.0",
+    "@angular/core": "^9.0.0-rc.0 || ^9.0.0",
+    "@angular/cdk": "^9.0.0-rc.0 || ^9.0.0",
+    "rxjs": "^6.0.0"
+  },
+  "keywords": [
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SchweizerischeBundesbahnen/scion-toolkit.git"
+  }
+}
