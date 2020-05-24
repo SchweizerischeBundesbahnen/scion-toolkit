@@ -1,0 +1,24 @@
+<h1>sci-list (~)</h1>
+
+<sci-list (filter)="onFilter($event)" filterPosition="top">
+  <ng-container *ngFor="let listItem of items$ | async">
+    <!-- list item -->
+    <ng-template sciListItem [actions]="[flag_action, unflag_action]">
+      <mark *ngIf="isFlagged(listItem)">
+        {{listItem}}
+      </mark>
+      <ng-container *ngIf="!isFlagged(listItem)">
+        {{listItem}}
+      </ng-container>
+    </ng-template>
+
+    <!-- action -->
+    <ng-template #flag_action>
+      <button class="material-icons" (click)="onFlag(listItem)">star</button>
+    </ng-template>
+
+    <ng-template #unflag_action>
+      <button class="material-icons" (click)="onUnflag(listItem)">star_outline</button>
+    </ng-template>
+  </ng-container>
+</sci-list>

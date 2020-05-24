@@ -1,0 +1,17 @@
+:host {
+  display: flex;
+  flex-direction: column;
+
+  > output {
+    border: 1px solid var(--sci-color-A900);
+    border-radius: 5px;
+    background-color: var(--sci-color-A50);
+    padding: 1em;
+    color: var(--sci-color-A900);
+    font-family: monospace;
+  }
+
+  > *:not(:last-child) {
+    margin-bottom: 1em;
+  }
+}

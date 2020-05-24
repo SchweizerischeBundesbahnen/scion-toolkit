@@ -1,0 +1,15 @@
+<h1>sci-accordion (~)</h1>
+
+<sci-accordion>
+  <ng-container *ngFor="let item of items">
+    <!-- item -->
+    <ng-template sciAccordionItem [panel]="panel">
+      {{item.title}}
+    </ng-template>
+
+    <!-- item panel -->
+    <ng-template #panel>
+      {{item.description}}
+    </ng-template>
+  </ng-container>
+</sci-accordion>
