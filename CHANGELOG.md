@@ -1,3 +1,12 @@
+# [9.0.0-beta.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/9.0.0-beta.1...9.0.0-beta.2) (2020-06-01)
+
+
+### Bug Fixes
+
+* publish internal toolkit under `@scion/toolkit.internal` instead of `@scion/~toolkit` ([78a31d7](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/78a31d7cee441fd3dcfdd8eee43c788e3f8241d2))
+
+
+
 # 9.0.0-beta.1 (2020-06-01)
 
 
