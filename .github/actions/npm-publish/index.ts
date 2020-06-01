@@ -40,7 +40,7 @@ async function publishToNpm(config: PublishConfig): Promise<void> {
   const command: string[] = []
     .concat('publish')
     .concat(...(dryRun ? ['--dry-run'] : [])) // set dry-run mode
-    .concat(...(prerelease ? ['--tag next'] : ['--tag latest'])); // set NPM distribution tag
+    .concat(...(prerelease ? ['--tag', 'next'] : ['--tag', 'latest'])); // set NPM distribution tag
 
   // Publish
   core.info(`${dryRun ? '[DRY-RUN]' : ''} Publishing ${name}@${version} package to NPM registry: npm ${command.join(' ')}`);
