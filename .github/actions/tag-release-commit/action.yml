@@ -1,0 +1,13 @@
+name: 'tag-release-commit'
+description: 'Adds a release tag to the head commit if its commit message matches the pattern of a release commit.'
+inputs:
+  release-commit-message-pattern:
+    description: 'Pattern to identify a release commit. The pattern is interpreted as regular expression. This action expects the release version to be captured in the first capturing group.'
+    required: false
+    default: 'release: v(\d+\S+)'
+outputs:
+  version:
+    description: 'The release version if a release commit, or empty otherwise.'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

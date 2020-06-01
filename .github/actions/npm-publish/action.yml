@@ -1,0 +1,16 @@
+name: 'npm-publish'
+description: 'Publishes a package to the NPM registry (https://registry.npmjs.org).'
+inputs:
+  dist-folder:
+    description: 'The dist folder which to publish. Must contain a package.json.'
+    required: true
+  npm-token:
+    description: 'The NPM token to log into the NPM registry to publish the package.'
+    required: true
+  dry-run:
+    description: 'Whether to perform a dry run without actually publishing the package to the NPM registry. If `true`, `npm publish` is invoked with the `--dry-run` flag set.'
+    required: false
+    default: 'false'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
