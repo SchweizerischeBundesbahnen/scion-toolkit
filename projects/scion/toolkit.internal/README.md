@@ -1,7 +1,7 @@
-SCION ~Toolkit (NOT PUBLIC API)
-===============================
+SCION Toolkit INTERNAL (NOT PUBLIC API)
+=======================================
 
-SCION ~Toolkit is a collection of UI components and utilities designed exclusively for use in SCION applications.
+SCION Toolkit INTERNAL is a collection of UI components and utilities designed exclusively for use in SCION applications.
 
 This module is private to SCION applications, which is indicated by the tilde symbol ("~") in the module name.
 

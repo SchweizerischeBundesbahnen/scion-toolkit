@@ -75,10 +75,10 @@ jobs:
         with:
           dist-folder: dist/scion/toolkit
           npm-token: ${{ secrets.NPM_TOKEN }}
-      - name: 'Publish @scion/~toolkit to NPM'
+      - name: 'Publish @scion/toolkit.internal to NPM'
         uses: ./.github/actions/npm-publish
         with:
-          dist-folder: dist/scion/~toolkit
+          dist-folder: dist/scion/toolkit.internal
           npm-token: ${{ secrets.NPM_TOKEN }}
       - name: 'Deploy toolkit-testing-app to Vercel'
         uses: ./.github/actions/vercel-deploy

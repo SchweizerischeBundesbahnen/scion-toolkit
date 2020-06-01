@@ -11,7 +11,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { SciFilterFieldPageComponent } from './sci-filter-field-page.component';
-import { SciFilterFieldModule } from '@scion/~toolkit/widgets';
+import { SciFilterFieldModule } from '@scion/toolkit.internal/widgets';
 
 const routes: Routes = [
   {path: '', component: SciFilterFieldPageComponent},

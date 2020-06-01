@@ -25,7 +25,7 @@ export class SciListPageComponent {
     'SCION Microfrontend Platform',
     'SCION Workbench',
     'SCION Toolkit',
-    'SCION ~Toolkit',
+    'SCION Toolkit INTERNAL',
     'Angular',
     'Angular CDK',
     'Angular Material',

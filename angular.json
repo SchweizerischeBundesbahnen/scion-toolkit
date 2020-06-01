@@ -70,38 +70,38 @@
         }
       }
     },
-    "@scion/~toolkit": {
+    "@scion/toolkit.internal": {
       "projectType": "library",
-      "root": "projects/scion/~toolkit",
-      "sourceRoot": "projects/scion/~toolkit/src",
+      "root": "projects/scion/toolkit.internal",
+      "sourceRoot": "projects/scion/toolkit.internal/src",
       "prefix": "sci",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-ng-packagr:build",
           "options": {
-            "tsConfig": "projects/scion/~toolkit/tsconfig.lib.json",
-            "project": "projects/scion/~toolkit/ng-package.json"
+            "tsConfig": "projects/scion/toolkit.internal/tsconfig.lib.json",
+            "project": "projects/scion/toolkit.internal/ng-package.json"
           },
           "configurations": {
             "production": {
-              "tsConfig": "projects/scion/~toolkit/tsconfig.lib.prod.json"
+              "tsConfig": "projects/scion/toolkit.internal/tsconfig.lib.prod.json"
             }
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/scion/~toolkit/src/test.ts",
-            "tsConfig": "projects/scion/~toolkit/tsconfig.spec.json",
-            "karmaConfig": "projects/scion/~toolkit/karma.conf.js"
+            "main": "projects/scion/toolkit.internal/src/test.ts",
+            "tsConfig": "projects/scion/toolkit.internal/tsconfig.spec.json",
+            "karmaConfig": "projects/scion/toolkit.internal/karma.conf.js"
           }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
             "tsConfig": [
-              "projects/scion/~toolkit/tsconfig.lib.json",
-              "projects/scion/~toolkit/tsconfig.spec.json"
+              "projects/scion/toolkit.internal/tsconfig.lib.json",
+              "projects/scion/toolkit.internal/tsconfig.spec.json"
             ],
             "exclude": [
               "**/node_modules/**"
@@ -134,7 +134,7 @@
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
-                "projects/scion/~toolkit/widgets"
+                "projects/scion/toolkit.internal/widgets"
               ]
             },
             "scripts": []

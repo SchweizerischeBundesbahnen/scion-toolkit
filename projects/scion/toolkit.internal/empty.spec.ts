@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-describe('~toolkit', () => {
+describe('toolkit.internal', () => {
 
   // single spec is required because karma fails if no spec is found
   it('should be truthy', () => {

@@ -9,7 +9,7 @@
  */
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SciParamsEnterModule } from '@scion/~toolkit/widgets';
+import { SciParamsEnterModule } from '@scion/toolkit.internal/widgets';
 import { RouterModule, Routes } from '@angular/router';
 import { SciParamsEnterPageComponent } from './sci-params-enter-page.component';
 import { ReactiveFormsModule } from '@angular/forms';

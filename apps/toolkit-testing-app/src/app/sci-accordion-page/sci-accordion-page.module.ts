@@ -9,7 +9,7 @@
  */
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SciAccordionModule } from '@scion/~toolkit/widgets';
+import { SciAccordionModule } from '@scion/toolkit.internal/widgets';
 import { RouterModule, Routes } from '@angular/router';
 import { SciAccordionPageComponent } from './sci-accordion-page.component';
 

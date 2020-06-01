@@ -9,7 +9,7 @@
  */
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SciFormFieldModule } from '@scion/~toolkit/widgets';
+import { SciFormFieldModule } from '@scion/toolkit.internal/widgets';
 import { RouterModule, Routes } from '@angular/router';
 import { SciFormFieldPageComponent } from './sci-form-field-page.component';
 

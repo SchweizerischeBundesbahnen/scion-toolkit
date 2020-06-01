@@ -22,8 +22,8 @@
       "@scion/toolkit/*": [
         "dist/scion/toolkit/*"
       ],
-      "@scion/~toolkit/*": [
-        "dist/scion/~toolkit/*"
+      "@scion/toolkit.internal/*": [
+        "dist/scion/toolkit.internal/*"
       ]
     }
     /*
@@ -55,11 +55,11 @@
     //      "@scion/toolkit/uuid": [
     //        "projects/scion/toolkit/uuid/src/public_api"
     //      ],
-    //      "@scion/~toolkit/widgets": [
-    //        "projects/scion/~toolkit/widgets/src/public_api"
+    //      "@scion/toolkit.internal/widgets": [
+    //        "projects/scion/toolkit.internal/widgets/src/public_api"
     //      ],
-    //      "@scion/~toolkit/widgets.po": [
-    //        "projects/scion/~toolkit/widgets.po/src/public_api"
+    //      "@scion/toolkit.internal/widgets.po": [
+    //        "projects/scion/toolkit.internal/widgets.po/src/public_api"
     //      ]
     //    }
   },

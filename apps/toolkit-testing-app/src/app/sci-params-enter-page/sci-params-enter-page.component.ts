@@ -9,7 +9,7 @@
  */
 import { Component } from '@angular/core';
 import { FormArray } from '@angular/forms';
-import { SciParamsEnterComponent } from '@scion/~toolkit/widgets';
+import { SciParamsEnterComponent } from '@scion/toolkit.internal/widgets';
 import { Dictionary } from '@scion/toolkit/util';
 
 @Component({

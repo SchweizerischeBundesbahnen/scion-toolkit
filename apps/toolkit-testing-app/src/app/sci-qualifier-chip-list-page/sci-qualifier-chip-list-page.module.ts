@@ -9,7 +9,7 @@
  */
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SciQualifierChipListModule } from '@scion/~toolkit/widgets';
+import { SciQualifierChipListModule } from '@scion/toolkit.internal/widgets';
 import { RouterModule, Routes } from '@angular/router';
 import { SciQualifierChipListPageComponent } from './sci-qualifier-chip-list-page.component';
 

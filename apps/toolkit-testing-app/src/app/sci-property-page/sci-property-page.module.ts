@@ -9,7 +9,7 @@
  */
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SciPropertyModule } from '@scion/~toolkit/widgets';
+import { SciPropertyModule } from '@scion/toolkit.internal/widgets';
 import { RouterModule, Routes } from '@angular/router';
 import { SciPropertyPageComponent } from './sci-property-page.component';
 

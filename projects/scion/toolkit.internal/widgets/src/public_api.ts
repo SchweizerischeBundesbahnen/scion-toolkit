@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 /*
- * Secondary entrypoint: '@scion/~toolkit/widgets'
+ * Secondary entrypoint: '@scion/toolkit.internal/widgets'
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */

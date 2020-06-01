@@ -27,9 +27,9 @@
     "toolkit:build": "ng build --prod @scion/toolkit",
     "posttoolkit:build": "scss-bundle -e projects/scion/toolkit/viewport/src/theme/_scrollbar.scss -o dist/scion/toolkit/viewport/scrollbar.scss",
 
-    "~toolkit:lint": "ng lint @scion/~toolkit",
-    "~toolkit:test": "ng test @scion/~toolkit",
-    "~toolkit:build": "ng build --prod @scion/~toolkit",
+    "toolkit.internal:lint": "ng lint @scion/toolkit.internal",
+    "toolkit.internal:test": "ng test @scion/toolkit.internal",
+    "toolkit.internal:build": "ng build --prod @scion/toolkit.internal",
 
     "toolkit-testing-app:serve": "ng serve toolkit-testing-app",
     "toolkit-testing-app:lint": "ng lint toolkit-testing-app",
