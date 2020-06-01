@@ -75,13 +75,11 @@ jobs:
         with:
           dist-folder: dist/scion/toolkit
           npm-token: ${{ secrets.NPM_TOKEN }}
-          dry-run: true
       - name: 'Publish @scion/~toolkit to NPM'
         uses: ./.github/actions/npm-publish
         with:
           dist-folder: dist/scion/~toolkit
           npm-token: ${{ secrets.NPM_TOKEN }}
-          dry-run: true
       - name: 'Deploy toolkit-testing-app to Vercel'
         uses: ./.github/actions/vercel-deploy
         with:
