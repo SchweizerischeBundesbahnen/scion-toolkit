@@ -35,7 +35,11 @@
     "toolkit-testing-app:lint": "ng lint toolkit-testing-app",
     "toolkit-testing-app:build": "ng build --configuration=production toolkit-testing-app",
 
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s && markdown-include docs/changelog.template.json"
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s && markdown-include docs/changelog.template.json",
+
+    "github-actions:tag-release-commit:build": "ncc build .github/actions/tag-release-commit/index.ts -o .github/actions/tag-release-commit/dist",
+    "github-actions:npm-publish:build": "ncc build .github/actions/npm-publish/index.ts -o .github/actions/npm-publish/dist",
+    "github-actions:vercel-deploy:build": "ncc build .github/actions/npm-publish/index.ts -o .github/actions/npm-publish/dist"
   },
   "private": true,
   "dependencies": {
@@ -53,6 +57,9 @@
     "zone.js": "0.10.3"
   },
   "devDependencies": {
+    "@actions/core": "1.2.4",
+    "@actions/exec": "1.0.4",
+    "@actions/github": "2.2.0",
     "@angular-devkit/build-angular": "0.901.7",
     "@angular-devkit/build-ng-packagr": "0.901.7",
     "@angular/cli": "9.1.7",
@@ -60,6 +67,7 @@
     "@types/jasmine": "3.5.10",
     "@types/jasminewd2": "2.0.8",
     "@types/node": "12.12.42",
+    "@zeit/ncc": "0.22.3",
     "codelyzer": "5.2.2",
     "conventional-changelog-cli": "2.0.34",
     "cross-env": "7.0.2",
@@ -81,7 +89,8 @@
     "tsconfig-paths": "3.9.0",
     "tslint": "6.1.2",
     "typedoc": "0.17.7",
-    "typescript": "3.8.3"
+    "typescript": "3.8.3",
+    "vercel": "19.0.1"
   },
   "repository": {
     "type": "git",

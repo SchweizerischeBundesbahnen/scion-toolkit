@@ -1,0 +1,93 @@
+name: Continuous Integration and Delivery
+on: push
+jobs:
+  build:
+    name: 'Building'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm ci
+      - run: npm run build-all
+      - uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist
+  lint:
+    name: 'Linting'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm ci
+      - run: npm run lint-all
+  test:
+    name: 'Testing (unit tests)'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: dist
+      - run: npm ci
+      - run: npm run test-all:headless
+  e2e:
+    name: 'Testing (e2e tests)'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: dist
+      - run: npm ci
+      - run: npm run e2e-all:headless
+  release-guard:
+    name: 'Should release?'
+    if: github.ref == 'refs/heads/master'
+    needs: [ build, lint, test, e2e]
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.tag-release-commit.outputs.version != '' }}
+      version: ${{ steps.tag-release-commit.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'If release commit present, add release tag'
+        uses: ./.github/actions/tag-release-commit
+        id: tag-release-commit
+        with:
+          release-commit-message-pattern: 'release: v(.*)'
+  release:
+    name: 'Releasing'
+    if: ${{ needs.release-guard.outputs.should-release == 'true' }}
+    needs: release-guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: dist
+      - run: npm ci
+      - name: 'Publish @scion/toolkit to NPM'
+        uses: ./.github/actions/npm-publish
+        with:
+          dist-folder: dist/scion/toolkit
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+      - name: 'Publish @scion/~toolkit to NPM'
+        uses: ./.github/actions/npm-publish
+        with:
+          dist-folder: dist/scion/~toolkit
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          dry-run: true
+      - name: 'Deploy toolkit-testing-app to Vercel'
+        uses: ./.github/actions/vercel-deploy
+        with:
+          dist-folder: dist/toolkit-testing-app
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          org-id: ${{ secrets.VERCEL_ORG_ID }}
+          project-id: ${{ secrets.VERCEL_SCION_TOOLKIT_TESTING_APP_PROJECT_ID }}
+          aliases: toolkit-testing-app, toolkit-testing-app-%v
+          version: ${{ needs.release-guard.outputs.version }}

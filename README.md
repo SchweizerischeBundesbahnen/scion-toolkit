@@ -45,7 +45,10 @@ As for now, SCION Toolkit is exclusively optimized and tested on the latest Goog
 ### Versioning
 SCION Toolkit follows the same SemVer philosophy as Angular, with major versions being released at the same time as major versions of the Angular framework. 
 
-[![Project version](https://img.shields.io/npm/v/@scion/toolkit.svg)][link-download] [![Project version](https://img.shields.io/npm/v/@scion/toolkit/next.svg)][link-download]
+[![Project version](https://img.shields.io/npm/v/@scion/toolkit.svg)][link-download]
+[![Project version](https://img.shields.io/npm/v/@scion/toolkit/next.svg)][link-download]
+[![Continuous Integration and Delivery](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/workflows/Continuous%20Integration%20and%20Delivery/badge.svg?branch=master&event=push)][link-build]
+
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/projects-overview.md
@@ -54,6 +57,7 @@ SCION Toolkit follows the same SemVer philosophy as Angular, with major versions
 [menu-sponsoring]: /docs/sponsoring.md
 
 [link-download]: https://www.npmjs.com/package/@scion/toolkit
+[link-build]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
 [link-tool-viewport]: /docs/tools/viewport.md
 [link-tool-dimension]: /docs/tools/dimension.md
 [link-tool-sashbox]: /docs/tools/sashbox.md

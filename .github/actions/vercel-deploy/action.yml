@@ -1,0 +1,28 @@
+name: 'vercel-deploy'
+description: 'Deploys an application to Vercel (https://vercel.com).'
+inputs:
+  dist-folder:
+    description: 'The dist folder which to deploy. Must not contain a `vercel.json` file as it is created on the fly.'
+    required: true
+  vercel-token:
+    description: 'The Vercel token to log into Vercel to deploy the package.'
+    required: true
+  org-id:
+    description: 'The ID of the user or team your Vercel project is owned by.'
+    required: true
+  project-id:
+    description: 'The ID of the Vercel project where you want to deploy the application.'
+    required: true
+  aliases:
+    description: 'A comma separated list of aliases under which you want to deploy the application. If you specify a version as input property, you can reference it in alias names using the placeholder `%v`.'
+    required: false
+  version:
+    description: 'Version that you can reference in alias names using the `%v` placeholder. Dots (`.`) are replaced by the dash (`-`) character. The other characters must be valid URL characters.'
+    required: false
+  prod:
+    description: 'Set to create a deployment for a production domain specified in the project dashboard.'
+    required: false
+    default: 'true'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
