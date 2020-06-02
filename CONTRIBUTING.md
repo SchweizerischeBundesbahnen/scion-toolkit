@@ -205,8 +205,8 @@ This chapter describes the tasks to publish a new release to NPM.
     - `projects/scion/toolkit.internal/package.json`
 1. Run `npm install` to update the version in `package-lock.json`.
 1. Run `npm run changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
-1. Commit the changed files using the following commit message: `release: vx.x.x`. Change `x.x.x` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in GitHub Actions.
-1. Push the commit to the branch `release/x.x.x` and submit a pull request to the master branch. Change `x.x.x` with the current version.
+1. Commit the changed files using the following commit message: `release: vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in GitHub Actions.
+1. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 1. When merged into the master branch, the release action in GitHub Actions creates a release tag and publishes the package to NPM.
 
   
