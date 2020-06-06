@@ -9,6 +9,9 @@
  */
 
 import { Directive, Input, OnChanges, OnInit, SimpleChanges, TemplateRef } from '@angular/core';
+import { SciSashBoxAccessor } from './sashbox-accessor';
+import { BehaviorSubject, merge, Observable } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 /**
  * Use this directive to model a sash for {@link SciSashboxComponent}.
@@ -35,9 +38,8 @@ import { Directive, Input, OnChanges, OnInit, SimpleChanges, TemplateRef } from 
 })
 export class SciSashDirective implements OnInit, OnChanges {
 
-  private _flexGrow: number;
-  private _rowDirection: boolean;
   private _size: string = '1'; // tslint:disable-line:no-inferrable-types
+  private _flexGrow$ = new BehaviorSubject<number>(0);
 
   /**
    * Specifies the sash size, either as fixed size with an explicit unit,
@@ -68,36 +70,16 @@ export class SciSashDirective implements OnInit, OnChanges {
   /**
    * @internal
    */
-  public set rowDirection(rowDirection: boolean) {
-    this._rowDirection = rowDirection;
-    this.flexGrowNormalized = this.normalizeFlexGrow(this.flexGrow);
-  }
-
-  public get rowDirection(): boolean {
-    return this._rowDirection;
-  }
-
-  /**
-   * @internal
-   */
   public set flexGrow(flexGrow: number) {
-    this._flexGrow = flexGrow;
-    this.flexGrowNormalized = this.normalizeFlexGrow(this.flexGrow);
+    this._flexGrow$.next(flexGrow);
   }
 
   /**
    * @internal
    */
   public get flexGrow(): number {
-    return this._flexGrow;
+    return this._flexGrow$.value;
   }
-
-  /**
-   * Normalized flex-grow proportion of this sash, which is a value >= 1.
-   *
-   * @internal
-   */
-  public flexGrowNormalized: number;
 
   /**
    * @internal
@@ -109,7 +91,19 @@ export class SciSashDirective implements OnInit, OnChanges {
    */
   public flexBasis: string;
 
-  constructor(public readonly sashTemplate: TemplateRef<void>) {
+  /**
+   * Normalized flex-grow proportion of this sash, which is a value >= 1.
+   *
+   * @internal
+   */
+  public flexGrowNormalized$: Observable<number>;
+
+  constructor(public readonly sashTemplate: TemplateRef<void>, private _sashBoxAccessor: SciSashBoxAccessor) {
+    this.flexGrowNormalized$ = this._sashBoxAccessor.sashes$
+      .pipe(
+        switchMap(sashes => merge(...sashes.map(sash => sash._flexGrow$))),
+        map(() => this.normalizeFlexGrow(this.flexGrow)),
+      );
   }
 
   public ngOnInit(): void {
@@ -137,7 +131,7 @@ export class SciSashDirective implements OnInit, OnChanges {
   public get computedSize(): number {
     // Note: Use `boundingClientRect` to get the fractional size.
     // see https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth
-    return this.rowDirection ? this.element.getBoundingClientRect().width : this.element.getBoundingClientRect().height;
+    return this._sashBoxAccessor.direction === 'row' ? this.element.getBoundingClientRect().width : this.element.getBoundingClientRect().height;
   }
 
   /**
@@ -174,7 +168,15 @@ export class SciSashDirective implements OnInit, OnChanges {
    * Without normalization in place, e.g., this could happen when removing a sash.
    */
   private normalizeFlexGrow(flexGrow: number): number {
-    const factor = this.rowDirection ? screen.width : screen.height;
-    return factor * flexGrow;
+    if (flexGrow === 0) {
+      return 0;
+    }
+
+    const sashes = this._sashBoxAccessor.sashes;
+    const flexGrowSum = sashes.reduce((sum, sash) => sum + sash.flexGrow, 0);
+    if (flexGrowSum === 0) {
+      return 0;
+    }
+    return flexGrow / flexGrowSum;
   }
 }

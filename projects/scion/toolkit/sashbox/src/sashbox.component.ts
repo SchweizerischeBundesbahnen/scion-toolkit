@@ -8,11 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ContentChildren, ElementRef, EventEmitter, HostBinding, Input, NgZone, OnDestroy, Output, QueryList } from '@angular/core';
-import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { Component, ContentChildren, ElementRef, EventEmitter, forwardRef, HostBinding, Input, NgZone, OnDestroy, Output, QueryList } from '@angular/core';
+import { startWith, takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { SplitterMoveEvent } from './splitter.directive';
 import { SciSashDirective } from './sash.directive';
+import { SciSashBoxAccessor } from './sashbox-accessor';
 
 /**
  * The <sci-sashbox> is like a CSS flexbox container that lays out its content children (sashes) in a row (which is by default)
@@ -68,12 +69,17 @@ import { SciSashDirective } from './sash.directive';
   selector: 'sci-sashbox',
   templateUrl: './sashbox.component.html',
   styleUrls: ['./sashbox.component.scss'],
+  providers: [{
+    provide: SciSashBoxAccessor,
+    useFactory: provideSashBoxAccessor,
+    deps: [forwardRef(() => SciSashboxComponent)],
+  }],
 })
 export class SciSashboxComponent implements OnDestroy {
 
   private _destroy$ = new Subject<void>();
 
-  public sashes: SciSashDirective[] = [];
+  public sashes$ = new BehaviorSubject<SciSashDirective[]>([]);
 
   @HostBinding('class.sashing')
   public sashing = false;
@@ -100,9 +106,12 @@ export class SciSashboxComponent implements OnDestroy {
   @ContentChildren(SciSashDirective)
   public set setSashes(queryList: QueryList<SciSashDirective>) {
     queryList.changes
-      .pipe(takeUntil(this._destroy$))
-      .subscribe((sashses: QueryList<SciSashDirective>) => {
-        this.sashes = sashses.toArray();
+      .pipe(
+        startWith(queryList),
+        takeUntil(this._destroy$),
+      )
+      .subscribe((sashes: QueryList<SciSashDirective>) => {
+        this.sashes$.next(sashes.toArray());
       });
   }
 
@@ -128,9 +137,11 @@ export class SciSashboxComponent implements OnDestroy {
 
     // unset the flex-basis for non-fixed sashes and set the flex-grow accordingly
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes);
-    this.sashes.forEach(sash => {
+    const absoluteSashSizes = this.sashes.map(sash => sash.computedSize);
+
+    this.sashes.forEach((sash, i) => {
       if (!sash.isFixedSize) {
-        sash.flexGrow = pixelToFlexGrowFactor * sash.computedSize;
+        sash.flexGrow = pixelToFlexGrowFactor * absoluteSashSizes[i];
         sash.flexShrink = 1;
         sash.flexBasis = '0';
       }
@@ -227,6 +238,10 @@ export class SciSashboxComponent implements OnDestroy {
     return this.direction === 'row';
   }
 
+  private get sashes(): SciSashDirective[] {
+    return this.sashes$.value;
+  }
+
   public ngOnDestroy(): void {
     this._destroy$.next();
   }
@@ -242,13 +257,6 @@ export class SciSashboxComponent implements OnDestroy {
     }
     return parseInt(value, 10);
   }
-
-  /**
-   * Returns the current sizes of all sashes, either as an absolute pixel value for fixed-sized sashes or as a proportion for non-fixed sashes.
-   */
-  public get sashSizes(): (string | number)[] {
-    return this.sashes.map(sash => sash.isFixedSize ? `${sash.computedSize}px` : sash.flexGrow);
-  }
 }
 
 function between(value: number, minmax: { min: number, max: number }): number {
@@ -261,8 +269,25 @@ function between(value: number, minmax: { min: number, max: number }): number {
 function computePixelToFlexGrowFactor(sashes: SciSashDirective[]): number {
   const flexibleSashes = sashes.filter(sash => !sash.isFixedSize);
 
-  const proportionSum = flexibleSashes.reduce((acc, sash) => acc + Number(sash.size), 0);
-  const pixelSum = flexibleSashes.reduce((acc, sash) => acc + sash.computedSize, 0);
+  const proportionSum = flexibleSashes.reduce((sum, sash) => sum + Number(sash.size), 0);
+  const pixelSum = flexibleSashes.reduce((sum, sash) => sum + sash.computedSize, 0);
 
   return proportionSum / pixelSum;
+}
+
+export function provideSashBoxAccessor(component: SciSashboxComponent): SciSashBoxAccessor {
+  return new class implements SciSashBoxAccessor { // tslint:disable-line:new-parens
+
+    public get direction(): 'column' | 'row' {
+      return component.direction;
+    }
+
+    public get sashes$(): Observable<SciSashDirective[]> {
+      return component.sashes$;
+    }
+
+    public get sashes(): SciSashDirective[] {
+      return component.sashes$.value;
+    }
+  };
 }
