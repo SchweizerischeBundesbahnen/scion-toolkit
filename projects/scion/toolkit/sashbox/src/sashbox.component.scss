@@ -37,37 +37,33 @@
     grid-auto-rows: 100%;
     grid-auto-columns: 100%;
     // flex properties are set programmatically.
-    transition-timing-function: ease-out;
-    transition-duration: 200ms;
-    transition-property: flex-basis, flex-grow;
   }
 
   &.row > div.sash {
-    padding: 0 var(--sci-sashbox-gap);
+    margin: 0 var(--sci-sashbox-gap);
 
     &.first {
-      padding-left: 0;
+      margin-left: 0;
     }
 
     &.last {
-      padding-right: 0;
+      margin-right: 0;
     }
   }
 
   &.column > div.sash {
-    padding: var(--sci-sashbox-gap) 0;
+    margin: var(--sci-sashbox-gap) 0;
 
     &.first {
-      padding-top: 0;
+      margin-top: 0;
     }
 
     &.last {
-      padding-bottom: 0;
+      margin-bottom: 0;
     }
   }
 
   &.sashing > div.sash {
-    transition-property: none;
     pointer-events: none; // e.g. iframes would swallow pointer events
   }
 

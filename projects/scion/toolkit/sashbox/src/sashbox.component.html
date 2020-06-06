@@ -1,9 +1,9 @@
-<ng-container *ngFor="let sash of sashes; index as i; first as first; last as last;">
+<ng-container *ngFor="let sash of sashes$ | async; index as i; first as first; last as last;">
   <div class="sash"
        [class.first]="first"
        [class.last]="last"
-       [sciSashInitializer]="sash" [sciSashInitializerRowDirection]="isRowDirection"
-       [style.flex-grow]="sash.flexGrowNormalized"
+       [sciSashInitializer]="sash"
+       [style.flex-grow]="sash.flexGrowNormalized$ | async"
        [style.flex-shrink]="sash.flexShrink"
        [style.flex-basis]="sash.flexBasis">
     <ng-container *ngTemplateOutlet="sash.sashTemplate"></ng-container>
