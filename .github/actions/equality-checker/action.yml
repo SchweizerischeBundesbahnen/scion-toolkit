@@ -1,0 +1,9 @@
+name: 'equality-checker'
+description: 'Asserts that given input values are equal. If not equal, this action sets its status to failed, resulting in concurrent actions being cancelled and future actions being skipped.'
+inputs:
+  values:
+    description: 'Comma-separated list of values to be checked for equality. The check is skipped if no values are given.'
+    required: false
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
