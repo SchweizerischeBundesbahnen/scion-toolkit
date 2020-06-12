@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ElementRef, Input, OnDestroy } from '@angular/core';
+import { Component, ElementRef, HostBinding, Input, OnDestroy } from '@angular/core';
 import { ConfigurableFocusTrapFactory, FocusTrap } from '@angular/cdk/a11y';
 
 @Component({
@@ -19,6 +19,14 @@ import { ConfigurableFocusTrapFactory, FocusTrap } from '@angular/cdk/a11y';
 export class SciFormFieldComponent implements OnDestroy {
 
   private _focusTrap: FocusTrap;
+
+  @Input()
+  public direction: 'row' | 'column';
+
+  @HostBinding('class.column-direction')
+  public get isColumnDirection(): boolean {
+    return this.direction === 'column';
+  }
 
   @Input()
   public label: string;
