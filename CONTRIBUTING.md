@@ -92,10 +92,10 @@ In additional to the linting rules, we have the following conventions:
   
 We believe in a compact and well written Git commit history. Every commit should be a logically separated changeset. We use the commit messages to generate the changelog.
  
-Each commit message consists of a **header**, a **body** and a **footer**.  The header has a special format that includes a **type** and a **subject**, as following:
+Each commit message consists of a **header**, a **summary** and a **footer**.  The header has a special format that includes a **type**, an optional **scope**, and a **subject**, as following:
 
 ```
-<type>: <subject>
+<type>(<scope>): <subject>
 
 [optional summary]
 
@@ -109,12 +109,21 @@ Each commit message consists of a **header**, a **body** and a **footer**.  The 
 - `fix`: bug fix
 - `docs`: changes to the documentation
 - `refactor`: changes that neither fixes a bug nor adds a feature
-- `perf`: changes that improves performance
+- `perf`: changes that improve performance
 - `test`: adding missing tests, refactoring tests; no production code change
 - `chore`: other changes like formatting, updating the license, updating dependencies, removal of deprecations, etc
 - `ci`: changes to our CI configuration files and scripts
 - `revert`: revert of a previous commit
 - `release`: publish a new release
+</details>
+
+<details>
+  <summary><strong>Scope</strong></summary>
+  
+The scope should be the name of the NPM package affected by the change.
+  
+- `toolkit`: If the change affects the `@scion/toolkit` NPM package.
+- `ɵtoolkit`: If the change affects the `@scion/toolkit.internal` NPM package. We use the Theta (`ɵ`) symbol to have a shorter scope name.
 </details>
 
 
