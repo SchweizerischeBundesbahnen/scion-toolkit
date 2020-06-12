@@ -16,11 +16,21 @@ Pattern to identify a release commit. The pattern is interpreted as regular expr
 *Example:*\
 If using the pattern `release: v(.*)`, this action identifies a commit with the message `release: v1.2.3` as a release commit, but not a commit with the message `chore: updating license headers`. In the first, the commit is tagged with the tag: `1.2.3`.
 
+### `expected-version`
+
+Allows specifying the version expected for the release commit. If the specified version and the version of the release commit do not match, then this action sets its status to failed, resulting in concurrent actions being cancelled and future actions being skipped. Has no effect if not a release commit.
+
+
 ## Outputs
+
+### `is-release-commit`
+
+True if identified the head commit as release commit, or false otherwise.
 
 ### `version`
 
-The release version if a release commit, or empty otherwise.
+The release version, or empty if not identified the head commit as release commit.
+
 
 ## Example usage
 

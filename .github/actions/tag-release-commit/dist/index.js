@@ -879,10 +879,16 @@ const { exec } = __webpack_require__(986);
         const patternMatch = message.match(new RegExp(`^${pattern}$`, 'm'));
         const isReleaseCommit = patternMatch != null;
         if (!isReleaseCommit) {
+            core.setOutput('is-release-commit', false);
             core.info(`Skip release tag. The commit message does not match the release commit pattern: '${message}'`);
             return;
         }
         const releaseVersion = patternMatch[1];
+        const expectedVersion = core.getInput('expected-version', { required: false });
+        if (expectedVersion && expectedVersion !== releaseVersion) {
+            core.setFailed(`Version mismatch. Expected version in commit message to be '${expectedVersion}', but was '${releaseVersion}'.`);
+            return;
+        }
         core.info(`The commit message maches the release commit pattern. Pushing release tag: ${releaseVersion}.`);
         // Delete the release tag, if present.
         yield exec('git', ['push', 'origin', `:refs/tags/${releaseVersion}`]);
@@ -890,6 +896,7 @@ const { exec } = __webpack_require__(986);
         yield exec('git', ['tag', releaseVersion]);
         // Push the release tag.
         yield exec('git', ['push', 'origin', 'tag', releaseVersion]);
+        core.setOutput('is-release-commit', true);
         core.setOutput('version', releaseVersion);
     }
     catch (error) {
