@@ -2,8 +2,8 @@
 Please check if your PR fulfills the following requirements:
 
 - [ ] The commit message follows our [guidelines](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/CONTRIBUTING.md)
-- [ ] Tests for the changes have been added (for bug fixes / features)
-- [ ] Docs have been added / updated (for bug fixes / features)
+- [ ] Tests for the changes have been added (for bug fixes and features)
+- [ ] Docs have been added / updated (for bug fixes and features)
 
 
 ## PR Type
@@ -15,7 +15,7 @@ What kind of change does this PR introduce?
 - [ ] Feature (new feature)
 - [ ] Documentation (changes to the documentation)
 - [ ] Refactoring (changes that neither fixes a bug nor adds a feature)
-- [ ] Performance (changes that improves performance)
+- [ ] Performance (changes that improve performance)
 - [ ] Test (adding missing tests, refactoring tests; no production code change)
 - [ ] Chore (other changes like formatting, updating the license, updating dependencies, removal of deprecations, etc)
 - [ ] CI (changes to our CI configuration files and scripts)
