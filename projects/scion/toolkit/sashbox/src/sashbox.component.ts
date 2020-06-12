@@ -48,21 +48,21 @@ import { SciSashBoxAccessor } from './sashbox-accessor';
  * You can override the following CSS variables:
  *
  * --sci-sashbox-gap: Sets the gaps (gutters) between sashes.
- * --sci-sashbox-splitter_size: Sets the size of the splitter along the main axis (width if direction is row, or height if direction is column).
- * --sci-sashbox-splitter_touchTargetSize: Sets the touch target size to move the splitter (accessibility).
- * --sci-sashbox-splitter_crossAxisSize: Sets the splitter handle size along the cross axis (height if direction is row, or width if direction is column).
- * --sci-sashbox-splitter_backgroundColor: Sets the background color of the splitter.
- * --sci-sashbox-splitter_borderRadius: Sets the border radius of the splitter handle.
- * --sci-sashbox-splitter_sizeOnHover: Sets the size of the splitter along the main axis when hovering it.
- * --sci-sashbox-splitter_opacityOnHover: Sets the opacity of the splitter when hovering it.
- * --sci-sashbox-splitter_backgroundColorOnHover: Sets the background color of the splitter when hovering it.
- * --sci-sashbox-splitter_opacityWhenActive: Sets the opacity of the splitter while the user moves the splitter.
+ * --sci-sashbox-splitter-bgcolor: Sets the background color of the splitter.
+ * --sci-sashbox-splitter-bgcolor_hover: Sets the background color of the splitter when hovering it.
+ * --sci-sashbox-splitter-size: Sets the size of the splitter along the main axis.
+ * --sci-sashbox-splitter-size_hover: Sets the size of the splitter along the main axis when hovering it.
+ * --sci-sashbox-splitter-touch-target-size: Sets the touch target size to move the splitter (accessibility).
+ * --sci-sashbox-splitter-cross-axis-size: Sets the splitter size along the cross axis.
+ * --sci-sashbox-splitter-border-radius: Sets the border radius of the splitter.
+ * --sci-sashbox-splitter-opacity_active: Sets the opacity of the splitter while the user moves the splitter.
+ * --sci-sashbox-splitter-opacity_hover: Sets the opacity of the splitter when hovering it.
  *
  * Example:
  *
  * sci-sashbox {
- *   --sci-sashbox-splitter_backgroundColor: black;
- *   --sci-sashbox-splitter_backgroundColorOnHover: black;
+ *   --sci-sashbox-splitter-bgcolor: black;
+ *   --sci-sashbox-splitter-bgcolor_hover: black;
  * }
  */
 @Component({
