@@ -1,0 +1,14 @@
+name: 'package-json'
+description: 'Reads values from the package.json.'
+inputs:
+  path:
+    description: 'The path to the `package.json` file.'
+    required: true
+outputs:
+  name:
+    description: 'Module name as contained in `package.json`.'
+  version:
+    description: 'Module version as contained in `package.json`.'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

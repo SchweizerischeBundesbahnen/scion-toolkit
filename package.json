@@ -40,7 +40,8 @@
     "github-actions:tag-release-commit:build": "ncc build .github/actions/tag-release-commit/index.ts -o .github/actions/tag-release-commit/dist",
     "github-actions:npm-publish:build": "ncc build .github/actions/npm-publish/index.ts -o .github/actions/npm-publish/dist",
     "github-actions:vercel-deploy:build": "ncc build .github/actions/npm-publish/index.ts -o .github/actions/npm-publish/dist",
-    "github-actions:equality-checker:build": "ncc build .github/actions/equality-checker/index.ts -o .github/actions/equality-checker/dist"
+    "github-actions:equality-checker:build": "ncc build .github/actions/equality-checker/index.ts -o .github/actions/equality-checker/dist",
+    "github-actions:package-json:build": "ncc build .github/actions/package-json/index.ts -o .github/actions/package-json/dist"
   },
   "private": true,
   "dependencies": {
