@@ -1,6 +1,16 @@
 <h1>sci-sashbox</h1>
 
-<sci-sashbox [direction]="direction">
+<sci-sashbox [direction]="directionFormControl.value"
+             [style.--sci-sashbox-gap]="stylingFormControls['--sci-sashbox-gap'].value"
+             [style.--sci-sashbox-splitter-bgcolor]="stylingFormControls['--sci-sashbox-splitter-bgcolor'].value"
+             [style.--sci-sashbox-splitter-bgcolor_hover]="stylingFormControls['--sci-sashbox-splitter-bgcolor_hover'].value"
+             [style.--sci-sashbox-splitter-size]="stylingFormControls['--sci-sashbox-splitter-size'].value"
+             [style.--sci-sashbox-splitter-size_hover]="stylingFormControls['--sci-sashbox-splitter-size_hover'].value"
+             [style.--sci-sashbox-splitter-touch-target-size]="stylingFormControls['--sci-sashbox-splitter-touch-target-size'].value"
+             [style.--sci-sashbox-splitter-cross-axis-size]="stylingFormControls['--sci-sashbox-splitter-cross-axis-size'].value"
+             [style.--sci-sashbox-splitter-border-radius]="stylingFormControls['--sci-sashbox-splitter-border-radius'].value"
+             [style.--sci-sashbox-splitter-opacity_active]="stylingFormControls['--sci-sashbox-splitter-opacity_active'].value"
+             [style.--sci-sashbox-splitter-opacity_hover]="stylingFormControls['--sci-sashbox-splitter-opacity_hover'].value">
   <ng-container *ngFor="let sash of sashes; index as i;">
     <ng-template sciSash *ngIf="sash.visible" [size]="sash.size" [minSize]="sash.minSize">
       <section class="sash-{{i + 1}}">Sash {{i + 1}}</section>
@@ -8,18 +18,19 @@
   </ng-container>
 </sci-sashbox>
 
-<section class="settings sashbox">
+<section class="sashbox-settings">
   <header>Settings</header>
-  <sci-form-field label="Direction">
-    <select [(ngModel)]="direction">
+
+  <sci-form-field label="Direction" direction="column">
+    <select [formControl]="directionFormControl">
       <option value="column">column</option>
       <option value="row">row</option>
     </select>
   </sci-form-field>
 </section>
 
-<ng-container *ngFor="let sash of sashes; index as i">
-  <section class="settings">
+<section class="sash-settings">
+  <section *ngFor="let sash of sashes; index as i">
     <header>Settings of sash {{i + 1}}</header>
     <sci-form-field label="Visible">
       <sci-checkbox [(ngModel)]="sash.visible"></sci-checkbox>
@@ -33,5 +44,39 @@
       <input [(ngModel)]="sash.minSize" placeholder="Value in pixel or percent">
     </sci-form-field>
   </section>
-</ng-container>
+</section>
 
+<section class="sashbox-styling">
+  <header>Styling</header>
+
+  <sci-form-field label="--sci-sashbox-gap" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-gap']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-bgcolor" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-bgcolor']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-bgcolor_hover" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-bgcolor_hover']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-size" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-size']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-size_hover" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-size_hover']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-touch-target-size" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-touch-target-size']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-cross-axis-size" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-cross-axis-size']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-border-radius" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-border-radius']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-opacity_active" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-opacity_active']">
+  </sci-form-field>
+  <sci-form-field label="--sci-sashbox-splitter-opacity_hover" direction="column">
+    <input [formControl]="stylingFormControls['--sci-sashbox-splitter-opacity_hover']">
+  </sci-form-field>
+</section>

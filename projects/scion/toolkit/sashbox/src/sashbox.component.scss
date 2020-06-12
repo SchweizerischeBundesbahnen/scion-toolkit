@@ -1,18 +1,15 @@
 :host {
   // CSS variables to override properties of the theme (public API).
-  --sci-sashbox-gap: 10px;
-  --sci-sashbox-splitter_backgroundColor: #d2d2d2;
-  --sci-sashbox-splitter_backgroundColorOnHover: var(--sci-sashbox-splitter_backgroundColor);
-  --sci-sashbox-splitter_size: 1px; // size of the splitter along the main axis (width if direction is row, or height if direction is column)
-  --sci-sashbox-splitter_sizeOnHover: 8px; // size of the splitter along the main axis when hovered
-  --sci-sashbox-splitter_touchTargetSize: 15px; // touch target size to move the splitter
-  // Use 'auto' instead of '100%' for the cross-axis size, i.e., if the sashbox is not given an explicit height or is not placed inside a
-  // growinig/shrinking container, then the splitter height computes to 0px even if set to 100%. This is because the splitter is a flex item
-  // that is relatively positioned to form a positioning context for the 'touch-target'.
-  --sci-sashbox-splitter_crossAxisSize: auto; // handle size along the cross axis (height if direction is row, or width if direction is column)
-  --sci-sashbox-splitter_borderRadius: 0; // border radius of the handle
-  --sci-sashbox-splitter_opacityWhenActive: 1; // opacity of the splitter when active
-  --sci-sashbox-splitter_opacityOnHover: .3; // opacity of the splitter on hover
+  --sci-sashbox-gap: 10px; // gaps (gutters) between sashes
+  --sci-sashbox-splitter-bgcolor: #d2d2d2; // background color of the splitter
+  --sci-sashbox-splitter-bgcolor_hover: var(--sci-sashbox-splitter-bgcolor); // background color of the splitter when hovering it
+  --sci-sashbox-splitter-size: 1px; // size of the splitter along the main axis (width if direction is row, or height if direction is column)
+  --sci-sashbox-splitter-size_hover: 8px; // size of the splitter along the main axis when hovering it.
+  --sci-sashbox-splitter-touch-target-size: 15px; // touch target size to move the splitter (accessibility)
+  --sci-sashbox-splitter-cross-axis-size: 100%; // handle size along the cross axis
+  --sci-sashbox-splitter-border-radius: 0; // border radius of the splitter
+  --sci-sashbox-splitter-opacity_active: 1; //  opacity of the splitter while the user moves the splitter
+  --sci-sashbox-splitter-opacity_hover: .3; // opacity of the splitter when hovering it
 
   display: flex;
   align-items: stretch;
@@ -71,8 +68,10 @@
     flex: none;
     display: grid; // stretch the touch-target
     position: relative; // positioning context for 'touch-target'
-    background-color: var(--sci-sashbox-splitter_backgroundColor);
+    background-color: var(--sci-sashbox-splitter-bgcolor);
+    border-radius: var(--sci-sashbox-splitter-border-radius);
     place-items: center; // center the touch-target
+    align-self: center;
 
     > div.touch-target {
       position: absolute; // out of the document flow
@@ -83,9 +82,9 @@
 
       > div.handle {
         position: absolute; // out of the document flow
-        background-color: var(--sci-sashbox-splitter_backgroundColor);
-        border-radius: var(--sci-sashbox-splitter_borderRadius);
-        opacity: var(--sci-sashbox-splitter_opacityOnHover);
+        background-color: var(--sci-sashbox-splitter-bgcolor);
+        border-radius: var(--sci-sashbox-splitter-border-radius);
+        opacity: var(--sci-sashbox-splitter-opacity_hover);
         transition-property: width, height;
         transition-timing-function: ease-in;
         transition-duration: 75ms;
@@ -93,47 +92,47 @@
     }
 
     &.vertical {
-      width: var(--sci-sashbox-splitter_size);
-      height: var(--sci-sashbox-splitter_crossAxisSize);
+      width: var(--sci-sashbox-splitter-size);
+      height: var(--sci-sashbox-splitter-cross-axis-size);
 
       > div.touch-target {
-        width: var(--sci-sashbox-splitter_touchTargetSize);
+        width: var(--sci-sashbox-splitter-touch-target-size);
         height: 100%;
 
         > div.handle {
-          width: var(--sci-sashbox-splitter_size);
+          width: var(--sci-sashbox-splitter-size);
           height: 100%;
         }
       }
     }
 
     &.horizontal {
-      height: var(--sci-sashbox-splitter_size);
-      width: var(--sci-sashbox-splitter_crossAxisSize);
+      height: var(--sci-sashbox-splitter-size);
+      width: var(--sci-sashbox-splitter-cross-axis-size);
 
       > div.touch-target {
         width: 100%;
-        height: var(--sci-sashbox-splitter_touchTargetSize);
+        height: var(--sci-sashbox-splitter-touch-target-size);
 
         > div.handle {
           width: 100%;
-          height: var(--sci-sashbox-splitter_size);
+          height: var(--sci-sashbox-splitter-size);
         }
       }
     }
 
     > div.touch-target:active > div.handle {
-      opacity: var(--sci-sashbox-splitter_opacityWhenActive);
+      opacity: var(--sci-sashbox-splitter-opacity_active);
     }
 
     &.vertical.moving > div.touch-target > div.handle, &.vertical > div.touch-target:hover > div.handle {
-      background-color: var(--sci-sashbox-splitter_backgroundColorOnHover);
-      width: var(--sci-sashbox-splitter_sizeOnHover);
+      background-color: var(--sci-sashbox-splitter-bgcolor_hover);
+      width: var(--sci-sashbox-splitter-size_hover);
     }
 
     &.horizontal.moving > div.touch-target > div.handle, &.horizontal > div.touch-target:hover > div.handle {
-      background-color: var(--sci-sashbox-splitter_backgroundColorOnHover);
-      height: var(--sci-sashbox-splitter_sizeOnHover);
+      background-color: var(--sci-sashbox-splitter-bgcolor_hover);
+      height: var(--sci-sashbox-splitter-size_hover);
     }
   }
 }
