@@ -19,6 +19,10 @@ Module name as contained in `package.json`.
 
 Module version as contained in `package.json`.
 
+### `version-dasherized`
+
+Module version as contained in `package.json`, with dots (`.`) replaced by the dash character (`-`) for use in a URL.
+
 
 ## Example usage
 

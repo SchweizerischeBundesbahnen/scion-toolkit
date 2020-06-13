@@ -412,6 +412,7 @@ const { readFileSync, existsSync } = __webpack_require__(747);
         core.info(`Reading '${packageJsonPath}': { name=${name}, version=${version} }`);
         core.setOutput('name', name);
         core.setOutput('version', version);
+        core.setOutput('version-dasherized', dasherizedVersion(version));
     }
     catch (error) {
         core.setFailed(error.message);
@@ -422,6 +423,9 @@ function readPackageJson(path) {
         throw Error(`Package.json not found: ${path}`);
     }
     return JSON.parse(readFileSync(path, 'utf8'));
+}
+function dasherizedVersion(version) {
+    return version ? version.replace(/[\\.]/g, '-') : version;
 }
 
 
