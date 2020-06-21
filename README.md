@@ -47,17 +47,12 @@ SCION Toolkit follows the same SemVer philosophy as Angular, with major versions
 
 [![Project version](https://img.shields.io/npm/v/@scion/toolkit.svg)][link-download]
 [![Project version](https://img.shields.io/npm/v/@scion/toolkit/next.svg)][link-download]
-[![Continuous Integration and Delivery](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/workflows/Continuous%20Integration%20and%20Delivery/badge.svg?branch=master&event=push)][link-build]
+[![Continuous Integration and Delivery][link-github-actions-workflow:status]][link-github-actions-workflow]
 
-
-[menu-home]: /README.md
-[menu-projects-overview]: /docs/projects-overview.md
-[menu-changelog]: /docs/changelog.md
-[menu-contributing]: /CONTRIBUTING.md
-[menu-sponsoring]: /docs/sponsoring.md
 
 [link-download]: https://www.npmjs.com/package/@scion/toolkit
-[link-build]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
+[link-github-actions-workflow]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
+[link-github-actions-workflow:status]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/workflows/Continuous%20Integration%20and%20Delivery/badge.svg?branch=master&event=push
 [link-tool-viewport]: /docs/tools/viewport.md
 [link-tool-dimension]: /docs/tools/dimension.md
 [link-tool-sashbox]: /docs/tools/sashbox.md
@@ -65,3 +60,9 @@ SCION Toolkit follows the same SemVer philosophy as Angular, with major versions
 [link-tool-operators]: /docs/tools/operators.md
 [link-tool-util]: /docs/tools/util.md
 [link-tool-uuid]: /docs/tools/uuid.md
+
+[menu-home]: /README.md
+[menu-projects-overview]: /docs/projects-overview.md
+[menu-changelog]: /docs/changelog.md
+[menu-contributing]: /CONTRIBUTING.md
+[menu-sponsoring]: /docs/sponsoring.md
