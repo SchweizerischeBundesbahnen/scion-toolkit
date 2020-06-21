@@ -183,10 +183,32 @@ function someMethod(): void {
 
 </details>
 
+<details>
+  <summary><strong>Deployments</strong></summary>
+  <br>
+  
+We deploy our documentations and applications to [Vercel](https://vercel.com/docs). Vercel is a cloud platform for static sites and serverless functions. Applications are deployed using the SCION collaborator account (scion.collaborator@gmail.com) under the [SCION organization](https://vercel.com/scion).
+
+We have the following toolkit related projects:
+- https://vercel.com/scion/scion-toolkit-testing-app
+ 
+</details>
+
+<details>
+  <summary><strong>NPM Packages</strong></summary>
+  <br>
+  
+We publish our packages to the [NPM registry](https://www.npmjs.com/). Packages are published using the SCION collaborator account (scion.collaborator) under the [SCION organization](https://www.npmjs.com/org/scion).
+
+We have the following microfrontend-platform related packages:
+- https://www.npmjs.com/package/@scion/toolkit
+- https://www.npmjs.com/package/@scion/toolkit.internal
+
+</details>
 
 <details>
   <summary><strong>Releasing Policy</strong></summary>
-  
+  <br>  
   
 SCION follows the semantic versioning scheme (SemVer) for its releases. In this scheme, a release is represented by three numbers: `MAJOR.MINOR.PATCH`. For example, version `1.5.3` indicates major version `1`, minor version `5`, and patch level `3`.
 
