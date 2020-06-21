@@ -30,8 +30,7 @@ SCION provides fundamental building blocks for implementing a microfrontend arch
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/sponsoring.md
 
-[link-scion-microfrontend-platform]: /docs/scion-microfrontend-platform.md
-[link-scion-workench]: /docs/scion-workbench.md
+[link-scion-microfrontend-platform]: https://github.com/SchweizerischeBundesbahnen/scion-microfrontend-platform/blob/master/README.md
+[link-scion-workench]: https://github.com/SchweizerischeBundesbahnen/scion-workbench/blob/master/README.md
 [link-scion-toolkit]: /README.md
-[link-scion-application-platform]: /docs/tools/dimension.md
-
+[link-scion-application-platform]: https://github.com/SchweizerischeBundesbahnen/scion-workbench/blob/master/resources/site/workbench-application-platform.md
