@@ -87,5 +87,5 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           org-id: ${{ secrets.VERCEL_ORG_ID }}
           project-id: ${{ secrets.VERCEL_SCION_TOOLKIT_TESTING_APP_PROJECT_ID }}
-          aliases: scion-toolkit-testing-app, scion-toolkit-testing-app-%v
+          aliases: scion-toolkit-testing-app, scion-toolkit-testing-app-v%v
           version: ${{ needs.release-guard.outputs.version }}
