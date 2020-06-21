@@ -3,7 +3,7 @@ SCION Toolkit INTERNAL (NOT PUBLIC API)
 
 SCION Toolkit INTERNAL is a collection of UI components and utilities designed exclusively for use in SCION applications.
 
-This module is private to SCION applications, which is indicated by the tilde symbol ("~") in the module name.
+**This module is private to SCION applications.**
 
 **DO NOT USE THIS MODULE IN YOUR PROJECT AS IT IS NOT GUARANTEED TO BE STABLE AND MAY CHANGE WITHOUT NOTICE.**
 
