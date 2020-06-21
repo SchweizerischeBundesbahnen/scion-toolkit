@@ -8,6 +8,7 @@ We encourage other developers to join the project and contribute to making SCION
 
 <details>
   <summary><strong>Submitting a Pull Request</strong></summary>
+  <br>
   
 This section explains how to submit a pull request.
 
@@ -33,16 +34,17 @@ This section explains how to submit a pull request.
 
 <details>
   <summary><strong>Development</strong></summary>
+  <br>
   
 For development, you can uncomment the section `PATH-OVERRIDE-FOR-DEVELOPMENT` in `tsconfig.json`. This allows running tests or serving applications without having to build dependent modules first.
 
 The following is a summary of commands useful for development of `scion-toolkit`:
 
 - `npm run toolkit-testing-app:serve`\
-  Fires up the test application against which end-to-end tests are executed at http://localhost:4200.
+  Serves the testing app against which end-to-end tests are executed at http://localhost:4200.
   
 - `npm run toolkit:e2e`\
-  Fires up the test application and runs end-to-end tests against it.
+  Serves the testing app and runs end-to-end tests against it.
   
 - `npm run toolkit:test`\
   Runs unit tests of the toolkit library.
@@ -58,6 +60,7 @@ The following is a summary of commands useful for development of `scion-toolkit`
 
 <details>
   <summary><strong>Code Formatting</strong></summary>
+  <br>
 
 To ensure consistency within our code base, please use the following formatting settings.  
   
@@ -71,12 +74,13 @@ To ensure consistency within our code base, please use the following formatting 
 
 <details>
   <summary><strong>Coding Guidelines</strong></summary>
+  <br>
   
 In additional to the linting rules, we have the following conventions:
 
 - We believe in the [Best practices for a clean and performant Angular application](https://medium.freecodecamp.org/best-practices-for-a-clean-and-performant-angular-application-288e7b39eb6f) and the [Angular Style Guide](https://angular.io/guide/styleguide).
 - We expect line endings to be Unix style (LF) only. Please check your Git settings to not convert line endings to CRLF. You can run the following command to find files with `windows-style` line endings: `find . -type f | xargs file | grep CRLF`.
-- Observable names are suffixed with the dollar sign (`$`).
+- Observable names are suffixed with the dollar sign (`$`) to indicate that it is an `Observable` which we must subscribe to and unsubscribe from.
 - We use explicit public and private visibility modifiers (except for constructors) to make the code more explicit.
 - We prefix private members with an underscore.
 - We write each RxJS operator on a separate line, except when piping a single RxJS operator. Then, we write it on the same line as the pipe method.
@@ -89,6 +93,7 @@ In additional to the linting rules, we have the following conventions:
 
 <details>
   <summary><strong>Commit Guidelines</strong></summary>
+  <br>
   
 We believe in a compact and well written Git commit history. Every commit should be a logically separated changeset. We use the commit messages to generate the changelog.
  
@@ -167,6 +172,7 @@ To migrate:
 
 <details>
   <summary><strong>Deprecation Policy</strong></summary>
+  <br>
 
 You can deprecate API in any version. However, it will still be present in the next major release. Removal of deprecated API will occur only in a major release.
 
@@ -227,21 +233,29 @@ In the development of a new major release, we usually release pre-releases and t
 
 <details>
   <summary><strong>Release Checklist</strong></summary>
+  <br>
 
 This chapter describes the tasks to publish a new release to NPM.
 
 1. Update the following `package.json` files with the new version:
-    - `package.json`
-    - `projects/scion/toolkit/package.json`
-    - `projects/scion/toolkit.internal/package.json`
+    - `/package.json`
+    - `/projects/scion/toolkit/package.json`
+    - `/projects/scion/toolkit.internal/package.json`
 1. Run `npm install` to update the version in `package-lock.json`.
 1. Run `npm run changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
-1. Commit the changed files using the following commit message: `release: vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in GitHub Actions.
+1. Commit the changed files using the following commit message: `release: vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
 1. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
-1. When merged into the master branch, the release action in GitHub Actions creates a release tag and publishes the package to NPM.
-
+1. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
+1. Verify that:
+   - **@scion/toolkit** is published to: https://www.npmjs.com/package/@scion/toolkit.
+   - **@scion/toolkit.internal** is published to: https://www.npmjs.com/package/@scion/toolkit.internal.
+   - **Testing App** is deployed to:
+      - https://scion-toolkit-testing-app.now.sh.
+      - https://scion-toolkit-testing-app-vX-X-X.now.sh.
   
 </details>
+
+[link-github-actions-workflow]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/projects-overview.md
