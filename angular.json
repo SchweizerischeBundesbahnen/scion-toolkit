@@ -126,8 +126,12 @@
             "tsConfig": "apps/toolkit-testing-app/tsconfig.app.json",
             "aot": true,
             "assets": [
-              "apps/toolkit-testing-app/src/favicon.ico",
-              "apps/toolkit-testing-app/src/assets"
+              "apps/toolkit-testing-app/src/assets",
+              {
+                "glob": "favicon.ico",
+                "input": "docs/branding",
+                "output": "/"
+              }
             ],
             "styles": [
               "apps/toolkit-testing-app/src/styles.scss"
