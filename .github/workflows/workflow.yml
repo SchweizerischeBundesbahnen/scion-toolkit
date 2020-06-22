@@ -1,56 +1,110 @@
 name: Continuous Integration and Delivery
 on: push
 jobs:
-  build:
-    name: 'Building'
+  install:
+    name: 'Installing NPM modules'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: npm ci
-      - run: npm run build-all
+      - name: 'Caching NPM modules if necessary'
+        uses: actions/cache@v2
+        id: node-modules-cache
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: npm ci
+  lint:
+    name: 'Linting'
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Restoring NPM modules from cache'
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - run: npm run lint
+  build:
+    name: 'Building'
+    needs: install
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.root-package-json.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Reading package.json version of project root'
+        uses: ./.github/actions/package-json
+        id: root-package-json
+        with:
+          path: package.json
+      - name: 'Reading package.json version of scion/toolkit'
+        uses: ./.github/actions/package-json
+        id: toolkit-package-json
+        with:
+          path: projects/scion/toolkit/package.json
+      - name: 'Reading package.json version of scion/toolkit.internal'
+        uses: ./.github/actions/package-json
+        id: toolkit-internal-package-json
+        with:
+          path: projects/scion/toolkit.internal/package.json
+      - name: 'Asserting package.json versions to be equal'
+        uses: ./.github/actions/equality-checker
+        with:
+          values: |
+            ${{ steps.root-package-json.outputs.version }},
+            ${{ steps.toolkit-package-json.outputs.version }},
+            ${{ steps.toolkit-internal-package-json.outputs.version }}
+      - name: 'Restoring NPM modules from cache'
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - run: npm run build
       - uses: actions/upload-artifact@v2
         with:
           name: dist
           path: dist
-  lint:
-    name: 'Linting'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: npm ci
-      - run: npm run lint-all
   test:
-    name: 'Testing (unit tests)'
+    name: 'Unit Testing'
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: 'Restoring NPM modules from cache'
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/download-artifact@v2
         with:
           name: dist
           path: dist
-      - run: npm ci
-      - run: npm run test-all:headless
+      - run: npm run test:headless
   e2e:
-    name: 'Testing (e2e tests)'
+    name: 'E2E Testing'
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: 'Restoring NPM modules from cache'
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/download-artifact@v2
         with:
           name: dist
           path: dist
-      - run: npm ci
-      - run: npm run e2e-all:headless
+      - run: npm run e2e:headless
   release-guard:
     name: 'Should release?'
     if: github.ref == 'refs/heads/master'
     needs: [ build, lint, test, e2e]
     runs-on: ubuntu-latest
     outputs:
-      should-release: ${{ steps.tag-release-commit.outputs.version != '' }}
-      version: ${{ steps.tag-release-commit.outputs.version }}
+      should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
     steps:
       - uses: actions/checkout@v2
       - name: 'If release commit present, add release tag'
@@ -58,29 +112,24 @@ jobs:
         id: tag-release-commit
         with:
           release-commit-message-pattern: 'release: v(.*)'
+          expected-version: ${{ needs.build.outputs.version }}
   release:
     name: 'Releasing'
     if: ${{ needs.release-guard.outputs.should-release == 'true' }}
-    needs: release-guard
+    needs: [release-guard, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: 'Restoring NPM modules from cache'
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/download-artifact@v2
         with:
           name: dist
           path: dist
-      - run: npm ci
-      - name: 'Publish @scion/toolkit to NPM'
-        uses: ./.github/actions/npm-publish
-        with:
-          dist-folder: dist/scion/toolkit
-          npm-token: ${{ secrets.NPM_TOKEN }}
-      - name: 'Publish @scion/toolkit.internal to NPM'
-        uses: ./.github/actions/npm-publish
-        with:
-          dist-folder: dist/scion/toolkit.internal
-          npm-token: ${{ secrets.NPM_TOKEN }}
-      - name: 'Deploy toolkit-testing-app to Vercel'
+      - name: 'Deploying toolkit-testing-app to Vercel'
         uses: ./.github/actions/vercel-deploy
         with:
           dist-folder: dist/toolkit-testing-app
@@ -88,4 +137,16 @@ jobs:
           org-id: ${{ secrets.VERCEL_ORG_ID }}
           project-id: ${{ secrets.VERCEL_SCION_TOOLKIT_TESTING_APP_PROJECT_ID }}
           aliases: scion-toolkit-testing-app, scion-toolkit-testing-app-v%v
-          version: ${{ needs.release-guard.outputs.version }}
+          version: ${{ needs.build.outputs.version }}
+      - name: 'Publishing @scion/toolkit to NPM'
+        uses: ./.github/actions/npm-publish
+        with:
+          dist-folder: dist/scion/toolkit
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          dry-run: false
+      - name: 'Publishing @scion/toolkit.internal to NPM'
+        uses: ./.github/actions/npm-publish
+        with:
+          dist-folder: dist/scion/toolkit.internal
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          dry-run: false

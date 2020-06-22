@@ -12,13 +12,14 @@
     "url": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit"
   },
   "scripts": {
-    "before-push": "run-s build-all lint-all test-all:headless e2e-all:headless",
-    "build-all": "run-s *:build",
-    "lint-all": "run-p *:lint",
-    "test-all": "run-s *:test",
-    "test-all:headless": "cross-env HEADLESS=true run-s *:test",
-    "e2e-all": "run-p *:e2e",
-    "e2e-all:headless": "cross-env HEADLESS=HEADLESS run-s *:e2e",
+    "before-push": "run-s build lint test:headless e2e:headless",
+    "build": "run-s *:build",
+    "lint": "run-p *:lint",
+    "test": "run-s *:test",
+    "test:headless": "cross-env HEADLESS=true run-s *:test",
+    "e2e": "run-s *:e2e",
+    "e2e:headless": "cross-env HEADLESS=HEADLESS run-s *:e2e",
+    "postinstall": "ngcc",
 
     "toolkit:lint": "ng lint @scion/toolkit",
     "toolkit.e2e:lint": "ng lint @scion/toolkit.e2e",

@@ -15,13 +15,13 @@ This section explains how to submit a pull request.
 1. Login to your GitHub account and fork the `SchweizerischeBundesbahnen/scion-toolkit` repo.
 1. Make your changes in a new Git branch. Name your branch in the form `issue/123` with `123` as the related GitHub issue number. Before submitting the pull request, please make sure that you comply with our coding and commit guidelines.
 1. Run the command `npm run before-push` to make sure that the project builds, passes all tests, and has no lint violations. Alternatively, you can also run the commands one by one, as following:
-   - `npm run test-all:headless`\
+   - `npm run test:headless`\
       Runs all unit tests.
-   - `npm run e2e-all:headless`\
+   - `npm run e2e:headless`\
       Runs all end-to-end tests.
-   - `npm run lint-all`\
+   - `npm run lint`\
       Lints all project files.
-   - `npm run build-all`\
+   - `npm run build`\
       Builds the project and related artifacts.
 1. Commit your changes using a descriptive commit message that follows our commit guidelines.
 1. Before submitting the pull request, ensure to have rebased your branch based on the master branch as we stick to the rebase policy to keep the repository history linear. 
@@ -38,24 +38,55 @@ This section explains how to submit a pull request.
   
 For development, you can uncomment the section `PATH-OVERRIDE-FOR-DEVELOPMENT` in `tsconfig.json`. This allows running tests or serving applications without having to build dependent modules first.
 
-The following is a summary of commands useful for development of `scion-toolkit`:
+The following is a summary of commands useful for development of `scion-toolkit`. See file `package.json` for a complete list of available NPM scripts.
 
-- `npm run toolkit-testing-app:serve`\
-  Serves the testing app against which end-to-end tests are executed at http://localhost:4200.
+### Commands for working on the toolkit library
+
+- `npm run toolkit:lint`\
+  Lints the toolkit library.
   
-- `npm run toolkit:e2e`\
-  Serves the testing app and runs end-to-end tests against it.
+- `npm run toolkit:build`\
+  Builds the toolkit library.
   
 - `npm run toolkit:test`\
   Runs unit tests of the toolkit library.
   
-- `npm run toolkit:lint`\
-  Lints the toolkit library.
+- `npm run toolkit:e2e`\
+  Runs end-to-end tests of the toolkit library. Prior to test execution, the testing app is started.
 
-- `npm run toolkit:build`\
-  Builds the toolkit library.
+### Commands for working on the toolkit.internal library
+
+- `npm run toolkit.internal:lint`\
+  Lints the internal toolkit library.
   
-> See file `package.json` for a complete list of available NPM scripts.
+- `npm run toolkit.internal:build`\
+  Builds the internal toolkit library.
+  
+- `npm run toolkit.internal:test`\
+  Runs unit tests of the internal toolkit library.
+
+### Commands for working on the testing application  
+  
+- `npm run toolkit-testing-app:serve`\
+  Serves the testing app on [http://localhost:4200](http://localhost:4200).\
+  Uncomment the section `PATH-OVERRIDE-FOR-DEVELOPMENT` in `tsconfig.json` to have hot module reloading support. 
+  
+- `npm run toolkit-testing-app:build`\
+  Builds the testing app into `dist` folder using the productive config.
+  
+- `npm run toolkit-testing-app:lint`\
+  Lints the testing app.
+  
+### Command for generating the changelog
+
+- `npm run changelog`\
+  Use to generate the changelog based on the commit history. The output is written to `CHANGELOG.md`, which will be included in `docs/site/changelog/changelog.md` using the template `docs/site/changelog/changelog.template.md`.   
+
+### Command for generating GitHub Actions
+
+- `run-s github-actions:*:build`\
+  Use to generate the GibHub Actions used in SCION projects.
+
 </details>
 
 <details>
