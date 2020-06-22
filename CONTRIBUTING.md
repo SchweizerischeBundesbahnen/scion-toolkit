@@ -258,7 +258,7 @@ This chapter describes the tasks to publish a new release to NPM.
 [link-github-actions-workflow]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
 
 [menu-home]: /README.md
-[menu-projects-overview]: /docs/projects-overview.md
-[menu-changelog]: /docs/changelog.md
+[menu-projects-overview]: /docs/site/projects-overview.md
+[menu-changelog]: /docs/site/changelog/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
-[menu-sponsoring]: /docs/sponsoring.md
+[menu-sponsoring]: /docs/site/sponsoring.md

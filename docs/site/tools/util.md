@@ -97,8 +97,8 @@ npm install --save @scion/toolkit
 
  
 [menu-home]: /README.md
-[menu-projects-overview]: /docs/projects-overview.md
-[menu-changelog]: /docs/changelog.md
+[menu-projects-overview]: /docs/site/projects-overview.md
+[menu-changelog]: /docs/site/changelog/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
-[menu-sponsoring]: /docs/sponsoring.md
+[menu-sponsoring]: /docs/site/sponsoring.md
 

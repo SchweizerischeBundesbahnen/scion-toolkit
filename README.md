@@ -53,16 +53,16 @@ SCION Toolkit follows the same SemVer philosophy as Angular, with major versions
 [link-download]: https://www.npmjs.com/package/@scion/toolkit
 [link-github-actions-workflow]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
 [link-github-actions-workflow:status]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/workflows/Continuous%20Integration%20and%20Delivery/badge.svg?branch=master&event=push
-[link-tool-viewport]: /docs/tools/viewport.md
-[link-tool-dimension]: /docs/tools/dimension.md
-[link-tool-sashbox]: /docs/tools/sashbox.md
-[link-tool-observable]: /docs/tools/observable.md
-[link-tool-operators]: /docs/tools/operators.md
-[link-tool-util]: /docs/tools/util.md
-[link-tool-uuid]: /docs/tools/uuid.md
+[link-tool-viewport]: /docs/site/tools/viewport.md
+[link-tool-dimension]: /docs/site/tools/dimension.md
+[link-tool-sashbox]: /docs/site/tools/sashbox.md
+[link-tool-observable]: /docs/site/tools/observable.md
+[link-tool-operators]: /docs/site/tools/operators.md
+[link-tool-util]: /docs/site/tools/util.md
+[link-tool-uuid]: /docs/site/tools/uuid.md
 
 [menu-home]: /README.md
-[menu-projects-overview]: /docs/projects-overview.md
-[menu-changelog]: /docs/changelog.md
+[menu-projects-overview]: /docs/site/projects-overview.md
+[menu-changelog]: /docs/site/changelog/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
-[menu-sponsoring]: /docs/sponsoring.md
+[menu-sponsoring]: /docs/site/sponsoring.md

@@ -35,7 +35,7 @@
     "toolkit-testing-app:lint": "ng lint toolkit-testing-app",
     "toolkit-testing-app:build": "ng build --configuration=production toolkit-testing-app",
 
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s && markdown-include docs/changelog.template.json",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s && markdown-include docs/site/changelog/changelog.template.json",
 
     "github-actions:tag-release-commit:build": "ncc build .github/actions/tag-release-commit/index.ts -o .github/actions/tag-release-commit/dist",
     "github-actions:npm-publish:build": "ncc build .github/actions/npm-publish/index.ts -o .github/actions/npm-publish/dist",

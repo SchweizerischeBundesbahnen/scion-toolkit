@@ -226,8 +226,8 @@ The module `@scion/toolkit/viewport` exports the scrollbar component `<sci-scrol
 </details>
 
 [menu-home]: /README.md
-[menu-projects-overview]: /docs/projects-overview.md
-[menu-changelog]: /docs/changelog.md
+[menu-projects-overview]: /docs/site/projects-overview.md
+[menu-changelog]: /docs/site/changelog/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
-[menu-sponsoring]: /docs/sponsoring.md
+[menu-sponsoring]: /docs/site/sponsoring.md
 
