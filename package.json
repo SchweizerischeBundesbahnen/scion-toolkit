@@ -13,12 +13,12 @@
   },
   "scripts": {
     "before-push": "run-s build lint test:headless e2e:headless",
-    "build": "run-s *:build",
-    "lint": "run-p *:lint",
-    "test": "run-s *:test",
-    "test:headless": "cross-env HEADLESS=true run-s *:test",
-    "e2e": "run-s *:e2e",
-    "e2e:headless": "cross-env HEADLESS=HEADLESS run-s *:e2e",
+    "build": "run-s **:*:build",
+    "lint": "run-p **:*:lint",
+    "test": "run-s **:*:test",
+    "test:headless": "cross-env HEADLESS=true run-s **:*:test",
+    "e2e": "run-s **:*:e2e",
+    "e2e:headless": "cross-env HEADLESS=HEADLESS run-s **:*:e2e",
     "postinstall": "ngcc",
 
     "toolkit:lint": "ng lint @scion/toolkit",
