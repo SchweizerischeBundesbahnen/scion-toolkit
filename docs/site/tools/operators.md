@@ -1,4 +1,4 @@
-<a href="/README.md"><img src="/docs/branding/scion-toolkit-banner.svg" height="50" alt="SCION Toolkit"></a>
+<a href="/README.md"><img src="/resources/branding/scion-toolkit-banner.svg" height="50" alt="SCION Toolkit"></a>
 
 | SCION Toolkit | [Projects Overview][menu-projects-overview] | [Changelog][menu-changelog] | [Contributing][menu-contributing] | [Sponsoring][menu-sponsoring] |  
 | --- | --- | --- | --- | --- |
