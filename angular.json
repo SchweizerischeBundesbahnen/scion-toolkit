@@ -129,7 +129,7 @@
               "apps/toolkit-testing-app/src/assets",
               {
                 "glob": "favicon.ico",
-                "input": "docs/branding",
+                "input": "resources/branding",
                 "output": "/"
               }
             ],
