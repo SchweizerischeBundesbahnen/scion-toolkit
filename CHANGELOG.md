@@ -1,3 +1,25 @@
+# [10.0.0-beta.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/9.0.0-beta.3...10.0.0-beta.1) (2020-07-16)
+
+
+### Bug Fixes
+
+* **ɵtoolkit:** prefix the version in the URL of the testing application ([885700b](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/885700b899a8432896bdc8d32149c151574df683))
+
+
+### chore
+
+* update toolkit to Angular 10 ([332d253](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/332d2531fb131c8c62bd6c9fa97d0b039ac985c5)), closes [#11](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/11)
+
+
+### BREAKING CHANGES
+
+* Added support for Angular 10.
+
+To migrate:
+- if using Angular agnostic tools, migrate your app to Angular 10 by running `ng update @angular/cli @angular/core @angular/cdk`.
+
+
+
 # [9.0.0-beta.3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/9.0.0-beta.2...9.0.0-beta.3) (2020-06-12)
 
 
