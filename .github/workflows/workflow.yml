@@ -26,8 +26,8 @@ jobs:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm run lint
-  build:
-    name: 'Building'
+  build-toolkit:
+    name: 'Building Toolkit'
     needs: install
     runs-on: ubuntu-latest
     outputs:
@@ -61,14 +61,44 @@ jobs:
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - run: npm run build
+      - name: 'Building @scion/toolkit'
+        run: npm run toolkit:build
+      - name: 'Building @scion/toolkit.internal'
+        run: npm run toolkit.internal:build
       - uses: actions/upload-artifact@v2
         with:
           name: dist
           path: dist
+  build-apps:
+    name: 'Building Apps'
+    needs: build-toolkit
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app:
+          - name: toolkit-testing-app
+            cmd: npm run toolkit-testing-app:build
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Restoring NPM modules from cache'
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: 'Downloading toolkit (dist)'
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: dist
+      - name: 'Building ${{ matrix.app.name }}'
+        run: ${{ matrix.app.cmd }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.app.name }}
+          path: dist/${{ matrix.app.name }}
   test:
     name: 'Unit Testing'
-    needs: build
+    needs: build-toolkit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -77,14 +107,15 @@ jobs:
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - uses: actions/download-artifact@v2
+      - name: 'Downloading toolkit (dist)'
+        uses: actions/download-artifact@v2
         with:
           name: dist
           path: dist
       - run: npm run test:headless
   e2e:
     name: 'E2E Testing'
-    needs: build
+    needs: [build-toolkit, build-apps]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -93,7 +124,8 @@ jobs:
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - uses: actions/download-artifact@v2
+      - name: 'Downloading toolkit (dist)'
+        uses: actions/download-artifact@v2
         with:
           name: dist
           path: dist
@@ -101,7 +133,12 @@ jobs:
   release-guard:
     name: 'Should release?'
     if: github.ref == 'refs/heads/master'
-    needs: [ build, lint, test, e2e]
+    needs:
+      - build-toolkit
+      - build-apps
+      - lint
+      - test
+      - e2e
     runs-on: ubuntu-latest
     outputs:
       should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
@@ -112,11 +149,11 @@ jobs:
         id: tag-release-commit
         with:
           release-commit-message-pattern: 'release: v(.*)'
-          expected-version: ${{ needs.build.outputs.version }}
+          expected-version: ${{ needs.build-toolkit.outputs.version }}
   release:
     name: 'Releasing'
     if: ${{ needs.release-guard.outputs.should-release == 'true' }}
-    needs: [release-guard, build]
+    needs: [release-guard, build-toolkit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -125,10 +162,16 @@ jobs:
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - uses: actions/download-artifact@v2
+      - name: 'Downloading toolkit (dist)'
+        uses: actions/download-artifact@v2
         with:
           name: dist
           path: dist
+      - name: 'Downloading app: toolkit-testing-app (dist)'
+        uses: actions/download-artifact@v2
+        with:
+          name: toolkit-testing-app
+          path: dist/toolkit-testing-app
       - name: 'Deploying toolkit-testing-app to Vercel'
         uses: ./.github/actions/vercel-deploy
         with:
@@ -137,7 +180,7 @@ jobs:
           org-id: ${{ secrets.VERCEL_ORG_ID }}
           project-id: ${{ secrets.VERCEL_SCION_TOOLKIT_TESTING_APP_PROJECT_ID }}
           aliases: scion-toolkit-testing-app, scion-toolkit-testing-app-v%v
-          version: ${{ needs.build.outputs.version }}
+          version: ${{ needs.build-toolkit.outputs.version }}
       - name: 'Publishing @scion/toolkit to NPM'
         uses: ./.github/actions/npm-publish
         with:
