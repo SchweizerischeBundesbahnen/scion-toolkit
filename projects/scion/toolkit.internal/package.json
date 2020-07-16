@@ -15,11 +15,12 @@
     "name": "SCION contributors"
   },
   "dependencies": {
+    "tslib": "^2.0.0"
   },
   "peerDependencies": {
-    "@angular/common": "^9.0.0-rc.0 || ^9.0.0",
-    "@angular/core": "^9.0.0-rc.0 || ^9.0.0",
-    "@angular/cdk": "^9.0.0-rc.0 || ^9.0.0",
+    "@angular/common": "^10.0.0-rc.0 || ^10.0.0",
+    "@angular/core": "^10.0.0-rc.0 || ^10.0.0",
+    "@angular/cdk": "^10.0.0-rc.0 || ^10.0.0",
     "rxjs": "^6.0.0"
   },
   "keywords": [
