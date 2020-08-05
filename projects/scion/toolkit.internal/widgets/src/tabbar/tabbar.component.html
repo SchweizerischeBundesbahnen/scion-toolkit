@@ -1,0 +1,15 @@
+<sci-viewport class="tabbar">
+  <ul class="tabs">
+    <li *ngFor="let tab of tabs$ | async"
+        class="tab"
+        [class.selected]="tab.isContentAttached()"
+        (click)="onTabSelect(tab)">
+      {{tab.label}}
+    </li>
+    <li class="filler"></li>
+  </ul>
+</sci-viewport>
+
+<sci-viewport class="tabcontent">
+  <ng-container #tabcontent></ng-container>
+</sci-viewport>

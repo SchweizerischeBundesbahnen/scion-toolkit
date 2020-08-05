@@ -1,0 +1,47 @@
+:host {
+  display: flex;
+  flex-direction: column;
+
+  > sci-viewport.tabbar {
+    flex: none;
+    height: 2em;
+
+    ul.tabs {
+      display: flex;
+      flex-flow: row nowrap;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+
+      > li.tab, > li.filler {
+        flex: none;
+        border-bottom: 3px solid var(--sci-color-P300);
+        padding: 0 1em 0 1em;
+        white-space: nowrap;
+
+        &.selected {
+          border-bottom-color: var(--sci-color-accent);
+          color: var(--sci-color-accent);
+        }
+
+        &:hover:not(.filler) {
+          cursor: pointer;
+
+          &:not(.selected) {
+            border-bottom-color: var(--sci-color-P400);
+            color: var(--sci-color-accent);
+          }
+        }
+
+        &.filler {
+          flex: auto;
+        }
+      }
+    }
+  }
+
+  > sci-viewport.tabcontent {
+    flex: auto;
+    margin-top: 1em;
+  }
+}
