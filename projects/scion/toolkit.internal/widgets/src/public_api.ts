@@ -20,3 +20,4 @@ export * from './form-field/public_api';
 export * from './params-enter/public_api';
 export * from './qualifier-chip-list/public_api';
 export * from './property/public_api';
+export * from './tabbar/public_api';
