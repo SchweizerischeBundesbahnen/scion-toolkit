@@ -36,7 +36,7 @@ export class SciListPageComponent {
     switchMap(items => this.filter$.pipe(map(filterText => items.filter(item => !filterText || item.toUpperCase().includes(filterText))))),
   );
 
-  public onFilter(filter: string) {
+  public onFilter(filter: string): void {
     this.filter$.next(filter.toUpperCase());
   }
 
