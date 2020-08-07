@@ -1,3 +1,12 @@
+# [10.0.0-beta.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/10.0.0-beta.1...10.0.0-beta.2) (2020-08-07)
+
+
+### Features
+
+* **ɵtoolkit:** allow organizing content in tabs ([98805e0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/98805e083a3e4874ce44ea28ebb6d6c177baa65d)), closes [#10](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/10)
+
+
+
 # [10.0.0-beta.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/9.0.0-beta.3...10.0.0-beta.1) (2020-07-17)
 
 
