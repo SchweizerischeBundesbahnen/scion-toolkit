@@ -18,6 +18,7 @@
     "test:headless": "cross-env HEADLESS=true run-s **:*:test",
     "e2e": "run-s **:*:e2e",
     "e2e:headless": "cross-env HEADLESS=HEADLESS run-s **:*:e2e",
+    "pre:e2e": "npx webdriver-manager update --versions.chrome=84.0.4147.0",
     "postinstall": "ngcc --tsconfig \"tsconfig.base.json\"",
 
     "toolkit:lint": "ng lint @scion/toolkit",

@@ -51,7 +51,8 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "projects/scion/toolkit.e2e/protractor.conf.js",
-            "devServerTarget": "toolkit-testing-app:serve"
+            "devServerTarget": "toolkit-testing-app:serve",
+            "webdriverUpdate": false
           },
           "configurations": {
             "production": {
