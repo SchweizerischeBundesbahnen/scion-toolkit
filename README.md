@@ -35,7 +35,9 @@ Provides a sashbox component for splitting content into multiple parts, which th
 
 - [**UUID**][link-tool-uuid]\
   Allows generating pseudo-random identifiers.
-   
+
+- [**WebStorage**][link-tool-web-storage]\
+Allows observing items contained in local or session storage.   
    
 ***
 
@@ -60,6 +62,7 @@ SCION Toolkit follows the same SemVer philosophy as Angular, with major versions
 [link-tool-operators]: /docs/site/tools/operators.md
 [link-tool-util]: /docs/site/tools/util.md
 [link-tool-uuid]: /docs/site/tools/uuid.md
+[link-tool-web-storage]: /docs/site/tools/web-storage.md
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
