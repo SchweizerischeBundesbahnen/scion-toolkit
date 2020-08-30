@@ -55,6 +55,9 @@
     //      "@scion/toolkit/uuid": [
     //        "projects/scion/toolkit/uuid/src/public_api"
     //      ],
+    //      "@scion/toolkit/testing": [
+    //        "projects/scion/toolkit/testing/src/public_api"
+    //      ],
     //      "@scion/toolkit.internal/widgets": [
     //        "projects/scion/toolkit.internal/widgets/src/public_api"
     //      ],
