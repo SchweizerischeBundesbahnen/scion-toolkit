@@ -19,7 +19,7 @@ export class Arrays {
   }
 
   /**
-   * Creates an array from the given value, or returns the value if already an array. If `null` or `undefined` is given, by default, returns an empty array.
+   * Returns the value, if an array, or adds it to an array. If `null` or `undefined` is given, by default, returns an empty array.
    */
   public static coerce<T>(value: T | T[], options?: { coerceNullOrUndefined?: boolean }): T[] {
     if (value === null || value === undefined) {
@@ -123,5 +123,28 @@ export class Arrays {
 
     const first = [...arrays.pop()];
     return arrays.reduce((intersection, array) => intersection.filter(value => array.includes(value)), first);
+  }
+
+  /**
+   * Returns the last element in the given array, optionally matching the predicate if given.
+   *
+   * Returns `undefined` if no element is found.
+   */
+  public static last<T>(array: T[], predicate?: (item: T) => boolean): T | undefined {
+    if (!array) {
+      return undefined;
+    }
+
+    if (!predicate) {
+      return array[array.length - 1];
+    }
+
+    for (let i = array.length - 1; i >= 0; i--) {
+      if (predicate(array[i])) {
+        return array[i];
+      }
+    }
+
+    return undefined;
   }
 }
