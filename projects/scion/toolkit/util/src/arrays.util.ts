@@ -65,10 +65,12 @@ export class Arrays {
    *
    * @param  array - The array from which elements should be removed.
    * @param  element - The element to be removed, or a predicate function to resolve elements which to be removed.
-   * @param  options - Control if to remove all occurrences of the element.
+   * @param  options - Control if to remove all occurrences of the element. If not specified, all occurrences are removed.
    * @return the elements removed from the array.
    */
-  public static remove<T>(array: T[], element: any | ((element: T) => boolean), options: { firstOnly: boolean }): T[] {
+  public static remove<T>(array: T[], element: any | ((element: T) => boolean), options?: { firstOnly: boolean }): T[] {
+    const firstOnly = Defined.orElse(options && options.firstOnly, false);
+
     // define a function to resolve the element's index in the original array
     const indexOfElementFn = ((): () => number => {
       if (typeof element === 'function') {
@@ -82,7 +84,7 @@ export class Arrays {
     const removedElements = [];
     for (let i = indexOfElementFn(); i !== -1; i = indexOfElementFn()) {
       removedElements.push(...array.splice(i, 1)); // changes the original array
-      if (options.firstOnly) {
+      if (firstOnly) {
         break;
       }
     }
