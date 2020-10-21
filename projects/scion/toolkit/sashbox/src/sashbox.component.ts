@@ -97,10 +97,10 @@ export class SciSashboxComponent implements OnDestroy {
   public sashStart = new EventEmitter<void>();
 
   /**
-   * Emits when end sashing.
+   * Emits the absolute sash sizes (px) when finished sashing.
    */
   @Output()
-  public sashEnd = new EventEmitter<void>();
+  public sashEnd = new EventEmitter<number[]>();
 
   /** @internal */
   @ContentChildren(SciSashDirective)
@@ -146,7 +146,7 @@ export class SciSashboxComponent implements OnDestroy {
         sash.flexBasis = '0';
       }
     });
-    this.sashEnd.emit();
+    this.sashEnd.emit(absoluteSashSizes);
   }
 
   public onSash(splitter: HTMLElement, sashIndex: number, moveEvent: SplitterMoveEvent): void {
