@@ -265,4 +265,31 @@ describe('Arrays', () => {
       expect(array).toBe(array);
     });
   });
+
+  describe('Arrays.last', () => {
+
+    it('should return `undefined` for a `undefined` array', () => {
+      expect(Arrays.last(undefined)).toBeUndefined();
+    });
+
+    it('should return `undefined` for a `null` array', () => {
+      expect(Arrays.last(null)).toBeUndefined();
+    });
+
+    it('should return `undefined` for an empty array', () => {
+      expect(Arrays.last([])).toBeUndefined();
+    });
+
+    it('should return the last element', () => {
+      expect(Arrays.last(['a', 'b', 'c'])).toEqual('c');
+    });
+
+    it('should return the last element matching the predicate', () => {
+      expect(Arrays.last(['a', 'b', 'c'], item => item === 'a' || item === 'b')).toEqual('b');
+    });
+
+    it('should return `undefined` if no element matches the predicate', () => {
+      expect(Arrays.last(['a', 'b', 'c'], item => item === 'g')).toBeUndefined();
+    });
+  });
 });
