@@ -12,7 +12,7 @@ import { Arrays } from './arrays.util';
 
 describe('Arrays', () => {
 
-  describe('Arrays.equal', () => {
+  describe('Arrays.isEqual', () => {
 
     it('should be equal for same array references', () => {
       const array = ['a', 'b', 'c'];
@@ -67,7 +67,7 @@ describe('Arrays', () => {
     });
   });
 
-  describe('Arrays.removeByItem', () => {
+  describe('Arrays.remove (by item)', () => {
 
     it('should remove the specified element', () => {
       const array = ['a', 'b', 'c', 'd', 'e'];
@@ -79,6 +79,12 @@ describe('Arrays', () => {
       const array = ['a', 'b', 'c', 'd', 'e', 'c', 'g'];
       expect(Arrays.remove(array, 'c', {firstOnly: true})).toEqual(['c']);
       expect(array).toEqual(['a', 'b', 'd', 'e', 'c', 'g']);
+    });
+
+    it('should remove all occurrences of the specified element (default if not specifying options)', () => {
+      const array = ['a', 'b', 'c', 'd', 'e', 'c', 'g'];
+      expect(Arrays.remove(array, 'c')).toEqual(['c', 'c']);
+      expect(array).toEqual(['a', 'b', 'd', 'e', 'g']);
     });
 
     it('should remove all occurrences of the specified element', () => {
@@ -94,7 +100,7 @@ describe('Arrays', () => {
     });
   });
 
-  describe('Arrays.removeByPredicate', () => {
+  describe('Arrays.remove (by predicate)', () => {
     const a1 = {key: 'a', value: '1'};
     const b2 = {key: 'b', value: '2'};
     const c3 = {key: 'c', value: '3'};
@@ -113,6 +119,12 @@ describe('Arrays', () => {
       const array = [a1, b2, c3, d4, e5, c6, g7];
       expect(Arrays.remove(array, item => item.key === 'c', {firstOnly: true})).toEqual([c3]);
       expect(array).toEqual([a1, b2, d4, e5, c6, g7]);
+    });
+
+    it('should remove all occurrences of the specified element (default if not specifying options)', () => {
+      const array = [a1, b2, c3, d4, e5, c6, g7];
+      expect(Arrays.remove(array, item => item.key === 'c')).toEqual([c3, c6]);
+      expect(array).toEqual([a1, b2, d4, e5, g7]);
     });
 
     it('should remove all occurrences of the specified element', () => {
