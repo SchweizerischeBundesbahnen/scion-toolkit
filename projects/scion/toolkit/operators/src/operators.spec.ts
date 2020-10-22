@@ -8,15 +8,30 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { noop, Observable, Observer, TeardownLogic } from 'rxjs';
+import { noop, Observable, Observer, of, TeardownLogic } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { NgZone } from '@angular/core';
 import { finalize, tap } from 'rxjs/operators';
-import { observeInside, subscribeInside } from './operators';
+import { mapArray, observeInside, subscribeInside } from './operators';
+import { ObserveCaptor } from '@scion/toolkit/testing';
 
 describe('Operators', () => {
 
   beforeEach(() => TestBed.configureTestingModule({}));
+
+  describe('mapArray', async () => {
+
+    it('should map items of an array', async () => {
+      const observeCaptor = new ObserveCaptor();
+
+      of(['a', 'b', 'c'])
+        .pipe(mapArray(a => a.toUpperCase()))
+        .subscribe(observeCaptor);
+
+      await observeCaptor.waitUntilCompletedOrErrored();
+      await expect(observeCaptor.getLastValue()).toEqual(['A', 'B', 'C']);
+    });
+  });
 
   describe('observeInside', () => {
 
