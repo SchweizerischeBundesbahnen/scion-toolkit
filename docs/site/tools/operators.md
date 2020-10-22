@@ -31,12 +31,12 @@ npm install --save @scion/toolkit
 </details>
 
 <details>
-  <summary><strong>pluckArray</strong></summary>
+  <summary><strong>mapArray</strong></summary>
   
-  Maps each element in the source array to its extracted property using the passed extract function.
+  Maps each element in the source array to its mapped value.
    
   ```typescript
-  import { pluckArray } from '@scion/toolkit/operators';
+  import { mapArray } from '@scion/toolkit/operators';
 
   const persons = [
     {name: 'John', age: 42},
@@ -45,7 +45,7 @@ npm install --save @scion/toolkit
   ];
 
   of(persons)
-    .pipe(pluckArray(person => person.name))
+    .pipe(mapArray(person => person.name))
     .subscribe((names: string[]) => {
       console.log(names); // prints ['John', 'Anna', 'Jack']
     });
