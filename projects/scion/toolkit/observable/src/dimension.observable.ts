@@ -99,14 +99,14 @@ function createObjectResizeObservable$(target: HTMLElement, onDisposeFn: () => v
     objectElement.data = 'about:blank';
     objectElement.classList.add(FromDimension.SYNTH_ELEMENT_MARKER);
     setStyle(objectElement, {
-      display: 'block',
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
+      'display': 'block',
+      'position': 'absolute',
+      'top': 0,
+      'right': 0,
+      'bottom': 0,
+      'left': 0,
+      'width': '100%',
+      'height': '100%',
       'pointer-events': 'none',
     });
 
