@@ -5,7 +5,7 @@
 
 ## [SCION Toolkit][menu-home] > WebStorage
 
-The NPM sub-module `@scion/toolkit/storage`  allows the observation of values contained in local or session storage.
+The NPM sub-module `@scion/toolkit/storage` allows the observation of values contained in local or session storage.
 
 > Local Storage maintains a persistent storage area per origin. Data does not expire and remains after the browser restarts. Session Storage also provides a separate storage area per origin, which, however, is only available for the duration of the page session (as long as the browser is open, including page reloads and restores). Each browser tab has its separate page session.
 
