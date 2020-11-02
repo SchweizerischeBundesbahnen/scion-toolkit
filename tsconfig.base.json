@@ -52,6 +52,9 @@
     //      "@scion/toolkit/util": [
     //        "projects/scion/toolkit/util/src/public_api"
     //      ],
+    //      "@scion/toolkit/bean-manager": [
+    //        "projects/scion/toolkit/bean-manager/src/public_api"
+    //      ],
     //      "@scion/toolkit/uuid": [
     //        "projects/scion/toolkit/uuid/src/public_api"
     //      ],
