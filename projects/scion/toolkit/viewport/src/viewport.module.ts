@@ -14,7 +14,6 @@ import { SciViewportComponent } from './viewport.component';
 import { SciScrollbarComponent } from './scrollbar/scrollbar.component';
 import { SciScrollableDirective } from './scrollable.directive';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { SciDimensionModule } from '@scion/toolkit/dimension';
 
 /**
  * Provides a viewport component with scrollbars that sit on top of the viewport client.
@@ -23,7 +22,6 @@ import { SciDimensionModule } from '@scion/toolkit/dimension';
   imports: [
     CommonModule,
     ScrollingModule,
-    SciDimensionModule,
   ],
   declarations: [
     SciViewportComponent,
