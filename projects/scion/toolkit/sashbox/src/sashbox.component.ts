@@ -214,6 +214,12 @@ export class SciSashboxComponent implements OnDestroy {
     const sash2 = this.sashes[sashIndex + 1];
     const equalSashSize = (sash1.computedSize + sash2.computedSize) / 2;
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes);
+    const absoluteSashSizesAfterReset = this.sashes.map((sash, index) => {
+      if (index === sashIndex || index === sashIndex + 1) {
+        return equalSashSize;
+      }
+      return sash.computedSize;
+    });
 
     [sash1, sash2].forEach(sash => {
       if (sash.isFixedSize) {
@@ -225,7 +231,7 @@ export class SciSashboxComponent implements OnDestroy {
     });
 
     this.sashStart.emit();
-    this.sashEnd.emit();
+    this.sashEnd.emit(absoluteSashSizesAfterReset);
   }
 
   @HostBinding('class.column')
