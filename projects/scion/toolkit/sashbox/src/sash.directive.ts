@@ -38,7 +38,7 @@ import { map, switchMap } from 'rxjs/operators';
 })
 export class SciSashDirective implements OnInit, OnChanges {
 
-  private _size: string = '1'; // tslint:disable-line:no-inferrable-types
+  private _size: string | number = '1'; // tslint:disable-line:no-inferrable-types
   private _flexGrow$ = new BehaviorSubject<number>(0);
 
   /**
@@ -49,8 +49,8 @@ export class SciSashDirective implements OnInit, OnChanges {
    * If not set, remaining space is distributed equally.
    */
   @Input()
-  public set size(size: string) {
-    this._size = size || '1';
+  public set size(size: string | number) {
+    this._size = size ?? '1';
   }
 
   /**
@@ -137,12 +137,12 @@ export class SciSashDirective implements OnInit, OnChanges {
   /**
    * Computes and sets the flex item properties based on the modelled size.
    */
-  public setFlexItemProperties(): void {
+  private setFlexItemProperties(): void {
     if (this.isFixedSize) {
       // fixed-sized sash
       this.flexGrow = 0;
       this.flexShrink = 0;
-      this.flexBasis = this.size;
+      this.flexBasis = `${this.size}`;
     }
     else {
       // remaining space is distributed according to given proportion
@@ -157,7 +157,7 @@ export class SciSashDirective implements OnInit, OnChanges {
     }
   }
 
-  public get size(): string {
+  public get size(): string | number {
     return this._size;
   }
 
