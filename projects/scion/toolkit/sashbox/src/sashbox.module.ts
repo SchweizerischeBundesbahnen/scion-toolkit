@@ -13,7 +13,6 @@ import { CommonModule } from '@angular/common';
 import { SciSashboxComponent } from './sashbox.component';
 import { SciSashDirective } from './sash.directive';
 import { SciSplitterDirective } from './splitter.directive';
-import { SciDimensionModule } from '@scion/toolkit/dimension';
 import { SciSashInitializerDirective } from './sash-initializer.directive';
 
 /**
@@ -44,7 +43,6 @@ import { SciSashInitializerDirective } from './sash-initializer.directive';
   ],
   imports: [
     CommonModule,
-    SciDimensionModule,
   ],
   exports: [
     SciSashboxComponent,
