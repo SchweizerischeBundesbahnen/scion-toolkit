@@ -5,6 +5,29 @@
 
 ## Changelog
 
+# [10.0.0-beta.3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/10.0.0-beta.2...10.0.0-beta.3) (2020-11-05)
+
+
+### Bug Fixes
+
+* **toolkit/sashbox:** accept numeric values for sash proportions ([94100ba](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/94100bac33f042e55f83ae4706ab71d81762c537))
+* **toolkit/sashbox:** emit sash sizes when resetting the sash layout ([6063078](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/60630788a41b7dc148a4b2193b44abe58ae584f7))
+* **toolkit/sashbox:** remove dimension module from imported modules as not used ([76bb850](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/76bb850eac0f9d112dd53d2ff5228bd02c6f2373))
+* **toolkit/viewport:** remove dimension module from imported modules as not used ([eef3cf8](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/eef3cf8f0ba4bef4d73beec88d0588c9ab97c3c2))
+
+
+### Features
+
+* **toolkit/util:** add method to arrays util to get the last element in an array matching a predicate ([2346dc1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/2346dc1db9bcbf59f186e294718a1240753c8a5f))
+* **toolkit/operators:** allow running downstream and upstream operators inside a context ([5074075](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/507407592f91aab170f697e945b012ed50a0f189))
+* **toolkit/operators:** deprecate `pluckArray` RxJS operator in favor of the `mapArray` operator ([5c72584](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/5c72584ceb2426e84423e3253596428b251310a6))
+* **toolkit/sashbox:** emit sash sizes when finished sashing ([0d28543](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/0d2854345e28732023c836acb07f7ce0455888d0))
+* **toolkit/util:** make options object optional in `Arrays.remove` utility ([c87f5fd](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/c87f5fd52a8863020ff7f407602eeebfcf78a9ff))
+* **toolkit/storage:** observe changes to items in local and session storage using the WebStorage class ([f435426](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/f4354260a0173c31c3883544c7699504d840b8b7))
+* **toolkit/bean-manager:** provide bean manager to look up singleton objects ([bf76eca](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/bf76eca7c74e9e087159d31f0297ff939e2c8f40))
+
+
+
 # [10.0.0-beta.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/10.0.0-beta.1...10.0.0-beta.2) (2020-08-07)
 
 
