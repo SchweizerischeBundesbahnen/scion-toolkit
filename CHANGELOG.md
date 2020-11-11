@@ -1,3 +1,12 @@
+# [10.0.0-beta.4](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/10.0.0-beta.3...10.0.0-beta.4) (2020-11-11)
+
+
+### Bug Fixes
+
+* **toolkit/testing:** capture error in `ObserveCaptor` ([31d3efe](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/31d3efe7a70e8908d53ee4892dc4f6cafa46bbb5))
+
+
+
 # [10.0.0-beta.3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/10.0.0-beta.2...10.0.0-beta.3) (2020-11-05)
 
 
