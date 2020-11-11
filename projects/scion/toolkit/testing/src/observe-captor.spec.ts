@@ -1,109 +1,148 @@
-import { AsyncSubject, Observer, ReplaySubject, throwError } from 'rxjs';
-import { take, timeoutWith } from 'rxjs/operators';
-
-/**
- * Allows capturing emissions of an Observable.
+/*
+ * Copyright (C) Schweizerische Bundesbahnen SBB, 2020.
  */
-export class ObserveCaptor<T = any, R = T> implements Observer<T> {
 
-  private readonly _projectFn: (value: T) => R;
+import { Subject } from 'rxjs';
+import { ObserveCaptor } from './observe-captor';
 
-  private _values: R[] = [];
-  private _completed = false;
-  private _error: any;
+describe('ObserveCaptor', () => {
 
-  private _completeOrError$ = new AsyncSubject<void>();
-  private _emitCount$ = new ReplaySubject<void>();
+  it('should capture emissions', () => {
+    const subject$ = new Subject<string>();
 
-  /**
-   * Constructs this captor. Optionally, you can provide a project function to map emitted values.
-   */
-  constructor(projectFn?: (value: T) => R) {
-    this._projectFn = projectFn || ((value) => value as any);
-  }
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
 
-  /**
-   * @docs-private
-   */
-  public next(value: T): void {
-    this._values.push(this._projectFn(value));
-    this._emitCount$.next();
-  }
+    subject$.next('value 1');
+    subject$.next('value 2');
+    subject$.next('value 3');
 
-  /**
-   * @docs-private
-   */
-  public error(error: any): void {
-    this._error = error;
-    this._completeOrError$.complete();
-  }
+    expect(captor.getValues()).toEqual(['value 1', 'value 2', 'value 3']);
+    expect(captor.hasErrored()).toBe(false);
+    expect(captor.hasCompleted()).toBe(false);
+  });
 
-  /**
-   * @docs-private
-   */
-  public complete(): void {
-    this._completed = true;
-    this._completeOrError$.complete();
-  }
+  it('should capture the last emission', () => {
+    const subject$ = new Subject<string>();
 
-  /**
-   * Returns captured values in the order as emitted by the Observable.
-   */
-  public getValues(): R[] {
-    return this._values;
-  }
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
 
-  /**
-   * Returns the last captured value, if any.
-   */
-  public getLastValue(): R {
-    return this._values[this._values.length - 1];
-  }
+    subject$.next('value 1');
+    subject$.next('value 2');
+    subject$.next('value 3');
 
-  /**
-   * Returns the error if the Observable errored.
-   */
-  public getError(): any {
-    return this._error;
-  }
+    expect(captor.getLastValue()).toEqual('value 3');
+    expect(captor.hasErrored()).toBe(false);
+    expect(captor.hasCompleted()).toBe(false);
+  });
 
-  /**
-   * Indicates if the Observable completed. An Observable can either complete or error.
-   */
-  public hasCompleted(): boolean {
-    return this._completed;
-  }
+  it('should capture an error', () => {
+    const subject$ = new Subject<string>();
 
-  /**
-   * Indicates if the Observable errored. An Observable can either complete or error.
-   */
-  public hasErrored(): boolean {
-    return this._error !== undefined;
-  }
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
 
-  /**
-   * Resets captured values. The emit counter is not reset.
-   */
-  public resetValues(): void {
-    this._values = [];
-  }
+    const error = Error('error');
+    subject$.next('value 1');
+    subject$.next('value 2');
+    subject$.error(error);
 
-  /**
-   * Waits until the Observable emits the given number of items, or throws if the given timeout elapses.
-   */
-  public async waitUntilEmitCount(count: number, timeout: number = 5000): Promise<void> {
-    return this._emitCount$
-      .pipe(
-        take(count),
-        timeoutWith(new Date(Date.now() + timeout), throwError('[SpecTimeoutError] Timeout elapsed.')),
-      )
-      .toPromise();
-  }
+    expect(captor.getValues()).toEqual(['value 1', 'value 2']);
+    expect(captor.getLastValue()).toEqual('value 2');
+    expect(captor.getError()).toBe(error);
+    expect(captor.hasErrored()).toBe(true);
+    expect(captor.hasCompleted()).toBe(false);
+  });
 
-  /**
-   * Waits until the Observable completes or errors.
-   */
-  public async waitUntilCompletedOrErrored(): Promise<void> {
-    return this._completeOrError$.toPromise();
-  }
-}
+  it('should capture completion', () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+
+    subject$.next('value 1');
+    subject$.next('value 2');
+    subject$.complete();
+
+    expect(captor.getValues()).toEqual(['value 1', 'value 2']);
+    expect(captor.getLastValue()).toEqual('value 2');
+    expect(captor.hasErrored()).toBe(false);
+    expect(captor.hasCompleted()).toBe(true);
+  });
+
+  it('should wait until a given number of emissions', async () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+
+    setTimeout(() => {
+      subject$.next('value 1');
+      subject$.next('value 2');
+      subject$.next('value 3');
+      subject$.next('value 4');
+      subject$.next('value 5');
+      subject$.next('value 6');
+    }, 50);
+
+    await captor.waitUntilEmitCount(3);
+
+    expect(captor.getValues()).toEqual(jasmine.arrayContaining(['value 1', 'value 2', 'value 3']));
+    expect(captor.hasErrored()).toBe(false);
+    expect(captor.hasCompleted()).toBe(false);
+  });
+
+  it('should wait until completion', async () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+
+    setTimeout(() => {
+      subject$.next('value 1');
+      subject$.next('value 2');
+      subject$.next('value 3');
+      subject$.next('value 4');
+      subject$.next('value 5');
+      subject$.next('value 6');
+      subject$.complete();
+    }, 50);
+
+    await captor.waitUntilCompletedOrErrored();
+
+    expect(captor.getValues()).toEqual(['value 1', 'value 2', 'value 3', 'value 4', 'value 5', 'value 6']);
+    expect(captor.hasErrored()).toBe(false);
+    expect(captor.hasCompleted()).toBe(true);
+  });
+
+  it('should allow the projection of captured values', () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>(value => value.toUpperCase());
+    subject$.subscribe(captor);
+
+    subject$.next('value 1');
+    subject$.next('value 2');
+    subject$.next('value 3');
+
+    expect(captor.getValues()).toEqual(['VALUE 1', 'VALUE 2', 'VALUE 3']);
+  });
+
+  it('should allow to reset captured values', () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+
+    subject$.next('value 1');
+    subject$.next('value 2');
+    subject$.next('value 3');
+    captor.resetValues();
+    subject$.next('value 4');
+    subject$.next('value 5');
+    subject$.next('value 6');
+
+    expect(captor.getValues()).toEqual(['value 4', 'value 5', 'value 6']);
+  });
+});
