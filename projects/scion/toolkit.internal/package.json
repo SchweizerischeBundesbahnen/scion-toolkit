@@ -1,6 +1,6 @@
 {
   "name": "@scion/toolkit.internal",
-  "version": "11.0.0-beta.1",
+  "version": "11.0.0-beta.2",
   "description": "SCION Toolkit INTERNAL is a collection of UI components and utilities designed exclusively for use in SCION applications. DO NOT USE THIS MODULE IN YOUR PROJECT AS IT IS NOT GUARANTEED TO BE STABLE AND MAY CHANGE WITHOUT NOTICE.",
   "license": "EPL-2.0",
   "private": false,

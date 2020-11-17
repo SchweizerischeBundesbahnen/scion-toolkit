@@ -5,6 +5,15 @@
 
 ## Changelog
 
+# [11.0.0-beta.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.1...11.0.0-beta.2) (2020-11-17)
+
+
+### Bug Fixes
+
+* **toolkit:** restrict the toolkit to be compatible with Angular version 11 ([2e603df](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/2e603dffee5182b88fb45c5870d6bd6441e1cc07))
+
+
+
 # [11.0.0-beta.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/10.0.0-beta.4...11.0.0-beta.1) (2020-11-17)
 
 
