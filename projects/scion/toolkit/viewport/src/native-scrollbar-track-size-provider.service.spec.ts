@@ -9,12 +9,12 @@
  */
 
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
-import { async, ComponentFixture, fakeAsync, inject, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, inject, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { SciNativeScrollbarTrackSizeProvider } from './native-scrollbar-track-size-provider.service';
 
 describe('SciNativeScrollbarTrackSizeProvider', () => {
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [AppComponent],
       providers: [

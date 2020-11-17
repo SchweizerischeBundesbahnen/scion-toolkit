@@ -1,29 +1,80 @@
-/*
-  This is a "Solution Style" tsconfig.json file, and is used by editors and TypeScript’s language server to improve development experience.
-  It is not intended to be used to perform a compilation.
-
-  To learn more about this file see: https://angular.io/config/solution-tsconfig.
-*/
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./projects/scion/toolkit/tsconfig.lib.json"
-    },
-    {
-      "path": "./projects/scion/toolkit/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/scion/toolkit.e2e/tsconfig.json"
-    },
-    {
-      "path": "./projects/scion/toolkit.internal/tsconfig.lib.json"
-    },
-    {
-      "path": "./projects/scion/toolkit.internal/tsconfig.spec.json"
-    },
-    {
-      "path": "./apps/toolkit-testing-app/tsconfig.app.json"
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "sourceMap": true,
+    "declaration": false,
+    // to correctly transpile ES2015 collections to ES5; crucial to run on ES5
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "es2020",
+    "noUnusedLocals": true,
+    "lib": [
+      "es2018",
+      "dom"
+    ],
+    "paths": {
+      "@scion/toolkit/*": [
+        "dist/scion/toolkit/*"
+      ],
+      "@scion/toolkit.internal/*": [
+        "dist/scion/toolkit.internal/*"
+      ]
     }
-  ]
+    /*
+     * ======================================+
+     * |    PATH-OVERRIDE-FOR-DEVELOPMENT    |
+     * |                                     |
+     * |   DO NOT ACTIVATE FOR PRODUCTION!   |
+     * +=====================================+
+     */
+    //    "paths": {
+    //      "@scion/toolkit/dimension": [
+    //        "projects/scion/toolkit/dimension/src/public_api"
+    //      ],
+    //      "@scion/toolkit/viewport": [
+    //        "projects/scion/toolkit/viewport/src/public_api"
+    //      ],
+    //      "@scion/toolkit/sashbox": [
+    //        "projects/scion/toolkit/sashbox/src/public_api"
+    //      ],
+    //      "@scion/toolkit/observable": [
+    //        "projects/scion/toolkit/observable/src/public_api"
+    //      ],
+    //      "@scion/toolkit/operators": [
+    //        "projects/scion/toolkit/operators/src/public_api"
+    //      ],
+    //      "@scion/toolkit/util": [
+    //        "projects/scion/toolkit/util/src/public_api"
+    //      ],
+    //      "@scion/toolkit/bean-manager": [
+    //        "projects/scion/toolkit/bean-manager/src/public_api"
+    //      ],
+    //      "@scion/toolkit/uuid": [
+    //        "projects/scion/toolkit/uuid/src/public_api"
+    //      ],
+    //      "@scion/toolkit/testing": [
+    //        "projects/scion/toolkit/testing/src/public_api"
+    //      ],
+    //      "@scion/toolkit.internal/widgets": [
+    //        "projects/scion/toolkit.internal/widgets/src/public_api"
+    //      ],
+    //      "@scion/toolkit.internal/widgets.po": [
+    //        "projects/scion/toolkit.internal/widgets.po/src/public_api"
+    //      ]
+    //    }
+  },
+  "angularCompilerOptions": {
+    "fullTemplateTypeCheck": true,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
 }

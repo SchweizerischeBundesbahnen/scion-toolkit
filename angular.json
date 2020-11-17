@@ -10,7 +10,7 @@
       "prefix": "sci",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
+          "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
             "tsConfig": "projects/scion/toolkit/tsconfig.lib.json",
             "project": "projects/scion/toolkit/ng-package.json"
@@ -78,7 +78,7 @@
       "prefix": "sci",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
+          "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
             "tsConfig": "projects/scion/toolkit.internal/tsconfig.lib.json",
             "project": "projects/scion/toolkit.internal/ng-package.json"
@@ -155,7 +155,6 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "extractCss": true,
               "namedChunks": false,
               "extractLicenses": true,
               "vendorChunk": false,
