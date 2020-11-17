@@ -5,6 +5,25 @@
 
 ## Changelog
 
+# [11.0.0-beta.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/10.0.0-beta.4...11.0.0-beta.1) (2020-11-17)
+
+
+### chore
+
+* **toolkit:** update @scion/toolkit to Angular 11 ([abfb0e9](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/abfb0e96a25bb765bc1ae6f4f9cf270e8edf3bf0)), closes [#26](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/26)
+
+
+### BREAKING CHANGES
+
+* **toolkit:** Added support for Angular 11.
+
+    To migrate:
+    If using Angular agnostic tools, migrate your app to Angular 11 as following:
+    - Run `ng update @angular/cli @angular/core @angular/cdk`.
+    - Refer to the Angular Update Guide for detailed instructions on how to update Angular: https://update.angular.io
+
+
+
 # [10.0.0-beta.4](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/10.0.0-beta.3...10.0.0-beta.4) (2020-11-11)
 
 
