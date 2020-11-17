@@ -40,7 +40,7 @@
 
     "github-actions:tag-release-commit:build": "ncc build .github/actions/tag-release-commit/index.ts -o .github/actions/tag-release-commit/dist",
     "github-actions:npm-publish:build": "ncc build .github/actions/npm-publish/index.ts -o .github/actions/npm-publish/dist",
-    "github-actions:vercel-deploy:build": "ncc build .github/actions/npm-publish/index.ts -o .github/actions/npm-publish/dist",
+    "github-actions:vercel-deploy:build": "ncc build .github/actions/vercel-deploy/index.ts -o .github/actions/vercel-deploy/dist",
     "github-actions:equality-checker:build": "ncc build .github/actions/equality-checker/index.ts -o .github/actions/equality-checker/dist",
     "github-actions:package-json:build": "ncc build .github/actions/package-json/index.ts -o .github/actions/package-json/dist"
   },
@@ -60,7 +60,7 @@
     "zone.js": "0.10.3"
   },
   "devDependencies": {
-    "@actions/core": "1.2.4",
+    "@actions/core": "1.2.6",
     "@actions/exec": "1.0.4",
     "@actions/github": "4.0.0",
     "@angular-devkit/build-angular": "0.1000.3",
