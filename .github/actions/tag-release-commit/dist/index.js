@@ -10085,29 +10085,31 @@ const { exec } = __webpack_require__(1514);
 (() => __awaiter(this, void 0, void 0, function* () {
     try {
         const { head_commit: { message } } = github.context.payload;
-        const pattern = core.getInput('release-commit-message-pattern');
-        const patternMatch = message.match(new RegExp(`^${pattern}$`, 'm'));
-        const isReleaseCommit = patternMatch != null;
+        const releaseCommitMessagePattern = core.getInput('release-commit-message-pattern');
+        const releaseCommitMessagePatternMatch = message.match(new RegExp(`^${releaseCommitMessagePattern}$`, 'm'));
+        const isReleaseCommit = releaseCommitMessagePatternMatch != null;
         if (!isReleaseCommit) {
             core.setOutput('is-release-commit', false);
             core.info(`Skip release tag. The commit message does not match the release commit pattern: '${message}'`);
             return;
         }
-        const releaseVersion = patternMatch[1];
+        const releaseVersion = releaseCommitMessagePatternMatch[1];
         const expectedVersion = core.getInput('expected-version', { required: false });
         if (expectedVersion && expectedVersion !== releaseVersion) {
             core.setFailed(`Version mismatch. Expected version in commit message to be '${expectedVersion}', but was '${releaseVersion}'.`);
             return;
         }
-        core.info(`The commit message maches the release commit pattern. Pushing release tag: ${releaseVersion}.`);
+        const gitTag = core.getInput('git-tag') ? core.getInput('git-tag').replace(new RegExp('%v', 'g'), releaseVersion) : releaseVersion;
+        core.info(`The commit message maches the release commit pattern. Pushing release tag: ${gitTag}.`);
         // Delete the release tag, if present.
-        yield exec('git', ['push', 'origin', `:refs/tags/${releaseVersion}`]);
+        yield exec('git', ['push', 'origin', `:refs/tags/${gitTag}`]);
         // Add the release tag.
-        yield exec('git', ['tag', releaseVersion]);
+        yield exec('git', ['tag', gitTag]);
         // Push the release tag.
-        yield exec('git', ['push', 'origin', 'tag', releaseVersion]);
+        yield exec('git', ['push', 'origin', 'tag', gitTag]);
         core.setOutput('is-release-commit', true);
         core.setOutput('version', releaseVersion);
+        core.setOutput('tag', gitTag);
     }
     catch (error) {
         core.setFailed(error.message);

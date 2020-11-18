@@ -20,6 +20,9 @@ If using the pattern `release: v(.*)`, this action identifies a commit with the 
 
 Allows specifying the version expected for the release commit. If the specified version and the version of the release commit do not match, then this action sets its status to failed, resulting in concurrent actions being cancelled and future actions being skipped. Has no effect if not a release commit.
 
+### `git-tag`
+
+Name of the Git tag to add to the release commit. You can reference the release version using the placeholder `%v`. If not set, uses the version as tag name.
 
 ## Outputs
 
@@ -30,6 +33,10 @@ True if identified the head commit as release commit, or false otherwise.
 ### `version`
 
 The release version, or empty if not identified the head commit as release commit.
+
+### `tag`
+
+The release tag, or empty if not identified the head commit as release commit.
 
 
 ## Example usage
