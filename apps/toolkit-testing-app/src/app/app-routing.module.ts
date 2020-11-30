@@ -12,6 +12,11 @@ import { RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
   {
+    path: 'sci-viewport',
+    loadChildren: (): any => import('./sci-viewport-page/sci-viewport-page.module').then(m => m.SciViewportPageModule),
+    data: {internal: false},
+  },
+  {
     path: 'sci-sashbox',
     loadChildren: (): any => import('./sci-sashbox-page/sci-sashbox-page.module').then(m => m.SciSashboxPageModule),
     data: {internal: false},

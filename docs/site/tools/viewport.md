@@ -9,6 +9,10 @@ The NPM sub-module `@scion/toolkit/viewport` provides an Angular viewport compon
 
 By default, the `<ng-content>` is added to a CSS grid container with a single column, thus, content fills remaining space vertically and horizontally. See section *Layout* for more information.
 
+***
+Click [here](https://scion-toolkit-testing-app.now.sh/#/sci-viewport) for a demo of the viewport component in our internal test application.
+***
+
 <!--- USAGE --->
 <details>
   <summary><strong>Usage</strong></summary>
@@ -106,26 +110,26 @@ By default, the `<ng-content>` is added to a CSS grid container with a single co
 
 You can override the following CSS variables to control the grid:
 
-- `--grid-template-columns`\
+- `--sci-viewport-content-grid-template-columns`\
   Defines the columns and their track sizes (by default, single column with track size `auto`)
 
-- `--grid-template-rows`\
+- `--sci-viewport-content-grid-template-rows`\
   Defines the rows and their track sizes (by default, single row with track size `auto`)
 
-- `--grid-auto-columns`\
-  Defines the track size for not explicitly sized columns.
+- `--sci-viewport-content-grid-auto-columns`\
+  Defines the track size of not explicitly declared columns.
 
-- `--grid-auto-rows`\
-  Defines the track size for not explicitly sized rows.
+- `--sci-viewport-content-grid-auto-rows`\
+  Defines the track size of not explicitly declared rows.
 
-- `--gap`\
+- `--sci-viewport-content-grid-gap`\
   Sets the gaps (gutters) between rows and columns. 
 
 Example of how to control the CSS grid:
 ```css 
 sci-viewport {
---grid-auto-rows: min-content;
---gap: .5em;
+  --sci-viewport-content-grid-auto-rows: min-content;
+  --sci-viewport-content-grid-gap: .5em;
 }
 ```
 
@@ -133,7 +137,24 @@ sci-viewport {
 
 <!--- SCROLLBAR --->
 <details>
-  <summary><strong>Using the scrollbar in other viewports</strong></summary>
+  <summary><strong>Scrollbar styling</strong></summary>
+
+You can override the following CSS variables to control the appearance of the scrollbar:
+
+- `--sci-viewport-scrollbar-color`\
+  Sets the color of the scrollbar (by default, uses `rgb(78, 78, 78)`). 
+
+Example of how to set CSS variables:
+```css 
+sci-viewport {
+  --sci-viewport-scrollbar-color: blue;
+}
+```
+
+</details>
+
+<details>
+  <summary><strong>Using the SCION scrollbar in other viewport implementations</strong></summary>
 
 The module `@scion/toolkit/viewport` exports the scrollbar component `<sci-scrollbar>` used internally by `<sci-viewport>`, allowing you to use it with other viewports as well, like for example with the `<cdk-virtual-scroll-viewport>` component of Angular CDK.
 

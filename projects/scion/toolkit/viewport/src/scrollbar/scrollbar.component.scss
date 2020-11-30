@@ -1,18 +1,14 @@
 $thumb-base-height: 20px;
 $thumb-default-size: 60%;
 $thumb-hover-size: 100%;
-$thumb-color: rgb(78, 78, 78);
-
-@function thumbColor($opacity: 1) {
-  @return rgba(red($thumb-color), green($thumb-color), blue($thumb-color), $opacity);
-}
 
 :host {
   display: flex;
   border: 2px solid transparent;
   box-sizing: border-box;
-  --thumbPositionFr: 0;
-  --thumbSizeFr: 0;
+  --sci-scrollbar-color: rgb(78, 78, 78);
+  --ɵsci-scrollbar-thumb-position-fr: 0;
+  --ɵsci-scrollbar-thumb-size-fr: 0;
 
   &.vertical {
     flex-direction: column;
@@ -23,13 +19,13 @@ $thumb-color: rgb(78, 78, 78);
   }
 
   > div.scrolltrack-start {
-    flex-grow: var(--thumbPositionFr)
+    flex-grow: var(--ɵsci-scrollbar-thumb-position-fr)
   }
 
   > div.thumb-handle {
     flex-basis: $thumb-base-height;
     display: flex;
-    flex-grow: var(--thumbSizeFr);
+    flex-grow: var(--ɵsci-scrollbar-thumb-size-fr);
     align-items: center;
 
     &.vertical {
@@ -43,7 +39,8 @@ $thumb-color: rgb(78, 78, 78);
     > div.thumb {
       flex: auto;
       border-radius: 4px;
-      background-color: thumbColor(.4);
+      background-color: var(--sci-scrollbar-color);
+      opacity: .4;
       transition-duration: 125ms;
       transition-property: width, height;
       transition-timing-function: ease-out;
@@ -59,7 +56,7 @@ $thumb-color: rgb(78, 78, 78);
   }
 
   > div.scrolltrack-end {
-    flex-grow: calc(1 - (var(--thumbPositionFr) + var(--thumbSizeFr)));
+    flex-grow: calc(1 - (var(--ɵsci-scrollbar-thumb-position-fr) + var(--ɵsci-scrollbar-thumb-size-fr)));
   }
 }
 
@@ -71,7 +68,8 @@ $thumb-color: rgb(78, 78, 78);
 // enlarge the thumb on hover or while scrolling (e.g. when dragging the thumb outside of the scrolltrack)
 :host-context:hover, :host-context(.scrolling) {
   > div.thumb-handle > div.thumb {
-    background-color: thumbColor(.75);
+    background-color: var(--sci-scrollbar-color);
+    opacity: .75;
 
     &.vertical {
       width: $thumb-hover-size;

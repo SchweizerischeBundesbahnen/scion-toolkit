@@ -31,19 +31,35 @@ import { coerceElement } from '@angular/cdk/coercion';
  *
  * ## Layout:
  * By default, the <ng-content> is added to a CSS grid container with a single column, thus, content fills remaining space vertically and horizontally.
+ *
  * You can override the following CSS variables to control the grid:
- *  --grid-template-columns:  Defines the columns and their track sizes (by default, single column with track size auto)
- *  --grid-template-rows:     Defines the rows and their track sizes (by default, single row with track size auto)
- *  --grid-auto-columns:      Defines the track size for not explicitly sized columns.
- *  --grid-auto-rows:         Defines the track size for not explicitly sized rows.
- *  --gap:                    Sets the gaps (gutters) between rows and columns.
+ *
+ * - sci-viewport-content-grid-template-columns:   Defines the columns and their track sizes (by default, single column with track size auto)
+ * - sci-viewport-content-grid-template-rows:      Defines the rows and their track sizes (by default, single row with track size auto)
+ * - sci-viewport-content-grid-auto-columns:       Defines the track size of not explicitly declared columns.
+ * - sci-viewport-content-grid-auto-rows:          Defines the track size of not explicitly declared rows.
+ * - sci-viewport-content-grid-gap:                Sets the gaps (gutters) between rows and columns.
  *
  * Example of how to control the CSS grid:
  *
+ * ```css
  * sci-viewport {
- *   --grid-auto-rows: min-content;
- *   --gap: .5em; // specifies the row and column gap
+ *   --sci-viewport-content-grid-auto-rows: min-content;
+ *   --sci-viewport-content-grid-gap: .5em; // specifies the row and column gap
  * }
+ * ```
+ *
+ * ## Scrollbar Styling:
+ *
+ * You can override the following CSS variables to control the appearance of the scrollbar:
+ *
+ * - sci-viewport-scrollbar-color:     Sets the color of the scrollbar (by default, uses `rgb(78, 78, 78)`).
+ *
+ * ```css
+ * sci-viewport {
+ *   --sci-viewport-scrollbar-color: blue;
+ * }
+ * ```
  */
 @Component({
   selector: 'sci-viewport',
@@ -54,6 +70,7 @@ export class SciViewportComponent {
 
   private _viewport: HTMLDivElement;
   private _viewportClient: HTMLDivElement;
+  private _scrollbarStyle: ScrollbarStyle = 'on-top';
 
   @HostBinding('attr.tabindex')
   public tabindex = -1; // make the viewport programmatically focusable but do not include it in the tab order
@@ -75,7 +92,9 @@ export class SciViewportComponent {
    * In the latter, the viewport client remains natively scrollable.
    */
   @Input()
-  public scrollbarStyle: 'native' | 'on-top' | 'hidden' = 'on-top';
+  public set scrollbarStyle(scrollbarStyle: ScrollbarStyle) {
+    this._scrollbarStyle = scrollbarStyle || 'on-top';
+  }
 
   /**
    * Emits upon a scroll event.
@@ -220,6 +239,10 @@ export class SciViewportComponent {
 
     return offset;
   }
+
+  public get scrollbarStyle(): ScrollbarStyle {
+    return this._scrollbarStyle;
+  }
 }
 
 /**
@@ -234,3 +257,8 @@ function isChildOf(element: Element, parent: Element): boolean {
   }
   return false;
 }
+
+/**
+ * Represents a scrollbar style.
+ */
+export type ScrollbarStyle = 'native' | 'on-top' | 'hidden';
