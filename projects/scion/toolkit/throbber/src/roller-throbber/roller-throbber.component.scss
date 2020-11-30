@@ -1,0 +1,41 @@
+$point-size: .1em;
+$point-count: 8;
+$point-angle: 15;
+
+:host {
+  display: inline-flex;
+  justify-content: center;
+  position: relative; // positioning context for points
+  font-size: var(--sci-throbber-size);
+  width: 1em;
+  height: 1em;
+  box-sizing: border-box;
+
+  > div.point {
+    flex: none;
+    position: absolute;
+    transform-origin: ($point-size / 2) .5em;
+    width: $point-size;
+    height: $point-size;
+    border-radius: 50%;
+    background-color: var(--sci-throbber-color);
+
+    @for $i from 1 through $point-count {
+      $angle: ($i - $point-count)*$point-angle;
+
+      &:nth-child(#{$i}) {
+        animation: sci-roller-throbber-#{$i} var(--sci-throbber-duration) cubic-bezier(.5, 0, .5, 1) infinite;
+        animation-delay: calc(var(--sci-throbber-duration) * #{-$i/50});
+      }
+
+      @keyframes sci-roller-throbber-#{$i} {
+        0% {
+          transform: rotate(#{$angle}deg);
+        }
+        100% {
+          transform: rotate(#{$angle + 360}deg);
+        }
+      }
+    }
+  }
+}

@@ -12,44 +12,59 @@ import { RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
   {
-    path: 'sci-sash-box',
+    path: 'sci-sashbox',
     loadChildren: (): any => import('./sci-sashbox-page/sci-sashbox-page.module').then(m => m.SciSashboxPageModule),
+    data: {internal: false},
   },
   {
     path: 'sci-form-field',
     loadChildren: (): any => import('./sci-form-field-page/sci-form-field-page.module').then(m => m.SciFormFieldPageModule),
+    data: {internal: true},
   },
   {
     path: 'sci-list',
     loadChildren: (): any => import('./sci-list-page/sci-list-page.module').then(m => m.SciListPageModule),
+    data: {internal: true},
   },
   {
     path: 'sci-accordion',
     loadChildren: (): any => import('./sci-accordion-page/sci-accordion-page.module').then(m => m.SciAccordionPageModule),
+    data: {internal: true},
   },
   {
-    path: 'sci-qualifier-chip-list-page',
+    path: 'sci-qualifier-chip-list',
     loadChildren: (): any => import('./sci-qualifier-chip-list-page/sci-qualifier-chip-list-page.module').then(m => m.SciQualifierChipListPageModule),
+    data: {internal: true},
   },
   {
-    path: 'sci-property-page',
+    path: 'sci-property',
     loadChildren: (): any => import('./sci-property-page/sci-property-page.module').then(m => m.SciPropertyPageModule),
+    data: {internal: true},
   },
   {
-    path: 'sci-params-enter-page',
+    path: 'sci-params-enter',
     loadChildren: (): any => import('./sci-params-enter-page/sci-params-enter-page.module').then(m => m.SciParamsEnterPageModule),
+    data: {internal: true},
   },
   {
-    path: 'sci-filter-field-page',
+    path: 'sci-filter-field',
     loadChildren: (): any => import('./sci-filter-field-page/sci-filter-field-page.module').then(m => m.SciFilterFieldPageModule),
+    data: {internal: true},
   },
   {
-    path: 'sci-checkbox-page',
+    path: 'sci-checkbox',
     loadChildren: (): any => import('./sci-checkbox-page/sci-checkbox-page.module').then(m => m.SciCheckboxPageModule),
+    data: {internal: true},
   },
   {
-    path: 'sci-tabbar-page',
+    path: 'sci-tabbar',
     loadChildren: (): any => import('./sci-tabbar-page/sci-tabbar-page.module').then(m => m.SciTabbarPageModule),
+    data: {internal: true},
+  },
+  {
+    path: 'sci-throbber',
+    loadChildren: (): any => import('./sci-throbber-page/sci-throbber-page.module').then(m => m.SciThrobberPageModule),
+    data: {internal: false},
   },
 ];
 

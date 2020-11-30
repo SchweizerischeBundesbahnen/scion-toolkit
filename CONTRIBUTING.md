@@ -159,8 +159,9 @@ Each commit message consists of a **header**, a **summary** and a **footer**.  T
 The scope should be the name of the NPM package affected by the change. Optionally, you can also add the secondary entry point, separated by a forward slash.
   
 - `toolkit`: If the change affects the `@scion/toolkit` NPM package.
-- `toolkit/viewport`: If the change affects the `@scion/toolkit/viewport` entry point.
+- `toolkit/<name>`: If the change affects the `@scion/toolkit/<name>` entry point.
 - `ɵtoolkit`: If the change affects the `@scion/toolkit.internal` NPM package. We use the Theta (`ɵ`) symbol to have a shorter scope name.
+- `ɵtoolkit/<name>`: If the change affects the `@scion/toolkit.internal/<name>` entry point.
 </details>
 
 

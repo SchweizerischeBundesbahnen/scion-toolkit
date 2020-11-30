@@ -8,7 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { sortArray } from '@scion/toolkit/operators';
 
 @Component({
   selector: 'app-root',
@@ -17,16 +21,28 @@ import { Router } from '@angular/router';
 })
 export class AppComponent {
 
-  public links: ComponentLink[];
+  public tools$: Observable<Tool[]>;
 
-  constructor(router: Router) {
-    this.links = router.config.reduce((links, route) => {
-      return links.concat({path: `/${route.path}`, label: route.path});
-    }, []);
+  constructor(router: Router, activatedRoute: ActivatedRoute) {
+    this.tools$ = activatedRoute.queryParamMap
+      .pipe(
+        map(params => coerceBooleanProperty(params.get('internal'))),
+        map(includeInternalTools => router.config
+          .filter(route => includeInternalTools || !route.data['internal'])
+          .reduce((tools, route) => {
+            return tools.concat({
+              routerPath: `/${route.path}`,
+              name: route.path,
+              internal: route.data['internal'],
+            });
+          }, [] as Tool[])),
+        sortArray((tool1, tool2) => Number(tool1.internal) - Number(tool2.internal)),
+      );
   }
 }
 
-export interface ComponentLink {
-  path: string;
-  label: string;
+export interface Tool {
+  routerPath: string;
+  name: string;
+  internal: boolean;
 }

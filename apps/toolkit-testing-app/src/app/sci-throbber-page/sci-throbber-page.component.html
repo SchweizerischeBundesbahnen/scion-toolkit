@@ -1,0 +1,35 @@
+<h1>sci-throbber</h1>
+
+<form [formGroup]="form">
+  <section class="settings">
+    <header>Settings</header>
+
+    <sci-form-field label="Type" direction="column">
+      <select [formControlName]="TYPE">
+        <option *ngFor="let type of types" [value]="type">{{type}}</option>
+      </select>
+    </sci-form-field>
+  </section>
+
+  <section class="styling">
+    <header>CSS Variables</header>
+
+    <sci-form-field label="--sci-throbber-color" direction="column">
+      <input [formControlName]="COLOR">
+    </sci-form-field>
+
+    <sci-form-field label="--sci-throbber-size" direction="column">
+      <input [formControlName]="SIZE">
+    </sci-form-field>
+
+    <sci-form-field label="--sci-throbber-duration" direction="column">
+      <input [formControlName]="DURATION">
+    </sci-form-field>
+  </section>
+</form>
+
+<sci-throbber [type]="form.get(TYPE).value"
+              [style.--sci-throbber-color]="form.get(COLOR).value"
+              [style.--sci-throbber-size]="form.get(SIZE).value"
+              [style.--sci-throbber-duration]="form.get(DURATION).value">
+</sci-throbber>
