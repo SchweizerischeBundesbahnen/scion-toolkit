@@ -1,5 +1,10 @@
 <nav>
-  <a *ngFor="let link of links" [routerLink]="link.path">{{link.label}}</a>
+  <a *ngFor="let tool of tools$ | async"
+     [routerLink]="tool.routerPath"
+     [queryParamsHandling]="'merge'"
+     [class.internal]="tool.internal">
+    {{tool.name}}
+  </a>
 </nav>
 
 <main>

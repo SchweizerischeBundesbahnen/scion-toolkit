@@ -1,0 +1,7 @@
+<ng-container [ngSwitch]="type">
+  <sci-ellipsis-throbber *ngSwitchCase="'ellipsis'"></sci-ellipsis-throbber>
+  <sci-ripple-throbber *ngSwitchCase="'ripple'"></sci-ripple-throbber>
+  <sci-roller-throbber *ngSwitchCase="'roller'"></sci-roller-throbber>
+  <sci-spinner-throbber *ngSwitchCase="'spinner'"></sci-spinner-throbber>
+  <sci-spinner-throbber *ngSwitchDefault></sci-spinner-throbber>
+</ng-container>

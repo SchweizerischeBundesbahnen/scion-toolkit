@@ -1,0 +1,44 @@
+$stroke-height: .25em;
+$stroke-width: .075em;
+$stroke-count: 12;
+$stroke-angle: 360 / $stroke-count;
+
+:host {
+  display: inline-flex;
+  justify-content: center;
+  position: relative; // positioning context for strokes
+  font-size: var(--sci-throbber-size);
+  width: 1em;
+  height: 1em;
+  box-sizing: border-box;
+
+  > div.stroke {
+    flex: none;
+    position: absolute;
+    transform-origin: ($stroke-width / 2) .5em;
+    width: $stroke-width;
+    height: $stroke-height;
+    opacity: 0;
+    border-radius: 20%;
+    background-color: var(--sci-throbber-color);
+    animation: sci-spinner-throbber var(--sci-throbber-duration) linear infinite;
+
+    @for $i from 1 through $stroke-count {
+      $angle: ($i - 1) * $stroke-angle;
+
+      &:nth-child(#{$i}) {
+        transform: rotate(#{$angle}deg);
+        animation-delay: calc(var(--sci-throbber-duration) * #{$i / $stroke-count});
+      }
+    }
+  }
+
+  @keyframes sci-spinner-throbber {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}

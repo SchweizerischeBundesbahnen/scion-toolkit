@@ -20,6 +20,11 @@
       &:not(:last-child)::after {
         content: '|';
         padding: 0 .5em;
+        color: var(--sci-color-A50);
+      }
+
+      &.internal {
+        color: var(--sci-color-W400);
       }
     }
   }
