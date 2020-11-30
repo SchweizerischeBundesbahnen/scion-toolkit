@@ -1,11 +1,12 @@
 @import 'theme/scrollbar';
 
 :host {
-  --grid-template-columns: auto; // single column
-  --grid-template-rows: unset; // unset because 'grid-auto-rows' is set
-  --grid-auto-rows: auto;
-  --grid-auto-columns: unset;
-  --gap: 0 0;
+  --sci-viewport-content-grid-template-columns: auto; // single column
+  --sci-viewport-content-grid-template-rows: unset; // unset because 'grid-auto-rows' is set
+  --sci-viewport-content-grid-auto-columns: unset;
+  --sci-viewport-content-grid-auto-rows: auto;
+  --sci-viewport-content-grid-gap: 0 0;
+  --sci-viewport-scrollbar-color: rgb(78, 78, 78);
 
   display: block;
   position: relative; // positioned anchor for viewport and scrollbars
@@ -23,15 +24,16 @@
 
     > div.viewport-client {
       display: grid; // part of API
-      grid-template-columns: var(--grid-template-columns); // part of API
-      grid-template-rows: var(--grid-template-rows); // part of API
-      grid-auto-rows: var(--grid-auto-rows); // part of API
-      grid-auto-columns: var(--grid-auto-columns); // part of API
-      gap: var(--gap); // part of API
+      grid-template-columns: var(--sci-viewport-content-grid-template-columns); // part of API
+      grid-template-rows: var(--sci-viewport-content-grid-template-rows); // part of API
+      grid-auto-rows: var(--sci-viewport-content-grid-auto-rows); // part of API
+      grid-auto-columns: var(--sci-viewport-content-grid-auto-columns); // part of API
+      gap: var(--sci-viewport-content-grid-gap); // part of API
     }
   }
 
   > sci-scrollbar {
+    --sci-scrollbar-color: var(--sci-viewport-scrollbar-color);
     @include scrollbar();
   }
 }

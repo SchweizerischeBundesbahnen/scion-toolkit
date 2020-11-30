@@ -21,6 +21,21 @@ import { FromDimension, fromDimension$, fromMutation$ } from '@scion/toolkit/obs
  * - allows to move the thumb by mouse or touch
  * - enlarges the thumb if the mouse pointer is near the thumb
  * - allows paging on mousedown on the scroll track
+ *
+ * ### CSS styling:
+ *
+ * You can override the following CSS variables:
+ *
+ * - sci-scrollbar-color:    Sets the color of the scrollbar (by default, uses `rgb(78, 78, 78)`).
+ *
+ * Example:
+ *
+ * ```css
+ *
+ * sci-scrollbar {
+ *   --sci-scrollbar-color: blue;
+ * }
+ * ```
  */
 @Component({
   selector: 'sci-scrollbar',
@@ -252,8 +267,8 @@ export class SciScrollbarComponent implements OnDestroy {
         this._host.nativeElement.classList.remove('overflow');
       }
 
-      this.setCssVariable('--thumbPositionFr', this._thumbPositionFr);
-      this.setCssVariable('--thumbSizeFr', this._thumbSizeFr);
+      this.setCssVariable('--ɵsci-scrollbar-thumb-position-fr', this._thumbPositionFr);
+      this.setCssVariable('--ɵsci-scrollbar-thumb-size-fr', this._thumbSizeFr);
     }
   }
 
