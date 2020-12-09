@@ -1,3 +1,27 @@
+# [11.0.0-beta.3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.2...11.0.0-beta.3) (2020-12-09)
+
+
+### Features
+
+* **ɵtoolkit/filter-field:** allow setting a placeholder text if empty ([0e4d4cf](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/0e4d4cfe0f0aca48ad1f0f967f9b87eb9bf7693a))
+* **toolkit/sashbox:** prevent the splitter from overlapping overlays ([6903256](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/69032562f31d4d1ef4d18ac1ed53234dd3adfdef))
+* **toolkit/throbber:** provide a throbber to indicate execution of an action ([eca1da9](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/eca1da93b54bcfefd4df808b8cc100155c25f0c9))
+* **toolkit/viewport:** allow styling scrollbar and prefix CSS variable names to lay out viewport content ([f91dc1f](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/f91dc1f13a0510bfacd122dff7b58c02e5352af7))
+
+
+### BREAKING CHANGES
+
+* **toolkit/viewport:** Renamed CSS variables to lay out viewport content.
+    
+    To migrate: If customizing the default layout of viewport content, replace the following CSS variables:
+    - `--grid-template-columns` -> `--sci-viewport-content-grid-template-columns`
+    - `--grid-template-rows` -> `--sci-viewport-content-grid-template-rows`
+    - `--grid-auto-columns` -> `--sci-viewport-content-grid-auto-columns`
+    - `--grid-auto-rows` -> `--sci-viewport-content-grid-auto-rows`
+    - `--gap` -> `--sci-viewport-content-grid-gap`
+
+
+
 # [11.0.0-beta.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.1...11.0.0-beta.2) (2020-11-17)
 
 
