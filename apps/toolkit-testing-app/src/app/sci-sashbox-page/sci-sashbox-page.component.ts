@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { SciSashboxComponent } from '@scion/toolkit/sashbox';
 
@@ -38,6 +38,8 @@ export class SciSashboxPageComponent implements OnInit {
     {visible: true, size: '250px', minSize: 75},
   ];
 
+  public glasspaneVisible = false;
+
   @ViewChild(SciSashboxComponent, {static: true, read: ElementRef})
   public sashBoxComponent: ElementRef<HTMLElement>;
 
@@ -47,6 +49,11 @@ export class SciSashboxPageComponent implements OnInit {
       const defaultValue = getComputedStyle(this.sashBoxComponent.nativeElement).getPropertyValue(key);
       formControl.setValue(defaultValue);
     });
+  }
+
+  @HostListener('keydown.escape')
+  public onGlasspaneToggle(): void {
+    this.glasspaneVisible = !this.glasspaneVisible;
   }
 }
 

@@ -1,5 +1,4 @@
 @mixin panel {
-  margin-top: 2em;
   border: 1px solid var(--sci-color-P400);
   border-radius: 5px;
   padding: 1em;
@@ -12,15 +11,18 @@
 }
 
 :host {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: max-content 1fr;
+  grid-auto-rows: max-content;
+  gap: 1em;
 
   > h1 {
-    flex: none;
+    grid-column: 1/-1;
   }
 
   > sci-sashbox {
-    flex: auto;
+    grid-column: 1/-1;
 
     section {
       display: flex;
@@ -44,34 +46,34 @@
   }
 
   > section.sashbox-settings {
-    flex: none;
+    grid-column: 1/3;
 
     @include panel();
     display: grid;
     grid-template-columns: repeat(auto-fill, 300px);
     grid-auto-rows: max-content;
     gap: 1em 3em;
+  }
+
+  > section.testing {
+    grid-column: 3/4;
+    display: grid;
+    gap: 1em 3em;
+    grid-auto-rows: max-content;
+
+    @include panel();
   }
 
   > section.sash-settings {
-    flex: none;
-
+    @include panel();
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: 1fr;
     grid-auto-rows: max-content;
-    gap: 1em;
-
-    > section {
-      @include panel();
-      display: grid;
-      grid-template-columns: 1fr;
-      grid-auto-rows: max-content;
-      gap: 1em 3em;
-    }
+    gap: 1em 3em;
   }
 
   > section.sashbox-styling {
-    flex: none;
+    grid-column: 1/-1;
 
     @include panel();
     display: grid;
@@ -79,4 +81,19 @@
     grid-auto-rows: max-content;
     gap: 1em 3em;
   }
+
+  > div.glasspane {
+    position: absolute;
+    inset: 0 0 0 0;
+    opacity: .75;
+    background-color: black;
+    
+    > button.close {
+      position: absolute;
+      top: 0;
+      right: 0;
+      color: white;
+    }
+  }
 }
+
