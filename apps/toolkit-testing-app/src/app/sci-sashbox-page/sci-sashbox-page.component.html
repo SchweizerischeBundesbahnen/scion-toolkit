@@ -29,21 +29,25 @@
   </sci-form-field>
 </section>
 
-<section class="sash-settings">
-  <section *ngFor="let sash of sashes; index as i">
-    <header>Settings of sash {{i + 1}}</header>
-    <sci-form-field label="Visible">
-      <sci-checkbox [(ngModel)]="sash.visible"></sci-checkbox>
-    </sci-form-field>
+<section class="testing">
+  <header>Testing</header>
 
-    <sci-form-field label="Size">
-      <input [(ngModel)]="sash.size" placeholder="Value in any CSS unit or unitless as a ratio">
-    </sci-form-field>
+  <button (click)="onGlasspaneToggle()" title="Show glasspane to test that splitters do not overlap overlays.">Show glasspane</button>
+</section>
 
-    <sci-form-field label="Min size">
-      <input [(ngModel)]="sash.minSize" placeholder="Value in pixel or percent">
-    </sci-form-field>
-  </section>
+<section *ngFor="let sash of sashes; index as i" class="sash-settings">
+  <header>Settings of sash {{i + 1}}</header>
+  <sci-form-field label="Visible">
+    <sci-checkbox [(ngModel)]="sash.visible"></sci-checkbox>
+  </sci-form-field>
+
+  <sci-form-field label="Size">
+    <input [(ngModel)]="sash.size" placeholder="Value in any CSS unit or unitless as a ratio">
+  </sci-form-field>
+
+  <sci-form-field label="Min size">
+    <input [(ngModel)]="sash.minSize" placeholder="Value in pixel or percent">
+  </sci-form-field>
 </section>
 
 <section class="sashbox-styling">
@@ -80,3 +84,7 @@
     <input [formControl]="stylingFormControls['--sci-sashbox-splitter-opacity_hover']">
   </sci-form-field>
 </section>
+
+<div class="glasspane" *ngIf="glasspaneVisible" tabindex="0">
+  <button class="close material-icons" (click)="onGlasspaneToggle()">close</button>
+</div>
