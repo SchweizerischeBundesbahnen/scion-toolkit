@@ -1,2 +1,6 @@
-<input #input id="search" [formControl]="formControl" autocomplete="off" [tabindex]="tabindex">
+<input #input id="search"
+       autocomplete="off"
+       [formControl]="formControl"
+       [tabindex]="tabindex"
+       [placeholder]="placeholder || ''">
 <label for="search" class="filter-icon material-icons">search</label>
