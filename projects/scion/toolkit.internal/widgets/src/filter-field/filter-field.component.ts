@@ -33,6 +33,12 @@ export class SciFilterFieldComponent implements OnDestroy {
   public tabindex = 0;
 
   /**
+   * Specifies the hint displayed when this field is empty.
+   */
+  @Input()
+  public placeholder: string;
+
+  /**
    * Emits on filter change.
    */
   @Output()
