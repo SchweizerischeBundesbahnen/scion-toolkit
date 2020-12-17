@@ -22,13 +22,14 @@ export class SciCheckboxPO {
   }
 
   public async toggle(check: boolean): Promise<void> {
-    const isChecked = await this._checkboxFinder.isSelected();
+    const isChecked = await this.isChecked();
 
-    if (check && !isChecked) {
+    if (check !== isChecked) {
       await this._checkboxFinder.click();
     }
-    else if (!check && isChecked) {
-      await this._checkboxFinder.click();
-    }
+  }
+
+  public async isChecked(): Promise<boolean> {
+    return this._checkboxFinder.isSelected();
   }
 }
