@@ -31,6 +31,10 @@ export class SciPropertyPO {
    * Reads the properties as dictionary.
    */
   public async readAsDictionary(): Promise<Dictionary> {
+    if (!await this._sciPropertyFinder.isPresent()) {
+      throw Error(`No element found using locator for 'SciPropertyPO': ${this._sciPropertyFinder.locator().toString()}`);
+    }
+
     const keysFinder = this._sciPropertyFinder.$$('.e2e-key');
     const valuesFinder = this._sciPropertyFinder.$$('.e2e-value');
 
