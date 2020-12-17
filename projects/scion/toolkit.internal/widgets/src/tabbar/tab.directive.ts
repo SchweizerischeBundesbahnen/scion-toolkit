@@ -37,6 +37,12 @@ export class SciTabDirective implements OnDestroy {
   @Input()
   public label: string;
 
+  /**
+   * Specifies CSS class(es) added to the tab item, e.g., to select the tab in e2e tests.
+   */
+  @Input()
+  public cssClass: string | string[];
+
   constructor(private readonly _templateRef: TemplateRef<void>) {
   }
 

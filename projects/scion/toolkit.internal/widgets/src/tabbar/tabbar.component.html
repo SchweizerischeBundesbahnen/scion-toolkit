@@ -1,8 +1,9 @@
 <sci-viewport class="tabbar">
   <ul class="tabs">
     <li *ngFor="let tab of tabs$ | async"
-        class="tab"
+        class="tab e2e-tab"
         [class.selected]="tab.isContentAttached()"
+        [ngClass]="tab.cssClass"
         (click)="onTabSelect(tab)">
       {{tab.label}}
     </li>
