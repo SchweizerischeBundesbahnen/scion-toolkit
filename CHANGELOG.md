@@ -1,3 +1,19 @@
+# [11.0.0-beta.4](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.3...11.0.0-beta.4) (2020-12-17)
+
+
+### Bug Fixes
+
+* **toolkit/sashbox:** do not form a stacking context barrier on sash content ([ff624fd](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/ff624fd9d10ef0a50d7d269ae286e8dd63c826f7))
+
+
+### Features
+
+* **ɵtoolkit/checkbox:** allow to query the checked state via page object ([1b0a767](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/1b0a7674f9639bd754c6e708fd7451b4a0aff836))
+* **ɵtoolkit/property:** throw an error if the page object is given an invalid element finder ([ca0cb90](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/ca0cb901b53ea321f1842bbe25819d5a6b764e62))
+* **ɵtoolkit/tabbar:** provide page object to select a tab in e2e tests ([9538a02](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/9538a021bcd909be91475145c46e168b956d6199))
+
+
+
 # [11.0.0-beta.3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.2...11.0.0-beta.3) (2020-12-09)
 
 
