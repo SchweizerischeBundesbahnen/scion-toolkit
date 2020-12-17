@@ -24,11 +24,10 @@
    * still forms a stacking context. Since it has the order `0`, it will not overlap subsequent positioned elements
    * of the same parent stacking context.
    *
-   * Our rationale for setting a z-index on the splitter:
+   * Rationale for setting a z-index on the splitter:
    * The splitter is a positioned element; thus, it implicitly forms a stacking context that overlaps the subsequent
-   * sash (as long as it is statically positioned). But sash content may also contain positioned elements or even
-   * have elements with a z-index set. To prevent them from overlapping the splitter, we form a stacking context on
-   * the sash <div> by setting its z-index to `0` and set the splitter’s z-index to `1`.
+   * sash (as long as it is statically positioned). But sash content may also contain positioned elements. To prevent
+     them from overlapping the splitter, we form a stacking context on the splitter by setting its z-index to `1`.
    *
    * Refer to https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
    * to learn more about stacking contexts.
@@ -52,7 +51,6 @@
     display: grid; // stretch the sash content
     grid-auto-rows: 100%;
     grid-auto-columns: 100%;
-    z-index: 0; // see the explanation above why we set this z-index
 
     // flex properties are set programmatically.
   }
