@@ -1,5 +1,13 @@
 <h1>sci-filter-field (ɵ)</h1>
 
-<sci-filter-field (filter)="onFilter($event)" placeholder="Enter a filter text"></sci-filter-field>
+<sci-filter-field (filter)="onFilter($event)" placeholder="Enter a filter text" [disabled]="disabled"></sci-filter-field>
 
 <output *ngIf="output">{{output}}</output>
+
+<section class="settings">
+  <header>Settings</header>
+
+  <sci-form-field label="Disabled">
+    <sci-checkbox [(ngModel)]="disabled"></sci-checkbox>
+  </sci-form-field>
+</section>

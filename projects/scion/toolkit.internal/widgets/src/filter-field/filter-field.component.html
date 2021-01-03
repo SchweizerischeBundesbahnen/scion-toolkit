@@ -3,4 +3,9 @@
        [formControl]="formControl"
        [tabindex]="tabindex"
        [placeholder]="placeholder || ''">
+<button class="clear material-icons" tabindex="-1"
+      (mousedown)="$event.stopPropagation()"
+      (click)="onClear($event)">
+  clear
+</button>
 <label for="search" class="filter-icon material-icons">search</label>

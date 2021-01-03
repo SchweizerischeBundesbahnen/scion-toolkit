@@ -64,6 +64,11 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   @HostBinding('attr.tabindex')
   public componentTabindex = -1; // component is not focusable in sequential keyboard navigation, but tabindex (if any) is installed on input field
 
+  @HostBinding('class.empty')
+  public get empty(): boolean {
+    return !this.formControl.value;
+  }
+
   /* @docs-private */
   public formControl: FormControl;
 
@@ -120,6 +125,12 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    */
   public onKeydown(event: KeyboardEvent): void {
     this.focusAndApplyKeyboardEvent(event);
+  }
+
+  public onClear(event: MouseEvent): void {
+    this.formControl.setValue('');
+    event.stopPropagation();
+    this.focus(); // restore the focus
   }
 
   /**
