@@ -8,10 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, OnDestroy, Output, ViewChild } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostBinding, HostListener, Input, OnDestroy, Output, ViewChild } from '@angular/core';
+import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { noop, Subject } from 'rxjs';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { FocusMonitor, FocusOrigin } from '@angular/cdk/a11y';
 
 /**
  * Provides a simple filter control.
@@ -20,10 +22,16 @@ import { Subject } from 'rxjs';
   selector: 'sci-filter-field',
   templateUrl: './filter-field.component.html',
   styleUrls: ['./filter-field.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => SciFilterFieldComponent)},
+  ],
 })
-export class SciFilterFieldComponent implements OnDestroy {
+export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy {
 
   private _destroy$ = new Subject<void>();
+  private _cvaChangeFn: (value: any) => void = noop;
+  private _cvaTouchedFn: () => void = noop;
 
   /**
    * Sets focus order in sequential keyboard navigation.
@@ -38,6 +46,12 @@ export class SciFilterFieldComponent implements OnDestroy {
   @Input()
   public placeholder: string;
 
+  @HostBinding('class.disabled')
+  @Input()
+  public set disabled(disabled: boolean) {
+    coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
+  }
+
   /**
    * Emits on filter change.
    */
@@ -50,13 +64,27 @@ export class SciFilterFieldComponent implements OnDestroy {
   @HostBinding('attr.tabindex')
   public componentTabindex = -1; // component is not focusable in sequential keyboard navigation, but tabindex (if any) is installed on input field
 
+  /* @docs-private */
   public formControl: FormControl;
 
-  constructor() {
+  constructor(private _host: ElementRef,
+              private _focusManager: FocusMonitor,
+              private _cd: ChangeDetectorRef) {
     this.formControl = new FormControl('', {updateOn: 'change'});
     this.formControl.valueChanges
       .pipe(takeUntil(this._destroy$))
-      .subscribe(this.filter);
+      .subscribe(value => {
+        this._cvaChangeFn(value);
+        this.filter.next(value);
+      });
+
+    this._focusManager.monitor(this._host.nativeElement, true)
+      .pipe(takeUntil(this._destroy$))
+      .subscribe((focusOrigin: FocusOrigin) => {
+        if (!focusOrigin) {
+          this._cvaTouchedFn(); // triggers form field validation and signals a blur event
+        }
+      });
   }
 
   @HostListener('focus')
@@ -70,7 +98,7 @@ export class SciFilterFieldComponent implements OnDestroy {
    * If the keyboard event represents an alphanumeric character, filter text is cleared and the cursor set into the filter field.
    * This allows to start filtering without having to focus the filter field, e.g. if another element has the focus.
    */
-  public onKeydown(event: KeyboardEvent): void {
+  public focusAndApplyKeyboardEvent(event: KeyboardEvent): void {
     if (event.ctrlKey || event.altKey || event.shiftKey) {
       return;
     }
@@ -78,12 +106,59 @@ export class SciFilterFieldComponent implements OnDestroy {
       return;
     }
     this.formControl.setValue('');
-    this._inputElement.nativeElement.focus();
+    this.focus();
     event.stopPropagation();
+    this._cd.markForCheck();
+  }
+
+  public get disabled(): boolean {
+    return this.formControl.disabled;
+  }
+
+  /**
+   * @deprecated since version 11.0.0-beta.5. Use {@link focusAndApplyKeyboardEvent} instead.
+   */
+  public onKeydown(event: KeyboardEvent): void {
+    this.focusAndApplyKeyboardEvent(event);
+  }
+
+  /**
+   * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
+   * @docs-private
+   */
+  public registerOnChange(fn: any): void {
+    this._cvaChangeFn = fn;
+  }
+
+  /**
+   * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
+   * @docs-private
+   */
+  public registerOnTouched(fn: any): void {
+    this._cvaTouchedFn = fn;
+  }
+
+  /**
+   * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
+   * @docs-private
+   */
+  public setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
+    this._cd.markForCheck();
+  }
+
+  /**
+   * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
+   * @docs-private
+   */
+  public writeValue(value: any): void {
+    this.formControl.setValue(value, {emitEvent: false});
+    this._cd.markForCheck();
   }
 
   public ngOnDestroy(): void {
     this._destroy$.next();
+    this._focusManager.stopMonitoring(this._host.nativeElement);
   }
 }
 

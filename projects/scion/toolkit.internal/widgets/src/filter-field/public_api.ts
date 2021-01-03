@@ -9,4 +9,4 @@
  */
 
 export { SciFilterFieldModule } from './filter-field.module';
-export { SciFilterFieldComponent } from './filter-field.component';
+export { SciFilterFieldComponent, toFilterRegExp } from './filter-field.component';
