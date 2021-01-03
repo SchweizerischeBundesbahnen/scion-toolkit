@@ -57,7 +57,34 @@ fromMutation$(element).subscribe((mutations: MutationRecord[]) => {
 When constructing the Observable, you can pass a `MutationObserverInit` options object to control which attributes or events to observe. See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserverInit for more information.
 
 </details> 
+
+<details>
+  <summary><strong>fromBoundingClientRect$</strong></summary>
+  
+Allows observing an element's bounding box, providing information about the element's size and position relative to the browser viewport. Refer to https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect for more information.
+
+Upon subscription, the Observable emits the element's current bounding box, and then continuously emits when its bounding box changes, e.g., due to a change in the layout. The Observable never completes.
+
+```typescript
+import { fromBoundingClientRect$ } from '@scion/toolkit/observable';
+
+const element: HTMLElement = ...;
+fromBoundingClientRect$(element).subscribe((boundingBox: ClientRect) => {   
+ console.log(boundingBox);
+});
+```
+
+***
+If you are only interested in element size changes and not position changes, consider using the `fromDimension$` Observable as it is more efficient because natively supported by the browser.
+***
  
+*Note on the detection of position changes:*\
+The Observable uses a relatively simple approach to detecting element position changes. It assumes the browser to support the native `ResizeObserver` API or logs a warning otherwise.
+ 
+There is, unfortunately, no native browser API to detect position changes of an element in a performant and reliable way. Our approach to detecting position changes of an element is based on the premise that it usually involves a parent or a parent's direct child changing in size. Repositioning can further occur when the user scrolls a parent container or when elements are added to or removed from the DOM. This covers most cases, but not all.
+ 
+We are aware that this approach can be quite expensive, mainly because potentially a large number of elements need to be monitored for resizing/scrolling. Therefore, use this Observable only if you need to be informed about position changes. For pure dimension changes use the `fromDimension$` Observable instead.
+</details> 
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
