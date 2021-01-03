@@ -7,20 +7,24 @@
   padding: .25em .5em;
 
   > input#search {
+    flex: auto;
     border: none;
     box-shadow: none;
     outline: none;
     padding: 0;
-    flex: auto;
     width: 0; // allows the input to shrink past UA minimal width
   }
 
   > label.filter-icon {
     flex: none;
+    align-self: center;
     user-select: none;
+    color: var(--sci-color-P400);
   }
 
-  &:focus-within > label.filter-icon {
-    color: var(--sci-color-accent);
+  &:focus-within:not(.disabled) {
+    > label.filter-icon {
+      color: var(--sci-color-accent);
+    }
   }
 }
