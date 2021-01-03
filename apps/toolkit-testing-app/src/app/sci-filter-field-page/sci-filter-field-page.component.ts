@@ -18,6 +18,8 @@ export class SciFilterFieldPageComponent {
 
   public output: string;
 
+  public disabled: boolean;
+
   public onFilter(filterText: string): void {
     this.output = filterText;
   }

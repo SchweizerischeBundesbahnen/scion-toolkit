@@ -15,6 +15,15 @@
     width: 0; // allows the input to shrink past UA minimal width
   }
 
+  > button.clear {
+    flex: none;
+    align-self: center;
+    line-height: 1;
+    font-size: 1em;
+    height: 1em;
+    margin-right: .25em;
+  }
+
   > label.filter-icon {
     flex: none;
     align-self: center;
@@ -23,8 +32,14 @@
   }
 
   &:focus-within:not(.disabled) {
-    > label.filter-icon {
+    > label.filter-icon, > button.clear {
       color: var(--sci-color-accent);
+    }
+  }
+
+  &:not(:hover), &.disabled, &.empty {
+    > button.clear {
+      visibility: hidden;
     }
   }
 }
