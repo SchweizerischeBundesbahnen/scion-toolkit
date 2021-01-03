@@ -57,7 +57,7 @@
   font-family: inherit;
   font-size: inherit;
 
-  &:focus-within {
+  &:focus-within:not(:disabled):not(.disabled) {
     border-color: var(--sci-color-accent);
     box-shadow: 0 0 6px 0 rgba(var(--sci-color-accent-rgb), .25);
   }
