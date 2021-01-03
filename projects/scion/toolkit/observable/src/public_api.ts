@@ -16,3 +16,4 @@
  */
 export { fromDimension$, Dimension, FromDimension } from './dimension.observable';
 export { fromMutation$ } from './mutation.observable';
+export { fromBoundingClientRect$ } from './bounding-client-rect.observable';
