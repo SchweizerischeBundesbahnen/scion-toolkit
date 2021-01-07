@@ -10,9 +10,8 @@
 
 import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, HostBinding, Inject, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
-import { concat, EMPTY, fromEvent, merge, of, Subject, timer } from 'rxjs';
-import { debounceTime, first, map, startWith, switchMap, takeUntil, takeWhile, withLatestFrom } from 'rxjs/operators';
-import { FromDimension, fromDimension$, fromMutation$ } from '@scion/toolkit/observable';
+import { fromEvent, merge, of, Subject, timer } from 'rxjs';
+import { debounceTime, first, startWith, takeUntil, takeWhile, withLatestFrom } from 'rxjs/operators';
 
 /**
  * Renders a vertical or horizontal scrollbar.
@@ -47,13 +46,13 @@ export class SciScrollbarComponent implements OnDestroy {
 
   private _destroy$ = new Subject<void>();
   private _viewport: HTMLElement;
-  private _viewportRefChange$ = new Subject<void>();
   private _lastDragPosition: number = null;
 
   private _overflow: boolean;
   private _thumbSizeFr: number;
   private _thumbPositionFr: number;
 
+  /* @docs-private */
   @ViewChild('thumb_handle', {static: true})
   public thumbElement: ElementRef<HTMLDivElement>;
 
@@ -81,23 +80,49 @@ export class SciScrollbarComponent implements OnDestroy {
   @Input('viewport') // tslint:disable-line:no-input-rename
   public set setViewport(viewport: HTMLElement) {
     this._viewport = viewport;
-    this.onViewportRefChange(viewport);
   }
 
   constructor(private _host: ElementRef<HTMLElement>,
               @Inject(DOCUMENT) private _document: any,
               private _zone: NgZone) {
+    this._zone.onStable
+      .pipe(takeUntil(this._destroy$))
+      .subscribe(() => {
+        NgZone.assertNotInAngularZone();
+        this.renderScrollPosition();
+      });
   }
 
-  public ngOnDestroy(): void {
-    this._destroy$.next();
+  /**
+   * Computes the scroll position and updates CSS variables to render the scroll position in the UI.
+   */
+  private renderScrollPosition(): void {
+    const viewportSize = this.viewportSize;
+    const viewportClientSize = this.viewportClientSize;
+    const thumbPositionFr = this.scrollTop / viewportClientSize;
+    const thumbSizeFr = viewportSize / viewportClientSize;
+    const overflow = viewportClientSize > viewportSize;
+
+    if (thumbPositionFr !== this._thumbPositionFr || thumbSizeFr !== this._thumbSizeFr) {
+      this._thumbPositionFr = thumbPositionFr;
+      this._thumbSizeFr = thumbSizeFr;
+      this.setCssVariable('--ɵsci-scrollbar-thumb-position-fr', thumbPositionFr);
+      this.setCssVariable('--ɵsci-scrollbar-thumb-size-fr', thumbSizeFr);
+    }
+
+    if (overflow !== this._overflow) {
+      this._overflow = overflow;
+      overflow ? this._host.nativeElement.classList.add('overflow') : this._host.nativeElement.classList.remove('overflow');
+    }
   }
 
+  /* @docs-private */
   public onTouchStart(event: TouchEvent): void {
     event.preventDefault();
     this._lastDragPosition = this.vertical ? event.touches[0].screenY : event.touches[0].screenX;
   }
 
+  /* @docs-private */
   public onTouchMove(event: TouchEvent): void {
     event.preventDefault();
 
@@ -108,11 +133,13 @@ export class SciScrollbarComponent implements OnDestroy {
     this.moveViewportClient(viewportPanPx);
   }
 
+  /* @docs-private */
   public onTouchEnd(event: TouchEvent): void {
     event.preventDefault();
     this._lastDragPosition = null;
   }
 
+  /* @docs-private */
   public onMouseDown(event: MouseEvent): void {
     if (event.button !== 0) {
       return;
@@ -146,21 +173,19 @@ export class SciScrollbarComponent implements OnDestroy {
     });
   }
 
+  /* @docs-private */
   public onScrollTrackMouseDown(event: MouseEvent, direction: 'up' | 'down'): void {
     const signum = (direction === 'up' ? -1 : +1);
-    this.scrollWhileMouseDown(this.toViewportPanPx(signum * this.getThumbSize()), event);
+    this.scrollWhileMouseDown(this.toViewportPanPx(signum * this.thumbSize), event);
   }
 
   /**
    * Projects the given scrollbar scroll pixels into viewport scroll pixels.
    */
   private toViewportPanPx(scrollbarPanPx: number): number {
-    const thumbSize = this.getThumbSize();
-    const trackSize = this.getTrackSize();
-
-    const scrollRangePx = trackSize - thumbSize;
+    const scrollRangePx = this.trackSize - this.thumbSize;
     const scrollRatio = scrollbarPanPx / scrollRangePx;
-    return scrollRatio * (this.getViewportClientSize() - this.getViewportSize());
+    return scrollRatio * (this.viewportClientSize - this.viewportSize);
   }
 
   /**
@@ -206,102 +231,34 @@ export class SciScrollbarComponent implements OnDestroy {
       });
   }
 
-  private onViewportRefChange(viewport: HTMLElement): void {
-    this._viewportRefChange$.next();
-    this.render();
-
-    if (!viewport) {
-      return;
-    }
-
-    this._zone.runOutsideAngular(() => {
-      // update the scroll position on scroll or viewport dimension change
-      merge(fromDimension$(viewport), fromEvent(viewport, 'scroll', {passive: true}))
-        .pipe(takeUntil(merge(this._destroy$, this._viewportRefChange$)))
-        .subscribe(() => this.render());
-
-      // update the scroll position on viewport client change
-      const viewportChildListChange$ = fromMutation$(viewport, {subtree: false, childList: true, attributeFilter: []}); // listen for addition or removal of child nodes
-      concat(of(null), viewportChildListChange$)
-        .pipe(
-          map(() => this.getChildList(viewport)),
-          // create a single observable which emits when the dimension or a style property of a child element changes
-          switchMap(children => children.reduce((acc$, child) => merge(
-            acc$,
-            // element dimension change
-            fromDimension$(child),
-            // style mutation (i.e. some transformations change the scroll position without necessarily triggering a dimension change, e.g., 'scale' or 'translate' used for virtual scrolling)
-            fromMutation$(child, {subtree: false, childList: false, attributeFilter: ['style']}),
-          ), EMPTY)),
-          takeUntil(merge(this._destroy$, this._viewportRefChange$)),
-        )
-        .subscribe(() => this.render());
-    });
-  }
-
-  /**
-   * Renders the scrollbar based on 'scrollTop'/'scrollLeft' and 'scrollHeight'/'scrollWidth` of the viewport.
-   */
-  public render(): void {
-    const viewportSize = this.getViewportSize();
-    const viewportClientSize = this.getViewportClientSize();
-
-    // compute if viewport client overflows, the thumb size and thumb position
-    const prevOverflow = this._overflow;
-    const prevThumbSizeFr = this._thumbSizeFr;
-    const prevThumbPositionFr = this._thumbPositionFr;
-
-    this._overflow = (viewportClientSize > viewportSize);
-    if (this._overflow) {
-      const scrollTop = this.getScrollStart();
-
-      this._thumbSizeFr = viewportSize / viewportClientSize;
-      this._thumbPositionFr = scrollTop / viewportClientSize;
-    }
-
-    if (this._overflow !== prevOverflow || this._thumbSizeFr !== prevThumbSizeFr || this._thumbPositionFr !== prevThumbPositionFr) {
-      if (this._overflow && !prevOverflow) {
-        this._host.nativeElement.classList.add('overflow');
-      }
-      else if (!this._overflow && prevOverflow) {
-        this._host.nativeElement.classList.remove('overflow');
-      }
-
-      this.setCssVariable('--ɵsci-scrollbar-thumb-position-fr', this._thumbPositionFr);
-      this.setCssVariable('--ɵsci-scrollbar-thumb-size-fr', this._thumbSizeFr);
-    }
-  }
-
-  private getViewportSize(): number {
-    return this._viewport ? (this.vertical ? this._viewport.clientHeight : this._viewport.clientWidth) : 0;
-  }
-
-  private getViewportClientSize(): number {
-    return this._viewport ? (this.vertical ? this._viewport.scrollHeight : this._viewport.scrollWidth) : 0;
-  }
-
-  private getScrollStart(): number {
-    return this._viewport ? (this.vertical ? this._viewport.scrollTop : this._viewport.scrollLeft) : 0;
-  }
-
-  private getThumbSize(): number {
-    const thumbElement = this.thumbElement.nativeElement;
-    return this.vertical ? thumbElement.clientHeight : thumbElement.clientWidth;
-  }
-
-  private getTrackSize(): number {
-    const trackElement = this._host.nativeElement;
-    return this.vertical ? trackElement.clientHeight : trackElement.clientWidth;
-  }
-
   private setCssVariable(key: string, value: any): void {
     this._host.nativeElement.style.setProperty(key, value);
   }
 
-  private getChildList(viewport: HTMLElement): HTMLElement[] {
-    return Array.from(viewport.children)
-      .filter(child => child instanceof HTMLElement)
-      .map(child => child as HTMLElement)
-      .filter(child => !FromDimension.isSynthResizeObservableObject(child));
+  private get viewportSize(): number {
+    return this._viewport ? (this.vertical ? this._viewport.clientHeight : this._viewport.clientWidth) : 0;
+  }
+
+  private get viewportClientSize(): number {
+    return this._viewport ? (this.vertical ? this._viewport.scrollHeight : this._viewport.scrollWidth) : 0;
+  }
+
+  private get scrollTop(): number {
+    return this._viewport ? (this.vertical ? this._viewport.scrollTop : this._viewport.scrollLeft) : 0;
+  }
+
+  private get thumbSize(): number {
+    const thumbElement = this.thumbElement.nativeElement;
+    return this.vertical ? thumbElement.clientHeight : thumbElement.clientWidth;
+  }
+
+  private get trackSize(): number {
+    const trackElement = this._host.nativeElement;
+    return this.vertical ? trackElement.clientHeight : trackElement.clientWidth;
+  }
+
+  /* @docs-private */
+  public ngOnDestroy(): void {
+    this._destroy$.next();
   }
 }

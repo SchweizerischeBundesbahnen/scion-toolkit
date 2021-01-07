@@ -17,6 +17,11 @@
 :host {
   display: flex;
   flex-direction: column;
+  --viewport-minheight: unset;
+  --viewport-maxheight: unset;
+  --viewport-flexitem: unset;
+  --viewport-content-width: unset;
+  --viewport-content-height: unset;
 
   > h1 {
     flex: none;
@@ -37,14 +42,24 @@
     > section.styling {
       @include panel();
     }
+
+    > section.miscellaneous {
+      @include panel();
+    }
   }
 
   > sci-viewport {
-    flex: auto;
-    min-height: 300px;
+    flex: var(--viewport-flexitem);
+    min-height: var(--viewport-minheight);
+    max-height: var(--viewport-maxheight);
 
     section {
       white-space: pre-line;
+      width: var(--viewport-content-width);
+      height: var(--viewport-content-height);
+      border: 1px dotted var(--sci-color-accent);
+      padding: 1em;
+      background-color: rgba(var(--sci-color-accent-rgb), .05);
     }
   }
 }

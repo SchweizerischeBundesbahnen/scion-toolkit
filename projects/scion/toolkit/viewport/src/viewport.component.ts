@@ -13,24 +13,41 @@ import { SciNativeScrollbarTrackSizeProvider } from './native-scrollbar-track-si
 import { coerceElement } from '@angular/cdk/coercion';
 
 /**
- * Represents a viewport with its `<ng-content>` used as its scrollable viewport client.
+ * Represents a viewport with the `<ng-content>` used as scrollable content. Content is added to a CSS grid layout.
  *
- * ## Usage:
- * ```
+ * The viewport component displays scrollbars when its content overflows. Scrollbars are displayed on top of the content, not next to it.
+ * The component uses the native scrollbars of the operating system if they are already sitting on top, or falls back and renders scrollbars on top otherwise.
+ * The viewport remains natively scrollable with the native scrollbars shifted out of the viewport's visible area. Consequently, the viewport keeps supporting
+ * native scrolling features such as touch gestures, scroll speed acceleration, or scrolling near the viewport edges during drag-and-drop operations.
+ *
+ * ```html
  * <sci-viewport>
  *   your content
  * </sci-viewport>
  * ```
  *
- * ## Description:
- * The viewport component displays scrollbars only when the content overflows and while the user moves his mouse over the viewport.
- * Some operating systems place scrollbars next to the content, which shrinks the content by a few pixels when scrollbars are displayed.
- * For this reason, unless the operating system already does, the viewport component hides the native scrollbars and renders scrollbars
- * on top of the content. Nevertheless, the viewport client remains natively scrollable, i.e. it supports native touch gestures and accelerated
- * scrolling speed. In addition, the viewport scrolls natively near the viewport edges during drag and drop operations.
+ * ## Adding the viewport to a layout
  *
- * ## Layout:
- * By default, the <ng-content> is added to a CSS grid container with a single column, thus, content fills remaining space vertically and horizontally.
+ * Typically you would add the viewport component to a flexible layout, filling the remaining space vertically and horizontally, such as a flexbox container
+ * with the viewport's `flex` CSS property set to either `flex: auto` or `flex: 1 1 0`.
+ *
+ * The viewport is sized according to its content width and height. It grows to absorb any free space, thus overflowing its content only when encountering
+ * a layout constraint. Depending on the layout, different steps may be necessary to prevent the viewport from growing to infinity.
+ *
+ * - If practical, give the viewport a fixed size or a maximum size.
+ * - If you add the viewport to a flexbox layout, make sure that it cannot exceed the available space. Instead, the viewport should fill the remaining space,
+ *   vertically and horizontally. Be aware that, by default, a flex item does not shrink below its minimum content size. To change this, set the viewport's
+ *   `flex-basis` to `0` (instead of `auto`), or use the CSS shorthand property `flex: 1 1 0`. The `flex-basis` defines the default size of a flex item before
+ *   the remaining extra space is distributed. If the viewport does not appear after setting this property, check its parent elements' content sizes.
+ *   As an alternative to setting `flex: 1 1 0`, change the setting to `flex: auto` and hide the overflow in the parent element, as follows: `overflow: hidden`.
+ *   Another approach would be to set the minimum height of all parents to `0`, as follows: `min-height: 0`.
+ *
+ *   For the complete documentation on the flex layout and its features, refer to https://developer.mozilla.org/en-US/docs/Web/CSS/flex.
+ *
+ *
+ * ## Layouting the viewport content
+ *
+ * `NgContent` is added to a CSS grid container with, by default, a single column, filling remaining space vertically and horizontally.
  *
  * You can override the following CSS variables to control the grid:
  *
@@ -49,7 +66,7 @@ import { coerceElement } from '@angular/cdk/coercion';
  * }
  * ```
  *
- * ## Scrollbar Styling:
+ * ## Styling of scrollbars
  *
  * You can override the following CSS variables to control the appearance of the scrollbar:
  *

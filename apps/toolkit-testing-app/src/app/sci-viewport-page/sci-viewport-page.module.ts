@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
 import { SciViewportPageComponent } from './sci-viewport-page.component';
 import { RouterModule } from '@angular/router';
 import { SciFormFieldModule } from '@scion/toolkit.internal/widgets';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SciViewportModule } from '@scion/toolkit/viewport';
 
 const routes = [
@@ -24,6 +24,7 @@ const routes = [
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     RouterModule.forChild(routes),
     SciFormFieldModule,
     SciViewportModule,

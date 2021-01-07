@@ -21,9 +21,9 @@ import { Dictionary } from '@scion/toolkit/util';
  * Because there is no cross-browser API to hide scrollbars without losing native scroll support, we set 'overflow'
  * to 'scroll' but shift the native scrollbars out of the visible viewport area. The shift offset is computed upfront.
  *
- * This directive fully stretches its host element to the bounding box of the nearest positioned parent. The parent
- * must have its 'overflow' CSS property set to 'hidden' because the native scrollbars are shifted out of the bounding
- * box of the parent component.
+ * This directive expects its host element to be the only child in document flow in its parent DOM element. It makes the host element
+ * fill up the entire space (width and height set to 100%). The parent element must have its CSS `overflow` property set to `hidden`
+ * to hide the pushed out native scrollbars.
  */
 @Directive({
   selector: '[sciScrollable]',
@@ -64,11 +64,10 @@ export class SciScrollableDirective implements OnChanges, OnDestroy {
   private useNativeScrollbars(): void {
     this.setStyle(this._host.nativeElement, {
       overflow: 'auto',
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0,
+      width: '100%',
+      height: '100%',
+      marginRight: 0,
+      marginBottom: 0,
     });
   }
 
@@ -78,11 +77,10 @@ export class SciScrollableDirective implements OnChanges, OnDestroy {
   private shiftNativeScrollbars(nativeScrollbarTrackSize: NativeScrollbarTrackSize): void {
     this.setStyle(this._host.nativeElement, {
       overflow: 'scroll',
-      position: 'absolute',
-      top: 0,
-      right: `${-nativeScrollbarTrackSize.vScrollbarTrackWidth}px`,
-      bottom: `${-nativeScrollbarTrackSize.hScrollbarTrackHeight}px`,
-      left: 0,
+      width: `calc(100% + ${nativeScrollbarTrackSize.vScrollbarTrackWidth}px`,
+      height: `calc(100% + ${nativeScrollbarTrackSize.hScrollbarTrackHeight}px`,
+      marginRight: `-${nativeScrollbarTrackSize.vScrollbarTrackWidth}px`,
+      marginBottom: `-${nativeScrollbarTrackSize.hScrollbarTrackHeight}px`,
     });
   }
 

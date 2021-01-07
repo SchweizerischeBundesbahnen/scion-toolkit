@@ -7,7 +7,7 @@
 
 The NPM sub-module `@scion/toolkit/viewport` provides an Angular viewport component with scrollbars that sit on top of the viewport client. The component renders its `<ng-content>` inside a scrollable viewport, that shows a vertical and/or horizontal scrollbar when the `<ng-content>` overflows the component's boundaries.
 
-By default, the `<ng-content>` is added to a CSS grid container with a single column, thus, content fills remaining space vertically and horizontally. See section *Layout* for more information.
+`NgContent` is added to a CSS grid container with, by default, a single column, filling remaining space vertically and horizontally. See section '*Layouting the viewport content*' for more information.
 
 ***
 Click [here](https://scion-toolkit-testing-app.now.sh/#/sci-viewport) for a demo of the viewport component in our internal test application.
@@ -47,9 +47,9 @@ Click [here](https://scion-toolkit-testing-app.now.sh/#/sci-viewport) for a demo
 <details>
   <summary><strong>Description</strong></summary>
   
-The viewport component displays scrollbars only when the content overflows and while the user moves his mouse over the viewport.
+This component represents a viewport with the `<ng-content>` used as scrollable content. Content is added to a CSS grid layout.
 
-Some operating systems place scrollbars next to the content, which shrinks the content by a few pixels when scrollbars are displayed. For this reason, unless the operating system already does, the viewport component hides the native scrollbars and renders scrollbars on top of the content. Nevertheless, the viewport client remains natively scrollable, i.e. it supports native touch gestures and accelerated scrolling speed. In addition, the viewport scrolls natively near the viewport edges during drag and drop operations.
+The viewport component displays scrollbars when its content overflows. Scrollbars are displayed on top of the content, not next to it. The component uses the native scrollbars of the operating system if they are already sitting on top, or falls back and renders scrollbars on top otherwise. The viewport remains natively scrollable with the native scrollbars shifted out of the viewport's visible area. Consequently, the viewport keeps supporting native scrolling features such as touch gestures, scroll speed acceleration, or scrolling near the viewport edges during drag-and-drop operations.
 
 </details>
 
@@ -103,10 +103,22 @@ Some operating systems place scrollbars next to the content, which shrinks the c
 
 <!--- LAYOUT --->
 <details>
-  <summary><strong>Layout</strong></summary>
-The viewport has no intrinsic size, thus, you must either give it an explicit size, or place it in a layout to fill remaining space. 
+  <summary><strong>Adding the viewport to a layout</strong></summary>
 
-By default, the `<ng-content>` is added to a CSS grid container with a single column.
+Typically you would add the viewport component to a flexible layout, filling the remaining space vertically and horizontally, such as a flexbox container with the viewport's `flex` CSS property set to either `flex: auto` or `flex: 1 1 0`.
+
+The viewport is sized according to its content width and height. It grows to absorb any free space, thus overflowing its content only when encountering a layout constraint. Depending on the layout, different steps may be necessary to prevent the viewport from growing to infinity.
+
+- If practical, give the viewport a fixed size or a maximum size.
+- If you add the viewport to a flexbox layout, make sure that it cannot exceed the available space. Instead, the viewport should fill the remaining space, vertically and horizontally. Be aware that, by default, a flex item does not shrink below its minimum content size. To change this, set the viewport's `flex-basis` to `0` (instead of `auto`), or use the CSS shorthand property `flex: 1 1 0`. The `flex-basis` defines the default size of a flex item before the remaining extra space is distributed. If the viewport does not appear after setting this property, check its parent elements' content sizes. As an alternative to setting `flex: 1 1 0`, change the setting to `flex: auto` and hide the overflow in the parent element, as follows: `overflow: hidden`. Another approach would be to set the minimum height of all parents to `0`, as follows: `min-height: 0`.
+
+> For the complete documentation on the flex layout and its features, refer to https://developer.mozilla.org/en-US/docs/Web/CSS/flex.
+ </details>
+
+<details>
+  <summary><strong>Layouting the viewport content</strong></summary>
+
+`NgContent` is added to a CSS grid container with, by default, a single column, filling remaining space vertically and horizontally.
 
 You can override the following CSS variables to control the grid:
 
@@ -196,7 +208,7 @@ The module `@scion/toolkit/viewport` exports the scrollbar component `<sci-scrol
    
    **Explanation:**
 
-    - Adds the `<cdk-virtual-scroll-viewport>` element as child element to the `<main>` element. Instead of the `<main>` element, you could also use a `<div>` element.
+    - Adds the `<cdk-virtual-scroll-viewport>` element as child element to the `<main>` element. Instead of the `<main>` element, you could use any other container element.
     - Creates the local template variable `#cdkViewport` to hold the reference to the CDK viewport component.
     - Decorates the CDK viewport with the `sciScrollable` directive to hide its native scrollbars.
     - Adds the vertical scrollbar `<sci-scrollbar>` and connects it to the CDK viewport.
@@ -224,25 +236,21 @@ The module `@scion/toolkit/viewport` exports the scrollbar component `<sci-scrol
      @import '~@scion/toolkit/viewport/scrollbar';
    
      main {
-       position: relative;
-       overflow: hidden;
-       @include hide-scrollbars-when-inactive();
+       display: grid; // stretches content vertically and horizontally
+       position: relative; // positioned anchor for the scrollbars
+       overflow: hidden; // hides native scrollbars (shifted out of the visible viewport area)
+       @include hide-scrollbars-when-inactive(); // hide scrollbars when the user is not hovering the viewport.
        height: 500px;
    
        > sci-scrollbar {
-         @include scrollbar();
+         @include scrollbar(); // positions scrollbars
        }
      }
    ```
    
    **Explanation:**
 
-    > The directive `sciScrollable` fully stretches its host element, which is `<cdk-virtual-scroll-viewport>` in our example, to the bounding box of the nearest positioned parent, and shifts native scrollbars out of the bounding box of the parent component.
-
-    - Defines a positioning context on the `<main>` element by setting its `position` to `relative`.
-    - Sets the `overflow` CSS variable of the `<main>` element to `hidden` to clip the native scrollbars of `<cdk-virtual-scroll-viewport>`.
-    - Hides the scrollbar when the user is not hovering the viewport by applying the `hide-scrollbars-when-inactive` mixin available through `~@scion/toolkit/viewport/scrollbar`.
-    - Positions the `<sci-scrollbar>` by applying the `scrollbar` mixin available through `~@scion/toolkit/viewport/scrollbar`.
+    > The directive `sciScrollable` makes the host element, which is `<cdk-virtual-scroll-viewport>` in our example, natively scrollable. It shifts native scrollbars out of the visible area of the host element, unless they sit on top of the viewport, e.g., in OS X. This directive expects its host element to be the only child in document flow in its parent DOM element, which is `<main>` in our example. It makes the host element fill up the entire space (width and height set to 100%). The parent element should set `overflow: hidden` and `display: grid` or `display: flex` in combination with `flex: auto` to make the host element filling remaining space vertically and horizontally.
 
 </details>
 
