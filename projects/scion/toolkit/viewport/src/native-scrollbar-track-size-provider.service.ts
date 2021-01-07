@@ -87,9 +87,9 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
   }
 
   private installNativeScrollbarTrackSizeListener(): void {
-    // Listen for window resize events to (re-)compute the native scrollbar track size.
-    // For instance, if the document is not displayed (e.g., in hidden iframes), the track of native scrollbars do not have a dimension.
-    // However, once displayed, the window sends a resize event.
+    // We compute the size of the native scrollbar track when the browser fires the onresize window event.
+    // This event is also fired on page zoom or when displaying a hidden document. Hidden documents do not have
+    // a scrollbar track size until being displayed, e.g., after showing hidden iframes.
     this._zone.runOutsideAngular(() => {
       fromEvent(window, 'resize')
         .pipe(

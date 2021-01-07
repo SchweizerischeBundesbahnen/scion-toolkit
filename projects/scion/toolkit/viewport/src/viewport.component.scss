@@ -8,22 +8,33 @@
   --sci-viewport-content-grid-gap: 0 0;
   --sci-viewport-scrollbar-color: rgb(78, 78, 78);
 
-  display: block;
-  position: relative; // positioned anchor for viewport and scrollbars
+  // Note: We do not position the internal viewport `DIV` absolutely to allow this component to adapt its size to the
+  // width and height of its content. i.e., the viewport will grow/shrink with its content, allowing for implementing
+  // use cases where the viewport grows with its content up to a maximum height and then starts overflowing its content.
+  display: grid;
+  // Do not use `auto`, but `100%` instead. Otherwise, large content would expand the viewport to the right and bottom.
+  // Also with `auto`, if the viewport defines a minimum height, the viewport content wouldn't scroll if the viewport
+  // height drops below that minimum height.
+  grid-template-columns: 100%;
+  grid-template-rows: 100%;
+  position: relative; // positioned anchor for scrollbars
   overflow: hidden;
   outline: none;
   @include hide-scrollbars-when-inactive();
 
   > div.viewport {
-    // absolutely positioned by `sciScrollable`
+    // On this element, we have installed the `sciScrollable` directive, making it natively scrollable and shifting native
+    // scrollbars out of this `DIV`. The directive sets following CSS properties: `overflow`, `width`, `height`, `margin-right`,
+    // and `margin-bottom`.
     display: grid;
-    outline: none; // tabindex set to -1
+    position: relative; // positioned anchor for SciViewportComponent#computeOffset
+    outline: none; // necessary as we set the tab index of this component to -1.
     // use momentum-based scrolling so that the viewport client continues to scroll for a while after finishing the scroll gesture
     // and removing the finger from the touchscreen.
     -webkit-overflow-scrolling: touch;
 
     > div.viewport-client {
-      display: grid; // part of API
+      display: grid; // This is part of the public API.
       grid-template-columns: var(--sci-viewport-content-grid-template-columns); // part of API
       grid-template-rows: var(--sci-viewport-content-grid-template-rows); // part of API
       grid-auto-rows: var(--sci-viewport-content-grid-auto-rows); // part of API
