@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ContentChildren, Input, QueryList, TrackByFunction, ViewChild } from '@angular/core';
+import { Component, ContentChildren, HostBinding, Input, QueryList, TrackByFunction, ViewChild } from '@angular/core';
 import { animate, AnimationMetadata, style, transition, trigger } from '@angular/animations';
 import { SciAccordionItemDirective } from './accordion-item.directive';
 import { SciViewportComponent } from '@scion/toolkit/viewport';
@@ -19,6 +19,8 @@ import { CdkAccordionItem } from '@angular/cdk/accordion';
  *
  * An accordion item is contributed as content child in the form of a `<ng-template>` decorated with `sciAccordionItem` directive,
  * and its panel modelled in the form of a `<ng-template>` and given as input to its `sciAccordionItem` directive.
+ *
+ * Accordion panel content is added to a CSS grid container with a single column, filling remaining space vertically and horizontally.
  *
  * ---
  * Example of a simple accordion:
@@ -47,6 +49,16 @@ import { CdkAccordionItem } from '@angular/cdk/accordion';
 })
 export class SciAccordionComponent {
 
+  @HostBinding('class.bubble')
+  public get isBubbleVariant(): boolean {
+    return this.variant === 'bubble';
+  }
+
+  @HostBinding('class.solid')
+  public get isSolidVariant(): boolean {
+    return this.variant === 'solid';
+  }
+
   @ViewChild(SciViewportComponent, {static: true})
   private _viewport: SciViewportComponent;
 
@@ -58,6 +70,12 @@ export class SciAccordionComponent {
    */
   @Input()
   public multi: boolean;
+
+  /**
+   * Specifies the style of the accordion.
+   */
+  @Input()
+  public variant: 'solid' | 'bubble' = 'bubble';
 
   public trackByFn: TrackByFunction<SciAccordionItemDirective> = (index: number, item: SciAccordionItemDirective): any => {
     return item.key || item;

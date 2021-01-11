@@ -14,6 +14,7 @@ import { SciViewportModule } from '@scion/toolkit/viewport';
 import { SciAccordionComponent } from './accordion.component';
 import { SciAccordionItemDirective } from './accordion-item.directive';
 import { CdkAccordionModule } from '@angular/cdk/accordion';
+import { SciDimensionModule } from '@scion/toolkit/dimension';
 
 /**
  * Provides an accordion component.
@@ -27,6 +28,7 @@ import { CdkAccordionModule } from '@angular/cdk/accordion';
     CommonModule,
     SciViewportModule,
     CdkAccordionModule,
+    SciDimensionModule,
   ],
   exports: [
     SciAccordionComponent,

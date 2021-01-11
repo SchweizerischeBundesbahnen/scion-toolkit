@@ -8,6 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import { Component } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+
+export const VARIANT = 'variant';
+export const MULTI = 'multi';
 
 @Component({
   selector: 'sci-accordion-page',
@@ -15,6 +19,10 @@ import { Component } from '@angular/core';
   styleUrls: ['./sci-accordion-page.component.scss'],
 })
 export class SciAccordionPageComponent {
+
+  public VARIANT = VARIANT;
+  public MULTI = MULTI;
+  public form: FormGroup;
 
   public items: Item[] = [
     {title: 'SCION', description: 'SCION provides fundamental building blocks for implementing a microfrontend architecture and facilitates the development of Angular web applications that require a complex workbench layout of multiple views and windows.'},
@@ -29,6 +37,13 @@ export class SciAccordionPageComponent {
     {title: 'Angular Google Maps Component', description: 'Angular components built on top of the Google Maps JavaScript API.'},
     {title: 'Angular Youtube Component', description: 'Angular component built on top of the YouTube Player API.'},
   ];
+
+  constructor(formBuilder: FormBuilder) {
+    this.form = formBuilder.group({
+      [VARIANT]: formBuilder.control('bubble'),
+      [MULTI]: formBuilder.control(false),
+    });
+  }
 }
 
 export interface Item {

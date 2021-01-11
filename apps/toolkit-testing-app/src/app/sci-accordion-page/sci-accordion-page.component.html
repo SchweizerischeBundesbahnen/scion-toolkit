@@ -1,10 +1,27 @@
 <h1>sci-accordion (ɵ)</h1>
 
-<sci-accordion>
+<form [formGroup]="form">
+  <section class="settings">
+    <header>Settings</header>
+
+    <sci-form-field label="Variant">
+      <select [formControlName]="VARIANT">
+        <option value="solid">solid</option>
+        <option value="bubble">bubble</option>
+      </select>
+    </sci-form-field>
+
+    <sci-form-field label="Multi">
+      <sci-checkbox [formControlName]="MULTI"></sci-checkbox>
+    </sci-form-field>
+  </section>
+</form>
+
+<sci-accordion [variant]="form.get(VARIANT).value" [multi]="form.get(MULTI).value">
   <ng-container *ngFor="let item of items">
     <!-- item -->
     <ng-template sciAccordionItem [panel]="panel">
-      {{item.title}}
+      <header>{{item.title}}</header>
     </ng-template>
 
     <!-- item panel -->
