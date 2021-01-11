@@ -20,3 +20,4 @@ export { SciListItemPO } from './list/list-item.po';
 export { SciQualifierChipListPO } from './qualifier-chip-list/qualifier-chip-list.po';
 export { SciPropertyPO } from './property/property.po';
 export { SciTabbarPO } from './tabbar/tabbar.po';
+export { SciAccordionPO } from './accordion/accordion.po';
