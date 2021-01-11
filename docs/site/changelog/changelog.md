@@ -5,6 +5,28 @@
 
 ## Changelog
 
+# [11.0.0-beta.5](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.4...11.0.0-beta.5) (2021-01-11)
+
+
+### Features
+
+* **ɵtoolkit/accordion:** allow displaying accordion items in solid instead of speech bubble style ([7d211d3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7d211d34f2ded4c9f90869b9f69896435df07d8b))
+* **ɵtoolkit/accordion:** provide page object to be used in e2e protractor tests ([c94c14e](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/c94c14e9be6109e0ce7af5277e850d74524a3bcd))
+* **ɵtoolkit/filter-field:** allow the user to reset filter text ([29e3fec](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/29e3fec61b9bbf403b3ad1db0bfc08b9aaa88191))
+* **ɵtoolkit/filter-field:** enable the filter field for use with the Angular Forms API ([079b00c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/079b00c1ae13f9c46a35c7c7d306763b7f32e251))
+* **ɵtoolkit/theme:** remove the focus glow from disabled input fields ([be9944c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/be9944c5e610dc20ea6c96b2e6df05624480372d))
+* **toolkit/observable:** allow observing an element's position on the screen ([7cbffa1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7cbffa1dc17538a0cd197a4d10e5c3ca8bbca2e7))
+* **toolkit/viewport:** allow a viewport to grow with its content ([b7f9e0d](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/b7f9e0db350965e836c1a74707ce530ea32887bf))
+
+
+### BREAKING CHANGES
+
+* **toolkit/viewport:** Changed the `sci-viewport` element to grow with its content. The viewport no longer positions its content absolutely, but in the document element flow instead, allowing the viewport to adapt its size to its content's width and height. This change may be breaking. Please refer to our documentation on how to layout a viewport: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/docs/site/tools/viewport.md.
+
+As part of this change, we also had to change the `sci-scrollable` directive's behavior. It no longer positions its host absolutely, but in document element flow instead. You may use this directive for adding the SCION scrollbar to other viewport implementations, such as the `<cdk-virtual-scroll-viewport>` component of Angular CDK. To migrate, add the host to a CSS grid container to fill the remaining space vertically and horizontally.
+
+
+
 # [11.0.0-beta.4](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.3...11.0.0-beta.4) (2020-12-17)
 
 
