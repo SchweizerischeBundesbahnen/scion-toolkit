@@ -8,11 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ContentChildren, HostBinding, Input, QueryList, TrackByFunction, ViewChild } from '@angular/core';
+import { Component, ContentChildren, ElementRef, HostBinding, Input, OnDestroy, OnInit, QueryList, TrackByFunction, ViewChild } from '@angular/core';
 import { animate, AnimationMetadata, style, transition, trigger } from '@angular/animations';
 import { SciAccordionItemDirective } from './accordion-item.directive';
-import { SciViewportComponent } from '@scion/toolkit/viewport';
-import { CdkAccordionItem } from '@angular/cdk/accordion';
+import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
+import { fromDimension$ } from '@scion/toolkit/observable';
+import { debounceTime, takeUntil } from 'rxjs/operators';
+import { combineLatest, Subject } from 'rxjs';
 
 /**
  * Component that shows items in an accordion.
@@ -47,7 +49,12 @@ import { CdkAccordionItem } from '@angular/cdk/accordion';
     trigger('enter', SciAccordionComponent.provideEnterAnimation()),
   ],
 })
-export class SciAccordionComponent {
+export class SciAccordionComponent implements OnInit, OnDestroy {
+
+  private _destroy$ = new Subject<void>();
+
+  @ViewChild(CdkAccordion, {static: true, read: ElementRef})
+  private _cdkAccordion: ElementRef<HTMLElement>;
 
   @HostBinding('class.bubble')
   public get isBubbleVariant(): boolean {
@@ -59,8 +66,8 @@ export class SciAccordionComponent {
     return this.variant === 'solid';
   }
 
-  @ViewChild(SciViewportComponent, {static: true})
-  private _viewport: SciViewportComponent;
+  @HostBinding('class.filled')
+  public filled: boolean;
 
   @ContentChildren(SciAccordionItemDirective)
   public items: QueryList<SciAccordionItemDirective>;
@@ -77,13 +84,42 @@ export class SciAccordionComponent {
   @Input()
   public variant: 'solid' | 'bubble' = 'bubble';
 
+  constructor(private _host: ElementRef<HTMLElement>) {
+  }
+
+  public ngOnInit(): void {
+    this.computeFilledStateOnDimensionChange();
+  }
+
   public trackByFn: TrackByFunction<SciAccordionItemDirective> = (index: number, item: SciAccordionItemDirective): any => {
     return item.key || item;
   };
 
-  public onToggle(item: CdkAccordionItem, section: HTMLElement): void {
+  public onToggle(item: CdkAccordionItem): void {
     item.toggle();
-    item.expanded && setTimeout(() => this._viewport.scrollIntoView(section));
+  }
+
+  /**
+   * Computes whether this accordion fills the boundaries of this component.
+   * It does this on each dimension change and sets the CSS class 'filled'
+   * accordingly.
+   */
+  private computeFilledStateOnDimensionChange(): void {
+    combineLatest([
+      fromDimension$(this._host.nativeElement),
+      fromDimension$(this._cdkAccordion.nativeElement),
+    ])
+      .pipe(
+        debounceTime(5), // debounce dimension changes because the animation for expanding/collapsing a panel continuously emits resize events.
+        takeUntil(this._destroy$),
+      )
+      .subscribe(([hostDimension, accordionDimension]) => {
+        this.filled = (hostDimension.clientHeight <= accordionDimension.offsetHeight);
+      });
+  }
+
+  public ngOnDestroy(): void {
+    this._destroy$.next();
   }
 
   /**

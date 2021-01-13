@@ -3,36 +3,34 @@ $border-color: var(--sci-color-P400);
 $background-color: var(--sci-color-P100);
 
 :host {
-  display: grid;
+  display: block;
   border: 1px solid var(--sci-color-P400);
   border-radius: 5px;
 
-  > sci-viewport div.accordion-client {
-    // Collapse bottom borders: Render a bottom border only if the accordion items do not fill available space
-    &:not(.filled) > section.accordion-item:last-child {
-      border-bottom: 1px solid var(--sci-color-P400);
+  // Collapse bottom borders: Render a bottom border only if the accordion items do not fill available space
+  &:not(.filled) section.accordion-item:last-child {
+    border-bottom: 1px solid var(--sci-color-P400);
+  }
+
+  section.accordion-item {
+    padding: 1em;
+
+    &:not(:first-child) {
+      border-top: 1px solid var(--sci-color-P400);
     }
 
-    > section.accordion-item {
-      padding: 1em;
+    > header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
 
-      &:not(:first-child) {
-        border-top: 1px solid var(--sci-color-P400);
-      }
-
-      > header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-        user-select: none;
-      }
-
-      > section {
-        display: grid; // public API
-        grid-template-columns: 100%;
-        gap: .5em;
-      }
+    > section {
+      display: grid; // public API
+      grid-template-columns: 100%;
+      gap: .5em;
     }
   }
 

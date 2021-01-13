@@ -1,29 +1,22 @@
-<sci-viewport>
-  <div cdkAccordion [multi]="multi" sciDimension #accordion_size="sciDimension">
-    <div sciDimension #accordion_client_size="sciDimension"
-         class="accordion-client"
-         [class.filled]="accordion_size.dimension.offsetHeight === accordion_client_size.dimension.offsetHeight">
-      <section #section
-               *ngFor="let item of items; trackBy: trackByFn"
-               class="accordion-item e2e-accordion-item"
-               [class.e2e-expanded]="cdkAccordionItem.expanded"
-               [ngClass]="item.cssClass"
-               cdkAccordionItem #cdkAccordionItem="cdkAccordionItem"
-               [expanded]="item.expanded">
-        <header (click)="onToggle(cdkAccordionItem, section)" class="e2e-accordion-item-header">
-          <div>
-            <ng-container *ngTemplateOutlet="item.template"></ng-container>
-          </div>
-          <button class="material-icons e2e-toggle"
-                  [class.e2e-expand]="!cdkAccordionItem.expanded"
-                  [class.e2e-collapse]="cdkAccordionItem.expanded">
-            {{cdkAccordionItem.expanded ? 'expand_less' : 'expand_more'}}
-          </button>
-        </header>
-        <section *ngIf="cdkAccordionItem.expanded" @enter>
-          <ng-container *ngTemplateOutlet="item.panel"></ng-container>
-        </section>
-      </section>
-    </div>
-  </div>
-</sci-viewport>
+<div cdkAccordion [multi]="multi" class="accordion">
+  <section *ngFor="let item of items; trackBy: trackByFn"
+           class="accordion-item e2e-accordion-item"
+           [class.e2e-expanded]="cdkAccordionItem.expanded"
+           [ngClass]="item.cssClass"
+           cdkAccordionItem #cdkAccordionItem="cdkAccordionItem"
+           [expanded]="item.expanded">
+    <header (click)="onToggle(cdkAccordionItem)" class="e2e-accordion-item-header">
+      <div>
+        <ng-container *ngTemplateOutlet="item.template"></ng-container>
+      </div>
+      <button class="material-icons e2e-toggle"
+              [class.e2e-expand]="!cdkAccordionItem.expanded"
+              [class.e2e-collapse]="cdkAccordionItem.expanded">
+        {{cdkAccordionItem.expanded ? 'expand_less' : 'expand_more'}}
+      </button>
+    </header>
+    <section *ngIf="cdkAccordionItem.expanded" @enter>
+      <ng-container *ngTemplateOutlet="item.panel"></ng-container>
+    </section>
+  </section>
+</div>
