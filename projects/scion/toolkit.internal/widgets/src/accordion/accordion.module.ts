@@ -10,7 +10,6 @@
 
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SciViewportModule } from '@scion/toolkit/viewport';
 import { SciAccordionComponent } from './accordion.component';
 import { SciAccordionItemDirective } from './accordion-item.directive';
 import { CdkAccordionModule } from '@angular/cdk/accordion';
@@ -26,7 +25,6 @@ import { SciDimensionModule } from '@scion/toolkit/dimension';
   ],
   imports: [
     CommonModule,
-    SciViewportModule,
     CdkAccordionModule,
     SciDimensionModule,
   ],
