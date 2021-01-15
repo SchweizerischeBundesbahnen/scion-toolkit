@@ -5,6 +5,16 @@
 
 ## Changelog
 
+# [11.0.0-beta.6](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.5...11.0.0-beta.6) (2021-01-15)
+
+
+### Bug Fixes
+
+* **ɵtoolkit/accordion:** remove viewport from accordion ([ff0aac3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/ff0aac345cce7c58bebd1b49386c2216929158ba))
+* **toolkit/viewport:** render the actual scroll position when an animation completes ([8033a79](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/8033a7947cbde1b84f0f632aaf7bc0d0d7cb3cb0))
+
+
+
 # [11.0.0-beta.5](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.4...11.0.0-beta.5) (2021-01-11)
 
 
