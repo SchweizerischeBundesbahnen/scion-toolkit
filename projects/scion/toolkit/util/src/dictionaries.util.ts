@@ -30,13 +30,22 @@ export class Dictionaries {
     }
 
     if (dictionaryLike instanceof Map) {
-      return Array
-        .from(dictionaryLike.entries())
-        .reduce(
-          (obj: Dictionary, [key, value]: [string, any]): Dictionary => ({...obj, [key]: value}),
-          {},
-        );
+      return createDictionaryFromMap(dictionaryLike);
     }
+
+    // Data sent from one JavaScript realm to another is serialized with the structured clone algorithm.
+    // Altought the algorithm supports the `Map` data type, a deserialized map object cannot be checked to be instance of `Map`.
+    // This is most likely because the serialization takes place in a different realm.
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
+    // @see http://man.hubwiz.com/docset/JavaScript.docset/Contents/Resources/Documents/developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm.html
+    try {
+      const map = new Map(dictionaryLike as any);
+      return createDictionaryFromMap(map);
+    }
+    catch {
+      // noop
+    }
+
     return dictionaryLike;
   }
 }
@@ -46,4 +55,16 @@ export class Dictionaries {
  */
 export interface Dictionary<T = any> {
   [key: string]: T;
+}
+
+function createDictionaryFromMap(map: Map<any, any>): Dictionary {
+  return Array
+    .from(map.entries())
+    .reduce(
+      (dictionary: Dictionary, [key, value]: [string, any]): Dictionary => {
+        dictionary[key] = value;
+        return dictionary;
+      },
+      {},
+    );
 }
