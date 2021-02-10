@@ -187,6 +187,11 @@ describe('Maps', () => {
       expect(Maps.coerce(new Map(map))).toEqual(map);
     });
 
+    it('should return tuples as map', () => {
+      const tuples = [['key1', 'value1'], ['key2', 'value2']];
+      expect(Maps.coerce(tuples)).toEqual(new Map().set('key1', 'value1').set('key2', 'value2'));
+    });
+
     it('should return `null` for a `null` value', () => {
       expect(Maps.coerce(null, {coerceNullOrUndefined: false})).toBeNull();
     });

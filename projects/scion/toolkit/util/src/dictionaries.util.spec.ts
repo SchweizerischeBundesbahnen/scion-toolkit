@@ -28,6 +28,11 @@ describe('Dictionaries', () => {
       expect(Dictionaries.coerce(dictionary)).toBe(dictionary);
     });
 
+    it('should return tuples as dictionary', () => {
+      const tuples = [['key1', 'value1'], ['key2', 'value2']];
+      expect(Dictionaries.coerce(tuples)).toEqual({key1: 'value1', key2: 'value2'});
+    });
+
     it('should return `null` for a `null` value', () => {
       expect(Dictionaries.coerce(null, {coerceNullOrUndefined: false})).toBeNull();
     });
