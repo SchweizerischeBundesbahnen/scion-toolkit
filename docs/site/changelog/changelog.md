@@ -5,6 +5,15 @@
 
 ## Changelog
 
+# [11.0.0-beta.7](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.6...11.0.0-beta.7) (2021-02-10)
+
+
+### Features
+
+* **toolkit/util:** support the coercion of Map's from other JavaScript realms ([aea4aa8](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/aea4aa8ce21dac20cb4bb22aeff440f81d6b5b8c))
+
+
+
 # [11.0.0-beta.6](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.5...11.0.0-beta.6) (2021-01-15)
 
 
