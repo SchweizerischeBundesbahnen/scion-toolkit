@@ -10,7 +10,7 @@ The NPM sub-module `@scion/toolkit/viewport` provides an Angular viewport compon
 `NgContent` is added to a CSS grid container with, by default, a single column, filling remaining space vertically and horizontally. See section '*Layouting the viewport content*' for more information.
 
 ***
-Click [here](https://scion-toolkit-testing-app.now.sh/#/sci-viewport) for a demo of the viewport component in our internal test application.
+Click [here](https://scion-toolkit-testing-app.vercel.app/#/sci-viewport) for a demo of the viewport component in our internal test application.
 ***
 
 <!--- USAGE --->

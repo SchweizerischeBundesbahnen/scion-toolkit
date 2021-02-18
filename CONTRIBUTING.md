@@ -283,8 +283,8 @@ This chapter describes the tasks to publish a new release to NPM.
    - **@scion/toolkit** is published to: https://www.npmjs.com/package/@scion/toolkit.
    - **@scion/toolkit.internal** is published to: https://www.npmjs.com/package/@scion/toolkit.internal.
    - **Testing App** is deployed to:
-      - https://scion-toolkit-testing-app.now.sh.
-      - https://scion-toolkit-testing-app-vX-X-X.now.sh.
+      - https://scion-toolkit-testing-app.vercel.app.
+      - https://scion-toolkit-testing-app-vX-X-X.vercel.app.
   
 </details>
 

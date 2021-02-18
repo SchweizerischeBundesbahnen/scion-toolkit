@@ -8,7 +8,7 @@
 The NPM sub-module `@scion/toolkit/throbber` provides an animated graphical Angular component to indicate the execution of an action. A throbber is commonly referred to as spinner.
 
 ***
-Click [here](https://scion-toolkit-testing-app.now.sh/#/sci-throbber) for a demo of the throbber component and supported throbber types in our internal test application.
+Click [here](https://scion-toolkit-testing-app.vercel.app/#/sci-throbber) for a demo of the throbber component and supported throbber types in our internal test application.
 ***
 
 <!--- USAGE --->
