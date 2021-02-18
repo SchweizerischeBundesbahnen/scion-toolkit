@@ -179,7 +179,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           org-id: ${{ secrets.VERCEL_ORG_ID }}
           project-id: ${{ secrets.VERCEL_SCION_TOOLKIT_TESTING_APP_PROJECT_ID }}
-          aliases: scion-toolkit-testing-app.now.sh, scion-toolkit-testing-app-v%v.now.sh
+          aliases: scion-toolkit-testing-app.vercel.app, scion-toolkit-testing-app-v%v.vercel.app
           version: ${{ needs.build-toolkit.outputs.version }}
       - name: 'Publishing @scion/toolkit to NPM'
         uses: ./.github/actions/npm-publish
