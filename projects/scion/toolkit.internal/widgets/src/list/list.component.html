@@ -2,15 +2,13 @@
 <ng-container *ngIf="filterPosition === 'top'; then filter_template"></ng-container>
 
 <!-- viewport and list items -->
-<sci-viewport (keydown)="onAnyKey($event)">
-  <div>
-    <sci-list-item #item *ngFor="let listItem of listItems; trackBy: trackByFn"
-                   [listItem]="listItem"
-                   [style]="style"
-                   [active]="activeItem === item"
-                   (click)="onItemClick(item)">
-    </sci-list-item>
-  </div>
+<sci-viewport (keydown)="onAnyKey($event)" [style.--sci-viewport-content-grid-auto-rows]="'min-content'">
+  <sci-list-item #item *ngFor="let listItem of listItems; trackBy: trackByFn"
+                 [listItem]="listItem"
+                 [style]="style"
+                 [active]="activeItem === item"
+                 (click)="onItemClick(item)">
+  </sci-list-item>
 </sci-viewport>
 
 <ng-container *ngIf="filterPosition === 'bottom'; then filter_template"></ng-container>

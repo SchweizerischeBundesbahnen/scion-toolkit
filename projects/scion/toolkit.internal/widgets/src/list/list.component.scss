@@ -16,10 +16,9 @@
   }
 
   > sci-viewport {
-    flex: auto;
+    flex: 1 1 0;
     border: 1px solid var(--sci-color-P400);
     border-radius: 5px;
-    padding: .5em;
 
     sci-list-item {
       &:not(:first-child) {
