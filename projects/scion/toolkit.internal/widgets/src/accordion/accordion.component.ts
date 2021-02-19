@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ContentChildren, ElementRef, HostBinding, Input, OnDestroy, OnInit, QueryList, TrackByFunction, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ContentChildren, ElementRef, HostBinding, Input, OnDestroy, OnInit, QueryList, SkipSelf, TrackByFunction, ViewChild } from '@angular/core';
 import { animate, AnimationMetadata, style, transition, trigger } from '@angular/animations';
 import { SciAccordionItemDirective } from './accordion-item.directive';
 import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
@@ -84,7 +84,11 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
   @Input()
   public variant: 'solid' | 'bubble' = 'bubble';
 
-  constructor(private _host: ElementRef<HTMLElement>) {
+  /**
+   * Workaround for setting the filled state on initialization:
+   * @see https://github.com/angular/angular/issues/22560#issuecomment-473958144
+   */
+  constructor(private _host: ElementRef<HTMLElement>, @SkipSelf() private _cdRef: ChangeDetectorRef) {
   }
 
   public ngOnInit(): void {
@@ -114,7 +118,8 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
         takeUntil(this._destroy$),
       )
       .subscribe(([hostDimension, accordionDimension]) => {
-        this.filled = (hostDimension.clientHeight <= accordionDimension.offsetHeight);
+        this.filled = hostDimension.clientHeight <= accordionDimension.offsetHeight;
+        this._cdRef.detectChanges();
       });
   }
 
