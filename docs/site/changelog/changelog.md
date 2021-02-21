@@ -5,6 +5,16 @@
 
 ## Changelog
 
+# [11.0.0-beta.8](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.7...11.0.0-beta.8) (2021-02-21)
+
+
+### Bug Fixes
+
+* **ɵtoolkit/accordion:** trigger filled state update on initialization ([7a5402f](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7a5402f6022a39fa50696e2e49b4dbcec3b14fdd))
+* **ɵtoolkit/list:** remove padding to prevent native scrollbars from showing ([5fc6dc1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/5fc6dc16698dbb2b5942adcec768269f3d5866ef))
+
+
+
 # [11.0.0-beta.7](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.6...11.0.0-beta.7) (2021-02-10)
 
 
