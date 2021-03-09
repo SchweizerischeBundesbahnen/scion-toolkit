@@ -1,3 +1,12 @@
+# [11.0.0-beta.9](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.8...11.0.0-beta.9) (2021-03-09)
+
+
+### Bug Fixes
+
+* **toolkit/util:** make the signature of `Arrays.intersect` compatible with strict type checking mode ([21bde13](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/21bde13550ed78c192531f7b88a2651848ffa9c0)), closes [#48](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/48)
+
+
+
 # [11.0.0-beta.8](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.7...11.0.0-beta.8) (2021-02-21)
 
 
