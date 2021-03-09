@@ -112,7 +112,7 @@ export class Arrays {
    * Intersects the given arrays, returning a new array containing all the elements contained in every array.
    * Arrays which are `undefined` or `null` are ignored.
    */
-  public static intersect<T>(...arrays: T[][] | undefined): T[] | undefined {
+  public static intersect<T>(...arrays: Array<T[] | undefined | null>): T[] {
     arrays = arrays.filter(array => array !== undefined && array !== null);
 
     if (!arrays.length) {
