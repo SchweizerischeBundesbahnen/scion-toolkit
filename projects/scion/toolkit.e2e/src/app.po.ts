@@ -7,15 +7,11 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { $, browser } from 'protractor';
+import { browser } from 'protractor';
 
 export class AppPO {
 
   public async navigateTo(): Promise<any> {
     return browser.get('/#/');
-  }
-
-  public async isCardContainerShowing(): Promise<boolean> {
-    return $('div.card-container').isPresent();
   }
 }
