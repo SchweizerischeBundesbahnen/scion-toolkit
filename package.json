@@ -11,7 +11,7 @@
     "name": "SCION contributors"
   },
   "scripts": {
-    "before-push": "run-s build lint test:headless e2e:headless",
+    "before-push": "run-s **:!(toolkit-testing-app):build ngcc toolkit-testing-app:build lint test:headless e2e:headless",
     "build": "run-s **:*:build",
     "lint": "run-p **:*:lint",
     "test": "run-s **:*:test",
@@ -20,6 +20,7 @@
     "e2e:headless": "cross-env HEADLESS=HEADLESS run-s **:*:e2e",
     "pre:e2e": "npx webdriver-manager update --versions.chrome=86.0.4240.22",
     "postinstall": "ngcc",
+    "ngcc": "ngcc",
 
     "toolkit:lint": "ng lint @scion/toolkit",
     "toolkit.e2e:lint": "ng lint @scion/toolkit.e2e",
