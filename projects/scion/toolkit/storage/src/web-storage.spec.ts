@@ -90,15 +90,15 @@ describe('WebStorage', () => {
 
       testee.put('key', 'value 1');
       await expect(observeCaptor.getValues()).toEqual(['value 1']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.put('key', 'value 2');
       await expect(observeCaptor.getValues()).toEqual(['value 2']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.put('key', 'value 3');
       await expect(observeCaptor.getValues()).toEqual(['value 3']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
     });
 
     it('should not emit when associating the same item multiple times', async () => {
@@ -110,15 +110,15 @@ describe('WebStorage', () => {
 
       testee.put('key', 'value');
       await expect(observeCaptor.getValues()).toEqual(['value']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.put('key', 'value');
       await expect(observeCaptor.getValues()).toEqual([]);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.put('key', 'value');
       await expect(observeCaptor.getValues()).toEqual([]);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
     });
 
     it('should, by default, not emit when removing an item', async () => {
@@ -128,7 +128,7 @@ describe('WebStorage', () => {
 
       testee.observe$('key').subscribe(observeCaptor);
       await expect(observeCaptor.getValues()).toEqual(['value']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.remove('key');
       await expect(observeCaptor.getValues()).toEqual([]);
@@ -141,7 +141,7 @@ describe('WebStorage', () => {
 
       testee.observe$('key').subscribe(observeCaptor);
       await expect(observeCaptor.getValues()).toEqual(['value']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.remove('key');
       await expect(observeCaptor.getValues()).toEqual([]);
@@ -154,7 +154,7 @@ describe('WebStorage', () => {
 
       testee.observe$('key', {emitIfAbsent: true}).subscribe(observeCaptor);
       await expect(observeCaptor.getValues()).toEqual(['value']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.remove('key');
       await expect(observeCaptor.getValues()).toEqual([undefined]);
@@ -167,7 +167,7 @@ describe('WebStorage', () => {
 
       testee.observe$('key').subscribe(observeCaptor);
       await expect(observeCaptor.getValues()).toEqual(['value']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.put('key', null);
       await expect(observeCaptor.getValues()).toEqual([null]);
@@ -180,7 +180,7 @@ describe('WebStorage', () => {
 
       testee.observe$('key').subscribe(observeCaptor);
       await expect(observeCaptor.getValues()).toEqual(['value']);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       testee.put('key', undefined);
       await expect(observeCaptor.getValues()).toEqual([undefined]);
@@ -193,11 +193,11 @@ describe('WebStorage', () => {
 
       testee.observe$('key').subscribe(observeCaptor);
       await expect(observeCaptor.getValues()).toEqual([]);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
 
       sessionStorage.setItem('key', 'illegal value');
       await expect(observeCaptor.getValues()).toEqual([]);
-      observeCaptor.resetValues();
+      observeCaptor.reset();
     });
   });
 
@@ -280,7 +280,7 @@ describe('WebStorage', () => {
 
       testee.absent$('key').subscribe(absentCaptor);
       await expect(absentCaptor.getValues()).toEqual([undefined]);
-      absentCaptor.resetValues();
+      absentCaptor.reset();
 
       testee.put('key', 'value-1');
       await expect(absentCaptor.getValues()).toEqual([]);

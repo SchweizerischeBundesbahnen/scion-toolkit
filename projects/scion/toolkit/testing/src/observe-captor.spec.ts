@@ -129,7 +129,7 @@ describe('ObserveCaptor', () => {
     expect(captor.getValues()).toEqual(['VALUE 1', 'VALUE 2', 'VALUE 3']);
   });
 
-  it('should allow to reset captured values', () => {
+  it('should allow to reset captured values', async () => {
     const subject$ = new Subject<string>();
 
     const captor = new ObserveCaptor<string>();
@@ -138,11 +138,70 @@ describe('ObserveCaptor', () => {
     subject$.next('value 1');
     subject$.next('value 2');
     subject$.next('value 3');
-    captor.resetValues();
+    captor.reset({resetValues: true, resetEmitCount: false});
     subject$.next('value 4');
     subject$.next('value 5');
     subject$.next('value 6');
 
+    await expectAsync(captor.waitUntilEmitCount(6, 50)).toBeResolved();
     expect(captor.getValues()).toEqual(['value 4', 'value 5', 'value 6']);
+  });
+
+  it('should allow to reset the captor\'s emit count', async () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+
+    subject$.next('value 1');
+    subject$.next('value 2');
+    subject$.next('value 3');
+    captor.reset({resetValues: false, resetEmitCount: true});
+    subject$.next('value 4');
+    subject$.next('value 5');
+    subject$.next('value 6');
+
+    await expectAsync(captor.waitUntilEmitCount(3, 50)).toBeResolved();
+    await expectAsync(captor.waitUntilEmitCount(6, 50)).toBeRejected();
+    expect(captor.getValues()).toEqual(['value 1', 'value 2', 'value 3', 'value 4', 'value 5', 'value 6']);
+  });
+
+  it('should reset all aspects of the captor if not passing reset options', async () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+
+    subject$.next('value 1');
+    subject$.next('value 2');
+    subject$.next('value 3');
+    captor.reset();
+    subject$.next('value 4');
+    subject$.next('value 5');
+    subject$.next('value 6');
+
+    await expectAsync(captor.waitUntilEmitCount(3, 50)).toBeResolved();
+    await expectAsync(captor.waitUntilEmitCount(6, 50)).toBeRejected();
+    expect(captor.getValues()).toEqual(['value 4', 'value 5', 'value 6']);
+  });
+
+  it('should error when waiting for a specific emit count and the captor is reset in the meantime', async () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+    const untilEmitCountPromise = captor.waitUntilEmitCount(3);
+    captor.reset();
+
+    await expectAsync(untilEmitCountPromise).toBeRejectedWith(jasmine.stringMatching(/CaptorError/));
+  });
+
+  it('should error when waiting for a specific emit count but the timeout elapses', async () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+    const untilEmitCountPromise = captor.waitUntilEmitCount(3, 10);
+    await expectAsync(untilEmitCountPromise).toBeRejectedWith(jasmine.stringMatching(/CaptorTimeoutError/));
   });
 });
