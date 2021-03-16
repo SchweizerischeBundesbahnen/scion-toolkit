@@ -5,6 +5,15 @@
 
 ## Changelog
 
+# [11.0.0-beta.10](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.9...11.0.0-beta.10) (2021-03-16)
+
+
+### Bug Fixes
+
+* **toolkit/testing:** allow to reset the emit count of `ObserveCaptor` ([b2427bf](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/b2427bfb2c7384c157ef73b9e04a56af4df262b4))
+
+
+
 # [11.0.0-beta.9](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.8...11.0.0-beta.9) (2021-03-09)
 
 
