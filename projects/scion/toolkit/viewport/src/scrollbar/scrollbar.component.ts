@@ -58,17 +58,17 @@ export class SciScrollbarComponent implements OnDestroy {
   public static readonly VIEWPORT_RESIZE_DEBOUNCE_TIME = 50;
 
   private _destroy$ = new Subject<void>();
-  private _viewport: HTMLElement;
+  private _viewport!: HTMLElement;
   private _viewportChange$ = new Subject<void>();
-  private _lastDragPosition: number = null;
+  private _lastDragPosition: number | null = null;
 
-  private _overflow: boolean;
-  private _thumbSizeFr: number;
-  private _thumbPositionFr: number;
+  private _overflow = false;
+  private _thumbSizeFr = 0;
+  private _thumbPositionFr = 0;
 
   /* @docs-private */
   @ViewChild('thumb_handle', {static: true})
-  public thumbElement: ElementRef<HTMLDivElement>;
+  public thumbElement!: ElementRef<HTMLDivElement>;
 
   @HostBinding('class.vertical')
   public get vertical(): boolean {
@@ -85,8 +85,13 @@ export class SciScrollbarComponent implements OnDestroy {
     return this._lastDragPosition !== null;
   }
 
+  /**
+   * Specifies the direction of the scrollbar.
+   *
+   * By default, if not specified, renders a vertical scrollbar.
+   */
   @Input()
-  public direction: 'vscroll' | 'hscroll';
+  public direction: 'vscroll' | 'hscroll' = 'vscroll';
 
   /**
    * The viewport to provide scrollbars for.
@@ -173,7 +178,7 @@ export class SciScrollbarComponent implements OnDestroy {
     event.preventDefault();
 
     const newDragPositionPx = this.vertical ? event.touches[0].screenY : event.touches[0].screenX;
-    const scrollbarPanPx = newDragPositionPx - this._lastDragPosition;
+    const scrollbarPanPx = newDragPositionPx - this._lastDragPosition!;
     const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
     this._lastDragPosition = newDragPositionPx;
     this.moveViewportClient(viewportPanPx);
@@ -186,32 +191,32 @@ export class SciScrollbarComponent implements OnDestroy {
   }
 
   /* @docs-private */
-  public onMouseDown(event: MouseEvent): void {
-    if (event.button !== 0) {
+  public onMouseDown(mousedownEvent: MouseEvent): void {
+    if (mousedownEvent.button !== 0) {
       return;
     }
 
-    event.preventDefault();
-    this._lastDragPosition = this.vertical ? event.screenY : event.screenX;
+    mousedownEvent.preventDefault();
+    this._lastDragPosition = this.vertical ? mousedownEvent.screenY : mousedownEvent.screenX;
 
     // Listen for 'mousemove' events
     this._zone.runOutsideAngular(() => {
-      const mousemoveListener = merge(fromEvent(this._document, 'mousemove'), fromEvent(this._document, 'sci-mousemove'))
+      const mousemoveListener = merge(fromEvent(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
         .pipe(takeUntil(this._destroy$))
-        .subscribe((mousemoveEvent: MouseEvent) => {
+        .subscribe(mousemoveEvent => {
           mousemoveEvent.preventDefault();
 
           const newDragPositionPx = this.vertical ? mousemoveEvent.screenY : mousemoveEvent.screenX;
-          const scrollbarPanPx = newDragPositionPx - this._lastDragPosition;
+          const scrollbarPanPx = newDragPositionPx - this._lastDragPosition!;
           const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
           this._lastDragPosition = newDragPositionPx;
           this.moveViewportClient(viewportPanPx);
         });
 
       // Listen for 'mouseup' events; use 'capture phase' and 'stop propagation' to not close overlays
-      merge(fromEvent(this._document, 'mouseup', {capture: true}), fromEvent(this._document, 'sci-mouseup'))
+      merge(fromEvent(this._document, 'mouseup', {capture: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup'))
         .pipe(first(), takeUntil(this._destroy$))
-        .subscribe((mouseupEvent: MouseEvent) => {
+        .subscribe(mouseupEvent => {
           mouseupEvent.stopPropagation();
           mousemoveListener.unsubscribe();
           this._lastDragPosition = null;
@@ -257,13 +262,16 @@ export class SciScrollbarComponent implements OnDestroy {
    * Scrolls continuously while holding the mouse pressed, or until the mouse leaves the scrolltrack.
    */
   private scrollWhileMouseDown(viewportScrollPx: number, mousedownEvent: MouseEvent): void {
-    const scrollTrackElement = mousedownEvent.target;
+    // The `EventTarget` type of `Event.target` is not yet compatible with `FromEventTarget` used in `fromEvent`.
+    // This will be fixed in rxjs version 7.0.0. Refer to https://github.com/ReactiveX/rxjs/commit/5f022d784570684632e6fd5ae247fc259ee34c4b
+    // for more details.
+    const scrollTrackElement = mousedownEvent.target as Element;
 
-    // scroll continously every 50ms after an initial delay of 250ms
+    // scroll continuously every 50ms after an initial delay of 250ms
     timer(250, 50)
       .pipe(
         // continue chain with latest mouse event
-        withLatestFrom(merge(of(mousedownEvent), fromEvent(scrollTrackElement, 'mousemove')), (tick, event) => event),
+        withLatestFrom(merge(of(mousedownEvent), fromEvent<MouseEvent>(scrollTrackElement, 'mousemove')), (tick, event) => event),
         // start immediately
         startWith(mousedownEvent),
         // stop scrolling on mouseout or mouseup
@@ -326,7 +334,8 @@ export class SciScrollbarComponent implements OnDestroy {
       .pipe(
         map(() => Array.from(element.children)),
         startWith(Array.from(element.children)),
-        filterArray<HTMLElement>(child => !FromDimension.isSynthResizeObservableObject(child)),
+        filterArray((child: Element): child is HTMLElement => child instanceof HTMLElement),
+        filterArray(child => !FromDimension.isSynthResizeObservableObject(child)),
       );
   }
 

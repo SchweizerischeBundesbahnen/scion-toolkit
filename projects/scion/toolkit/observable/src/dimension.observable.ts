@@ -56,7 +56,7 @@ export function fromDimension$(target: HTMLElement, options?: { useNativeResizeO
   // Check if there is already allocated a <HTML> object element to listen for resize events.
   const registry = FromDimension.objectObservableRegistry;
   if (registry.has(target)) {
-    return registry.get(target);
+    return registry.get(target)!;
   }
 
   // Allocate the <HTML> object element and multicast its resize events to the subscribers.
@@ -77,7 +77,7 @@ export function fromDimension$(target: HTMLElement, options?: { useNativeResizeO
 
 function createNativeResizeObservable$(target: HTMLElement): Observable<Dimension> {
   return new Observable((observer: Observer<Dimension>): TeardownLogic => {
-    const resizeObserver = new window['ResizeObserver'](() => observer.next(FromDimension.captureElementDimension(target))); // tslint:disable-line:typedef
+    const resizeObserver = new (window as any).ResizeObserver(() => observer.next(FromDimension.captureElementDimension(target))); // tslint:disable-line:typedef
     resizeObserver.observe(target);
 
     // emit the current dimension once the browser is about to repaint
@@ -114,7 +114,7 @@ function createObjectResizeObservable$(target: HTMLElement, onDisposeFn: () => v
     fromEvent(objectElement, 'load')
       .pipe(
         tap(() => ensureHostElementPositioned(target)),
-        switchMap(() => concat(of(undefined) /* emit the dimension upon subscription */, fromEvent(objectElement.contentWindow, 'resize') /* emit on size change */)),
+        switchMap(() => concat(of(undefined) /* emit the dimension upon subscription */, fromEvent(objectElement.contentWindow!, 'resize') /* emit on size change */)),
         map((): Dimension => FromDimension.captureElementDimension(target)),
         takeUntil(destroy$),
       )
@@ -137,14 +137,16 @@ function ensureHostElementPositioned(element: HTMLElement): void {
 }
 
 function supportsNativeResizeObserver(): boolean {
-  return !!window['ResizeObserver'];
+  return 'ResizeObserver' in window;
 }
 
 /**
  * Applies the given style(s) to the given element.
+ *
+ * Specify styles to be modified by passing a dictionary containing CSS property names (hyphen case).
  */
 function setStyle(element: HTMLElement, style: { [style: string]: any }): void {
-  Object.keys(style).forEach(key => element.style[key] = style[key]);
+  Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
 }
 
 /**
@@ -179,7 +181,7 @@ export namespace FromDimension {
   /**
    * Returns 'true' if the given element is used to observe an element's size.
    */
-  export function isSynthResizeObservableObject(element: HTMLElement): boolean {
+  export function isSynthResizeObservableObject(element: Element): boolean {
     return element instanceof HTMLObjectElement && element.classList.contains(FromDimension.SYNTH_ELEMENT_MARKER);
   }
 

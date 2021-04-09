@@ -14,8 +14,10 @@ import { MonoTypeOperatorFunction, noop, Observable, Observer, OperatorFunction,
 /**
  * Filters items in the source array and emits an array with items satisfying given predicate.
  *
- * An undefined predicate matches any value.
+ * If passing `undefined` as predicate, the filter matches all items.
  */
+export function filterArray<T, S extends T>(predicate?: (item: T) => item is S): OperatorFunction<T[], S[]>;
+export function filterArray<T>(predicate?: (item: T) => boolean): MonoTypeOperatorFunction<T[]>;
 export function filterArray<T>(predicate?: (item: T) => boolean): MonoTypeOperatorFunction<T[]> {
   return map((items: T[]): T[] => items.filter(item => !predicate || predicate(item)));
 }
@@ -46,9 +48,9 @@ export function sortArray<T>(comparator: (item1: T, item2: T) => number): MonoTy
 }
 
 /**
- * Executes a tap-function for the first perculating value.
+ * Executes a tap-function for the first percolating value.
  */
-export function tapFirst<T>(tapFn: (value: T) => void, scheduler?: SchedulerLike): MonoTypeOperatorFunction<T> {
+export function tapFirst<T>(tapFn: (value?: T) => void, scheduler?: SchedulerLike): MonoTypeOperatorFunction<T> {
   return map(((value: T, index: number): T => {
     if (index === 0) {
       scheduler ? scheduler.schedule(tapFn) : tapFn(value);

@@ -49,12 +49,12 @@ export class SciThrobberComponent {
    * - **ellipsis**
    * Represents a throbber as an ellipsis consisting of three horizontally arranged points that appear one after the other.
    * - **ripple**
-   * Represents a throbble with a rippled, centric wave effect, similar to throwing a stone into water.
+   * Represents a throbber with a rippled, centric wave effect, similar to throwing a stone into water.
    * - **roller**
    * Represents a circular throbber with points rotating around the center of a circle. Points have a delayed acceleration, which leads to an accordion effect.
    * - **spinner** (default)
    * Represents a classic spinner throbber with strokes arranged radially. The strokes light up one after the other in clockwise direction and then then fade out again.
    */
   @Input()
-  public type: 'ellipsis' | 'ripple' | 'roller' | 'spinner';
+  public type: 'ellipsis' | 'ripple' | 'roller' | 'spinner' = 'spinner';
 }

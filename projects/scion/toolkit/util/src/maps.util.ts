@@ -23,7 +23,9 @@ export class Maps {
   /**
    * Creates a {@link Map} from the given map-like object. If given a `Map`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Map}.
    */
-  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T>, options?: { coerceNullOrUndefined?: boolean }): Map<string, T> | null {
+  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: { coerceNullOrUndefined: true } | {}): NonNullable<Map<string, T>>;
+  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options: { coerceNullOrUndefined: false }): Map<string, T> | null | undefined;
+  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: { coerceNullOrUndefined?: boolean }): Map<string, T> | null | undefined {
     if (mapLike === null || mapLike === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return new Map<string, T>();
@@ -36,7 +38,7 @@ export class Maps {
     }
 
     // Data sent from one JavaScript realm to another is serialized with the structured clone algorithm.
-    // Altought the algorithm supports the `Map` data type, a deserialized map object cannot be checked to be instance of `Map`.
+    // Although the algorithm supports the `Map` data type, a deserialized map object cannot be checked to be instance of `Map`.
     // This is most likely because the serialization takes place in a different realm.
     // @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
     // @see http://man.hubwiz.com/docset/JavaScript.docset/Contents/Resources/Documents/developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm.html
@@ -73,9 +75,10 @@ export class Maps {
 
     let hasRemoved = false;
     if (typeof value === 'function') {
+      const predicateFn = value as PredicateFn<V>;
       hasRemoved = Array.from(values)
-        .filter(value as PredicateFn<V>)
-        .reduce((removed, it) => values.delete(it) || removed, false);
+        .filter(predicateFn)
+        .reduce<boolean>((removed, it) => values.delete(it) || removed, false);
     }
     else {
       hasRemoved = values.delete(value);

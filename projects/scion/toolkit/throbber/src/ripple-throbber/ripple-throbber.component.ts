@@ -11,7 +11,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 /**
- * Represents a throbble with a rippled, centric wave effect, similar to throwing a stone into water.
+ * Represents a throbber with a rippled, centric wave effect, similar to throwing a stone into water.
  *
  * Throbber type: `ripple`
  */

@@ -18,7 +18,7 @@ import { SciSashDirective } from './sash.directive';
 export class SciSashInitializerDirective implements OnChanges {
 
   @Input('sciSashInitializer') // tslint:disable-line:no-input-rename
-  public sash: SciSashDirective;
+  public sash!: SciSashDirective;
 
   constructor(private _host: ElementRef<HTMLDivElement>) {
   }

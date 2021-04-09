@@ -48,7 +48,7 @@ export class SciScrollableDirective implements OnChanges, OnDestroy {
       this._inputChange$.pipe(map(() => nativeScrollbarTrackSizeProvider.trackSize)),
     )
       .pipe(takeUntil(this._destroy$))
-      .subscribe((nativeScrollbarTrackSize: NativeScrollbarTrackSize) => {
+      .subscribe(nativeScrollbarTrackSize => {
         if (nativeScrollbarTrackSize === null) { // the native scrollbar sits on top of the content
           this.useNativeScrollbars();
         }
