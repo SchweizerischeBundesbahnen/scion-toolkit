@@ -109,27 +109,31 @@ export class BeanManager {
       throw Error('[BeanRegisterError] Missing bean lookup symbol.');
     }
 
+    if (!instructions || !containsBeansConstructStrategy(instructions)) {
+      instructions = {...instructions, useClass: symbol as Type<T>};
+    }
+
     // Check that either 'multi' or 'non-multi' beans are registered on the same symbol.
-    const multi = Defined.orElse(instructions?.multi, false);
-    if (multi && this._beanRegistry.has(symbol) && Array.from(this._beanRegistry.get(symbol)).some(metaData => !metaData.multi)) {
+    const multi = Defined.orElse(instructions.multi, false);
+    if (multi && this._beanRegistry.has(symbol) && Array.from(this._beanRegistry.get(symbol)!).some(metaData => !metaData.multi)) {
       throw Error('[BeanRegisterError] Trying to register a bean as \'multi-bean\' on a symbol that has already registered a \'non-multi-bean\'. This is probably not what was intended.');
     }
-    if (!multi && this._beanRegistry.has(symbol) && Array.from(this._beanRegistry.get(symbol)).some(metaData => metaData.multi)) {
+    if (!multi && this._beanRegistry.has(symbol) && Array.from(this._beanRegistry.get(symbol)!).some(metaData => metaData.multi)) {
       throw Error('[BeanRegisterError] Trying to register a bean on a symbol that has already registered a \'multi-bean\'. This is probably not what was intended.');
     }
 
     // Destroy an already registered bean under the same symbol, if any, unless multi is set to `true`.
     if (!multi && this._beanRegistry.has(symbol)) {
-      this.disposeBean(this._beanRegistry.get(symbol).values().next().value);
+      this.disposeBean(this._beanRegistry.get(symbol)!.values().next().value);
     }
 
     const beanInfo: BeanInfo<T> = {
       symbol: symbol,
-      beanConstructFn: deriveConstructFunction(symbol, instructions),
-      eager: Defined.orElse(instructions && (instructions.eager || instructions.useValue !== undefined), false),
+      beanConstructFn: deriveConstructFunction(instructions),
+      eager: Defined.orElse(instructions.eager || instructions.useValue !== undefined, false),
       multi: multi,
-      useExisting: instructions?.useExisting,
-      destroyOrder: instructions?.destroyOrder ?? 0,
+      instructions: instructions,
+      constructing: false,
     };
 
     if (multi) {
@@ -183,7 +187,7 @@ export class BeanManager {
       throw Error('[BeanDecoratorRegisterError] A decorator requires a symbol.');
     }
 
-    const constructFn = deriveConstructFunction(undefined, decorator)();
+    const constructFn = deriveConstructFunction(decorator)();
     Maps.addListValue(this._decoratorRegistry, symbol, constructFn);
   }
 
@@ -204,14 +208,15 @@ export class BeanManager {
       if (typeof initializer === 'function') {
         return {fn: initializer};
       }
-      else if (initializer !== undefined && initializer.runlevel < 0) {
+      else if (initializer.runlevel !== undefined && initializer.runlevel < 0) {
         throw Error(`[InitializerRegisterError] The runlevel of an initializer must be >= 0, but was ${initializer.runlevel}.`);
       }
       else if (initializer.useFunction) {
         return {fn: initializer.useFunction, runlevel: initializer.runlevel};
       }
       else if (initializer.useClass) {
-        return {fn: (): Promise<void> => new initializer.useClass().init(), runlevel: initializer.runlevel};
+        const initializerInstance = new initializer.useClass();
+        return {fn: (): Promise<void> => initializerInstance.init(), runlevel: initializer.runlevel};
       }
       throw Error('[NullInitializerError] No initializer specified.');
     })();
@@ -331,7 +336,8 @@ export class BeanManager {
 
   private disposeBean(beanInfo: BeanInfo): void {
     // Invoke 'preDestroy' lifecycle hook, if any, but only if not an alias for another bean.
-    if (!beanInfo.useExisting && beanInfo.instance && typeof (beanInfo.instance as PreDestroy).preDestroy === 'function') {
+    const alias = beanInfo.instructions.useExisting ?? false;
+    if (!alias && beanInfo.instance && typeof (beanInfo.instance as PreDestroy).preDestroy === 'function') {
       try {
         beanInfo.instance.preDestroy();
       }
@@ -378,7 +384,7 @@ export class BeanManager {
     for (const runlevel of runlevels) {
       this._runlevel$.next(runlevel);
       try {
-        await Promise.all(initializersGroupedByRunlevel.get(runlevel).map(initializerFn => initializerFn()));
+        await Promise.all(initializersGroupedByRunlevel.get(runlevel)!.map(initializerFn => initializerFn()));
       }
       catch (error) {
         throw Error(`[InitializerError] Initializer rejected with an error: ${error} [runlevel=${runlevel}]`);
@@ -434,32 +440,43 @@ export const Beans = new BeanManager();
  * @ignore
  */
 function compareByDestroyOrder(bean1: BeanInfo, bean2: BeanInfo): number {
-  if (bean1.destroyOrder < bean2.destroyOrder) {
+  if ((bean1.instructions.destroyOrder ?? 0) < (bean2.instructions.destroyOrder ?? 0)) {
     return -1;
   }
-  if (bean1.destroyOrder > bean2.destroyOrder) {
+  if ((bean1.instructions.destroyOrder ?? 0) > (bean2.instructions.destroyOrder ?? 0)) {
     return +1;
   }
-  return bean2.constructInstant - bean1.constructInstant; // reverse construction order
+  return (bean2.constructInstant ?? 0) - (bean1.constructInstant ?? 0); // reverse construction order
 }
 
 /** @ignore */
-function deriveConstructFunction<T>(symbol: Type<T | any> | AbstractType<T | any> | symbol, instructions?: BeanInstanceConstructInstructions<T>): () => T {
-  if (instructions?.useValue !== undefined) {
-    return (): T => instructions.useValue;
+function deriveConstructFunction<T>(instructions: BeanInstanceConstructInstructions<T>): () => T {
+  if (Object.keys(instructions).filter(property => property.startsWith('use')).length > 1) {
+    throw Error(`[BeanRegisterError] Multiple bean construct strategies specified. Expected one of 'useValue', 'useClass', 'useFactory' or 'useExisting', but was ${JSON.stringify(instructions)}.`);
   }
-  else if (instructions?.useClass) {
-    return (): T => new instructions.useClass();
+
+  if (instructions.useValue !== undefined) {
+    const useValue = instructions.useValue;
+    return (): T => useValue;
   }
-  else if (instructions?.useFactory) {
-    return (): T => instructions.useFactory();
+  else if (instructions.useClass) {
+    const useClassFn = instructions.useClass;
+    return (): T => new useClassFn();
   }
-  else if (instructions?.useExisting) {
-    return (): T => Beans.get(instructions.useExisting);
+  else if (instructions.useFactory) {
+    const useFactoryFn = instructions.useFactory;
+    return (): T => useFactoryFn();
   }
-  else {
-    return (): T => new (symbol as Type<T>)();
+  else if (instructions.useExisting) {
+    const useExisting = instructions.useExisting;
+    return (): T => Beans.get(useExisting);
   }
+  throw Error(`[BeanRegisterError] Unsupported bean construct strategy specified. Expected one of 'useValue', 'useClass', 'useFactory' or 'useExisting', but was ${JSON.stringify(instructions)}.`);
+}
+
+/** @ignore */
+function containsBeansConstructStrategy(instructions: BeanInstanceConstructInstructions): boolean {
+  return Object.keys(instructions).some(property => property.startsWith('use'));
 }
 
 /**
@@ -483,13 +500,12 @@ export interface PreDestroy {
 interface BeanInfo<T = any> {
   symbol: Type<T | any> | AbstractType<T | any> | symbol;
   instance?: T;
-  constructing?: boolean;
+  constructing: boolean;
   beanConstructFn: () => T;
   constructInstant?: number;
   eager: boolean;
   multi: boolean;
-  useExisting: Type<any> | AbstractType<any> | symbol;
-  destroyOrder: number;
+  instructions: BeanInstanceConstructInstructions;
 }
 
 /**

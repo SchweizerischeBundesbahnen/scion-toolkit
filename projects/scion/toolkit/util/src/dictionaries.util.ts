@@ -21,7 +21,9 @@ export class Dictionaries {
   /**
    * Creates a {@link Dictionary} from the given dictionary-like object. If given a `Dictionary`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Dictionary}.
    */
-  public static coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T>, options?: { coerceNullOrUndefined?: boolean }): Dictionary<T> | null {
+  public static coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: { coerceNullOrUndefined: true } | {}): NonNullable<Dictionary<T>>;
+  public static coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options: { coerceNullOrUndefined: false }): Dictionary<T> | null | undefined;
+  public static coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: { coerceNullOrUndefined?: boolean }): Dictionary<T> | null | undefined {
     if (dictionaryLike === null || dictionaryLike === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return {};
@@ -34,7 +36,7 @@ export class Dictionaries {
     }
 
     // Data sent from one JavaScript realm to another is serialized with the structured clone algorithm.
-    // Altought the algorithm supports the `Map` data type, a deserialized map object cannot be checked to be instance of `Map`.
+    // Although the algorithm supports the `Map` data type, a deserialized map object cannot be checked to be instance of `Map`.
     // This is most likely because the serialization takes place in a different realm.
     // @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
     // @see http://man.hubwiz.com/docset/JavaScript.docset/Contents/Resources/Documents/developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm.html

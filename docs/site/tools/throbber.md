@@ -47,7 +47,7 @@ You can choose between different throbber presentations by setting the `type` pr
 - **ellipsis**\
   Represents a throbber as an ellipsis consisting of three horizontally arranged points that appear one after the other.
 - **ripple**\
-  Represents a throbble with a rippled, centric wave effect, similar to throwing a stone into water.
+  Represents a throbber with a rippled, centric wave effect, similar to throwing a stone into water.
 - **roller**\
   Represents a circular throbber with points rotating around the center of a circle. Points have a delayed acceleration, which leads to an accordion effect.
 - **spinner** (default)\

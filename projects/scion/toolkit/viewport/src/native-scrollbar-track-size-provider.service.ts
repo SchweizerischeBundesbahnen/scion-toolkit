@@ -41,7 +41,7 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
   /**
    * Returns the native scrollbar track size, if any, or else `null`.
    */
-  public get trackSize(): NativeScrollbarTrackSize {
+  public get trackSize(): NativeScrollbarTrackSize | null {
     return this._trackSize$.getValue();
   }
 
@@ -50,7 +50,7 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
    *
    * @returns native track size, or `null` if the native scrollbars sit on top of the content.
    */
-  private computeTrackSize(): NativeScrollbarTrackSize {
+  private computeTrackSize(): NativeScrollbarTrackSize | null {
     // create temporary viewport and viewport client with native scrollbars to compute scrolltrack width
     const viewportDiv = this._renderer.createElement('div');
     this.setStyle(this._renderer, viewportDiv, {
@@ -94,12 +94,12 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
       fromEvent(window, 'resize')
         .pipe(
           debounceTime(5),
-          startWith(null as number), // trigger the initial computation
-          map((): NativeScrollbarTrackSize => this.computeTrackSize()),
-          distinctUntilChanged((t1: NativeScrollbarTrackSize, t2: NativeScrollbarTrackSize) => JSON.stringify(t1) === JSON.stringify(t2)),
+          startWith(null), // trigger the initial computation
+          map(() => this.computeTrackSize()),
+          distinctUntilChanged((t1, t2) => JSON.stringify(t1) === JSON.stringify(t2)),
           takeUntil(this._destroy$),
         )
-        .subscribe((trackSize: NativeScrollbarTrackSize) => {
+        .subscribe(trackSize => {
           this._zone.run(() => this._trackSize$.next(trackSize));
         });
     });

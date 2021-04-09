@@ -25,10 +25,10 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
   private _destroy$ = new Subject<void>();
 
   @HostBinding('class.moving')
-  public moving: boolean;
+  public moving = false;
 
   @Input('sciSplitterVertical') // tslint:disable-line:no-input-rename
-  public vertical: boolean;
+  public vertical!: boolean;
 
   /**
    * Emits when starting to move the splitter.
@@ -56,7 +56,7 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
   public reset = new EventEmitter<void>();
 
   @HostBinding('style.cursor')
-  public sashCursor: string;
+  public sashCursor!: string;
 
   constructor(private _zone: NgZone, @Inject(DOCUMENT) private _document: Document) {
   }
@@ -71,9 +71,9 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
   }
 
   @HostListener('touchstart', ['$event'])
-  public onTouchStart(event: TouchEvent): void {
+  public onTouchStart(startEvent: TouchEvent): void {
     this.installMoveListener({
-        startEvent: event,
+        startEvent: startEvent,
         moveEventNames: ['touchmove'],
         endEventNames: ['touchend', 'touchcancel'],
         eventPositionFn: (touchEvent: TouchEvent): EventPosition => {
@@ -90,13 +90,13 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
   }
 
   @HostListener('mousedown', ['$event'])
-  public onMouseDown(event: MouseEvent): void {
-    if (event.button !== 0) {
+  public onMouseDown(startEvent: MouseEvent): void {
+    if (startEvent.button !== 0) {
       return;
     }
 
     this.installMoveListener({
-        startEvent: event,
+        startEvent: startEvent,
         moveEventNames: ['mousemove', 'sci-mousemove'],
         endEventNames: ['mouseup', 'sci-mouseup'],
         eventPositionFn: (mouseEvent: MouseEvent): EventPosition => {
@@ -111,15 +111,15 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
     );
   }
 
-  private installMoveListener(config: { startEvent: Event, moveEventNames: string[], endEventNames: string[], eventPositionFn: (event: Event) => EventPosition }): void {
+  private installMoveListener<EVENT extends Event>(config: { startEvent: EVENT, moveEventNames: string[], endEventNames: string[], eventPositionFn: (event: EVENT) => EventPosition }): void {
     const startEvent = config.startEvent;
 
     startEvent.preventDefault();
 
     this._zone.runOutsideAngular(() => {
       // install listeners on document level to allow dragging outside of the sash box.
-      const moveEvent$ = merge(...config.moveEventNames.map(eventName => fromEvent(this._document, eventName)));
-      const endEvent$ = merge(...config.endEventNames.map(eventName => fromEvent(this._document, eventName)));
+      const moveEvent$ = merge(...config.moveEventNames.map(eventName => fromEvent<EVENT>(this._document, eventName)));
+      const endEvent$ = merge(...config.endEventNames.map(eventName => fromEvent<EVENT>(this._document, eventName)));
       let lastClientPos = config.eventPositionFn(startEvent).clientPos;
 
       // Apply cursor on document level to prevent flickering while moving the splitter
@@ -135,7 +135,7 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
           })),
           takeUntil(merge(endEvent$, this._destroy$)),
         )
-        .subscribe((moveEvent: Event) => {
+        .subscribe((moveEvent: EVENT) => {
           const eventPos = config.eventPositionFn(moveEvent);
           const newClientPos = eventPos.clientPos;
           const delta = newClientPos - lastClientPos;
@@ -147,7 +147,7 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
       // Listen for 'end' events; call 'stop propagation' to not close overlays
       endEvent$
         .pipe(first(), takeUntil(this._destroy$))
-        .subscribe((endEvent: Event) => {
+        .subscribe((endEvent: EVENT) => {
           endEvent.stopPropagation();
           this._document.body.style.cursor = oldDocumentCursor;
           this.moving && this._zone.run(() => {

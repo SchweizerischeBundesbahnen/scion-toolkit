@@ -60,12 +60,12 @@ export class SciSashDirective implements OnInit, OnChanges {
    * If the unit is omitted, the value is interpreted as a pixel value.
    */
   @Input()
-  public minSize: string | number;
+  public minSize?: string | number;
 
   /**
    * @internal
    */
-  public element: HTMLElement;
+  public element!: HTMLElement;
 
   /**
    * @internal
@@ -84,12 +84,12 @@ export class SciSashDirective implements OnInit, OnChanges {
   /**
    * @internal
    */
-  public flexShrink: number;
+  public flexShrink!: number;
 
   /**
    * @internal
    */
-  public flexBasis: string;
+  public flexBasis!: string;
 
   /**
    * Normalized flex-grow proportion of this sash, which is a value >= 1.

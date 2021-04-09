@@ -25,14 +25,14 @@ export class Defined {
   /**
    * Returns the value, if present, otherwise returns the `orElseValue`, which can be a static value or provided by a supplier function.
    */
-  public static orElse<T>(value: T, orElseValue: T | (() => T)): T {
+  public static orElse<T>(value: T | undefined, orElseValue: T | (() => T)): T {
     return (value !== undefined ? value : (typeof orElseValue === 'function' ? ((orElseValue) as Function)() : orElseValue));
   }
 
   /**
    * Returns the value, if present, otherwise throws an exception to be created by the provided supplier.
    */
-  public static orElseThrow<T>(value: T, orElseThrowFn: () => Error): T {
+  public static orElseThrow<T>(value: T | undefined, orElseThrowFn: () => Error): T {
     if (value !== undefined) {
       return value;
     }

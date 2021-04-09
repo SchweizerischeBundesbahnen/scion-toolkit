@@ -41,9 +41,11 @@ export class SciDimensionDirective implements OnInit, OnDestroy {
   /**
    * Controls if to emit a dimension change inside or outside of the Angular zone.
    * If emitted outside of the Angular zone no change detection cycle is triggered.
+   *
+   * By default, if not specified, emits inside the Angular zone.
    */
   @Input()
-  public emitOutsideAngular: boolean;
+  public emitOutsideAngular = false;
 
   constructor(host: ElementRef<HTMLElement>, private _ngZone: NgZone) {
     this._host = host.nativeElement;

@@ -90,5 +90,5 @@ function captureClientRect(element: HTMLElement): ClientRect {
 }
 
 function supportsNativeResizeObserver(): boolean {
-  return !!window['ResizeObserver'];
+  return 'ResizeObserver' in window;
 }

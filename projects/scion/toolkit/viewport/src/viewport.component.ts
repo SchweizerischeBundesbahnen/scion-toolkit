@@ -85,8 +85,8 @@ import { coerceElement } from '@angular/cdk/coercion';
 })
 export class SciViewportComponent {
 
-  private _viewport: HTMLDivElement;
-  private _viewportClient: HTMLDivElement;
+  private _viewport!: HTMLDivElement;
+  private _viewportClient!: HTMLDivElement;
   private _scrollbarStyle: ScrollbarStyle = 'on-top';
 
   @HostBinding('attr.tabindex')

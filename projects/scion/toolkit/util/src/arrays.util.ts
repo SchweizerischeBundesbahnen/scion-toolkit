@@ -21,7 +21,9 @@ export class Arrays {
   /**
    * Returns the value, if an array, or adds it to an array. If `null` or `undefined` is given, by default, returns an empty array.
    */
-  public static coerce<T>(value: T | T[], options?: { coerceNullOrUndefined?: boolean }): T[] {
+  public static coerce<T>(value: T | T[] | null | undefined, options?: { coerceNullOrUndefined: true } | {}): NonNullable<T[]>;
+  public static coerce<T>(value: T | T[] | null | undefined, options: { coerceNullOrUndefined: false }): T[] | null | undefined;
+  public static coerce<T>(value: T | T[] | null | undefined, options?: { coerceNullOrUndefined?: boolean }): T[] | null | undefined {
     if (value === null || value === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return [];
@@ -113,18 +115,14 @@ export class Arrays {
    * Arrays which are `undefined` or `null` are ignored.
    */
   public static intersect<T>(...arrays: Array<T[] | undefined | null>): T[] {
-    arrays = arrays.filter(array => array !== undefined && array !== null);
+    const _arrays = arrays.filter(array => array !== undefined && array !== null) as Array<T[]>;
 
-    if (!arrays.length) {
+    if (!_arrays.length) {
       return [];
     }
 
-    if (arrays.length === 1) {
-      return [...arrays[0]];
-    }
-
-    const first = [...arrays.pop()];
-    return arrays.reduce((intersection, array) => intersection.filter(value => array.includes(value)), first);
+    const first = _arrays.pop()!;
+    return _arrays.reduce((intersection, array) => intersection.filter(value => array.includes(value)), [...first]);
   }
 
   /**
