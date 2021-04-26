@@ -1,3 +1,12 @@
+# [11.0.0-beta.11](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.10...11.0.0-beta.11) (2021-04-26)
+
+
+### Chore
+
+* **toolkit:** compile with TypeScript strict checks enabled ([0a241d5](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/0a241d526984d855287cfa3e7410460a2cb7fc06)), closes [#42](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/42)
+
+
+
 # [11.0.0-beta.10](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.9...11.0.0-beta.10) (2021-03-16)
 
 
