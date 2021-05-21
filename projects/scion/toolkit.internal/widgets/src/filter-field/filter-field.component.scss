@@ -6,7 +6,7 @@
   @include sci-toolkit-styles.input-field(5px);
   padding: .25em .5em;
 
-  > input#search {
+  > input {
     flex: auto;
     border: none;
     box-shadow: none;
