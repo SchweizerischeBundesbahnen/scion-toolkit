@@ -9,6 +9,7 @@
  */
 
 import { Defined } from './defined.util';
+import { identity } from 'rxjs';
 
 /**
  * Provides array utility methods.
@@ -96,18 +97,11 @@ export class Arrays {
   /**
    * Removes duplicate items from the array. The original array will not be modified.
    *
-   * Use the parameter `identityFn` to provide a function for comparing objects.
+   * Use the parameter `keySelector` to provide a function for comparing objects.
    */
-  public static distinct<T>(items: T[], identityFn: (item: T) => any = (item: T): any => item): T[] {
-    const visitedItems = new Set<T>();
-    return items.filter(item => {
-      const identity = identityFn(item);
-      if (visitedItems.has(identity)) {
-        return false;
-      }
-      visitedItems.add(identity);
-      return true;
-    });
+  public static distinct<T>(items: T[], keySelector: (item: T) => any = identity): T[] {
+    const itemSet = new Set(items.map(keySelector));
+    return items.filter(item => itemSet.delete(keySelector(item)));
   }
 
   /**
