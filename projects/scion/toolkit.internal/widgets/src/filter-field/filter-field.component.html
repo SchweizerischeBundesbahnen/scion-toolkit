@@ -1,4 +1,5 @@
-<input #input id="search"
+<input #input
+       [attr.id]="id"
        autocomplete="off"
        [formControl]="formControl"
        [tabindex]="tabindex"
@@ -8,4 +9,4 @@
       (click)="onClear($event)">
   clear
 </button>
-<label for="search" class="filter-icon material-icons">search</label>
+<label [for]="id" class="filter-icon material-icons">search</label>

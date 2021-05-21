@@ -14,6 +14,7 @@ import { takeUntil } from 'rxjs/operators';
 import { noop, Subject } from 'rxjs';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { FocusMonitor, FocusOrigin } from '@angular/cdk/a11y';
+import { UUID } from '@scion/toolkit/uuid';
 
 /**
  * Provides a simple filter control.
@@ -32,6 +33,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   private _destroy$ = new Subject<void>();
   private _cvaChangeFn: (value: any) => void = noop;
   private _cvaTouchedFn: () => void = noop;
+  public id = UUID.randomUUID();
 
   /**
    * Sets focus order in sequential keyboard navigation.
