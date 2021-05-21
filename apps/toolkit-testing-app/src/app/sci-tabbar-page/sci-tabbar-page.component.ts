@@ -8,8 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { SciTabbarComponent } from '@scion/toolkit.internal/widgets';
 
 @Component({
   selector: 'sci-tabbar-page',
@@ -22,4 +23,12 @@ export class SciTabbarPageComponent {
   public longContentTabVisible = new FormControl(true);
   public textareaTabVisible = new FormControl(true);
   public dynamicTabs = new FormControl('Tab 1,Tab 2,Tab 3');
+  public selectedTabName = new FormControl();
+
+  @ViewChild(SciTabbarComponent)
+  public tabbar: SciTabbarComponent;
+
+  public onActivateTab(): void {
+    this.tabbar.activateTab(this.selectedTabName.value);
+  }
 }

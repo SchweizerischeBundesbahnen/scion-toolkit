@@ -8,10 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { AfterContentInit, ChangeDetectionStrategy, Component, ContentChildren, QueryList, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChildren, QueryList, ViewChild, ViewContainerRef } from '@angular/core';
 import { SciTabDirective } from './tab.directive';
-import { startWith, tap } from 'rxjs/operators';
-import { noop, Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { tapFirst } from '@scion/toolkit/operators';
 
 /**
  * Organizes content into separate tabs where only one tab can be visible at a time.
@@ -44,21 +45,30 @@ export class SciTabbarComponent implements AfterContentInit {
   public tabs: QueryList<SciTabDirective>;
 
   /** @internal */
-  public tabs$: Observable<QueryList<SciTabDirective>>;
+  public tabs$: Observable<SciTabDirective[]>;
+
+  constructor(private _cd: ChangeDetectorRef) {
+  }
 
   public ngAfterContentInit(): void {
     this.tabs$ = this.tabs.changes
       .pipe(
         startWith(this.tabs),
-        tap(() => this.getActiveTab() ? noop() : this.selectTab(this.tabs.first))
+        tapFirst(() => this.activateTab(this.tabs.first)),
+        map(tabs => tabs.toArray()),
       );
   }
 
-  public onTabSelect(tab: SciTabDirective | undefined): void {
-    this.selectTab(tab);
+  public onTabClick(tab: SciTabDirective | undefined): void {
+    this.activateTab(tab);
   }
 
-  private selectTab(tab: SciTabDirective | undefined): void {
+  /**
+   * Activates the given tab.
+   */
+  public activateTab(tabOrIdentity: SciTabDirective | string | undefined): void {
+    const tab = this.coerceTab(tabOrIdentity);
+
     // Deactivate the currently selected tab, if any.
     const selectedTab = this.getActiveTab();
     if (selectedTab && selectedTab === tab) {
@@ -72,9 +82,20 @@ export class SciTabbarComponent implements AfterContentInit {
     if (tab) {
       tab.attachContent(this._vcr);
     }
+    this._cd.markForCheck();
   }
 
   private getActiveTab(): SciTabDirective {
     return this.tabs.find(tab => tab.isContentAttached());
+  }
+
+  private coerceTab(tabOrIdentity: SciTabDirective | string | undefined): SciTabDirective {
+    if (!tabOrIdentity) {
+      return undefined;
+    }
+    if (typeof tabOrIdentity === 'string') {
+      return this.tabs.find(it => it.name === tabOrIdentity) ?? undefined;
+    }
+    return tabOrIdentity;
   }
 }

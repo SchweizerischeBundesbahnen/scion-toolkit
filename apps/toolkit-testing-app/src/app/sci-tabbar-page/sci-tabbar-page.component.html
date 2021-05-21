@@ -2,14 +2,14 @@
 
 <sci-tabbar>
   <!-- short content tab -->
-  <ng-template sciTab label="Short Content" *ngIf="shortContentTabVisible.value">
+  <ng-template sciTab label="Short Content" name="Short Content" *ngIf="shortContentTabVisible.value">
     <pre>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla venenatis tortor ante, et finibus nunc pellentesque sit amet. Morbi consectetur, lacus gravida egestas posuere, neque nulla sodales sapien, eu volutpat dolor dolor vitae dui. Curabitur vestibulum mi eget elit mollis, ut tristique urna faucibus. Duis iaculis pretium posuere. Duis dictum, lectus nec consectetur mattis, ipsum tellus placerat lacus, sed molestie ligula libero sed nisi. Duis interdum sagittis tellus. Nulla suscipit quis tortor eget accumsan. Ut euismod vehicula aliquet. Quisque cursus ultricies nunc, vitae finibus felis sodales sed. Nunc vitae urna et enim egestas dignissim. Morbi eleifend enim quis iaculis bibendum. Aenean ornare ipsum ut elit ornare dapibus.
     </pre>
   </ng-template>
 
   <!-- long content tab -->
-  <ng-template sciTab label="Long Content" *ngIf="longContentTabVisible.value">
+  <ng-template sciTab label="Long Content" name="Long Content" *ngIf="longContentTabVisible.value">
     <h3>Content should show in a viewport</h3>
     <pre>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla venenatis tortor ante, et finibus nunc pellentesque sit amet. Morbi consectetur, lacus gravida egestas posuere, neque nulla sodales sapien, eu volutpat dolor dolor vitae dui. Curabitur vestibulum mi eget elit mollis, ut tristique urna faucibus. Duis iaculis pretium posuere. Duis dictum, lectus nec consectetur mattis, ipsum tellus placerat lacus, sed molestie ligula libero sed nisi. Duis interdum sagittis tellus. Nulla suscipit quis tortor eget accumsan. Ut euismod vehicula aliquet. Quisque cursus ultricies nunc, vitae finibus felis sodales sed. Nunc vitae urna et enim egestas dignissim. Morbi eleifend enim quis iaculis bibendum. Aenean ornare ipsum ut elit ornare dapibus.
@@ -37,12 +37,12 @@
   </ng-template>
 
   <!-- textarea tab -->
-  <ng-template sciTab label="Textarea" *ngIf="textareaTabVisible.value">
+  <ng-template sciTab label="Textarea" name="Textarea" *ngIf="textareaTabVisible.value">
     <textarea placeholder="Enter some text. The text should be preserved when switching between tabs."></textarea>
   </ng-template>
 
   <!-- dynamic tabs -->
-  <ng-template sciTab *ngFor="let tab of dynamicTabs.value  | appSplit:','" [label]="tab">
+  <ng-template sciTab *ngFor="let tab of dynamicTabs.value  | appSplit:','" [label]="tab" [name]="tab">
     {{tab}}
   </ng-template>
 
@@ -65,4 +65,19 @@
   <header>Dynamic Tabs</header>
 
   <input [formControl]="dynamicTabs" placeholder="Comma-separated list of tabs">
+</section>
+
+<section class="settings">
+  <header>Activate Tab</header>
+
+  <sci-form-field label="Tab Name" direction="row">
+    <select [formControl]="selectedTabName">
+      <option value="Short Content">Short Content</option>
+      <option value="Long Content">Long Content</option>
+      <option value="Textarea">Textarea</option>
+      <option *ngFor="let tab of dynamicTabs.value  | appSplit:','" [value]="tab">{{tab}}</option>
+    </select>
+  </sci-form-field>
+
+  <button (click)="onActivateTab()">Activate</button>
 </section>

@@ -30,5 +30,13 @@
       @include sci-toolkit-styles.input-field();
       grid-column: 1/-1;
     }
+
+    > sci-form-field {
+      grid-column: 1/-1;
+    }
+
+    > button {
+      grid-column: 1/-1;
+    }
   }
 }
