@@ -6,7 +6,7 @@
            cdkAccordionItem #cdkAccordionItem="cdkAccordionItem"
            [expanded]="item.expanded">
     <header (click)="onToggle(cdkAccordionItem)" class="e2e-accordion-item-header">
-      <div>
+      <div class="header-content">
         <ng-container *ngTemplateOutlet="item.template"></ng-container>
       </div>
       <button class="material-icons e2e-toggle"

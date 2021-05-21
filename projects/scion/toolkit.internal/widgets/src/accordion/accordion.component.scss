@@ -25,6 +25,10 @@ $background-color: var(--sci-color-P100);
       align-items: center;
       cursor: pointer;
       user-select: none;
+
+      > div.header-content {
+        flex: auto;
+      }
     }
 
     > section {
