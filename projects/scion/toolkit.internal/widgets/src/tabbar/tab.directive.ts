@@ -38,6 +38,14 @@ export class SciTabDirective implements OnDestroy {
   public label: string;
 
   /**
+   * Specifies the identity of this tab.
+   *
+   * Can be used to activate this tab via {@link SciTabbarComponent.activateTab}.
+   */
+  @Input()
+  public name: string;
+
+  /**
    * Specifies CSS class(es) added to the tab item, e.g., to select the tab in e2e tests.
    */
   @Input()
