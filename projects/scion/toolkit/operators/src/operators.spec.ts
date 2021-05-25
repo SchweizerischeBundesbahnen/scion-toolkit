@@ -9,12 +9,12 @@
  */
 
 import { BehaviorSubject, noop, Observable, Observer, of, Subject, TeardownLogic } from 'rxjs';
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, flushMicrotasks, TestBed } from '@angular/core/testing';
 import { NgZone } from '@angular/core';
 import { finalize, tap } from 'rxjs/operators';
 import { combineArray, mapArray, observeInside, subscribeInside } from './operators';
 import { ObserveCaptor } from '@scion/toolkit/testing';
-import { distinctArray } from '@scion/toolkit/operators';
+import { bufferUntil, distinctArray } from '@scion/toolkit/operators';
 
 describe('Operators', () => {
 
@@ -484,5 +484,132 @@ describe('Operators', () => {
 
       expect(observeCaptor.getLastValue()).toEqual([{value: 'a'}, {value: 'b'}, {value: 'c'}]);
     });
+  });
+
+  describe('bufferUntil', async () => {
+
+    it('should buffer emissions until `closingNotifier$` emits', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      const closingNotifier$ = new Subject();
+      const source$ = new Subject<string>();
+      source$
+        .pipe(bufferUntil(closingNotifier$))
+        .subscribe(observeCaptor);
+
+      source$.next('a');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      source$.next('b');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      source$.next('c');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      // close the buffer.
+      closingNotifier$.next();
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c']);
+
+      // emit after the buffer is closed.
+      source$.next('d');
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd']);
+
+      source$.next('e');
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd', 'e']);
+    });
+
+    it('should buffer emissions until `closingNotifier$` completes', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      const closingNotifier$ = new Subject();
+      const source$ = new Subject<string>();
+      source$
+        .pipe(bufferUntil(closingNotifier$))
+        .subscribe(observeCaptor);
+
+      source$.next('a');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      source$.next('b');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      source$.next('c');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      // close the buffer.
+      closingNotifier$.complete();
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c']);
+
+      // emit after the buffer is closed.
+      source$.next('d');
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd']);
+
+      source$.next('e');
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd', 'e']);
+    });
+
+    it('should not emit if `closingNotifier$` emits error', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      const closingNotifier$ = new Subject();
+      const source$ = new Subject<string>();
+      source$
+        .pipe(bufferUntil(closingNotifier$))
+        .subscribe(observeCaptor);
+
+      source$.next('a');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      source$.next('b');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      source$.next('c');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      // emit error.
+      closingNotifier$.error('Error');
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      // emit after notifier error.
+      source$.next('d');
+      expect(observeCaptor.getValues()).toEqual([]);
+    });
+
+    it('should buffer emissions until `closingNotifier` resolves', fakeAsync(() => {
+      const observeCaptor = new ObserveCaptor();
+
+      let resolvePromiseFn: () => void;
+      const closingNotifier = new Promise(resolve => resolvePromiseFn = resolve);
+      const source$ = new Subject<string>();
+      source$
+        .pipe(bufferUntil(closingNotifier))
+        .subscribe(observeCaptor);
+
+      source$.next('a');
+      flushMicrotasks();
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      source$.next('b');
+      flushMicrotasks();
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      source$.next('c');
+      flushMicrotasks();
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      // close the buffer.
+      resolvePromiseFn();
+      flushMicrotasks();
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c']);
+
+      // emit after the buffer is closed.
+      source$.next('d');
+      flushMicrotasks();
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd']);
+
+      source$.next('e');
+      flushMicrotasks();
+      expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd', 'e']);
+    }));
   });
 });

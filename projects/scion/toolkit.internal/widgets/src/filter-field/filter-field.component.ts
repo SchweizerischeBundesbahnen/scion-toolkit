@@ -82,7 +82,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
       .pipe(takeUntil(this._destroy$))
       .subscribe(value => {
         this._cvaChangeFn(value);
-        this.filter.next(value);
+        this.filter.emit(value);
       });
 
     this._focusManager.monitor(this._host.nativeElement, true)
