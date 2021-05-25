@@ -156,6 +156,40 @@ npm install --save @scion/toolkit
 
 </details>
 
+<details>
+  <summary><strong>combineArray</strong></summary>
+
+Combines the Observables contained in the source array by applying `combineLatest`, emitting an array with the latest value of each Observable of the source array. Combines only the Observables of the most recently emitted array.
+
+> Each time the source emits an array of Observables, combines its Observables by subscribing to each of them, cancelling any subscription of a previous source emission.
+
+  ```typescript
+  import { combineArray } from '@scion/toolkit/operators';
+  import { interval } from 'rxjs';
+  import { map, take } from 'rxjs/operators';
+
+  interval(100)
+    .pipe(
+        map(i => [
+          interval(30).pipe(map(ii => [`A(${i};${ii})`, `B(${i};${ii})`])),
+          interval(70).pipe(map(ii => [`C(${i};${ii})`])),
+        ]),
+        combineArray(),
+        take(4),
+    )
+    .subscribe(value => {
+      console.log(value);
+    });
+   ```
+The snippet above prints the following output to the console:
+```console
+   ['A(0;1)', 'B(0;1)', 'C(0;0)']
+   ['A(0;2)', 'B(0;2)', 'C(0;0)']
+   ['A(1;1)', 'B(1;1)', 'C(1;0)']
+   ['A(1;2)', 'B(1;2)', 'C(1;0)']
+```
+
+</details>
  
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
