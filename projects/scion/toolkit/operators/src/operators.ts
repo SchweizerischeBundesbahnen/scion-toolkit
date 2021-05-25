@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { map, switchMap } from 'rxjs/operators';
-import { combineLatest, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic } from 'rxjs';
+import { map, mergeMap, mergeMapTo, publishLast, refCount, switchMap, take } from 'rxjs/operators';
+import { combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic } from 'rxjs';
 import { Arrays } from '@scion/toolkit/util';
 
 /**
@@ -70,6 +70,24 @@ export function combineArray<T>(): OperatorFunction<Array<Observable<T[]>>, T[]>
 export function distinctArray<T>(keySelector: (item: T) => any = identity): MonoTypeOperatorFunction<T[]> {
   return pipe(map((items: T[]): T[] => Arrays.distinct(items, keySelector)));
 }
+
+/**
+ * Buffers the source Observable values until `closingNotifier$` notifier resolves, emits or completes.
+ *
+ * Once closed the buffer, emits its buffered values as a separate emission per buffered value, in the
+ * order as collected. After that, this operator mirrors the source Observable, i.e., emits values as they
+ * arrive.
+ *
+ * Unlike {@link bufferWhen} RxJS operator, the buffer is not re-opened once closed.
+ *
+ * @param closingNotifier$ Closes the buffer when the passed Promise resolves, or when the passed Observable
+ *                         emits or completes.
+ */
+export function bufferUntil<T>(closingNotifier$: Observable<any> | Promise<any>): MonoTypeOperatorFunction<T> {
+  const guard$ = from(closingNotifier$).pipe(take(1), publishLast(), refCount(), mergeMapTo(EMPTY));
+  return mergeMap((item: T) => concat(guard$, of(item)));
+}
+
 /**
  * Executes a tap-function for the first percolating value.
  */
