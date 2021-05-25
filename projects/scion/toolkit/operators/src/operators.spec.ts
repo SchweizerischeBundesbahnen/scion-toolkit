@@ -14,6 +14,7 @@ import { NgZone } from '@angular/core';
 import { finalize, tap } from 'rxjs/operators';
 import { combineArray, mapArray, observeInside, subscribeInside } from './operators';
 import { ObserveCaptor } from '@scion/toolkit/testing';
+import { distinctArray } from '@scion/toolkit/operators';
 
 describe('Operators', () => {
 
@@ -441,6 +442,47 @@ describe('Operators', () => {
       observeCaptor.reset();
       b$.next(['b5']);
       expect(observeCaptor.getValues()).toEqual([]);
+    });
+  });
+
+  describe('distinctArray', async () => {
+
+    it('should remove duplicates of elements in the source array', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      const source$ = new Subject<string[]>();
+      source$
+        .pipe(distinctArray())
+        .subscribe(observeCaptor);
+
+      source$.next(['a', 'b', 'c']);
+      expect(observeCaptor.getValues()).toEqual([['a', 'b', 'c']]);
+
+      observeCaptor.reset();
+      source$.next(['d', 'e', 'f', 'e', 'd', 'g']);
+      expect(observeCaptor.getValues()).toEqual([['d', 'e', 'f', 'g']]);
+
+      observeCaptor.reset();
+      source$.next(['d', 'e', 'f']);
+      expect(observeCaptor.getValues()).toEqual([['d', 'e', 'f']]);
+
+      observeCaptor.reset();
+      source$.next([]);
+      expect(observeCaptor.getValues()).toEqual([[]]);
+
+      observeCaptor.reset();
+      source$.next(['d', 'd']);
+      expect(observeCaptor.getValues()).toEqual([['d']]);
+    });
+
+    it('should remove duplicates of elements in the source array by evaluating a key selector', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      of([{value: 'a'}, {value: 'b'}, {value: 'a'}, {value: 'c'}])
+        .pipe(distinctArray(item => item.value))
+        .subscribe(observeCaptor);
+
+      expect(observeCaptor.getLastValue()).toEqual([{value: 'a'}, {value: 'b'}, {value: 'c'}]);
     });
   });
 });

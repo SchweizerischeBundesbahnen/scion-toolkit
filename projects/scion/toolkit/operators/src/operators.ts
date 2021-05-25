@@ -9,7 +9,8 @@
  */
 
 import { map, switchMap } from 'rxjs/operators';
-import { combineLatest, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic } from 'rxjs';
+import { combineLatest, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic } from 'rxjs';
+import { Arrays } from '@scion/toolkit/util';
 
 /**
  * Filters items in the source array and emits an array with items satisfying given predicate.
@@ -59,6 +60,15 @@ export function combineArray<T>(): OperatorFunction<Array<Observable<T[]>>, T[]>
     switchMap((items: Array<Observable<T[]>>) => items.length ? combineLatest(items) : of([])),
     map((items: Array<T[]>) => new Array<T>().concat(...items)),
   );
+}
+
+/**
+ * Removes duplicates of elements in the source array.
+ *
+ * <span class=“informal”>Each time the source emits, maps the array to a new array with duplicates removed.</span>
+ */
+export function distinctArray<T>(keySelector: (item: T) => any = identity): MonoTypeOperatorFunction<T[]> {
+  return pipe(map((items: T[]): T[] => Arrays.distinct(items, keySelector)));
 }
 /**
  * Executes a tap-function for the first percolating value.
