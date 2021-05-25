@@ -190,7 +190,29 @@ The snippet above prints the following output to the console:
 ```
 
 </details>
- 
+
+<details>
+  <summary><strong>distinctArray</strong></summary>
+
+Removes duplicates of elements in the source array.
+
+  ```typescript
+  import { distinctArray } from '@scion/toolkit/operators';
+  import { of } from 'rxjs';
+
+  of(['a', 'b', 'a', 'e', 'b', 'd'])
+      .pipe(distinctArray())
+      .subscribe(value => {
+        console.log(value);
+      });
+   ```
+The snippet above prints the following output to the console:
+```console
+   ['a', 'b', 'e', 'd']
+```
+
+</details>
+
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
 [menu-changelog]: /docs/site/changelog/changelog.md
