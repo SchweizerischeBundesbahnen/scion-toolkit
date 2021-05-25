@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { map } from 'rxjs/operators';
-import { MonoTypeOperatorFunction, noop, Observable, Observer, OperatorFunction, SchedulerLike, Subscriber, Subscription, TeardownLogic } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+import { combineLatest, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic } from 'rxjs';
 
 /**
  * Filters items in the source array and emits an array with items satisfying given predicate.
@@ -47,6 +47,19 @@ export function sortArray<T>(comparator: (item1: T, item2: T) => number): MonoTy
   return map((items: T[]): T[] => [...items].sort(comparator));
 }
 
+/**
+ * Combines the Observables contained in the source array by applying {@link combineLatest}, emitting an array with the latest
+ * value of each Observable of the source array. Combines only the Observables of the most recently emitted array.
+ *
+ * <span class=“informal”>Each time the source emits an array of Observables, combines its Observables by subscribing to each
+ * of them, cancelling any subscription of a previous source emission.</span>
+ */
+export function combineArray<T>(): OperatorFunction<Array<Observable<T[]>>, T[]> {
+  return pipe(
+    switchMap((items: Array<Observable<T[]>>) => items.length ? combineLatest(items) : of([])),
+    map((items: Array<T[]>) => new Array<T>().concat(...items)),
+  );
+}
 /**
  * Executes a tap-function for the first percolating value.
  */

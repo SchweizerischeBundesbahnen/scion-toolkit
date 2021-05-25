@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { noop, Observable, Observer, of, TeardownLogic } from 'rxjs';
+import { BehaviorSubject, noop, Observable, Observer, of, Subject, TeardownLogic } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { NgZone } from '@angular/core';
 import { finalize, tap } from 'rxjs/operators';
-import { mapArray, observeInside, subscribeInside } from './operators';
+import { combineArray, mapArray, observeInside, subscribeInside } from './operators';
 import { ObserveCaptor } from '@scion/toolkit/testing';
 
 describe('Operators', () => {
@@ -359,6 +359,88 @@ describe('Operators', () => {
         await expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
         await expect(insideAngularCaptor.onFinalize).toBeFalse();
       });
+    });
+  });
+
+  describe('combineArray', async () => {
+
+    it('should combine the Observables of each source emission', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      const source$ = new Subject<Array<Observable<string[]>>>();
+      source$
+        .pipe(combineArray())
+        .subscribe(observeCaptor);
+
+      // Simulate the source to emit an array of Observables.
+      const a$ = new Subject<string[]>();
+      const b$ = new Subject<string[]>();
+      const c$ = new Subject<string[]>();
+      source$.next([a$, b$, c$]);
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      observeCaptor.reset();
+      a$.next(['a1', 'a2']);
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      observeCaptor.reset();
+      b$.next(['b1']);
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      observeCaptor.reset();
+      c$.next(['c1', 'c2', 'c3']);
+      expect(observeCaptor.getValues()).toEqual([
+        ['a1', 'a2', 'b1', 'c1', 'c2', 'c3'],
+      ]);
+
+      observeCaptor.reset();
+      c$.next(['c4', 'c5']);
+      expect(observeCaptor.getValues()).toEqual([
+        ['a1', 'a2', 'b1', 'c4', 'c5'],
+      ]);
+
+      observeCaptor.reset();
+      b$.next(['b2', 'b3', 'b4']);
+      expect(observeCaptor.getValues()).toEqual([
+        ['a1', 'a2', 'b2', 'b3', 'b4', 'c4', 'c5'],
+      ]);
+
+      observeCaptor.reset();
+      a$.next(['a3', 'a4', 'a5']);
+      expect(observeCaptor.getValues()).toEqual([
+        ['a3', 'a4', 'a5', 'b2', 'b3', 'b4', 'c4', 'c5'],
+      ]);
+
+      // Simulate the source to emit an array of Observables.
+      observeCaptor.reset();
+      const d$ = new BehaviorSubject<string[]>(['d1', 'd2']);
+      const e$ = new Subject<string[]>();
+      source$.next([d$, e$]);
+      expect(observeCaptor.getValues()).toEqual([]);
+
+      observeCaptor.reset();
+      e$.next(['e1']);
+      expect(observeCaptor.getValues()).toEqual([
+        ['d1', 'd2', 'e1'],
+      ]);
+
+      observeCaptor.reset();
+      d$.next(['d3']);
+      expect(observeCaptor.getValues()).toEqual([
+        ['d3', 'e1'],
+      ]);
+
+      observeCaptor.reset();
+      e$.next(['e2', 'e3', 'e4']);
+      expect(observeCaptor.getValues()).toEqual([
+        ['d3', 'e2', 'e3', 'e4'],
+      ]);
+
+      // Simulate an Observable of a previous source emission to emit.
+      // Expect no emission since unsubscribed from previous emitted Observables.
+      observeCaptor.reset();
+      b$.next(['b5']);
+      expect(observeCaptor.getValues()).toEqual([]);
     });
   });
 });
