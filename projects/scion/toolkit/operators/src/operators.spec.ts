@@ -579,7 +579,7 @@ describe('Operators', () => {
       const observeCaptor = new ObserveCaptor();
 
       let resolvePromiseFn: () => void;
-      const closingNotifier = new Promise(resolve => resolvePromiseFn = resolve);
+      const closingNotifier = new Promise<void>(resolve => resolvePromiseFn = resolve);
       const source$ = new Subject<string>();
       source$
         .pipe(bufferUntil(closingNotifier))

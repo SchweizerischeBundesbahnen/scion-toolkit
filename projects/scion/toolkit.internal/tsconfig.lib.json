@@ -2,16 +2,12 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../../out-tsc/toolkit.internal",
-    "declarationMap": true,
+    "target": "es2015",
     "declaration": true,
+    "declarationMap": true,
     "stripInternal": true,
     "inlineSources": true,
-    "types": []
-  },
-  "angularCompilerOptions": {
-    "skipTemplateCodegen": true,
-    "strictMetadataEmit": true,
-    "enableResourceInlining": true
+    "types": [],
   },
   "exclude": [
     "src/test.ts",

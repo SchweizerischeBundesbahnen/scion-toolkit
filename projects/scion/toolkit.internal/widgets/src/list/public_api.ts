@@ -9,4 +9,5 @@
  */
 
 export { SciListModule } from './list.module';
+export { SciListComponent } from './list.component';
 export { SciListItemDirective } from './list-item.directive';
