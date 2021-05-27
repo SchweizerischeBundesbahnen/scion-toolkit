@@ -12,21 +12,25 @@
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
-            "tsConfig": "projects/scion/toolkit/tsconfig.lib.json",
             "project": "projects/scion/toolkit/ng-package.json"
           },
           "configurations": {
             "production": {
               "tsConfig": "projects/scion/toolkit/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/scion/toolkit/tsconfig.lib.json"
             }
-          }
+          },
+          "defaultConfiguration": "production"
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "main": "projects/scion/toolkit/src/test.ts",
             "tsConfig": "projects/scion/toolkit/tsconfig.spec.json",
-            "karmaConfig": "projects/scion/toolkit/karma.conf.js"
+            "karmaConfig": "projects/scion/toolkit/karma.conf.js",
+            "inlineStyleLanguage": "scss"
           }
         },
         "lint": {
@@ -51,14 +55,17 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "projects/scion/toolkit.e2e/protractor.conf.js",
-            "devServerTarget": "toolkit-testing-app:serve",
             "webdriverUpdate": false
           },
           "configurations": {
             "production": {
               "devServerTarget": "toolkit-testing-app:serve:production"
+            },
+            "development": {
+              "devServerTarget": "toolkit-testing-app:serve:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
@@ -80,21 +87,25 @@
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
-            "tsConfig": "projects/scion/toolkit.internal/tsconfig.lib.json",
             "project": "projects/scion/toolkit.internal/ng-package.json"
           },
           "configurations": {
             "production": {
               "tsConfig": "projects/scion/toolkit.internal/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/scion/toolkit.internal/tsconfig.lib.json"
             }
-          }
+          },
+          "defaultConfiguration": "production"
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "main": "projects/scion/toolkit.internal/src/test.ts",
             "tsConfig": "projects/scion/toolkit.internal/tsconfig.spec.json",
-            "karmaConfig": "projects/scion/toolkit.internal/karma.conf.js"
+            "karmaConfig": "projects/scion/toolkit.internal/karma.conf.js",
+            "inlineStyleLanguage": "scss"
           }
         },
         "lint": {
@@ -125,7 +136,7 @@
             "main": "apps/toolkit-testing-app/src/main.ts",
             "polyfills": "apps/toolkit-testing-app/src/polyfills.ts",
             "tsConfig": "apps/toolkit-testing-app/tsconfig.app.json",
-            "aot": true,
+            "inlineStyleLanguage": "scss",
             "assets": [
               "apps/toolkit-testing-app/src/assets",
               {
@@ -152,26 +163,30 @@
                   "with": "apps/toolkit-testing-app/src/environments/environment.prod.ts"
                 }
               ],
-              "optimization": true,
-              "outputHashing": "all",
-              "sourceMap": false,
-              "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": false,
-              "buildOptimizer": true
+              "outputHashing": "all"
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
             }
-          }
+          },
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
-          "options": {
-            "browserTarget": "toolkit-testing-app:build"
-          },
           "configurations": {
             "production": {
               "browserTarget": "toolkit-testing-app:build:production"
+            },
+            "development": {
+              "browserTarget": "toolkit-testing-app:build:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
@@ -188,6 +203,9 @@
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
+        },
+        "@schematics/angular:application": {
+          "strict": true
         }
       }
     }

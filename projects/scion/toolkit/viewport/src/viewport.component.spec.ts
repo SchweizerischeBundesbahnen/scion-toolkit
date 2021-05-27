@@ -1009,7 +1009,7 @@ describe('Viewport', () => {
       flex-direction: row;
     }
 
-    div.container.row > button {
+    div.container.row button {
       width: 100px;
     }
 
@@ -1018,7 +1018,7 @@ describe('Viewport', () => {
       flex-direction: column;
     }
 
-    div.container.column > button {
+    div.container.column button {
       height: 100px;
     }
   `],

@@ -28,7 +28,6 @@ import { CommonModule } from '@angular/common';
   ],
   exports: [
     SciListComponent,
-    SciListItemComponent,
     SciListItemDirective,
   ],
   imports: [
