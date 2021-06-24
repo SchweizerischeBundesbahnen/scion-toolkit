@@ -1,3 +1,21 @@
+# [11.0.0-beta.12](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.11...11.0.0-beta.12) (2021-06-24)
+
+
+### Bug Fixes
+
+* **ɵtoolkit/accordion:** stretch the accordion header horizontally to its full width ([4f4e152](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/4f4e152cfb43da381f8b557d5add77aa3e30d88c))
+* **ɵtoolkit/filter-field:** use unique id to identify the input element ([736e32a](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/736e32af2a9de8fe7cec9e6826c5883fcd57642a))
+
+
+### Features
+
+* **ɵtoolkit/tabbar:** allow activating a tab programmatically ([6c70831](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/6c708314037d94e5cbd3019100e28b3b5e57d1ba))
+* **toolkit/operators:** add `bufferUntil` operator to buffer emissions ([50e365e](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/50e365eb68d660a20af9db09615592c4d55f53ba))
+* **toolkit/operators:** add `combineArray` operator to combine Observables contained in the source array ([113a419](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/113a419b24afebe6e67fc97ebd72f5f81cd74b39))
+* **toolkit/operators:** add `distinctArray` operator to remove duplicates in the source array ([5a61e1c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/5a61e1ca566b713298ae3350a93de7a6f348369f))
+
+
+
 # [11.0.0-beta.11](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.10...11.0.0-beta.11) (2021-04-26)
 
 
