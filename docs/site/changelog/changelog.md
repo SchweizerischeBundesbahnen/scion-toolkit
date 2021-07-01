@@ -5,6 +5,15 @@
 
 ## Changelog
 
+# [12.0.0-beta.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.12...12.0.0-beta.1) (2021-07-01)
+
+
+### Chore
+
+* **toolkit:** update @scion/toolkit to Angular 12 ([8331caa](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/8331caa32b83087e9144cf74b6e902e781d2d4ef)), closes [#56](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/56)
+
+
+
 # [11.0.0-beta.12](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.11...11.0.0-beta.12) (2021-06-24)
 
 
