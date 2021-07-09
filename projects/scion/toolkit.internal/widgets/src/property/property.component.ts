@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { KeyValue } from '@angular/common';
-import { Dictionaries, Dictionary } from '@scion/toolkit/util';
+import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {KeyValue} from '@angular/common';
+import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 
 /**
  * Show the properties of an object.

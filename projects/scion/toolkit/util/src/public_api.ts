@@ -14,9 +14,9 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export { Defined } from './defined.util';
-export { Arrays } from './arrays.util';
-export { Objects } from './objects.util';
-export { Dictionaries, Dictionary } from './dictionaries.util';
-export { Maps, PredicateFn } from './maps.util';
-export { Observables } from './observables.util';
+export {Defined} from './defined.util';
+export {Arrays} from './arrays.util';
+export {Objects} from './objects.util';
+export {Dictionaries, Dictionary} from './dictionaries.util';
+export {Maps, PredicateFn} from './maps.util';
+export {Observables} from './observables.util';

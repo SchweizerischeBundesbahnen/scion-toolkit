@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Directive, ElementRef, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges } from '@angular/core';
-import { NativeScrollbarTrackSize, SciNativeScrollbarTrackSizeProvider } from './native-scrollbar-track-size-provider.service';
-import { map, takeUntil } from 'rxjs/operators';
-import { merge, Subject } from 'rxjs';
-import { Dictionary } from '@scion/toolkit/util';
+import {Directive, ElementRef, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges} from '@angular/core';
+import {NativeScrollbarTrackSize, SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
+import {map, takeUntil} from 'rxjs/operators';
+import {merge, Subject} from 'rxjs';
+import {Dictionary} from '@scion/toolkit/util';
 
 /**
  * Makes the host element natively scrollable and hides native scrollbars by default, unless native scrollbars
@@ -37,8 +37,8 @@ export class SciScrollableDirective implements OnChanges, OnDestroy {
    * Controls whether to display native scrollbars.
    * Has no effect if the native scrollbar sits on top of the content, e.g. in OS X.
    */
-  @Input('sciScrollableDisplayNativeScrollbar') // tslint:disable-line:no-input-rename
-  public isDisplayNativeScrollbar: boolean = false; // tslint:disable-line:no-inferrable-types
+  @Input('sciScrollableDisplayNativeScrollbar') // eslint-disable-line @angular-eslint/no-input-rename
+  public isDisplayNativeScrollbar: boolean = false;
 
   constructor(private _host: ElementRef<HTMLDivElement>,
               private _renderer: Renderer2,

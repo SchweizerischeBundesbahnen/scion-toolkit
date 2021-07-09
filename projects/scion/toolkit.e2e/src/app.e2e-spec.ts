@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { AppPO } from './app.po';
+import {AppPO} from './app.po';
 
 describe('@scion/toolkit', () => {
   const pagePO = new AppPO();

@@ -7,8 +7,8 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import {Component} from '@angular/core';
+import {FormBuilder, FormGroup} from '@angular/forms';
 
 export const VARIANT = 'variant';
 export const MULTI = 'multi';

@@ -8,6 +8,6 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciTabbarModule } from './tabbar.module';
-export { SciTabbarComponent } from './tabbar.component';
-export { SciTabDirective } from './tab.directive';
+export {SciTabbarModule} from './tabbar.module';
+export {SciTabbarComponent} from './tabbar.component';
+export {SciTabDirective} from './tab.directive';

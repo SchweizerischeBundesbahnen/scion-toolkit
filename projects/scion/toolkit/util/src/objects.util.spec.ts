@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Objects } from './objects.util';
+import {Objects} from './objects.util';
 
 describe('Objects', () => {
 

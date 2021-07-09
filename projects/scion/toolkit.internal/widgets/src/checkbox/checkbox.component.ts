@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnDestroy } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { noop, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnDestroy} from '@angular/core';
+import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {noop, Subject} from 'rxjs';
+import {takeUntil} from 'rxjs/operators';
+import {coerceBooleanProperty} from '@angular/cdk/coercion';
 
 @Component({
   selector: 'sci-checkbox',

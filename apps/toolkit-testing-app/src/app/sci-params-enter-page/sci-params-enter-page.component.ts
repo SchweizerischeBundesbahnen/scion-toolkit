@@ -7,10 +7,10 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { Component } from '@angular/core';
-import { FormArray } from '@angular/forms';
-import { SciParamsEnterComponent } from '@scion/toolkit.internal/widgets';
-import { Dictionary } from '@scion/toolkit/util';
+import {Component} from '@angular/core';
+import {FormArray} from '@angular/forms';
+import {SciParamsEnterComponent} from '@scion/toolkit.internal/widgets';
+import {Dictionary} from '@scion/toolkit/util';
 
 @Component({
   selector: 'sci-params-enter-page',

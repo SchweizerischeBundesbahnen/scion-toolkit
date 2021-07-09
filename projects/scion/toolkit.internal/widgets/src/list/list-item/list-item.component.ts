@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ElementRef, HostBinding, Input } from '@angular/core';
-import { FocusableOption, FocusOrigin } from '@angular/cdk/a11y';
-import { SciListItemDirective } from '../list-item.directive';
-import { SciListStyle } from '../metadata';
+import {Component, ElementRef, HostBinding, Input} from '@angular/core';
+import {FocusableOption, FocusOrigin} from '@angular/cdk/a11y';
+import {SciListItemDirective} from '../list-item.directive';
+import {SciListStyle} from '../metadata';
 
 @Component({
   selector: 'sci-list-item',

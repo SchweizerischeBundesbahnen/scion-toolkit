@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { SciTabbarComponent } from './tabbar.component';
-import { SciTabDirective } from './tab.directive';
-import { CommonModule } from '@angular/common';
-import { SciViewportModule } from '@scion/toolkit/viewport';
+import {NgModule} from '@angular/core';
+import {SciTabbarComponent} from './tabbar.component';
+import {SciTabDirective} from './tab.directive';
+import {CommonModule} from '@angular/common';
+import {SciViewportModule} from '@scion/toolkit/viewport';
 
 @NgModule({
   imports: [

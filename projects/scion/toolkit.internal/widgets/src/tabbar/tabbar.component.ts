@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChildren, QueryList, ViewChild, ViewContainerRef } from '@angular/core';
-import { SciTabDirective } from './tab.directive';
-import { map, startWith } from 'rxjs/operators';
-import { Observable } from 'rxjs';
-import { tapFirst } from '@scion/toolkit/operators';
+import {AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChildren, QueryList, ViewChild, ViewContainerRef} from '@angular/core';
+import {SciTabDirective} from './tab.directive';
+import {map, startWith} from 'rxjs/operators';
+import {Observable} from 'rxjs';
+import {tapFirst} from '@scion/toolkit/operators';
 
 /**
  * Organizes content into separate tabs where only one tab can be visible at a time.

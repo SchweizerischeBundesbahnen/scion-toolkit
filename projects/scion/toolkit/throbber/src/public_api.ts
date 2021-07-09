@@ -13,5 +13,5 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export { SciThrobberModule } from './throbber.module';
-export { SciThrobberComponent } from './throbber.component';
+export {SciThrobberModule} from './throbber.module';
+export {SciThrobberComponent} from './throbber.component';

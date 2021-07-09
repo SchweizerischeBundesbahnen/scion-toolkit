@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Directive, Input, TemplateRef } from '@angular/core';
+import {Directive, Input, TemplateRef} from '@angular/core';
 
 /**
  * Use this directive to model a list item for {SciListComponent}.

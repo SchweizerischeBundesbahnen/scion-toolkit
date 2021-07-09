@@ -8,16 +8,16 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ElementRef, Input, Renderer2, ViewChild } from '@angular/core';
-import { SciViewportModule } from './viewport.module';
-import { By } from '@angular/platform-browser';
-import { Dictionary } from '@scion/toolkit/util';
-import { SciViewportComponent } from './viewport.component';
-import { fromDimension$, Dimension } from '@scion/toolkit/observable';
-import { ObserveCaptor } from '@scion/toolkit/testing';
-import { asyncScheduler } from 'rxjs';
-import { SciScrollbarComponent } from './scrollbar/scrollbar.component';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {Component, ElementRef, Input, Renderer2, ViewChild} from '@angular/core';
+import {SciViewportModule} from './viewport.module';
+import {By} from '@angular/platform-browser';
+import {Dictionary} from '@scion/toolkit/util';
+import {SciViewportComponent} from './viewport.component';
+import {Dimension, fromDimension$} from '@scion/toolkit/observable';
+import {ObserveCaptor} from '@scion/toolkit/testing';
+import {asyncScheduler} from 'rxjs';
+import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
 
 describe('Viewport', () => {
 
@@ -981,7 +981,7 @@ describe('Viewport', () => {
       return Promise.resolve();
     }
 
-    return new Promise(resolve => { // tslint:disable-line:typedef
+    return new Promise(resolve => {
       requestAnimationFrame(() => awaitRenderCycles(renderCyclesToWait - 1).then(() => resolve()));
     });
   }

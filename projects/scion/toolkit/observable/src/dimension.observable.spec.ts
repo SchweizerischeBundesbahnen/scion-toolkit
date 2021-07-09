@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { FromDimension, fromDimension$ } from './dimension.observable';
+import {FromDimension, fromDimension$} from './dimension.observable';
 
 describe('fromDimension$', () => {
 
@@ -157,7 +157,7 @@ describe('fromDimension$', () => {
       return Promise.resolve();
     }
 
-    return new Promise(resolve => { // tslint:disable-line:typedef
+    return new Promise(resolve => {
       requestAnimationFrame(() => waitUntilRendered(renderCyclesToWait - 1).then(() => resolve()));
     });
   }

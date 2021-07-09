@@ -1,5 +1,5 @@
-import { AsyncSubject, Observer, ReplaySubject, throwError } from 'rxjs';
-import { take, timeoutWith } from 'rxjs/operators';
+import {AsyncSubject, Observer, ReplaySubject, throwError} from 'rxjs';
+import {take, timeoutWith} from 'rxjs/operators';
 
 /**
  * Allows capturing emissions of an Observable.
@@ -13,7 +13,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
   private _error: any;
 
   private _completeOrError$ = new AsyncSubject<void>();
-  private _emitCount$ = new ReplaySubject<void>();
+  private _emitCount$ = new ReplaySubject<void>(Infinity);
 
   /**
    * Constructs this captor. Optionally, you can provide a project function to map emitted values.
@@ -101,7 +101,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
    *
    * Pass options to control which aspects of this captor not to reset. By default, all aspects are reset.
    */
-  public reset(options?: { resetValues?: boolean, resetEmitCount?: boolean }): this {
+  public reset(options?: {resetValues?: boolean, resetEmitCount?: boolean}): this {
     const resetValues = options?.resetValues ?? true;
     const resetEmitCount = options?.resetEmitCount ?? true;
 
@@ -110,7 +110,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
     }
     if (resetEmitCount) {
       this._emitCount$.error('[CaptorError] Captor has been reset.');
-      this._emitCount$ = new ReplaySubject<void>();
+      this._emitCount$ = new ReplaySubject<void>(Infinity);
     }
     return this;
   }

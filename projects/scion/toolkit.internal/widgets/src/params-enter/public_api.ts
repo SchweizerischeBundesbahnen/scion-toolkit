@@ -8,5 +8,5 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciParamsEnterModule } from './params-enter.module';
-export { SciParamsEnterComponent } from './params-enter.component';
+export {SciParamsEnterModule} from './params-enter.module';
+export {SciParamsEnterComponent} from './params-enter.component';

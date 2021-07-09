@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ElementRef, HostBinding, Input } from '@angular/core';
-import { FormArray, FormBuilder } from '@angular/forms';
-import { Dictionary, Maps } from '@scion/toolkit/util';
+import {Component, ElementRef, HostBinding, Input} from '@angular/core';
+import {FormArray, FormBuilder} from '@angular/forms';
+import {Dictionary, Maps} from '@scion/toolkit/util';
 
 export const PARAM_NAME = 'paramName';
 export const PARAM_VALUE = 'paramValue';

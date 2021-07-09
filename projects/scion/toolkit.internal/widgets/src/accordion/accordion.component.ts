@@ -8,13 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { ChangeDetectorRef, Component, ContentChildren, ElementRef, HostBinding, Input, OnDestroy, OnInit, QueryList, SkipSelf, TrackByFunction, ViewChild } from '@angular/core';
-import { animate, AnimationMetadata, style, transition, trigger } from '@angular/animations';
-import { SciAccordionItemDirective } from './accordion-item.directive';
-import { CdkAccordion, CdkAccordionItem } from '@angular/cdk/accordion';
-import { fromDimension$ } from '@scion/toolkit/observable';
-import { debounceTime, takeUntil } from 'rxjs/operators';
-import { combineLatest, Subject } from 'rxjs';
+import {ChangeDetectorRef, Component, ContentChildren, ElementRef, HostBinding, Input, OnDestroy, OnInit, QueryList, SkipSelf, TrackByFunction, ViewChild} from '@angular/core';
+import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
+import {SciAccordionItemDirective} from './accordion-item.directive';
+import {CdkAccordion, CdkAccordionItem} from '@angular/cdk/accordion';
+import {fromDimension$} from '@scion/toolkit/observable';
+import {debounceTime, takeUntil} from 'rxjs/operators';
+import {combineLatest, Subject} from 'rxjs';
 
 /**
  * Component that shows items in an accordion.

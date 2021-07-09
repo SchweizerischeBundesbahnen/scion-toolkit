@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ElementRef, HostBinding, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { SciViewportComponent } from '@scion/toolkit/viewport';
+import {Component, ElementRef, HostBinding, OnInit, ViewChild} from '@angular/core';
+import {FormBuilder, FormGroup} from '@angular/forms';
+import {SciViewportComponent} from '@scion/toolkit/viewport';
 
 export const SCROLLBAR_STYLE = 'scrollbarStyle';
 export const SCROLLBAR_COLOR = 'scrollbarColor';

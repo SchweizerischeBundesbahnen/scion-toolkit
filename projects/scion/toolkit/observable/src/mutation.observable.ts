@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Observable, Observer, TeardownLogic } from 'rxjs';
+import {Observable, Observer, TeardownLogic} from 'rxjs';
 
 /**
  * Allows watching for changes being made to the DOM tree of an HTML element. It never completes.

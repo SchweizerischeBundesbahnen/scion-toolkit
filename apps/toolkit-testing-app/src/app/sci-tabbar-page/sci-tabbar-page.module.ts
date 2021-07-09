@@ -8,13 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciTabbarPageComponent } from './sci-tabbar-page.component';
-import { RouterModule } from '@angular/router';
-import { SciCheckboxModule, SciFormFieldModule, SciTabbarModule } from '@scion/toolkit.internal/widgets';
-import { ReactiveFormsModule } from '@angular/forms';
-import { SplitPipe } from './split.pipe';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciTabbarPageComponent} from './sci-tabbar-page.component';
+import {RouterModule} from '@angular/router';
+import {SciCheckboxModule, SciFormFieldModule, SciTabbarModule} from '@scion/toolkit.internal/widgets';
+import {ReactiveFormsModule} from '@angular/forms';
+import {SplitPipe} from './split.pipe';
 
 const routes = [
   {path: '', component: SciTabbarPageComponent},

@@ -7,11 +7,11 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciQualifierChipListModule } from '@scion/toolkit.internal/widgets';
-import { RouterModule, Routes } from '@angular/router';
-import { SciQualifierChipListPageComponent } from './sci-qualifier-chip-list-page.component';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciQualifierChipListModule} from '@scion/toolkit.internal/widgets';
+import {RouterModule, Routes} from '@angular/router';
+import {SciQualifierChipListPageComponent} from './sci-qualifier-chip-list-page.component';
 
 const routes: Routes = [
   {path: '', component: SciQualifierChipListPageComponent},

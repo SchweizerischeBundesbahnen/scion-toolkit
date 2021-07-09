@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ViewChild } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { SciTabbarComponent } from '@scion/toolkit.internal/widgets';
+import {Component, ViewChild} from '@angular/core';
+import {FormControl} from '@angular/forms';
+import {SciTabbarComponent} from '@scion/toolkit.internal/widgets';
 
 @Component({
   selector: 'sci-tabbar-page',

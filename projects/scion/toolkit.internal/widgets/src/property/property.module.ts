@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciPropertyComponent } from './property.component';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciPropertyComponent} from './property.component';
 
 /**
  * Allows to show the properties of an object or the entries of a map

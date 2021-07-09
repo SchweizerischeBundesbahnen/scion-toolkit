@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
-import { ComponentFixture, fakeAsync, inject, TestBed, tick, waitForAsync } from '@angular/core/testing';
-import { SciNativeScrollbarTrackSizeProvider } from './native-scrollbar-track-size-provider.service';
+import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
+import {ComponentFixture, fakeAsync, inject, TestBed, tick, waitForAsync} from '@angular/core/testing';
+import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 
 describe('SciNativeScrollbarTrackSizeProvider', () => {
 

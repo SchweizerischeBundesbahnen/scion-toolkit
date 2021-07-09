@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Defined } from './defined.util';
-import { identity } from 'rxjs';
+import {Defined} from './defined.util';
+import {identity} from 'rxjs';
 
 /**
  * Provides array utility methods.
@@ -22,9 +22,9 @@ export class Arrays {
   /**
    * Returns the value, if an array, or adds it to an array. If `null` or `undefined` is given, by default, returns an empty array.
    */
-  public static coerce<T>(value: T | T[] | null | undefined, options?: { coerceNullOrUndefined: true } | {}): NonNullable<T[]>;
-  public static coerce<T>(value: T | T[] | null | undefined, options: { coerceNullOrUndefined: false }): T[] | null | undefined;
-  public static coerce<T>(value: T | T[] | null | undefined, options?: { coerceNullOrUndefined?: boolean }): T[] | null | undefined {
+  public static coerce<T>(value: T | T[] | null | undefined, options?: {coerceNullOrUndefined: true} | {}): NonNullable<T[]>;
+  public static coerce<T>(value: T | T[] | null | undefined, options: {coerceNullOrUndefined: false}): T[] | null | undefined;
+  public static coerce<T>(value: T | T[] | null | undefined, options?: {coerceNullOrUndefined?: boolean}): T[] | null | undefined {
     if (value === null || value === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return [];
@@ -40,7 +40,7 @@ export class Arrays {
    *
    * Use the parameter `exactOrder` to control if the item order must be equal (which is by default) or not.
    */
-  public static isEqual(array1: any[], array2: any[], options?: { exactOrder?: boolean }): boolean {
+  public static isEqual(array1: any[], array2: any[], options?: {exactOrder?: boolean}): boolean {
     if (array1 === array2) {
       return true;
     }
@@ -71,7 +71,7 @@ export class Arrays {
    * @param  options - Control if to remove all occurrences of the element. If not specified, all occurrences are removed.
    * @return the elements removed from the array.
    */
-  public static remove<T>(array: T[], element: any | ((element: T) => boolean), options?: { firstOnly: boolean }): T[] {
+  public static remove<T>(array: T[], element: any | ((element: T) => boolean), options?: {firstOnly: boolean}): T[] {
     const firstOnly = Defined.orElse(options && options.firstOnly, false);
 
     // define a function to resolve the element's index in the original array

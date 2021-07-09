@@ -8,5 +8,5 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciQualifierChipListModule } from './qualifier-chip-list.module';
-export { SciQualifierChipListComponent } from './qualifier-chip-list.component';
+export {SciQualifierChipListModule} from './qualifier-chip-list.module';
+export {SciQualifierChipListComponent} from './qualifier-chip-list.component';

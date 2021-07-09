@@ -13,5 +13,5 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export { SciDimensionModule } from './dimension.module';
-export { SciDimensionDirective, SciDimension } from './dimension.directive';
+export {SciDimensionModule} from './dimension.module';
+export {SciDimensionDirective, SciDimension} from './dimension.directive';

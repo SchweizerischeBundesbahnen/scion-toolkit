@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { fromEvent, merge, Observable, of, OperatorFunction, pipe } from 'rxjs';
-import { auditTime, distinctUntilChanged, map, mapTo, startWith, switchMap } from 'rxjs/operators';
-import { fromMutation$ } from './mutation.observable';
-import { fromDimension$ } from './dimension.observable';
+import {fromEvent, merge, Observable, of, OperatorFunction, pipe} from 'rxjs';
+import {auditTime, distinctUntilChanged, map, mapTo, startWith, switchMap} from 'rxjs/operators';
+import {fromMutation$} from './mutation.observable';
+import {fromDimension$} from './dimension.observable';
 
 /**
  * Allows observing an element's bounding box, providing information about the element's size and position relative to the

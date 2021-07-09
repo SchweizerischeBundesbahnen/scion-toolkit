@@ -8,10 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { BeanDecorator, Beans, PreDestroy } from './bean-manager';
-import { fakeAsync, tick } from '@angular/core/testing';
+import {BeanDecorator, Beans, PreDestroy} from './bean-manager';
+import {fakeAsync, tick} from '@angular/core/testing';
 
-// tslint:disable:typedef
 describe('BeanManager', () => {
 
   beforeEach(async () => await Beans.destroy());
@@ -376,7 +375,7 @@ describe('BeanManager', () => {
 
     class Decorator implements BeanDecorator<Bean> {
       public decorate(bean: Bean): Bean {
-        return new class implements Bean { // tslint:disable-line:new-parens
+        return new class implements Bean {
           public getName(): string {
             return bean.getName().toUpperCase();
           }
@@ -408,7 +407,7 @@ describe('BeanManager', () => {
 
     class Decorator implements BeanDecorator<Bean> {
       public decorate(bean: Bean): Bean {
-        return new class implements Bean { // tslint:disable-line:new-parens
+        return new class implements Bean {
           public getName(): string {
             return bean.getName().toUpperCase();
           }
@@ -556,7 +555,7 @@ describe('BeanManager', () => {
 
     class Decorator1 implements BeanDecorator<PingBean> {
       public decorate(bean: PingBean): PingBean {
-        return new class implements PingBean { // tslint:disable-line:new-parens
+        return new class implements PingBean {
           public ping(ping: string): string {
             decoratorInvocationCaptor.push('decorator1');
             return `${bean.ping(ping)} [decorator1]`;
@@ -567,7 +566,7 @@ describe('BeanManager', () => {
 
     class Decorator2 implements BeanDecorator<PingBean> {
       public decorate(bean: PingBean): PingBean {
-        return new class implements PingBean { // tslint:disable-line:new-parens
+        return new class implements PingBean {
           public ping(ping: string): string {
             decoratorInvocationCaptor.push('decorator2');
             return `${bean.ping(ping)} [decorator2]`;
@@ -578,7 +577,7 @@ describe('BeanManager', () => {
 
     class ToUppercaseDecorator implements BeanDecorator<PingBean> {
       public decorate(bean: PingBean): PingBean {
-        return new class implements PingBean { // tslint:disable-line:new-parens
+        return new class implements PingBean {
           public ping(ping: string): string {
             decoratorInvocationCaptor.push('toUppercaseDecorator');
             return bean.ping(ping).toUpperCase();
@@ -1148,7 +1147,7 @@ describe('BeanManager', () => {
    * Returns a Promise that resolves after the given millis elapses.
    */
   function waitFor(millis: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, millis)); // tslint:disable-line:typedef
+    return new Promise(resolve => setTimeout(resolve, millis));
   }
 });
 

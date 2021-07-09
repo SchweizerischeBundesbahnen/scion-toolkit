@@ -8,13 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciViewportPageComponent } from './sci-viewport-page.component';
-import { RouterModule } from '@angular/router';
-import { SciFormFieldModule } from '@scion/toolkit.internal/widgets';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { SciViewportModule } from '@scion/toolkit/viewport';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciViewportPageComponent} from './sci-viewport-page.component';
+import {RouterModule} from '@angular/router';
+import {SciFormFieldModule} from '@scion/toolkit.internal/widgets';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {SciViewportModule} from '@scion/toolkit/viewport';
 
 const routes = [
   {path: '', component: SciViewportPageComponent},

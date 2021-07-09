@@ -8,5 +8,5 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciCheckboxModule } from './checkbox.module';
-export { SciCheckboxComponent } from './checkbox.component';
+export {SciCheckboxModule} from './checkbox.module';
+export {SciCheckboxComponent} from './checkbox.component';

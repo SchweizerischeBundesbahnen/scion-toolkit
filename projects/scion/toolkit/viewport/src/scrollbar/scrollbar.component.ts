@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, HostBinding, Inject, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
-import { fromEvent, merge, Observable, of, Subject, timer } from 'rxjs';
-import { debounceTime, first, map, mapTo, startWith, switchMap, takeUntil, takeWhile, withLatestFrom } from 'rxjs/operators';
-import { FromDimension, fromDimension$, fromMutation$ } from '@scion/toolkit/observable';
-import { filterArray, subscribeInside } from '@scion/toolkit/operators';
+import {DOCUMENT} from '@angular/common';
+import {ChangeDetectionStrategy, Component, ElementRef, HostBinding, Inject, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
+import {fromEvent, merge, Observable, of, Subject, timer} from 'rxjs';
+import {debounceTime, first, map, mapTo, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
+import {FromDimension, fromDimension$, fromMutation$} from '@scion/toolkit/observable';
+import {filterArray, subscribeInside} from '@scion/toolkit/operators';
 
 /**
  * Renders a vertical or horizontal scrollbar.
@@ -96,7 +96,7 @@ export class SciScrollbarComponent implements OnDestroy {
   /**
    * The viewport to provide scrollbars for.
    */
-  @Input('viewport') // tslint:disable-line:no-input-rename
+  @Input('viewport') // eslint-disable-line @angular-eslint/no-input-rename
   public set setViewport(viewport: HTMLElement) {
     this._viewport = viewport;
     this._viewportChange$.next();
@@ -274,11 +274,11 @@ export class SciScrollbarComponent implements OnDestroy {
         withLatestFrom(merge(of(mousedownEvent), fromEvent<MouseEvent>(scrollTrackElement, 'mousemove')), (tick, event) => event),
         // start immediately
         startWith(mousedownEvent),
-        // stop scrolling on mouseout or mouseup
-        takeUntil(merge(fromEvent(scrollTrackElement, 'mouseout'), fromEvent(scrollTrackElement, 'mouseup'))),
         // stop scrolling if the thumb hits the mouse pointer position
         takeWhile((event: MouseEvent) => scrollTrackElement === this._document.elementFromPoint(event.clientX, event.clientY)),
         debounceTime(10),
+        // stop scrolling on mouseout or mouseup
+        takeUntil(merge(fromEvent(scrollTrackElement, 'mouseout'), fromEvent(scrollTrackElement, 'mouseup'))),
       )
       .subscribe(() => {
         this.moveViewportClient(viewportScrollPx);
@@ -295,7 +295,7 @@ export class SciScrollbarComponent implements OnDestroy {
   /**
    * Emits on subscription, and then each time the size of the viewport changes.
    */
-  private viewportDimensionChange$(options: { debounceTime: number }): Observable<void> {
+  private viewportDimensionChange$(options: {debounceTime: number}): Observable<void> {
     return fromDimension$(this._viewport)
       .pipe(
         // Debouncing is particularly important in the context of Angular animations, since they continuously
@@ -309,7 +309,7 @@ export class SciScrollbarComponent implements OnDestroy {
   /**
    * Emits on subscription, and then each time the size or style property of the viewport client changes.
    */
-  private viewportClientDimensionChange$(options: { debounceTime: number }): Observable<void> {
+  private viewportClientDimensionChange$(options: {debounceTime: number}): Observable<void> {
     return this.children$(this._viewport)
       .pipe(
         switchMap(children => merge(...children.map(child => merge(

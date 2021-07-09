@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { WebStorage } from './web-storage';
-import { ObserveCaptor } from '@scion/toolkit/testing';
+import {WebStorage} from './web-storage';
+import {ObserveCaptor} from '@scion/toolkit/testing';
 
 describe('WebStorage', () => {
 

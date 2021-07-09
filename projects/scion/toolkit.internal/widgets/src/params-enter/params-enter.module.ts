@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciParamsEnterComponent } from './params-enter.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciParamsEnterComponent} from './params-enter.component';
+import {ReactiveFormsModule} from '@angular/forms';
 
 /**
  * Allows to enter parameters.

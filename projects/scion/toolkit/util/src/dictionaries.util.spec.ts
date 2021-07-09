@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Dictionaries } from './dictionaries.util';
+import {Dictionaries} from './dictionaries.util';
 
 describe('Dictionaries', () => {
 

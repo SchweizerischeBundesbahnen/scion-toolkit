@@ -8,13 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostBinding, HostListener, Input, OnDestroy, Output, ViewChild } from '@angular/core';
-import { ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { takeUntil } from 'rxjs/operators';
-import { noop, Subject } from 'rxjs';
-import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { FocusMonitor, FocusOrigin } from '@angular/cdk/a11y';
-import { UUID } from '@scion/toolkit/uuid';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostBinding, HostListener, Input, OnDestroy, Output, ViewChild} from '@angular/core';
+import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {takeUntil} from 'rxjs/operators';
+import {noop, Subject} from 'rxjs';
+import {coerceBooleanProperty} from '@angular/cdk/coercion';
+import {FocusMonitor, FocusOrigin} from '@angular/cdk/a11y';
+import {UUID} from '@scion/toolkit/uuid';
 
 /**
  * Provides a simple filter control.
@@ -52,6 +52,10 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   @Input()
   public set disabled(disabled: boolean) {
     coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
+  }
+
+  public get disabled(): boolean {
+    return this.formControl.disabled;
   }
 
   /**
@@ -116,10 +120,6 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
     this.focus();
     event.stopPropagation();
     this._cd.markForCheck();
-  }
-
-  public get disabled(): boolean {
-    return this.formControl.disabled;
   }
 
   /**
