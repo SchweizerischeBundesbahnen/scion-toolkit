@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { ElementFinder } from 'protractor';
+import {ElementFinder} from 'protractor';
 
 /**
  * Page object to interact {@link SciAccordionComponent}.

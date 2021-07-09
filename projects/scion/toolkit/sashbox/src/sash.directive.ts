@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Directive, Input, OnChanges, OnInit, SimpleChanges, TemplateRef } from '@angular/core';
-import { SciSashBoxAccessor } from './sashbox-accessor';
-import { BehaviorSubject, merge, Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import {Directive, Input, OnChanges, OnInit, SimpleChanges, TemplateRef} from '@angular/core';
+import {SciSashBoxAccessor} from './sashbox-accessor';
+import {BehaviorSubject, merge, Observable} from 'rxjs';
+import {map, switchMap} from 'rxjs/operators';
 
 /**
  * Use this directive to model a sash for {@link SciSashboxComponent}.
@@ -38,7 +38,7 @@ import { map, switchMap } from 'rxjs/operators';
 })
 export class SciSashDirective implements OnInit, OnChanges {
 
-  private _size: string | number = '1'; // tslint:disable-line:no-inferrable-types
+  private _size: string | number = '1';
   private _flexGrow$ = new BehaviorSubject<number>(0);
 
   /**
@@ -51,6 +51,10 @@ export class SciSashDirective implements OnInit, OnChanges {
   @Input()
   public set size(size: string | number) {
     this._size = size ?? '1';
+  }
+
+  public get size(): string | number {
+    return this._size;
   }
 
   /**
@@ -155,10 +159,6 @@ export class SciSashDirective implements OnInit, OnChanges {
       this.flexShrink = 1;
       this.flexBasis = '0';
     }
-  }
-
-  public get size(): string | number {
-    return this._size;
   }
 
   /**

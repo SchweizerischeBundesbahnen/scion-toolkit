@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ContentChildren, ElementRef, EventEmitter, forwardRef, HostBinding, Input, NgZone, OnDestroy, Output, QueryList } from '@angular/core';
-import { startWith, takeUntil } from 'rxjs/operators';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { SplitterMoveEvent } from './splitter.directive';
-import { SciSashDirective } from './sash.directive';
-import { SciSashBoxAccessor } from './sashbox-accessor';
+import {Component, ContentChildren, ElementRef, EventEmitter, forwardRef, HostBinding, Input, NgZone, OnDestroy, Output, QueryList} from '@angular/core';
+import {startWith, takeUntil} from 'rxjs/operators';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
+import {SplitterMoveEvent} from './splitter.directive';
+import {SciSashDirective} from './sash.directive';
+import {SciSashBoxAccessor} from './sashbox-accessor';
 
 /**
  * The <sci-sashbox> is like a CSS flexbox container that lays out its content children (sashes) in a row (which is by default)
@@ -265,7 +265,7 @@ export class SciSashboxComponent implements OnDestroy {
   }
 }
 
-function between(value: number, minmax: { min: number, max: number }): number {
+function between(value: number, minmax: {min: number, max: number}): number {
   return Math.min(minmax.max, Math.max(minmax.min, value));
 }
 
@@ -282,7 +282,7 @@ function computePixelToFlexGrowFactor(sashes: SciSashDirective[]): number {
 }
 
 export function provideSashBoxAccessor(component: SciSashboxComponent): SciSashBoxAccessor {
-  return new class implements SciSashBoxAccessor { // tslint:disable-line:new-parens
+  return new class implements SciSashBoxAccessor {
 
     public get direction(): 'column' | 'row' {
       return component.direction;

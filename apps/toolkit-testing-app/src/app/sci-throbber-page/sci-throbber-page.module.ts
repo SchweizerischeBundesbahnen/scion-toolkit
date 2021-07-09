@@ -8,13 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciThrobberPageComponent } from './sci-throbber-page.component';
-import { RouterModule } from '@angular/router';
-import { SciFormFieldModule } from '@scion/toolkit.internal/widgets';
-import { ReactiveFormsModule } from '@angular/forms';
-import { SciThrobberModule } from '@scion/toolkit/throbber';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciThrobberPageComponent} from './sci-throbber-page.component';
+import {RouterModule} from '@angular/router';
+import {SciFormFieldModule} from '@scion/toolkit.internal/widgets';
+import {ReactiveFormsModule} from '@angular/forms';
+import {SciThrobberModule} from '@scion/toolkit/throbber';
 
 const routes = [
   {path: '', component: SciThrobberPageComponent},

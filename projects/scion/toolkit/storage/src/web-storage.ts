@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { EMPTY, fromEvent, merge, Observable, Observer, of, Subject, TeardownLogic } from 'rxjs';
-import { distinctUntilChanged, filter, mapTo, mergeMap, startWith, takeUntil } from 'rxjs/operators';
-import { Defined } from '@scion/toolkit/util';
+import {EMPTY, fromEvent, merge, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
+import {distinctUntilChanged, filter, mapTo, mergeMap, startWith, takeUntil} from 'rxjs/operators';
+import {Defined} from '@scion/toolkit/util';
 
 /**
  * Allows observing items contained in web storage (local storage or session storage).
@@ -87,7 +87,7 @@ export class WebStorage {
    * Set `emitIfAbsent` to `true` if to emit `undefined` when removing the item, or if there is no item associated
    * with the given key upon subscription. By default, `emitIfAbsent` is set to `false`.
    */
-  public observe$<T>(key: string, options?: { emitIfAbsent?: boolean }): Observable<T> {
+  public observe$<T>(key: string, options?: {emitIfAbsent?: boolean}): Observable<T> {
     const otherDocumentChange$ = fromEvent<StorageEvent>(window, 'storage')
       .pipe(
         filter(event => event.storageArea === this._storage),
@@ -102,27 +102,27 @@ export class WebStorage {
           filter(itemKey => itemKey === key),
           startWith(key),
           mergeMap(itemKey => {
-            const item = this._storage.getItem(itemKey);
+              const item = this._storage.getItem(itemKey);
 
-            // Web storage returns `null` if there is no item associated with the key.
-            if (item === null) {
-              return Defined.orElse(options?.emitIfAbsent, false) ? of(undefined) : EMPTY;
-            }
+              // Web storage returns `null` if there is no item associated with the key.
+              if (item === null) {
+                return Defined.orElse(options?.emitIfAbsent, false) ? of(undefined) : EMPTY;
+              }
 
-            // If the value `undefined` is associated with the key, web storage returns 'undefined' as string.
-            if (item === 'undefined') {
-              return of(undefined);
-            }
+              // If the value `undefined` is associated with the key, web storage returns 'undefined' as string.
+              if (item === 'undefined') {
+                return of(undefined);
+              }
 
-            // If the value `null` is associated with the key, web storage returns 'null' as string.
-            if (item === 'null') {
-              return of(null);
-            }
+              // If the value `null` is associated with the key, web storage returns 'null' as string.
+              if (item === 'null') {
+                return of(null);
+              }
 
-            try {
-              return of(JSON.parse(item));
-            }
-            catch (error) {
+              try {
+                return of(JSON.parse(item));
+              }
+              catch (error) {
                 console.warn(`Failed to parse item from storage. Invalid JSON. [item=${item}]`, error);
                 return EMPTY;
               }

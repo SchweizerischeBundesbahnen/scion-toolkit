@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Arrays } from './arrays.util';
-import { Dictionary } from './dictionaries.util';
-import { Defined } from './defined.util';
+import {Arrays} from './arrays.util';
+import {Dictionary} from './dictionaries.util';
+import {Defined} from './defined.util';
 
 /**
  * Provides utility methods for {@link Map}.
@@ -23,9 +23,9 @@ export class Maps {
   /**
    * Creates a {@link Map} from the given map-like object. If given a `Map`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Map}.
    */
-  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: { coerceNullOrUndefined: true } | {}): NonNullable<Map<string, T>>;
-  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options: { coerceNullOrUndefined: false }): Map<string, T> | null | undefined;
-  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: { coerceNullOrUndefined?: boolean }): Map<string, T> | null | undefined {
+  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined: true} | {}): NonNullable<Map<string, T>>;
+  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options: {coerceNullOrUndefined: false}): Map<string, T> | null | undefined;
+  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Map<string, T> | null | undefined {
     if (mapLike === null || mapLike === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return new Map<string, T>();

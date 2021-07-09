@@ -2,8 +2,8 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2020.
  */
 
-import { Subject } from 'rxjs';
-import { ObserveCaptor } from './observe-captor';
+import {Subject} from 'rxjs';
+import {ObserveCaptor} from './observe-captor';
 
 describe('ObserveCaptor', () => {
 

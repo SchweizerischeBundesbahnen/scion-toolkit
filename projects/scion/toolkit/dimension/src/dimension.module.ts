@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciDimensionDirective } from './dimension.directive';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciDimensionDirective} from './dimension.directive';
 
 /**
  * Provides a directive for observing changes to the size of the host element.

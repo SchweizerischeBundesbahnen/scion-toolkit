@@ -8,5 +8,5 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciPropertyModule } from './property.module';
-export { SciPropertyComponent } from './property.component';
+export {SciPropertyModule} from './property.module';
+export {SciPropertyComponent} from './property.component';

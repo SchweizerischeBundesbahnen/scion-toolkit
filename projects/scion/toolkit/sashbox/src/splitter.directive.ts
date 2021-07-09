@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Directive, EventEmitter, HostBinding, HostListener, Inject, Input, NgZone, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
-import { fromEvent, merge, Subject } from 'rxjs';
-import { first, takeUntil } from 'rxjs/operators';
-import { DOCUMENT } from '@angular/common';
-import { tapFirst } from '@scion/toolkit/operators';
+import {Directive, EventEmitter, HostBinding, HostListener, Inject, Input, NgZone, OnChanges, OnDestroy, Output, SimpleChanges} from '@angular/core';
+import {fromEvent, merge, Subject} from 'rxjs';
+import {first, takeUntil} from 'rxjs/operators';
+import {DOCUMENT} from '@angular/common';
+import {tapFirst} from '@scion/toolkit/operators';
 
 /**
  * Visual element to resize sashes.
@@ -27,33 +27,33 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
   @HostBinding('class.moving')
   public moving = false;
 
-  @Input('sciSplitterVertical') // tslint:disable-line:no-input-rename
+  @Input('sciSplitterVertical')
   public vertical!: boolean;
 
   /**
    * Emits when starting to move the splitter.
    */
-  @Output('sciSplitterStart') // tslint:disable-line:no-output-rename
-  public start = new EventEmitter<number>();
+  @Output('sciSplitterStart')
+  public start = new EventEmitter<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
   /**
    * Emits the delta in pixel when the splitter is moved.
    * The event is emitted outside of the Angular zone.
    */
-  @Output('sciSplitterMove') // tslint:disable-line:no-output-rename
+  @Output('sciSplitterMove')
   public move = new EventEmitter<SplitterMoveEvent>();
 
   /**
    * Emits when ending to move the splitter.
    */
-  @Output('sciSplitterEnd') // tslint:disable-line:no-output-rename
-  public end = new EventEmitter<number>();
+  @Output('sciSplitterEnd')
+  public end = new EventEmitter<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
   /**
    * Emits when to reset the splitter position.
    */
-  @Output('sciSplitterReset') // tslint:disable-line:no-output-rename
-  public reset = new EventEmitter<void>();
+  @Output('sciSplitterReset')
+  public reset = new EventEmitter<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
   @HostBinding('style.cursor')
   public sashCursor!: string;
@@ -111,7 +111,7 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
     );
   }
 
-  private installMoveListener<EVENT extends Event>(config: { startEvent: EVENT, moveEventNames: string[], endEventNames: string[], eventPositionFn: (event: EVENT) => EventPosition }): void {
+  private installMoveListener<EVENT extends Event>(config: {startEvent: EVENT, moveEventNames: string[], endEventNames: string[], eventPositionFn: (event: EVENT) => EventPosition}): void {
     const startEvent = config.startEvent;
 
     startEvent.preventDefault();

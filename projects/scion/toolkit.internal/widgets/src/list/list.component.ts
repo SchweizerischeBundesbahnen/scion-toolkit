@@ -8,14 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { AfterViewInit, Component, ContentChildren, EventEmitter, HostBinding, HostListener, Input, OnDestroy, Output, QueryList, TrackByFunction, ViewChild, ViewChildren } from '@angular/core';
-import { FocusKeyManager } from '@angular/cdk/a11y';
-import { SciListItemDirective } from './list-item.directive';
-import { SciListItemComponent } from './list-item/list-item.component';
-import { SciFilterFieldComponent } from '../filter-field/public_api';
-import { Subject } from 'rxjs';
-import { filter, map, takeUntil } from 'rxjs/operators';
-import { SciListStyle } from './metadata';
+import {AfterViewInit, Component, ContentChildren, EventEmitter, HostBinding, HostListener, Input, OnDestroy, Output, QueryList, TrackByFunction, ViewChild, ViewChildren} from '@angular/core';
+import {FocusKeyManager} from '@angular/cdk/a11y';
+import {SciListItemDirective} from './list-item.directive';
+import {SciListItemComponent} from './list-item/list-item.component';
+import {SciFilterFieldComponent} from '../filter-field/public_api';
+import {Subject} from 'rxjs';
+import {filter, map, takeUntil} from 'rxjs/operators';
+import {SciListStyle} from './metadata';
 
 /**
  * Component that contains a list of items or options which can be filtered and associated with actions.

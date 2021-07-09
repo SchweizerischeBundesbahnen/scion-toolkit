@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciAccordionComponent } from './accordion.component';
-import { SciAccordionItemDirective } from './accordion-item.directive';
-import { CdkAccordionModule } from '@angular/cdk/accordion';
-import { SciDimensionModule } from '@scion/toolkit/dimension';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciAccordionComponent} from './accordion.component';
+import {SciAccordionItemDirective} from './accordion-item.directive';
+import {CdkAccordionModule} from '@angular/cdk/accordion';
+import {SciDimensionModule} from '@scion/toolkit/dimension';
 
 /**
  * Provides an accordion component.

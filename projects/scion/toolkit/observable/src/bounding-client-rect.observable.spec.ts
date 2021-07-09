@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { fromBoundingClientRect$ } from './bounding-client-rect.observable';
-import { ObserveCaptor } from '@scion/toolkit/testing';
+import {fromBoundingClientRect$} from './bounding-client-rect.observable';
+import {ObserveCaptor} from '@scion/toolkit/testing';
 
 describe('fromBoundingClientRect$', () => {
 
@@ -253,7 +253,7 @@ function $(selector: string): HTMLElement {
   return document.querySelector(selector) as HTMLElement;
 }
 
-function addDelta(selector: string, delta: { minWidth?: number, minHeight?: number, width?: number, height?: number }): void {
+function addDelta(selector: string, delta: {minWidth?: number, minHeight?: number, width?: number, height?: number}): void {
   const element = $(selector);
   delta.width && setStyle(element, {'width': `${element.getBoundingClientRect().width + delta.width}px`});
   delta.height && setStyle(element, {'height': `${element.getBoundingClientRect().height + delta.height}px`});
@@ -283,11 +283,11 @@ function createDiv(options: ElementCreateOptions): HTMLElement {
 interface ElementCreateOptions {
   id: string;
   parent?: Node;
-  style?: { [style: string]: any };
+  style?: {[style: string]: any};
   children?: Node[];
 }
 
-function setStyle(element: HTMLElement, style: { [style: string]: any | null }): void {
+function setStyle(element: HTMLElement, style: {[style: string]: any | null}): void {
   Object.keys(style).forEach(key => element.style[key] = style[key]);
 }
 

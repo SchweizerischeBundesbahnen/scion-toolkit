@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { concat, fromEvent, Observable, Observer, of, ReplaySubject, Subject, TeardownLogic } from 'rxjs';
-import { map, multicast, refCount, switchMap, takeUntil, tap } from 'rxjs/operators';
+import {concat, fromEvent, Observable, Observer, of, ReplaySubject, Subject, TeardownLogic} from 'rxjs';
+import {map, multicast, refCount, switchMap, takeUntil, tap} from 'rxjs/operators';
 
 /**
  * Allows observing the dimension of an element. Upon subscription, it emits the element's dimension, and then continuously
@@ -43,7 +43,7 @@ import { map, multicast, refCount, switchMap, takeUntil, tap } from 'rxjs/operat
  *           </li>
  *         </ul>
  */
-export function fromDimension$(target: HTMLElement, options?: { useNativeResizeObserver?: boolean }): Observable<Dimension> {
+export function fromDimension$(target: HTMLElement, options?: {useNativeResizeObserver?: boolean}): Observable<Dimension> {
   options = {
     useNativeResizeObserver: FromDimension.defaults.useNativeResizeObserver,
     ...options,
@@ -77,7 +77,7 @@ export function fromDimension$(target: HTMLElement, options?: { useNativeResizeO
 
 function createNativeResizeObservable$(target: HTMLElement): Observable<Dimension> {
   return new Observable((observer: Observer<Dimension>): TeardownLogic => {
-    const resizeObserver = new (window as any).ResizeObserver(() => observer.next(FromDimension.captureElementDimension(target))); // tslint:disable-line:typedef
+    const resizeObserver = new (window as any).ResizeObserver(() => observer.next(FromDimension.captureElementDimension(target)));
     resizeObserver.observe(target);
 
     // emit the current dimension once the browser is about to repaint
@@ -145,7 +145,7 @@ function supportsNativeResizeObserver(): boolean {
  *
  * Specify styles to be modified by passing a dictionary containing CSS property names (hyphen case).
  */
-function setStyle(element: HTMLElement, style: { [style: string]: any }): void {
+function setStyle(element: HTMLElement, style: {[style: string]: any}): void {
   Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
 }
 

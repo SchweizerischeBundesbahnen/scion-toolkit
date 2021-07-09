@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Observables } from './observables.util';
-import { Subject } from 'rxjs';
+import {Observables} from './observables.util';
+import {Subject} from 'rxjs';
 
 describe('Observables', () => {
 

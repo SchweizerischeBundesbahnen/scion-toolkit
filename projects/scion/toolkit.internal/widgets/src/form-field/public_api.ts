@@ -8,5 +8,5 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciFormFieldModule } from './form-field.module';
-export { SciFormFieldComponent } from './form-field.component';
+export {SciFormFieldModule} from './form-field.module';
+export {SciFormFieldComponent} from './form-field.component';

@@ -8,6 +8,6 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciAccordionModule } from './accordion.module';
-export { SciAccordionItemDirective } from './accordion-item.directive';
-export { SciAccordionComponent } from './accordion.component';
+export {SciAccordionModule} from './accordion.module';
+export {SciAccordionItemDirective} from './accordion-item.directive';
+export {SciAccordionComponent} from './accordion.component';

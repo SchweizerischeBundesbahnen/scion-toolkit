@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { from, Observable, of } from 'rxjs';
+import {from, Observable, of} from 'rxjs';
 
 export class Observables {
 

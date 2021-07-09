@@ -34,14 +34,11 @@
           }
         },
         "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-eslint/builder:lint",
           "options": {
-            "tsConfig": [
-              "projects/scion/toolkit/tsconfig.lib.json",
-              "projects/scion/toolkit/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
+            "lintFilePatterns": [
+              "projects/scion/toolkit/**/*.ts",
+              "projects/scion/toolkit/**/*.html"
             ]
           }
         }
@@ -68,11 +65,11 @@
           "defaultConfiguration": "development"
         },
         "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-eslint/builder:lint",
           "options": {
-            "tsConfig": "projects/scion/toolkit.e2e/tsconfig.json",
-            "exclude": [
-              "**/node_modules/**"
+            "lintFilePatterns": [
+              "projects/scion/toolkit.e2e/**/*.ts",
+              "projects/scion/toolkit.e2e/**/*.html"
             ]
           }
         }
@@ -109,14 +106,11 @@
           }
         },
         "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-eslint/builder:lint",
           "options": {
-            "tsConfig": [
-              "projects/scion/toolkit.internal/tsconfig.lib.json",
-              "projects/scion/toolkit.internal/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
+            "lintFilePatterns": [
+              "projects/scion/toolkit.internal/**/*.ts",
+              "projects/scion/toolkit.internal/**/*.html"
             ]
           }
         }
@@ -189,13 +183,11 @@
           "defaultConfiguration": "development"
         },
         "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-eslint/builder:lint",
           "options": {
-            "tsConfig": [
-              "apps/toolkit-testing-app/tsconfig.app.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
+            "lintFilePatterns": [
+              "apps/toolkit-testing-app/**/*.ts",
+              "apps/toolkit-testing-app/**/*.html"
             ]
           }
         }
@@ -210,5 +202,8 @@
       }
     }
   },
-  "defaultProject": "@scion/toolkit"
+  "defaultProject": "@scion/toolkit",
+  "cli": {
+    "defaultCollection": "@angular-eslint/schematics"
+  }
 }

@@ -8,13 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { BehaviorSubject, noop, Observable, Observer, of, Subject, TeardownLogic } from 'rxjs';
-import { fakeAsync, flushMicrotasks, TestBed } from '@angular/core/testing';
-import { NgZone } from '@angular/core';
-import { finalize, tap } from 'rxjs/operators';
-import { combineArray, mapArray, observeInside, subscribeInside } from './operators';
-import { ObserveCaptor } from '@scion/toolkit/testing';
-import { bufferUntil, distinctArray } from '@scion/toolkit/operators';
+import {BehaviorSubject, noop, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
+import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
+import {NgZone} from '@angular/core';
+import {finalize, tap} from 'rxjs/operators';
+import {combineArray, mapArray, observeInside, subscribeInside} from './operators';
+import {ObserveCaptor} from '@scion/toolkit/testing';
+import {bufferUntil, distinctArray} from '@scion/toolkit/operators';
 
 describe('Operators', () => {
 

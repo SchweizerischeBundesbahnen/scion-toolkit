@@ -7,9 +7,9 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { SciSashboxComponent } from '@scion/toolkit/sashbox';
+import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
+import {FormControl} from '@angular/forms';
+import {SciSashboxComponent} from '@scion/toolkit/sashbox';
 
 @Component({
   selector: 'sci-sashbox-page',

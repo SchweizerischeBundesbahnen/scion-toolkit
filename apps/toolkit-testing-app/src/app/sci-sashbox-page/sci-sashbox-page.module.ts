@@ -7,13 +7,13 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciSashboxPageComponent } from './sci-sashbox-page.component';
-import { SciCheckboxModule, SciFormFieldModule } from '@scion/toolkit.internal/widgets';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { SciSashboxModule } from '@scion/toolkit/sashbox';
-import { RouterModule, Routes } from '@angular/router';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciSashboxPageComponent} from './sci-sashbox-page.component';
+import {SciCheckboxModule, SciFormFieldModule} from '@scion/toolkit.internal/widgets';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {SciSashboxModule} from '@scion/toolkit/sashbox';
+import {RouterModule, Routes} from '@angular/router';
 
 const routes: Routes = [
   {path: '', component: SciSashboxPageComponent},

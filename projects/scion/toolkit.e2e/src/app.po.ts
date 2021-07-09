@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { browser } from 'protractor';
+import {browser} from 'protractor';
 
 export class AppPO {
 

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { browser, ElementArrayFinder, ElementFinder } from 'protractor';
+import {browser, ElementArrayFinder, ElementFinder} from 'protractor';
 
 /**
  * Page object for {@link SciListItemComponent}.

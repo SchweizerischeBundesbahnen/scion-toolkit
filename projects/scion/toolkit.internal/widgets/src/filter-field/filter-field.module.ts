@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciFilterFieldComponent } from './filter-field.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciFilterFieldComponent} from './filter-field.component';
+import {ReactiveFormsModule} from '@angular/forms';
 
 /**
  * Provides a simple filter field.

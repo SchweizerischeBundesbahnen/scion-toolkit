@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { ElementFinder } from 'protractor';
-import { Dictionaries, Dictionary } from '@scion/toolkit/util';
+import {ElementFinder} from 'protractor';
+import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 
 /**
  * Page object for {@link SciParamsEnterComponent}.

@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { browser, ElementFinder } from 'protractor';
-import { SciListItemPO } from './list-item.po';
-import { Defined } from '@scion/toolkit/util';
+import {browser, ElementFinder} from 'protractor';
+import {SciListItemPO} from './list-item.po';
+import {Defined} from '@scion/toolkit/util';
 
 /**
  * Page object for {@link SciListComponent}.

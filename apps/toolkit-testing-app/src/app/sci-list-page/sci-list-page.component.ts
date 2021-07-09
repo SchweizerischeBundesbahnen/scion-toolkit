@@ -7,9 +7,9 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { Component } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import {Component} from '@angular/core';
+import {BehaviorSubject, Observable, of} from 'rxjs';
+import {map, switchMap} from 'rxjs/operators';
 
 @Component({
   selector: 'sci-list-page',

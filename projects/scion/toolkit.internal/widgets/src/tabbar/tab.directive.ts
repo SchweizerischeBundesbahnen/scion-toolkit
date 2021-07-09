@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Directive, Input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef } from '@angular/core';
+import {Directive, Input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
 
 /**
  * Use this directive to model a tab item for {SciTabbarComponent}.

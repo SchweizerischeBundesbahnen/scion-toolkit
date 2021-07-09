@@ -13,7 +13,7 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export { SciViewportModule } from './viewport.module';
+export {SciViewportModule} from './viewport.module';
 export * from './viewport.component';
 export * from './scrollable.directive';
 export * from './scrollbar/scrollbar.component';

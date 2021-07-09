@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Inject, Injectable, NgZone, OnDestroy, Renderer2, RendererFactory2 } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
-import { BehaviorSubject, fromEvent, Observable, Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, startWith, takeUntil } from 'rxjs/operators';
-import { Dictionary } from '@scion/toolkit/util';
+import {Inject, Injectable, NgZone, OnDestroy, Renderer2, RendererFactory2} from '@angular/core';
+import {DOCUMENT} from '@angular/common';
+import {BehaviorSubject, fromEvent, Observable, Subject} from 'rxjs';
+import {debounceTime, distinctUntilChanged, map, startWith, takeUntil} from 'rxjs/operators';
+import {Dictionary} from '@scion/toolkit/util';
 
 /**
  * Provides the native scrollbar tracksize.

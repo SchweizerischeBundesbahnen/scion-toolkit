@@ -26,7 +26,7 @@ export class Defined {
    * Returns the value, if present, otherwise returns the `orElseValue`, which can be a static value or provided by a supplier function.
    */
   public static orElse<T>(value: T | undefined, orElseValue: T | (() => T)): T {
-    return (value !== undefined ? value : (typeof orElseValue === 'function' ? ((orElseValue) as Function)() : orElseValue));
+    return (value !== undefined ? value : (typeof orElseValue === 'function' ? (orElseValue as (() => T))() : orElseValue));
   }
 
   /**

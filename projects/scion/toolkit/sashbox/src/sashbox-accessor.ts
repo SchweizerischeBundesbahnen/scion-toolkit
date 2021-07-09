@@ -1,5 +1,5 @@
-import { SciSashDirective } from './sash.directive';
-import { Observable } from 'rxjs';
+import {SciSashDirective} from './sash.directive';
+import {Observable} from 'rxjs';
 
 /**
  * Allows accessing the sashbox component from sashes.

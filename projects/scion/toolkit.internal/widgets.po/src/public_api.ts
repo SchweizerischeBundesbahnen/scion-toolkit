@@ -13,11 +13,11 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export { SciParamsEnterPO } from './params-enter/params-enter.po';
-export { SciCheckboxPO } from './checkbox/checkbox.po';
-export { SciListPO, WaitUntil } from './list/list.po';
-export { SciListItemPO } from './list/list-item.po';
-export { SciQualifierChipListPO } from './qualifier-chip-list/qualifier-chip-list.po';
-export { SciPropertyPO } from './property/property.po';
-export { SciTabbarPO } from './tabbar/tabbar.po';
-export { SciAccordionPO } from './accordion/accordion.po';
+export {SciParamsEnterPO} from './params-enter/params-enter.po';
+export {SciCheckboxPO} from './checkbox/checkbox.po';
+export {SciListPO, WaitUntil} from './list/list.po';
+export {SciListItemPO} from './list/list-item.po';
+export {SciQualifierChipListPO} from './qualifier-chip-list/qualifier-chip-list.po';
+export {SciPropertyPO} from './property/property.po';
+export {SciTabbarPO} from './tabbar/tabbar.po';
+export {SciAccordionPO} from './accordion/accordion.po';

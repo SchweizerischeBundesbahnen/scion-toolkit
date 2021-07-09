@@ -8,5 +8,5 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciFilterFieldModule } from './filter-field.module';
-export { SciFilterFieldComponent, toFilterRegExp } from './filter-field.component';
+export {SciFilterFieldModule} from './filter-field.module';
+export {SciFilterFieldComponent, toFilterRegExp} from './filter-field.component';

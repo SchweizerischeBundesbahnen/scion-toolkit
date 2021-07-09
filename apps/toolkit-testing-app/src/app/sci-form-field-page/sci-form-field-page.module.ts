@@ -7,11 +7,11 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciFormFieldModule } from '@scion/toolkit.internal/widgets';
-import { RouterModule, Routes } from '@angular/router';
-import { SciFormFieldPageComponent } from './sci-form-field-page.component';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciFormFieldModule} from '@scion/toolkit.internal/widgets';
+import {RouterModule, Routes} from '@angular/router';
+import {SciFormFieldPageComponent} from './sci-form-field-page.component';
 
 const routes: Routes = [
   {path: '', component: SciFormFieldPageComponent},

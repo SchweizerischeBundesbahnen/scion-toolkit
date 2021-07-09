@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { map, mergeMap, mergeMapTo, publishLast, refCount, switchMap, take } from 'rxjs/operators';
-import { combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic } from 'rxjs';
-import { Arrays } from '@scion/toolkit/util';
+import {map, mergeMap, mergeMapTo, publishLast, refCount, switchMap, take} from 'rxjs/operators';
+import {combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic} from 'rxjs';
+import {Arrays} from '@scion/toolkit/util';
 
 /**
  * Filters items in the source array and emits an array with items satisfying given predicate.
@@ -180,7 +180,7 @@ export function subscribeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFu
       let subscription: Subscription;
 
       executionFn(() => {
-        subscription = source.subscribe(new class extends Subscriber<T> { // tslint:disable-line:new-parens
+        subscription = source.subscribe(new class extends Subscriber<T> {
 
           constructor() {
             super(observer);

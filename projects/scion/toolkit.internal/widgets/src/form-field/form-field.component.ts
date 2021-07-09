@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ElementRef, HostBinding, Input, OnDestroy } from '@angular/core';
-import { ConfigurableFocusTrapFactory, FocusTrap } from '@angular/cdk/a11y';
+import {Component, ElementRef, HostBinding, Input, OnDestroy} from '@angular/core';
+import {ConfigurableFocusTrapFactory, FocusTrap} from '@angular/cdk/a11y';
 
 @Component({
   selector: 'sci-form-field',

@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SciSashboxComponent } from './sashbox.component';
-import { SciSashDirective } from './sash.directive';
-import { SciSplitterDirective } from './splitter.directive';
-import { SciSashInitializerDirective } from './sash-initializer.directive';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {SciSashboxComponent} from './sashbox.component';
+import {SciSashDirective} from './sash.directive';
+import {SciSplitterDirective} from './splitter.directive';
+import {SciSashInitializerDirective} from './sash-initializer.directive';
 
 /**
  * Provides a sashbox component that lays out its children in a row or column arrangement and places a splitter between each child.

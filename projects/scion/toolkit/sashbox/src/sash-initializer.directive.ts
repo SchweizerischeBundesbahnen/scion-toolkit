@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { SciSashDirective } from './sash.directive';
+import {Directive, ElementRef, Input, OnChanges, SimpleChanges} from '@angular/core';
+import {SciSashDirective} from './sash.directive';
 
 /**
  * Initializes {SashDirective} with the target {HTMLDivElement}.
@@ -17,7 +17,7 @@ import { SciSashDirective } from './sash.directive';
 @Directive({selector: 'div[sciSashInitializer].sash'})
 export class SciSashInitializerDirective implements OnChanges {
 
-  @Input('sciSashInitializer') // tslint:disable-line:no-input-rename
+  @Input('sciSashInitializer') // eslint-disable-line @angular-eslint/no-input-rename
   public sash!: SciSashDirective;
 
   constructor(private _host: ElementRef<HTMLDivElement>) {

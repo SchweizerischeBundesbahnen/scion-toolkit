@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { Dimension, FromDimension, fromDimension$ } from '@scion/toolkit/observable';
+import {Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output} from '@angular/core';
+import {Subject} from 'rxjs';
+import {takeUntil} from 'rxjs/operators';
+import {Dimension, FromDimension, fromDimension$} from '@scion/toolkit/observable';
 
 /**
  * Allows observing changes to host element's size.
@@ -35,7 +35,7 @@ export class SciDimensionDirective implements OnInit, OnDestroy {
   /**
    * Upon subscription, it emits the host element's dimension, and then continuously emits when the dimension of the host element changes.
    */
-  @Output('sciDimensionChange') // tslint:disable-line:no-output-rename
+  @Output('sciDimensionChange') // eslint-disable-line @angular-eslint/no-output-rename
   public dimensionChange = new EventEmitter<SciDimension>();
 
   /**

@@ -7,11 +7,11 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, Routes } from '@angular/router';
-import { SciCheckboxModule } from '@scion/toolkit.internal/widgets';
-import { SciCheckboxPageComponent } from './sci-checkbox-page.component';
+import {NgModule} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {RouterModule, Routes} from '@angular/router';
+import {SciCheckboxModule} from '@scion/toolkit.internal/widgets';
+import {SciCheckboxPageComponent} from './sci-checkbox-page.component';
 
 const routes: Routes = [
   {path: '', component: SciCheckboxPageComponent},

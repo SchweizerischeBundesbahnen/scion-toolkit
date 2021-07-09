@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Maps } from './maps.util';
+import {Maps} from './maps.util';
 
 describe('Maps', () => {
 

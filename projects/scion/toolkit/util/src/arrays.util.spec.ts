@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Arrays } from './arrays.util';
+import {Arrays} from './arrays.util';
 
 describe('Arrays', () => {
 

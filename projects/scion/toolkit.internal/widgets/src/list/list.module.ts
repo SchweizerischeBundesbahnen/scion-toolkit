@@ -8,14 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { NgModule } from '@angular/core';
-import { SciListComponent } from './list.component';
-import { A11yModule } from '@angular/cdk/a11y';
-import { SciFilterFieldModule } from '../filter-field/filter-field.module';
-import { SciListItemComponent } from './list-item/list-item.component';
-import { SciListItemDirective } from './list-item.directive';
-import { SciViewportModule } from '@scion/toolkit/viewport';
-import { CommonModule } from '@angular/common';
+import {NgModule} from '@angular/core';
+import {SciListComponent} from './list.component';
+import {A11yModule} from '@angular/cdk/a11y';
+import {SciFilterFieldModule} from '../filter-field/filter-field.module';
+import {SciListItemComponent} from './list-item/list-item.component';
+import {SciListItemDirective} from './list-item.directive';
+import {SciViewportModule} from '@scion/toolkit/viewport';
+import {CommonModule} from '@angular/common';
 
 /**
  * Provides a list component to render a list of items which can be filtered.

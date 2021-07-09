@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { SciThrobberComponent } from '@scion/toolkit/throbber';
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {FormBuilder, FormGroup} from '@angular/forms';
+import {SciThrobberComponent} from '@scion/toolkit/throbber';
 
 export const TYPE = 'type';
 export const COLOR = 'color';

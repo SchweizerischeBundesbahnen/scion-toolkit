@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import { Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, Output, ViewChild } from '@angular/core';
-import { SciNativeScrollbarTrackSizeProvider } from './native-scrollbar-track-size-provider.service';
-import { coerceElement } from '@angular/cdk/coercion';
+import {Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, Output, ViewChild} from '@angular/core';
+import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
+import {coerceElement} from '@angular/cdk/coercion';
 
 /**
  * Represents a viewport with the `<ng-content>` used as scrollable content. Content is added to a CSS grid layout.
@@ -113,13 +113,17 @@ export class SciViewportComponent {
     this._scrollbarStyle = scrollbarStyle || 'on-top';
   }
 
+  public get scrollbarStyle(): ScrollbarStyle {
+    return this._scrollbarStyle;
+  }
+
   /**
    * Emits upon a scroll event.
    *
    * You can add [sciDimension] directive to the viewport or viewport client to be notified about layout changes.
    */
-  @Output() // tslint:disable-line:no-output-native
-  public scroll = new EventEmitter<Event>();
+  @Output()
+  public scroll = new EventEmitter<Event>(); // eslint-disable-line @angular-eslint/no-output-native
 
   constructor(public host: ElementRef<HTMLElement>, public nativeScrollbarTrackSizeProvider: SciNativeScrollbarTrackSizeProvider) {
   }
@@ -255,10 +259,6 @@ export class SciViewportComponent {
     } while (el !== null && el !== this._viewport);
 
     return offset;
-  }
-
-  public get scrollbarStyle(): ScrollbarStyle {
-    return this._scrollbarStyle;
   }
 }
 

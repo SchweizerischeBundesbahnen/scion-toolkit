@@ -8,6 +8,6 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export { SciListModule } from './list.module';
-export { SciListComponent } from './list.component';
-export { SciListItemDirective } from './list-item.directive';
+export {SciListModule} from './list.module';
+export {SciListComponent} from './list.component';
+export {SciListItemDirective} from './list-item.directive';
