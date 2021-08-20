@@ -50,6 +50,18 @@ export class Dictionaries {
 
     return dictionaryLike;
   }
+
+  /**
+   * Returns a new {@link Dictionary} with `undefined` values removed.
+   */
+  public static withoutUndefinedEntries(object: Dictionary): Dictionary {
+    return Object.entries(object).reduce<Dictionary>((dictionary, [key, value]) => {
+      if (value !== undefined) {
+        dictionary[key] = value;
+      }
+      return dictionary;
+    }, {});
+  }
 }
 
 /**

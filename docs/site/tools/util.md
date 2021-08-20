@@ -38,6 +38,8 @@ npm install --save @scion/toolkit
   
   - **coerce**\
     Creates a `Dictionary` from the given dictionary-like object. If given a `Dictionary`, it is returned. If given `null` or `undefined`, by default, returns an empty `Dictionary`.
+  - **withoutUndefinedEntries**\
+    Returns a new `Dictionary` with `undefined` values removed.
 
 </details>
 
