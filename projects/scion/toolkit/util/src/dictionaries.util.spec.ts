@@ -51,4 +51,32 @@ describe('Dictionaries', () => {
       expect(Dictionaries.coerce(undefined, {coerceNullOrUndefined: true})).toEqual({});
     });
   });
+
+  describe('Dictionaries.withoutUndefinedEntries', () => {
+
+    it('should remove undefined entries (resulting dictionary is empty)', () => {
+      const dictionary = {firstname: undefined, lastname: undefined};
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual({});
+    });
+
+    it('should remove undefined entries (resulting dictionary contains entries)', () => {
+      const dictionary = {firstname: 'John', lastname: undefined};
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual({firstname: 'John'});
+    });
+
+    it('should not alter dictionary without undefined entries', () => {
+      const dictionary = {firstname: 'John', lastname: 'Smith'};
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary);
+    });
+
+    it('should not alter empty dictionary', () => {
+      const dictionary = {};
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary);
+    });
+
+    it('should not alter dictionary containing `null` entries', () => {
+      const dictionary = {firstname: null, lastname: null};
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary);
+    });
+  });
 });
