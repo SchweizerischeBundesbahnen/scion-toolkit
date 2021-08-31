@@ -9,7 +9,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
   private readonly _projectFn: (value: T) => R;
 
   private _values: R[] = [];
-  private _completed = false;
+  private _state: 'completed' | 'errored' | undefined;
   private _error: any;
 
   private _completeOrError$ = new AsyncSubject<void>();
@@ -38,6 +38,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
    * Note: Write as arrow function to retain the `this` reference when being invoked from another scope, e.g., from the global scope.
    */
   public error = (error: any): void => {
+    this._state = 'errored';
     this._error = error;
     this._completeOrError$.complete();
   }
@@ -48,7 +49,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
    * Note: Write as arrow function to retain the `this` reference when being invoked from another scope, e.g., from the global scope.
    */
   public complete = (): void => {
-    this._completed = true;
+    this._state = 'completed';
     this._completeOrError$.complete();
   }
 
@@ -77,14 +78,14 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
    * Indicates if the Observable completed. An Observable can either complete or error.
    */
   public hasCompleted(): boolean {
-    return this._completed;
+    return this._state === 'completed';
   }
 
   /**
    * Indicates if the Observable errored. An Observable can either complete or error.
    */
   public hasErrored(): boolean {
-    return this._error !== undefined;
+    return this._state === 'errored';
   }
 
   /**
