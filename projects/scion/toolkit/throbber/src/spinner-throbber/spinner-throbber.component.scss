@@ -1,7 +1,9 @@
+@use "sass:math";
+
 $stroke-height: .25em;
 $stroke-width: .075em;
 $stroke-count: 12;
-$stroke-angle: 360 / $stroke-count;
+$stroke-angle: math.div(360, $stroke-count);
 
 :host {
   display: inline-flex;
@@ -15,7 +17,7 @@ $stroke-angle: 360 / $stroke-count;
   > div.stroke {
     flex: none;
     position: absolute;
-    transform-origin: ($stroke-width / 2) .5em;
+    transform-origin: ($stroke-width * 0.5) .5em;
     width: $stroke-width;
     height: $stroke-height;
     opacity: 0;
@@ -28,7 +30,7 @@ $stroke-angle: 360 / $stroke-count;
 
       &:nth-child(#{$i}) {
         transform: rotate(#{$angle}deg);
-        animation-delay: calc(var(--sci-throbber-duration) * #{$i / $stroke-count});
+        animation-delay: calc(var(--sci-throbber-duration) * #{math.div($i, $stroke-count)});
       }
     }
   }
