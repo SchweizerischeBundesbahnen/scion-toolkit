@@ -14,7 +14,7 @@ $point-angle: 15;
   > div.point {
     flex: none;
     position: absolute;
-    transform-origin: ($point-size / 2) .5em;
+    transform-origin: ($point-size * 0.5) .5em;
     width: $point-size;
     height: $point-size;
     border-radius: 50%;
@@ -25,7 +25,7 @@ $point-angle: 15;
 
       &:nth-child(#{$i}) {
         animation: sci-roller-throbber-#{$i} var(--sci-throbber-duration) cubic-bezier(.5, 0, .5, 1) infinite;
-        animation-delay: calc(var(--sci-throbber-duration) * #{-$i/50});
+        animation-delay: calc(var(--sci-throbber-duration) * #{-$i*.02});
       }
 
       @keyframes sci-roller-throbber-#{$i} {
