@@ -204,4 +204,24 @@ describe('ObserveCaptor', () => {
     const untilEmitCountPromise = captor.waitUntilEmitCount(3, 10);
     await expectAsync(untilEmitCountPromise).toBeRejectedWith(jasmine.stringMatching(/CaptorTimeoutError/));
   });
+
+  it('should indicate that an Observable errored', () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+    subject$.error(Error('error'));
+    expect(captor.hasErrored()).toBeTrue();
+    expect(captor.getError()).toEqual(Error('error'));
+  });
+
+  it('should indicate that an Observable errored (`undefined` error)', () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+    subject$.error(undefined);
+    expect(captor.hasErrored()).toBeTrue();
+    expect(captor.getError()).toBeUndefined();
+  });
 });
