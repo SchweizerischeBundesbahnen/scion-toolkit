@@ -1,3 +1,17 @@
+# [12.0.0-beta.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/12.0.0-beta.1...12.0.0-beta.2) (2021-08-31)
+
+
+### Bug Fixes
+
+* **toolkit/testing:** fix check in `ObserveCaptor` to indicate whether the Observable has failed ([606b47e](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/606b47e60f3c2de5214612d5d27b4ec51f7f8e28))
+
+
+### Features
+
+* **toolkit:** provide a function to remove undefined entries from a dictionary ([5350a1c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/5350a1cbdbdfcacd8b4574daee26a3307ae55eca))
+
+
+
 # [12.0.0-beta.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/11.0.0-beta.12...12.0.0-beta.1) (2021-07-01)
 
 
