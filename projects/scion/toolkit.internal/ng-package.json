@@ -7,7 +7,7 @@
   "assets": [
     "widgets/*.scss"
   ],
-  "whitelistedNonPeerDependencies": [
+  "allowedNonPeerDependencies": [
     "@scion"
   ]
 }
