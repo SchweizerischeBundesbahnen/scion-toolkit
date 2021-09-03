@@ -136,7 +136,7 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
   }
 
   public onAnyKey(event: KeyboardEvent): void {
-    this._filterField && this._filterField.onKeydown(event);
+    this._filterField && this._filterField.focusAndApplyKeyboardEvent(event);
   }
 
   public get activeItem(): SciListItemComponent {

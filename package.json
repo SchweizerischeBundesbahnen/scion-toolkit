@@ -80,6 +80,7 @@
     "conventional-changelog-cli": "2.1.1",
     "cross-env": "7.0.3",
     "eslint": "7.31.0",
+    "eslint-plugin-deprecation": "1.2.1",
     "eslint-plugin-rxjs": "3.3.5",
     "jasmine-core": "3.7.1",
     "jasmine-spec-reporter": "7.0.0",
