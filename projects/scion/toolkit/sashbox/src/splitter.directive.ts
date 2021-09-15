@@ -111,7 +111,7 @@ export class SciSplitterDirective implements OnChanges, OnDestroy {
     );
   }
 
-  private installMoveListener<EVENT extends Event>(config: {startEvent: EVENT, moveEventNames: string[], endEventNames: string[], eventPositionFn: (event: EVENT) => EventPosition}): void {
+  private installMoveListener<EVENT extends Event>(config: {startEvent: EVENT; moveEventNames: string[]; endEventNames: string[]; eventPositionFn: (event: EVENT) => EventPosition}): void {
     const startEvent = config.startEvent;
 
     startEvent.preventDefault();
