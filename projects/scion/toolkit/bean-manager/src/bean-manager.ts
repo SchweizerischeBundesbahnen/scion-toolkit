@@ -199,7 +199,7 @@ export class BeanManager {
    *
    * Initializers must be registered before starting the bean manager.
    */
-  public registerInitializer(initializer: InitializerFn | {useFunction?: InitializerFn, useClass?: Type<Initializer>, runlevel?: number}): void {
+  public registerInitializer(initializer: InitializerFn | {useFunction?: InitializerFn; useClass?: Type<Initializer>; runlevel?: number}): void {
     if (this.runlevel >= 0) {
       throw Error('[BeanManagerLifecycleError] Initializers can only be registered before starting the bean manager.');
     }
@@ -233,7 +233,7 @@ export class BeanManager {
    * @param  orElse - Controls what to do if no bean is found under the given symbol. If not set and if no bean is found, the bean manager throws an error.
    * @throws if not finding a bean, or if multiple beans are found under the given symbol.
    */
-  public get<T>(symbol: Type<T> | AbstractType<T> | Type<any> | AbstractType<any> | symbol, orElse?: {orElseGet?: T, orElseSupply?: () => T}): T {
+  public get<T>(symbol: Type<T> | AbstractType<T> | Type<any> | AbstractType<any> | symbol, orElse?: {orElseGet?: T; orElseSupply?: () => T}): T {
     const beans = this.all(symbol);
     switch (beans.length) {
       case 0: {

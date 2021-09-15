@@ -265,7 +265,7 @@ export class SciSashboxComponent implements OnDestroy {
   }
 }
 
-function between(value: number, minmax: {min: number, max: number}): number {
+function between(value: number, minmax: {min: number; max: number}): number {
   return Math.min(minmax.max, Math.max(minmax.min, value));
 }
 

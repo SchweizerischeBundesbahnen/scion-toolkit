@@ -30,7 +30,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
   public next = (value: T): void => {
     this._values.push(this._projectFn(value));
     this._emitCount$.next();
-  }
+  };
 
   /**
    * @docs-private
@@ -41,7 +41,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
     this._state = 'errored';
     this._error = error;
     this._completeOrError$.complete();
-  }
+  };
 
   /**
    * @docs-private
@@ -51,7 +51,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
   public complete = (): void => {
     this._state = 'completed';
     this._completeOrError$.complete();
-  }
+  };
 
   /**
    * Returns captured values in the order as emitted by the Observable.
@@ -102,7 +102,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
    *
    * Pass options to control which aspects of this captor not to reset. By default, all aspects are reset.
    */
-  public reset(options?: {resetValues?: boolean, resetEmitCount?: boolean}): this {
+  public reset(options?: {resetValues?: boolean; resetEmitCount?: boolean}): this {
     const resetValues = options?.resetValues ?? true;
     const resetEmitCount = options?.resetEmitCount ?? true;
 

@@ -36,7 +36,7 @@ export class SciQualifierChipListComponent implements OnChanges {
    */
   public qualifierKeyCompareFn = (a: KeyValue<string, any>, b: KeyValue<string, any>): number => {
     return this._qualifierKeys.indexOf(a.key) - this._qualifierKeys.indexOf(b.key);
-  }
+  };
 }
 
 export interface Qualifier {

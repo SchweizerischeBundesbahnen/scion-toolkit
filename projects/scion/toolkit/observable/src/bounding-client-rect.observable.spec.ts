@@ -253,7 +253,7 @@ function $(selector: string): HTMLElement {
   return document.querySelector(selector) as HTMLElement;
 }
 
-function addDelta(selector: string, delta: {minWidth?: number, minHeight?: number, width?: number, height?: number}): void {
+function addDelta(selector: string, delta: {minWidth?: number; minHeight?: number; width?: number; height?: number}): void {
   const element = $(selector);
   delta.width && setStyle(element, {'width': `${element.getBoundingClientRect().width + delta.width}px`});
   delta.height && setStyle(element, {'height': `${element.getBoundingClientRect().height + delta.height}px`});
