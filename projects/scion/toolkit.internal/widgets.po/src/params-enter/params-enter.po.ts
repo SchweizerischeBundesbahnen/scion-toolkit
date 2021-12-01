@@ -21,7 +21,7 @@ export class SciParamsEnterPO {
 
   public async enterParams(params: Dictionary | Map<string, any>): Promise<void> {
     if (params instanceof Map) {
-      return this.enterParams(Dictionaries.coerce(params));
+      await this.enterParams(Dictionaries.coerce(params));
     }
 
     const addButton = this._sciParamsEnterFinder.$('button.e2e-add');
