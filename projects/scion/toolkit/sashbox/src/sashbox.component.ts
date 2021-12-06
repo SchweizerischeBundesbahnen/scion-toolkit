@@ -11,7 +11,7 @@
 import {Component, ContentChildren, ElementRef, EventEmitter, forwardRef, HostBinding, Input, NgZone, OnDestroy, Output, QueryList} from '@angular/core';
 import {startWith, takeUntil} from 'rxjs/operators';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
-import {SplitterMoveEvent} from './splitter.directive';
+import {SplitterMoveEvent} from '@scion/toolkit/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
 
@@ -27,6 +27,7 @@ import {SciSashBoxAccessor} from './sashbox-accessor';
  *
  * ### Usage:
  *
+ * ```html
  * <sci-sashbox direction="row">
  *   <ng-template sciSash size="1">
  *     ...
@@ -40,30 +41,31 @@ import {SciSashBoxAccessor} from './sashbox-accessor';
  *     ...
  *   </ng-template>
  * </sci-sashbox>
- *
- *
+ * ```
  *
  * ### Theme override:
+ * The default style of the sashbox is made up of shades of gray.
+ * You can control the appearance by overriding the following CSS variables:
  *
- * You can override the following CSS variables:
- *
- * --sci-sashbox-gap: Sets the gaps (gutters) between sashes.
- * --sci-sashbox-splitter-bgcolor: Sets the background color of the splitter.
- * --sci-sashbox-splitter-bgcolor_hover: Sets the background color of the splitter when hovering it.
- * --sci-sashbox-splitter-size: Sets the size of the splitter along the main axis.
- * --sci-sashbox-splitter-size_hover: Sets the size of the splitter along the main axis when hovering it.
- * --sci-sashbox-splitter-touch-target-size: Sets the touch target size to move the splitter (accessibility).
- * --sci-sashbox-splitter-cross-axis-size: Sets the splitter size along the cross axis.
- * --sci-sashbox-splitter-border-radius: Sets the border radius of the splitter.
- * --sci-sashbox-splitter-opacity_active: Sets the opacity of the splitter while the user moves the splitter.
- * --sci-sashbox-splitter-opacity_hover: Sets the opacity of the splitter when hovering it.
+ * - --sci-sashbox-gap: Sets the gaps (gutters) between sashes.
+ * - --sci-sashbox-splitter-bgcolor: Sets the background color of the splitter.
+ * - --sci-sashbox-splitter-bgcolor_hover: Sets the background color of the splitter when hovering it.
+ * - --sci-sashbox-splitter-size: Sets the size of the splitter along the main axis.
+ * - --sci-sashbox-splitter-size_hover: Sets the size of the splitter along the main axis when hovering it.
+ * - --sci-sashbox-splitter-touch-target-size: Sets the touch target size to move the splitter (accessibility).
+ * - --sci-sashbox-splitter-cross-axis-size: Sets the splitter size along the cross axis.
+ * - --sci-sashbox-splitter-border-radius: Sets the border radius of the splitter.
+ * - --sci-sashbox-splitter-opacity_active: Sets the opacity of the splitter while the user moves the splitter.
+ * - --sci-sashbox-splitter-opacity_hover: Sets the opacity of the splitter when hovering it.
  *
  * Example:
  *
+ * ```scss
  * sci-sashbox {
  *   --sci-sashbox-splitter-bgcolor: black;
  *   --sci-sashbox-splitter-bgcolor_hover: black;
  * }
+ * ```
  */
 @Component({
   selector: 'sci-sashbox',
@@ -150,8 +152,8 @@ export class SciSashboxComponent implements OnDestroy {
   }
 
   public onSash(splitter: HTMLElement, sashIndex: number, moveEvent: SplitterMoveEvent): void {
-    const delta = moveEvent.delta;
-    if (delta === 0) {
+    const distance = moveEvent.distance;
+    if (distance === 0) {
       return;
     }
 
@@ -165,12 +167,12 @@ export class SciSashboxComponent implements OnDestroy {
     // ignore the event if outside of the splitter's action scope
     const eventPos = moveEvent.position.clientPos;
     // i.e. the sash should not grow if moved the mouse pointer beyond the left bounds of the sash, and if now moving the mouse pointer back toward the current sash.
-    if (delta > 0 && eventPos < splitterStart) {
+    if (distance > 0 && eventPos < splitterStart) {
       return;
     }
 
     // i.e. the sash should not shrink if moved the mouse pointer beyond the right bounds of the sash, and if now moving the mouse pointer back toward the current sash.
-    if (delta < 0 && eventPos > splitterEnd) {
+    if (distance < 0 && eventPos > splitterEnd) {
       return;
     }
 
@@ -181,13 +183,13 @@ export class SciSashboxComponent implements OnDestroy {
     const sashSize1 = sash1.computedSize;
     const sashSize2 = sash2.computedSize;
     const maxSashSize = sashSize1 + sashSize2;
-    const computedNewSashSize1 = Math.round(sashSize1 + delta);
-    const computedNewSashSize2 = Math.round(sashSize2 - delta);
+    const computedNewSashSize1 = Math.round(sashSize1 + distance);
+    const computedNewSashSize2 = Math.round(sashSize2 - distance);
 
-    if (sash1.minSize !== undefined && delta < 0 && computedNewSashSize1 < this.toPixel(sash1.minSize)) {
+    if (sash1.minSize !== undefined && distance < 0 && computedNewSashSize1 < this.toPixel(sash1.minSize)) {
       return;
     }
-    if (sash2.minSize !== undefined && delta > 0 && computedNewSashSize2 < this.toPixel(sash2.minSize)) {
+    if (sash2.minSize !== undefined && distance > 0 && computedNewSashSize2 < this.toPixel(sash2.minSize)) {
       return;
     }
 
