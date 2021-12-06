@@ -8,24 +8,23 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Inject, Injectable, NgZone, OnDestroy, Renderer2, RendererFactory2} from '@angular/core';
+import {Inject, Injectable, NgZone, OnDestroy} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {BehaviorSubject, fromEvent, Observable, Subject} from 'rxjs';
 import {debounceTime, distinctUntilChanged, map, startWith, takeUntil} from 'rxjs/operators';
-import {Dictionary} from '@scion/toolkit/util';
 
 /**
  * Provides the native scrollbar tracksize.
+ *
+ * @dynamic ignore 'strictMetadataEmit' errors due to the usage of {@link Document} as ambient type for DI.
  */
 @Injectable({providedIn: 'root'})
 export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
 
   private readonly _trackSize$ = new BehaviorSubject<NativeScrollbarTrackSize | null>(null);
-  private readonly _renderer: Renderer2;
   private readonly _destroy$ = new Subject<void>();
 
-  constructor(@Inject(DOCUMENT) private _document: any, rendererFactory: RendererFactory2, private _zone: NgZone) {
-    this._renderer = rendererFactory.createRenderer(null, null);
+  constructor(@Inject(DOCUMENT) private _document: Document, private _zone: NgZone) {
     this.installNativeScrollbarTrackSizeListener();
   }
 
@@ -52,8 +51,8 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
    */
   private computeTrackSize(): NativeScrollbarTrackSize | null {
     // create temporary viewport and viewport client with native scrollbars to compute scrolltrack width
-    const viewportDiv = this._renderer.createElement('div');
-    this.setStyle(this._renderer, viewportDiv, {
+    const viewportDiv = this._document.createElement('div');
+    setStyle(viewportDiv, {
       position: 'absolute',
       overflow: 'scroll',
       height: '100px',
@@ -62,15 +61,15 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
       visibility: 'hidden',
     });
 
-    const viewportClientDiv = this._renderer.createElement('div');
-    this.setStyle(this._renderer, viewportClientDiv, {
+    const viewportClientDiv = this._document.createElement('div');
+    setStyle(viewportClientDiv, {
       height: '100%',
       width: '100%',
       border: 0,
     });
 
-    this._renderer.appendChild(viewportDiv, viewportClientDiv);
-    this._renderer.appendChild(this._document.body, viewportDiv);
+    viewportDiv.appendChild(viewportClientDiv);
+    this._document.body.appendChild(viewportDiv);
 
     const trackSize: NativeScrollbarTrackSize = {
       hScrollbarTrackHeight: viewportDiv.offsetHeight - viewportClientDiv.offsetHeight,
@@ -78,7 +77,7 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
     };
 
     // destroy temporary viewport
-    this._renderer.removeChild(this._document.body, viewportDiv);
+    this._document.body.removeChild(viewportDiv);
     if (trackSize.hScrollbarTrackHeight === 0 && trackSize.vScrollbarTrackWidth === 0) {
       return null;
     }
@@ -105,14 +104,21 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
     });
   }
 
-  private setStyle(renderer: Renderer2, element: Element, style: Dictionary): void {
-    Object.keys(style).forEach(key => renderer.setStyle(element, key, style[key]));
-  }
-
   public ngOnDestroy(): void {
-    this._renderer.destroy();
     this._destroy$.next();
   }
+}
+
+/**
+ * Applies the given style(s) to the given element.
+ *
+ * Specify styles to be modified by passing a dictionary containing CSS property names (hyphen case).
+ * To remove a style, set its value to `null`.
+ *
+ * @ignore
+ */
+function setStyle(element: HTMLElement, style: {[style: string]: any | null}): void {
+  Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
 }
 
 /**
