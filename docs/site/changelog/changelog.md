@@ -5,6 +5,20 @@
 
 ## Changelog
 
+# [12.0.0-beta.3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/12.0.0-beta.2...12.0.0-beta.3) (2021-12-06)
+
+
+### Bug Fixes
+
+* **toolkit/viewport:** remove DOM elements instantly after computing the native scrollbar track size ([af28dee](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/af28dee7c797588f69b61fc868558c3f7be5bbe6))
+
+
+### Features
+
+* **toolkit/splitter:** provide splitter Angular component to control the size of elements next to it ([4cb5afe](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/4cb5afeae990625c3b0269b9ccbc3b44a23081ee))
+
+
+
 # [12.0.0-beta.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/12.0.0-beta.1...12.0.0-beta.2) (2021-08-31)
 
 
