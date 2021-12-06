@@ -83,75 +83,18 @@
     pointer-events: none; // e.g. iframes would swallow pointer events
   }
 
-  > div.splitter {
+  > sci-splitter {
+    --sci-splitter-bgcolor: var(--sci-sashbox-splitter-bgcolor);
+    --sci-splitter-bgcolor_hover: var(--sci-sashbox-splitter-bgcolor_hover);
+    --sci-splitter-size: var(--sci-sashbox-splitter-size);
+    --sci-splitter-size_hover: var(--sci-sashbox-splitter-size_hover);
+    --sci-splitter-touch-target-size: var(--sci-sashbox-splitter-touch-target-size);
+    --sci-splitter-cross-axis-size: var(--sci-sashbox-splitter-cross-axis-size);
+    --sci-splitter-border-radius: var(--sci-sashbox-splitter-border-radius);
+    --sci-splitter-opacity_active: var(--sci-sashbox-splitter-opacity_active);
+    --sci-splitter-opacity_hover: var(--sci-sashbox-splitter-opacity_hover);
+
     flex: none;
-    display: grid; // stretch the touch-target
-    position: relative; // positioning context for 'touch-target'
-    background-color: var(--sci-sashbox-splitter-bgcolor);
-    border-radius: var(--sci-sashbox-splitter-border-radius);
-    place-items: center; // center the touch-target
-    align-self: center;
     z-index: 1; // see the explanation above why we set this z-index
-
-    > div.touch-target {
-      position: absolute; // out of the document flow
-      display: grid; // stretch the handle
-      place-items: center; // center the handle
-      pointer-events: auto; // ensure interactable
-
-      > div.handle {
-        position: absolute; // out of the document flow
-        background-color: var(--sci-sashbox-splitter-bgcolor);
-        border-radius: var(--sci-sashbox-splitter-border-radius);
-        opacity: var(--sci-sashbox-splitter-opacity_hover);
-        transition-property: width, height;
-        transition-timing-function: ease-in;
-        transition-duration: 75ms;
-      }
-    }
-
-    &.vertical {
-      width: var(--sci-sashbox-splitter-size);
-      height: var(--sci-sashbox-splitter-cross-axis-size);
-
-      > div.touch-target {
-        width: var(--sci-sashbox-splitter-touch-target-size);
-        height: 100%;
-
-        > div.handle {
-          width: var(--sci-sashbox-splitter-size);
-          height: 100%;
-        }
-      }
-    }
-
-    &.horizontal {
-      height: var(--sci-sashbox-splitter-size);
-      width: var(--sci-sashbox-splitter-cross-axis-size);
-
-      > div.touch-target {
-        width: 100%;
-        height: var(--sci-sashbox-splitter-touch-target-size);
-
-        > div.handle {
-          width: 100%;
-          height: var(--sci-sashbox-splitter-size);
-        }
-      }
-    }
-
-    > div.touch-target:active > div.handle {
-      opacity: var(--sci-sashbox-splitter-opacity_active);
-    }
-
-    &.vertical.moving > div.touch-target > div.handle, &.vertical > div.touch-target:hover > div.handle {
-      background-color: var(--sci-sashbox-splitter-bgcolor_hover);
-      width: var(--sci-sashbox-splitter-size_hover);
-    }
-
-    &.horizontal.moving > div.touch-target > div.handle, &.horizontal > div.touch-target:hover > div.handle {
-      background-color: var(--sci-sashbox-splitter-bgcolor_hover);
-      height: var(--sci-sashbox-splitter-size_hover);
-    }
   }
 }

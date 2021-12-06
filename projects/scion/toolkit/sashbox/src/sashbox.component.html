@@ -9,18 +9,12 @@
     <ng-container *ngTemplateOutlet="sash.sashTemplate"></ng-container>
   </div>
 
-  <div *ngIf="!last" #splitter
-       class="splitter"
-       [class.moving]="sciSplitter.moving"
-       [class.vertical]="isRowDirection"
-       [class.horizontal]="isColumnDirection">
-    <div class="touch-target"
-         sciSplitter [sciSplitterVertical]="isRowDirection" #sciSplitter="sciSplitter"
-         (sciSplitterStart)="onSashStart()"
-         (sciSplitterMove)="onSash(splitter, i, $event)"
-         (sciSplitterEnd)="onSashEnd()"
-         (sciSplitterReset)="onSashReset(i)">
-      <div class="handle"></div>
-    </div>
-  </div>
+  <sci-splitter *ngIf="!last"
+                sciElementRef #sciElementRef="sciElementRef"
+                [orientation]="isRowDirection ? 'vertical' : 'horizontal'"
+                (start)="onSashStart()"
+                (move)="onSash(sciElementRef.nativeElement, i, $event)"
+                (end)="onSashEnd()"
+                (reset)="onSashReset(i)">
+  </sci-splitter>
 </ng-container>

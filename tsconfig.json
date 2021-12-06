@@ -45,6 +45,9 @@
     //      "@scion/toolkit/sashbox": [
     //        "projects/scion/toolkit/sashbox/src/public_api"
     //      ],
+    //      "@scion/toolkit/splitter": [
+    //        "projects/scion/toolkit/splitter/src/public_api"
+    //      ],
     //      "@scion/toolkit/throbber": [
     //        "projects/scion/toolkit/throbber/src/public_api"
     //      ],

@@ -1,0 +1,80 @@
+:host {
+  // CSS variables to override properties of the theme (public API).
+  --sci-splitter-bgcolor: #d2d2d2; // background color of the splitter
+  --sci-splitter-bgcolor_hover: var(--sci-splitter-bgcolor); // background color of the splitter when hovering it
+  --sci-splitter-size: 1px; // size of the splitter along the main axis (width if direction is row, or height if direction is column)
+  --sci-splitter-size_hover: 8px; // size of the splitter along the main axis when hovering it.
+  --sci-splitter-touch-target-size: 15px; // touch target size to move the splitter (accessibility)
+  --sci-splitter-cross-axis-size: 100%; // handle size along the cross axis
+  --sci-splitter-border-radius: 0; // border radius of the splitter
+  --sci-splitter-opacity_active: 1; //  opacity of the splitter while the user moves the splitter
+  --sci-splitter-opacity_hover: .3; // opacity of the splitter when hovering it
+
+  display: grid; // stretch the touch-target
+  position: relative; // positioning context for 'touch-target'
+  background-color: var(--sci-splitter-bgcolor);
+  border-radius: var(--sci-splitter-border-radius);
+  place-items: center; // center the touch-target
+  align-self: center;
+
+  > div.touch-target {
+    position: absolute; // out of the document flow
+    display: grid; // stretch the handle
+    place-items: center; // center the handle
+    pointer-events: auto; // ensure interactable
+
+    > div.handle {
+      position: absolute; // out of the document flow
+      background-color: var(--sci-splitter-bgcolor);
+      border-radius: var(--sci-splitter-border-radius);
+      opacity: var(--sci-splitter-opacity_hover);
+      transition-property: width, height;
+      transition-timing-function: ease-in;
+      transition-duration: 75ms;
+    }
+  }
+
+  &.vertical {
+    width: var(--sci-splitter-size);
+    height: var(--sci-splitter-cross-axis-size);
+
+    > div.touch-target {
+      width: var(--sci-splitter-touch-target-size);
+      height: 100%;
+
+      > div.handle {
+        width: var(--sci-splitter-size);
+        height: 100%;
+      }
+    }
+  }
+
+  &.horizontal {
+    height: var(--sci-splitter-size);
+    width: var(--sci-splitter-cross-axis-size);
+
+    > div.touch-target {
+      width: 100%;
+      height: var(--sci-splitter-touch-target-size);
+
+      > div.handle {
+        width: 100%;
+        height: var(--sci-splitter-size);
+      }
+    }
+  }
+
+  > div.touch-target:active > div.handle {
+    opacity: var(--sci-splitter-opacity_active);
+  }
+
+  &.vertical.moving > div.touch-target > div.handle, &.vertical > div.touch-target:hover > div.handle {
+    background-color: var(--sci-splitter-bgcolor_hover);
+    width: var(--sci-splitter-size_hover);
+  }
+
+  &.horizontal.moving > div.touch-target > div.handle, &.horizontal > div.touch-target:hover > div.handle {
+    background-color: var(--sci-splitter-bgcolor_hover);
+    height: var(--sci-splitter-size_hover);
+  }
+}
