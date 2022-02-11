@@ -200,7 +200,7 @@ As part of this change, we also had to change the `sci-scrollable` directive's b
 * **toolkit:** Added support for Angular 11.
 
     To migrate:
-    If using Angular agnostic tools, migrate your app to Angular 11 as following:
+    If using Angular-specific tools, migrate your app to Angular 11 as following:
     - Run `ng update @angular/cli @angular/core @angular/cdk`.
     - Refer to the Angular Update Guide for detailed instructions on how to update Angular: https://update.angular.io
 
@@ -265,7 +265,7 @@ As part of this change, we also had to change the `sci-scrollable` directive's b
 * Added support for Angular 10.
 
 To migrate:
-- if using Angular agnostic tools, migrate your app to Angular 10 by running `ng update @angular/cli @angular/core @angular/cdk`.
+- if using Angular-specific tools, migrate your app to Angular 10 by running `ng update @angular/cli @angular/core @angular/cdk`.
 
 
 
