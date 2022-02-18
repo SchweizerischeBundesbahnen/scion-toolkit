@@ -19,5 +19,5 @@ outputs:
   tag:
     description: 'The release tag, or empty if not identified the head commit as release commit.'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'

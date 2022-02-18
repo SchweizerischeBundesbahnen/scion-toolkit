@@ -20,7 +20,7 @@ const {readFileSync, writeFileSync, existsSync} = require('fs');
     await publishToNpm({
       npmToken: core.getInput('npm-token', {required: true}),
       distFolder: distFolder,
-      dryRun: core.getInput('dry-run') === 'true',
+      dryRun: core.getBooleanInput('dry-run'),
       name: name,
       version: version,
     });

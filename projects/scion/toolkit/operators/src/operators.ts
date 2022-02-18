@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {map, mergeMap, mergeMapTo, publishLast, refCount, switchMap, take} from 'rxjs/operators';
+import {map, mergeMap, mergeMapTo, share, switchMap, take} from 'rxjs/operators';
 import {combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic} from 'rxjs';
 import {Arrays} from '@scion/toolkit/util';
 
@@ -84,7 +84,12 @@ export function distinctArray<T>(keySelector: (item: T) => any = identity): Mono
  *                         emits or completes.
  */
 export function bufferUntil<T>(closingNotifier$: Observable<any> | Promise<any>): MonoTypeOperatorFunction<T> {
-  const guard$ = from(closingNotifier$).pipe(take(1), publishLast(), refCount(), mergeMapTo(EMPTY));
+  const guard$ = from(closingNotifier$)
+    .pipe(
+      take(1),
+      mergeMapTo(EMPTY),
+      share({resetOnComplete: false, resetOnError: false, resetOnRefCountZero: false}),
+    );
   return mergeMap((item: T) => concat(guard$, of(item)));
 }
 
@@ -131,11 +136,11 @@ export function tapFirst<T>(tapFn: (value?: T) => void, scheduler?: SchedulerLik
 export function observeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>): Observable<T> => {
     return new Observable((observer: Observer<T>): TeardownLogic => {
-      const subscription = source.subscribe(
-        next => executionFn(() => observer.next(next)),
-        error => executionFn(() => observer.error(error)),
-        () => executionFn(() => observer.complete()),
-      );
+      const subscription = source.subscribe({
+        next: next => executionFn(() => observer.next(next)),
+        error: error => executionFn(() => observer.error(error)),
+        complete: () => executionFn(() => observer.complete()),
+      });
 
       return () => subscription.unsubscribe();
     });
@@ -186,19 +191,19 @@ export function subscribeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFu
             super(observer);
           }
 
-          protected _next(value: T): void {
+          protected override _next(value: T): void {
             executionFn(() => super._next(value));
           }
 
-          protected _error(err: any): void {
+          protected override _error(err: any): void {
             executionFn(() => super._error(err));
           }
 
-          protected _complete(): void {
+          protected override _complete(): void {
             executionFn(() => super._complete());
           }
 
-          public unsubscribe(): void {
+          public override unsubscribe(): void {
             executionFn(() => this.closed ? noop() : super.unsubscribe());
           }
         });

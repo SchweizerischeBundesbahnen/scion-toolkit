@@ -19,6 +19,6 @@ describe('@scion/toolkit', () => {
   // single spec is required because karma fails if no spec is found
   it('should be truthy', async () => {
     await pagePO.navigateTo();
-    await expect(true).toEqual(true);
+    expect(true).toEqual(true);
   });
 });

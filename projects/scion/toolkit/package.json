@@ -1,7 +1,7 @@
 {
   "name": "@scion/toolkit",
   "version": "12.0.0-beta.3",
-  "description": "SCION Toolkit is a collection of UI components and utilities designed primarily for use in SCION libraries and their demo and test applications.",
+  "description": "SCION Toolkit is a collection of UI components and utilities designed primarily for use in SCION libraries and their demo and test applications. The library has an optional peer-dependency on the Angular framework, since some tools are Angular-specific.",
   "license": "EPL-2.0",
   "private": false,
   "publishConfig": {
@@ -18,10 +18,21 @@
     "tslib": "^2.0.0"
   },
   "peerDependencies": {
-    "@angular/common": "^12.0.0-rc.0 || ^12.0.0",
-    "@angular/core": "^12.0.0-rc.0 || ^12.0.0",
-    "@angular/cdk": "^12.0.0-rc.0 || ^12.0.0",
-    "rxjs": "^6.0.0"
+    "@angular/common": "^13.0.0",
+    "@angular/core": "^13.0.0",
+    "@angular/cdk": "^13.0.0",
+    "rxjs": "^7.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@angular/common": {
+      "optional": true
+    },
+    "@angular/core": {
+      "optional": true
+    },
+    "@angular/cdk": {
+      "optional": true
+    }
   },
   "keywords": [
   ],

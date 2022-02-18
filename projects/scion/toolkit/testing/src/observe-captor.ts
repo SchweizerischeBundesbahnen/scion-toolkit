@@ -1,5 +1,5 @@
-import {AsyncSubject, Observer, ReplaySubject, throwError} from 'rxjs';
-import {take, timeoutWith} from 'rxjs/operators';
+import {AsyncSubject, lastValueFrom, Observer, ReplaySubject, throwError} from 'rxjs';
+import {take, timeout} from 'rxjs/operators';
 
 /**
  * Allows capturing emissions of an Observable.
@@ -119,19 +119,18 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
   /**
    * Waits until the Observable emits the given number of items, or throws if the given timeout elapses.
    */
-  public async waitUntilEmitCount(count: number, timeout: number = 5000): Promise<void> {
-    return this._emitCount$
+  public async waitUntilEmitCount(count: number, timeoutMs: number = 5000): Promise<void> {
+    return lastValueFrom(this._emitCount$
       .pipe(
         take(count),
-        timeoutWith(new Date(Date.now() + timeout), throwError('[CaptorTimeoutError] Timeout elapsed.')),
-      )
-      .toPromise();
+        timeout({first: timeoutMs, with: () => throwError(() => new Error('[CaptorTimeoutError] Timeout elapsed.'))}),
+      ));
   }
 
   /**
    * Waits until the Observable completes or errors.
    */
   public async waitUntilCompletedOrErrored(): Promise<void> {
-    return this._completeOrError$.toPromise();
+    return new Promise(resolve => this._completeOrError$.subscribe({complete: resolve}));
   }
 }

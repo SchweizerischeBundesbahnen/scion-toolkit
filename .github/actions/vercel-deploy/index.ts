@@ -31,7 +31,7 @@ const {writeFileSync} = require('fs');
       .concat('--token')
       .concat(core.getInput('vercel-token', {required: true}))
       .concat('--confirm')
-      .concat(...(core.getInput('prod') === 'true' ? ['--prod'] : []));
+      .concat(...(core.getBooleanInput('prod') ? ['--prod'] : []));
 
     core.info(`Deploying ${distFolder} to Vercel: ${command.join(' ')} [aliases=${aliases.join(',')}]`);
     await exec(

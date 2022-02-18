@@ -5,5 +5,5 @@ inputs:
     description: 'Comma-separated list of values to be checked for equality. The check is skipped if no values are given.'
     required: false
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'

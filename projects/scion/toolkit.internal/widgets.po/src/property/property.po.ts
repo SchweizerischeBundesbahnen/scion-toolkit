@@ -42,8 +42,7 @@ export class SciPropertyPO {
     const properties: Dictionary = {};
     for (let i = 0; i < propertyCount; i++) {
       const key = await keysFinder.get(i).getText();
-      const value = await valuesFinder.get(i).getText();
-      properties[key] = value;
+      properties[key] = await valuesFinder.get(i).getText();
     }
 
     return properties;

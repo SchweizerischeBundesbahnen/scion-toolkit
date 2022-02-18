@@ -9,8 +9,8 @@
  */
 
 import {Defined, Maps} from '@scion/toolkit/util';
-import {BehaviorSubject, noop} from 'rxjs';
-import {filter, take} from 'rxjs/operators';
+import {BehaviorSubject, firstValueFrom, noop} from 'rxjs';
+import {filter} from 'rxjs/operators';
 
 /**
  * The bean manager allows getting references to singleton objects, so-called beans.
@@ -356,9 +356,8 @@ export class BeanManager {
    * The Promise resolves immediately when the bean manager has already entered or completed that runlevel.
    */
   public async whenRunlevel(runlevel: number): Promise<void> {
-    return this._runlevel$
-      .pipe(filter(currentRunlevel => currentRunlevel >= runlevel), take(1))
-      .toPromise()
+    return firstValueFrom(this._runlevel$
+      .pipe(filter(currentRunlevel => currentRunlevel >= runlevel)))
       .then(() => Promise.resolve());
   }
 
