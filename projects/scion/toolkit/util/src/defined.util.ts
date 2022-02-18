@@ -17,22 +17,21 @@
  * ## Links:
  * [1] https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#nullish-coalescing
  */
-export class Defined {
-
-  private constructor() {
-  }
+export namespace Defined {
 
   /**
-   * Returns the value, if present, otherwise returns the `orElseValue`, which can be a static value or provided by a supplier function.
+   * Returns the value if not `undefined`, otherwise "orElseValue". The "orElseValue" value can be created with a factory function.
+   *
+   * Unlike JavaScript's "nullish coalescing operator (??)", the "orElse" function only tests for `undefined`, not `null`.
    */
-  public static orElse<T>(value: T | undefined, orElseValue: T | (() => T)): T {
+  export function orElse<T>(value: T | undefined, orElseValue: T | (() => T)): T {
     return (value !== undefined ? value : (typeof orElseValue === 'function' ? (orElseValue as (() => T))() : orElseValue));
   }
 
   /**
-   * Returns the value, if present, otherwise throws an exception to be created by the provided supplier.
+   * Returns the value if not `undefined`, otherwise throws the error created by the passed factory function.
    */
-  public static orElseThrow<T>(value: T | undefined, orElseThrowFn: () => Error): T {
+  export function orElseThrow<T>(value: T | undefined, orElseThrowFn: () => Error): T {
     if (value !== undefined) {
       return value;
     }

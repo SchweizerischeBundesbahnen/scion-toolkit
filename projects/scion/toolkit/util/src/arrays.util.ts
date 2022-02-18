@@ -14,17 +14,14 @@ import {identity} from 'rxjs';
 /**
  * Provides array utility methods.
  */
-export class Arrays {
-
-  private constructor() {
-  }
+export namespace Arrays {
 
   /**
    * Returns the value, if an array, or adds it to an array. If `null` or `undefined` is given, by default, returns an empty array.
    */
-  public static coerce<T>(value: T | T[] | null | undefined, options?: {coerceNullOrUndefined: true} | {}): NonNullable<T[]>;
-  public static coerce<T>(value: T | T[] | null | undefined, options: {coerceNullOrUndefined: false}): T[] | null | undefined;
-  public static coerce<T>(value: T | T[] | null | undefined, options?: {coerceNullOrUndefined?: boolean}): T[] | null | undefined {
+  export function coerce<T>(value: T | T[] | null | undefined, options?: {coerceNullOrUndefined: true} | {}): NonNullable<T[]>;
+  export function coerce<T>(value: T | T[] | null | undefined, options: {coerceNullOrUndefined: false}): T[] | null | undefined;
+  export function coerce<T>(value: T | T[] | null | undefined, options?: {coerceNullOrUndefined?: boolean}): T[] | null | undefined {
     if (value === null || value === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return [];
@@ -40,7 +37,7 @@ export class Arrays {
    *
    * Use the parameter `exactOrder` to control if the item order must be equal (which is by default) or not.
    */
-  public static isEqual(array1: any[], array2: any[], options?: {exactOrder?: boolean}): boolean {
+  export function isEqual(array1: any[], array2: any[], options?: {exactOrder?: boolean}): boolean {
     if (array1 === array2) {
       return true;
     }
@@ -71,7 +68,7 @@ export class Arrays {
    * @param  options - Control if to remove all occurrences of the element. If not specified, all occurrences are removed.
    * @return the elements removed from the array.
    */
-  public static remove<T>(array: T[], element: any | ((element: T) => boolean), options?: {firstOnly: boolean}): T[] {
+  export function remove<T>(array: T[], element: any | ((element: T) => boolean), options?: {firstOnly: boolean}): T[] {
     const firstOnly = Defined.orElse(options && options.firstOnly, false);
 
     // define a function to resolve the element's index in the original array
@@ -99,7 +96,7 @@ export class Arrays {
    *
    * Use the parameter `keySelector` to provide a function for comparing objects.
    */
-  public static distinct<T>(items: T[], keySelector: (item: T) => any = identity): T[] {
+  export function distinct<T>(items: T[], keySelector: (item: T) => any = identity): T[] {
     const itemSet = new Set(items.map(keySelector));
     return items.filter(item => itemSet.delete(keySelector(item)));
   }
@@ -108,7 +105,7 @@ export class Arrays {
    * Intersects the given arrays, returning a new array containing all the elements contained in every array.
    * Arrays which are `undefined` or `null` are ignored.
    */
-  public static intersect<T>(...arrays: Array<T[] | undefined | null>): T[] {
+  export function intersect<T>(...arrays: Array<T[] | undefined | null>): T[] {
     const _arrays = arrays.filter(array => array !== undefined && array !== null) as Array<T[]>;
 
     if (!_arrays.length) {
@@ -124,7 +121,7 @@ export class Arrays {
    *
    * Returns `undefined` if no element is found.
    */
-  public static last<T>(array: T[], predicate?: (item: T) => boolean): T | undefined {
+  export function last<T>(array: T[], predicate?: (item: T) => boolean): T | undefined {
     if (!array) {
       return undefined;
     }

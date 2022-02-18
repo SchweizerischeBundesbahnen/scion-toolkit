@@ -13,17 +13,14 @@ import {Defined} from './defined.util';
 /**
  * Provides dictionary utility methods.
  */
-export class Dictionaries {
-
-  private constructor() {
-  }
+export namespace Dictionaries {
 
   /**
    * Creates a {@link Dictionary} from the given dictionary-like object. If given a `Dictionary`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Dictionary}.
    */
-  public static coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined: true} | {}): NonNullable<Dictionary<T>>;
-  public static coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options: {coerceNullOrUndefined: false}): Dictionary<T> | null | undefined;
-  public static coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Dictionary<T> | null | undefined {
+  export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined: true} | {}): NonNullable<Dictionary<T>>;
+  export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options: {coerceNullOrUndefined: false}): Dictionary<T> | null | undefined;
+  export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Dictionary<T> | null | undefined {
     if (dictionaryLike === null || dictionaryLike === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return {};
@@ -54,7 +51,7 @@ export class Dictionaries {
   /**
    * Returns a new {@link Dictionary} with `undefined` values removed.
    */
-  public static withoutUndefinedEntries(object: Dictionary): Dictionary {
+  export function withoutUndefinedEntries(object: Dictionary): Dictionary {
     return Object.entries(object).reduce<Dictionary>((dictionary, [key, value]) => {
       if (value !== undefined) {
         dictionary[key] = value;
