@@ -5,6 +5,38 @@
 
 ## Changelog
 
+# [13.0.0-beta.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/12.0.0-beta.3...13.0.0-beta.1) (2022-02-18)
+
+
+### Dependencies
+
+* **toolkit:** update `@scion/toolkit` to Angular 13 and migrate to RxJS 7.5 ([d9114e2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/d9114e246d9b05c63a65abb80aaa1a71009b25e8))
+
+
+### Code Refactoring
+
+* **toolkit/observable:** remove option for disabling native resize observer ([af91803](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/af91803c8781b7212b86b17731277c696023f0e5))
+
+
+### BREAKING CHANGES
+
+* **toolkit:** Updating `@scion/toolkit` to Angular 13 and RxJS 7.5 introduced a breaking change.
+
+  To migrate:
+  - update your application to Angular 13; for detailed migration instructions,
+    refer to https://github.com/angular/angular/blob/master/CHANGELOG.md#1321-2022-02-02.
+  - migrate your application to RxJS 7.5; for detailed migration instructions,
+    refer to https://rxjs.dev/6-to-7-change-summary.
+
+
+* **toolkit/observable:** Support for disabling the native `ResizeObserver` has been removed because this API is now supported by all major browsers.
+
+  To migrate:
+  - remove the `options` parameter when calling `fromDimension$`.
+  - remove the global flag `FromDimension.defaults.useNativeResizeObserver`.
+
+
+
 # [12.0.0-beta.3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/12.0.0-beta.2...12.0.0-beta.3) (2021-12-06)
 
 
