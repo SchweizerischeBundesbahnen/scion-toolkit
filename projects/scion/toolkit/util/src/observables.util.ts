@@ -10,15 +10,14 @@
 
 import {from, Observable, of} from 'rxjs';
 
-export class Observables {
-
-  private constructor() {
-  }
+export namespace Observables {
 
   /**
-   * Creates an `Observable` from the given value, or returns the value if already an `Observable`. If given a `Promise`, it is converted into an `Observable`.
+   * Creates an `Observable` from the passed value, which will emit the value and then complete,
+   * or, if passing an `Observable`, returns it unchanged. If passing a `Promise`, it is converted
+   * to an `Observable`.
    */
-  public static coerce<T>(value: T | Observable<T> | Promise<T>): Observable<T> {
+  export function coerce<T>(value: T | Observable<T> | Promise<T>): Observable<T> {
     if (value instanceof Observable) {
       return value;
     }

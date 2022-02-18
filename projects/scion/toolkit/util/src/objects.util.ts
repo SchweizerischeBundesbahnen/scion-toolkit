@@ -8,15 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export class Objects {
-
-  private constructor() {
-  }
+export namespace Objects {
 
   /**
    * Compares the two objects for shallow equality.
    */
-  public static isEqual(a: any, b: any): boolean {
+  export function isEqual(a: any, b: any): boolean {
     if (a === b) {
       return true;
     }

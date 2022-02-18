@@ -15,17 +15,14 @@ import {Defined} from './defined.util';
 /**
  * Provides utility methods for {@link Map}.
  */
-export class Maps {
-
-  private constructor() {
-  }
+export namespace Maps {
 
   /**
    * Creates a {@link Map} from the given map-like object. If given a `Map`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Map}.
    */
-  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined: true} | {}): NonNullable<Map<string, T>>;
-  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options: {coerceNullOrUndefined: false}): Map<string, T> | null | undefined;
-  public static coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Map<string, T> | null | undefined {
+  export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined: true} | {}): NonNullable<Map<string, T>>;
+  export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options: {coerceNullOrUndefined: false}): Map<string, T> | null | undefined;
+  export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Map<string, T> | null | undefined {
     if (mapLike === null || mapLike === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return new Map<string, T>();
@@ -60,7 +57,7 @@ export class Maps {
   /**
    * Adds the given value into a {@link Set} in the multi value {@link Map}.
    */
-  public static addSetValue<K, V>(multiValueMap: Map<K, Set<V>>, key: K, value: V): Map<K, Set<V>> {
+  export function addSetValue<K, V>(multiValueMap: Map<K, Set<V>>, key: K, value: V): Map<K, Set<V>> {
     const values = multiValueMap.get(key) || new Set<V>();
     return multiValueMap.set(key, values.add(value));
   }
@@ -70,10 +67,10 @@ export class Maps {
    *
    * @return `true` if the element was removed, or `false` otherwise.
    */
-  public static removeSetValue<K, V>(multiValueMap: Map<K, Set<V>>, key: K, value: V | PredicateFn<V>): boolean {
+  export function removeSetValue<K, V>(multiValueMap: Map<K, Set<V>>, key: K, value: V | PredicateFn<V>): boolean {
     const values = multiValueMap.get(key) || new Set<V>();
 
-    let hasRemoved = false;
+    let hasRemoved;
     if (typeof value === 'function') {
       const predicateFn = value as PredicateFn<V>;
       hasRemoved = Array.from(values)
@@ -93,7 +90,7 @@ export class Maps {
   /**
    * Adds the given value into an {@link Array} in the multi value {@link Map}.
    */
-  public static addListValue<K, V>(map: Map<K, V[]>, key: K, value: V): Map<K, V[]> {
+  export function addListValue<K, V>(map: Map<K, V[]>, key: K, value: V): Map<K, V[]> {
     const values = map.get(key) || [];
     return map.set(key, values.concat(value));
   }
@@ -103,7 +100,7 @@ export class Maps {
    *
    * @return `true` if the element was removed, or `false` otherwise.
    */
-  public static removeListValue<K, V>(multiValueMap: Map<K, V[]>, key: K, value: V | PredicateFn<V>): boolean {
+  export function removeListValue<K, V>(multiValueMap: Map<K, V[]>, key: K, value: V | PredicateFn<V>): boolean {
     const values = multiValueMap.get(key) || [];
     const hasRemoved = Arrays.remove(values, value, {firstOnly: false}).length > 0;
     if (hasRemoved && !values.length) {
