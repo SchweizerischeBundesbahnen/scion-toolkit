@@ -8,35 +8,34 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {FromDimension, fromDimension$} from './dimension.observable';
+import {Dimension, fromDimension$} from './dimension.observable';
+import {ObserveCaptor} from '@scion/toolkit/testing';
 
 describe('fromDimension$', () => {
-
-  beforeEach(() => FromDimension.objectObservableRegistry.clear());
 
   it('should emit on size change of the element', async () => {
     // create the testee <div> and subscribe for dimension changes
     const testeeDiv = document.createElement('div');
     testeeDiv.style.width = '100px';
 
-    const reportedSizes: number[] = [];
-    fromDimension$(testeeDiv, {useNativeResizeObserver: false}).subscribe(dimension => reportedSizes.push(dimension.clientWidth));
+    const observeCaptor = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
+    fromDimension$(testeeDiv).subscribe(observeCaptor);
 
     // append the testee <div> to the DOM
     document.body.appendChild(testeeDiv);
 
     await waitUntilRendered();
-    expect(reportedSizes).toEqual([100]);
+    expect(observeCaptor.getValues()).toEqual([100]);
 
     // change the size of the <div> to 200px and wait until the changed size is reported
     testeeDiv.style.width = '200px';
     await waitUntilRendered();
-    expect(reportedSizes).toEqual([100, 200]);
+    expect(observeCaptor.getValues()).toEqual([100, 200]);
 
     // change the size of the <div> to 300px and wait until the changed size is reported
     testeeDiv.style.width = '300px';
     await waitUntilRendered();
-    expect(reportedSizes).toEqual([100, 200, 300]);
+    expect(observeCaptor.getValues()).toEqual([100, 200, 300]);
   });
 
   it('should emit on size change of the parent element', async () => {
@@ -48,27 +47,27 @@ describe('fromDimension$', () => {
     // create the testee <div> and subscribe for dimension changes
     const testeeDiv = document.createElement('div');
 
-    const reportedSizes: number[] = [];
-    fromDimension$(testeeDiv, {useNativeResizeObserver: false}).subscribe(dimension => reportedSizes.push(dimension.clientWidth));
+    const observeCaptor = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
+    fromDimension$(testeeDiv).subscribe(observeCaptor);
 
     // append the testee <div> to the DOM
     parentDiv.appendChild(testeeDiv);
 
     await waitUntilRendered();
-    expect(reportedSizes).toEqual([100]);
+    expect(observeCaptor.getValues()).toEqual([100]);
 
     // change the size of the parent <div> to 200px and wait until the changed size is reported
     parentDiv.style.width = '200px';
     await waitUntilRendered();
-    expect(reportedSizes).toEqual([100, 200]);
+    expect(observeCaptor.getValues()).toEqual([100, 200]);
 
     // change the size of the parent <div> to 300px and wait until the changed size is reported
     parentDiv.style.width = '300px';
     await waitUntilRendered();
-    expect(reportedSizes).toEqual([100, 200, 300]);
+    expect(observeCaptor.getValues()).toEqual([100, 200, 300]);
   });
 
-  it('should allocate a single HTML object element for multiple observers', async () => {
+  it('should emit on size change for multiple observers', async () => {
     // create the testee <div>
     const testeeDiv = document.createElement('div');
     testeeDiv.style.width = '100px';
@@ -76,77 +75,65 @@ describe('fromDimension$', () => {
     await waitUntilRendered();
 
     // 1. subscription
-    const reportedSizes1: number[] = [];
-    const subscription1 = fromDimension$(testeeDiv, {useNativeResizeObserver: false}).subscribe(dimension => reportedSizes1.push(dimension.clientWidth));
+    const observeCaptor1 = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
+    const subscription1 = fromDimension$(testeeDiv).subscribe(observeCaptor1);
     await waitUntilRendered();
 
-    expect(reportedSizes1).toEqual([100]);
-    expect(FromDimension.objectObservableRegistry.size).toEqual(1);
-    expect(testeeDiv.querySelectorAll('object.synth-resize-observable').length).toEqual(1);
+    expect(observeCaptor1.getValues()).toEqual([100]);
 
     // 2. subscription
-    const reportedSizes2: number[] = [];
-    const subscription2 = fromDimension$(testeeDiv, {useNativeResizeObserver: false}).subscribe(dimension => reportedSizes2.push(dimension.clientWidth));
+    const observeCaptor2 = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
+    const subscription2 = fromDimension$(testeeDiv).subscribe(observeCaptor2);
     await waitUntilRendered();
 
-    expect(reportedSizes2).toEqual([100]);
-    expect(FromDimension.objectObservableRegistry.size).toEqual(1);
-    expect(testeeDiv.querySelectorAll('object.synth-resize-observable').length).toEqual(1);
+    expect(observeCaptor2.getValues()).toEqual([100]);
 
     // 3. subscription
-    const reportedSizes3: number[] = [];
-    const subscription3 = fromDimension$(testeeDiv, {useNativeResizeObserver: false}).subscribe(dimension => reportedSizes3.push(dimension.clientWidth));
+    const observeCaptor3 = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
+    const subscription3 = fromDimension$(testeeDiv).subscribe(observeCaptor3);
     await waitUntilRendered();
 
-    expect(reportedSizes3).toEqual([100]);
-    expect(FromDimension.objectObservableRegistry.size).toEqual(1);
-    expect(testeeDiv.querySelectorAll('object.synth-resize-observable').length).toEqual(1);
+    expect(observeCaptor3.getValues()).toEqual([100]);
 
     // change the size of the <div> to 200px and wait until the changed size is reported
     testeeDiv.style.width = '200px';
     await waitUntilRendered();
-    expect(reportedSizes1).toEqual([100, 200]);
-    expect(reportedSizes2).toEqual([100, 200]);
-    expect(reportedSizes3).toEqual([100, 200]);
+    expect(observeCaptor1.getValues()).toEqual([100, 200]);
+    expect(observeCaptor2.getValues()).toEqual([100, 200]);
+    expect(observeCaptor3.getValues()).toEqual([100, 200]);
 
     // Unsubscribe the 3. subscriber
     subscription3.unsubscribe();
     await waitUntilRendered();
-    expect(FromDimension.objectObservableRegistry.size).toEqual(1);
-    expect(testeeDiv.querySelectorAll('object.synth-resize-observable').length).toEqual(1);
 
     // change the size of the <div> to 300px and wait until the changed size is reported
     testeeDiv.style.width = '300px';
     await waitUntilRendered();
-    expect(reportedSizes1).toEqual([100, 200, 300]);
-    expect(reportedSizes2).toEqual([100, 200, 300]);
-    expect(reportedSizes3).toEqual([100, 200]);
+    expect(observeCaptor1.getValues()).toEqual([100, 200, 300]);
+    expect(observeCaptor2.getValues()).toEqual([100, 200, 300]);
+    expect(observeCaptor3.getValues()).toEqual([100, 200]);
 
     // Unsubscribe the 2. subscriber
     subscription2.unsubscribe();
     await waitUntilRendered();
-    expect(FromDimension.objectObservableRegistry.size).toEqual(1);
-    expect(testeeDiv.querySelectorAll('object.synth-resize-observable').length).toEqual(1);
 
     // change the size of the <div> to 400px and wait until the changed size is reported
     testeeDiv.style.width = '400px';
     await waitUntilRendered();
-    expect(reportedSizes1).toEqual([100, 200, 300, 400]);
-    expect(reportedSizes2).toEqual([100, 200, 300]);
-    expect(reportedSizes3).toEqual([100, 200]);
+    expect(observeCaptor1.getValues()).toEqual([100, 200, 300, 400]);
+    expect(observeCaptor2.getValues()).toEqual([100, 200, 300]);
+    expect(observeCaptor3.getValues()).toEqual([100, 200]);
 
     // Unsubscribe the 1. subscriber
     subscription1.unsubscribe();
     await waitUntilRendered();
-    expect(FromDimension.objectObservableRegistry.size).toEqual(0);
-    expect(testeeDiv.querySelectorAll('object.synth-resize-observable').length).toEqual(0);
 
     // change the size of the <div> to 500px and wait until the changed size is reported
     testeeDiv.style.width = '500px';
     await waitUntilRendered();
-    expect(reportedSizes1).toEqual([100, 200, 300, 400]);
-    expect(reportedSizes2).toEqual([100, 200, 300]);
-    expect(reportedSizes3).toEqual([100, 200]);
+    expect(observeCaptor1.getValues()).toEqual([100, 200, 300, 400]);
+    expect(observeCaptor2.getValues()).toEqual([100, 200, 300]);
+    expect(observeCaptor3.getValues()).toEqual([100, 200]);
   });
 
   /**

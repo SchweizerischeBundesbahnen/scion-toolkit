@@ -14,6 +14,6 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {fromDimension$, Dimension, FromDimension} from './dimension.observable';
+export {captureElementDimension, fromDimension$, Dimension} from './dimension.observable';
 export {fromMutation$} from './mutation.observable';
 export {fromBoundingClientRect$} from './bounding-client-rect.observable';

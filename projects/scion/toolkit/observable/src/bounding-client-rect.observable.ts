@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {fromEvent, merge, Observable, of, OperatorFunction, pipe} from 'rxjs';
+import {fromEvent, merge, Observable, OperatorFunction, pipe} from 'rxjs';
 import {auditTime, distinctUntilChanged, map, mapTo, startWith, switchMap} from 'rxjs/operators';
 import {fromMutation$} from './mutation.observable';
 import {fromDimension$} from './dimension.observable';
@@ -27,9 +27,6 @@ import {fromDimension$} from './dimension.observable';
  *
  * ### Note on the detection of position changes:
  *
- * The Observable uses a relatively simple approach to detecting element position changes. It assumes the browser to support the
- * native {ResizeObserver} API or logs a warning otherwise.
- *
  * There is, unfortunately, no native browser API to detect position changes of an element in a performant and reliable way.
  * Our approach to detecting position changes of an element is based on the premise that it usually involves a parent or a parent's
  * direct child changing in size. Repositioning can further occur when the user scrolls a parent container or when elements are added
@@ -41,16 +38,11 @@ import {fromDimension$} from './dimension.observable';
  *
  * @see fromDimension$
  */
-export function fromBoundingClientRect$(element: HTMLElement): Observable<ClientRect> {
-  if (!supportsNativeResizeObserver()) {
-    console?.warn('Cannot monitor the element\'s bounding box as it requires the browser to have native {ResizeObserver} support.');
-    return of(captureClientRect(element));
-  }
-
+export function fromBoundingClientRect$(element: HTMLElement): Observable<Readonly<DOMRect>> {
   return fromMutation$(document.body, {childList: true, subtree: true})
     .pipe(
+      startWith(undefined as void),
       map(() => collectElements(element)),
-      startWith(collectElements(element)),
       detectLayoutChange(),
       map(() => captureClientRect(element)),
       distinctUntilChanged((a, b) => a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height),
@@ -75,7 +67,7 @@ function collectElements(element: HTMLElement): HTMLElement[] {
 function detectLayoutChange(): OperatorFunction<HTMLElement[], void> {
   return pipe(
     switchMap(elements => merge(...elements.map(element => merge(
-      fromDimension$(element, {useNativeResizeObserver: true}),
+      fromDimension$(element),
       fromEvent(element, 'scroll', {passive: true})),
     ))),
     mapTo(undefined),
@@ -84,11 +76,6 @@ function detectLayoutChange(): OperatorFunction<HTMLElement[], void> {
   );
 }
 
-function captureClientRect(element: HTMLElement): ClientRect {
-  const {top, right, bottom, left, width, height} = element.getBoundingClientRect();
-  return {top, right, bottom, left, width, height};
-}
-
-function supportsNativeResizeObserver(): boolean {
-  return 'ResizeObserver' in window;
+function captureClientRect(element: HTMLElement): Readonly<DOMRect> {
+  return element.getBoundingClientRect();
 }
