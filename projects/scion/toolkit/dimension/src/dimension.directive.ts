@@ -11,7 +11,7 @@
 import {Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output} from '@angular/core';
 import {Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
-import {Dimension, FromDimension, fromDimension$} from '@scion/toolkit/observable';
+import {captureElementDimension, Dimension, fromDimension$} from '@scion/toolkit/observable';
 
 /**
  * Allows observing changes to host element's size.
@@ -29,7 +29,7 @@ import {Dimension, FromDimension, fromDimension$} from '@scion/toolkit/observabl
 })
 export class SciDimensionDirective implements OnInit, OnDestroy {
 
-  private _host: HTMLElement;
+  private readonly _host: HTMLElement;
   private _destroy$ = new Subject<void>();
 
   /**
@@ -74,7 +74,7 @@ export class SciDimensionDirective implements OnInit, OnDestroy {
    * Returns the current dimension of its host element.
    */
   public get dimension(): SciDimension {
-    return FromDimension.captureElementDimension(this._host);
+    return captureElementDimension(this._host);
   }
 
   public ngOnDestroy(): void {

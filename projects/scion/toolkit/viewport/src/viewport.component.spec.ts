@@ -955,10 +955,9 @@ describe('Viewport', () => {
     return scrollbarElement.classList.contains('overflow');
   }
 
-  function getSize(fixture: ComponentFixture<any>, selector: string): ClientRect {
+  function getSize(fixture: ComponentFixture<any>, selector: string): Readonly<DOMRect> {
     const viewportElement: HTMLElement = fixture.debugElement.query(By.css(selector)).nativeElement;
-    const {width, height, top, right, bottom, left} = viewportElement.getBoundingClientRect();
-    return {width, height, top, right, bottom, left};
+    return viewportElement.getBoundingClientRect();
   }
 
   /**

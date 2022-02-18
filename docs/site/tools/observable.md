@@ -27,14 +27,7 @@ fromDimension$(element).subscribe((dimension: Dimension) => {
 });
 ```
 
-By default, the Observable uses the native [`ResizeObserver`](https://wicg.github.io/ResizeObserver) if supported by the user agent, or falls back to listening for resize events on a hidden HTML `<object>` element. You can, however, override this strategy to never use the native `ResizeObserver` by setting the global flag `FromDimension.defaults.useNativeResizeObserver` to `false`, or override it locally by passing an options object when constructing the `Observable`.
-
-> The HTML `<object>` element provides a nested browsing context with a separate window, allowing to listen for resize events natively.
-The HTML `<object>` element is aligned with the target's bounds, thus requires the element to define a positioning context. If not positioned,
-the element is changed to be positioned relative. The implementation is based on a blog post published in [`backalleycoder.com`](http://www.backalleycoder.com/2013/03/18/cross-browser-event-based-element-resize-detection/).
-
-*Note:* Web Performance Working Group is working on a [W3C recommendation for natively observing changes to Element’s size](https://wicg.github.io/ResizeObserver/).
-The Web API draft, however, is still work in progress and support limited to Google Chrome and Opera.
+The Observable uses the native [`ResizeObserver`](https://wicg.github.io/ResizeObserver) to detect size changes of the passed element.
 
 </details>
  
@@ -69,7 +62,7 @@ Upon subscription, the Observable emits the element's current bounding box, and 
 import { fromBoundingClientRect$ } from '@scion/toolkit/observable';
 
 const element: HTMLElement = ...;
-fromBoundingClientRect$(element).subscribe((boundingBox: ClientRect) => {   
+fromBoundingClientRect$(element).subscribe((boundingBox: Readonly<DOMRect>) => {
  console.log(boundingBox);
 });
 ```
@@ -79,7 +72,6 @@ If you are only interested in element size changes and not position changes, con
 ***
  
 *Note on the detection of position changes:*\
-The Observable uses a relatively simple approach to detecting element position changes. It assumes the browser to support the native `ResizeObserver` API or logs a warning otherwise.
  
 There is, unfortunately, no native browser API to detect position changes of an element in a performant and reliable way. Our approach to detecting position changes of an element is based on the premise that it usually involves a parent or a parent's direct child changing in size. Repositioning can further occur when the user scrolls a parent container or when elements are added to or removed from the DOM. This covers most cases, but not all.
  

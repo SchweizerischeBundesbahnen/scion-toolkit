@@ -12,7 +12,7 @@ import {DOCUMENT} from '@angular/common';
 import {ChangeDetectionStrategy, Component, ElementRef, HostBinding, Inject, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import {fromEvent, merge, Observable, of, Subject, timer} from 'rxjs';
 import {debounceTime, first, map, mapTo, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
-import {FromDimension, fromDimension$, fromMutation$} from '@scion/toolkit/observable';
+import {fromDimension$, fromMutation$} from '@scion/toolkit/observable';
 import {filterArray, subscribeInside} from '@scion/toolkit/operators';
 
 /**
@@ -201,7 +201,7 @@ export class SciScrollbarComponent implements OnDestroy {
 
     // Listen for 'mousemove' events
     this._zone.runOutsideAngular(() => {
-      const mousemoveListener = merge(fromEvent(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
+      const mousemoveListener = merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
         .pipe(takeUntil(this._destroy$))
         .subscribe(mousemoveEvent => {
           mousemoveEvent.preventDefault();
@@ -214,7 +214,7 @@ export class SciScrollbarComponent implements OnDestroy {
         });
 
       // Listen for 'mouseup' events; use 'capture phase' and 'stop propagation' to not close overlays
-      merge(fromEvent(this._document, 'mouseup', {capture: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup'))
+      merge(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup'))
         .pipe(first(), takeUntil(this._destroy$))
         .subscribe(mouseupEvent => {
           mouseupEvent.stopPropagation();
@@ -332,10 +332,9 @@ export class SciScrollbarComponent implements OnDestroy {
   private children$(element: HTMLElement): Observable<HTMLElement[]> {
     return fromMutation$(element, {subtree: false, childList: true})
       .pipe(
+        startWith(undefined as void),
         map(() => Array.from(element.children)),
-        startWith(Array.from(element.children)),
         filterArray((child: Element): child is HTMLElement => child instanceof HTMLElement),
-        filterArray(child => !FromDimension.isSynthResizeObservableObject(child)),
       );
   }
 

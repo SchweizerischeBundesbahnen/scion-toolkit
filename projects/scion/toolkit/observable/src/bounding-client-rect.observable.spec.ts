@@ -43,12 +43,12 @@ describe('fromBoundingClientRect$', () => {
 
   it('should emit on layout change if affecting the observed element\'s position or size', async () => {
     const clientRectCaptures = new ClientRects().capture();
-    const emitCaptor = new ObserveCaptor<ClientRect>();
+    const emitCaptor = new ObserveCaptor<Readonly<DOMRect>>();
 
     // TEST: Subscribe to fromBoundingClientRect$
     fromBoundingClientRect$($('div#testee')).subscribe(emitCaptor);
 
-    // expect the initial ClientRect to be emitted
+    // expect the initial DOMRect to be emitted
     await emitCaptor.waitUntilEmitCount(1);
     await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining(clientRectCaptures.get('div#testee')));
 
@@ -180,12 +180,12 @@ describe('fromBoundingClientRect$', () => {
     // Capture current element dimensions and positions
     const clientRectCaptures = new ClientRects().capture();
     // Init captor to capture Observable emissions
-    const emitCaptor = new ObserveCaptor<ClientRect>();
+    const emitCaptor = new ObserveCaptor<Readonly<DOMRect>>();
 
     // TEST: Subscribe to fromBoundingClientRect$
     fromBoundingClientRect$($('div#testee')).subscribe(emitCaptor);
 
-    // expect the initial ClientRect to be emitted
+    // expect the initial DOMRect to be emitted
     await emitCaptor.waitUntilEmitCount(1);
     await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining(clientRectCaptures.get('div#testee')));
 
@@ -314,8 +314,7 @@ class ClientRects {
   /**
    * Returns the last captured bounding box for the element.
    */
-  public get(selector: string): ClientRect {
-    const {top, right, bottom, left, width, height} = this.rects.get(selector);
-    return {top: top, right, bottom, left, width, height};
+  public get(selector: string): Readonly<DOMRect> {
+    return this.rects.get(selector);
   }
 }
