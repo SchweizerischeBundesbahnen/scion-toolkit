@@ -27,8 +27,7 @@
  */
 @use 'sci-toolkit-theming' as sci-theming;
 @use 'sci-toolkit-styles' as sci-toolkit-styles;
-@use '~@angular/cdk/a11y' as cdk-a11y;
-@use '~@angular/cdk/overlay' as cdk-overlay;
+@use '@angular/cdk';
 
 $theme: sci-theming.$default-theme !default; // fallback to the default theme if not overwritten
 $theme: sci-theming.map-deep-merge(sci-theming.$default-theme, $theme); // merge overwritten theme (if any) with the default theme
@@ -36,8 +35,8 @@ $theme: sci-theming.map-deep-merge(sci-theming.$default-theme, $theme); // merge
 
 @import url('https://fonts.googleapis.com/css?family=Roboto:normal,bold,italic,bolditalic|Roboto+Mono');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-@include cdk-a11y.a11y-visually-hidden();
-@include cdk-overlay.overlay();
+@include cdk.a11y-visually-hidden();
+@include cdk.overlay();
 
 * {
   box-sizing: border-box;

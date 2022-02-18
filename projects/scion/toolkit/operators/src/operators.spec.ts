@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {BehaviorSubject, noop, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
+import {BehaviorSubject, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
 import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
 import {NgZone} from '@angular/core';
 import {finalize, tap} from 'rxjs/operators';
@@ -100,15 +100,15 @@ describe('Operators', () => {
       })
         .pipe(
           finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap(noop, noop, () => insideAngularCaptor.onCompleteBeforeObserveInside = NgZone.isInAngularZone()),
+          tap({complete: () => insideAngularCaptor.onCompleteBeforeObserveInside = NgZone.isInAngularZone()}),
           // use `observeInside` operator to continue operator chain inside the Angular zone
           observeInside(continueFn => zone.run(continueFn)),
-          tap(noop, noop, () => insideAngularCaptor.onCompleteAfterObserveInside = NgZone.isInAngularZone()),
+          tap({complete: () => insideAngularCaptor.onCompleteAfterObserveInside = NgZone.isInAngularZone()}),
         );
 
       // WHEN
-      const subscription = observable$.subscribe(noop, noop, () => {
-        insideAngularCaptor.onComplete = NgZone.isInAngularZone();
+      const subscription = observable$.subscribe({
+        complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
       });
 
       // THEN
@@ -144,15 +144,15 @@ describe('Operators', () => {
       })
         .pipe(
           finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap(noop, () => insideAngularCaptor.onErrorBeforeObserveInside = NgZone.isInAngularZone()),
+          tap({error: () => insideAngularCaptor.onErrorBeforeObserveInside = NgZone.isInAngularZone()}),
           // use `observeInside` operator to continue operator chain inside the Angular zone
           observeInside(continueFn => zone.run(continueFn)),
-          tap(noop, () => insideAngularCaptor.onErrorAfterObserveInside = NgZone.isInAngularZone()),
+          tap({error: () => insideAngularCaptor.onErrorAfterObserveInside = NgZone.isInAngularZone()}),
         );
 
       // WHEN
-      const subscription = observable$.subscribe(noop, () => {
-        insideAngularCaptor.onError = NgZone.isInAngularZone();
+      const subscription = observable$.subscribe({
+        error: () => insideAngularCaptor.onError = NgZone.isInAngularZone(),
       });
 
       // THEN
@@ -235,15 +235,15 @@ describe('Operators', () => {
       })
         .pipe(
           finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap(noop, () => insideAngularCaptor.onErrorBeforeSubscribeInside = NgZone.isInAngularZone()),
+          tap({error: () => insideAngularCaptor.onErrorBeforeSubscribeInside = NgZone.isInAngularZone()}),
           // use `subscribeInside` operator to run downstream and upstream operators inside the Angular zone
           subscribeInside(continueFn => zone.run(continueFn)),
-          tap(noop, () => insideAngularCaptor.onErrorAfterSubscribeInside = NgZone.isInAngularZone()),
+          tap({error: () => insideAngularCaptor.onErrorAfterSubscribeInside = NgZone.isInAngularZone()}),
         );
 
       // WHEN
-      const subscription = observable$.subscribe(noop, () => {
-        insideAngularCaptor.onError = NgZone.isInAngularZone();
+      const subscription = observable$.subscribe({
+        error: () => insideAngularCaptor.onError = NgZone.isInAngularZone(),
       });
 
       // THEN
@@ -279,15 +279,15 @@ describe('Operators', () => {
       })
         .pipe(
           finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap(noop, noop, () => insideAngularCaptor.onCompleteBeforeSubscribeInside = NgZone.isInAngularZone()),
+          tap({complete: () => insideAngularCaptor.onCompleteBeforeSubscribeInside = NgZone.isInAngularZone()}),
           // use `subscribeInside` operator to run downstream and upstream operators inside the Angular zone
           subscribeInside(continueFn => zone.run(continueFn)),
-          tap(noop, noop, () => insideAngularCaptor.onCompleteAfterSubscribeInside = NgZone.isInAngularZone()),
+          tap({complete: () => insideAngularCaptor.onCompleteAfterSubscribeInside = NgZone.isInAngularZone()}),
         );
 
       // WHEN
-      const subscription = observable$.subscribe(noop, noop, () => {
-        insideAngularCaptor.onComplete = NgZone.isInAngularZone();
+      const subscription = observable$.subscribe({
+        complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
       });
 
       // THEN
@@ -340,11 +340,10 @@ describe('Operators', () => {
 
       // WHEN
       await zone.run(async () => {
-        const subscription = observable$.subscribe(
-          () => insideAngularCaptor.onNext = NgZone.isInAngularZone(),
-          noop,
-          () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
-        );
+        const subscription = observable$.subscribe({
+          next: () => insideAngularCaptor.onNext = NgZone.isInAngularZone(),
+          complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
+        });
 
         // THEN
         await expect(NgZone.isInAngularZone()).toBeTrue();
@@ -491,7 +490,7 @@ describe('Operators', () => {
     it('should buffer emissions until `closingNotifier$` emits', () => {
       const observeCaptor = new ObserveCaptor();
 
-      const closingNotifier$ = new Subject();
+      const closingNotifier$ = new Subject<void>();
       const source$ = new Subject<string>();
       source$
         .pipe(bufferUntil(closingNotifier$))
@@ -521,7 +520,7 @@ describe('Operators', () => {
     it('should buffer emissions until `closingNotifier$` completes', () => {
       const observeCaptor = new ObserveCaptor();
 
-      const closingNotifier$ = new Subject();
+      const closingNotifier$ = new Subject<never>();
       const source$ = new Subject<string>();
       source$
         .pipe(bufferUntil(closingNotifier$))
@@ -548,10 +547,10 @@ describe('Operators', () => {
       expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd', 'e']);
     });
 
-    it('should not emit if `closingNotifier$` emits error', () => {
+    it('should error if `closingNotifier$` errors', () => {
       const observeCaptor = new ObserveCaptor();
 
-      const closingNotifier$ = new Subject();
+      const closingNotifier$ = new Subject<void>();
       const source$ = new Subject<string>();
       source$
         .pipe(bufferUntil(closingNotifier$))
@@ -569,10 +568,68 @@ describe('Operators', () => {
       // emit error.
       closingNotifier$.error('Error');
       expect(observeCaptor.getValues()).toEqual([]);
+      expect(observeCaptor.hasErrored()).toBeTrue();
 
       // emit after notifier error.
       source$.next('d');
       expect(observeCaptor.getValues()).toEqual([]);
+      expect(observeCaptor.hasErrored()).toBeTrue();
+    });
+
+    it('should share buffer status among subscriptions', () => {
+      const closingNotifier$ = new Subject<void>();
+      const source$ = new Subject<string>();
+      const testee$ = source$.pipe(bufferUntil(closingNotifier$));
+
+      // Subscribe captor 1.
+      const observeCaptor1 = new ObserveCaptor();
+      const subscription1 = testee$.subscribe(observeCaptor1);
+
+      source$.next('a');
+      expect(observeCaptor1.getValues()).toEqual([]);
+
+      source$.next('b');
+      expect(observeCaptor1.getValues()).toEqual([]);
+
+      // close the buffer by emitting, not completing.
+      closingNotifier$.next();
+      expect(observeCaptor1.getValues()).toEqual(['a', 'b']);
+
+      source$.next('c');
+      expect(observeCaptor1.getValues()).toEqual(['a', 'b', 'c']);
+
+      // Subscribe captor 2.
+      const observeCaptor2 = new ObserveCaptor();
+      const subscription2 = testee$.subscribe(observeCaptor2);
+      expect(observeCaptor2.getValues()).toEqual([]);
+
+      source$.next('d');
+      expect(observeCaptor1.getValues()).toEqual(['a', 'b', 'c', 'd']);
+      expect(observeCaptor2.getValues()).toEqual(['d']);
+
+      // Unsubscribe captor 1.
+      subscription1.unsubscribe();
+
+      source$.next('e');
+      expect(observeCaptor1.getValues()).toEqual(['a', 'b', 'c', 'd']);
+      expect(observeCaptor2.getValues()).toEqual(['d', 'e']);
+
+      // Unsubscribe captor 2.
+      subscription2.unsubscribe();
+
+      source$.next('f');
+      expect(observeCaptor1.getValues()).toEqual(['a', 'b', 'c', 'd']);
+      expect(observeCaptor2.getValues()).toEqual(['d', 'e']);
+
+      // Subscribe captor 3.
+      const observeCaptor3 = new ObserveCaptor();
+      testee$.subscribe(observeCaptor3);
+      expect(observeCaptor3.getValues()).toEqual([]);
+
+      source$.next('g');
+      expect(observeCaptor1.getValues()).toEqual(['a', 'b', 'c', 'd']);
+      expect(observeCaptor2.getValues()).toEqual(['d', 'e']);
+      expect(observeCaptor3.getValues()).toEqual(['g']);
     });
 
     it('should buffer emissions until `closingNotifier` resolves', fakeAsync(() => {

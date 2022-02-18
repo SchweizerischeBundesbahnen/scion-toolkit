@@ -21,8 +21,8 @@ import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
 
 describe('Viewport', () => {
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(() => {
+    TestBed.configureTestingModule({
       declarations: [
         Testee1Component,
         Testee2Component,
@@ -30,7 +30,7 @@ describe('Viewport', () => {
       imports: [
         SciViewportModule,
       ],
-    }).compileComponents();
+    });
   });
 
   it('should show a vertical scrollbar on vertical overflow', async () => {
@@ -40,58 +40,58 @@ describe('Viewport', () => {
 
     component.direction = 'column';
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(1) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(1) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(1) vertical)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(1) horizonal)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(2) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(2) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(2) vertical)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(2) horizonal)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(3) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(3) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(3) vertical)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(3) horizonal)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(4) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(4) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(4) vertical)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(4) horizonal)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(true, '(5) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(5) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(5) vertical)').toBe(true);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(5) horizonal)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(true, '(6) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(6) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(6) vertical)').toBe(true);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(6) horizonal)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(true, '(7) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(7) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(7) vertical)').toBe(true);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(7) horizonal)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(8) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(8) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(8) vertical)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(8) horizonal)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(9) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(9) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(9) vertical)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(9) horizonal)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(10) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(10) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(10) vertical)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(10) horizonal)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(11) vertical)');
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(11) horizonal)');
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(11) vertical)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(11) horizonal)').toBe(false);
   });
 
   it('should show a horizontal scrollbar on horizontal overflow', async () => {
@@ -101,58 +101,58 @@ describe('Viewport', () => {
 
     component.direction = 'row';
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(1) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(1) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(1) horizonal)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(1) vertical)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(2) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(2) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(2) horizonal)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(2) vertical)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(3) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(3) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(3) horizonal)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(3) vertical)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(4) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(4) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(4) horizonal)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(4) vertical)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(true, '(5) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(5) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(5) horizonal)').toBe(true);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(5) vertical)').toBe(false);
 
     component.onAdd();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(true, '(6) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(6) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(6) horizonal)').toBe(true);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(6) vertical)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(true, '(7) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(7) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(7) horizonal)').toBe(true);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(7) vertical)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(8) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(8) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(8) horizonal)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(8) vertical)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(9) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(9) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(9) horizonal)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(9) vertical)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(10) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(10) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(10) horizonal)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(10) vertical)').toBe(false);
 
     component.onRemove();
     await flushChanges(fixture);
-    expect(isScrollbarVisible(fixture, 'horizontal')).toBe(false, '(11) horizonal)');
-    expect(isScrollbarVisible(fixture, 'vertical')).toBe(false, '(11) vertical)');
+    expect(isScrollbarVisible(fixture, 'horizontal')).withContext('(11) horizonal)').toBe(false);
+    expect(isScrollbarVisible(fixture, 'vertical')).withContext('(11) vertical)').toBe(false);
   });
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '1 1 0', content.height: '0'] => expect viewport height to be 300px`, async () => {
@@ -938,7 +938,8 @@ describe('Viewport', () => {
     await flushChanges(fixture);
 
     const viewportClientSizeCaptor = new ObserveCaptor<Dimension>();
-    fromDimension$(component.viewport.viewportClientElement).subscribe(viewportClientSizeCaptor);
+    const fromDimensionSubscription = fromDimension$(component.viewport.viewportClientElement)
+      .subscribe(viewportClientSizeCaptor);
 
     expect(getSize(fixture, 'sci-viewport')).toEqual(jasmine.objectContaining({height: 300}));
     expect(getSize(fixture, 'div.viewport-client')).toEqual(jasmine.objectContaining({height: 600}));
@@ -948,6 +949,9 @@ describe('Viewport', () => {
     await viewportClientSizeCaptor.waitUntilEmitCount(1);
     expect(viewportClientSizeCaptor.getLastValue()).toEqual(jasmine.objectContaining({offsetHeight: 600}));
     expect(component.viewport.scrollHeight).toEqual(600);
+
+    // unsubscribe to avoid `ResizeObserver loop limit exceeded` error
+    fromDimensionSubscription.unsubscribe();
   });
 
   function isScrollbarVisible(fixture: ComponentFixture<any>, scrollbar: 'vertical' | 'horizontal'): boolean {

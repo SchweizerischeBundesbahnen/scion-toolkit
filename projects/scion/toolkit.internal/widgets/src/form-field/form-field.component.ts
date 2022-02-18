@@ -9,7 +9,7 @@
  */
 
 import {Component, ElementRef, HostBinding, Input, OnDestroy} from '@angular/core';
-import {ConfigurableFocusTrapFactory, FocusTrap} from '@angular/cdk/a11y';
+import {ConfigurableFocusTrap, ConfigurableFocusTrapFactory} from '@angular/cdk/a11y';
 
 @Component({
   selector: 'sci-form-field',
@@ -18,7 +18,7 @@ import {ConfigurableFocusTrapFactory, FocusTrap} from '@angular/cdk/a11y';
 })
 export class SciFormFieldComponent implements OnDestroy {
 
-  private _focusTrap: FocusTrap;
+  private _focusTrap: ConfigurableFocusTrap;
 
   @Input()
   public direction: 'row' | 'column';
