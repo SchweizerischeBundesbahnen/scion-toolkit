@@ -93,6 +93,27 @@ describe('ObserveCaptor', () => {
     expect(captor.hasCompleted()).toBe(false);
   });
 
+  it('should time out if not emitted expected emissions [actual: 0, expected: 3]', async () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+
+    await expectAsync(captor.waitUntilEmitCount(3, 500)).toBeRejectedWithError(/\[CaptorTimeoutError/);
+  });
+
+  it('should time out if not emitted expected emissions [actual: 2, expected: 3]', async () => {
+    const subject$ = new Subject<string>();
+
+    const captor = new ObserveCaptor<string>();
+    subject$.subscribe(captor);
+
+    subject$.next('value 1');
+    const waitUntilEmitCount = captor.waitUntilEmitCount(3, 500);
+    subject$.next('value 2');
+    await expectAsync(waitUntilEmitCount).toBeRejectedWithError(/\[CaptorTimeoutError/);
+  });
+
   it('should wait until completion', async () => {
     const subject$ = new Subject<string>();
 
