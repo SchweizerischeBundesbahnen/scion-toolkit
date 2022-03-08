@@ -88,6 +88,8 @@ export class BeanManager {
 
   private _sequence = 0;
   private _runlevel$ = new BehaviorSubject<number>(-1);
+  private _eagerBeansConstructed = false;
+  private _started = false;
 
   /**
    * Registers a bean under the given symbol.
@@ -144,6 +146,10 @@ export class BeanManager {
       this._beanRegistry.set(symbol, new Set<BeanInfo>([beanInfo]));
     }
 
+    if (beanInfo.eager && this._eagerBeansConstructed) {
+      this.get(symbol);
+    }
+
     return {unregister: (): void => this.disposeBean(beanInfo)};
   }
 
@@ -179,7 +185,7 @@ export class BeanManager {
    * @param decorator - Specifies the decorator.
    */
   public registerDecorator<T extends BeanDecorator<any>>(symbol: Type<any> | AbstractType<any> | symbol, decorator: {useValue: T} | {useClass?: Type<T>} | {useFactory?: () => T}): void {
-    if (this.runlevel >= 0) {
+    if (this._started) {
       throw Error('[BeanManagerLifecycleError] Decorators can only be registered before starting the bean manager.');
     }
 
@@ -200,7 +206,7 @@ export class BeanManager {
    * Initializers must be registered before starting the bean manager.
    */
   public registerInitializer(initializer: InitializerFn | {useFunction?: InitializerFn; useClass?: Type<Initializer>; runlevel?: number}): void {
-    if (this.runlevel >= 0) {
+    if (this._started) {
       throw Error('[BeanManagerLifecycleError] Initializers can only be registered before starting the bean manager.');
     }
 
@@ -294,7 +300,7 @@ export class BeanManager {
    * @return A Promise that resolves when all initializers completed.
    */
   public async start(config?: BeanManagerConfig): Promise<void> {
-    if (this.runlevel >= 0) {
+    if (this._started) {
       throw Error('[BeanManagerLifecycleError] Bean manager already started.');
     }
 
@@ -308,12 +314,17 @@ export class BeanManager {
 
     // Register initializer to construct eager beans.
     this.registerInitializer({
-      useFunction: async () => this.constructEagerBeans(),
+      useFunction: async () => {
+        this.constructEagerBeans();
+        this._eagerBeansConstructed = true;
+      },
       runlevel: eagerBeanConstructRunlevel,
     });
 
     // Run initializers.
     await this.runInitializers(initializerDefaultRunlevel);
+
+    this._started = true;
   }
 
   /**
@@ -332,6 +343,8 @@ export class BeanManager {
     this._decoratorRegistry.clear();
     this._initializers.length = 0;
     this._runlevel$.next(-1);
+    this._eagerBeansConstructed = false;
+    this._started = false;
   }
 
   private disposeBean(beanInfo: BeanInfo): void {
@@ -359,10 +372,6 @@ export class BeanManager {
     return firstValueFrom(this._runlevel$
       .pipe(filter(currentRunlevel => currentRunlevel >= runlevel)))
       .then(() => Promise.resolve());
-  }
-
-  private get runlevel(): number {
-    return this._runlevel$.value;
   }
 
   private getBeanInfos(): BeanInfo[] {
