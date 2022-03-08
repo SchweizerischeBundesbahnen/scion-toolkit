@@ -13,8 +13,8 @@ import {fakeAsync, tick} from '@angular/core/testing';
 
 describe('BeanManager', () => {
 
-  beforeEach(async () => await Beans.destroy());
-  afterEach(async () => await Beans.destroy());
+  beforeEach(async () => Beans.destroy());
+  afterEach(async () => Beans.destroy());
 
   it('should allow looking up a bean', async () => {
     class Bean {
@@ -454,7 +454,7 @@ describe('BeanManager', () => {
     Beans.register(Bean4, {destroyOrder: 2, eager: true});
 
     await Beans.start();
-    await Beans.destroy();
+    Beans.destroy();
     await expect(beanDestroyCaptor).toEqual(['bean1', 'bean4', 'bean3', 'bean2']);
   });
 
@@ -513,7 +513,7 @@ describe('BeanManager', () => {
     Beans.get(Bean4);
     Beans.get(Bean2);
 
-    await Beans.destroy(); // 1, 6, 3, 5, 4, 2
+    Beans.destroy(); // 1, 6, 3, 5, 4, 2
     await expect(beanDestroyCaptor).toEqual(['bean2', 'bean4', 'bean5', 'bean3', 'bean6', 'bean1']);
   });
 
@@ -529,7 +529,7 @@ describe('BeanManager', () => {
     Beans.register(Bean);
 
     await Beans.start();
-    await Beans.destroy();
+    Beans.destroy();
     await expect(constructed).toBeFalse();
   });
 
@@ -604,7 +604,7 @@ describe('BeanManager', () => {
     await Beans.start();
     expect(Beans.get(Bean)).toBeDefined();
 
-    await Beans.destroy();
+    Beans.destroy();
     await Beans.start();
 
     expect(() => Beans.get(Bean)).toThrowError(/NullBeanError/);
@@ -926,6 +926,64 @@ describe('BeanManager', () => {
 
     expect(bean1Constructed).toBeTrue();
     expect(bean2Constructed).toBeTrue();
+  });
+
+  it('should immediately construct eager bean when registered after started the bean manager', async () => {
+    let constructed = false;
+
+    class Bean {
+      constructor() {
+        constructed = true;
+      }
+    }
+
+    await Beans.start();
+    Beans.register(Bean, {eager: true});
+    expect(constructed).toBeTrue();
+  });
+
+  it('should immediately construct eager bean when registered in an initializer that is bound to a higher runlevel than the "eager bean construction runlevel"', async () => {
+    const eagerBeanConstructRunlevel = 5;
+
+    let bean1Constructed = false;
+    let bean2Constructed = false;
+    let bean3Constructed = false;
+
+    class Bean1 {
+      constructor() {
+        bean1Constructed = true;
+      }
+    }
+
+    class Bean2 {
+      constructor() {
+        bean2Constructed = true;
+      }
+    }
+
+    class Bean3 {
+      constructor() {
+        bean3Constructed = true;
+      }
+    }
+
+    Beans.registerInitializer({
+      useFunction: async () => void Beans.register(Bean1, {eager: true}),
+      runlevel: eagerBeanConstructRunlevel - 1,
+    });
+    Beans.registerInitializer({
+      useFunction: async () => void Beans.register(Bean2, {eager: true}),
+      runlevel: eagerBeanConstructRunlevel,
+    });
+    Beans.registerInitializer({
+      useFunction: async () => void Beans.register(Bean3, {eager: true}),
+      runlevel: eagerBeanConstructRunlevel + 1,
+    });
+
+    await Beans.start({eagerBeanConstructRunlevel});
+    expect(bean1Constructed).toBeTrue();
+    expect(bean2Constructed).toBeTrue();
+    expect(bean3Constructed).toBeTrue();
   });
 
   it('should not construct lazy beans when starting the bean manager', async () => {
