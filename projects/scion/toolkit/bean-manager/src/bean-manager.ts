@@ -207,7 +207,7 @@ export class BeanManager {
    *
    * Initializers must be registered before starting the bean manager.
    */
-  public registerInitializer(initializer: InitializerFn | {useFunction?: InitializerFn; useClass?: Type<Initializer>; runlevel?: number}): void {
+  public registerInitializer(initializer: InitializerFn | {useFunction?: InitializerFn; useClass?: Type<Initializer>; useExisting?: Type<Initializer> | AbstractType<Initializer> | symbol; runlevel?: number}): void {
     if (this._started) {
       throw Error('[BeanManagerLifecycleError] Initializers can only be registered before starting the bean manager.');
     }
@@ -223,8 +223,12 @@ export class BeanManager {
         return {fn: initializer.useFunction, runlevel: initializer.runlevel};
       }
       else if (initializer.useClass) {
-        const initializerInstance = new initializer.useClass();
-        return {fn: (): Promise<void> => initializerInstance.init(), runlevel: initializer.runlevel};
+        const useClass = initializer.useClass;
+        return {fn: (): Promise<void> => new useClass().init(), runlevel: initializer.runlevel};
+      }
+      else if (initializer.useExisting) {
+        const useExisting = initializer.useExisting;
+        return {fn: (): Promise<void> => Beans.get(useExisting).init(), runlevel: initializer.runlevel};
       }
       throw Error('[NullInitializerError] No initializer specified.');
     })();

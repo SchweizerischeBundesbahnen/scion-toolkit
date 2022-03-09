@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {BeanDecorator, Beans, PreDestroy} from './bean-manager';
+import {BeanDecorator, Beans, Initializer, PreDestroy} from './bean-manager';
 import {fakeAsync, tick} from '@angular/core/testing';
 
 describe('BeanManager', () => {
@@ -129,7 +129,7 @@ describe('BeanManager', () => {
     expect(constructed).toBeTruthy();
   });
 
-  it('should allow initializers to lookup beans', async () => {
+  it('should allow initializers to look up beans', async () => {
     class Bean {
     }
 
@@ -1231,6 +1231,75 @@ describe('BeanManager', () => {
     await expectAsync(Beans.start()).toBeRejectedWithError(/InitializerError/);
   });
 
+  it('should allow registration of a function initializer', async () => {
+    let initializerInvoked = false;
+
+    Beans.registerInitializer(async () => void (initializerInvoked = true));
+    await Beans.start();
+
+    expect(initializerInvoked).toBeTrue();
+  });
+
+  it('should allow registration of a function initializer (useFunction)', async () => {
+    let initializerInvoked = false;
+
+    Beans.registerInitializer({useFunction: async () => void (initializerInvoked = true)});
+    await Beans.start();
+
+    expect(initializerInvoked).toBeTrue();
+  });
+
+  it('should allow registration of a class initializer (useClass)', async () => {
+    let initializerInvoked = false;
+
+    class InitializerClass implements Initializer {
+
+      public async init(): Promise<void> {
+        initializerInvoked = true;
+      }
+    }
+
+    Beans.registerInitializer({useClass: InitializerClass});
+    await Beans.start();
+
+    expect(() => Beans.get(InitializerClass)).toThrowError(/NullBeanError/);
+    expect(initializerInvoked).toBeTrue();
+  });
+
+  it('should allow using an existing bean as initializer (useExisting)', async () => {
+    const beanInstances = new Set<Bean>();
+
+    class Bean implements Initializer {
+
+      public initInvoked = false;
+
+      constructor() {
+        beanInstances.add(this);
+      }
+
+      public async init(): Promise<void> {
+        this.initInvoked = true;
+      }
+    }
+
+    Beans.registerInitializer({useExisting: Bean});
+    Beans.register(Bean);
+    await Beans.start();
+
+    expect(new Set([Beans.get(Bean)])).toEqual(beanInstances);
+    expect(Beans.get(Bean).initInvoked).toBeTrue();
+  });
+
+  it('should error if not registered the bean specified as initializer (useExisting)', async () => {
+    class Bean implements Initializer {
+      public async init(): Promise<void> { // eslint-disable-line @typescript-eslint/no-empty-function
+      }
+    }
+
+    Beans.registerInitializer({useExisting: Bean});
+    await expectAsync(Beans.start()).toBeRejectedWithError(/InitializerError/);
+  });
+
   /**
    * Returns a Promise that resolves after the given millis elapses.
    */
@@ -1238,4 +1307,3 @@ describe('BeanManager', () => {
     return new Promise(resolve => setTimeout(resolve, millis));
   }
 });
-
