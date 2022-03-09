@@ -10,7 +10,6 @@
 
 import {EMPTY, fromEvent, merge, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
 import {distinctUntilChanged, filter, mapTo, mergeMap, startWith, takeUntil} from 'rxjs/operators';
-import {Defined} from '@scion/toolkit/util';
 
 /**
  * Allows observing items contained in web storage (local storage or session storage).
@@ -62,6 +61,32 @@ export class WebStorage {
   }
 
   /**
+   * Returns the item associated with the given key, or `undefined` if not found.
+   *
+   * Expects the value to be stored in JSON format. Throws an error if the value cannot be parsed.
+   */
+  public get<T>(key: string): T | null | undefined {
+    const item = this._storage.getItem(key);
+
+    // Web storage returns `null` if there is no item associated with the key.
+    if (item === null) {
+      return undefined;
+    }
+
+    // If the value `undefined` is associated with the key, web storage returns 'undefined' as string.
+    if (item === 'undefined') {
+      return undefined;
+    }
+
+    // If the value `null` is associated with the key, web storage returns 'null' as string.
+    if (item === 'null') {
+      return null;
+    }
+
+    return JSON.parse(item);
+  }
+
+  /**
    * Removes the item associated with the given key.
    */
   public remove(key: string): void {
@@ -88,6 +113,7 @@ export class WebStorage {
    * with the given key upon subscription. By default, `emitIfAbsent` is set to `false`.
    */
   public observe$<T>(key: string, options?: {emitIfAbsent?: boolean}): Observable<T> {
+    const emitIfAbsent = options?.emitIfAbsent ?? false;
     const otherDocumentChange$ = fromEvent<StorageEvent>(window, 'storage')
       .pipe(
         filter(event => event.storageArea === this._storage),
@@ -102,32 +128,18 @@ export class WebStorage {
           filter(itemKey => itemKey === key),
           startWith(key),
           mergeMap(itemKey => {
-              const item = this._storage.getItem(itemKey);
+            if (!this.isPresent(itemKey)) {
+              return emitIfAbsent ? of(undefined) : EMPTY;
+            }
 
-              // Web storage returns `null` if there is no item associated with the key.
-              if (item === null) {
-                return Defined.orElse(options?.emitIfAbsent, false) ? of(undefined) : EMPTY;
-              }
-
-              // If the value `undefined` is associated with the key, web storage returns 'undefined' as string.
-              if (item === 'undefined') {
-                return of(undefined);
-              }
-
-              // If the value `null` is associated with the key, web storage returns 'null' as string.
-              if (item === 'null') {
-                return of(null);
-              }
-
-              try {
-                return of(JSON.parse(item));
-              }
-              catch (error) {
-                console.warn(`Failed to parse item from storage. Invalid JSON. [item=${item}]`, error);
-                return EMPTY;
-              }
-            },
-          ),
+            try {
+              return of(this.get<any>(itemKey));
+            }
+            catch (error) {
+              console.warn(`Failed to parse item from storage. Invalid JSON. [key=${itemKey}]`, error);
+              return EMPTY;
+            }
+          }),
           distinctUntilChanged(),
           takeUntil(unsubscribe$),
         )
