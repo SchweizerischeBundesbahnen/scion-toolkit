@@ -201,32 +201,89 @@ describe('WebStorage', () => {
     });
   });
 
+  describe('WebStorage.get', () => {
+
+    it('should return the value associated with the given key', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      testee.put('key', 'value');
+      expect(testee.get('key')).toEqual('value');
+    });
+
+    it('should return the object associated with the given key', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      const value = {p1: 'value', p2: 2, p3: true};
+      testee.put('key', value);
+      expect(testee.get('key')).toEqual(value);
+    });
+
+    it('should return `undefined` if no item is associated with the given key', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      expect(testee.get('key')).toBeUndefined();
+    });
+
+    it('should return `null` if the `null` value is associated with the given key', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      testee.put('key', null);
+      expect(testee.get('key')).toBeNull();
+    });
+
+    it('should return `undefined` if the `undefined` value is associated with the given key', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      testee.put('key', undefined);
+      expect(testee.get('key')).toBeUndefined();
+    });
+
+    it('should return `0` if the `0` value is associated with the given key (falsy value)', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      testee.put('key', 0);
+      expect(testee.get('key')).toEqual(0);
+    });
+
+    it('should return `false` if the `false` value is associated with the given key (falsy value)', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      testee.put('key', false);
+      expect(testee.get('key')).toBeFalse();
+    });
+
+    it('should return an empty string if the "" value is associated with the given key (falsy value)', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      testee.put('key', '');
+      expect(testee.get('key')).toEqual('');
+    });
+
+    it('should throw if failed to parse the value associated with the given key', () => {
+      const testee = new WebStorage(window.sessionStorage);
+      sessionStorage.setItem('key', 'VALUE NOT IN JSON FORMAT');
+      expect(() => testee.get('key')).toThrowError(/Unexpected token V in JSON/);
+    });
+  });
+
   describe('WebStorage.isPresent', () => {
 
-    it('should not be present if no value is associated with the key', async () => {
+    it('should not be present if no value is associated with the key', () => {
       const testee = new WebStorage(window.sessionStorage);
       expect(testee.isPresent('key')).toBeFalse();
     });
 
-    it('should be present if the `null` value is associated with the key', async () => {
+    it('should be present if the `null` value is associated with the key', () => {
       const testee = new WebStorage(window.sessionStorage);
       sessionStorage.setItem('key', null);
       expect(testee.isPresent('key')).toBeTrue();
     });
 
-    it('should be present if the `undefined` value is associated with the key', async () => {
+    it('should be present if the `undefined` value is associated with the key', () => {
       const testee = new WebStorage(window.sessionStorage);
       sessionStorage.setItem('key', undefined);
       expect(testee.isPresent('key')).toBeTrue();
     });
 
-    it('should be present if a value is associated with the key', async () => {
+    it('should be present if a value is associated with the key', () => {
       const testee = new WebStorage(window.sessionStorage);
       sessionStorage.setItem('key', 'value');
       expect(testee.isPresent('key')).toBeTrue();
     });
 
-    it('should be present if a falsy value is associated with the key', async () => {
+    it('should be present if a falsy value is associated with the key', () => {
       const testee = new WebStorage(window.sessionStorage);
       testee.put('key', 0);
       expect(testee.isPresent('key')).toBeTrue();
