@@ -114,6 +114,7 @@ export class BeanManager {
     if (!instructions || !containsBeansConstructStrategy(instructions)) {
       instructions = {...instructions, useClass: symbol as Type<T>};
     }
+    validateBeanConstructInstructions(symbol, instructions);
 
     // Check that either 'multi' or 'non-multi' beans are registered on the same symbol.
     const multi = Defined.orElse(instructions.multi, false);
@@ -131,7 +132,7 @@ export class BeanManager {
 
     const beanInfo: BeanInfo<T> = {
       symbol: symbol,
-      beanConstructFn: deriveConstructFunction(instructions),
+      beanConstructFn: createBeanConstructFunction(instructions),
       eager: Defined.orElse(instructions.eager || instructions.useValue !== undefined, false),
       multi: multi,
       instructions: instructions,
@@ -193,7 +194,8 @@ export class BeanManager {
       throw Error('[BeanDecoratorRegisterError] A decorator requires a symbol.');
     }
 
-    const constructFn = deriveConstructFunction(decorator)();
+    validateBeanConstructInstructions(symbol, decorator);
+    const constructFn = createBeanConstructFunction(decorator)();
     Maps.addListValue(this._decoratorRegistry, symbol, constructFn);
   }
 
@@ -458,14 +460,10 @@ function compareByDestroyOrder(bean1: BeanInfo, bean2: BeanInfo): number {
 }
 
 /** @ignore */
-function deriveConstructFunction<T>(instructions: BeanInstanceConstructInstructions<T>): () => T {
-  if (Object.keys(instructions).filter(property => property.startsWith('use')).length > 1) {
-    throw Error(`[BeanRegisterError] Multiple bean construct strategies specified. Expected one of 'useValue', 'useClass', 'useFactory' or 'useExisting', but was ${JSON.stringify(instructions)}.`);
-  }
-
+function createBeanConstructFunction<T>(instructions: BeanInstanceConstructInstructions<T>): () => T | null {
   if (instructions.useValue !== undefined) {
     const useValue = instructions.useValue;
-    return (): T => useValue;
+    return (): T | null => useValue;
   }
   else if (instructions.useClass) {
     const useClassFn = instructions.useClass;
@@ -479,7 +477,27 @@ function deriveConstructFunction<T>(instructions: BeanInstanceConstructInstructi
     const useExisting = instructions.useExisting;
     return (): T => Beans.get(useExisting);
   }
-  throw Error(`[BeanRegisterError] Unsupported bean construct strategy specified. Expected one of 'useValue', 'useClass', 'useFactory' or 'useExisting', but was ${JSON.stringify(instructions)}.`);
+  throw Error(`[BeanConstructError] Missing bean construction strategy`);
+}
+
+/**
+ * Validates passed instructions to construct the bean to be valid.
+ *
+ * @ignore
+ */
+function validateBeanConstructInstructions(symbol: Type<any> | AbstractType<any> | symbol, instructions: BeanInstanceConstructInstructions): void {
+  switch (Object.keys(instructions).filter(instruction => instruction.startsWith('use')).length) {
+    case 0:
+      throw Error(`[BeanRegisterError] Missing bean construction strategy. Expected one of 'useValue', 'useClass', 'useFactory' or 'useExisting' [bean=${symbol.toString()}, instructions=${JSON.stringify(instructions)}]`);
+    case 1:
+      break;
+    default:
+      throw Error(`[BeanRegisterError] Multiple bean construction strategies specified. Expected one of 'useValue', 'useClass', 'useFactory' or 'useExisting' [bean=${symbol.toString()}, instructions=${JSON.stringify(instructions)}]`);
+  }
+
+  if (Object.keys(instructions).includes('useValue') && instructions.useValue === undefined) {
+    throw Error(`[BeanRegisterError] Passing \`undefined\` as bean value is not supported [bean=${symbol.toString()}].`);
+  }
 }
 
 /** @ignore */
@@ -509,7 +527,7 @@ interface BeanInfo<T = any> {
   symbol: Type<T | any> | AbstractType<T | any> | symbol;
   instance?: T;
   constructing: boolean;
-  beanConstructFn: () => T;
+  beanConstructFn: () => T | null;
   constructInstant?: number;
   eager: boolean;
   multi: boolean;
@@ -533,7 +551,7 @@ export interface BeanInstanceConstructInstructions<T = any> {
   /**
    * Set if to use a static value as bean.
    */
-  useValue?: T;
+  useValue?: T | null;
   /**
    * Set if to create an instance of a class.
    */

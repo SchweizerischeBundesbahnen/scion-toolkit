@@ -45,11 +45,11 @@ describe('BeanManager', () => {
     expect(Beans.opt(Symbol())).toBeUndefined();
   });
 
-  it('should return \'orElseGet\' value when looking up a bean not present in the bean manager [orElseGet]', async () => {
+  it('should return \'orElseGet\' value when looking up a bean not present in the bean manager', async () => {
     expect(Beans.get(Symbol(), {orElseGet: 'not-found'})).toEqual('not-found');
   });
 
-  it('should return a bean even if representing a falsy value (except for undefined)', async () => {
+  it('should return "falsy" bean value', async () => {
     const symbol = Symbol();
     Beans.register(symbol, {useValue: 0});
     expect(Beans.get(symbol, {orElseGet: 123})).toEqual(0);
@@ -61,13 +61,13 @@ describe('BeanManager', () => {
     expect(Beans.get(symbol, {orElseGet: 'abc'})).toEqual('');
   });
 
-  it('should return \'orElseGet\' value even if being a falsy value (except for undefined) [orElseGet]', async () => {
+  it('should return "falsy" \'orElseGet\' value', async () => {
     expect(Beans.get(Symbol(), {orElseGet: 0})).toEqual(0);
     expect(Beans.get(Symbol(), {orElseGet: null})).toBeNull();
     expect(Beans.get(Symbol(), {orElseGet: ''})).toEqual('');
   });
 
-  it('should invoke \'orElseSupply\' function when looking up a bean not present in the bean manager [orElseSupply]', async () => {
+  it('should invoke \'orElseSupply\' function when looking up a bean not present in the bean manager', async () => {
     expect(Beans.get(Symbol(), {orElseSupply: (): string => 'not-found'})).toEqual('not-found');
   });
 
@@ -337,6 +337,36 @@ describe('BeanManager', () => {
 
     expect(Beans.get(TrueValueBean)).toBe(true);
     expect(Beans.get(FalseValueBean)).toBe(false);
+  });
+
+  it('should allow registering a bean with `false` as its value (falsy value)', () => {
+    const symbol = Symbol();
+    Beans.register(symbol, {useValue: false});
+    expect(Beans.get(symbol)).toBeFalse();
+  });
+
+  it('should allow registering a bean with `0` as its value (falsy value)', () => {
+    const symbol = Symbol();
+    Beans.register(symbol, {useValue: 0});
+    expect(Beans.get(symbol)).toEqual(0);
+  });
+
+  it('should allow registering a bean with "" as its value (falsy value)', () => {
+    const symbol = Symbol();
+    Beans.register(symbol, {useValue: ''});
+    expect(Beans.get(symbol)).toEqual('');
+  });
+
+  it('should allow registering a bean with `null` as its value (falsy value)', () => {
+    const symbol = Symbol();
+    Beans.register(symbol, {useValue: null});
+    expect(Beans.get(symbol)).toBeNull();
+  });
+
+  it('should not allow registering a bean with `undefined` as its value', () => {
+    const symbol = Symbol();
+    expect(() => Beans.register(symbol, {useValue: undefined})).toThrowError(/\[BeanRegisterError] Passing `undefined` as bean value is not supported/);
+    expect(() => Beans.get(symbol)).toThrowError(/NullBeanError/);
   });
 
   it('should allow registering a bean using a factory construction function', async () => {
