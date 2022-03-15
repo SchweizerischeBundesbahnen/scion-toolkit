@@ -1,3 +1,20 @@
+# [13.0.0-beta.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/13.0.0-beta.1...13.0.0-beta.2) (2022-03-15)
+
+
+### Bug Fixes
+
+* **toolkit/bean-manager:** construct eager bean when registering it after started the bean manager ([3511b4b](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/3511b4b381302c1a31eac2562e6d4caaaac68544))
+* **toolkit/bean-manager:** prevent registering a bean with `undefined` as value ([8f68cdf](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/8f68cdf56c5e4b60399b8a8d41c70744bc2ec830))
+* **toolkit/testing:** time out `ObserveCaptor#waitUntilEmitCount` when not capturing expected emissions in time ([ec8507c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/ec8507c468e49103e016c9283b827b240aafdb17))
+
+
+### Features
+
+* **toolkit/bean-manager:** allow using an existing bean as initializer ([efde8b1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/efde8b18d3b23de8c26b5eb35a4347813e6980bd))
+* **toolkit/storage:** allow synchronous retrieval of an item ([eadd8fd](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/eadd8fdb6fe07eb4a057de9198f5a7d0b4fa7117))
+
+
+
 # [13.0.0-beta.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/12.0.0-beta.3...13.0.0-beta.1) (2022-02-18)
 
 
@@ -25,7 +42,7 @@
 * **toolkit/observable:** Support for disabling the native `ResizeObserver` has been removed because this API is now supported by all major browsers.
 
   To migrate:
-  - remove the `options` parameter when calling `fromDimension$`.
+  - remove the `options` parameter when calling `fromDimension$ `.
   - remove the global flag `FromDimension.defaults.useNativeResizeObserver`.
 
 
