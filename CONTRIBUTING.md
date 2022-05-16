@@ -17,8 +17,6 @@ This section explains how to submit a pull request.
 1. Run the command `npm run before-push` to make sure that the project builds, passes all tests, and has no lint violations. Alternatively, you can also run the commands one by one, as following:
    - `npm run test:headless`\
       Runs all unit tests.
-   - `npm run e2e:headless`\
-      Runs all end-to-end tests.
    - `npm run lint`\
       Lints all project files.
    - `npm run build`\
@@ -42,52 +40,64 @@ For development, you can uncomment the section `PATH-OVERRIDE-FOR-DEVELOPMENT` i
 
 The following is a summary of commands useful for development of `scion-toolkit`. See file `package.json` for a complete list of available NPM scripts.
 
-### Commands for working on the toolkit library
+### Commands for working on the @scion/components library
+
+- **`npm run components:lint`**\
+  Lints *@scion/components* library.
+  
+- **`npm run components:build`**\
+  Builds *@scion/components* library.
+  
+- **`npm run components:test`**\
+  Runs unit tests of *@scion/components* library.
+ 
+- **`npm run components:changelog`**\
+  Generates the changelog for *@scion/components* based on the commit history. The output is written to `CHANGELOG_COMPONENTS.md`, which will be included in `docs/site/changelog-components/changelog/changelog.md`.
+  
+### Commands for working on the @scion/toolkit library
 
 - `npm run toolkit:lint`\
-  Lints the toolkit library.
+  Lints *@scion/toolkit* library.
   
 - `npm run toolkit:build`\
-  Builds the toolkit library.
+  Builds *@scion/toolkit* library.
   
 - `npm run toolkit:test`\
-  Runs unit tests of the toolkit library.
-  
-- `npm run toolkit:e2e`\
-  Runs end-to-end tests of the toolkit library. Prior to test execution, the testing app is started.
+  Runs unit tests of *@scion/toolkit* library.
 
-### Commands for working on the toolkit.internal library
+- `npm run toolkit:changelog`\
+  Generates the changelog for *@scion/toolkit* based on the commit history. The output is written to `CHANGELOG_TOOLKIT.md`, which will be included in `docs/site/changelog-toolkit/changelog/changelog.md`.
 
-- `npm run toolkit.internal:lint`\
-  Lints the internal toolkit library.
-  
-- `npm run toolkit.internal:build`\
-  Builds the internal toolkit library.
-  
-- `npm run toolkit.internal:test`\
-  Runs unit tests of the internal toolkit library.
+### Commands for working on the @scion/components.internal library
 
-### Commands for working on the testing application  
+- `npm run components.internal:lint`\
+  Lints *@scion/components.internal* library.
   
-- `npm run toolkit-testing-app:serve`\
-  Serves the testing app on [http://localhost:4200](http://localhost:4200).\
+- `npm run components.internal:build`\
+  Builds *@scion/components.internal* library.
+  
+- `npm run components.internal:test`\
+  Runs unit tests of *@scion/components.internal* library.
+
+- `npm run components.internal:changelog`\
+  Generates the changelog for *@scion/components.internal* based on the commit history. The output is written to `CHANGELOG_COMPONENTS_INTERNAL`, which will be included in `docs/site/changelog-components.internal/changelog/changelog.md`.
+
+### Commands for working on the components application
+  
+- `npm run components-app:serve`\
+  Serves the components app on [http://localhost:4200](http://localhost:4200).\
   Uncomment the section `PATH-OVERRIDE-FOR-DEVELOPMENT` in `tsconfig.json` to have hot module reloading support. 
   
-- `npm run toolkit-testing-app:build`\
-  Builds the testing app into `dist` folder using the productive config.
+- `npm run components-app:build`\
+  Builds the components app into `dist` folder using the productive config.
   
-- `npm run toolkit-testing-app:lint`\
-  Lints the testing app.
-  
-### Command for generating the changelog
+- `npm run components-app:lint`\
+  Lints the components app.
 
-- `npm run changelog`\
-  Use to generate the changelog based on the commit history. The output is written to `CHANGELOG.md`, which will be included in `docs/site/changelog/changelog.md` using the template `docs/site/changelog/changelog.template.md`.   
-
-### Command for generating GitHub Actions
+### Command for building GitHub Actions
 
 - `run-s github-actions:*:build`\
-  Use to generate the GibHub Actions used in SCION projects.
+  Generates GitHub Actions that are used in SCION projects.
 
 </details>
 
@@ -162,9 +172,11 @@ Each commit message consists of a **header**, a **summary** and a **footer**.  T
 The scope should be the name of the NPM package affected by the change. Optionally, you can also add the secondary entry point, separated by a forward slash.
   
 - `toolkit`: If the change affects the `@scion/toolkit` NPM package.
-- `toolkit/<name>`: If the change affects the `@scion/toolkit/<name>` entry point.
-- `ɵtoolkit`: If the change affects the `@scion/toolkit.internal` NPM package. We use the Theta (`ɵ`) symbol to have a shorter scope name.
-- `ɵtoolkit/<name>`: If the change affects the `@scion/toolkit.internal/<name>` entry point.
+- `toolkit/<module>`: If the change affects the `@scion/toolkit/<module>` entry point.
+- `components`: If the change affects the `@scion/components` NPM package.
+- `components/<module>`: If the change affects the `@scion/components/<module>` entry point.
+- `ɵcomponents`: If the change affects the `@scion/components.internal` NPM package. We use the Theta (`ɵ`) symbol to have a shorter scope name.
+- `ɵcomponents/<module>`: If the change affects the `@scion/components.internal/<module>` entry point.
 </details>
 
 
@@ -229,10 +241,13 @@ function someMethod(): void {
   <summary><strong>Deployments</strong></summary>
   <br>
   
-We deploy our documentations and applications to [Vercel](https://vercel.com/docs). Vercel is a cloud platform for static sites and serverless functions. Applications are deployed using the SCION collaborator account (scion.collaborator@gmail.com) under the [SCION organization](https://vercel.com/scion).
+We deploy our documentations and applications to [Vercel](https://vercel.com). Vercel is a cloud platform for static sites and serverless functions. Applications are deployed using the SCION collaborator account (scion.collaborator@gmail.com) under the [SCION](https://vercel.com/scion) scope.
 
-We have the following toolkit related projects:
-- https://vercel.com/scion/scion-toolkit-testing-app
+We have the following toolkit related deployments:
+
+| Deployment             | Vercel Project                            | URL                                 |
+|------------------------|-------------------------------------------|-------------------------------------|
+| Components Application | https://vercel.com/scion/scion-components | https://components.scion.vercel.app |
  
 </details>
 
@@ -240,11 +255,12 @@ We have the following toolkit related projects:
   <summary><strong>NPM Packages</strong></summary>
   <br>
   
-We publish our packages to the [NPM registry](https://www.npmjs.com/). Packages are published using the SCION collaborator account (scion.collaborator) under the [SCION organization](https://www.npmjs.com/org/scion).
+We publish our packages to the [NPM registry](https://www.npmjs.com/). Packages are published using the SCION collaborator account (scion.collaborator) under the [SCION](https://www.npmjs.com/org/scion) organization.
 
-We have the following microfrontend-platform related packages:
+We have the following toolkit related packages:
 - https://www.npmjs.com/package/@scion/toolkit
-- https://www.npmjs.com/package/@scion/toolkit.internal
+- https://www.npmjs.com/package/@scion/components
+- https://www.npmjs.com/package/@scion/components.internal
 
 </details>
 
@@ -252,9 +268,7 @@ We have the following microfrontend-platform related packages:
   <summary><strong>Versioning</strong></summary>
   <br>  
 
-We follow the same SemVer (Semantic Versioning) philosophy as Angular, with major versions being released at the same time as major versions of the Angular framework.
-
-### Semantic Versioning Scheme (SemVer)
+Releases of SCION Toolkit are versioned according to the SemVer (Semantic Versioning) versioning scheme.
 
 **Major Version:**\
 Major versions contain breaking changes.
@@ -264,37 +278,63 @@ Minor versions add new features or deprecate existing features without breaking 
 
 **Patch Level**\
 Patch versions fix bugs or optimize existing features without breaking changes.
-  
+
+> The module `@scion/components` is based on the Angular framework and thus follows the major versions of Angular, i.e., when Angular releases a new major version, we will also release a new major version compatible with that Angular version.
+
 </details>
 
 <details>
-  <summary><strong>Release Checklist</strong></summary>
-  <br>
+  <summary><strong>Release Checklist for @scion/toolkit and related artifacts</strong></summary>
 
-This chapter describes the tasks to publish a new release to NPM.
+Instructions for releasing the `@scion/toolkit` module.
 
-1. Update the following `package.json` files with the new version:
-    - `/package.json`
-    - `/projects/scion/toolkit/package.json`
-    - `/projects/scion/toolkit.internal/package.json`
-1. Run `npm install` to update the version in `package-lock.json`.
-1. Run `npm run changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
-1. Commit the changed files using the following commit message: `release: vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
-1. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
-1. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
-1. Verify that:
-   - **@scion/toolkit** is published to: https://www.npmjs.com/package/@scion/toolkit.
-   - **@scion/toolkit.internal** is published to: https://www.npmjs.com/package/@scion/toolkit.internal.
-   - **Testing App** is deployed to:
-      - https://scion-toolkit-testing-app.vercel.app.
-      - https://scion-toolkit-testing-app-vX-X-X.vercel.app.
-  
+1. Update `/projects/scion/toolkit/package.json` with the new version.
+2. Run `npm run toolkit:changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
+3. Commit the changed files using the following commit message: `release(toolkit): vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
+4. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
+5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
+6. Verify that:
+   - `@scion/toolkit` is published to: https://www.npmjs.com/package/@scion/toolkit.
+   - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
+
+</details>
+
+<details>
+  <summary><strong>Release Checklist for @scion/components and related artifacts</strong></summary>
+
+Instructions for releasing the `@scion/components` module.
+
+1. Update `/projects/scion/components/package.json` with the new version.
+2. Run `npm run components:changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
+3. Commit the changed files using the following commit message: `release(components): vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
+4. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
+5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
+6. Verify that:
+   - `@scion/components` is published to: https://www.npmjs.com/package/@scion/components.
+   - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
+
+</details>
+
+<details>
+  <summary><strong>Release Checklist for @scion/components.internal and related artifacts</strong></summary>
+
+Instructions for releasing the `@scion/components.internal` module.
+
+1. Update `/projects/scion/components.internal/package.json` with the new version.
+2. Run `npm run components.internal:changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
+3. Commit the changed files using the following commit message: `release(ɵcomponents): vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
+4. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
+5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
+6. Verify that:
+   - `@scion/components.internal` is published to: https://www.npmjs.com/package/@scion/components.internal.
+   - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
+
 </details>
 
 [link-github-actions-workflow]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md

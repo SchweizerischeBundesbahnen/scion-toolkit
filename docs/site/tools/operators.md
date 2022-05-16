@@ -5,12 +5,12 @@
 
 ## [SCION Toolkit][menu-home] > Operators
 
-The NPM sub-module `@scion/toolkit/operators` provides a set of useful RxJS operators. It has no dependency on the Angular framework.
+The NPM sub-module `@scion/toolkit/operators` provides a set of useful RxJS operators.
 
 To use the operators, install the NPM module `@scion/toolkit` as following:
 
 ```
-npm install --save @scion/toolkit
+npm install @scion/toolkit --save
 ```
 
 <details>
@@ -271,7 +271,7 @@ The snippet above prints the following output to the console:
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

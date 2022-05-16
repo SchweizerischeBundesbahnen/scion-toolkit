@@ -9,7 +9,7 @@
  */
 
 import {EMPTY, fromEvent, merge, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
-import {distinctUntilChanged, filter, mapTo, mergeMap, startWith, takeUntil} from 'rxjs/operators';
+import {distinctUntilChanged, filter, map, mergeMap, startWith, takeUntil} from 'rxjs/operators';
 
 /**
  * Allows observing items contained in web storage (local storage or session storage).
@@ -158,7 +158,7 @@ export class WebStorage {
     return this.observe$(key, {emitIfAbsent: true})
       .pipe(
         filter(() => !this.isPresent(key)),
-        mapTo(undefined),
+        map(() => undefined),
       );
   }
 }

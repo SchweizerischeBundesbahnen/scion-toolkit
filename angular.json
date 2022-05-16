@@ -44,54 +44,23 @@
         }
       }
     },
-    "@scion/toolkit.e2e": {
-      "projectType": "application",
-      "root": "projects/scion/toolkit.e2e",
-      "architect": {
-        "e2e": {
-          "builder": "@angular-devkit/build-angular:protractor",
-          "options": {
-            "protractorConfig": "projects/scion/toolkit.e2e/protractor.conf.js",
-            "webdriverUpdate": false
-          },
-          "configurations": {
-            "production": {
-              "devServerTarget": "toolkit-testing-app:serve:production"
-            },
-            "development": {
-              "devServerTarget": "toolkit-testing-app:serve:development"
-            }
-          },
-          "defaultConfiguration": "development"
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "projects/scion/toolkit.e2e/**/*.ts",
-              "projects/scion/toolkit.e2e/**/*.html"
-            ]
-          }
-        }
-      }
-    },
-    "@scion/toolkit.internal": {
+    "@scion/components": {
       "projectType": "library",
-      "root": "projects/scion/toolkit.internal",
-      "sourceRoot": "projects/scion/toolkit.internal/src",
+      "root": "projects/scion/components",
+      "sourceRoot": "projects/scion/components/src",
       "prefix": "sci",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
-            "project": "projects/scion/toolkit.internal/ng-package.json"
+            "project": "projects/scion/components/ng-package.json"
           },
           "configurations": {
             "production": {
-              "tsConfig": "projects/scion/toolkit.internal/tsconfig.lib.prod.json"
+              "tsConfig": "projects/scion/components/tsconfig.lib.prod.json"
             },
             "development": {
-              "tsConfig": "projects/scion/toolkit.internal/tsconfig.lib.json"
+              "tsConfig": "projects/scion/components/tsconfig.lib.json"
             }
           },
           "defaultConfiguration": "production"
@@ -99,9 +68,9 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/scion/toolkit.internal/src/test.ts",
-            "tsConfig": "projects/scion/toolkit.internal/tsconfig.spec.json",
-            "karmaConfig": "projects/scion/toolkit.internal/karma.conf.js",
+            "main": "projects/scion/components/src/test.ts",
+            "tsConfig": "projects/scion/components/tsconfig.spec.json",
+            "karmaConfig": "projects/scion/components/karma.conf.js",
             "inlineStyleLanguage": "scss"
           }
         },
@@ -109,30 +78,71 @@
           "builder": "@angular-eslint/builder:lint",
           "options": {
             "lintFilePatterns": [
-              "projects/scion/toolkit.internal/**/*.ts",
-              "projects/scion/toolkit.internal/**/*.html"
+              "projects/scion/components/**/*.ts",
+              "projects/scion/components/**/*.html"
             ]
           }
         }
       }
     },
-    "toolkit-testing-app": {
+    "@scion/components.internal": {
+      "projectType": "library",
+      "root": "projects/scion/components.internal",
+      "sourceRoot": "projects/scion/components.internal/src",
+      "prefix": "sci",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/scion/components.internal/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/scion/components.internal/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/scion/components.internal/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/scion/components.internal/src/test.ts",
+            "tsConfig": "projects/scion/components.internal/tsconfig.spec.json",
+            "karmaConfig": "projects/scion/components.internal/karma.conf.js",
+            "inlineStyleLanguage": "scss"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/scion/components.internal/**/*.ts",
+              "projects/scion/components.internal/**/*.html"
+            ]
+          }
+        }
+      }
+    },
+    "components": {
       "projectType": "application",
-      "root": "apps/toolkit-testing-app",
-      "sourceRoot": "apps/toolkit-testing-app/src",
+      "root": "apps/components",
+      "sourceRoot": "apps/components/src",
       "prefix": "sci",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/toolkit-testing-app",
-            "index": "apps/toolkit-testing-app/src/index.html",
-            "main": "apps/toolkit-testing-app/src/main.ts",
-            "polyfills": "apps/toolkit-testing-app/src/polyfills.ts",
-            "tsConfig": "apps/toolkit-testing-app/tsconfig.app.json",
+            "outputPath": "dist/components-app",
+            "index": "apps/components/src/index.html",
+            "main": "apps/components/src/main.ts",
+            "polyfills": "apps/components/src/polyfills.ts",
+            "tsConfig": "apps/components/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "apps/toolkit-testing-app/src/assets",
+              "apps/components/src/assets",
               {
                 "glob": "favicon.ico",
                 "input": "resources/branding",
@@ -140,11 +150,12 @@
               }
             ],
             "styles": [
-              "apps/toolkit-testing-app/src/styles.scss"
+              "apps/components/src/styles.scss"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
-                "projects/scion/toolkit.internal/widgets"
+                "projects/scion/components",
+                "projects/scion/components.internal"
               ]
             },
             "scripts": []
@@ -153,8 +164,8 @@
             "production": {
               "fileReplacements": [
                 {
-                  "replace": "apps/toolkit-testing-app/src/environments/environment.ts",
-                  "with": "apps/toolkit-testing-app/src/environments/environment.prod.ts"
+                  "replace": "apps/components/src/environments/environment.ts",
+                  "with": "apps/components/src/environments/environment.prod.ts"
                 }
               ],
               "outputHashing": "all"
@@ -174,10 +185,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "toolkit-testing-app:build:production"
+              "browserTarget": "components:build:production"
             },
             "development": {
-              "browserTarget": "toolkit-testing-app:build:development"
+              "browserTarget": "components:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -186,8 +197,8 @@
           "builder": "@angular-eslint/builder:lint",
           "options": {
             "lintFilePatterns": [
-              "apps/toolkit-testing-app/**/*.ts",
-              "apps/toolkit-testing-app/**/*.html"
+              "apps/components/**/*.ts",
+              "apps/components/**/*.html"
             ]
           }
         }

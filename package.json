@@ -1,6 +1,5 @@
 {
   "name": "scion-toolkit",
-  "version": "13.0.0-beta.2",
   "description": "SCION Toolkit is a collection of UI components and utilities designed primarily for use in SCION libraries and their demo and test applications.",
   "license": "EPL-2.0",
   "homepage": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit",
@@ -11,31 +10,31 @@
     "name": "SCION contributors"
   },
   "scripts": {
-    "before-push": "run-s build lint test:headless e2e:headless",
+    "before-push": "run-s build lint test:headless",
     "build": "run-s **:*:build",
+    "start": "run-s components-app:serve",
     "lint": "run-p **:*:lint",
-    "test": "run-s **:*:test",
-    "test:headless": "cross-env HEADLESS=true run-s **:*:test",
-    "e2e": "run-s **:*:e2e",
-    "e2e:headless": "cross-env HEADLESS=HEADLESS run-s **:*:e2e",
-    "pre:e2e": "npx webdriver-manager update --versions.chrome=99.0.4844.17",
+    "test": "run-p **:*:test",
+    "test:headless": "cross-env HEADLESS=true run-p **:*:test",
 
     "toolkit:lint": "ng lint @scion/toolkit",
-    "toolkit.e2e:lint": "ng lint @scion/toolkit.e2e",
     "toolkit:test": "ng test @scion/toolkit",
-    "toolkit:e2e": "ng e2e @scion/toolkit.e2e",
     "toolkit:build": "ng build --configuration production @scion/toolkit",
-    "posttoolkit:build": "scss-bundle -e projects/scion/toolkit/viewport/src/theme/_scrollbar.scss -o dist/scion/toolkit/viewport/scrollbar.scss",
+    "toolkit:changelog": "conventional-changelog --commit-path projects/scion/toolkit -k projects/scion/toolkit -t toolkit- -p angular -i CHANGELOG_TOOLKIT.md -s && markdown-include docs/site/changelog-toolkit/changelog.template.json",
 
-    "toolkit.internal:lint": "ng lint @scion/toolkit.internal",
-    "toolkit.internal:test": "ng test @scion/toolkit.internal",
-    "toolkit.internal:build": "ng build --configuration production @scion/toolkit.internal",
+    "components:lint": "ng lint @scion/components",
+    "components:test": "ng test @scion/components",
+    "components:build": "ng build --configuration production @scion/components",
+    "components:changelog": "conventional-changelog --commit-path projects/scion/components -k projects/scion/components -t components- -p angular -i CHANGELOG_COMPONENTS.md -s && markdown-include docs/site/changelog-components/changelog.template.json",
 
-    "toolkit-testing-app:serve": "ng serve toolkit-testing-app",
-    "toolkit-testing-app:lint": "ng lint toolkit-testing-app",
-    "toolkit-testing-app:build": "ng build --configuration=production toolkit-testing-app",
+    "components.internal:lint": "ng lint @scion/components.internal",
+    "components.internal:test": "ng test @scion/components.internal",
+    "components.internal:build": "ng build --configuration production @scion/components.internal",
+    "components.internal:changelog": "conventional-changelog --commit-path projects/scion/components.internal -k projects/scion/components.internal -t ɵcomponents- -p angular -i CHANGELOG_COMPONENTS_INTERNAL.md -s && markdown-include docs/site/changelog-components.internal/changelog.template.json",
 
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s && markdown-include docs/site/changelog/changelog.template.json",
+    "components-app:serve": "ng serve components",
+    "components-app:lint": "ng lint components",
+    "components-app:build": "ng build --configuration=production components",
 
     "github-actions:tag-release-commit:build": "ncc build .github/actions/tag-release-commit/index.ts -o .github/actions/tag-release-commit/dist",
     "github-actions:npm-publish:build": "ncc build .github/actions/npm-publish/index.ts -o .github/actions/npm-publish/dist",
@@ -81,7 +80,6 @@
     "eslint-plugin-deprecation": "1.3.2",
     "eslint-plugin-rxjs": "5.0.2",
     "jasmine-core": "4.0.0",
-    "jasmine-spec-reporter": "7.0.0",
     "karma": "6.3.16",
     "karma-chrome-launcher": "3.1.0",
     "karma-coverage": "2.2.0",
@@ -90,13 +88,9 @@
     "markdown-include": "0.4.3",
     "ng-packagr": "13.2.1",
     "npm-run-all": "4.1.5",
-    "protractor": "7.0.0",
     "puppeteer": "13.3.1",
-    "scss-bundle": "3.1.2",
-    "ts-node": "10.5.0",
-    "tsconfig-paths": "3.12.0",
     "typescript": "4.5.5",
-    "vercel": "23.1.2"
+    "vercel": "24.0.0"
   },
   "repository": {
     "type": "git",

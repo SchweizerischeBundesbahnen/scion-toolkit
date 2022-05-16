@@ -1,0 +1,45 @@
+@use 'components.internal' as sci-ɵcomponents;
+
+:host {
+  display: inline-flex;
+  flex-direction: row;
+  @include sci-ɵcomponents.theme-input-field(5px);
+  padding: .25em .5em;
+
+  > input {
+    flex: auto;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    padding: 0;
+    width: 0; // allows the input to shrink past UA minimal width
+  }
+
+  > button.clear {
+    flex: none;
+    align-self: center;
+    line-height: 1;
+    font-size: 1em;
+    height: 1em;
+    margin-right: .25em;
+  }
+
+  > label.filter-icon {
+    flex: none;
+    align-self: center;
+    user-select: none;
+    color: var(--sci-color-P400);
+  }
+
+  &:focus-within:not(.disabled) {
+    > label.filter-icon, > button.clear {
+      color: var(--sci-color-accent);
+    }
+  }
+
+  &:not(:hover), &.disabled, &.empty {
+    > button.clear {
+      visibility: hidden;
+    }
+  }
+}

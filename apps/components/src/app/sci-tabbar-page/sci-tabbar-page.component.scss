@@ -1,0 +1,42 @@
+@use '@scion/components.internal' as sci-ɵcomponents;
+
+:host {
+  display: block;
+
+  > sci-tabbar {
+    height: 500px;
+
+    pre {
+      white-space: pre-line;
+    }
+  }
+
+  > section.settings {
+    display: grid;
+    grid-template-columns: min-content auto;
+    gap: 1em;
+    margin-top: 2em;
+    border: 1px solid var(--sci-color-P400);
+    border-radius: 5px;
+    padding: 1em;
+
+    > header {
+      font-weight: bold;
+      margin-bottom: 1em;
+      grid-column: 1/-1;
+    }
+
+    > input {
+      @include sci-ɵcomponents.theme-input-field();
+      grid-column: 1/-1;
+    }
+
+    > sci-form-field {
+      grid-column: 1/-1;
+    }
+
+    > button {
+      grid-column: 1/-1;
+    }
+  }
+}

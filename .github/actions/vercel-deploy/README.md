@@ -50,7 +50,7 @@ Set to create a deployment for production domains specified on the project. Defa
 
 This action has no outputs.
 
-## Example usage
+## Usage
 
 ```
 - name: Deploy to Vercel

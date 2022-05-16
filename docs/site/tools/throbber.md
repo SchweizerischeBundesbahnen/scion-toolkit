@@ -5,25 +5,26 @@
 
 ## [SCION Toolkit][menu-home] > Throbber
 
-The NPM sub-module `@scion/toolkit/throbber` provides an animated graphical Angular component to indicate the execution of an action. A throbber is commonly referred to as spinner.
+The NPM sub-module `@scion/components/throbber` provides an animated graphical Angular component to indicate the execution of an action. A throbber is commonly referred to as spinner.
 
 ***
-Click [here](https://scion-toolkit-testing-app.vercel.app/#/sci-throbber) for a demo of the throbber component and supported throbber types in our internal test application.
+Click [here](https://components.scion.vercel.app/#/sci-throbber) for a demo of the throbber component and supported throbber types in our internal test application.
 ***
 
-<!--- USAGE --->
+<!--- INSTALLATION AND USAGE --->
 <details>
-  <summary><strong>Usage</strong></summary>
+  <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
-    ```
-    npm install --save @scion/toolkit
-    ```
+1. Install `@scion/components` using the NPM command-line tool: 
+   ```
+   npm install @scion/components @scion/toolkit @angular/cdk --save
+   ```
+   > The library requires some peer to be installed. By using the above command, those are installed as well.
 
 1. Import `SciThrobberModule` in the module where to use the throbber:
    
    ```typescript
-   import { SciThrobberModule } from '@scion/toolkit/throbber';
+   import { SciThrobberModule } from '@scion/components/throbber';
 
    @NgModule({
      imports: [SciThrobberModule]
@@ -89,7 +90,7 @@ sci-throbber {
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

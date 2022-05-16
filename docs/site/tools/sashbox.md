@@ -5,25 +5,26 @@
 
 ## [SCION Toolkit][menu-home] > Sashbox
 
-The NPM sub-module `@scion/toolkit/sashbox` provides an Angular sashbox component for splitting content into multiple parts, so-called sashes. The user can resize the sashes by moving the splitter between the sashes. 
+The NPM sub-module `@scion/components/sashbox` provides an Angular sashbox component for splitting content into multiple parts, so-called sashes. The user can resize the sashes by moving the splitter between the sashes. 
 
 ***
-Click [here](https://scion-toolkit-testing-app.vercel.app/#/sci-sashbox) for a demo of the sashbox component in our internal test application.
+Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of the sashbox component in our internal test application.
 ***
 
-<!--- USAGE --->
+<!--- INSTALLATION AND USAGE --->
 <details>
-  <summary><strong>Usage</strong></summary>
+  <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
-    ```
-    npm install --save @scion/toolkit
-    ```
+1. Install `@scion/components` using the NPM command-line tool: 
+   ```
+   npm install @scion/components @scion/toolkit @angular/cdk --save
+   ```
+   > The library requires some peer to be installed. By using the above command, those are installed as well.
 
 1. Import `SciSashboxModule` in the module where to use the sashbox:
    
    ```typescript
-   import { SciSashboxModule } from '@scion/toolkit/sashbox';
+   import { SciSashboxModule } from '@scion/components/sashbox';
 
    @NgModule({
      imports: [SciSashboxModule]
@@ -162,7 +163,7 @@ sci-sashbox {
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

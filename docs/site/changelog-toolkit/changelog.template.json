@@ -1,0 +1,4 @@
+{
+  "build": "docs/site/changelog-toolkit/changelog.md",
+  "files": ["docs/site/changelog-toolkit/changelog.template.md"]
+}

@@ -34,39 +34,34 @@ jobs:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm run lint
-  build-toolkit:
-    name: 'Building Toolkit'
+  build-libs:
+    name: 'Building Libs'
     needs: install
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.root-package-json.outputs.version }}
+      toolkit-version: ${{ steps.toolkit-package-json.outputs.version }}
+      components-version: ${{ steps.components-package-json.outputs.version }}
+      components-internal-version: ${{ steps.components-internal-package-json.outputs.version }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: 'Reading package.json version of project root'
-        uses: ./.github/actions/package-json
-        id: root-package-json
-        with:
-          path: package.json
       - name: 'Reading package.json version of scion/toolkit'
         uses: ./.github/actions/package-json
         id: toolkit-package-json
         with:
           path: projects/scion/toolkit/package.json
-      - name: 'Reading package.json version of scion/toolkit.internal'
+      - name: 'Reading package.json version of scion/components'
         uses: ./.github/actions/package-json
-        id: toolkit-internal-package-json
+        id: components-package-json
         with:
-          path: projects/scion/toolkit.internal/package.json
-      - name: 'Asserting package.json versions to be equal'
-        uses: ./.github/actions/equality-checker
+          path: projects/scion/components/package.json
+      - name: 'Reading package.json version of scion/components.internal'
+        uses: ./.github/actions/package-json
+        id: components-internal-package-json
         with:
-          values: |
-            ${{ steps.root-package-json.outputs.version }},
-            ${{ steps.toolkit-package-json.outputs.version }},
-            ${{ steps.toolkit-internal-package-json.outputs.version }}
+          path: projects/scion/components.internal/package.json
       - name: 'Restoring NPM modules from cache'
         uses: actions/cache@v2
         with:
@@ -74,21 +69,34 @@ jobs:
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Building @scion/toolkit'
         run: npm run toolkit:build
-      - name: 'Building @scion/toolkit.internal'
-        run: npm run toolkit.internal:build
-      - uses: actions/upload-artifact@v2
+      - name: 'Uploading dist/scion/toolkit'
+        uses: actions/upload-artifact@v2
         with:
-          name: dist
-          path: dist
+          name: toolkit-dist
+          path: dist/scion/toolkit
+      - name: 'Building @scion/components'
+        run: npm run components:build
+      - name: 'Uploading dist/scion/components'
+        uses: actions/upload-artifact@v2
+        with:
+          name: components-dist
+          path: dist/scion/components
+      - name: 'Building @scion/components.internal'
+        run: npm run components.internal:build
+      - name: 'Uploading dist/scion/components.internal'
+        uses: actions/upload-artifact@v2
+        with:
+          name: components-internal-dist
+          path: dist/scion/components.internal
   build-apps:
     name: 'Building Apps'
-    needs: build-toolkit
+    needs: build-libs
     runs-on: ubuntu-latest
     strategy:
       matrix:
         app:
-          - name: toolkit-testing-app
-            cmd: npm run toolkit-testing-app:build
+          - name: components-app
+            cmd: npm run components-app:build
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -99,11 +107,21 @@ jobs:
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - name: 'Downloading toolkit (dist)'
+      - name: 'Downloading dist/scion/toolkit'
         uses: actions/download-artifact@v2
         with:
-          name: dist
-          path: dist
+          name: toolkit-dist
+          path: dist/scion/toolkit
+      - name: 'Downloading dist/scion/components'
+        uses: actions/download-artifact@v2
+        with:
+          name: components-dist
+          path: dist/scion/components
+      - name: 'Downloading dist/scion/components.internal'
+        uses: actions/download-artifact@v2
+        with:
+          name: components-internal-dist
+          path: dist/scion/components.internal
       - name: 'Building ${{ matrix.app.name }}'
         run: ${{ matrix.app.cmd }}
       - uses: actions/upload-artifact@v2
@@ -112,7 +130,7 @@ jobs:
           path: dist/${{ matrix.app.name }}
   test:
     name: 'Unit Testing'
-    needs: build-toolkit
+    needs: build-libs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -124,92 +142,160 @@ jobs:
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - name: 'Downloading toolkit (dist)'
+      - name: 'Downloading dist/scion/toolkit'
         uses: actions/download-artifact@v2
         with:
-          name: dist
-          path: dist
+          name: toolkit-dist
+          path: dist/scion/toolkit
+      - name: 'Downloading dist/scion/components'
+        uses: actions/download-artifact@v2
+        with:
+          name: components-dist
+          path: dist/scion/components
+      - name: 'Downloading dist/scion/components.internal'
+        uses: actions/download-artifact@v2
+        with:
+          name: components-internal-dist
+          path: dist/scion/components.internal
       - run: npm run test:headless
-  e2e:
-    name: 'E2E Testing'
-    needs: [build-toolkit, build-apps]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v2
-        with:
-          path: ./node_modules
-          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - name: 'Downloading toolkit (dist)'
-        uses: actions/download-artifact@v2
-        with:
-          name: dist
-          path: dist
-      - run: npm run e2e:headless
-  release-guard:
-    name: 'Should release?'
+  toolkit-release-guard:
+    name: 'Should release @scion/toolkit?'
     if: github.ref == 'refs/heads/master'
     needs:
-      - build-toolkit
+      - build-libs
       - build-apps
       - lint
       - test
-      - e2e
     runs-on: ubuntu-latest
     outputs:
       should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
     steps:
       - uses: actions/checkout@v2
       - name: 'If release commit present, add release tag'
-        uses: ./.github/actions/tag-release-commit
+        uses: SchweizerischeBundesbahnen/scion-toolkit/.github/actions/tag-release-commit@master
         id: tag-release-commit
         with:
-          release-commit-message-pattern: 'release: v(.*)'
-          expected-version: ${{ needs.build-toolkit.outputs.version }}
-  release:
-    name: 'Releasing'
-    if: ${{ needs.release-guard.outputs.should-release == 'true' }}
-    needs: [release-guard, build-toolkit]
+          release-commit-message-pattern: 'release\(toolkit\): v(.*)'
+          expected-version: ${{ needs.build-libs.outputs.toolkit-version }}
+          git-tag: toolkit-%v
+  components-release-guard:
+    name: 'Should release @scion/components?'
+    if: github.ref == 'refs/heads/master'
+    needs:
+      - build-libs
+      - build-apps
+      - lint
+      - test
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'If release commit present, add release tag'
+        uses: SchweizerischeBundesbahnen/scion-toolkit/.github/actions/tag-release-commit@master
+        id: tag-release-commit
+        with:
+          release-commit-message-pattern: 'release\(components\): v(.*)'
+          expected-version: ${{ needs.build-libs.outputs.components-version }}
+          git-tag: components-%v
+  components-internal-release-guard:
+    name: 'Should release @scion/components.internal?'
+    if: github.ref == 'refs/heads/master'
+    needs:
+      - build-libs
+      - build-apps
+      - lint
+      - test
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'If release commit present, add release tag'
+        uses: SchweizerischeBundesbahnen/scion-toolkit/.github/actions/tag-release-commit@master
+        id: tag-release-commit
+        with:
+          release-commit-message-pattern: 'release\(ɵcomponents\): v(.*)'
+          expected-version: ${{ needs.build-libs.outputs.components-internal-version }}
+          git-tag: ɵcomponents-%v
+  deploy-components-app:
+    name: 'Deploying components application'
+    if: github.ref == 'refs/heads/master'
+    needs:
+      - build-libs
+      - build-apps
+      - lint
+      - test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v2
-        with:
-          path: ./node_modules
-          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - name: 'Downloading toolkit (dist)'
+      - name: 'Downloading dist/components-app'
         uses: actions/download-artifact@v2
         with:
-          name: dist
-          path: dist
-      - name: 'Downloading app: toolkit-testing-app (dist)'
-        uses: actions/download-artifact@v2
-        with:
-          name: toolkit-testing-app
-          path: dist/toolkit-testing-app
-      - name: 'Deploying toolkit-testing-app to Vercel'
+          name: components-app
+          path: dist/components-app
+      - name: 'Deploying components application to Vercel'
         uses: ./.github/actions/vercel-deploy
         with:
-          dist-folder: dist/toolkit-testing-app
+          dist-folder: dist/components-app
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           org-id: ${{ secrets.VERCEL_ORG_ID }}
-          project-id: ${{ secrets.VERCEL_SCION_TOOLKIT_TESTING_APP_PROJECT_ID }}
-          aliases: scion-toolkit-testing-app.vercel.app, scion-toolkit-testing-app-v%v.vercel.app
-          version: ${{ needs.build-toolkit.outputs.version }}
+          project-id: ${{ secrets.VERCEL_COMPONENTS_PROJECT_ID }}
+          version: ${{ needs.build-libs.outputs.components-version }}
+          aliases: |
+            components.scion.vercel.app,
+            components-v%v.scion.vercel.app,
+  release-toolkit:
+    name: 'Releasing @scion/toolkit'
+    if: ${{ needs.toolkit-release-guard.outputs.should-release == 'true' }}
+    needs: toolkit-release-guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Downloading dist/scion/toolkit'
+        uses: actions/download-artifact@v2
+        with:
+          name: toolkit-dist
+          path: dist/scion/toolkit
       - name: 'Publishing @scion/toolkit to NPM'
         uses: ./.github/actions/npm-publish
         with:
           dist-folder: dist/scion/toolkit
           npm-token: ${{ secrets.NPM_TOKEN }}
           dry-run: false
-      - name: 'Publishing @scion/toolkit.internal to NPM'
+  release-components:
+    name: 'Releasing @scion/components'
+    if: ${{ needs.components-release-guard.outputs.should-release == 'true' }}
+    needs: components-release-guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Downloading dist/scion/components'
+        uses: actions/download-artifact@v2
+        with:
+          name: components-dist
+          path: dist/scion/components
+      - name: 'Publishing @scion/components to NPM'
         uses: ./.github/actions/npm-publish
         with:
-          dist-folder: dist/scion/toolkit.internal
+          dist-folder: dist/scion/components
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          dry-run: false
+  release-components-internal:
+    name: 'Releasing @scion/components.internal'
+    if: ${{ needs.components-internal-release-guard.outputs.should-release == 'true' }}
+    needs: components-internal-release-guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Downloading dist/scion/components.internal'
+        uses: actions/download-artifact@v2
+        with:
+          name: components-internal-dist
+          path: dist/scion/components.internal
+      - name: 'Publishing @scion/components.internal to NPM'
+        uses: ./.github/actions/npm-publish
+        with:
+          dist-folder: dist/scion/components.internal
           npm-token: ${{ secrets.NPM_TOKEN }}
           dry-run: false

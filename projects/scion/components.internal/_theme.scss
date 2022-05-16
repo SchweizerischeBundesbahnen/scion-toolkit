@@ -1,0 +1,26 @@
+/**
+ * The package.json standard allows specifying conditional exports, not only for JavaScript files, but also for SASS files.
+ * They are supported by the Angular compiler, but not yet by all IDEs. Therefore, we additionally provide this entry point.
+ * See https://nodejs.org/api/packages.html#conditional-exports for more information about conditional SASS exports.
+ *
+ *
+ * ```package.json
+ * {
+ *   "exports": {
+ *     ".": {
+ *       "sass": "./_components.internal.scss",
+ *       "types": "./scion-components.internal.d.ts",
+ *       "esm2020": "./esm2020/scion-components.internal.mjs",
+ *       "es2020": "./fesm2020/scion-components.internal.mjs",
+ *       "es2015": "./fesm2015/scion-components.internal.mjs",
+ *       "node": "./fesm2015/scion-components.internal.mjs",
+ *       "default": "./fesm2020/scion-components.internal.mjs"
+ *     },
+ *     "./theme": {
+ *       "sass": "./theming/_theme.scss"
+ *     }
+ *   }
+ * }
+ * ```
+ */
+@forward './theming/theme';

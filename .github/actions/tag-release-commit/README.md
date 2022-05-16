@@ -39,7 +39,7 @@ The release version, or empty if not identified the head commit as release commi
 The release tag, or empty if not identified the head commit as release commit.
 
 
-## Example usage
+## Usage
 
 ```
 - uses: actions/checkout@v2

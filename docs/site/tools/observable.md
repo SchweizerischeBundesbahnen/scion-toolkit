@@ -5,12 +5,12 @@
 
 ## [SCION Toolkit][menu-home] > Observable
 
-The NPM sub-module `@scion/toolkit/observable` provides a set of useful RxJS observables. It has no dependency on the Angular framework.
+The NPM sub-module `@scion/toolkit/observable` provides a set of useful RxJS observables.
 
 To use the observables, install the NPM module `@scion/toolkit` as following:
  
 ```
-npm install --save @scion/toolkit
+npm install @scion/toolkit --save
 ```
 
 <details>
@@ -80,7 +80,7 @@ We are aware that this approach can be quite expensive, mainly because potential
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

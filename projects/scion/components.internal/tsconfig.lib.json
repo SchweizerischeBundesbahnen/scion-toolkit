@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../out-tsc/components.internal",
+    "declaration": true,
+    "declarationMap": true,
+    "stripInternal": true,
+    "inlineSources": true,
+    "types": []
+  },
+  "exclude": [
+    "src/test.ts",
+    "**/*.spec.ts"
+  ]
+}

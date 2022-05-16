@@ -1,0 +1,37 @@
+@use 'components.internal' as sci-ɵcomponents;
+
+:host {
+  display: inline-flex;
+  flex-flow: row wrap;
+
+  &.column-direction {
+    flex-flow: column;
+
+    > label {
+      flex: none;
+      align-self: flex-start;
+    }
+  }
+
+  > label {
+    flex: 0 1 130px;
+    align-self: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    user-select: none;
+    margin-right: 1em;
+    margin-bottom: .25em
+  }
+
+  > div.content {
+    flex: auto;
+    display: grid;
+
+    ::ng-deep {
+      input, textarea, select {
+        @include sci-ɵcomponents.theme-input-field();
+      }
+    }
+  }
+}

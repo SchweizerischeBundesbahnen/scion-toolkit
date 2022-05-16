@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {map, mergeMap, mergeMapTo, share, switchMap, take} from 'rxjs/operators';
+import {map, mergeMap, share, switchMap, take} from 'rxjs/operators';
 import {combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic} from 'rxjs';
 import {Arrays} from '@scion/toolkit/util';
 
@@ -87,7 +87,7 @@ export function bufferUntil<T>(closingNotifier$: Observable<any> | Promise<any>)
   const guard$ = from(closingNotifier$)
     .pipe(
       take(1),
-      mergeMapTo(EMPTY),
+      mergeMap(() => EMPTY),
       share({resetOnComplete: false, resetOnError: false, resetOnRefCountZero: false}),
     );
   return mergeMap((item: T) => concat(guard$, of(item)));
