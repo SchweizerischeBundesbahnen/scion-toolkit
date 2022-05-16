@@ -5,17 +5,17 @@
 
 ## [SCION Toolkit][menu-home] > Bean Manager
 
-The NPM sub-module `@scion/toolkit/bean-manager` provides a registry for singleton objects, so-called beans. The bean manager has no dependency on the Angular framework.
+The NPM sub-module `@scion/toolkit/bean-manager` provides a registry for singleton objects, so-called beans.
 
-### Tl;dr;
+### TL;DR
 The bean manager provides operations for obtaining references for beans. A bean can be any object, even primitive values can be beans. Beans are registered under a symbol in the bean manager. Using a bean's symbol, the bean can be looked up in the bean manager. By default, beans are instantiated lazy when looked up for the first time. Runlevels, part of the bean manager lifecycle, help with the controlled instantiation of dependent beans. Bean decorators allow for the installation of bean proxies to intercept method calls. 
 
 <details>
-  <summary><strong>Installation and usage</strong></summary>
+  <summary><strong>Installation and Usage</strong></summary>
 
 1. Install `@scion/toolkit` using the NPM command-line tool: 
     ```
-    npm install --save @scion/toolkit
+    npm install @scion/toolkit --save
     ```
 
 1. Register a bean in the bean manager. In its simplest form, the registration could look like this:
@@ -97,7 +97,7 @@ When registering a bean, you must tell the bean manager how to construct the bea
  |useFactory           |if to construct the bean with a factory function                      |```Beans.register(Logger, {useFactory: () => new ConsoleLogger()});```|
  |useExisting          |if to create an alias for another bean registered in the bean manager |```Beans.register(Logger, {useExisting: ConsoleLogger});```|
  
-> For Angular developers, the API looks familiar because inspired by Angular.
+> For Angular developers, the API looks familiar because inspired by Angular for registering providers.
 </details>
 
 <details>
@@ -218,6 +218,22 @@ Beans.registerInitializer({
 });
 ```
 
+You can also use an existing bean as initializer, as follows:
+```typescript
+class YourBean implements Initializer {
+
+  public init(): Promise<void> {
+    // doing some initialization work
+    return Promise.resolve();   
+  }
+}
+
+// Register the bean
+Beans.register(YourBean);
+// Register the initializer
+Beans.registerInitializer({useExisting: YourBean});
+```
+
 </details>
 
 <details>
@@ -254,7 +270,7 @@ Beans.register(Bean);
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

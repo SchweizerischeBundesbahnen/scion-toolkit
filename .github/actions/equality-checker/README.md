@@ -10,7 +10,7 @@ If not equal, this action sets its status to failed, resulting in concurrent act
 
 Comma-separated list of values to be checked for equality. The check is skipped if no values are given.
 
-## Example usage
+## Usage
 
 ```
   - name: 'Assert versions to be equal'

@@ -5,13 +5,13 @@
 
 ## [SCION Toolkit][menu-home] > UUID
 
-The NPM sub-module `@scion/toolkit/uuid` provides a pseudo-random identifier generator. It has no dependency on the Angular framework.
+The NPM sub-module `@scion/toolkit/uuid` provides a pseudo-random identifier generator.
 
-#### Usage
+#### Installation and Usage
 
 1. Install `@scion/toolkit` using the NPM command-line tool: 
     ```
-    npm install --save @scion/toolkit
+    npm install @scion/toolkit --save
     ```
 
 1. Import the `UUID` symbol from `@scion/toolkit/uuid` and invoke the method `randomUUID`:
@@ -24,7 +24,7 @@ The NPM sub-module `@scion/toolkit/uuid` provides a pseudo-random identifier gen
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

@@ -1,0 +1,38 @@
+{
+  "name": "@scion/components",
+  "version": "13.0.0",
+  "description": "Provides a collection of Angular components and directives primarily for use in SCION libraries such as `@scion/workbench` and `@scion/microfrontend-platform`. This library is not a comprehensive component library as its focus is on SCION requirements.",
+  "license": "EPL-2.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit",
+  "bugs": {
+    "url": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues"
+  },
+  "author": {
+    "name": "SCION contributors"
+  },
+  "exports": {
+    ".": {
+      "sass": "./_components.scss"
+    }
+  },
+  "dependencies": {
+    "tslib": "^2.0.0"
+  },
+  "peerDependencies": {
+    "@angular/common": "^13.0.0",
+    "@angular/core": "^13.0.0",
+    "@angular/cdk": "^13.0.0",
+    "@scion/toolkit": "^1.0.0",
+    "rxjs": "^7.5.0"
+  },
+  "keywords": [
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit.git"
+  }
+}

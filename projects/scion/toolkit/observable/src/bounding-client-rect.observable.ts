@@ -9,7 +9,7 @@
  */
 
 import {fromEvent, merge, Observable, OperatorFunction, pipe} from 'rxjs';
-import {auditTime, distinctUntilChanged, map, mapTo, startWith, switchMap} from 'rxjs/operators';
+import {auditTime, distinctUntilChanged, map, startWith, switchMap} from 'rxjs/operators';
 import {fromMutation$} from './mutation.observable';
 import {fromDimension$} from './dimension.observable';
 
@@ -70,7 +70,7 @@ function detectLayoutChange(): OperatorFunction<HTMLElement[], void> {
       fromDimension$(element),
       fromEvent(element, 'scroll', {passive: true})),
     ))),
-    mapTo(undefined),
+    map(() => undefined),
     // Debounce to a single emission as a layout change can cause multiple elements to change.
     auditTime(25),
   );

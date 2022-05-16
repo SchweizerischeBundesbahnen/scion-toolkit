@@ -24,7 +24,7 @@ Whether to perform a dry run without actually publishing the package to the NPM 
 
 This action has no outputs.
 
-## Example usage
+## Usage
 
 ```
 - name: Deploy to NPM

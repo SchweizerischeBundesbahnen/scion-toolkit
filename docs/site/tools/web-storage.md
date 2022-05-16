@@ -10,11 +10,11 @@ The NPM sub-module `@scion/toolkit/storage` allows the observation of values con
 > Local Storage maintains a persistent storage area per origin. Data does not expire and remains after the browser restarts. Session Storage also provides a separate storage area per origin, which, however, is only available for the duration of the page session (as long as the browser is open, including page reloads and restores). Each browser tab has its separate page session.
 
 <details>
-  <summary><strong>Usage</strong></summary>
+  <summary><strong>Installation and Usage</strong></summary>
 
 1. Install `@scion/toolkit` using the NPM command-line tool: 
     ```
-    npm install --save @scion/toolkit
+    npm install @scion/toolkit --save
     ```
 
 1. Create an instance of the `WebStorage` class by passing the storage implementor as constructor argument.
@@ -98,6 +98,12 @@ Alternatively, you could also use a DI token to provide `WebStorage` for depende
 #### Methods:
 
 <details>
+  <summary><strong>get</strong></summary>
+
+Returns the item associated with the given key, or `undefined` if not found.
+</details>
+
+<details>
   <summary><strong>observe$</strong></summary>
 
 Observes the item associated with the given key.
@@ -142,7 +148,7 @@ Checks if an item is present in the storage. Present also includes `null` and `u
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

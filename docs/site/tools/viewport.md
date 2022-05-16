@@ -5,27 +5,28 @@
 
 ## [SCION Toolkit][menu-home] > Viewport
 
-The NPM sub-module `@scion/toolkit/viewport` provides an Angular viewport component with scrollbars that sit on top of the viewport client. The component renders its `<ng-content>` inside a scrollable viewport, that shows a vertical and/or horizontal scrollbar when the `<ng-content>` overflows the component's boundaries.
+The NPM sub-module `@scion/components/viewport` provides an Angular viewport component with scrollbars that sit on top of the viewport client. The component renders its `<ng-content>` inside a scrollable viewport, that shows a vertical and/or horizontal scrollbar when the `<ng-content>` overflows the component's boundaries.
 
 `NgContent` is added to a CSS grid container with, by default, a single column, filling remaining space vertically and horizontally. See section '*Layouting the viewport content*' for more information.
 
 ***
-Click [here](https://scion-toolkit-testing-app.vercel.app/#/sci-viewport) for a demo of the viewport component in our internal test application.
+Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of the viewport component in our internal test application.
 ***
 
-<!--- USAGE --->
+<!--- INSTALLATION AND USAGE --->
 <details>
-  <summary><strong>Usage</strong></summary>
+  <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
-    ```
-    npm install --save @scion/toolkit
-    ```
+1. Install `@scion/components` using the NPM command-line tool: 
+   ```
+   npm install @scion/components @scion/toolkit @angular/cdk --save
+   ```
+   > The library requires some peer to be installed. By using the above command, those are installed as well.
 
 1. Import `SciViewportModule` in the module where to use the viewport:
    
    ```typescript
-   import { SciViewportModule } from '@scion/toolkit/viewport';
+   import { SciViewportModule } from '@scion/components/viewport';
 
    @NgModule({
      imports: [SciViewportModule]
@@ -34,7 +35,7 @@ Click [here](https://scion-toolkit-testing-app.vercel.app/#/sci-viewport) for a 
    }
    ```
 
-1. Wrap your content inside the `sci-viewport` component as following:
+1. Put your content inside the `<sci-viewport></sci-viewport>` component, as following:
 
    ```html
    <sci-viewport>
@@ -168,22 +169,27 @@ sci-viewport {
 <details>
   <summary><strong>Using the SCION scrollbar in other viewport implementations</strong></summary>
 
-The module `@scion/toolkit/viewport` exports the scrollbar component `<sci-scrollbar>` used internally by `<sci-viewport>`, allowing you to use it with other viewports as well, like for example with the `<cdk-virtual-scroll-viewport>` component of Angular CDK.
+The module `@scion/components/viewport` exports the scrollbar component `<sci-scrollbar>` used internally by `<sci-viewport>`, allowing you to use it with other viewports as well, like for example with the `<cdk-virtual-scroll-viewport>` component of Angular CDK.
 
 **The following example illustrates how to use `<sci-scrollbar>` in combination with `<cdk-virtual-scroll-viewport>`.**
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
-    ```
-    npm install --save @scion/toolkit
-    ```
+1. Install `@scion/components` using the NPM command-line tool: 
+   ```
+   npm install @scion/components @scion/toolkit @angular/cdk --save
+   ```
+   > The library requires some peer to be installed. By using the above command, those are installed as well.
 
 1. Import `SciViewportModule` in the module where to use the scrollbar:
    
    ```typescript
-   import { SciViewportModule } from '@scion/toolkit/viewport';
+   import { SciViewportModule } from '@scion/components/viewport';
+   import { ScrollingModule } from '@angular/cdk/scrolling';
 
    @NgModule({
-     imports: [SciViewportModule]
+     imports: [
+       SciViewportModule,
+       ScrollingModule
+     ]
    })
    export class YourModule {
    }
@@ -233,17 +239,17 @@ The module `@scion/toolkit/viewport` exports the scrollbar component `<sci-scrol
 1. Add the following code to the style template of the component:
 
    ```scss
-     @import '~@scion/toolkit/viewport/scrollbar';
+     @use '@scion/components' as sci-components;
    
      main {
        display: grid; // stretches content vertically and horizontally
        position: relative; // positioned anchor for the scrollbars
        overflow: hidden; // hides native scrollbars (shifted out of the visible viewport area)
-       @include hide-scrollbars-when-inactive(); // hide scrollbars when the user is not hovering the viewport.
+       @include sci-components.scrollbar-hide-when-inactive(); // hide scrollbars when the user is not hovering the viewport.
        height: 500px;
    
        > sci-scrollbar {
-         @include scrollbar(); // positions scrollbars
+         @include sci-components.scrollbar-position(); // positions scrollbars
        }
      }
    ```
@@ -256,7 +262,7 @@ The module `@scion/toolkit/viewport` exports the scrollbar component `<sci-scrol
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

@@ -5,12 +5,12 @@
 
 ## [SCION Toolkit][menu-home] > Util
 
-The NPM sub-module `@scion/toolkit/util` provides some utilities for dealing with collections and objects. It has no dependency on the Angular framework.
+The NPM sub-module `@scion/toolkit/util` provides some utilities for dealing with collections and objects.
 
 To use the utils, install the NPM module `@scion/toolkit` as following:
  
 ```
-npm install --save @scion/toolkit
+npm install @scion/toolkit --save
 ```
 
 <details>
@@ -100,7 +100,7 @@ npm install --save @scion/toolkit
  
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

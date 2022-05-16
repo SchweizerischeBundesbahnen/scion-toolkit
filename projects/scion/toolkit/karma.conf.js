@@ -52,6 +52,7 @@ module.exports = function (config) {
       process.env.HEADLESS ? 'ChromeHeadless' : 'Chrome',
     ],
     singleRun: !!process.env.HEADLESS,
+    failOnEmptyTestSuite: false,
     restartOnFileChange: true,
   });
 };

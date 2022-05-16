@@ -1,0 +1,62 @@
+/**
+ * Themes components of the SCION internal component library. Import this module in the global "styles.scss".
+ *
+ * ## Usage:
+ * ```scss
+ * @use '@scion/components.internal/theme';
+ * ```
+ *
+ * Alternatively, you can provide a custom theme to override individual color palettes (primary, accent, warning) or individual colors, as following:
+ *
+ * ```scss
+ * @use '@scion/components.internal/theme' with (
+ *   $theme: (
+ *     accent: (
+ *       50: #E8F5E9,
+ *       100: #C8E6C9,
+ *       200: #A5D6A7,
+ *       300: #81C784,
+ *       400: #66BB6A,
+ *       500: #4CAF50,
+ *       600: #43A047,
+ *       700: #388E3C,
+ *       800: #2E7D32,
+ *       900: #1B5E20,
+ *       default: 800,
+ *       lighter: 600,
+ *       darker: 900,
+ *     ),
+ *   )
+ * );
+ * ```
+ */
+
+@use '@angular/cdk';
+@use 'color-palettes' as sci-color-palettes;
+@use 'styles' as sci-styles;
+@use 'theming' as sci-theming;
+
+$theme: sci-color-palettes.$default !default; // use default theme if not provided a theme
+$theme: sci-theming.map-deep-merge(sci-color-palettes.$default, $theme); // merge overwritten theme (if any) with the default theme
+@include sci-theming.apply-theme($theme);
+
+@import url('https://fonts.googleapis.com/css?family=Roboto:normal,bold,italic,bolditalic|Roboto+Mono');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@include cdk.a11y-visually-hidden();
+@include cdk.overlay();
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  @include sci-styles.link;
+}
+
+button.material-icons {
+  @include sci-styles.mat-icon-button;
+}
+
+button:not(.material-icons) {
+  @include sci-styles.button;
+}

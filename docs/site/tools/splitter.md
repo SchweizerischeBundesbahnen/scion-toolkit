@@ -5,25 +5,26 @@
 
 ## [SCION Toolkit][menu-home] > Splitter
 
-The NPM sub-module `@scion/toolkit/splitter` provides an Angular splitter component, a visual element that allows the user to control the size of elements next to it.
+The NPM sub-module `@scion/components/splitter` provides an Angular splitter component, a visual element that allows the user to control the size of elements next to it.
 
 ***
-Click [here](https://scion-toolkit-testing-app.vercel.app/#/sci-sashbox) for a demo of the splitter component used in the [Sashbox Component][link-tool-sashbox].
+Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of the splitter component used in the [Sashbox Component][link-tool-sashbox].
 ***
 
-<!--- USAGE --->
+<!--- INSTALLATION AND USAGE --->
 <details>
-  <summary><strong>Usage</strong></summary>
+  <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
-    ```
-    npm install --save @scion/toolkit
-    ```
+1. Install `@scion/components` using the NPM command-line tool: 
+   ```
+   npm install @scion/components @scion/toolkit @angular/cdk --save
+   ```
+   > The library requires some peer to be installed. By using the above command, those are installed as well.
 
 1. Import `SciSplitterModule` in the module where to use the splitter:
    
    ```typescript
-   import { SciSplitterModule } from '@scion/toolkit/splitter';
+   import { SciSplitterModule } from '@scion/components/splitter';
 
    @NgModule({
      imports: [SciSplitterModule]
@@ -47,7 +48,7 @@ The `<sci-splitter>` Angular component is a visual element that allows the user 
 
 Note that this control neither does change the size of adjacent elements nor does it (re-)position itself, but emits the distance by which the user has theoretically moved the splitter. You must subscribe to these events and change your layout accordingly.
 
-In the toolkit, [SciSashboxComponent][link-tool-sashbox] uses this splitter to divide a layout into several resizable sections. Another use case would be a resizable sidebar panel.
+> [@scion/components/sashbox][link-tool-sashbox] uses this splitter to divide a layout into several resizable sections. Another use case would be a resizable sidebar panel.
 
 </details>
 
@@ -127,7 +128,7 @@ sci-splitter {
 [link-tool-sashbox]: /docs/site/tools/sashbox.md
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 

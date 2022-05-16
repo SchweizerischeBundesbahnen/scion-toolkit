@@ -5,20 +5,21 @@
 
 ## [SCION Toolkit][menu-home] > Dimension
 
-The NPM sub-module `@scion/toolkit/dimension` provides an Angular directive for observing the size of an HTML element. The directive emits the element's initial size, and then continuously emits when its size changes. It never completes.
+The NPM sub-module `@scion/components/dimension` provides an Angular directive for observing the size of an HTML element. The directive emits the element's initial size, and then continuously emits when its size changes. It never completes.
 
 <details>
-  <summary><strong>Usage</strong></summary>
+  <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
-    ```
-    npm install --save @scion/toolkit
-    ```
+1. Install `@scion/components` using the NPM command-line tool: 
+   ```
+   npm install @scion/components @scion/toolkit @angular/cdk --save
+   ```
+   > The library requires some peer to be installed. By using the above command, those are installed as well.
 
 1. Import `SciDimensionModule` in the module where to use the directive:
    
    ```typescript
-   import { SciDimensionModule } from '@scion/toolkit/dimension';
+   import { SciDimensionModule } from '@scion/components/dimension';
 
    @NgModule({
      imports: [SciDimensionModule]
@@ -53,7 +54,7 @@ You can control if to emit a dimension change inside or outside of the Angular z
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
-[menu-changelog]: /docs/site/changelog/changelog.md
+[menu-changelog]: /docs/site/changelog.md
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
