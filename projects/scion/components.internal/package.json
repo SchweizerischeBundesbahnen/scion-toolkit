@@ -31,7 +31,13 @@
     "@angular/cdk": "^13.0.0",
     "@scion/toolkit": "^1.0.0",
     "@scion/components": "^13.0.0",
+    "protractor": "^7.0.0",
     "rxjs": "^7.5.0"
+  },
+  "peerDependenciesMeta": {
+    "protractor": {
+      "optional": true
+    }
   },
   "keywords": [
   ],
