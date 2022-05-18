@@ -5,6 +5,15 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+## [13.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-13.0.0...ɵcomponents-13.0.1) (2022-05-18)
+
+
+### Bug Fixes
+
+* **ɵcomponents:** add Protractor as optional peer dependency as used by page objects ([ac7cd26](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/ac7cd26466dcaffedbf2796d163674d8f528b837))
+
+
+
 # [13.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/13.0.0-beta.2...ɵcomponents-13.0.0) (2022-05-17)
 
 
