@@ -19,7 +19,7 @@ Click [here](https://components.scion.vercel.app/#/sci-throbber) for a demo of t
    ```
    npm install @scion/components @scion/toolkit @angular/cdk --save
    ```
-   > The library requires some peer to be installed. By using the above command, those are installed as well.
+   > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
 1. Import `SciThrobberModule` in the module where to use the throbber:
    

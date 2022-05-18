@@ -14,7 +14,7 @@ The NPM sub-module `@scion/components/dimension` provides an Angular directive f
    ```
    npm install @scion/components @scion/toolkit @angular/cdk --save
    ```
-   > The library requires some peer to be installed. By using the above command, those are installed as well.
+   > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
 1. Import `SciDimensionModule` in the module where to use the directive:
    
