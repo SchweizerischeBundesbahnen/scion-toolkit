@@ -21,7 +21,7 @@ Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of t
    ```
    npm install @scion/components @scion/toolkit @angular/cdk --save
    ```
-   > The library requires some peer to be installed. By using the above command, those are installed as well.
+   > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
 1. Import `SciViewportModule` in the module where to use the viewport:
    
@@ -177,7 +177,7 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
    ```
    npm install @scion/components @scion/toolkit @angular/cdk --save
    ```
-   > The library requires some peer to be installed. By using the above command, those are installed as well.
+   > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
 1. Import `SciViewportModule` in the module where to use the scrollbar:
    
