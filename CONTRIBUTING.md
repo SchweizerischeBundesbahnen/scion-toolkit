@@ -291,7 +291,7 @@ Instructions for releasing the `@scion/toolkit` module.
 1. Update `/projects/scion/toolkit/package.json` with the new version.
 2. Run `npm run toolkit:changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
 3. Commit the changed files using the following commit message: `release(toolkit): vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
-4. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
+4. Push the commit to the branch `release/toolkit-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
 6. Verify that:
    - `@scion/toolkit` is published to: https://www.npmjs.com/package/@scion/toolkit.
@@ -307,7 +307,7 @@ Instructions for releasing the `@scion/components` module.
 1. Update `/projects/scion/components/package.json` with the new version.
 2. Run `npm run components:changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
 3. Commit the changed files using the following commit message: `release(components): vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
-4. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
+4. Push the commit to the branch `release/components-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
 6. Verify that:
    - `@scion/components` is published to: https://www.npmjs.com/package/@scion/components.
@@ -323,7 +323,7 @@ Instructions for releasing the `@scion/components.internal` module.
 1. Update `/projects/scion/components.internal/package.json` with the new version.
 2. Run `npm run components.internal:changelog` to generate the changelog. Then, review the generated changelog carefully and correct typos and formatting errors, if any.
 3. Commit the changed files using the following commit message: `release(ɵcomponents): vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
-4. Push the commit to the branch `release/X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
+4. Push the commit to the branch `release/ɵcomponents-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
 6. Verify that:
    - `@scion/components.internal` is published to: https://www.npmjs.com/package/@scion/components.internal.
