@@ -126,7 +126,7 @@
         }
       }
     },
-    "components": {
+    "components-app": {
       "projectType": "application",
       "root": "apps/components",
       "sourceRoot": "apps/components/src",
@@ -185,10 +185,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "components:build:production"
+              "browserTarget": "components-app:build:production"
             },
             "development": {
-              "browserTarget": "components:build:development"
+              "browserTarget": "components-app:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -213,8 +213,9 @@
       }
     }
   },
-  "defaultProject": "@scion/toolkit",
   "cli": {
-    "defaultCollection": "@angular-eslint/schematics"
+    "schematicCollections": [
+      "@angular-eslint/schematics"
+    ]
   }
 }

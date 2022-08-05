@@ -9,8 +9,8 @@
  */
 
 import {Component, ViewChild} from '@angular/core';
-import {FormControl} from '@angular/forms';
 import {SciTabbarComponent} from '@scion/components.internal/tabbar';
+import {FormControl} from '@angular/forms';
 
 @Component({
   selector: 'sci-tabbar-page',

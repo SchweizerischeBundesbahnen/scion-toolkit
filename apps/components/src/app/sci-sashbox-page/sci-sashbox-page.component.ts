@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
-import {FormControl} from '@angular/forms';
+import {FormControl, FormGroup} from '@angular/forms';
 import {SciSashboxComponent} from '@scion/components/sashbox';
 
 @Component({
@@ -18,8 +18,8 @@ import {SciSashboxComponent} from '@scion/components/sashbox';
 })
 export class SciSashboxPageComponent implements OnInit {
 
-  public directionFormControl = new FormControl('row');
-  public stylingFormControls = {
+  public directionFormControl = new FormControl<'column' | 'row'>('row', {nonNullable: true});
+  public stylingFormGroup = new FormGroup({
     '--sci-sashbox-gap': new FormControl(''),
     '--sci-sashbox-splitter-bgcolor': new FormControl(''),
     '--sci-sashbox-splitter-bgcolor_hover': new FormControl(''),
@@ -30,7 +30,7 @@ export class SciSashboxPageComponent implements OnInit {
     '--sci-sashbox-splitter-border-radius': new FormControl(''),
     '--sci-sashbox-splitter-opacity_active': new FormControl(''),
     '--sci-sashbox-splitter-opacity_hover': new FormControl(''),
-  };
+  });
 
   public sashes: Sash[] = [
     {visible: true, size: '250px', minSize: 75},
@@ -45,7 +45,7 @@ export class SciSashboxPageComponent implements OnInit {
 
   public ngOnInit(): void {
     // Set CSS variable default values.
-    Object.entries(this.stylingFormControls).forEach(([key, formControl]) => {
+    Object.entries(this.stylingFormGroup.controls).forEach(([key, formControl]) => {
       const defaultValue = getComputedStyle(this.sashBoxComponent.nativeElement).getPropertyValue(key);
       formControl.setValue(defaultValue);
     });
