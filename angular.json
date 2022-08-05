@@ -71,7 +71,12 @@
             "main": "projects/scion/components/src/test.ts",
             "tsConfig": "projects/scion/components/tsconfig.spec.json",
             "karmaConfig": "projects/scion/components/karma.conf.js",
-            "inlineStyleLanguage": "scss"
+            "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "projects/scion/components"
+              ]
+            }
           }
         },
         "lint": {
@@ -112,7 +117,13 @@
             "main": "projects/scion/components.internal/src/test.ts",
             "tsConfig": "projects/scion/components.internal/tsconfig.spec.json",
             "karmaConfig": "projects/scion/components.internal/karma.conf.js",
-            "inlineStyleLanguage": "scss"
+            "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "projects/scion/components",
+                "projects/scion/components.internal"
+              ]
+            }
           }
         },
         "lint": {
@@ -126,7 +137,7 @@
         }
       }
     },
-    "components": {
+    "components-app": {
       "projectType": "application",
       "root": "apps/components",
       "sourceRoot": "apps/components/src",
@@ -185,10 +196,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "components:build:production"
+              "browserTarget": "components-app:build:production"
             },
             "development": {
-              "browserTarget": "components:build:development"
+              "browserTarget": "components-app:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -213,8 +224,9 @@
       }
     }
   },
-  "defaultProject": "@scion/toolkit",
   "cli": {
-    "defaultCollection": "@angular-eslint/schematics"
+    "schematicCollections": [
+      "@angular-eslint/schematics"
+    ]
   }
 }
