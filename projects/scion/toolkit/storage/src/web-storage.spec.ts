@@ -254,7 +254,7 @@ describe('WebStorage', () => {
     it('should throw if failed to parse the value associated with the given key', () => {
       const testee = new WebStorage(window.sessionStorage);
       sessionStorage.setItem('key', 'VALUE NOT IN JSON FORMAT');
-      expect(() => testee.get('key')).toThrowError(/Unexpected token V in JSON/);
+      expect(() => testee.get('key')).toThrowError(/Unexpected token 'V'/);
     });
   });
 

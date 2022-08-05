@@ -9,20 +9,20 @@ We encourage other developers to join the project and contribute to making SCION
 <details>
   <summary><strong>Submitting a Pull Request</strong></summary>
   <br>
-  
+
 This section explains how to submit a pull request.
 
 1. Login to your GitHub account and fork the `SchweizerischeBundesbahnen/scion-toolkit` repo.
 1. Make your changes in a new Git branch. Name your branch in the form `issue/123` with `123` as the related GitHub issue number. Before submitting the pull request, please make sure that you comply with our coding and commit guidelines.
 1. Run the command `npm run before-push` to make sure that the project builds, passes all tests, and has no lint violations. Alternatively, you can also run the commands one by one, as following:
-   - `npm run test:headless`\
-      Runs all unit tests.
-   - `npm run lint`\
-      Lints all project files.
-   - `npm run build`\
-      Builds the project and related artifacts.
+  - `npm run test:headless`\
+    Runs all unit tests.
+  - `npm run lint`\
+    Lints all project files.
+  - `npm run build`\
+    Builds the project and related artifacts.
 1. Commit your changes using a descriptive commit message that follows our commit guidelines.
-1. Before submitting the pull request, ensure to have rebased your branch based on the master branch as we stick to the rebase policy to keep the repository history linear. 
+1. Before submitting the pull request, ensure to have rebased your branch based on the master branch as we stick to the rebase policy to keep the repository history linear.
 1. Push your branch to your fork on GitHub. In GitHub, send a pull request to `scion-toolkit:master`.
 1. If we suggest changes, please amend your commit and force push it to your GitHub repository.
 
@@ -34,7 +34,7 @@ This section explains how to submit a pull request.
   <summary><strong>Development</strong></summary>
   <br>
 
-Make sure to use Node.js version 16.14.0 for contributing to SCION. We suggest using [Node Version Manager](https://github.com/nvm-sh/nvm) if you need different Node.js versions for other projects.
+Make sure to use Node.js version 16.16.0 for contributing to SCION. We suggest using [Node Version Manager](https://github.com/nvm-sh/nvm) if you need different Node.js versions for other projects.
 
 For development, you can uncomment the section `PATH-OVERRIDE-FOR-DEVELOPMENT` in `tsconfig.json`. This allows running tests or serving applications without having to build dependent modules first.
 
@@ -44,24 +44,24 @@ The following is a summary of commands useful for development of `scion-toolkit`
 
 - **`npm run components:lint`**\
   Lints *@scion/components* library.
-  
+
 - **`npm run components:build`**\
   Builds *@scion/components* library.
-  
+
 - **`npm run components:test`**\
   Runs unit tests of *@scion/components* library.
- 
+
 - **`npm run components:changelog`**\
   Generates the changelog for *@scion/components* based on the commit history. The output is written to `CHANGELOG_COMPONENTS.md`, which will be included in `docs/site/changelog-components/changelog/changelog.md`.
-  
+
 ### Commands for working on the @scion/toolkit library
 
 - `npm run toolkit:lint`\
   Lints *@scion/toolkit* library.
-  
+
 - `npm run toolkit:build`\
   Builds *@scion/toolkit* library.
-  
+
 - `npm run toolkit:test`\
   Runs unit tests of *@scion/toolkit* library.
 
@@ -72,10 +72,10 @@ The following is a summary of commands useful for development of `scion-toolkit`
 
 - `npm run components.internal:lint`\
   Lints *@scion/components.internal* library.
-  
+
 - `npm run components.internal:build`\
   Builds *@scion/components.internal* library.
-  
+
 - `npm run components.internal:test`\
   Runs unit tests of *@scion/components.internal* library.
 
@@ -83,14 +83,14 @@ The following is a summary of commands useful for development of `scion-toolkit`
   Generates the changelog for *@scion/components.internal* based on the commit history. The output is written to `CHANGELOG_COMPONENTS_INTERNAL`, which will be included in `docs/site/changelog-components.internal/changelog/changelog.md`.
 
 ### Commands for working on the components application
-  
-- `npm run components-app:serve`\
+
+- `npm run components-app:serve` or `npm run start`\
   Serves the components app on [http://localhost:4200](http://localhost:4200).\
-  Uncomment the section `PATH-OVERRIDE-FOR-DEVELOPMENT` in `tsconfig.json` to have hot module reloading support. 
-  
+  Uncomment the section `PATH-OVERRIDE-FOR-DEVELOPMENT` in `tsconfig.json` to have hot module reloading support.
+
 - `npm run components-app:build`\
   Builds the components app into `dist` folder using the productive config.
-  
+
 - `npm run components-app:lint`\
   Lints the components app.
 
@@ -105,20 +105,20 @@ The following is a summary of commands useful for development of `scion-toolkit`
   <summary><strong>Code Formatting</strong></summary>
   <br>
 
-To ensure consistency within our code base, please use the following formatting settings.  
-  
+To ensure consistency within our code base, please use the following formatting settings.
+
 - **For IntelliJ IDEA**\
   Import the code style settings of `.editorconfig.intellij.xml` located in the project root.
 
 - **For other IDEs**\
   Import the code style settings of `.editorconfig` located in the project root.
-  
+
 </details>
 
 <details>
   <summary><strong>Coding Guidelines</strong></summary>
   <br>
-  
+
 In additional to the linting rules, we have the following conventions:
 
 - We believe in the [Best practices for a clean and performant Angular application](https://medium.freecodecamp.org/best-practices-for-a-clean-and-performant-angular-application-288e7b39eb6f) and the [Angular Style Guide](https://angular.io/guide/styleguide).
@@ -129,7 +129,7 @@ In additional to the linting rules, we have the following conventions:
 - We write each RxJS operator on a separate line, except when piping a single RxJS operator. Then, we write it on the same line as the pipe method.
 - We avoid nested RxJS subscriptions.
 - We document all public API methods, constants, functions, classes or interfaces.
-- We structure the CSS selectors in CSS files similar to the structure of the companion HTML file and favor the direct descendant selector (`>`) over the non-restrictive descendant selector (` `), except if there are good reasons not to do it. This gives us a visual by only reading the CSS file. 
+- We structure the CSS selectors in CSS files similar to the structure of the companion HTML file and favor the direct descendant selector (`>`) over the non-restrictive descendant selector (` `), except if there are good reasons not to do it. This gives us a visual by only reading the CSS file.
 - When referencing CSS classes from within E2E tests, we always prefix them with `e2e-`. We never reference e2e prefixed CSS classes in stylesheets.
 
 </details>
@@ -137,10 +137,10 @@ In additional to the linting rules, we have the following conventions:
 <details>
   <summary><strong>Commit Guidelines</strong></summary>
   <br>
-  
+
 We believe in a compact and well written Git commit history. Every commit should be a logically separated changeset. We use the commit messages to generate the changelog.
- 
-Each commit message consists of a **header**, a **summary** and a **footer**.  The header has a special format that includes a **type**, an optional **scope**, and a **subject**, as following:
+
+Each commit message consists of a **header**, a **summary** and a **footer**. The header has a special format that includes a **type**, an optional **scope**, and a **subject**, as following:
 
 ```
 <type>(<scope>): <subject>
@@ -152,7 +152,7 @@ Each commit message consists of a **header**, a **summary** and a **footer**.  T
 
 <details>
   <summary><strong>Type</strong></summary>
-  
+
 - `feat`: new feature
 - `fix`: bug fix
 - `docs`: changes to the documentation
@@ -168,9 +168,9 @@ Each commit message consists of a **header**, a **summary** and a **footer**.  T
 
 <details>
   <summary><strong>Scope</strong></summary>
-  
+
 The scope should be the name of the NPM package affected by the change. Optionally, you can also add the secondary entry point, separated by a forward slash.
-  
+
 - `toolkit`: If the change affects the `@scion/toolkit` NPM package.
 - `toolkit/<module>`: If the change affects the `@scion/toolkit/<module>` entry point.
 - `components`: If the change affects the `@scion/components` NPM package.
@@ -182,7 +182,7 @@ The scope should be the name of the NPM package affected by the change. Optional
 
 <details>
   <summary><strong>Subject</strong></summary>
-  
+
 The subject contains a succinct description of the change and follows the following rules:
 - written in the imperative, present tense ("change" not "changed" nor "changes")
 - starts with a lowercase letter
@@ -191,13 +191,13 @@ The subject contains a succinct description of the change and follows the follow
 
 <details>
   <summary><strong>Summary</strong></summary>
-  
-The summary describes the change. You can include the motivation for the change and contrast this with previous behavior.  
+
+The summary describes the change. You can include the motivation for the change and contrast this with previous behavior.
 </details>
 
 <details>
   <summary><strong>Footer</strong></summary>
-  
+
 In the footer, reference the GitHub issue and optionally close it with the `Closes` keyword, as following:
 
 ```
@@ -205,7 +205,7 @@ closes #123
 ```
 
 And finally, add notes about breaking changes, if there are any. Breaking changes start with the keyword `BREAKING CHANGE: `. The rest of the commit message is then used to describe the breaking change and should contain information about the migration.
-  
+
 ```
 BREAKING CHANGE: Removed deprecated API for xy.
 
@@ -224,7 +224,7 @@ To migrate:
 
 You can deprecate API in any version. However, it will still be present in the next major release. Removal of deprecated API will occur only in a major release.
 
-When deprecating API, mark it with the `@deprecated` JSDoc comment tag and include the current library version. Optionally, you can also specify which API to use instead, as following: 
+When deprecating API, mark it with the `@deprecated` JSDoc comment tag and include the current library version. Optionally, you can also specify which API to use instead, as following:
 
 ```ts
 /**
@@ -240,7 +240,7 @@ function someMethod(): void {
 <details>
   <summary><strong>Deployments</strong></summary>
   <br>
-  
+
 We deploy our documentations and applications to [Vercel](https://vercel.com). Vercel is a cloud platform for static sites and serverless functions. Applications are deployed using the SCION collaborator account (scion.collaborator@gmail.com) under the [SCION](https://vercel.com/scion) scope.
 
 We have the following toolkit related deployments:
@@ -248,13 +248,13 @@ We have the following toolkit related deployments:
 | Deployment             | Vercel Project                            | URL                                 |
 |------------------------|-------------------------------------------|-------------------------------------|
 | Components Application | https://vercel.com/scion/scion-components | https://components.scion.vercel.app |
- 
+
 </details>
 
 <details>
   <summary><strong>NPM Packages</strong></summary>
   <br>
-  
+
 We publish our packages to the [NPM registry](https://www.npmjs.com/). Packages are published using the SCION collaborator account (scion.collaborator) under the [SCION](https://www.npmjs.com/org/scion) organization.
 
 We have the following toolkit related packages:
@@ -294,8 +294,8 @@ Instructions for releasing the `@scion/toolkit` module.
 4. Push the commit to the branch `release/toolkit-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
 6. Verify that:
-   - `@scion/toolkit` is published to: https://www.npmjs.com/package/@scion/toolkit.
-   - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
+  - `@scion/toolkit` is published to: https://www.npmjs.com/package/@scion/toolkit.
+  - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
 
 </details>
 
@@ -310,8 +310,8 @@ Instructions for releasing the `@scion/components` module.
 4. Push the commit to the branch `release/components-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
 6. Verify that:
-   - `@scion/components` is published to: https://www.npmjs.com/package/@scion/components.
-   - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
+  - `@scion/components` is published to: https://www.npmjs.com/package/@scion/components.
+  - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
 
 </details>
 
@@ -326,8 +326,8 @@ Instructions for releasing the `@scion/components.internal` module.
 4. Push the commit to the branch `release/ɵcomponents-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
 6. Verify that:
-   - `@scion/components.internal` is published to: https://www.npmjs.com/package/@scion/components.internal.
-   - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
+  - `@scion/components.internal` is published to: https://www.npmjs.com/package/@scion/components.internal.
+  - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
 
 </details>
 
