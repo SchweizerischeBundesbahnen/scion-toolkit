@@ -17,7 +17,7 @@
   </section>
 </form>
 
-<sci-accordion [variant]="form.get(VARIANT).value" [multi]="form.get(MULTI).value">
+<sci-accordion [variant]="form.get(VARIANT)!.value" [multi]="form.get(MULTI)!.value">
   <ng-container *ngFor="let item of items">
     <!-- item -->
     <ng-template sciAccordionItem [panel]="panel">

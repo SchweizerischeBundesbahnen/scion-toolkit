@@ -16,9 +16,9 @@ import {Component} from '@angular/core';
 })
 export class SciFilterFieldPageComponent {
 
-  public output: string;
+  public output: string | null = null;
 
-  public disabled: boolean;
+  public disabled = false;
 
   public onFilter(filterText: string): void {
     this.output = filterText;

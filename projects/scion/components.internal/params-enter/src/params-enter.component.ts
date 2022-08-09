@@ -75,6 +75,11 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
     this.paramsFormArray.clear();
   }
 
+  private assertInputProperties(): void {
+    Defined.orElseThrow(this.title, () => Error('[NullInputError] Missing required input: `title`.'));
+    Defined.orElseThrow(this.paramsFormArray, () => Error('[NullInputError] Missing required input: `paramsFormArray`.'));
+  }
+
   /**
    * Creates a dictionary from the form controls in the given `FormArray`.
    *
@@ -107,10 +112,5 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
   public static toParamsMap(formArray: FormArray, returnNullIfEmpty: boolean): Map<string, any> | null;
   public static toParamsMap(formArray: FormArray, returnNullIfEmpty: boolean = true): Map<string, any> | null {
     return Maps.coerce(SciParamsEnterComponent.toParamsDictionary(formArray, returnNullIfEmpty), {coerceNullOrUndefined: false}) ?? null;
-  }
-
-  private assertInputProperties(): void {
-    Defined.orElseThrow(this.title, () => Error('[NullInputError] Missing required input: `title`.'));
-    Defined.orElseThrow(this.paramsFormArray, () => Error('[NullInputError] Missing required input: `paramsFormArray`.'));
   }
 }

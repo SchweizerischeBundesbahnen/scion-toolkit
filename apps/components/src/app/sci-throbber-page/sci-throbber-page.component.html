@@ -28,8 +28,8 @@
   </section>
 </form>
 
-<sci-throbber [type]="form.get(TYPE).value"
-              [style.--sci-throbber-color]="form.get(COLOR).value"
-              [style.--sci-throbber-size]="form.get(SIZE).value"
-              [style.--sci-throbber-duration]="form.get(DURATION).value">
+<sci-throbber [type]="form.get(TYPE)!.value"
+              [style.--sci-throbber-color]="form.get(COLOR)!.value"
+              [style.--sci-throbber-size]="form.get(SIZE)!.value"
+              [style.--sci-throbber-duration]="form.get(DURATION)!.value">
 </sci-throbber>
