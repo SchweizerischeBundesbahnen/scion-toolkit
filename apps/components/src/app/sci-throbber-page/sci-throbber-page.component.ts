@@ -33,7 +33,7 @@ export class SciThrobberPageComponent implements OnInit {
   public form: FormGroup;
 
   @ViewChild(SciThrobberComponent, {static: true, read: ElementRef})
-  public throbberComponent: ElementRef<HTMLElement>;
+  public throbberComponent!: ElementRef<HTMLElement>;
 
   constructor(formBuilder: FormBuilder) {
     this.form = formBuilder.group({
@@ -45,9 +45,9 @@ export class SciThrobberPageComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.form.get(COLOR).setValue(this.readCssVariableDefault('--sci-throbber-color'));
-    this.form.get(SIZE).setValue(this.readCssVariableDefault('--sci-throbber-size'));
-    this.form.get(DURATION).setValue(this.readCssVariableDefault('--sci-throbber-duration'));
+    this.form.get(COLOR)!.setValue(this.readCssVariableDefault('--sci-throbber-color'));
+    this.form.get(SIZE)!.setValue(this.readCssVariableDefault('--sci-throbber-size'));
+    this.form.get(DURATION)!.setValue(this.readCssVariableDefault('--sci-throbber-duration'));
   }
 
   private readCssVariableDefault(cssVariable: string): string {

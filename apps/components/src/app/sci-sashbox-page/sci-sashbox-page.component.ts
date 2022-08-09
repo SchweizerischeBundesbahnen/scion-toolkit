@@ -41,7 +41,7 @@ export class SciSashboxPageComponent implements OnInit {
   public glasspaneVisible = false;
 
   @ViewChild(SciSashboxComponent, {static: true, read: ElementRef})
-  public sashBoxComponent: ElementRef<HTMLElement>;
+  public sashBoxComponent!: ElementRef<HTMLElement>;
 
   public ngOnInit(): void {
     // Set CSS variable default values.

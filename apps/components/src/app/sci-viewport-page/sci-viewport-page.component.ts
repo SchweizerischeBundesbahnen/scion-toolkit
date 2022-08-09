@@ -47,21 +47,21 @@ export class SciViewportPageComponent implements OnInit, OnDestroy {
   public form: FormGroup;
 
   @ViewChild(SciViewportComponent, {static: true, read: ElementRef})
-  public viewportComponent: ElementRef<HTMLElement>;
+  public viewportComponent!: ElementRef<HTMLElement>;
 
   @HostBinding('style.--viewport-minheight')
   public get viewportMinHeight(): string {
-    return this.form.get(this.VIEWPORT_MIN_HEIGHT).value;
+    return this.form.get(this.VIEWPORT_MIN_HEIGHT)!.value;
   }
 
   @HostBinding('style.--viewport-maxheight')
   public get viewportMaxHeight(): string {
-    return this.form.get(this.VIEWPORT_MAX_HEIGHT).value;
+    return this.form.get(this.VIEWPORT_MAX_HEIGHT)!.value;
   }
 
   @HostBinding('style.--viewport-flex')
   public get viewportFlex(): string {
-    return this.form.get(this.VIEWPORT_FLEX).value;
+    return this.form.get(this.VIEWPORT_FLEX)!.value;
   }
 
   constructor(formBuilder: FormBuilder, @Inject(DOCUMENT) private _document: any) {
@@ -79,13 +79,13 @@ export class SciViewportPageComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit(): void {
-    this.form.get(SCROLLBAR_COLOR).value || this.form.get(SCROLLBAR_COLOR).setValue(this.readCssVariableDefault('--sci-viewport-scrollbar-color'));
+    this.form.get(SCROLLBAR_COLOR)!.setValue(this.readCssVariableDefault('--sci-viewport-scrollbar-color'));
   }
 
   private applyViewportContentStylesOnStyleChange(): void {
-    this.form.get(VIEWPORT_CONTENT_STYLES).valueChanges
+    this.form.get(VIEWPORT_CONTENT_STYLES)!.valueChanges
       .pipe(
-        startWith(this.form.get(VIEWPORT_CONTENT_STYLES).value),
+        startWith(this.form.get(VIEWPORT_CONTENT_STYLES)!.value),
         takeUntil(this._destroy$),
       )
       .subscribe((styles: string) => {
@@ -126,8 +126,8 @@ export class SciViewportPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this._styleSheet.deleteRule(0);
-    this._styleSheet.insertRule(rule);
+    this._styleSheet!.deleteRule(0);
+    this._styleSheet!.insertRule(rule);
   }
 
   private supportsConstructableStyleSheets(): boolean {
@@ -139,4 +139,3 @@ export class SciViewportPageComponent implements OnInit, OnDestroy {
     this.uninstallStyleSheet();
   }
 }
-

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component} from '@angular/core';
-import {FormArray} from '@angular/forms';
+import {FormArray, FormBuilder} from '@angular/forms';
 import {SciParamsEnterComponent} from '@scion/components.internal/params-enter';
 import {Dictionary} from '@scion/toolkit/util';
 
@@ -19,8 +19,12 @@ import {Dictionary} from '@scion/toolkit/util';
 })
 export class SciParamsEnterPageComponent {
 
-  public formArray = new FormArray([]);
-  public output: Dictionary;
+  public formArray: FormArray;
+  public output: Dictionary | null = null;
+
+  constructor(fb: FormBuilder) {
+    this.formArray = fb.array([]);
+  }
 
   public onPrint(): void {
     this.output = SciParamsEnterComponent.toParamsDictionary(this.formArray);
