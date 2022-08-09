@@ -49,7 +49,7 @@ export class SciSashDirective implements OnInit, OnChanges {
    * If not set, remaining space is distributed equally.
    */
   @Input()
-  public set size(size: string | number) {
+  public set size(size: string | number | null | undefined) {
     this._size = size ?? '1';
   }
 
