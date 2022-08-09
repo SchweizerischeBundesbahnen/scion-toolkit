@@ -25,8 +25,8 @@ export class SciTabbarPageComponent {
   public dynamicTabs = new FormControl('Tab 1,Tab 2,Tab 3');
   public selectedTabName = new FormControl();
 
-  @ViewChild(SciTabbarComponent)
-  public tabbar: SciTabbarComponent;
+  @ViewChild(SciTabbarComponent, {static: true})
+  public tabbar!: SciTabbarComponent;
 
   public onActivateTab(): void {
     this.tabbar.activateTab(this.selectedTabName.value);

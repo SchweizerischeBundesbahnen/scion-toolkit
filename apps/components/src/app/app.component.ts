@@ -28,14 +28,14 @@ export class AppComponent {
       .pipe(
         map(params => coerceBooleanProperty(params.get('internal'))),
         map(includeInternalTools => router.config
-          .filter(route => includeInternalTools || !route.data['internal'])
+          .filter(route => includeInternalTools || !route.data?.['internal'])
           .reduce((tools, route) => {
             return tools.concat({
               routerPath: `/${route.path}`,
-              name: route.path,
-              internal: route.data['internal'],
+              name: route.path!,
+              internal: route.data?.['internal'] ?? false,
             });
-          }, [] as Tool[])),
+          }, new Array<Tool>())),
         sortArray((tool1, tool2) => Number(tool1.internal) - Number(tool2.internal)),
       );
   }

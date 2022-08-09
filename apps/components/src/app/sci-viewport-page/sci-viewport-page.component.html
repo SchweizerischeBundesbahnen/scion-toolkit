@@ -44,9 +44,9 @@
   </section>
 </form>
 
-<sci-viewport [scrollbarStyle]="form.get(SCROLLBAR_PRESENTATION).value"
-              [style.--sci-viewport-scrollbar-color]="form.get(SCROLLBAR_COLOR).value">
-  <section *ngFor="let content of form.get(CONTENT).value | appSplit:'\n+'">
+<sci-viewport [scrollbarStyle]="form.get(SCROLLBAR_PRESENTATION)!.value"
+              [style.--sci-viewport-scrollbar-color]="form.get(SCROLLBAR_COLOR)!.value">
+  <section *ngFor="let content of form.get(CONTENT)!.value | appSplit:'\n+'">
     {{content}}
   </section>
 </sci-viewport>
