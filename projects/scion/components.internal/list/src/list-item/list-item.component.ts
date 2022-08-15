@@ -8,30 +8,28 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, Input} from '@angular/core';
+import {Component, ElementRef, HostBinding, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
 import {FocusableOption, FocusOrigin} from '@angular/cdk/a11y';
 import {SciListItemDirective} from '../list-item.directive';
 import {SciListStyle} from '../metadata';
+import {Defined} from '@scion/toolkit/util';
 
 @Component({
   selector: 'sci-list-item',
   templateUrl: './list-item.component.html',
   styleUrls: ['./list-item.component.scss'],
 })
-export class SciListItemComponent implements FocusableOption {
+export class SciListItemComponent implements FocusableOption, OnInit, OnChanges {
 
   @Input()
-  public listItem: SciListItemDirective;
+  public listItem!: SciListItemDirective;
 
   @HostBinding('class.active')
   @Input()
-  public active: boolean;
+  public active = false;
 
   @Input()
-  public style: SciListStyle;
-
-  @HostBinding('attr.disabled')
-  public disabled: boolean;
+  public style!: SciListStyle;
 
   @HostBinding('attr.tabindex')
   public tabindex = -1;
@@ -39,6 +37,17 @@ export class SciListItemComponent implements FocusableOption {
   constructor(private _host: ElementRef<HTMLElement>) {
   }
 
+  public ngOnInit(): void {
+    this.assertInputProperties();
+  }
+
+  public ngOnChanges(changes: SimpleChanges): void {
+    this.assertInputProperties();
+  }
+
+  /**
+   * @implements FocusableOption
+   */
   public focus(origin?: FocusOrigin): void {
     this._host.nativeElement.focus();
   }
@@ -46,5 +55,10 @@ export class SciListItemComponent implements FocusableOption {
   @HostBinding('class.option')
   public get optionStyle(): boolean {
     return this.style === 'option-item';
+  }
+
+  private assertInputProperties(): void {
+    Defined.orElseThrow(this.listItem, () => Error('[NullInputError] Missing required input: `listItem`.'));
+    Defined.orElseThrow(this.style, () => Error('[NullInputError] Missing required input: `style`.'));
   }
 }

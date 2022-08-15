@@ -18,7 +18,7 @@ import {filter, map, takeUntil} from 'rxjs/operators';
 import {SciListStyle} from './metadata';
 
 /**
- * Component that contains a list of items or options which can be filtered and associated with actions.
+ * Component that contains a list of items or options which can be optionally filtered and associated with actions.
  *
  * List items are contributed as content children in the form of a `<ng-template>` decorated with `sciListItem` directive.
  * Actions are modelled in the form of a `<ng-template>` and are inputs for respective `sciListItem` directive.
@@ -57,14 +57,15 @@ import {SciListStyle} from './metadata';
 })
 export class SciListComponent implements AfterViewInit, OnDestroy {
 
-  private _focusKeyManager: FocusKeyManager<SciListItemComponent>;
+  private _focusKeyManager: FocusKeyManager<SciListItemComponent> | undefined;
   private _destroy$ = new Subject<void>();
 
   /**
    * Specifies where to position the filter field.
+   * If not specified, does not display the filter field.
    */
   @Input()
-  public filterPosition: 'top' | 'bottom' | undefined;
+  public filterPosition?: 'top' | 'bottom';
 
   /**
    * Specifies whether to render list items or option items.
@@ -77,7 +78,7 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
    * If not specified, the focus order is according to the position in the document (tabindex=0).
    */
   @Input()
-  public tabindex = 0;
+  public tabindex?: number;
 
   /**
    * Emits filter text on filter change.
@@ -92,20 +93,20 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
   public selection = new EventEmitter<string>();
 
   @ContentChildren(SciListItemDirective)
-  public listItems: QueryList<SciListItemDirective>;
+  public listItems!: QueryList<SciListItemDirective>;
 
   @ViewChildren(SciListItemComponent)
-  private _listItemComponents: QueryList<SciListItemComponent>;
+  private _listItemComponents!: QueryList<SciListItemComponent>;
 
   @ViewChild(SciFilterFieldComponent)
-  private _filterField: SciFilterFieldComponent;
+  private _filterField!: SciFilterFieldComponent;
 
   @HostBinding('attr.tabindex')
   public componentTabindex = -1; // component itself is not focusable in sequential keyboard navigation, but tabindex (if any) set to filter field
 
   @HostListener('keydown', ['$event'])
   public onKeydown(event: KeyboardEvent): void {
-    this._focusKeyManager.onKeydown(event);
+    this._focusKeyManager!.onKeydown(event);
   }
 
   @HostListener('focus')
@@ -127,11 +128,11 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
   }
 
   public onItemClick(item: SciListItemComponent): void {
-    this._focusKeyManager.setActiveItem(item);
+    this._focusKeyManager!.setActiveItem(item);
   }
 
   public onFilter(filterText: string): void {
-    this._focusKeyManager.setActiveItem(-1);
+    this._focusKeyManager!.setActiveItem(-1);
     this.filter.emit(filterText);
   }
 
@@ -139,12 +140,12 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
     this._filterField && this._filterField.focusAndApplyKeyboardEvent(event);
   }
 
-  public get activeItem(): SciListItemComponent {
-    return this._focusKeyManager && this._focusKeyManager.activeItem;
+  public get activeItem(): SciListItemComponent | null {
+    return this._focusKeyManager?.activeItem ?? null;
   }
 
   public trackByFn: TrackByFunction<SciListItemDirective> = (index: number, item: SciListItemDirective): any => {
-    return item.key || item;
+    return item.key ?? item;
   };
 
   public ngOnDestroy(): void {

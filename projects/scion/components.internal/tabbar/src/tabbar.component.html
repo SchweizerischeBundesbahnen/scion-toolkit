@@ -3,7 +3,7 @@
     <li *ngFor="let tab of tabs$ | async"
         class="tab e2e-tab"
         [class.selected]="tab.isContentAttached()"
-        [ngClass]="tab.cssClass"
+        [ngClass]="$any(tab.cssClass)"
         (click)="onTabClick(tab)">
       {{tab.label}}
     </li>

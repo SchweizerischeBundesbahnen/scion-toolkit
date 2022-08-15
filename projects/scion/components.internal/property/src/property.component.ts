@@ -23,13 +23,13 @@ import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 })
 export class SciPropertyComponent {
 
-  public flattenedProperties: Dictionary;
-  private _keys: string[];
+  public flattenedProperties: Dictionary = {};
+  private _keys: string[] = [];
 
   @Input()
   public set properties(properties: Dictionary | Map<string, any>) {
     this.flattenedProperties = this.flattenObject(properties || {});
-    this._keys = Object.keys(this.flattenedProperties || {});
+    this._keys = Object.keys(this.flattenedProperties);
   }
 
   /**

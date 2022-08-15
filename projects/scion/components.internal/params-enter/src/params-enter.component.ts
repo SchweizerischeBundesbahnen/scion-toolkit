@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, Input} from '@angular/core';
+import {Component, ElementRef, HostBinding, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
 import {FormArray, FormBuilder} from '@angular/forms';
-import {Dictionary, Maps} from '@scion/toolkit/util';
+import {Defined, Dictionary, Maps} from '@scion/toolkit/util';
 
 export const PARAM_NAME = 'paramName';
 export const PARAM_VALUE = 'paramValue';
@@ -23,29 +23,37 @@ export const PARAM_VALUE = 'paramValue';
   templateUrl: './params-enter.component.html',
   styleUrls: ['./params-enter.component.scss'],
 })
-export class SciParamsEnterComponent {
+export class SciParamsEnterComponent implements OnInit, OnChanges {
 
   public readonly PARAM_NAME = PARAM_NAME;
   public readonly PARAM_VALUE = PARAM_VALUE;
 
   @Input()
-  public title: string;
+  public title!: string;
 
   @Input()
-  public paramsFormArray: FormArray;
+  public paramsFormArray!: FormArray;
 
   @Input()
   @HostBinding('class.removable')
-  public removable: boolean;
+  public removable = false;
 
   @Input()
   @HostBinding('class.addable')
-  public addable: boolean;
+  public addable = false;
 
   @HostBinding('attr.tabindex')
   public tabindex = -1;
 
   constructor(private _formBuilder: FormBuilder, private _host: ElementRef<HTMLElement>) {
+  }
+
+  public ngOnInit(): void {
+    this.assertInputProperties();
+  }
+
+  public ngOnChanges(changes: SimpleChanges): void {
+    this.assertInputProperties();
   }
 
   public onRemove(index: number): void {
@@ -72,11 +80,14 @@ export class SciParamsEnterComponent {
    *
    * By default, if empty, `null` is returned.
    */
+  public static toParamsDictionary(formArray: FormArray, returnNullIfEmpty?: true): Dictionary | null;
+  public static toParamsDictionary(formArray: FormArray, returnNullIfEmpty: false): Dictionary;
+  public static toParamsDictionary(formArray: FormArray, returnNullIfEmpty: boolean): Dictionary | null;
   public static toParamsDictionary(formArray: FormArray, returnNullIfEmpty: boolean = true): Dictionary | null {
     const params: Dictionary = {};
     formArray.controls.forEach(formGroup => {
-      const paramName = formGroup.get(PARAM_NAME).value;
-      params[paramName] = formGroup.get(PARAM_VALUE).value;
+      const paramName = formGroup.get(PARAM_NAME)!.value;
+      params[paramName] = formGroup.get(PARAM_VALUE)!.value;
     });
 
     if (!Object.keys(params).length && returnNullIfEmpty) {
@@ -91,7 +102,15 @@ export class SciParamsEnterComponent {
    *
    * By default, if empty, `null` is returned.
    */
+  public static toParamsMap(formArray: FormArray, returnNullIfEmpty?: true): Map<string, any> | null;
+  public static toParamsMap(formArray: FormArray, returnNullIfEmpty: false): Map<string, any>;
+  public static toParamsMap(formArray: FormArray, returnNullIfEmpty: boolean): Map<string, any> | null;
   public static toParamsMap(formArray: FormArray, returnNullIfEmpty: boolean = true): Map<string, any> | null {
-    return Maps.coerce(SciParamsEnterComponent.toParamsDictionary(formArray, returnNullIfEmpty), {coerceNullOrUndefined: false});
+    return Maps.coerce(SciParamsEnterComponent.toParamsDictionary(formArray, returnNullIfEmpty), {coerceNullOrUndefined: false}) ?? null;
+  }
+
+  private assertInputProperties(): void {
+    Defined.orElseThrow(this.title, () => Error('[NullInputError] Missing required input: `title`.'));
+    Defined.orElseThrow(this.paramsFormArray, () => Error('[NullInputError] Missing required input: `paramsFormArray`.'));
   }
 }
