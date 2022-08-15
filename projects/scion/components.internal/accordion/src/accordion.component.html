@@ -2,7 +2,7 @@
   <section *ngFor="let item of items; trackBy: trackByFn"
            class="accordion-item e2e-accordion-item"
            [class.e2e-expanded]="cdkAccordionItem.expanded"
-           [ngClass]="item.cssClass"
+           [ngClass]="$any(item.cssClass)"
            cdkAccordionItem #cdkAccordionItem="cdkAccordionItem"
            [expanded]="item.expanded">
     <header (click)="onToggle(cdkAccordionItem)" class="e2e-accordion-item-header">

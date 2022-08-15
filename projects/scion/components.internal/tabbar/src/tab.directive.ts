@@ -8,7 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, Input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
+import {Directive, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
+import {Defined} from '@scion/toolkit/util';
 
 /**
  * Use this directive to model a tab item for {SciTabbarComponent}.
@@ -26,7 +27,7 @@ import {Directive, Input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} fro
  * </sci-tabbar>
  */
 @Directive({selector: 'ng-template[sciTab]'})
-export class SciTabDirective implements OnDestroy {
+export class SciTabDirective implements OnInit, OnChanges, OnDestroy {
 
   private _vcr: ViewContainerRef | undefined;
   private _viewRef: ViewRef | undefined;
@@ -35,7 +36,7 @@ export class SciTabDirective implements OnDestroy {
    * Specifies the title of the tab.
    */
   @Input()
-  public label: string;
+  public label!: string;
 
   /**
    * Specifies the identity of this tab.
@@ -43,15 +44,27 @@ export class SciTabDirective implements OnDestroy {
    * Can be used to activate this tab via {@link SciTabbarComponent.activateTab}.
    */
   @Input()
-  public name: string;
+  public name?: string;
 
   /**
    * Specifies CSS class(es) added to the tab item, e.g., to select the tab in e2e tests.
    */
   @Input()
-  public cssClass: string | string[];
+  public cssClass?: string | string[];
 
   constructor(private readonly _templateRef: TemplateRef<void>) {
+  }
+
+  public ngOnInit(): void {
+    this.assertInputProperties();
+  }
+
+  public ngOnChanges(changes: SimpleChanges): void {
+    this.assertInputProperties();
+  }
+
+  private assertInputProperties(): void {
+    Defined.orElseThrow(this.label, () => Error('[NullInputError] Missing required input: `label`.'));
   }
 
   /**
@@ -65,7 +78,7 @@ export class SciTabDirective implements OnDestroy {
 
     // Construct the view, if not already constructed.
     if (!this._viewRef) {
-      this._viewRef = this._templateRef.createEmbeddedView(null);
+      this._viewRef = this._templateRef.createEmbeddedView(undefined);
     }
 
     // Attach the content, if not already attached.
@@ -80,8 +93,8 @@ export class SciTabDirective implements OnDestroy {
    */
   public detachContent(): void {
     if (this.isContentAttached()) {
-      this._vcr.detach(this._vcr.indexOf(this._viewRef));
-      this._viewRef.detach();
+      this._vcr!.detach(this._vcr!.indexOf(this._viewRef!));
+      this._viewRef!.detach();
     }
   }
 
@@ -89,7 +102,7 @@ export class SciTabDirective implements OnDestroy {
    * Returns whether the tab content is currently attached to the DOM, meaning that the user has selected the tab.
    */
   public isContentAttached(): boolean {
-    return this._vcr && this._vcr.indexOf(this._viewRef) !== -1;
+    return !!this._viewRef && this._vcr?.indexOf(this._viewRef) !== -1;
   }
 
   public ngOnDestroy(): void {

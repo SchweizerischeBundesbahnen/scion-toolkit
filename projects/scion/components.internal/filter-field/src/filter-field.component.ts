@@ -40,17 +40,17 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * If not specified, the focus order is according to the position in the document (tabindex=0).
    */
   @Input()
-  public tabindex = 0;
+  public tabindex?: number;
 
   /**
    * Specifies the hint displayed when this field is empty.
    */
   @Input()
-  public placeholder: string;
+  public placeholder?: string;
 
   @HostBinding('class.disabled')
   @Input()
-  public set disabled(disabled: boolean) {
+  public set disabled(disabled: boolean | string | undefined | null) {
     coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
   }
 
@@ -65,7 +65,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   public filter = new EventEmitter<string>();
 
   @ViewChild('input', {static: true})
-  private _inputElement: ElementRef<HTMLInputElement>;
+  private _inputElement!: ElementRef<HTMLInputElement>;
 
   @HostBinding('attr.tabindex')
   public componentTabindex = -1; // component is not focusable in sequential keyboard navigation, but tabindex (if any) is installed on input field
@@ -81,7 +81,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   constructor(private _host: ElementRef,
               private _focusManager: FocusMonitor,
               private _cd: ChangeDetectorRef) {
-    this.formControl = new FormControl('', {updateOn: 'change'});
+    this.formControl = new FormControl('', {updateOn: 'change', nonNullable: true});
     this.formControl.valueChanges
       .pipe(takeUntil(this._destroy$))
       .subscribe(value => {
