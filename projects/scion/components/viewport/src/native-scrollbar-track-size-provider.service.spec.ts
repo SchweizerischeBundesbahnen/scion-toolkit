@@ -27,8 +27,8 @@ describe('SciNativeScrollbarTrackSizeProvider', () => {
     const fixture = TestBed.createComponent(AppComponent);
     advance(fixture);
 
-    expect(testee.trackSize.vScrollbarTrackWidth).withContext('vScrollbarTrackWidth').toEqual(fixture.componentInstance.vScrollbarTrackWidth);
-    expect(testee.trackSize.hScrollbarTrackHeight).withContext('hScrollbarTrackHeight').toEqual(fixture.componentInstance.hScrollbarTrackHeight);
+    expect(testee.trackSize!.vScrollbarTrackWidth).withContext('vScrollbarTrackWidth').toEqual(fixture.componentInstance.vScrollbarTrackWidth);
+    expect(testee.trackSize!.hScrollbarTrackHeight).withContext('hScrollbarTrackHeight').toEqual(fixture.componentInstance.hScrollbarTrackHeight);
     tick();
   })));
 });
@@ -43,14 +43,14 @@ describe('SciNativeScrollbarTrackSizeProvider', () => {
 })
 class AppComponent implements AfterViewInit {
 
-  public vScrollbarTrackWidth: number;
-  public hScrollbarTrackHeight: number;
+  public vScrollbarTrackWidth!: number;
+  public hScrollbarTrackHeight!: number;
 
   @ViewChild('viewport', {static: true})
-  public viewport: ElementRef<HTMLElement>;
+  public viewport!: ElementRef<HTMLElement>;
 
   @ViewChild('viewport_client', {static: true})
-  public viewportClient: ElementRef<HTMLElement>;
+  public viewportClient!: ElementRef<HTMLElement>;
 
   public ngAfterViewInit(): void {
     this.vScrollbarTrackWidth = this.viewport.nativeElement.offsetWidth - this.viewportClient.nativeElement.offsetWidth;
