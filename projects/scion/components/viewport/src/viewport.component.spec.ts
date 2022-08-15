@@ -1031,7 +1031,7 @@ class Testee1Component {
   public elements: null[] = [];
 
   @Input()
-  public direction: 'row' | 'column';
+  public direction!: 'row' | 'column';
 
   public onRemove(): void {
     this.elements = this.elements.slice(0, -1);
@@ -1066,19 +1066,19 @@ class Testee1Component {
 class Testee2Component {
 
   @ViewChild(SciViewportComponent, {static: true, read: ElementRef})
-  private _viewportElement: ElementRef<HTMLElement>;
+  private _viewportElement!: ElementRef<HTMLElement>;
 
   @ViewChild(SciViewportComponent, {static: true})
-  public viewport: SciViewportComponent;
+  public viewport!: SciViewportComponent;
 
   @ViewChild('container1', {static: true, read: ElementRef})
-  private _container1: ElementRef<HTMLElement>;
+  private _container1!: ElementRef<HTMLElement>;
 
   @ViewChild('container2', {static: true, read: ElementRef})
-  private _container2: ElementRef<HTMLElement>;
+  private _container2!: ElementRef<HTMLElement>;
 
   @ViewChild('content', {static: true, read: ElementRef})
-  private _contentElement: ElementRef<HTMLElement>;
+  private _contentElement!: ElementRef<HTMLElement>;
 
   constructor(private _renderer: Renderer2) {
   }
