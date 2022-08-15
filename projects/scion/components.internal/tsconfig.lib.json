@@ -6,7 +6,8 @@
     "declarationMap": true,
     "stripInternal": true,
     "inlineSources": true,
-    "types": []
+    "types": [],
+    "strict": true
   },
   "exclude": [
     "src/test.ts",

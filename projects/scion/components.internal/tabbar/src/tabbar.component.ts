@@ -38,14 +38,14 @@ import {tapFirst} from '@scion/toolkit/operators';
 export class SciTabbarComponent implements AfterContentInit {
 
   @ViewChild('tabcontent', {read: ViewContainerRef, static: true})
-  private _vcr: ViewContainerRef;
+  private _vcr!: ViewContainerRef;
 
   /** @internal */
   @ContentChildren(SciTabDirective)
-  public tabs: QueryList<SciTabDirective>;
+  public tabs!: QueryList<SciTabDirective>;
 
   /** @internal */
-  public tabs$: Observable<SciTabDirective[]>;
+  public tabs$!: Observable<SciTabDirective[]>;
 
   constructor(private _cd: ChangeDetectorRef) {
   }
@@ -85,11 +85,11 @@ export class SciTabbarComponent implements AfterContentInit {
     this._cd.markForCheck();
   }
 
-  private getActiveTab(): SciTabDirective {
+  private getActiveTab(): SciTabDirective | undefined {
     return this.tabs.find(tab => tab.isContentAttached());
   }
 
-  private coerceTab(tabOrIdentity: SciTabDirective | string | undefined): SciTabDirective {
+  private coerceTab(tabOrIdentity: SciTabDirective | string | undefined): SciTabDirective | undefined {
     if (!tabOrIdentity) {
       return undefined;
     }

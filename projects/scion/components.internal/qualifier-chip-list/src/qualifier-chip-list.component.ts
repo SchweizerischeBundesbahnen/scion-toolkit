@@ -19,16 +19,16 @@ import {KeyValue} from '@angular/common';
 })
 export class SciQualifierChipListComponent implements OnChanges {
 
-  private _qualifierKeys: string[];
+  private _qualifierKeys: string[] = [];
 
   @Input()
-  public qualifier: Qualifier;
+  public qualifier?: Qualifier | undefined | null;
 
   @Input()
-  public type: string;
+  public type?: string;
 
   public ngOnChanges(changes: SimpleChanges): void {
-    this._qualifierKeys = Object.keys(this.qualifier || {});
+    this._qualifierKeys = Object.keys(this.qualifier ?? {});
   }
 
   /**

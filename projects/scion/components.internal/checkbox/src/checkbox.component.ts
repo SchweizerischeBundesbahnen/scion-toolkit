@@ -30,17 +30,17 @@ export class SciCheckboxComponent implements ControlValueAccessor, OnDestroy {
   private _cvaChangeFn: (value: any) => void = noop;
   private _cvaTouchedFn: () => void = noop;
 
-  public formControl = new FormControl(false, {updateOn: 'change'});
+  public formControl = new FormControl(false, {updateOn: 'change', nonNullable: true});
 
   /**
    * Sets focus order in sequential keyboard navigation.
    * If not specified, the focus order is according to the position in the document (tabindex=0).
    */
   @Input()
-  public tabindex = 0;
+  public tabindex?: number;
 
   @Input()
-  public set disabled(disabled: boolean) {
+  public set disabled(disabled: boolean | string | undefined | null) {
     coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
   }
 

@@ -32,7 +32,7 @@ export class SciListItemDirective {
    * Optional key to identify this item and is used to emit selection and internally as key for the {TrackBy} function.
    */
   @Input()
-  public key: string;
+  public key?: string;
 
   /**
    * Provide template(s) to be rendered as actions of this list item.

@@ -15,5 +15,5 @@
 
 <!-- filter field if positioned at the bottom -->
 <ng-template #filter_template>
-  <sci-filter-field (filter)="onFilter($event)" [ngClass]="filterPosition" [tabindex]="tabindex"></sci-filter-field>
+  <sci-filter-field (filter)="onFilter($event)" [ngClass]="filterPosition!" [tabindex]="tabindex ?? 0"></sci-filter-field>
 </ng-template>

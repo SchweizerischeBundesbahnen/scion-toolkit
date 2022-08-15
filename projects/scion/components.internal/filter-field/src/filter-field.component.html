@@ -2,8 +2,8 @@
        [attr.id]="id"
        autocomplete="off"
        [formControl]="formControl"
-       [tabindex]="tabindex"
-       [placeholder]="placeholder || ''">
+       [tabindex]="tabindex ?? 0"
+       [placeholder]="placeholder ?? ''">
 <button class="clear material-icons" tabindex="-1"
         (mousedown)="$event.stopPropagation()"
         (click)="onClear($event)">

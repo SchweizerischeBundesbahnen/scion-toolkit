@@ -54,7 +54,7 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
   private _destroy$ = new Subject<void>();
 
   @ViewChild(CdkAccordion, {static: true, read: ElementRef})
-  private _cdkAccordion: ElementRef<HTMLElement>;
+  private _cdkAccordion!: ElementRef<HTMLElement>;
 
   @HostBinding('class.bubble')
   public get isBubbleVariant(): boolean {
@@ -67,22 +67,22 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
   }
 
   @HostBinding('class.filled')
-  public filled: boolean;
+  public filled = false;
 
   @ContentChildren(SciAccordionItemDirective)
-  public items: QueryList<SciAccordionItemDirective>;
+  public items!: QueryList<SciAccordionItemDirective>;
 
   /**
    * Whether the accordion should allow multiple expanded accordion items simultaneously.
    */
   @Input()
-  public multi: boolean;
+  public multi? = false;
 
   /**
    * Specifies the style of the accordion.
    */
   @Input()
-  public variant: 'solid' | 'bubble' = 'bubble';
+  public variant?: 'solid' | 'bubble' = 'bubble';
 
   /**
    * Workaround for setting the filled state on initialization:
@@ -96,7 +96,7 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
   }
 
   public trackByFn: TrackByFunction<SciAccordionItemDirective> = (index: number, item: SciAccordionItemDirective): any => {
-    return item.key || item;
+    return item.key ?? item;
   };
 
   public onToggle(item: CdkAccordionItem): void {
