@@ -53,7 +53,7 @@ describe('WebStorage', () => {
     });
 
     it('should emit upon subscription if there is the `undefined` value associated with the key', async () => {
-      sessionStorage.setItem('key', undefined);
+      sessionStorage.setItem('key', undefined!);
       const testee = new WebStorage(window.sessionStorage);
       const observeCaptor = new ObserveCaptor();
 
@@ -62,7 +62,7 @@ describe('WebStorage', () => {
     });
 
     it('should emit upon subscription if there is the `null` value associated with the key', async () => {
-      sessionStorage.setItem('key', null);
+      sessionStorage.setItem('key', null!);
       const testee = new WebStorage(window.sessionStorage);
       const observeCaptor = new ObserveCaptor();
 
@@ -206,14 +206,14 @@ describe('WebStorage', () => {
     it('should return the value associated with the given key', () => {
       const testee = new WebStorage(window.sessionStorage);
       testee.put('key', 'value');
-      expect(testee.get('key')).toEqual('value');
+      expect(testee.get('key')!).toEqual('value');
     });
 
     it('should return the object associated with the given key', () => {
       const testee = new WebStorage(window.sessionStorage);
       const value = {p1: 'value', p2: 2, p3: true};
       testee.put('key', value);
-      expect(testee.get('key')).toEqual(value);
+      expect(testee.get('key')!).toEqual(value);
     });
 
     it('should return `undefined` if no item is associated with the given key', () => {
@@ -236,7 +236,7 @@ describe('WebStorage', () => {
     it('should return `0` if the `0` value is associated with the given key (falsy value)', () => {
       const testee = new WebStorage(window.sessionStorage);
       testee.put('key', 0);
-      expect(testee.get('key')).toEqual(0);
+      expect(testee.get('key')!).toEqual(0);
     });
 
     it('should return `false` if the `false` value is associated with the given key (falsy value)', () => {
@@ -248,7 +248,7 @@ describe('WebStorage', () => {
     it('should return an empty string if the "" value is associated with the given key (falsy value)', () => {
       const testee = new WebStorage(window.sessionStorage);
       testee.put('key', '');
-      expect(testee.get('key')).toEqual('');
+      expect(testee.get('key')!).toEqual('');
     });
 
     it('should throw if failed to parse the value associated with the given key', () => {
@@ -267,13 +267,13 @@ describe('WebStorage', () => {
 
     it('should be present if the `null` value is associated with the key', () => {
       const testee = new WebStorage(window.sessionStorage);
-      sessionStorage.setItem('key', null);
+      sessionStorage.setItem('key', null!);
       expect(testee.isPresent('key')).toBeTrue();
     });
 
     it('should be present if the `undefined` value is associated with the key', () => {
       const testee = new WebStorage(window.sessionStorage);
-      sessionStorage.setItem('key', undefined);
+      sessionStorage.setItem('key', undefined!);
       expect(testee.isPresent('key')).toBeTrue();
     });
 
