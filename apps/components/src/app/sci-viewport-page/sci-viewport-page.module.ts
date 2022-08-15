@@ -15,6 +15,7 @@ import {RouterModule} from '@angular/router';
 import {SciFormFieldModule} from '@scion/components.internal/form-field';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportModule} from '@scion/components/viewport';
+import {CoreModule} from '../core/core.module';
 
 const routes = [
   {path: '', component: SciViewportPageComponent},
@@ -28,6 +29,7 @@ const routes = [
     RouterModule.forChild(routes),
     SciFormFieldModule,
     SciViewportModule,
+    CoreModule,
   ],
   declarations: [
     SciViewportPageComponent,

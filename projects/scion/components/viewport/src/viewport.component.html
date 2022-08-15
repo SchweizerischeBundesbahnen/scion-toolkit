@@ -5,8 +5,8 @@
      sciScrollable [sciScrollableDisplayNativeScrollbar]="scrollbarStyle === 'native'"
      cdkScrollable
      (scroll)="onScroll($event)">
-  <div #viewport_client class="viewport-client">
-    <ng-content></ng-content>
+  <div #viewport_client class="viewport-client" part="content">
+    <slot></slot>
   </div>
 </div>
 

@@ -16,7 +16,7 @@ import {SciCheckboxModule} from '@scion/components.internal/checkbox';
 import {SciFormFieldModule} from '@scion/components.internal/form-field';
 import {SciTabbarModule} from '@scion/components.internal/tabbar';
 import {ReactiveFormsModule} from '@angular/forms';
-import {SplitPipe} from './split.pipe';
+import {CoreModule} from '../core/core.module';
 
 const routes = [
   {path: '', component: SciTabbarPageComponent},
@@ -30,10 +30,10 @@ const routes = [
     SciCheckboxModule,
     SciFormFieldModule,
     SciTabbarModule,
+    CoreModule,
   ],
   declarations: [
     SciTabbarPageComponent,
-    SplitPipe,
   ],
 })
 export class SciTabbarPageModule {
