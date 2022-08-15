@@ -40,14 +40,16 @@ describe('Operators', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
-      const insideAngularCaptor = {
-        onObservableCreate: undefined,
-        onObservableTeardown: undefined,
-        onNextBeforeObserveInside: undefined,
-        onNextAfterObserveInside: undefined,
-        onNext: undefined,
-        onFinalize: undefined,
-      };
+      interface InsideNgZoneCaptor {
+        onObservableCreate?: boolean;
+        onObservableTeardown?: boolean;
+        onNextBeforeObserveInside?: boolean;
+        onNextAfterObserveInside?: boolean;
+        onNext?: boolean;
+        onFinalize?: boolean;
+      }
+
+      const insideAngularCaptor: InsideNgZoneCaptor = {};
 
       const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
         insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
@@ -84,14 +86,16 @@ describe('Operators', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
-      const insideAngularCaptor = {
-        onObservableCreate: undefined,
-        onObservableTeardown: undefined,
-        onCompleteBeforeObserveInside: undefined,
-        onCompleteAfterObserveInside: undefined,
-        onComplete: undefined,
-        onFinalize: undefined,
-      };
+      interface InsideNgZoneCaptor {
+        onObservableCreate?: boolean;
+        onObservableTeardown?: boolean;
+        onCompleteBeforeObserveInside?: boolean;
+        onCompleteAfterObserveInside?: boolean;
+        onComplete?: boolean;
+        onFinalize?: boolean;
+      }
+
+      const insideAngularCaptor: InsideNgZoneCaptor = {};
 
       const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
         insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
@@ -128,14 +132,16 @@ describe('Operators', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
-      const insideAngularCaptor = {
-        onObservableCreate: undefined,
-        onObservableTeardown: undefined,
-        onErrorBeforeObserveInside: undefined,
-        onErrorAfterObserveInside: undefined,
-        onError: undefined,
-        onFinalize: undefined,
-      };
+      interface InsideNgZoneCaptor {
+        onObservableCreate?: boolean;
+        onObservableTeardown?: boolean;
+        onErrorBeforeObserveInside?: boolean;
+        onErrorAfterObserveInside?: boolean;
+        onError?: boolean;
+        onFinalize?: boolean;
+      }
+
+      const insideAngularCaptor: InsideNgZoneCaptor = {};
 
       const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
         insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
@@ -175,14 +181,16 @@ describe('Operators', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
-      const insideAngularCaptor = {
-        onObservableCreate: undefined,
-        onObservableTeardown: undefined,
-        onNextBeforeSubscribeInside: undefined,
-        onNextAfterSubscribeInside: undefined,
-        onNext: undefined,
-        onFinalize: undefined,
-      };
+      interface InsideNgZoneCaptor {
+        onObservableCreate?: boolean;
+        onObservableTeardown?: boolean;
+        onNextBeforeSubscribeInside?: boolean;
+        onNextAfterSubscribeInside?: boolean;
+        onNext?: boolean;
+        onFinalize?: boolean;
+      }
+
+      const insideAngularCaptor: InsideNgZoneCaptor = {};
 
       const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
         insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
@@ -219,14 +227,16 @@ describe('Operators', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
-      const insideAngularCaptor = {
-        onObservableCreate: undefined,
-        onObservableTeardown: undefined,
-        onErrorBeforeSubscribeInside: undefined,
-        onErrorAfterSubscribeInside: undefined,
-        onError: undefined,
-        onFinalize: undefined,
-      };
+      interface InsideNgZoneCaptor {
+        onObservableCreate?: boolean;
+        onObservableTeardown?: boolean;
+        onErrorBeforeSubscribeInside?: boolean;
+        onErrorAfterSubscribeInside?: boolean;
+        onError?: boolean;
+        onFinalize?: boolean;
+      }
+
+      const insideAngularCaptor: InsideNgZoneCaptor = {};
 
       const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
         insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
@@ -263,14 +273,16 @@ describe('Operators', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
-      const insideAngularCaptor = {
-        onObservableCreate: undefined,
-        onObservableTeardown: undefined,
-        onCompleteBeforeSubscribeInside: undefined,
-        onCompleteAfterSubscribeInside: undefined,
-        onComplete: undefined,
-        onFinalize: undefined,
-      };
+      interface InsideNgZoneCaptor {
+        onObservableCreate?: boolean;
+        onObservableTeardown?: boolean;
+        onCompleteBeforeSubscribeInside?: boolean;
+        onCompleteAfterSubscribeInside?: boolean;
+        onComplete?: boolean;
+        onFinalize?: boolean;
+      }
+
+      const insideAngularCaptor: InsideNgZoneCaptor = {};
 
       const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
         insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
@@ -310,16 +322,17 @@ describe('Operators', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
-      const insideAngularCaptor = {
-        onObservableCreate: undefined,
-        onObservableTeardown: undefined,
-        onNextBeforeSubscribeInside: undefined,
-        onNextAfterSubscribeInside: undefined,
-        onNextAfterObserveInside: undefined,
-        onNext: undefined,
-        onComplete: undefined,
-        onFinalize: undefined,
-      };
+      interface InsideNgZoneCaptor {
+        onObservableCreate?: boolean;
+        onObservableTeardown?: boolean;
+        onNextBeforeSubscribeInside?: boolean;
+        onNextAfterSubscribeInside?: boolean;
+        onNextAfterObserveInside?: boolean;
+        onNext?: boolean;
+        onComplete?: boolean;
+        onFinalize?: boolean;
+      }
+      const insideAngularCaptor: InsideNgZoneCaptor = {};
 
       const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
         insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
@@ -655,7 +668,7 @@ describe('Operators', () => {
       expect(observeCaptor.getValues()).toEqual([]);
 
       // close the buffer.
-      resolvePromiseFn();
+      resolvePromiseFn!();
       flushMicrotasks();
       expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c']);
 

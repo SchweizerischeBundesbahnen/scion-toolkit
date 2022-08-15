@@ -133,7 +133,7 @@ describe('BeanManager', () => {
     class Bean {
     }
 
-    let actualBeanInInitializer: Bean = null;
+    let actualBeanInInitializer: Bean | null = null;
 
     Beans.registerInitializer(() => {
       actualBeanInInitializer = Beans.get(Bean);
@@ -143,7 +143,7 @@ describe('BeanManager', () => {
     Beans.register(Bean);
     await Beans.start();
 
-    expect(actualBeanInInitializer).toBe(Beans.get(Bean));
+    expect(actualBeanInInitializer!).toBe(Beans.get(Bean));
   });
 
   it('should construct lazy beans when looking it up for the first time', async () => {
@@ -179,12 +179,12 @@ describe('BeanManager', () => {
     Beans.register(Bean);
     expect(state).toEqual(undefined);
     Beans.get(Bean);
-    expect(state).toEqual('constructed');
+    expect(state!).toEqual('constructed');
 
     // destroy the bean manager
     Beans.destroy();
 
-    expect(state).toEqual('destroyed');
+    expect(state!).toEqual('destroyed');
     expect(Beans.opt(Bean)).toBeUndefined();
   });
 
@@ -201,7 +201,7 @@ describe('BeanManager', () => {
     Beans.register(Bean);
     expect(state).toEqual(undefined);
     Beans.get(Bean);
-    expect(state).toEqual('constructed');
+    expect(state!).toEqual('constructed');
 
     // destroy the bean manager
     Beans.destroy();
@@ -1077,7 +1077,7 @@ describe('BeanManager', () => {
       log.push('initializer-1 [no runlevel specified]');
     });
     Beans.registerInitializer({
-      useFunction: () => void (log.push('initializer-2 [runlevel 5]')),
+      useFunction: async () => void (log.push('initializer-2 [runlevel 5]')),
       runlevel: 5,
     });
     Beans.registerInitializer(async () => {
@@ -1149,7 +1149,7 @@ describe('BeanManager', () => {
       log.push('initializer-1 [no runlevel specified]');
     });
     Beans.registerInitializer({
-      useFunction: () => void (log.push('initializer-2 [runlevel 6]')),
+      useFunction: async () => void (log.push('initializer-2 [runlevel 6]')),
       runlevel: 6,
     });
     Beans.registerInitializer(async () => {

@@ -181,7 +181,7 @@ describe('Arrays', () => {
     });
 
     it('should return a new empty array if an empty array is given', () => {
-      const array = [];
+      const array = new Array<string>();
       expect(Arrays.intersect(array)).not.toBe(array);
       expect(Arrays.intersect(array)).toEqual(array);
     });
@@ -193,8 +193,8 @@ describe('Arrays', () => {
     });
 
     it('should intersect empty arrays', () => {
-      const array1 = [];
-      const array2 = [];
+      const array1 = new Array<string>();
+      const array2 = new Array<string>();
       expect(Arrays.intersect(array1, array2)).not.toBe(array1);
       expect(Arrays.intersect(array1, array2)).not.toBe(array2);
       expect(Arrays.intersect(array1, array2)).toEqual([]);
@@ -214,7 +214,7 @@ describe('Arrays', () => {
 
     it('should return an empty array if intersecting with an empty array', () => {
       const array1 = ['a', 'b', 'c'];
-      const array2 = [];
+      const array2 = new Array<string>();
       expect(Arrays.intersect(array1, array2)).toEqual([]);
       expect(Arrays.intersect(array2, array1)).toEqual([]);
     });

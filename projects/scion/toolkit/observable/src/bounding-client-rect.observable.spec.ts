@@ -288,12 +288,14 @@ interface ElementCreateOptions {
 }
 
 function setStyle(element: HTMLElement, style: {[style: string]: any | null}): void {
-  Object.keys(style).forEach(key => element.style[key] = style[key]);
+  Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
 }
+
+type RectId = 'div#left' | 'div#middle' | 'div#right' | 'div#middle_1' | 'div#middle_2' | 'div#middle_3' | 'div#testee';
 
 class ClientRects {
 
-  public rects = new Map<string, DOMRect>();
+  public rects = new Map<RectId, DOMRect>();
 
   /**
    * Captures current bounding boxes.
@@ -314,7 +316,7 @@ class ClientRects {
   /**
    * Returns the last captured bounding box for the element.
    */
-  public get(selector: string): Readonly<DOMRect> {
-    return this.rects.get(selector);
+  public get(selector: RectId): Readonly<DOMRect> {
+    return this.rects.get(selector)!;
   }
 }

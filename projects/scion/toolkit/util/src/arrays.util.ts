@@ -37,7 +37,7 @@ export namespace Arrays {
    *
    * Use the parameter `exactOrder` to control if the item order must be equal (which is by default) or not.
    */
-  export function isEqual(array1: any[], array2: any[], options?: {exactOrder?: boolean}): boolean {
+  export function isEqual(array1: any[] | null | undefined, array2: any[] | null | undefined, options?: {exactOrder?: boolean}): boolean {
     if (array1 === array2) {
       return true;
     }
@@ -68,13 +68,14 @@ export namespace Arrays {
    * @param  options - Control if to remove all occurrences of the element. If not specified, all occurrences are removed.
    * @return the elements removed from the array.
    */
-  export function remove<T>(array: T[], element: any | ((element: T) => boolean), options?: {firstOnly: boolean}): T[] {
+  export function remove<T>(array: T[], element: T | ((element: T) => boolean), options?: {firstOnly: boolean}): T[] {
     const firstOnly = Defined.orElse(options && options.firstOnly, false);
 
     // define a function to resolve the element's index in the original array
     const indexOfElementFn = ((): () => number => {
       if (typeof element === 'function') {
-        return (): number => array.findIndex(element);
+        const predicate = element as (element: T) => boolean;
+        return (): number => array.findIndex(predicate);
       }
       else {
         return (): number => array.indexOf(element);
@@ -121,7 +122,7 @@ export namespace Arrays {
    *
    * Returns `undefined` if no element is found.
    */
-  export function last<T>(array: T[], predicate?: (item: T) => boolean): T | undefined {
+  export function last<T>(array: T[] | null | undefined, predicate?: (item: T) => boolean): T | undefined {
     if (!array) {
       return undefined;
     }
