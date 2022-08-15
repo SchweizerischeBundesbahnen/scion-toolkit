@@ -1,16 +1,15 @@
 @mixin panel {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1em;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  grid-auto-rows: max-content;
   border: 1px solid var(--sci-color-P400);
   border-radius: 5px;
   padding: 1em;
 
   > header {
+    flex: none;
     font-weight: bold;
-    margin-bottom: 1em;
-    grid-column: 1/-1;
+    margin-bottom: .5em;
   }
 }
 
@@ -19,9 +18,7 @@
   flex-direction: column;
   --viewport-minheight: unset;
   --viewport-maxheight: unset;
-  --viewport-flexitem: unset;
-  --viewport-content-width: unset;
-  --viewport-content-height: unset;
+  --viewport-flex: unset;
 
   > h1 {
     flex: none;
@@ -30,36 +27,48 @@
   > form {
     flex: none;
     display: grid;
-    grid-auto-rows: max-content;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: 1fr 1fr auto;
+    grid-template-rows: auto auto;
     gap: 1em;
     margin-bottom: 2em;
 
-    > section.settings {
+    > section.content {
       @include panel;
+      grid-row: 1/-1;
+
+      > textarea {
+        flex: auto;
+      }
     }
 
-    > section.styling {
-      @include panel();
+    > section.viewport-slotted-content-layout {
+      @include panel;
+      grid-row: 1/-1;
+
+      > textarea {
+        flex: auto;
+      }
     }
 
-    > section.miscellaneous {
+    > section.viewport-scrollbar {
       @include panel();
+      grid-column: 3;
+    }
+
+    > section.viewport-style-properties {
+      @include panel();
+      grid-column: 3;
     }
   }
 
   > sci-viewport {
-    flex: var(--viewport-flexitem);
+    flex: var(--viewport-flex);
     min-height: var(--viewport-minheight);
     max-height: var(--viewport-maxheight);
 
     section {
-      white-space: pre-line;
-      width: var(--viewport-content-width);
-      height: var(--viewport-content-height);
       border: 1px dotted var(--sci-color-accent);
       padding: 1em;
-      background-color: rgba(var(--sci-color-accent-rgb), .05);
     }
   }
 }

@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, Output, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, Output, ViewChild, ViewEncapsulation} from '@angular/core';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 import {coerceElement} from '@angular/cdk/coercion';
 
 /**
- * Represents a viewport with the `<ng-content>` used as scrollable content. Content is added to a CSS grid layout.
+ * Represents a viewport with slotted content (`<ng-content>`) used as scrollable content. By default, content is added to a CSS grid layout.
  *
  * The viewport component displays scrollbars when its content overflows. Scrollbars are displayed on top of the content, not next to it.
  * The component uses the native scrollbars of the operating system if they are already sitting on top, or falls back and renders scrollbars on top otherwise.
@@ -45,24 +45,24 @@ import {coerceElement} from '@angular/cdk/coercion';
  *   For the complete documentation on the flex layout and its features, refer to https://developer.mozilla.org/en-US/docs/Web/CSS/flex.
  *
  *
- * ## Layouting the viewport content
+ * ## Layouting the viewport's slotted content
  *
- * `NgContent` is added to a CSS grid container with, by default, a single column, filling remaining space vertically and horizontally.
+ * By default, the viewport's content is added to a CSS grid container with a single column, filling remaining space vertically and horizontally.
+ * Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout.
  *
- * You can override the following CSS variables to control the grid:
- *
- * - sci-viewport-content-grid-template-columns:   Defines the columns and their track sizes (by default, single column with track size auto)
- * - sci-viewport-content-grid-template-rows:      Defines the rows and their track sizes (by default, single row with track size auto)
- * - sci-viewport-content-grid-auto-columns:       Defines the track size of not explicitly declared columns.
- * - sci-viewport-content-grid-auto-rows:          Defines the track size of not explicitly declared rows.
- * - sci-viewport-content-grid-gap:                Sets the gaps (gutters) between rows and columns.
- *
- * Example of how to control the CSS grid:
- *
+ * #### Example of adding slotted content to a CSS flex container.
  * ```css
- * sci-viewport {
- *   --sci-viewport-content-grid-auto-rows: min-content;
- *   --sci-viewport-content-grid-gap: .5em; // specifies the row and column gap
+ * sci-viewport::part(content) {
+ *   display: flex;
+ *   flex-direction: column;
+ * }
+ * ```
+ *
+ * #### Example of configuring CSS grid container with two columns
+ * ```css
+ * sci-viewport::part(content) {
+ *   grid-template-columns: 1fr 1fr;
+ *   gap: 1em;
  * }
  * ```
  *
@@ -82,6 +82,7 @@ import {coerceElement} from '@angular/cdk/coercion';
   selector: 'sci-viewport',
   templateUrl: './viewport.component.html',
   styleUrls: ['./viewport.component.scss'],
+  encapsulation: ViewEncapsulation.ShadowDom,
 })
 export class SciViewportComponent {
 
