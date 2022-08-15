@@ -5,9 +5,9 @@
 
 ## [SCION Toolkit][menu-home] > Viewport
 
-The NPM sub-module `@scion/components/viewport` provides an Angular viewport component with scrollbars that sit on top of the viewport client. The component renders its `<ng-content>` inside a scrollable viewport, that shows a vertical and/or horizontal scrollbar when the `<ng-content>` overflows the component's boundaries.
+The NPM sub-module `@scion/components/viewport` provides an Angular viewport component with scrollbars that sit on top of the viewport client. The component renders slotted content (`<ng-content>`) inside a scrollable viewport, that shows a vertical and/or horizontal scrollbar when content overflows the component's boundaries.
 
-`NgContent` is added to a CSS grid container with, by default, a single column, filling remaining space vertically and horizontally. See section '*Layouting the viewport content*' for more information.
+By default, slotted content is added to a CSS grid layout with a single column, filling remaining space vertically and horizontally. Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout. See section "*Layouting the viewport's slotted content*" for more information.
 
 ***
 Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of the viewport component in our internal test application.
@@ -117,28 +117,46 @@ The viewport is sized according to its content width and height. It grows to abs
  </details>
 
 <details>
-  <summary><strong>Layouting the viewport content</strong></summary>
+  <summary><strong>Layouting the viewport's slotted content</strong></summary>
 
-`NgContent` is added to a CSS grid container with, by default, a single column, filling remaining space vertically and horizontally.
+By default, the viewport's slotted content (`ng-content`) is added to a CSS grid container with a single column, filling remaining space vertically and horizontally. Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout.
 
-You can override the following CSS variables to control the grid:
+#### Example of adding slotted content to a CSS flex container.
+```css
+sci-viewport::part(content) {
+  display: flex;
+  flex-direction: column;
+}
+```
 
+#### Example of configuring CSS grid container with two columns
+```css
+sci-viewport::part(content) {
+  grid-template-columns: 1fr 1fr;
+  gap: 1em;
+}
+```
+
+</details>
+
+<details>
+  <summary><strong>Layouting the viewport's slotted content using CSS variables (DEPRECATED)</strong></summary>
+
+We have deprecated configuring the CSS grid container via CSS variables in favor of the `::part pseudo-element` technique described above. We will discontinue support for CSS variables in version 15.
+
+#### Deprecated CSS variables for configuring the grid container:
 - `--sci-viewport-content-grid-template-columns`\
   Defines the columns and their track sizes (by default, single column with track size `auto`)
-
 - `--sci-viewport-content-grid-template-rows`\
   Defines the rows and their track sizes (by default, single row with track size `auto`)
-
 - `--sci-viewport-content-grid-auto-columns`\
   Defines the track size of not explicitly declared columns.
-
 - `--sci-viewport-content-grid-auto-rows`\
   Defines the track size of not explicitly declared rows.
-
 - `--sci-viewport-content-grid-gap`\
   Sets the gaps (gutters) between rows and columns. 
 
-Example of how to control the CSS grid:
+#### Depreacted example of how to control the CSS grid using CSS variables:
 ```css 
 sci-viewport {
   --sci-viewport-content-grid-auto-rows: min-content;
