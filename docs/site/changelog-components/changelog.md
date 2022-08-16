@@ -6,6 +6,64 @@
 ## [Changelog][menu-changelog] > @scion/components
 
 
+# [14.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-13.0.0...components-14.0.0) (2022-08-16)
+
+
+### Bug Fixes
+
+* **components/sashbox:** allow to reset the size of the sash ([ea2185e](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/ea2185e40afa3c746a1b72c30085b246552d8e09))
+
+
+### Dependencies
+
+* **components:** update @scion/components to Angular 14 ([1089d2a](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/1089d2aa042759168fe867a47c338edb99593de4)), closes [#96](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/96)
+
+
+### Features
+
+* **components/viewport:** allow full control over the layout of slotted content ([2c1f714](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/2c1f714e74b2c0eafe04bd9322c0c8b70d2c354b)), closes [#97](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/97)
+
+
+### BREAKING CHANGES
+
+* **components:** Updating `@scion/components` to Angular 14 introduced a breaking change.
+
+  To migrate:
+  - update your application to Angular 14; for detailed migration instructions, refer to https://v14.angular.io/guide/update-to-latest-version;
+  - update @scion/components to version 14; for detailed migration instructions, refer to https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/CHANGELOG_COMPONENTS.md;
+
+
+### DEPRECATIONS
+
+* **components/viewport:** The flexible definition of the layout of the viewport's slotted content introduced a deprecation.
+
+  The layout of slotted content can now be configured using the `::part(content)` pseudo-element selector instead of custom CSS variables. We have deprecated related CSS variables and will discontinue support in version 15.
+  
+  To migrate, change the following custom CSS variables to styles of the `sci-viewport::part(content)` pseudo element selector:
+  - `--sci-viewport-content-grid-template-columns` ➜ `grid-template-columns`
+  - `--sci-viewport-content-grid-template-rows` ➜ `grid-template-rows`
+  - `--sci-viewport-content-grid-auto-columns` ➜ `grid-auto-columns`
+  - `--sci-viewport-content-grid-auto-rows` ➜ `grid-auto-rows`
+  - `--sci-viewport-content-grid-gap` ➜ `gap`
+
+  #### Migration Example:
+  
+  **Before migration:**
+  ```css
+  sci-viewport {
+    --sci-viewport-content-grid-template-columns: 1fr 1fr;
+    --sci-viewport-content-grid-gap: 1em;
+  }
+  ```
+  
+  **After migration:**
+  ```css
+  sci-viewport::part(content) {
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+  }
+  ```
+
 # [13.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/13.0.0-beta.2...components-13.0.0) (2022-05-17)
 
 
