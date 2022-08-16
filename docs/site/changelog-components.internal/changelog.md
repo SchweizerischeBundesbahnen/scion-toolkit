@@ -5,6 +5,24 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+# [14.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-13.0.1...ɵcomponents-14.0.0) (2022-08-16)
+
+
+### Dependencies
+
+* **ɵcomponents:** update @scion/components.internal to Angular 14 ([1089d2a](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/1089d2aa042759168fe867a47c338edb99593de4)), closes [#96](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/96)
+
+
+### BREAKING CHANGES
+
+* **ɵcomponents:** Updating `@scion/components.internal` to Angular 14 introduced a breaking change.
+
+  To migrate:
+  - update your application to Angular 14; for detailed migration instructions, refer to https://v14.angular.io/guide/update-to-latest-version;
+  - update @scion/components to version 14; for detailed migration instructions, refer to https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/CHANGELOG_COMPONENTS.md;
+  - update @scion/components.internal to version 14; for detailed migration instructions, refer to https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/CHANGELOG_COMPONENTS_INTERNAL.md;
+
+
 ## [13.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-13.0.0...ɵcomponents-13.0.1) (2022-05-18)
 
 
