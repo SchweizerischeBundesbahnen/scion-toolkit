@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {map, mergeMap, share, switchMap, take} from 'rxjs/operators';
+import {distinctUntilChanged, map, mergeMap, share, switchMap, take} from 'rxjs/operators';
 import {combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic} from 'rxjs';
-import {Arrays} from '@scion/toolkit/util';
+import {Arrays, Observables} from '@scion/toolkit/util';
 
 /**
  * Filters items in the source array and emits an array with items satisfying given predicate.
@@ -18,9 +18,30 @@ import {Arrays} from '@scion/toolkit/util';
  * If passing `undefined` as predicate, the filter matches all items.
  */
 export function filterArray<T, S extends T>(predicate?: (item: T) => item is S): OperatorFunction<T[], S[]>;
-export function filterArray<T>(predicate?: (item: T) => boolean): MonoTypeOperatorFunction<T[]>;
-export function filterArray<T>(predicate?: (item: T) => boolean): MonoTypeOperatorFunction<T[]> {
-  return map((items: T[]): T[] => items.filter(item => !predicate || predicate(item)));
+export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Promise<boolean> | boolean): MonoTypeOperatorFunction<T[]>;
+export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Promise<boolean> | boolean): MonoTypeOperatorFunction<T[]> {
+  if (!predicate) {
+    return identity;
+  }
+
+  return switchMap((items: T[]): Observable<T[]> => {
+    if (!items.length) {
+      return of([]);
+    }
+
+    // Filter items if all predicates return a boolean value.
+    const matches = items.map(predicate);
+    if (matches.every(match => typeof match === 'boolean')) {
+      return of(items.filter((item, i) => matches[i]));
+    }
+
+    // Filter items by subscribing to predicate Observables.
+    return combineLatest(matches.map(Observables.coerce))
+      .pipe(
+        distinctUntilChanged((previous, current) => Arrays.isEqual(previous, current)),
+        map(matches => items.filter((item, i) => matches[i])),
+      );
+  });
 }
 
 /**
