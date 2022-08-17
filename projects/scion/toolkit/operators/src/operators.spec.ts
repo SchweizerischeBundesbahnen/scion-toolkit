@@ -8,17 +8,277 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {BehaviorSubject, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
+import {BehaviorSubject, concat, NEVER, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
 import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
 import {NgZone} from '@angular/core';
 import {finalize, tap} from 'rxjs/operators';
-import {combineArray, mapArray, observeInside, subscribeInside} from './operators';
+import {combineArray, filterArray, mapArray, observeInside, subscribeInside} from './operators';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 import {bufferUntil, distinctArray} from '@scion/toolkit/operators';
 
 describe('Operators', () => {
 
   beforeEach(() => TestBed.configureTestingModule({}));
+
+  describe('filterArray', () => {
+
+    it('should filter items', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      of(['a', 'b', 'c'])
+        .pipe(filterArray(item => item === 'a'))
+        .subscribe(observeCaptor);
+
+      expect(observeCaptor.getValues()).toEqual([
+        ['a'],
+      ]);
+    });
+
+    it('should not filter items if predicate is undefined', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      of(['a', 'b', 'c'])
+        .pipe(filterArray(undefined))
+        .subscribe(observeCaptor);
+
+      expect(observeCaptor.getValues()).toEqual([
+        ['a', 'b', 'c'],
+      ]);
+    });
+
+    it('should not filter `null` values', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      of(['a', null, null, 'b'])
+        .pipe(filterArray(() => true))
+        .subscribe(observeCaptor);
+
+      expect(observeCaptor.getValues()).toEqual([
+        ['a', null, null, 'b'],
+      ]);
+    });
+
+    it('should not filter `undefined` values', () => {
+      const observeCaptor = new ObserveCaptor();
+
+      of(['a', undefined, undefined, 'b'])
+        .pipe(filterArray(() => true))
+        .subscribe(observeCaptor);
+
+      expect(observeCaptor.getValues()).toEqual([
+        ['a', undefined, undefined, 'b'],
+      ]);
+    });
+
+    describe('promise predicate', () => {
+
+      it('should filter items with promise as predicate', async () => {
+        const observeCaptor = new ObserveCaptor();
+
+        const predicates = new Map<string, Promise<boolean>>()
+          .set('a', Promise.resolve(true))
+          .set('b', Promise.resolve(true))
+          .set('c', Promise.resolve(false));
+
+        of(['a', 'b', 'c'])
+          .pipe(filterArray(item => predicates.get(item)!))
+          .subscribe(observeCaptor);
+
+        await observeCaptor.waitUntilCompletedOrErrored();
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b'],
+        ]);
+      });
+
+      it('should error when predicate errors', async () => {
+        const observeCaptor = new ObserveCaptor();
+
+        const predicates = new Map<string, Promise<boolean>>()
+          .set('a', Promise.resolve(true))
+          .set('b', Promise.resolve(true))
+          .set('c', Promise.reject('error'));
+
+        of(['a', 'b', 'c'])
+          .pipe(filterArray(item => predicates.get(item)!))
+          .subscribe(observeCaptor);
+
+        await observeCaptor.waitUntilCompletedOrErrored();
+        expect(observeCaptor.getValues()).toEqual([]);
+        expect(observeCaptor.hasErrored()).toBeTrue();
+        expect(observeCaptor.getError()).toBe('error');
+      });
+    });
+
+    describe('observable predicate', () => {
+
+      it('should filter items with observable as predicate', async () => {
+        const observeCaptor = new ObserveCaptor();
+
+        const predicates = new Map<string, Subject<boolean>>()
+          .set('a', new Subject<boolean>())
+          .set('b', new Subject<boolean>())
+          .set('c', new Subject<boolean>());
+
+        of(['a', 'b', 'c'])
+          .pipe(filterArray(item => predicates.get(item)!))
+          .subscribe(observeCaptor);
+
+        // WHEN predicate 'a' emits true
+        predicates.get('a')!.next(true);
+        // THEN expect no emission
+        expect(observeCaptor.getValues()).toEqual([]);
+
+        // WHEN predicate 'b' emits true
+        predicates.get('b')!.next(true);
+        // THEN expect no emission
+        expect(observeCaptor.getValues()).toEqual([]);
+
+        // WHEN predicate 'c' emits true
+        predicates.get('c')!.next(true);
+        // THEN expect emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b', 'c'],
+        ]);
+
+        observeCaptor.reset();
+
+        // WHEN predicate 'b' emits true
+        predicates.get('b')!.next(true);
+        // THEN expect no emission
+        expect(observeCaptor.getValues()).toEqual([]);
+
+        observeCaptor.reset();
+
+        // WHEN predicate 'b' emits false
+        predicates.get('b')!.next(false);
+        // THEN expect emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'c'],
+        ]);
+
+        observeCaptor.reset();
+
+        // WHEN predicate 'a' emits false
+        predicates.get('a')!.next(false);
+        // THEN expect emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['c'],
+        ]);
+
+        observeCaptor.reset();
+
+        // WHEN predicate 'c' emits false
+        predicates.get('c')!.next(false);
+        // THEN expect emission
+        expect(observeCaptor.getValues()).toEqual([
+          [],
+        ]);
+      });
+
+      it('should distinct predicate emissions, but not item emissions', async () => {
+        const observeCaptor = new ObserveCaptor();
+
+        const predicates = new Map<string, Subject<boolean>>()
+          .set('a', new Subject<boolean>())
+          .set('b', new Subject<boolean>())
+          .set('c', new Subject<boolean>());
+
+
+        const items$ = new BehaviorSubject<string[]>(['a', 'b', 'c']);
+        items$
+          .pipe(filterArray(item => predicates.get(item)!))
+          .subscribe(observeCaptor);
+
+        // GIVEN
+        predicates.get('a')!.next(true);
+        predicates.get('b')!.next(true);
+        predicates.get('c')!.next(true);
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b', 'c'],
+        ]);
+
+        observeCaptor.reset();
+
+        // WHEN predicate 'a' emits true again
+        predicates.get('a')!.next(true);
+        // THEN expect no emission
+        expect(observeCaptor.getValues()).toEqual([]);
+
+        observeCaptor.reset();
+
+        // WHEN emitting the same items again
+        items$.next(['a', 'b', 'c']);
+        predicates.get('a')!.next(true);
+        predicates.get('b')!.next(true);
+        predicates.get('c')!.next(true);
+        // THEN expect items to be emitted
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b', 'c'],
+        ]);
+      });
+
+      it('should not complete when predicates complete', () => {
+        const observeCaptor = new ObserveCaptor();
+
+        const predicates = new Map<string, Subject<boolean>>()
+          .set('a', new Subject<boolean>())
+          .set('b', new Subject<boolean>());
+
+        concat(of(['a', 'b']), NEVER)
+          .pipe(filterArray(item => predicates.get(item)!))
+          .subscribe(observeCaptor);
+
+        // GIVEN
+        predicates.get('a')!.next(true);
+        predicates.get('b')!.next(true);
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b'],
+        ]);
+
+        // WHEN predicate 'b' completes
+        predicates.get('b')!.complete();
+        // THEN expect no emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b'],
+        ]);
+        expect(observeCaptor.hasCompleted()).toBeFalse();
+
+        // WHEN predicate 'a' completes
+        predicates.get('a')!.complete();
+        // THEN expect no emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b'],
+        ]);
+        expect(observeCaptor.hasCompleted()).toBeFalse();
+      });
+
+      it('should error when predicate errors', () => {
+        const observeCaptor = new ObserveCaptor();
+
+        const predicates = new Map<string, Subject<boolean>>()
+          .set('a', new Subject<boolean>())
+          .set('b', new Subject<boolean>());
+
+        of(['a', 'b'])
+          .pipe(filterArray(item => predicates.get(item)!))
+          .subscribe(observeCaptor);
+
+        // GIVEN
+        predicates.get('a')!.next(true);
+        predicates.get('b')!.next(true);
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b'],
+        ]);
+        expect(observeCaptor.hasErrored()).toBeFalse();
+
+        // WHEN subject 'a' errors
+        predicates.get('a')!.error('error');
+        // THEN expect observable to error
+        expect(observeCaptor.hasErrored()).toBeTrue();
+        expect(observeCaptor.getError()).toBe('error');
+      });
+    });
+  });
 
   describe('mapArray', async () => {
 
@@ -332,6 +592,7 @@ describe('Operators', () => {
         onComplete?: boolean;
         onFinalize?: boolean;
       }
+
       const insideAngularCaptor: InsideNgZoneCaptor = {};
 
       const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
