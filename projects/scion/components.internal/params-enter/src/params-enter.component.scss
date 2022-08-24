@@ -1,4 +1,4 @@
-@use 'components.internal' as sci-ɵcomponents;
+@use '../../theming' as sci-theming;
 
 :host {
   display: grid;
@@ -39,6 +39,6 @@
   }
 
   input {
-    @include sci-ɵcomponents.theme-input-field();
+    @include sci-theming.theme-input-field();
   }
 }
