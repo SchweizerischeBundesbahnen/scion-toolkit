@@ -1,9 +1,9 @@
-@use 'components.internal' as sci-ɵcomponents;
+@use '../../theming' as sci-theming;
 
 :host {
   display: inline-flex;
   flex-direction: row;
-  @include sci-ɵcomponents.theme-input-field(5px);
+  @include sci-theming.theme-input-field(5px);
   padding: .25em .5em;
 
   > input {

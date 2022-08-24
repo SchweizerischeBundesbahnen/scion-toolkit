@@ -1,4 +1,4 @@
-@use 'components.internal' as sci-ɵcomponents;
+@use '../../theming' as sci-theming;
 
 :host {
   display: inline-flex;
@@ -30,7 +30,7 @@
 
     ::ng-deep {
       input, textarea, select {
-        @include sci-ɵcomponents.theme-input-field();
+        @include sci-theming.theme-input-field();
       }
     }
   }
