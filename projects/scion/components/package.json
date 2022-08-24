@@ -16,7 +16,7 @@
   },
   "exports": {
     ".": {
-      "sass": "./_components.scss"
+      "sass": "./_index.scss"
     }
   },
   "dependencies": {
