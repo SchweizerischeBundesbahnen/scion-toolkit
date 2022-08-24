@@ -1,10 +1,12 @@
+@use 'sass:map';
+
 /**
  * Positions scrollbars absolutely relative to the bounding box of the nearest positioned parent.
  *
  * Invoke from within the 'sci-scrollbar' selector.
  */
 @mixin position($theme: ()) {
-  $scrollbar-size: map-get($theme, scrollbar-size);
+  $scrollbar-size: map.get($theme, scrollbar-size);
   $scrollbar-size: 12px !default;
 
   position: absolute;
