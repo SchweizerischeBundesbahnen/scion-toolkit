@@ -97,6 +97,8 @@ jobs:
         app:
           - name: components-app
             cmd: npm run components-app:build
+          - name: components-testing-app
+            cmd: npm run components-testing-app:build
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -158,6 +160,29 @@ jobs:
           name: components-internal-dist
           path: dist/scion/components.internal
       - run: npm run test:headless
+  e2e:
+    name: 'E2E Testing'
+    needs: [ build-libs, build-apps ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1/1]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 'Restoring NPM modules from cache'
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: 'Downloading dist/components-testing-app'
+        uses: actions/download-artifact@v2
+        with:
+          name: components-testing-app
+          path: dist/components-testing-app
+      - run: npm run e2e:headless -- --shard=${{ matrix.shard }}
   toolkit-release-guard:
     name: 'Should release @scion/toolkit?'
     if: github.ref == 'refs/heads/master'
@@ -166,6 +191,7 @@ jobs:
       - build-apps
       - lint
       - test
+      - e2e
     runs-on: ubuntu-latest
     outputs:
       should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
@@ -186,6 +212,7 @@ jobs:
       - build-apps
       - lint
       - test
+      - e2e
     runs-on: ubuntu-latest
     outputs:
       should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
@@ -206,6 +233,7 @@ jobs:
       - build-apps
       - lint
       - test
+      - e2e
     runs-on: ubuntu-latest
     outputs:
       should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
@@ -226,6 +254,7 @@ jobs:
       - build-apps
       - lint
       - test
+      - e2e
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

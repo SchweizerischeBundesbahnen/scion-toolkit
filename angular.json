@@ -90,6 +90,21 @@
         }
       }
     },
+    "@scion/components.e2e": {
+      "projectType": "application",
+      "root": "projects/scion/components.e2e",
+      "architect": {
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/scion/components.e2e/**/*.ts",
+              "projects/scion/components.e2e/**/*.html"
+            ]
+          }
+        }
+      }
+    },
     "@scion/components.internal": {
       "projectType": "library",
       "root": "projects/scion/components.internal",
@@ -220,6 +235,83 @@
         },
         "@schematics/angular:application": {
           "strict": true
+        }
+      }
+    },
+    "components-testing-app": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "apps/components-testing-app",
+      "sourceRoot": "apps/components-testing-app/src",
+      "prefix": "e2e",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/components-testing-app",
+            "index": "apps/components-testing-app/src/index.html",
+            "main": "apps/components-testing-app/src/main.ts",
+            "polyfills": "apps/components-testing-app/src/polyfills.ts",
+            "tsConfig": "apps/components-testing-app/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              "apps/components-testing-app/src/assets"
+            ],
+            "styles": [
+              "apps/components-testing-app/src/styles.scss"
+            ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "projects/scion/components"
+              ]
+            },
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/components-testing-app/src/environments/environment.ts",
+                  "with": "apps/components-testing-app/src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "browserTarget": "components-testing-app:build:production"
+            },
+            "development": {
+              "browserTarget": "components-testing-app:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "apps/components-testing-app/**/*.ts",
+              "apps/components-testing-app/**/*.html"
+            ]
+          }
         }
       }
     }
