@@ -1,3 +1,13 @@
+## [14.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-14.0.0...components-14.0.1) (2022-08-26)
+
+
+### Bug Fixes
+
+* **components/viewport:** focus elements of slotted content via sequential keyboard navigation ([5dd5a5d](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/5dd5a5da1dc2de043489b7fe614400a265eca40b)), closes [#108](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/108)
+* **components:** fix resolution of SASS modules when linking the library via `tsconfig` path overrides ([522eba3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/522eba30d50dd347df4db680da49d1ae27173722))
+
+
+
 # [14.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-13.0.0...components-14.0.0) (2022-08-16)
 
 
