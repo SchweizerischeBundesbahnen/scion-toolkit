@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, Output, ViewChild, ViewEncapsulation} from '@angular/core';
+import {Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild, ViewEncapsulation} from '@angular/core';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 import {coerceElement} from '@angular/cdk/coercion';
 
@@ -89,9 +89,6 @@ export class SciViewportComponent {
   private _viewport!: HTMLDivElement;
   private _viewportClient!: HTMLDivElement;
   private _scrollbarStyle: ScrollbarStyle = 'on-top';
-
-  @HostBinding('attr.tabindex')
-  public tabindex = -1; // make the viewport programmatically focusable but do not include it in the tab order
 
   /** @internal */
   @ViewChild('viewport', {static: true})

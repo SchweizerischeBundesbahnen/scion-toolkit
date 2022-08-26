@@ -17,6 +17,8 @@ This section explains how to submit a pull request.
 1. Run the command `npm run before-push` to make sure that the project builds, passes all tests, and has no lint violations. Alternatively, you can also run the commands one by one, as following:
   - `npm run test:headless`\
     Runs all unit tests.
+  - `npm run e2e:headless`\
+    Runs all e2e tests.
   - `npm run lint`\
     Lints all project files.
   - `npm run build`\
@@ -50,6 +52,9 @@ The following is a summary of commands useful for development of `scion-toolkit`
 
 - **`npm run components:test`**\
   Runs unit tests of *@scion/components* library.
+
+- **`npm run components:e2e:run`**\
+  Runs e2e tests of *@scion/components* library.
 
 - **`npm run components:changelog`**\
   Generates the changelog for *@scion/components* based on the commit history. The output is written to `CHANGELOG_COMPONENTS.md`, which will be included in `docs/site/changelog-components/changelog/changelog.md`.
