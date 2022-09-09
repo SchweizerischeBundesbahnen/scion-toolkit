@@ -5,6 +5,16 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+## [14.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-14.0.0...ɵcomponents-14.0.1) (2022-09-09)
+
+
+### Bug Fixes
+
+* **ɵcomponents/params-enter:** make title optional ([744f9e2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/744f9e2fae5ec2fad1795973bd876fb0355a8ea8))
+* **ɵcomponents:** fix resolution of SASS modules when linking the library via `tsconfig` path overrides ([bc63340](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/bc6334038a398f650ffecca9d7280ad04e089e0f))
+
+
+
 # [14.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-13.0.1...ɵcomponents-14.0.0) (2022-08-16)
 
 
