@@ -1,3 +1,12 @@
+## [14.0.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-14.0.1...components-14.0.2) (2022-09-09)
+
+
+### Bug Fixes
+
+* **components/viewport:** fix offset computation of slotted content ([8e287f0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/8e287f0d2a05eb56bb05b8c59a65f4ef3ae44ee0))
+
+
+
 ## [14.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-14.0.0...components-14.0.1) (2022-08-26)
 
 
