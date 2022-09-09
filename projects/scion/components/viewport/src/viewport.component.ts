@@ -86,14 +86,14 @@ import {coerceElement} from '@angular/cdk/coercion';
 })
 export class SciViewportComponent {
 
-  private _viewport!: HTMLDivElement;
+  private _viewportElement!: HTMLDivElement;
   private _viewportClient!: HTMLDivElement;
   private _scrollbarStyle: ScrollbarStyle = 'on-top';
 
   /** @internal */
   @ViewChild('viewport', {static: true})
   public set setViewport(viewport: ElementRef<HTMLDivElement>) {
-    this._viewport = coerceElement(viewport);
+    this._viewportElement = coerceElement(viewport);
   }
 
   /** @internal */
@@ -128,7 +128,7 @@ export class SciViewportComponent {
 
   @HostListener('focus')
   public focus(): void { // do not rename to expose the same focus method like `HTMLElement.focus()`.
-    this._viewport && this._viewport.focus();
+    this._viewportElement?.focus();
   }
 
   public onScroll(event: Event): void {
@@ -141,7 +141,7 @@ export class SciViewportComponent {
    * @see Element.scrollTop
    */
   public get scrollTop(): number {
-    return this._viewport.scrollTop;
+    return this._viewportElement.scrollTop;
   }
 
   /**
@@ -150,7 +150,7 @@ export class SciViewportComponent {
    * @see Element.scrollTop
    */
   public set scrollTop(scrollTop: number) {
-    this._viewport.scrollTop = scrollTop;
+    this._viewportElement.scrollTop = scrollTop;
   }
 
   /**
@@ -159,7 +159,7 @@ export class SciViewportComponent {
    * @see Element.scrollLeft
    */
   public get scrollLeft(): number {
-    return this._viewport.scrollLeft;
+    return this._viewportElement.scrollLeft;
   }
 
   /**
@@ -168,7 +168,7 @@ export class SciViewportComponent {
    * @see Element.scrollLeft
    */
   public set scrollLeft(scrollLeft: number) {
-    this._viewport.scrollLeft = scrollLeft;
+    this._viewportElement.scrollLeft = scrollLeft;
   }
 
   /**
@@ -177,7 +177,7 @@ export class SciViewportComponent {
    * @see Element.scrollHeight
    */
   public get scrollHeight(): number {
-    return this._viewport.scrollHeight;
+    return this._viewportElement.scrollHeight;
   }
 
   /**
@@ -186,14 +186,14 @@ export class SciViewportComponent {
    * @see Element.scrollWidth
    */
   public get scrollWidth(): number {
-    return this._viewport.scrollWidth;
+    return this._viewportElement.scrollWidth;
   }
 
   /**
    * Returns the viewport {HTMLElement}.
    */
   public get viewportElement(): HTMLElement {
-    return this._viewport;
+    return this._viewportElement;
   }
 
   /**
@@ -208,17 +208,19 @@ export class SciViewportComponent {
    *
    * @param element - the element to be checked
    * @param fit - control if the element must fully or partially fit into the viewport
+   *
+   * @throws if the element is not contained in the viewport's slotted content.
    */
-  public isElementInView(element: HTMLElement, fit: 'full' | 'partial'): boolean {
+  public isElementInView(element: ElementRef<HTMLElement> | HTMLElement, fit: 'full' | 'partial'): boolean {
     const elLeft = this.computeOffset(element, 'left');
-    const elRight = elLeft + element.offsetWidth;
+    const elRight = elLeft + coerceElement(element).offsetWidth;
     const elTop = this.computeOffset(element, 'top');
-    const elBottom = elTop + element.offsetHeight;
+    const elBottom = elTop + coerceElement(element).offsetHeight;
 
-    const vpLeft = this._viewport.scrollLeft;
-    const vpRight = vpLeft + this._viewport.clientWidth;
-    const vpTop = this._viewport.scrollTop;
-    const vpBottom = vpTop + this._viewport.clientHeight;
+    const vpLeft = this._viewportElement.scrollLeft;
+    const vpRight = vpLeft + this._viewportElement.clientWidth;
+    const vpTop = this._viewportElement.scrollTop;
+    const vpBottom = vpTop + this._viewportElement.clientHeight;
 
     switch (fit) {
       case 'full':
@@ -235,42 +237,32 @@ export class SciViewportComponent {
    *
    * @param element - the element to scroll into the viewport
    * @param offset - the gap between the element and the viewport
+   *
+   * @throws if the element is not contained in the viewport's slotted content.
    */
-  public scrollIntoView(element: HTMLElement, offset: number = 50): void {
-    this._viewport.scrollTop = this.computeOffset(element, 'top') - offset;
-    this._viewport.scrollLeft = this.computeOffset(element, 'left') - offset;
+  public scrollIntoView(element: ElementRef<HTMLElement> | HTMLElement, offset: number = 50): void {
+    this._viewportElement.scrollTop = this.computeOffset(element, 'top') - offset;
+    this._viewportElement.scrollLeft = this.computeOffset(element, 'left') - offset;
   }
 
   /**
    * Computes the distance of the element to the viewport's left or top border.
+   *
+   * @throws if the element is not contained in the viewport's slotted content.
    */
-  public computeOffset(element: HTMLElement, border: 'left' | 'top'): number {
-    if (!isChildOf(element, this._viewport)) {
-      throw Error('element not a child of the viewport');
-    }
-
+  public computeOffset(element: ElementRef<HTMLElement> | HTMLElement, border: 'left' | 'top'): number {
     let offset = 0;
-    let el = element;
+    let el = coerceElement(element);
     do {
       offset += (border === 'left' ? el.offsetLeft : el.offsetTop);
       el = el.offsetParent as HTMLElement;
-    } while (el !== null && el !== this._viewport);
+      if (el === null) {
+        throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+      }
+    } while (el !== this.host.nativeElement);
 
     return offset;
   }
-}
-
-/**
- * Returns 'true' if the given element is a child element of the parent element.
- */
-function isChildOf(element: Element, parent: Element): boolean {
-  while (element.parentElement !== null) {
-    element = element.parentElement;
-    if (element === parent) {
-      return true;
-    }
-  }
-  return false;
 }
 
 /**

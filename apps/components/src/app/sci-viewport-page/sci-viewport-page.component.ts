@@ -47,7 +47,7 @@ export class SciViewportPageComponent implements OnInit, OnDestroy {
   public form: FormGroup;
 
   @ViewChild(SciViewportComponent, {static: true, read: ElementRef})
-  public viewportComponent!: ElementRef<HTMLElement>;
+  public viewportElement!: ElementRef<HTMLElement>;
 
   @HostBinding('style.--viewport-minheight')
   public get viewportMinHeight(): string {
@@ -98,7 +98,7 @@ export class SciViewportPageComponent implements OnInit, OnDestroy {
   }
 
   private readCssVariableDefault(cssVariable: string): string {
-    return getComputedStyle(this.viewportComponent.nativeElement).getPropertyValue(cssVariable);
+    return getComputedStyle(this.viewportElement.nativeElement).getPropertyValue(cssVariable);
   }
 
   private installStyleSheet(): CSSStyleSheet | null {
