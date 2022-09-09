@@ -1,8 +1,10 @@
-<h2>{{title}}</h2>
-
-<!-- 'add' button -->
-<button *ngIf="addable" (click)="onAdd()" class="add e2e-add material-icons" type="button" title="Add entry">add</button>
-<button *ngIf="removable" (click)="onClear()" class="clear e2e-clear material-icons" type="button" title="Clear all entries">clear</button>
+<header>
+  <h2 *ngIf="title">{{title}}</h2>
+  <!-- add button -->
+  <button *ngIf="addable" (click)="onAdd()" class="e2e-add material-icons" type="button" title="Add entry">add</button>
+  <!-- remove button -->
+  <button *ngIf="removable" (click)="onClear()" class="e2e-clear material-icons" type="button" title="Clear all entries">clear</button>
+</header>
 
 <ng-container *ngFor="let paramGroup of paramsFormArray.controls; index as i;">
   <!-- label -->
