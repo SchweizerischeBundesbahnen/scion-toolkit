@@ -26,6 +26,7 @@ describe('Viewport', () => {
       declarations: [
         Testee1Component,
         Testee2Component,
+        Testee3Component,
       ],
       imports: [
         SciViewportModule,
@@ -954,6 +955,202 @@ describe('Viewport', () => {
     fromDimensionSubscription.unsubscribe();
   });
 
+  describe('computeOffset', () => {
+
+    it('should compute offset of element inside viewport', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'left')).toEqual(0);
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'top')).toEqual(0);
+
+      component.setStyle(component.insideViewportElement, {'position': 'relative'});
+      component.moveElement(component.insideViewportElement, {x: 100, y: 200});
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'left')).toEqual(100);
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'top')).toEqual(200);
+    });
+
+    it('should compute offset relative to viewport boundaries', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'left')).toEqual(0);
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'top')).toEqual(0);
+
+      component.setStyle(component.viewportElement, {'position': 'relative'});
+      component.moveElement(component.viewportElement, {x: 100, y: 200});
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'left')).toEqual(0);
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'top')).toEqual(0);
+    });
+
+    it('should throw when computing the offset of an element that is not contained in the viewport', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      expect(() => component.viewportComponent.computeOffset(component.beforeViewportElement, 'left')).toThrowError(/ElementNotContainedError/);
+    });
+  });
+
+  describe('isElementInView', () => {
+
+    it('should determine whether element is in view (1/2)', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      component.setStyle(component.viewportElement, {
+        'width': '100px',
+        'height': '100px',
+      });
+      // when element is smaller than viewport
+      component.setStyle(component.insideViewportElement, {
+        'width': '99px',
+        'height': '99px',
+      });
+      // then expect element to be in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element has equal viewport size
+      component.setStyle(component.insideViewportElement, {
+        'width': '100px',
+        'height': '100px',
+      });
+      // then expect element to be in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element is larger than viewport
+      component.setStyle(component.insideViewportElement, {
+        'width': '101px',
+        'height': '101px',
+      });
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+    });
+
+    it('should determine whether element is in view (2/2)', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      component.setStyle(component.viewportElement, {
+        'width': '100px',
+        'height': '100px',
+      });
+      component.setStyle(component.insideViewportElement, {
+        'position': 'relative',
+        'width': '100px',
+        'height': '100px',
+      });
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
+
+      // when element overlaps on top
+      component.moveElement(component.insideViewportElement, {x: 0, y: -50});
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element overlaps on top right
+      component.moveElement(component.insideViewportElement, {x: 50, y: -50});
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element overlaps on right
+      component.moveElement(component.insideViewportElement, {x: 50, y: 0});
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element overlaps on bottom right
+      component.moveElement(component.insideViewportElement, {x: 50, y: 50});
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element overlaps on bottom
+      component.moveElement(component.insideViewportElement, {x: 0, y: 50});
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element overlaps on bottom left
+      component.moveElement(component.insideViewportElement, {x: -50, y: 50});
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element overlaps on left
+      component.moveElement(component.insideViewportElement, {x: -50, y: 0});
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element overlaps on top left
+      component.moveElement(component.insideViewportElement, {x: -50, y: -50});
+      // then expect element to be partially in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+
+      // when element is outside viewport
+      component.moveElement(component.insideViewportElement, {x: 150, y: 150});
+      // then expect element to not be in viewport
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeFalse();
+    });
+  });
+
+  describe('scrollIntoView', () => {
+
+    it('should scroll element into view horizontally', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      component.setStyle(component.viewportElement, {
+        'width': '100px',
+        'height': '100px',
+      });
+      component.setStyle(component.insideViewportElement, {
+        'position': 'relative',
+        'width': '100px',
+        'height': '100px',
+        'left': '250px',
+      });
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeFalse();
+
+      // when scrolling element into view
+      component.viewportComponent.scrollIntoView(component.insideViewportElement, 0);
+      // then expect element to be in view
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+    });
+
+    it('should scroll element into view vertically', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      component.setStyle(component.viewportElement, {
+        'width': '100px',
+        'height': '100px',
+      });
+      component.setStyle(component.insideViewportElement, {
+        'position': 'relative',
+        'width': '100px',
+        'height': '100px',
+        'top': '250px',
+      });
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeFalse();
+
+      // when scrolling element into view
+      component.viewportComponent.scrollIntoView(component.insideViewportElement, 0);
+      // then expect element to be in view
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
+    });
+  });
+
   function isScrollbarVisible(fixture: ComponentFixture<any>, scrollbar: 'vertical' | 'horizontal'): boolean {
     const scrollbarElement: HTMLElement = fixture.debugElement.query(By.css(`sci-scrollbar.${scrollbar}`)).nativeElement;
     return scrollbarElement.classList.contains('overflow');
@@ -1101,5 +1298,56 @@ class Testee2Component {
       default:
         throw Error(`[SpecError] Element not found: ${selector}`);
     }
+  }
+}
+
+@Component({
+  selector: 'spec-testee-3',
+  template: `
+    <div #before_viewport></div>
+    <sci-viewport>
+      <div #inside_viewport></div>
+    </sci-viewport>
+  `,
+  styles: [`
+    sci-viewport {
+      height: 100px;
+      width: 100px;
+      background-color: grey;
+    }
+
+    div {
+      width: 100px;
+      height: 100px;
+      background-color: cornflowerblue;
+    }
+  `],
+})
+class Testee3Component {
+
+  @ViewChild(SciViewportComponent, {static: true})
+  public viewportComponent!: SciViewportComponent;
+
+  @ViewChild(SciViewportComponent, {read: ElementRef, static: true})
+  public viewportElement!: ElementRef<HTMLElement>;
+
+  @ViewChild('before_viewport', {read: ElementRef, static: true})
+  public beforeViewportElement!: ElementRef<HTMLElement>;
+
+  @ViewChild('inside_viewport', {read: ElementRef, static: true})
+  public insideViewportElement!: ElementRef<HTMLElement>;
+
+  constructor(private _renderer: Renderer2) {
+  }
+
+  public moveElement(element: ElementRef<HTMLElement>, coordinates: { x: number; y: number }): void {
+    this.setStyle(element, {
+      'left': `${coordinates.x}px`,
+      'top': `${coordinates.y}px`,
+    });
+  }
+
+  public setStyle(element: ElementRef<HTMLElement>, style: Dictionary): void {
+    Object.keys(style).forEach(key => this._renderer.setStyle(element.nativeElement, key, style[key]));
   }
 }
