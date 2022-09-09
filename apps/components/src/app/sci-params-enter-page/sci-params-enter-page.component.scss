@@ -1,11 +1,7 @@
 :host {
   display: flex;
   flex-direction: column;
-
-  > button.print {
-    margin: 1em 0;
-    align-self: flex-end;
-  }
+  gap: 1em;
 
   > output {
     border: 1px solid var(--sci-color-A900);

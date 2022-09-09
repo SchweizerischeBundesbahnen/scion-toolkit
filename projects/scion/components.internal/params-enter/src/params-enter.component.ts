@@ -29,7 +29,7 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
   public readonly PARAM_VALUE = PARAM_VALUE;
 
   @Input()
-  public title!: string;
+  public title?: string;
 
   @Input()
   public paramsFormArray!: FormArray;
@@ -76,7 +76,6 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
   }
 
   private assertInputProperties(): void {
-    Defined.orElseThrow(this.title, () => Error('[NullInputError] Missing required input: `title`.'));
     Defined.orElseThrow(this.paramsFormArray, () => Error('[NullInputError] Missing required input: `paramsFormArray`.'));
   }
 
