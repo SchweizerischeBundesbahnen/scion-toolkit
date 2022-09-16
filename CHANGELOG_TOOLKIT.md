@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.0.0...toolkit-1.1.0) (2022-09-16)
+
+
+### Features
+
+* **toolkit/operators:** support asynchronous predicate in `filterArray` operator ([c5803f7](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/c5803f79f28536fcf6a7f654fcafa6428e8f1631)), closes [#104](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/104)
+
+
 # [1.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/13.0.0-beta.2...toolkit-1.0.0) (2022-05-17)
 
 
