@@ -54,7 +54,10 @@ The following is a summary of commands useful for development of `scion-toolkit`
   Runs unit tests of *@scion/components* library.
 
 - **`npm run components:e2e:run`**\
-  Runs e2e tests of *@scion/components* library.
+  Runs end-to-end tests of the *@scion/components* library. Prior to test execution, starts the testing app `components-testing-app`.
+
+- **`npm run components:e2e:debug`**\
+  Runs end-to-end tests of the *@scion/components* library in debug mode. Prior to test execution, starts the testing app `components-testing-app`.
 
 - **`npm run components:changelog`**\
   Generates the changelog for *@scion/components* based on the commit history. The output is written to `CHANGELOG_COMPONENTS.md`, which will be included in `docs/site/changelog-components/changelog/changelog.md`.
