@@ -111,7 +111,7 @@ describe('Operators', () => {
 
     describe('observable predicate', () => {
 
-      it('should filter items with observable as predicate', async () => {
+      it('should filter items with observable as predicate', () => {
         const observeCaptor = new ObserveCaptor();
 
         const predicates = new Map<string, Subject<boolean>>()
@@ -175,14 +175,13 @@ describe('Operators', () => {
         ]);
       });
 
-      it('should distinct predicate emissions, but not item emissions', async () => {
+      it('should distinct predicate emissions, but not item emissions', () => {
         const observeCaptor = new ObserveCaptor();
 
         const predicates = new Map<string, Subject<boolean>>()
           .set('a', new Subject<boolean>())
           .set('b', new Subject<boolean>())
           .set('c', new Subject<boolean>());
-
 
         const items$ = new BehaviorSubject<string[]>(['a', 'b', 'c']);
         items$
@@ -280,23 +279,22 @@ describe('Operators', () => {
     });
   });
 
-  describe('mapArray', async () => {
+  describe('mapArray', () => {
 
-    it('should map items of an array', async () => {
+    it('should map items of an array', () => {
       const observeCaptor = new ObserveCaptor();
 
       of(['a', 'b', 'c'])
         .pipe(mapArray(a => a.toUpperCase()))
         .subscribe(observeCaptor);
 
-      await observeCaptor.waitUntilCompletedOrErrored();
-      await expect(observeCaptor.getLastValue()).toEqual(['A', 'B', 'C']);
+      expect(observeCaptor.getLastValue()).toEqual(['A', 'B', 'C']);
     });
   });
 
   describe('observeInside', () => {
 
-    it('should execute downstream, next operators and the next subscription handler inside the Angular zone', async () => {
+    it('should execute downstream, next operators and the next subscription handler inside the Angular zone', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
@@ -330,19 +328,19 @@ describe('Operators', () => {
       });
 
       // THEN
-      await expect(NgZone.isInAngularZone()).toBeFalse();
-      await expect(insideAngularCaptor.onObservableCreate).toBeFalse();
-      await expect(insideAngularCaptor.onNextBeforeObserveInside).toBeFalse();
-      await expect(insideAngularCaptor.onNextAfterObserveInside).toBeTrue();
-      await expect(insideAngularCaptor.onNext).toBeTrue();
+      expect(NgZone.isInAngularZone()).toBeFalse();
+      expect(insideAngularCaptor.onObservableCreate).toBeFalse();
+      expect(insideAngularCaptor.onNextBeforeObserveInside).toBeFalse();
+      expect(insideAngularCaptor.onNextAfterObserveInside).toBeTrue();
+      expect(insideAngularCaptor.onNext).toBeTrue();
 
       subscription.unsubscribe();
 
-      await expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
-      await expect(insideAngularCaptor.onFinalize).toBeFalse();
+      expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
+      expect(insideAngularCaptor.onFinalize).toBeFalse();
     });
 
-    it('should execute downstream complete operators and the complete subscription handler inside the Angular zone', async () => {
+    it('should execute downstream complete operators and the complete subscription handler inside the Angular zone', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
@@ -376,19 +374,19 @@ describe('Operators', () => {
       });
 
       // THEN
-      await expect(NgZone.isInAngularZone()).toBeFalse();
-      await expect(insideAngularCaptor.onObservableCreate).toBeFalse();
-      await expect(insideAngularCaptor.onCompleteBeforeObserveInside).toBeFalse();
-      await expect(insideAngularCaptor.onCompleteAfterObserveInside).toBeTrue();
-      await expect(insideAngularCaptor.onComplete).toBeTrue();
+      expect(NgZone.isInAngularZone()).toBeFalse();
+      expect(insideAngularCaptor.onObservableCreate).toBeFalse();
+      expect(insideAngularCaptor.onCompleteBeforeObserveInside).toBeFalse();
+      expect(insideAngularCaptor.onCompleteAfterObserveInside).toBeTrue();
+      expect(insideAngularCaptor.onComplete).toBeTrue();
 
       subscription.unsubscribe();
 
-      await expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
-      await expect(insideAngularCaptor.onFinalize).toBeFalse();
+      expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
+      expect(insideAngularCaptor.onFinalize).toBeFalse();
     });
 
-    it('should execute downstream error operators and the error subscription handler inside the Angular zone', async () => {
+    it('should execute downstream error operators and the error subscription handler inside the Angular zone', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
@@ -422,22 +420,22 @@ describe('Operators', () => {
       });
 
       // THEN
-      await expect(NgZone.isInAngularZone()).toBeFalse();
-      await expect(insideAngularCaptor.onObservableCreate).toBeFalse();
-      await expect(insideAngularCaptor.onErrorBeforeObserveInside).toBeFalse();
-      await expect(insideAngularCaptor.onErrorAfterObserveInside).toBeTrue();
-      await expect(insideAngularCaptor.onError).toBeTrue();
+      expect(NgZone.isInAngularZone()).toBeFalse();
+      expect(insideAngularCaptor.onObservableCreate).toBeFalse();
+      expect(insideAngularCaptor.onErrorBeforeObserveInside).toBeFalse();
+      expect(insideAngularCaptor.onErrorAfterObserveInside).toBeTrue();
+      expect(insideAngularCaptor.onError).toBeTrue();
 
       subscription.unsubscribe();
 
-      await expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
-      await expect(insideAngularCaptor.onFinalize).toBeFalse();
+      expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
+      expect(insideAngularCaptor.onFinalize).toBeFalse();
     });
   });
 
   describe('subscribeInside', () => {
 
-    it('should create the Observable and execute next operators and the next handler inside the Angular zone', async () => {
+    it('should create the Observable and execute next operators and the next handler inside the Angular zone', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
@@ -471,19 +469,19 @@ describe('Operators', () => {
       });
 
       // THEN
-      await expect(NgZone.isInAngularZone()).toBeFalse();
-      await expect(insideAngularCaptor.onObservableCreate).toBeTrue();
-      await expect(insideAngularCaptor.onNextBeforeSubscribeInside).toBeTrue();
-      await expect(insideAngularCaptor.onNextAfterSubscribeInside).toBeTrue();
-      await expect(insideAngularCaptor.onNext).toBeTrue();
+      expect(NgZone.isInAngularZone()).toBeFalse();
+      expect(insideAngularCaptor.onObservableCreate).toBeTrue();
+      expect(insideAngularCaptor.onNextBeforeSubscribeInside).toBeTrue();
+      expect(insideAngularCaptor.onNextAfterSubscribeInside).toBeTrue();
+      expect(insideAngularCaptor.onNext).toBeTrue();
 
       subscription.unsubscribe();
 
-      await expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
-      await expect(insideAngularCaptor.onFinalize).toBeTrue();
+      expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
+      expect(insideAngularCaptor.onFinalize).toBeTrue();
     });
 
-    it('should create the Observable and execute error operators and the error handler inside the Angular zone', async () => {
+    it('should create the Observable and execute error operators and the error handler inside the Angular zone', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
@@ -517,19 +515,19 @@ describe('Operators', () => {
       });
 
       // THEN
-      await expect(NgZone.isInAngularZone()).toBeFalse();
-      await expect(insideAngularCaptor.onObservableCreate).toBeTrue();
-      await expect(insideAngularCaptor.onErrorBeforeSubscribeInside).toBeTrue();
-      await expect(insideAngularCaptor.onErrorAfterSubscribeInside).toBeTrue();
-      await expect(insideAngularCaptor.onError).toBeTrue();
+      expect(NgZone.isInAngularZone()).toBeFalse();
+      expect(insideAngularCaptor.onObservableCreate).toBeTrue();
+      expect(insideAngularCaptor.onErrorBeforeSubscribeInside).toBeTrue();
+      expect(insideAngularCaptor.onErrorAfterSubscribeInside).toBeTrue();
+      expect(insideAngularCaptor.onError).toBeTrue();
 
       subscription.unsubscribe();
 
-      await expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
-      await expect(insideAngularCaptor.onFinalize).toBeTrue();
+      expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
+      expect(insideAngularCaptor.onFinalize).toBeTrue();
     });
 
-    it('should create the Observable and execute complete operators and the complete handler inside the Angular zone', async () => {
+    it('should create the Observable and execute complete operators and the complete handler inside the Angular zone', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
@@ -563,22 +561,22 @@ describe('Operators', () => {
       });
 
       // THEN
-      await expect(NgZone.isInAngularZone()).toBeFalse();
-      await expect(insideAngularCaptor.onObservableCreate).toBeTrue();
-      await expect(insideAngularCaptor.onCompleteBeforeSubscribeInside).toBeTrue();
-      await expect(insideAngularCaptor.onCompleteAfterSubscribeInside).toBeTrue();
-      await expect(insideAngularCaptor.onComplete).toBeTrue();
+      expect(NgZone.isInAngularZone()).toBeFalse();
+      expect(insideAngularCaptor.onObservableCreate).toBeTrue();
+      expect(insideAngularCaptor.onCompleteBeforeSubscribeInside).toBeTrue();
+      expect(insideAngularCaptor.onCompleteAfterSubscribeInside).toBeTrue();
+      expect(insideAngularCaptor.onComplete).toBeTrue();
 
       subscription.unsubscribe();
 
-      await expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
-      await expect(insideAngularCaptor.onFinalize).toBeTrue();
+      expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
+      expect(insideAngularCaptor.onFinalize).toBeTrue();
     });
   });
 
   describe('subscribeInside and observeInside', () => {
 
-    it('should subscribe outside the Angular zone, but observe inside of the Angular zone ', async () => {
+    it('should subscribe outside the Angular zone, but observe inside of the Angular zone ', () => {
       const zone = TestBed.inject(NgZone);
 
       // GIVEN
@@ -613,30 +611,30 @@ describe('Operators', () => {
         );
 
       // WHEN
-      await zone.run(async () => {
+      zone.run( () => {
         const subscription = observable$.subscribe({
           next: () => insideAngularCaptor.onNext = NgZone.isInAngularZone(),
           complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
         });
 
         // THEN
-        await expect(NgZone.isInAngularZone()).toBeTrue();
-        await expect(insideAngularCaptor.onObservableCreate).toBeFalse();
-        await expect(insideAngularCaptor.onNextBeforeSubscribeInside).toBeFalse();
-        await expect(insideAngularCaptor.onNextAfterSubscribeInside).toBeFalse();
-        await expect(insideAngularCaptor.onNextAfterObserveInside).toBeTrue();
-        await expect(insideAngularCaptor.onNext).toBeTrue();
-        await expect(insideAngularCaptor.onComplete).toBeTrue();
+        expect(NgZone.isInAngularZone()).toBeTrue();
+        expect(insideAngularCaptor.onObservableCreate).toBeFalse();
+        expect(insideAngularCaptor.onNextBeforeSubscribeInside).toBeFalse();
+        expect(insideAngularCaptor.onNextAfterSubscribeInside).toBeFalse();
+        expect(insideAngularCaptor.onNextAfterObserveInside).toBeTrue();
+        expect(insideAngularCaptor.onNext).toBeTrue();
+        expect(insideAngularCaptor.onComplete).toBeTrue();
 
         subscription.unsubscribe();
 
-        await expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
-        await expect(insideAngularCaptor.onFinalize).toBeFalse();
+        expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
+        expect(insideAngularCaptor.onFinalize).toBeFalse();
       });
     });
   });
 
-  describe('combineArray', async () => {
+  describe('combineArray', () => {
 
     it('should combine the Observables of each source emission', () => {
       const observeCaptor = new ObserveCaptor();
@@ -718,7 +716,7 @@ describe('Operators', () => {
     });
   });
 
-  describe('distinctArray', async () => {
+  describe('distinctArray', () => {
 
     it('should remove duplicates of elements in the source array', () => {
       const observeCaptor = new ObserveCaptor();
@@ -759,7 +757,7 @@ describe('Operators', () => {
     });
   });
 
-  describe('bufferUntil', async () => {
+  describe('bufferUntil', () => {
 
     it('should buffer emissions until `closingNotifier$` emits', () => {
       const observeCaptor = new ObserveCaptor();
