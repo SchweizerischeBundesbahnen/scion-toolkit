@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {defaultIfEmpty, distinctUntilChanged, map, mergeMap, share, switchMap, take} from 'rxjs/operators';
+import {catchError, defaultIfEmpty, distinctUntilChanged, map, mergeMap, share, switchMap, take} from 'rxjs/operators';
 import {combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic} from 'rxjs';
 import {Arrays, Observables} from '@scion/toolkit/util';
 
@@ -18,6 +18,7 @@ import {Arrays, Observables} from '@scion/toolkit/util';
  * - If passing `undefined` as predicate, the filter matches all items.
  * - If passing an asynchronous predicate:
  *   - Continues filtering the source Observable even if some predicate complete without first emission. Such items are not included in the emission.
+ *   - Continues filtering the source Observable even if some predicate error. Such items are not included in the emission and the error is not propagated.
  */
 export function filterArray<T, S extends T>(predicate?: (item: T) => item is S): OperatorFunction<T[], S[]>;
 export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Promise<boolean> | boolean): MonoTypeOperatorFunction<T[]>;
@@ -44,7 +45,7 @@ export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Pr
      * - If some Observable does not emit any value and never completes, `combineLatest` will also never emit and never complete.
      * - If any Observable errors, `combineLatest` will error immediately as well, and all other Observables will be unsubscribed.
      */
-    return combineLatest(matches.map(match => Observables.coerce(match).pipe(defaultIfEmpty(false))))
+    return combineLatest(matches.map(match => Observables.coerce(match).pipe(defaultIfEmpty(false), catchError(() => of(false)))))
       .pipe(
         distinctUntilChanged((previous, current) => Arrays.isEqual(previous, current)),
         map(matches => items.filter((item, i) => matches[i])),
