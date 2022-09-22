@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {BehaviorSubject, concat, NEVER, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
+import {BehaviorSubject, concat, EMPTY, NEVER, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
 import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
 import {NgZone} from '@angular/core';
 import {finalize, tap} from 'rxjs/operators';
@@ -275,6 +275,55 @@ describe('Operators', () => {
         // THEN expect observable to error
         expect(observeCaptor.hasErrored()).toBeTrue();
         expect(observeCaptor.getError()).toBe('error');
+      });
+
+      it('should continue filtering the source even if some predicate complete without first emission', () => {
+        const observeCaptor = new ObserveCaptor();
+
+        const predicates = new Map<string, Subject<boolean>>()
+          .set('a', new Subject<boolean>())
+          .set('b', new Subject<boolean>())
+          .set('c', new Subject<boolean>())
+          .set('d', EMPTY as any);
+
+        of(['a', 'b', 'c', 'd'])
+          .pipe(filterArray(item => predicates.get(item)!))
+          .subscribe(observeCaptor);
+
+        // WHEN predicate 'a' emits true
+        predicates.get('a')!.next(true);
+        // THEN expect no emission
+        expect(observeCaptor.getValues()).toEqual([]);
+
+        // WHEN predicate 'b' emits true
+        predicates.get('b')!.next(true);
+        // THEN expect no emission
+        expect(observeCaptor.getValues()).toEqual([]);
+
+        // WHEN predicate 'c' completes
+        predicates.get('c')!.complete();
+        // THEN expect emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b'],
+        ]);
+
+        observeCaptor.reset();
+
+        // WHEN predicate 'b' emits false
+        predicates.get('b')!.next(false);
+        // THEN expect emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['a'],
+        ]);
+
+        observeCaptor.reset();
+
+        // WHEN predicate 'b' emits true
+        predicates.get('b')!.next(true);
+        // THEN expect emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'b'],
+        ]);
       });
     });
   });
@@ -611,7 +660,7 @@ describe('Operators', () => {
         );
 
       // WHEN
-      zone.run( () => {
+      zone.run(() => {
         const subscription = observable$.subscribe({
           next: () => insideAngularCaptor.onNext = NgZone.isInAngularZone(),
           complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
