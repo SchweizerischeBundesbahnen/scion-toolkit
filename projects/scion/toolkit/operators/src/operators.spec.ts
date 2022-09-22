@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {BehaviorSubject, concat, EMPTY, NEVER, Observable, Observer, of, Subject, TeardownLogic} from 'rxjs';
+import {BehaviorSubject, concat, EMPTY, NEVER, Observable, Observer, of, Subject, TeardownLogic, throwError} from 'rxjs';
 import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
 import {NgZone} from '@angular/core';
 import {finalize, tap} from 'rxjs/operators';
@@ -90,22 +90,24 @@ describe('Operators', () => {
         ]);
       });
 
-      it('should error when predicate errors', async () => {
+      it('should not error when predicate errors', async () => {
         const observeCaptor = new ObserveCaptor();
 
         const predicates = new Map<string, Promise<boolean>>()
           .set('a', Promise.resolve(true))
-          .set('b', Promise.resolve(true))
-          .set('c', Promise.reject('error'));
+          .set('b', Promise.reject('error'))
+          .set('c', Promise.resolve(true));
 
-        of(['a', 'b', 'c'])
+        concat(of(['a', 'b', 'c']), NEVER)
           .pipe(filterArray(item => predicates.get(item)!))
           .subscribe(observeCaptor);
 
-        await observeCaptor.waitUntilCompletedOrErrored();
-        expect(observeCaptor.getValues()).toEqual([]);
-        expect(observeCaptor.hasErrored()).toBeTrue();
-        expect(observeCaptor.getError()).toBe('error');
+        await observeCaptor.waitUntilEmitCount(1);
+        expect(observeCaptor.getValues()).toEqual([
+          ['a', 'c'],
+        ]);
+        expect(observeCaptor.hasErrored()).toBeFalse();
+        expect(observeCaptor.hasCompleted()).toBeFalse();
       });
     });
 
@@ -251,30 +253,60 @@ describe('Operators', () => {
         expect(observeCaptor.hasCompleted()).toBeFalse();
       });
 
-      it('should error when predicate errors', () => {
+      it('should not error when predicate errors', () => {
         const observeCaptor = new ObserveCaptor();
 
         const predicates = new Map<string, Subject<boolean>>()
           .set('a', new Subject<boolean>())
-          .set('b', new Subject<boolean>());
+          .set('b', throwError(() => 'error') as any)
+          .set('c', new Subject<boolean>())
+          .set('d', new Subject<boolean>())
+          .set('e', new Subject<boolean>());
 
-        of(['a', 'b'])
+        of(['a', 'b', 'c', 'd', 'e'])
           .pipe(filterArray(item => predicates.get(item)!))
           .subscribe(observeCaptor);
 
         // GIVEN
         predicates.get('a')!.next(true);
-        predicates.get('b')!.next(true);
+        predicates.get('c')!.next(true);
+        predicates.get('d')!.next(false);
+        predicates.get('e')!.next(false);
         expect(observeCaptor.getValues()).toEqual([
-          ['a', 'b'],
+          ['a', 'c'],
         ]);
         expect(observeCaptor.hasErrored()).toBeFalse();
 
+        observeCaptor.reset();
+
         // WHEN subject 'a' errors
         predicates.get('a')!.error('error');
-        // THEN expect observable to error
-        expect(observeCaptor.hasErrored()).toBeTrue();
-        expect(observeCaptor.getError()).toBe('error');
+        // THEN expect emission (because 'a' had a `true` predicate) and observable not to error
+        expect(observeCaptor.getValues()).toEqual([
+          ['c'],
+        ]);
+        expect(observeCaptor.hasErrored()).toBeFalse();
+        expect(observeCaptor.hasCompleted()).toBeFalse();
+
+        observeCaptor.reset();
+
+        // WHEN subject 'e' errors
+        predicates.get('e')!.error('error');
+        // THEN expect no emission because 'e' had a `false` predicate
+        expect(observeCaptor.getValues()).toEqual([]);
+        expect(observeCaptor.hasErrored()).toBeFalse();
+        expect(observeCaptor.hasCompleted()).toBeFalse();
+
+        observeCaptor.reset();
+
+        // WHEN subject 'd' emits
+        predicates.get('d')!.next(true);
+        // THEN expect emission
+        expect(observeCaptor.getValues()).toEqual([
+          ['c', 'd'],
+        ]);
+        expect(observeCaptor.hasErrored()).toBeFalse();
+        expect(observeCaptor.hasCompleted()).toBeFalse();
       });
 
       it('should continue filtering the source even if some predicate complete without first emission', () => {
