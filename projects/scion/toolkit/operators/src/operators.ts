@@ -17,6 +17,19 @@ import {Arrays, Observables} from '@scion/toolkit/util';
  *
  * - If passing `undefined` as predicate, the filter matches all items.
  * - If passing an asynchronous predicate:
+ *   - Waits for all predicates to emit at least once or to complete.
+ *     TIP: If you want to emit as soon as a predicate emits, use the `startWith(false)` operator in combination with
+ *     the `skip` operator. Consequently, there will be a separate emission per item, in the order in which predicates
+ *     emit.
+ *
+ *     ```ts
+ *     source$
+ *       .pipe(
+ *         filterArray(item => matchesItem$(item).pipe(startWith(false))), // make the predicate immediately emit `false`
+ *         skip(1), // skip initial emission caused by `startWith(false)`.
+ *       )
+ *       .subscribe(items => {});
+ *     ```
  *   - Continues filtering the source Observable even if some predicate complete without first emission. Such items are not included in the emission.
  *   - Continues filtering the source Observable even if some predicate error. Such items are not included in the emission and the error is not propagated.
  */
@@ -41,7 +54,8 @@ export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Pr
     /*
      * Notes about `combineLatest` operator:
      * - Passing an empty array will result in an Observable that completes immediately.
-     * - If some Observable does not emit a value but completes, resulting Observable will complete at the same moment without emitting anything
+     * - Waits for all Observables to emit at least once.
+     * - If some Observable does not emit a value but completes, resulting Observable will complete at the same moment without emitting anything.
      * - If some Observable does not emit any value and never completes, `combineLatest` will also never emit and never complete.
      * - If any Observable errors, `combineLatest` will error immediately as well, and all other Observables will be unsubscribed.
      */
