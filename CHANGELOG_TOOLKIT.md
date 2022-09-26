@@ -1,3 +1,13 @@
+# [1.2.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.1.0...toolkit-1.2.0) (2022-09-26)
+
+
+### Features
+
+* **toolkit/operators/filterArray:** continue filtering if a predicate completes without first emission ([b1435d6](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/b1435d623f03a5afb4d256d91f6eaf15f76cf804))
+* **toolkit/operators/filterArray:** do not error if a predicate errors ([84af2b0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/84af2b0e4d4363d4479f135f8219db550e1b6bce))
+
+
+
 # [1.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.0.0...toolkit-1.1.0) (2022-09-16)
 
 
