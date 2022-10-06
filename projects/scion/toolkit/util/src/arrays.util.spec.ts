@@ -16,54 +16,54 @@ describe('Arrays', () => {
 
     it('should be equal for same array references', () => {
       const array = ['a', 'b', 'c'];
-      expect(Arrays.isEqual(array, array)).toBeTruthy();
+      expect(Arrays.isEqual(array, array)).toBeTrue();
     });
 
     it('should be equal for same elements (same order)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'b', 'c'];
-      expect(Arrays.isEqual(array1, array2)).toBeTruthy();
+      expect(Arrays.isEqual(array1, array2)).toBeTrue();
     });
 
     it('should be equal for same elements (unordered)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
-      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTruthy();
+      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTrue();
     });
 
     it('should not be equal for different elements (1)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'b', 'c', 'e'];
-      expect(Arrays.isEqual(array1, array2)).toBeFalsy();
+      expect(Arrays.isEqual(array1, array2)).toBeFalse();
     });
 
     it('should not be equal for different elements (2)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'B', 'c'];
-      expect(Arrays.isEqual(array1, array2)).toBeFalsy();
+      expect(Arrays.isEqual(array1, array2)).toBeFalse();
     });
 
     it('should not be equal if ordered differently', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
-      expect(Arrays.isEqual(array1, array2)).toBeFalsy();
+      expect(Arrays.isEqual(array1, array2)).toBeFalse();
     });
 
     it('should be equal if ordered differently', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
-      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTruthy();
+      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTrue();
     });
 
     it('should compare \'null\' and \'undefined\' arrays', () => {
-      expect(Arrays.isEqual(null, ['a', 'b', 'c'])).toBeFalsy();
-      expect(Arrays.isEqual(undefined, ['a', 'b', 'c'])).toBeFalsy();
-      expect(Arrays.isEqual(['a', 'b', 'c'], null)).toBeFalsy();
-      expect(Arrays.isEqual(['a', 'b', 'c'], undefined)).toBeFalsy();
-      expect(Arrays.isEqual(null, null)).toBeTruthy();
-      expect(Arrays.isEqual(undefined, undefined)).toBeTruthy();
-      expect(Arrays.isEqual(null, undefined)).toBeFalsy();
-      expect(Arrays.isEqual(undefined, null)).toBeFalsy();
+      expect(Arrays.isEqual(null, ['a', 'b', 'c'])).toBeFalse();
+      expect(Arrays.isEqual(undefined, ['a', 'b', 'c'])).toBeFalse();
+      expect(Arrays.isEqual(['a', 'b', 'c'], null)).toBeFalse();
+      expect(Arrays.isEqual(['a', 'b', 'c'], undefined)).toBeFalse();
+      expect(Arrays.isEqual(null, null)).toBeTrue();
+      expect(Arrays.isEqual(undefined, undefined)).toBeTrue();
+      expect(Arrays.isEqual(null, undefined)).toBeFalse();
+      expect(Arrays.isEqual(undefined, null)).toBeFalse();
     });
   });
 

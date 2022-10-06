@@ -18,8 +18,8 @@ describe('ObserveCaptor', () => {
     subject$.next('value 3');
 
     expect(captor.getValues()).toEqual(['value 1', 'value 2', 'value 3']);
-    expect(captor.hasErrored()).toBe(false);
-    expect(captor.hasCompleted()).toBe(false);
+    expect(captor.hasErrored()).toBeFalse();
+    expect(captor.hasCompleted()).toBeFalse();
   });
 
   it('should capture the last emission', () => {
@@ -33,8 +33,8 @@ describe('ObserveCaptor', () => {
     subject$.next('value 3');
 
     expect(captor.getLastValue()).toEqual('value 3');
-    expect(captor.hasErrored()).toBe(false);
-    expect(captor.hasCompleted()).toBe(false);
+    expect(captor.hasErrored()).toBeFalse();
+    expect(captor.hasCompleted()).toBeFalse();
   });
 
   it('should capture an error', () => {
@@ -51,8 +51,8 @@ describe('ObserveCaptor', () => {
     expect(captor.getValues()).toEqual(['value 1', 'value 2']);
     expect(captor.getLastValue()).toEqual('value 2');
     expect(captor.getError()).toBe(error);
-    expect(captor.hasErrored()).toBe(true);
-    expect(captor.hasCompleted()).toBe(false);
+    expect(captor.hasErrored()).toBeTrue();
+    expect(captor.hasCompleted()).toBeFalse();
   });
 
   it('should capture completion', () => {
@@ -67,8 +67,8 @@ describe('ObserveCaptor', () => {
 
     expect(captor.getValues()).toEqual(['value 1', 'value 2']);
     expect(captor.getLastValue()).toEqual('value 2');
-    expect(captor.hasErrored()).toBe(false);
-    expect(captor.hasCompleted()).toBe(true);
+    expect(captor.hasErrored()).toBeFalse();
+    expect(captor.hasCompleted()).toBeTrue();
   });
 
   it('should wait until a given number of emissions', async () => {
@@ -89,8 +89,8 @@ describe('ObserveCaptor', () => {
     await captor.waitUntilEmitCount(3);
 
     expect(captor.getValues()).toEqual(jasmine.arrayContaining(['value 1', 'value 2', 'value 3']));
-    expect(captor.hasErrored()).toBe(false);
-    expect(captor.hasCompleted()).toBe(false);
+    expect(captor.hasErrored()).toBeFalse();
+    expect(captor.hasCompleted()).toBeFalse();
   });
 
   it('should time out if not emitted expected emissions [actual: 0, expected: 3]', async () => {
@@ -133,8 +133,8 @@ describe('ObserveCaptor', () => {
     await captor.waitUntilCompletedOrErrored();
 
     expect(captor.getValues()).toEqual(['value 1', 'value 2', 'value 3', 'value 4', 'value 5', 'value 6']);
-    expect(captor.hasErrored()).toBe(false);
-    expect(captor.hasCompleted()).toBe(true);
+    expect(captor.hasErrored()).toBeFalse();
+    expect(captor.hasCompleted()).toBeTrue();
   });
 
   it('should allow the projection of captured values', () => {

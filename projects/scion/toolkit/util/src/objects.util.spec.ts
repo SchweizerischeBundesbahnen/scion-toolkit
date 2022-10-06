@@ -16,41 +16,41 @@ describe('Objects', () => {
 
     it('should be equal for same object reference', () => {
       const obj = {};
-      expect(Objects.isEqual(obj, obj)).toBeTruthy();
+      expect(Objects.isEqual(obj, obj)).toBeTrue();
     });
 
     it('should be equal for different property order', () => {
       const a = {firstname: 'john', lastname: 'smith'};
       const b = {lastname: 'smith', firstname: 'john'};
-      expect(Objects.isEqual(a, b)).toBeTruthy();
+      expect(Objects.isEqual(a, b)).toBeTrue();
     });
 
     it('should be equal for two `null` objects', () => {
-      expect(Objects.isEqual(null, null)).toBeTruthy();
+      expect(Objects.isEqual(null, null)).toBeTrue();
     });
 
     it('should be equal for two `undefined` objects', () => {
-      expect(Objects.isEqual(undefined, undefined)).toBeTruthy();
+      expect(Objects.isEqual(undefined, undefined)).toBeTrue();
     });
 
     it('should not be equal for `undefined` and object', () => {
-      expect(Objects.isEqual(undefined, {})).toBeFalsy();
+      expect(Objects.isEqual(undefined, {})).toBeFalse();
     });
 
     it('should not be equal for `null` and object', () => {
-      expect(Objects.isEqual(null, {})).toBeFalsy();
+      expect(Objects.isEqual(null, {})).toBeFalse();
     });
 
     it('should not be equal for `null` and `undefined`', () => {
-      expect(Objects.isEqual(null, undefined)).toBeFalsy();
+      expect(Objects.isEqual(null, undefined)).toBeFalse();
     });
 
     it('should be equal for two empty objects', () => {
-      expect(Objects.isEqual({}, {})).toBeTruthy();
+      expect(Objects.isEqual({}, {})).toBeTrue();
     });
 
     it('should not be equal for different properties', () => {
-      expect(Objects.isEqual({firstname: 'jack'}, {firstname: 'john'})).toBeFalsy();
+      expect(Objects.isEqual({firstname: 'jack'}, {firstname: 'john'})).toBeFalse();
     });
   });
 });

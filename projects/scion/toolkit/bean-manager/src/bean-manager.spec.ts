@@ -21,8 +21,7 @@ describe('BeanManager', () => {
     }
 
     Beans.register(Bean);
-    expect(Beans.get(Bean)).toBeTruthy();
-    expect(Beans.get(Bean) instanceof Bean).toBeTruthy();
+    expect(Beans.get(Bean)).toBeInstanceOf(Bean);
     expect(Beans.get(Bean)).toBe(Beans.get(Bean));
   });
 
@@ -110,7 +109,7 @@ describe('BeanManager', () => {
     Beans.register(Bean);
 
     expect(Beans.get(Bean)).toBe(Beans.get(Bean));
-    expect(Beans.get(Bean) instanceof Bean).toBeTruthy();
+    expect(Beans.get(Bean)).toBeInstanceOf(Bean);
   });
 
   it('should construct beans lazily unless specified differently', async () => {
@@ -124,9 +123,9 @@ describe('BeanManager', () => {
 
     Beans.register(Bean);
 
-    expect(constructed).toBeFalsy();
+    expect(constructed).toBeFalse();
     Beans.get(Bean);
-    expect(constructed).toBeTruthy();
+    expect(constructed).toBeTrue();
   });
 
   it('should allow initializers to look up beans', async () => {
@@ -157,9 +156,8 @@ describe('BeanManager', () => {
 
     Beans.register(Bean, {eager: false});
 
-    expect(constructed).toBeFalsy();
-    Beans.get(Bean);
-    expect(Bean).toBeTruthy();
+    expect(constructed).toBeFalse();
+    expect(Beans.get(Bean)).toBeInstanceOf(Bean);
   });
 
   it('should invoke the bean\'s \'preDestroy\' lifecycle hook on destroy', async () => {
@@ -224,12 +222,12 @@ describe('BeanManager', () => {
     }
 
     Beans.register(symbol, {useClass: Bean1});
-    expect(Beans.get(symbol) instanceof Bean1).toBeTruthy();
+    expect(Beans.get(symbol)).toBeInstanceOf(Bean1);
 
     // replace the bean
     Beans.register(symbol, {useClass: Bean2});
-    expect(Beans.get(symbol) instanceof Bean2).toBeTruthy();
-    expect(bean1Destroyed).toBeTruthy();
+    expect(Beans.get(symbol)).toBeInstanceOf(Bean2);
+    expect(bean1Destroyed).toBeTrue();
   });
 
   it('should allow looking up other beans in a bean constructor', async () => {
@@ -260,14 +258,14 @@ describe('BeanManager', () => {
     Beans.register(Bean2);
     Beans.register(Bean3);
 
-    expect(bean1Constructed).toBeFalsy();
-    expect(bean2Constructed).toBeFalsy();
-    expect(bean3Constructed).toBeFalsy();
+    expect(bean1Constructed).toBeFalse();
+    expect(bean2Constructed).toBeFalse();
+    expect(bean3Constructed).toBeFalse();
 
     Beans.get(Bean1);
-    expect(bean1Constructed).toBeTruthy();
-    expect(bean2Constructed).toBeTruthy();
-    expect(bean3Constructed).toBeFalsy();
+    expect(bean1Constructed).toBeTrue();
+    expect(bean2Constructed).toBeTrue();
+    expect(bean3Constructed).toBeFalse();
   });
 
   it('should throw when looking up a bean which causes a circular construction cycle', async () => {
@@ -311,7 +309,7 @@ describe('BeanManager', () => {
     Beans.register(SomeSymbol, {useClass: Bean});
 
     Beans.get(SomeSymbol);
-    expect(constructed).toBeTruthy();
+    expect(constructed).toBeTrue();
     expect(() => Beans.get(Bean)).toThrowError(/NullBeanError/);
   });
 
@@ -335,8 +333,8 @@ describe('BeanManager', () => {
     Beans.register(TrueValueBean, {useValue: true});
     Beans.register(FalseValueBean, {useValue: false});
 
-    expect(Beans.get(TrueValueBean)).toBe(true);
-    expect(Beans.get(FalseValueBean)).toBe(false);
+    expect(Beans.get(TrueValueBean)).toBeTrue();
+    expect(Beans.get(FalseValueBean)).toBeFalse();
   });
 
   it('should allow registering a bean with `false` as its value (falsy value)', () => {
@@ -653,11 +651,11 @@ describe('BeanManager', () => {
     const actualBean = Beans.get(Bean);
     const alias = Beans.get(Alias);
     expect(actualBean).toBe(alias);
-    expect(alias instanceof Bean).toBeTruthy();
-    expect(alias instanceof Alias).toBeFalsy();
+    expect(alias).toBeInstanceOf(Bean);
+    expect(alias).not.toBeInstanceOf(Alias);
   });
 
-  it('should not destroy the aliased bean when its alias is destroyed [useExisting]', async () => {
+  it('should not destroy the referenced bean when its alias is destroyed [useExisting]', async () => {
     let beanDestroyed = false;
 
     abstract class Bean implements PreDestroy {
@@ -681,7 +679,7 @@ describe('BeanManager', () => {
     Beans.register(Alias, {useValue: 'some-other-bean'});
 
     expect(Beans.get(Bean)).toBe(actualBean);
-    expect(beanDestroyed).toBeFalsy();
+    expect(beanDestroyed).toBeFalse();
     expect(Beans.get(Alias)).toEqual('some-other-bean' as any);
   });
 
