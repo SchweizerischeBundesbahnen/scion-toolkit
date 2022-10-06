@@ -354,9 +354,8 @@ export class BeanManager {
   }
 
   private disposeBean(beanInfo: BeanInfo): void {
-    // Invoke 'preDestroy' lifecycle hook, if any, but only if not an alias for another bean.
-    const alias = beanInfo.instructions.useExisting ?? false;
-    if (!alias && beanInfo.instance && typeof (beanInfo.instance as PreDestroy).preDestroy === 'function') {
+    const destroyable = beanInfo.instructions.useClass || beanInfo.instructions.useFactory;
+    if (destroyable && beanInfo.instance && typeof (beanInfo.instance as PreDestroy).preDestroy === 'function') {
       try {
         beanInfo.instance.preDestroy();
       }

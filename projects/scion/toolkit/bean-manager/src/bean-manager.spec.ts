@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 Swiss Federal Railways
+ * Copyright (c) 2018-2022 Swiss Federal Railways
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -657,7 +657,7 @@ describe('BeanManager', () => {
     expect(alias instanceof Alias).toBeFalsy();
   });
 
-  it('should not destroy the referenced bean when its alias is destroyed [useExisting]', async () => {
+  it('should not destroy the aliased bean when its alias is destroyed [useExisting]', async () => {
     let beanDestroyed = false;
 
     abstract class Bean implements PreDestroy {
@@ -683,6 +683,55 @@ describe('BeanManager', () => {
     expect(Beans.get(Bean)).toBe(actualBean);
     expect(beanDestroyed).toBeFalsy();
     expect(Beans.get(Alias)).toEqual('some-other-bean' as any);
+  });
+
+  it('should not invoke \'preDestroy\' on value bean', async () => {
+    let destroyed = false;
+
+    const value = new class implements PreDestroy {
+      public preDestroy(): void {
+        destroyed = true;
+      }
+    };
+
+    const VALUE_BEAN = Symbol();
+    Beans.register(VALUE_BEAN, {useValue: value});
+    expect(Beans.get(VALUE_BEAN)).toBe(value);
+
+    Beans.destroy();
+    expect(destroyed).toBeFalse();
+  });
+
+  it('should invoke \'preDestroy\' on class bean', async () => {
+    let destroyed = false;
+
+    class Bean implements PreDestroy {
+      public preDestroy(): void {
+        destroyed = true;
+      }
+    }
+
+    Beans.register(Bean);
+    expect(Beans.get(Bean)).toBeInstanceOf(Bean);
+
+    Beans.destroy();
+    expect(destroyed).toBeTrue();
+  });
+
+  it('should invoke \'preDestroy\' on factory bean', async () => {
+    let destroyed = false;
+
+    class Bean implements PreDestroy {
+      public preDestroy(): void {
+        destroyed = true;
+      }
+    }
+
+    Beans.register(Bean, {useFactory: () => new Bean()});
+    expect(Beans.get(Bean)).toBeInstanceOf(Bean);
+
+    Beans.destroy();
+    expect(destroyed).toBeTrue();
   });
 
   it('should execute initializers with a lower runlevel before initializers with a higher runlevel', fakeAsync(() => {
