@@ -1,6 +1,6 @@
 {
   "name": "@scion/toolkit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Provides a collection of framework-agnostic utilities designed primarily for use in SCION libraries such as `@scion/workbench` and `@scion/microfrontend-platform`. This library is written in plain TypeScript and has no dependency on any other library.",
   "license": "EPL-2.0",
   "private": false,
