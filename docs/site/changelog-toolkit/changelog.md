@@ -6,6 +6,15 @@
 ## [Changelog][menu-changelog] > @scion/toolkit
 
 
+## [1.2.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.2.0...toolkit-1.2.1) (2022-10-07)
+
+
+### Bug Fixes
+
+* **toolkit/bean-manager:** do not destroy "value beans" ([2698ec3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/2698ec32fbe0eed497ec37d063b43f1fe3b1c0db))
+
+
+
 # [1.2.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.1.0...toolkit-1.2.0) (2022-09-26)
 
 
