@@ -80,7 +80,7 @@
     "@angular-eslint/template-parser": "14.1.2",
     "@angular/cli": "14.2.3",
     "@angular/compiler-cli": "14.2.3",
-    "@playwright/test": "1.26.0",
+    "@playwright/test": "1.27.0",
     "@types/jasmine": "4.3.0",
     "@typescript-eslint/eslint-plugin": "5.38.0",
     "@typescript-eslint/parser": "5.38.0",
