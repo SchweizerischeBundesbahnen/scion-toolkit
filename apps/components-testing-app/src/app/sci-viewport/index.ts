@@ -10,7 +10,9 @@
 
 import {Routes} from '@angular/router';
 import {E2eFocusComponent} from './focus/e2e-focus.component';
+import {E2eOverlapComponent} from './overlap/e2e-overlap.component';
 
 export const routes: Routes = [
   {path: 'focus', component: E2eFocusComponent},
+  {path: 'overlap', component: E2eOverlapComponent},
 ];
