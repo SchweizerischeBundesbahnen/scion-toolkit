@@ -9,12 +9,12 @@
  */
 
 import {expect, test} from '@playwright/test';
-import {E2eFocusPo} from './e2e-focus.po';
+import {ViewportFocusPagePO} from './viewport-focus-page.po';
 
 test.describe('sci-viewport/focus', () => {
 
   test('should focus elements of slotted content via sequential keyboard navigation', async ({page}) => {
-    const focusPO = new E2eFocusPo(page);
+    const focusPO = new ViewportFocusPagePO(page);
     await focusPO.open();
 
     // focus input field before viewport

@@ -8,17 +8,17 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {E2eOverlapPO} from './e2e-overlap.po';
 import {test} from '../../fixtures';
 import {expect} from '@playwright/test';
+import {ViewportOverlapPagePO} from './viewport-overlap-page.po';
 
 test.describe('sci-viewport/overlap', () => {
 
   test('should not overlap adjacent elements', async ({page, consoleLogs}) => {
-    const overlapPO = new E2eOverlapPO(page);
+    const overlapPO = new ViewportOverlapPagePO(page);
     await overlapPO.open();
 
     await overlapPO.clickAdjacentElement();
-    await expect(await consoleLogs.get({filter: /E2eOverlapComponent/})).toHaveLength(1);
+    await expect(await consoleLogs.get({filter: /ViewportOverlapPageComponent/})).toHaveLength(1);
   });
 });

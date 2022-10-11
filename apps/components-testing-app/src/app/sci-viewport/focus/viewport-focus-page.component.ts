@@ -12,12 +12,12 @@ import {Component} from '@angular/core';
 import {SciViewportModule} from '@scion/components/viewport';
 
 @Component({
-  selector: 'e2e-focus',
-  templateUrl: './e2e-focus.component.html',
+  selector: 'e2e-viewport-focus-page',
+  templateUrl: './viewport-focus-page.component.html',
   standalone: true,
   imports: [
     SciViewportModule,
   ],
 })
-export class E2eFocusComponent {
+export class ViewportFocusPageComponent {
 }

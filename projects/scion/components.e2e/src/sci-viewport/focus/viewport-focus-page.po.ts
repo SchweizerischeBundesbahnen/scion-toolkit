@@ -13,12 +13,12 @@ import {isActiveElement} from '../../helper/testing.utils';
 
 const PATH = '/#/sci-viewport/focus';
 
-export class E2eFocusPo {
+export class ViewportFocusPagePO {
 
   private readonly componentLocator: Locator;
 
   constructor(private _page: Page) {
-    this.componentLocator = _page.locator('e2e-focus');
+    this.componentLocator = _page.locator('e2e-viewport-focus-page');
   }
 
   public async open(): Promise<void> {
