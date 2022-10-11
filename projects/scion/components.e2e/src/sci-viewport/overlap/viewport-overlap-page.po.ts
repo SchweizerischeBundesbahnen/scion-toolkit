@@ -12,12 +12,12 @@ import {Locator, Page} from '@playwright/test';
 
 const PATH = '/#/sci-viewport/overlap';
 
-export class E2eOverlapPO {
+export class ViewportOverlapPagePO {
 
   public readonly locator: Locator;
 
   constructor(private _page: Page) {
-    this.locator = _page.locator('e2e-overlap');
+    this.locator = _page.locator('e2e-viewport-overlap-page');
   }
 
   public async open(): Promise<void> {

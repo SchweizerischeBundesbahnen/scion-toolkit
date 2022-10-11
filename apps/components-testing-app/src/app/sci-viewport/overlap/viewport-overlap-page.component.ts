@@ -12,17 +12,17 @@ import {Component} from '@angular/core';
 import {SciViewportModule} from '@scion/components/viewport';
 
 @Component({
-  selector: 'e2e-overlap',
-  templateUrl: './e2e-overlap.component.html',
-  styleUrls: ['./e2e-overlap.component.scss'],
+  selector: 'e2e-viewport-overlap-page',
+  templateUrl: './viewport-overlap-page.component.html',
+  styleUrls: ['./viewport-overlap-page.component.scss'],
   standalone: true,
   imports: [
     SciViewportModule,
   ],
 })
-export class E2eOverlapComponent {
+export class ViewportOverlapPageComponent {
 
   public onClick(): void {
-    console.debug('[E2eOverlapComponent] Button clicked');
+    console.debug('[ViewportOverlapPageComponent] Button clicked');
   }
 }
