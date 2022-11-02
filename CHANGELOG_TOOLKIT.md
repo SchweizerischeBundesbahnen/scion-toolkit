@@ -1,3 +1,12 @@
+# [1.3.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.2.1...toolkit-1.3.0) (2022-11-02)
+
+
+### Features
+
+* **toolkit/crypto:** provide `digest` function to compute the hash of data ([67eff30](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/67eff3087e566eef81828758524ef951d48ec304))
+
+
+
 ## [1.2.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.2.0...toolkit-1.2.1) (2022-10-07)
 
 
