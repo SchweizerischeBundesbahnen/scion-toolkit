@@ -23,6 +23,9 @@ This module is available as [@scion/toolkit][link-toolkit-download] in the NPM r
 - [**BeanManager**][link-tool-bean-manager]\
   Provides a registry for looking up singleton objects.
 
+- [**Crypto**][link-tool-crypto]\
+  Provides cryptographic functions.
+
 - [**Observable**][link-tool-observable]\
   Provides RxJS Observables for observing the size or DOM mutations of an HTML element.
    
@@ -81,6 +84,7 @@ This module is available as [@scion/components][link-components-download] in the
 [link-tool-uuid]: /docs/site/tools/uuid.md
 [link-tool-web-storage]: /docs/site/tools/web-storage.md
 [link-tool-bean-manager]: /docs/site/tools/bean-manager.md
+[link-tool-crypto]: /docs/site/tools/crypto.md
 [link-scion-microfrontend-platform]: https://github.com/SchweizerischeBundesbahnen/scion-microfrontend-platform/blob/master/README.md
 [link-scion-workbench]: https://github.com/SchweizerischeBundesbahnen/scion-workbench/blob/master/README.md
 
