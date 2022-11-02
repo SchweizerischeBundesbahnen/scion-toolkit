@@ -22,6 +22,9 @@ This library is written in plain TypeScript and has no dependency on any other l
 - [**BeanManager**][link-tool-bean-manager]\
   Provides a registry for looking up singleton objects.
 
+- [**Crypto**][link-tool-crypto]\
+  Provides cryptographic functions.
+
 - [**WebStorage**][link-tool-web-storage]\
   Allows observing items contained in local or session storage.
 
@@ -41,3 +44,4 @@ License: EPL-2.0
 [link-tool-uuid]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/docs/site/tools/uuid.md
 [link-tool-web-storage]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/docs/site/tools/web-storage.md
 [link-tool-bean-manager]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/docs/site/tools/bean-manager.md
+[link-tool-crypto]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/docs/site/tools/crypto.md
