@@ -6,6 +6,15 @@
 ## [Changelog][menu-changelog] > @scion/toolkit
 
 
+## [1.3.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.3.0...toolkit-1.3.1) (2022-11-09)
+
+
+### Bug Fixes
+
+* **toolkit/bean-manager:** construct eager bean of a multi-token when registered after started the bean manager ([6c29afd](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/6c29afd079b058ae5989703a979d737b112deebc))
+
+
+
 # [1.3.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.2.1...toolkit-1.3.0) (2022-11-02)
 
 
