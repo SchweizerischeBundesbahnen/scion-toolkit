@@ -148,7 +148,7 @@ export class BeanManager {
     }
 
     if (beanInfo.eager && this._eagerBeansConstructed) {
-      this.get(symbol);
+      this.getOrConstructBeanInstance(beanInfo);
     }
 
     return {unregister: (): void => this.disposeBean(beanInfo)};

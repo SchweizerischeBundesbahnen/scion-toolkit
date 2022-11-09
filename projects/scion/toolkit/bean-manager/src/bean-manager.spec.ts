@@ -983,6 +983,12 @@ describe('BeanManager', () => {
   it('should construct eager beans when starting the bean manager', async () => {
     let bean1Constructed = false;
     let bean2Constructed = false;
+    let bean3Constructed = false;
+    let bean4Constructed = false;
+    let bean5Constructed = false;
+    let bean6Constructed = false;
+
+    const SYMBOL = Symbol('MULTI');
 
     class Bean1 {
       constructor() {
@@ -996,27 +1002,112 @@ describe('BeanManager', () => {
       }
     }
 
-    Beans.register(Bean1, {eager: true});
-    Beans.register(Bean2, {eager: true});
-
-    await Beans.start();
-
-    expect(bean1Constructed).toBeTrue();
-    expect(bean2Constructed).toBeTrue();
-  });
-
-  it('should immediately construct eager bean when registered after started the bean manager', async () => {
-    let constructed = false;
-
-    class Bean {
+    class Bean3 {
       constructor() {
-        constructed = true;
+        bean3Constructed = true;
       }
     }
 
+    class Bean4 {
+      constructor() {
+        bean4Constructed = true;
+      }
+    }
+
+    class Bean5 {
+      constructor() {
+        bean5Constructed = true;
+      }
+    }
+
+    class Bean6 {
+      constructor() {
+        bean6Constructed = true;
+      }
+    }
+
+    // Register beans before started the bean manager.
+    Beans.register(SYMBOL, {useClass: Bean1, multi: true});
+    Beans.register(SYMBOL, {useClass: Bean2, multi: true, eager: true});
+    Beans.register(SYMBOL, {useClass: Bean3, multi: true, eager: false});
+    Beans.register(Bean4, {eager: true});
+    Beans.register(Bean5, {eager: false});
+    Beans.register(Bean6);
+
+    // Start the bean manager.
     await Beans.start();
-    Beans.register(Bean, {eager: true});
-    expect(constructed).toBeTrue();
+
+    expect(bean1Constructed).toBeFalse();
+    expect(bean2Constructed).toBeTrue();
+    expect(bean3Constructed).toBeFalse();
+    expect(bean4Constructed).toBeTrue();
+    expect(bean5Constructed).toBeFalse();
+    expect(bean6Constructed).toBeFalse();
+  });
+
+  it('should immediately construct eager beans when registered after started the bean manager', async () => {
+    let bean1Constructed = false;
+    let bean2Constructed = false;
+    let bean3Constructed = false;
+    let bean4Constructed = false;
+    let bean5Constructed = false;
+    let bean6Constructed = false;
+
+    const SYMBOL = Symbol('MULTI');
+
+    class Bean1 {
+      constructor() {
+        bean1Constructed = true;
+      }
+    }
+
+    class Bean2 {
+      constructor() {
+        bean2Constructed = true;
+      }
+    }
+
+    class Bean3 {
+      constructor() {
+        bean3Constructed = true;
+      }
+    }
+
+    class Bean4 {
+      constructor() {
+        bean4Constructed = true;
+      }
+    }
+
+    class Bean5 {
+      constructor() {
+        bean5Constructed = true;
+      }
+    }
+
+    class Bean6 {
+      constructor() {
+        bean6Constructed = true;
+      }
+    }
+
+    // Start the bean manager.
+    await Beans.start();
+
+    // Register beans after started the bean manager.
+    Beans.register(SYMBOL, {useClass: Bean1, multi: true});
+    Beans.register(SYMBOL, {useClass: Bean2, multi: true, eager: true});
+    Beans.register(SYMBOL, {useClass: Bean3, multi: true, eager: false});
+    Beans.register(Bean4, {eager: true});
+    Beans.register(Bean5, {eager: false});
+    Beans.register(Bean6);
+
+    expect(bean1Constructed).toBeFalse();
+    expect(bean2Constructed).toBeTrue();
+    expect(bean3Constructed).toBeFalse();
+    expect(bean4Constructed).toBeTrue();
+    expect(bean5Constructed).toBeFalse();
+    expect(bean6Constructed).toBeFalse();
   });
 
   it('should immediately construct eager bean when registered in an initializer that is bound to a higher runlevel than the "eager bean construction runlevel"', async () => {
