@@ -6,7 +6,7 @@
     "@scion/toolkit": {
       "projectType": "library",
       "root": "projects/scion/toolkit",
-      "sourceRoot": "projects/scion/toolkit/src",
+      "sourceRoot": "projects/scion/toolkit",
       "prefix": "sci",
       "architect": {
         "build": {
@@ -47,7 +47,7 @@
     "@scion/components": {
       "projectType": "library",
       "root": "projects/scion/components",
-      "sourceRoot": "projects/scion/components/src",
+      "sourceRoot": "projects/scion/components",
       "prefix": "sci",
       "architect": {
         "build": {
@@ -108,7 +108,7 @@
     "@scion/components.internal": {
       "projectType": "library",
       "root": "projects/scion/components.internal",
-      "sourceRoot": "projects/scion/components.internal/src",
+      "sourceRoot": "projects/scion/components.internal",
       "prefix": "sci",
       "architect": {
         "build": {
@@ -164,7 +164,9 @@
             "outputPath": "dist/components-app",
             "index": "apps/components/src/index.html",
             "main": "apps/components/src/main.ts",
-            "polyfills": "apps/components/src/polyfills.ts",
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "apps/components/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -255,7 +257,9 @@
             "outputPath": "dist/components-testing-app",
             "index": "apps/components-testing-app/src/index.html",
             "main": "apps/components-testing-app/src/main.ts",
-            "polyfills": "apps/components-testing-app/src/polyfills.ts",
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "apps/components-testing-app/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -320,5 +324,13 @@
     "schematicCollections": [
       "@angular-eslint/schematics"
     ]
+  },
+  "schematics": {
+    "@angular-eslint/schematics:application": {
+      "setParserOptionsProject": true
+    },
+    "@angular-eslint/schematics:library": {
+      "setParserOptionsProject": true
+    }
   }
 }

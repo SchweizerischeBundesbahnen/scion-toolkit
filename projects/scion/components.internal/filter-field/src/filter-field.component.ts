@@ -188,6 +188,6 @@ export function toFilterRegExp(filterText: string): RegExp | null {
   }
 
   // Escape the user filter input and add wildcard support
-  const escapedString = filterText.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
+  const escapedString = filterText.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
   return new RegExp(escapedString, 'i');
 }
