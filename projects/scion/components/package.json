@@ -1,6 +1,6 @@
 {
   "name": "@scion/components",
-  "version": "14.0.2",
+  "version": "15.0.0",
   "description": "Provides a collection of Angular components and directives primarily for use in SCION libraries such as `@scion/workbench` and `@scion/microfrontend-platform`. This library is not a comprehensive component library as its focus is on SCION requirements.",
   "license": "EPL-2.0",
   "private": false,
@@ -20,12 +20,12 @@
     }
   },
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.4.0"
   },
   "peerDependencies": {
-    "@angular/common": "^14.0.0",
-    "@angular/core": "^14.0.0",
-    "@angular/cdk": "^14.0.0",
+    "@angular/common": "^15.0.0",
+    "@angular/core": "^15.0.0",
+    "@angular/cdk": "^15.0.0",
     "@scion/toolkit": "^1.0.0",
     "rxjs": "^7.5.0"
   },
