@@ -6,6 +6,23 @@
 ## [Changelog][menu-changelog] > @scion/components
 
 
+# [15.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-14.0.2...components-15.0.0) (2022-12-07)
+
+
+### Dependencies
+
+* **components:** update `@scion/components` to Angular 15 ([2dd75b5](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/2dd75b5e77e19fec95e4b97b846df7bfe3e2ddfb)), closes [#112](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/112)
+
+
+### BREAKING CHANGES
+
+* **components:** Updating `@scion/components` to Angular 15 introduced a breaking change.
+
+  To migrate:
+  - update your application to Angular 15; for detailed migration instructions, refer to https://v15.angular.io/guide/update-to-latest-version;
+
+
+
 ## [14.0.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-14.0.1...components-14.0.2) (2022-09-09)
 
 
