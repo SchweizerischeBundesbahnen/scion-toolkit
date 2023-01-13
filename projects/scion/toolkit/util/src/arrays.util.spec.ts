@@ -23,36 +23,56 @@ describe('Arrays', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'b', 'c'];
       expect(Arrays.isEqual(array1, array2)).toBeTrue();
+      expect(Arrays.isEqual(array2, array1)).toBeTrue();
     });
 
     it('should be equal for same elements (unordered)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
       expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTrue();
+      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeTrue();
+    });
+
+    it('should not be equal for duplicate elements (same order)', () => {
+      const array1 = ['a', 'a', 'a'];
+      const array2 = ['a', 'b', 'c'];
+      expect(Arrays.isEqual(array1, array2)).toBeFalse();
+      expect(Arrays.isEqual(array2, array1)).toBeFalse();
+    });
+
+    it('should not be equal for duplicate elements (unordered)', () => {
+      const array1 = ['a', 'a', 'a'];
+      const array2 = ['a', 'c', 'b'];
+      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeFalse();
+      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeFalse();
     });
 
     it('should not be equal for different elements (1)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'b', 'c', 'e'];
       expect(Arrays.isEqual(array1, array2)).toBeFalse();
+      expect(Arrays.isEqual(array2, array1)).toBeFalse();
     });
 
     it('should not be equal for different elements (2)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'B', 'c'];
       expect(Arrays.isEqual(array1, array2)).toBeFalse();
+      expect(Arrays.isEqual(array2, array1)).toBeFalse();
     });
 
     it('should not be equal if ordered differently', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
       expect(Arrays.isEqual(array1, array2)).toBeFalse();
+      expect(Arrays.isEqual(array2, array1)).toBeFalse();
     });
 
     it('should be equal if ordered differently', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
       expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTrue();
+      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeTrue();
     });
 
     it('should compare \'null\' and \'undefined\' arrays', () => {

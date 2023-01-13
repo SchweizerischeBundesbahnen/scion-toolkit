@@ -47,16 +47,10 @@ export namespace Arrays {
     if (array1.length !== array2.length) {
       return false;
     }
-
-    const exactOrder = Defined.orElse(options && options.exactOrder, true);
-    return array1.every((item, index) => {
-      if (exactOrder) {
-        return item === array2[index];
-      }
-      else {
-        return array2.includes(item);
-      }
-    });
+    if (options?.exactOrder ?? true) {
+      return array1.every((item, index) => item === array2[index]);
+    }
+    return array1.every(item => array2.includes(item)) && array2.every(item => array1.includes(item));
   }
 
   /**
