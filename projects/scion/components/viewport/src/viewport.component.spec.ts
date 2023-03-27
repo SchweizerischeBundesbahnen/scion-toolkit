@@ -984,11 +984,19 @@ describe('Viewport', () => {
       expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'top')).toEqual(0);
     });
 
-    it('should throw when computing the offset of an element that is not contained in the viewport', async () => {
+    it('should return `null` when computing the offset of an element not contained in the viewport', async () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
-      expect(() => component.viewportComponent.computeOffset(component.beforeViewportElement, 'left')).toThrowError(/ElementNotContainedError/);
+      expect(component.viewportComponent.computeOffset(component.beforeViewportElement, 'left')).toBeNull();
+    });
+
+    it('should return `null` when computing the offset for an element whose effective `display` style resolves to `none`.', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      component.setStyle(component.insideViewportElement, {'display': 'none'});
+      expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'left')).toBeNull();
     });
   });
 
@@ -1457,7 +1465,7 @@ class Testee3Component {
   constructor(private _renderer: Renderer2) {
   }
 
-  public moveElement(element: ElementRef<HTMLElement>, coordinates: { x: number; y: number }): void {
+  public moveElement(element: ElementRef<HTMLElement>, coordinates: {x: number; y: number}): void {
     this.setStyle(element, {
       'left': `${coordinates.x}px`,
       'top': `${coordinates.y}px`,

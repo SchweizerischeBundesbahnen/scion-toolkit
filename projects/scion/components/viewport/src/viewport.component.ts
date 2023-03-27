@@ -213,7 +213,13 @@ export class SciViewportComponent {
    */
   public isElementInView(element: ElementRef<HTMLElement> | HTMLElement, fit: 'full' | 'partial'): boolean {
     const elTop = this.computeOffset(element, 'top');
+    if (elTop === null) {
+      throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+    }
     const elLeft = this.computeOffset(element, 'left');
+    if (elLeft === null) {
+      throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+    }
 
     // Consider elements as scrolled into view when there is no viewport overflow.
     // The calculation of whether an element is scrolled into view may be wrong by a few pixels if the viewport contains elements with decimal sizes.
@@ -248,24 +254,43 @@ export class SciViewportComponent {
    * @throws if the element is not contained in the viewport's slotted content.
    */
   public scrollIntoView(element: ElementRef<HTMLElement> | HTMLElement, offset: number = 50): void {
-    this._viewportElement.scrollTop = this.computeOffset(element, 'top') - offset;
-    this._viewportElement.scrollLeft = this.computeOffset(element, 'left') - offset;
+    const top = this.computeOffset(element, 'top');
+    if (top === null) {
+      throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+    }
+    const left = this.computeOffset(element, 'left');
+    if (left === null) {
+      throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+    }
+
+    this._viewportElement.scrollTop = top - offset;
+    this._viewportElement.scrollLeft = left - offset;
   }
 
   /**
    * Computes the distance of the element to the viewport's left or top border.
    *
-   * @throws if the element is not contained in the viewport's slotted content.
+   * @return distance of the element to the viewport's left or top border, or `null` if not contained
+   *         in the viewport or the element or any ancestor has the `display` property set to `none`.
    */
-  public computeOffset(element: ElementRef<HTMLElement> | HTMLElement, border: 'left' | 'top'): number {
+  public computeOffset(element: ElementRef<HTMLElement> | HTMLElement, border: 'left' | 'top'): number | null {
     let offset = 0;
     let el = coerceElement(element);
     do {
       offset += (border === 'left' ? el.offsetLeft : el.offsetTop);
-      el = el.offsetParent as HTMLElement;
-      if (el === null) {
-        throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+      const offsetParent = el.offsetParent;
+      if (offsetParent === null) {
+        // `offsetParent` is `null` in the following situations:
+        // - The element or any ancestor has the `display` property set to `none`
+        // - The element has the position property set to fixed (Firefox returns <body>).
+        // - The element is <body> or <html>.
+        // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetParent.
+        return null;
       }
+      if (!(offsetParent instanceof HTMLElement)) {
+        return null;
+      }
+      el = offsetParent;
     } while (el !== this.host.nativeElement);
 
     return offset;
