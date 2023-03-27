@@ -208,17 +208,16 @@ export class SciViewportComponent {
    *
    * @param element - the element to be checked
    * @param fit - control if the element must fully or partially fit into the viewport
-   *
-   * @throws if the element is not contained in the viewport's slotted content.
+   * @return `true` if the element is scrolled into the viewport, or `false` otherwise.
    */
   public isElementInView(element: ElementRef<HTMLElement> | HTMLElement, fit: 'full' | 'partial'): boolean {
     const elTop = this.computeOffset(element, 'top');
     if (elTop === null) {
-      throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+      return false;
     }
     const elLeft = this.computeOffset(element, 'left');
     if (elLeft === null) {
-      throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+      return false;
     }
 
     // Consider elements as scrolled into view when there is no viewport overflow.
