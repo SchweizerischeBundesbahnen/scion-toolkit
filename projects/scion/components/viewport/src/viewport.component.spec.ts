@@ -9,7 +9,7 @@
  */
 
 import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {Component, ElementRef, Input, Renderer2, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostBinding, Input, Renderer2, ViewChild} from '@angular/core';
 import {SciViewportModule} from './viewport.module';
 import {By} from '@angular/platform-browser';
 import {Dictionary} from '@scion/toolkit/util';
@@ -27,6 +27,7 @@ describe('Viewport', () => {
         Testee1Component,
         Testee2Component,
         Testee3Component,
+        ElementDecimalSizeTestComponent,
       ],
       imports: [
         SciViewportModule,
@@ -1046,8 +1047,8 @@ describe('Viewport', () => {
 
       // when element overlaps on top
       component.moveElement(component.insideViewportElement, {x: 0, y: -50});
-      // then expect element to be partially in viewport
-      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      // then expect element to be in the viewport (native viewport only overflows on the right or bottom)
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
 
       // when element overlaps on top right
@@ -1082,14 +1083,14 @@ describe('Viewport', () => {
 
       // when element overlaps on left
       component.moveElement(component.insideViewportElement, {x: -50, y: 0});
-      // then expect element to be partially in viewport
-      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      // then expect element to be in the viewport (native viewport only overflows on the right or bottom)
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
 
       // when element overlaps on top left
       component.moveElement(component.insideViewportElement, {x: -50, y: -50});
-      // then expect element to be partially in viewport
-      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      // then expect element to be in the viewport (native viewport only overflows on the right or bottom)
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
 
       // when element is outside viewport
@@ -1097,6 +1098,122 @@ describe('Viewport', () => {
       // then expect element to not be in viewport
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeFalse();
+    });
+
+    describe('viewport contains elements with a decimal element width', () => {
+
+      it('should report all elements to be in the viewport if the viewport does not overflow (1/2)', async () => {
+        const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
+        fixture.autoDetectChanges(true);
+        const component = fixture.componentInstance;
+        await flushChanges(fixture);
+
+        component.setElement2Width(100.5);
+
+        // Set width of element-1 to 100.4 pixel
+        component.setElement1Width(100.4);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (A)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+
+        // Set width of element-1 to 100.5 pixel
+        component.setElement1Width(100.5);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (B)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (B)').toBeFalse();
+
+        // Set width of element-1 to 100.6 pixel
+        component.setElement1Width(100.6);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (C)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
+      });
+
+      it('should report all elements to be in the viewport if the viewport does not overflow (2/2)', async () => {
+        const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
+        fixture.autoDetectChanges(true);
+        const component = fixture.componentInstance;
+        await flushChanges(fixture);
+
+        component.setElement1Width(100.5);
+
+        // Set width of element-2 to 100.4 pixel
+        component.setElement2Width(100.4);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (A)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+
+        // Set width of element-2 to 100.5 pixel
+        component.setElement2Width(100.5);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (B)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (B)').toBeFalse();
+
+        // Set width of element-2 to 100.6 pixel
+        component.setElement2Width(100.6);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (C)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
+      });
+    });
+
+    describe('viewport contains elements with a decimal element height', () => {
+
+      it('should report all elements to be in the viewport if the viewport does not overflow (1/2)', async () => {
+        const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
+        fixture.autoDetectChanges(true);
+        fixture.componentRef.setInput('columnLayout', true);
+        const component = fixture.componentInstance;
+        await flushChanges(fixture);
+
+        component.setElement2Height(100.5);
+
+        // Set height of element-1 to 100.4 pixel
+        component.setElement1Height(100.4);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (A)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+
+        // Set height of element-1 to 100.5 pixel
+        component.setElement1Height(100.5);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (B)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (B)').toBeFalse();
+
+        // Set height of element-1 to 100.6 pixel
+        component.setElement1Height(100.6);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (C)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
+      });
+
+      it('should report all elements to be in the viewport if the viewport does not overflow (2/2)', async () => {
+        const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
+        fixture.autoDetectChanges(true);
+        fixture.componentRef.setInput('columnLayout', true);
+        const component = fixture.componentInstance;
+        await flushChanges(fixture);
+
+        component.setElement1Height(100.5);
+
+        // Set height of element-2 to 100.4 pixel
+        component.setElement2Height(100.4);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (A)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+
+        // Set height of element-2 to 100.5 pixel
+        component.setElement2Height(100.5);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (B)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (B)').toBeFalse();
+
+        // Set height of element-2 to 100.6 pixel
+        component.setElement2Height(100.6);
+        expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (C)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
+      });
     });
   });
 
@@ -1344,6 +1461,102 @@ class Testee3Component {
     this.setStyle(element, {
       'left': `${coordinates.x}px`,
       'top': `${coordinates.y}px`,
+    });
+  }
+
+  public setStyle(element: ElementRef<HTMLElement>, style: Dictionary): void {
+    Object.keys(style).forEach(key => this._renderer.setStyle(element.nativeElement, key, style[key]));
+  }
+}
+
+/**
+ * Renders a viewport that contains two elements, either aligned in a row or a column,
+ * controlled via 'columnLayout' input property. The viewport is sized according to its
+ * content width and height.
+ */
+@Component({
+  selector: 'spec-decimal-element-size',
+  template: `
+    <sci-viewport>
+      <div class="element" #element1></div>
+      <div class="element" #element2></div>
+    </sci-viewport>
+  `,
+  styles: [`
+    :host {
+      display: flex;
+      height: 100px;
+    }
+
+    :host.column-layout {
+      flex-direction: column;
+      height: unset;
+      width: 100px;
+    }
+
+    sci-viewport {
+      flex: initial;
+      background-color: grey;
+    }
+
+    div.element {
+      width: 100px;
+      height: 100px;
+    }
+
+    sci-viewport::part(content) {
+      display: flex;
+      background-color: cornflowerblue;
+    }
+
+    :host.column-layout sci-viewport::part(content) {
+      flex-direction: column;
+    }
+  `],
+})
+class ElementDecimalSizeTestComponent {
+
+  @Input()
+  @HostBinding('class.column-layout')
+  public columnLayout = false;
+
+  @ViewChild(SciViewportComponent, {static: true})
+  public viewportComponent!: SciViewportComponent;
+
+  @ViewChild('element1', {read: ElementRef, static: true})
+  public element1!: ElementRef<HTMLElement>;
+
+  @ViewChild('element2', {read: ElementRef, static: true})
+  public element2!: ElementRef<HTMLElement>;
+
+  constructor(private _renderer: Renderer2) {
+  }
+
+  public setElement1Width(px: number): void {
+    this.setStyle(this.element1, {
+      'font-size': '1px',
+      'width': `${px}em`, // set width as `em` to bypass CSS limitation to set decimal pixel values
+    });
+  }
+
+  public setElement2Width(px: number): void {
+    this.setStyle(this.element2, {
+      'font-size': '1px',
+      'width': `${px}em`, // set width as `em` to bypass CSS limitation to set decimal pixel values
+    });
+  }
+
+  public setElement1Height(px: number): void {
+    this.setStyle(this.element1, {
+      'font-size': '1px',
+      'height': `${px}em`, // set height as `em` to bypass CSS limitation to set decimal pixel values
+    });
+  }
+
+  public setElement2Height(px: number): void {
+    this.setStyle(this.element2, {
+      'font-size': '1px',
+      'height': `${px}em`, // set height as `em` to bypass CSS limitation to set decimal pixel values
     });
   }
 
