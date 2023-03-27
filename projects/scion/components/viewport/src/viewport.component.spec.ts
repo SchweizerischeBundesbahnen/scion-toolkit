@@ -1108,6 +1108,23 @@ describe('Viewport', () => {
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeFalse();
     });
 
+    it('should return `false` for an element not contained in the viewport', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      expect(component.viewportComponent.isElementInView(component.beforeViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.beforeViewportElement, 'partial')).toBeFalse();
+    });
+
+    it('should return `null` for an element whose effective `display` style resolves to `none`', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+      component.setStyle(component.insideViewportElement, {'display': 'none'});
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeFalse();
+      expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeFalse();
+    });
+
     describe('viewport contains elements with a decimal element width', () => {
 
       it('should report all elements to be in the viewport if the viewport does not overflow (1/2)', async () => {
