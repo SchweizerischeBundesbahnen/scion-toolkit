@@ -212,23 +212,30 @@ export class SciViewportComponent {
    * @throws if the element is not contained in the viewport's slotted content.
    */
   public isElementInView(element: ElementRef<HTMLElement> | HTMLElement, fit: 'full' | 'partial'): boolean {
-    const elLeft = this.computeOffset(element, 'left');
-    const elRight = elLeft + coerceElement(element).offsetWidth;
     const elTop = this.computeOffset(element, 'top');
+    const elLeft = this.computeOffset(element, 'left');
+
+    // Consider elements as scrolled into view when there is no viewport overflow.
+    // The calculation of whether an element is scrolled into view may be wrong by a few pixels if the viewport contains elements with decimal sizes.
+    // This can happen because `offsetLeft` and `offsetTop` operate on an integer (not a decimal), losing precision that can accumulate.
+    // To avoid incorrect calculation when there is no viewport overflow, we consider all contained elements as scrolled into the view.
+    if (this._viewportElement.scrollWidth <= this._viewportElement.clientWidth && this._viewportElement.scrollHeight <= this._viewportElement.clientHeight) {
+      return true;
+    }
+
     const elBottom = elTop + coerceElement(element).offsetHeight;
+    const elRight = elLeft + coerceElement(element).offsetWidth;
 
-    const vpLeft = this._viewportElement.scrollLeft;
-    const vpRight = vpLeft + this._viewportElement.clientWidth;
     const vpTop = this._viewportElement.scrollTop;
+    const vpLeft = this._viewportElement.scrollLeft;
     const vpBottom = vpTop + this._viewportElement.clientHeight;
+    const vpRight = vpLeft + this._viewportElement.clientWidth;
 
-    switch (fit) {
-      case 'full':
-        return (elLeft >= vpLeft && elRight <= vpRight) && (elTop >= vpTop && elBottom <= vpBottom);
-      case 'partial':
-        return (elRight >= vpLeft && elLeft <= vpRight) && (elBottom >= vpTop && elTop <= vpBottom);
-      default:
-        throw Error('Unsupported fit strategy');
+    if (fit === 'full') {
+      return (elTop >= vpTop && elBottom <= vpBottom) && (elLeft >= vpLeft && elRight <= vpRight);
+    }
+    else {
+      return (elBottom >= vpTop && elTop <= vpBottom) && (elRight >= vpLeft && elLeft <= vpRight);
     }
   }
 
