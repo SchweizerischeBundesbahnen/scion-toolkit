@@ -1291,6 +1291,23 @@ describe('Viewport', () => {
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'full')).toBeTrue();
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
     });
+
+    it('ignore element not contained in the viewport', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+
+      expect(() => component.viewportComponent.scrollIntoView(component.beforeViewportElement)).not.toThrowError();
+    });
+
+    it('ignore element if its effective `display` style resolves to `none`', async () => {
+      const fixture = TestBed.createComponent(Testee3Component);
+      fixture.autoDetectChanges(true);
+      const component = fixture.componentInstance;
+
+      component.setStyle(component.insideViewportElement, {'display': 'none'});
+      expect(() => component.viewportComponent.scrollIntoView(component.insideViewportElement)).not.toThrowError();
+    });
   });
 
   function isScrollbarVisible(fixture: ComponentFixture<any>, scrollbar: 'vertical' | 'horizontal'): boolean {
