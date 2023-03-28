@@ -72,7 +72,7 @@
     "@actions/core": "1.10.0",
     "@actions/exec": "1.1.1",
     "@actions/github": "5.1.1",
-    "@angular-devkit/build-angular": "15.0.2",
+    "@angular-devkit/build-angular": "15.2.4",
     "@angular-eslint/builder": "15.1.0",
     "@angular-eslint/eslint-plugin": "15.1.0",
     "@angular-eslint/eslint-plugin-template": "15.1.0",
