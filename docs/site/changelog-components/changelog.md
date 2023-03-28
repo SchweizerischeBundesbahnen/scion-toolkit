@@ -6,6 +6,29 @@
 ## [Changelog][menu-changelog] > @scion/components
 
 
+## [15.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-15.0.0...components-15.0.1) (2023-03-28)
+
+
+### Bug Fixes
+
+* **components/viewport:** consider elements as scrolled into view when there is no viewport overflow ([22baab7](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/22baab78c4bdf34caeb99c750079cd415aca046b))
+* **components/viewport:** do not throw error when calling `computeOffset` for an element not contained in the viewport ([7177bc7](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7177bc779e40c76d455d89189cbc533bb630dee7))
+* **components/viewport:** do not throw error when calling `isElementInView` for an element not contained in the viewport ([7eeac19](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7eeac19db86ca232db5e279748851186c4b5b159))
+* **components/viewport:** do not throw error when calling `scrollIntoView` for elements not contained in the viewport ([f27a94f](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/f27a94f6ca44798bcf394afb46fac3efd2f5d068))
+
+
+### BREAKING CHANGES
+
+* **components/viewport:** more tolerant handling of elements not contained in the viewport introduced a breaking change.
+
+  The following methods of `SciViewportComponent` are now more tolerant when invoked for elements that are not contained in the viewport or have `display` style set to `none`.
+
+  - `SciViewportComponent#computeOffset` returns `null` instead of throwing an error.
+  - `SciViewportComponent#isElementInView` returns `false` instead of throwing an error.
+  - `SciViewportComponent#scrollIntoView` does nothing instead of throwing an error.
+
+
+
 # [15.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-14.0.2...components-15.0.0) (2022-12-07)
 
 
