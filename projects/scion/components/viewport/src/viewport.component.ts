@@ -249,17 +249,15 @@ export class SciViewportComponent {
    *
    * @param element - the element to scroll into the viewport
    * @param offset - the gap between the element and the viewport
-   *
-   * @throws if the element is not contained in the viewport's slotted content.
    */
   public scrollIntoView(element: ElementRef<HTMLElement> | HTMLElement, offset: number = 50): void {
     const top = this.computeOffset(element, 'top');
     if (top === null) {
-      throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+      return;
     }
     const left = this.computeOffset(element, 'left');
     if (left === null) {
-      throw Error(`[ElementNotContainedError] Element not contained in the viewport's slotted content`);
+      return;
     }
 
     this._viewportElement.scrollTop = top - offset;
