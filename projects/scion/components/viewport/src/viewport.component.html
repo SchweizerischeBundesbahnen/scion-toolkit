@@ -12,6 +12,6 @@
 
 <!-- render emulated scrollbars which sit on-top -->
 <ng-container *ngIf="scrollbarStyle === 'on-top' && (nativeScrollbarTrackSizeProvider.trackSize$ | async) !== null">
-  <sci-scrollbar [direction]="'vscroll'" [viewport]="viewport"></sci-scrollbar>
-  <sci-scrollbar [direction]="'hscroll'" [viewport]="viewport"></sci-scrollbar>
+  <sci-scrollbar [direction]="'vscroll'" [viewport]="viewport" class="e2e-vertical"></sci-scrollbar>
+  <sci-scrollbar [direction]="'hscroll'" [viewport]="viewport" class="e2e-horizontal"></sci-scrollbar>
 </ng-container>

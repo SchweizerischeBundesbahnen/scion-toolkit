@@ -15,22 +15,22 @@ const PATH = '/#/sci-viewport/focus';
 
 export class ViewportFocusPagePO {
 
-  private readonly componentLocator: Locator;
+  private readonly _locator: Locator;
 
   constructor(private _page: Page) {
-    this.componentLocator = _page.locator('e2e-viewport-focus-page');
+    this._locator = _page.locator('e2e-viewport-focus-page');
   }
 
-  public async open(): Promise<void> {
+  public async navigate(): Promise<void> {
     await this._page.goto(PATH);
   }
 
   public async focusInput(cssClass: string): Promise<void> {
-    await this.componentLocator.locator(`input.${cssClass}`).focus();
+    await this._locator.locator(`input.${cssClass}`).focus();
   }
 
   public async isInputActive(cssClass: string): Promise<boolean> {
-    return isActiveElement(this.componentLocator.locator(`input.${cssClass}`));
+    return isActiveElement(this._locator.locator(`input.${cssClass}`));
   }
 
   public async tab(): Promise<void> {

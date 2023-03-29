@@ -14,17 +14,17 @@ const PATH = '/#/sci-viewport/overlap';
 
 export class ViewportOverlapPagePO {
 
-  public readonly locator: Locator;
+  private readonly _locator: Locator;
 
   constructor(private _page: Page) {
-    this.locator = _page.locator('e2e-viewport-overlap-page');
+    this._locator = _page.locator('e2e-viewport-overlap-page');
   }
 
-  public async open(): Promise<void> {
+  public async navigate(): Promise<void> {
     await this._page.goto(PATH);
   }
 
   public clickAdjacentElement(): Promise<void> {
-    return this.locator.locator('button').click({timeout: 1000});
+    return this._locator.locator('button').click({timeout: 1000});
   }
 }

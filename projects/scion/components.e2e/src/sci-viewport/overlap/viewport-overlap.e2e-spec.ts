@@ -16,7 +16,7 @@ test.describe('sci-viewport/overlap', () => {
 
   test('should not overlap adjacent elements', async ({page, consoleLogs}) => {
     const overlapPO = new ViewportOverlapPagePO(page);
-    await overlapPO.open();
+    await overlapPO.navigate();
 
     await overlapPO.clickAdjacentElement();
     await expect(await consoleLogs.get({filter: /ViewportOverlapPageComponent/})).toHaveLength(1);
