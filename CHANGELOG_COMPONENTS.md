@@ -1,3 +1,12 @@
+## [15.0.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-15.0.1...components-15.0.2) (2023-03-29)
+
+
+### Bug Fixes
+
+* **components/viewport:** display scrollbar only when hovering the viewport ([9f2c6f2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/9f2c6f2faea567f6aa8091b3194e660d25fccb4a))
+
+
+
 ## [15.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-15.0.0...components-15.0.1) (2023-03-28)
 
 
