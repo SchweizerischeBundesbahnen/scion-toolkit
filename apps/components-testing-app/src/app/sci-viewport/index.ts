@@ -11,8 +11,10 @@
 import {Routes} from '@angular/router';
 import {ViewportFocusPageComponent} from './focus/viewport-focus-page.component';
 import {ViewportOverlapPageComponent} from './overlap/viewport-overlap-page.component';
+import {ViewportHoverPageComponent} from './hover/viewport-hover-page.component';
 
 export const routes: Routes = [
   {path: 'focus', component: ViewportFocusPageComponent},
   {path: 'overlap', component: ViewportOverlapPageComponent},
+  {path: 'hover', component: ViewportHoverPageComponent},
 ];

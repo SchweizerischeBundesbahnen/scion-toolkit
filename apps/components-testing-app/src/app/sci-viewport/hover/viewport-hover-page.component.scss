@@ -1,0 +1,21 @@
+:host {
+  display: block;
+
+  > sci-viewport {
+    height: 300px;
+    width: 200px;
+    border: 1px solid black;
+
+    > div.content {
+      background-color: cornflowerblue;
+    }
+
+    &.vertical > div.content {
+      height: 600px;
+    }
+
+    &.horizontal > div.content {
+      width: 400px;
+    }
+  }
+}

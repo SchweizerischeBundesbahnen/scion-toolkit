@@ -24,6 +24,11 @@ const config: PlaywrightTestConfig = {
     browserName: 'chromium',
     headless: runHeadless,
     baseURL: 'http://localhost:4200',
+    launchOptions: {
+      // By default, Playwright hides scrollbars in headless mode, causing problems with tests using `sci-scrollbar`, e.g., to check whether content overflows.
+      // Therefore, we instruct Playwright to ignore this default. Refer to https://github.com/microsoft/playwright/issues/5778#issuecomment-796264504 for more details.
+      ignoreDefaultArgs: ['--hide-scrollbars'],
+    },
   },
   maxFailures: runInCI ? 1 : undefined,
   testMatch: /.*\.e2e-spec\.ts/,

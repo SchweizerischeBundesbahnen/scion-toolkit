@@ -15,7 +15,7 @@ test.describe('sci-viewport/focus', () => {
 
   test('should focus elements of slotted content via sequential keyboard navigation', async ({page}) => {
     const focusPO = new ViewportFocusPagePO(page);
-    await focusPO.open();
+    await focusPO.navigate();
 
     // focus input field before viewport
     await focusPO.focusInput('before-viewport');
