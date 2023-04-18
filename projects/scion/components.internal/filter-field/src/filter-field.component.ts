@@ -110,6 +110,9 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * This allows to start filtering without having to focus the filter field, e.g. if another element has the focus.
    */
   public focusAndApplyKeyboardEvent(event: KeyboardEvent): void {
+    if (event.target === this._inputElement.nativeElement) {
+      return; // Ignore the keyboard event if its target is equal to the input element.
+    }
     if (event.ctrlKey || event.altKey || event.shiftKey) {
       return;
     }
