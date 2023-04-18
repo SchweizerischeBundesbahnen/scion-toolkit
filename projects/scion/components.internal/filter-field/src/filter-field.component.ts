@@ -129,9 +129,8 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
     this.focusAndApplyKeyboardEvent(event);
   }
 
-  public onClear(event: MouseEvent): void {
+  public onClear(): void {
     this.formControl.setValue('');
-    event.stopPropagation();
     this.focus(); // restore the focus
   }
 
