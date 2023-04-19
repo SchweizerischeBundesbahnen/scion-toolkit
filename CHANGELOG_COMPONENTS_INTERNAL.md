@@ -1,3 +1,13 @@
+## [15.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-15.0.0...ɵcomponents-15.0.1) (2023-04-19)
+
+
+### Bug Fixes
+
+* **ɵcomponents/filter-field:** do not stop propagation of mouse events ([87cac1f](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/87cac1fc17ce84514def805d250acabe87db513f))
+* **ɵcomponents/filter-field:** ignore keyboard event if its target is equal to the input element ([fe04fd1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/fe04fd199e32923ba71ee8eafd61bba8fd398dc2))
+
+
+
 # [15.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-14.0.1...ɵcomponents-15.0.0) (2022-12-07)
 
 
