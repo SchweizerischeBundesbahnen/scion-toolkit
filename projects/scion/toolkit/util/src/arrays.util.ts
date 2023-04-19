@@ -19,9 +19,9 @@ export namespace Arrays {
   /**
    * Returns the value, if an array, or adds it to an array. If `null` or `undefined` is given, by default, returns an empty array.
    */
-  export function coerce<T>(value: T | T[] | null | undefined, options?: {coerceNullOrUndefined: true} | {}): NonNullable<T[]>;
-  export function coerce<T>(value: T | T[] | null | undefined, options: {coerceNullOrUndefined: false}): T[] | null | undefined;
-  export function coerce<T>(value: T | T[] | null | undefined, options?: {coerceNullOrUndefined?: boolean}): T[] | null | undefined {
+  export function coerce<T>(value: T | T[] | readonly T[] | null | undefined, options?: {coerceNullOrUndefined: true} | {}): NonNullable<T[]>;
+  export function coerce<T>(value: T | T[] | readonly T[] | null | undefined, options: {coerceNullOrUndefined: false}): T[] | null | undefined;
+  export function coerce<T>(value: T | T[] | readonly T[] | null | undefined, options?: {coerceNullOrUndefined?: boolean}): T[] | null | undefined {
     if (value === null || value === undefined) {
       if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
         return [];
@@ -29,7 +29,7 @@ export namespace Arrays {
       return value as null | undefined;
     }
 
-    return Array.isArray(value) ? value : [value];
+    return Array.isArray(value) ? value : [value as T];
   }
 
   /**
@@ -91,7 +91,7 @@ export namespace Arrays {
    *
    * Use the parameter `keySelector` to provide a function for comparing objects.
    */
-  export function distinct<T>(items: T[], keySelector: (item: T) => any = identity): T[] {
+  export function distinct<T>(items: T[] | readonly T[], keySelector: (item: T) => any = identity): T[] {
     const itemSet = new Set(items.map(keySelector));
     return items.filter(item => itemSet.delete(keySelector(item)));
   }
@@ -100,7 +100,7 @@ export namespace Arrays {
    * Intersects the given arrays, returning a new array containing all the elements contained in every array.
    * Arrays which are `undefined` or `null` are ignored.
    */
-  export function intersect<T>(...arrays: Array<T[] | undefined | null>): T[] {
+  export function intersect<T>(...arrays: Array<T[] | readonly T[] | undefined | null>): T[] {
     const _arrays = arrays.filter(array => array !== undefined && array !== null) as Array<T[]>;
 
     if (!_arrays.length) {
@@ -116,7 +116,7 @@ export namespace Arrays {
    *
    * Returns `undefined` if no element is found.
    */
-  export function last<T>(array: T[] | null | undefined, predicate?: (item: T) => boolean): T | undefined {
+  export function last<T>(array: T[] | readonly T[] | null | undefined, predicate?: (item: T) => boolean): T | undefined {
     if (!array) {
       return undefined;
     }
