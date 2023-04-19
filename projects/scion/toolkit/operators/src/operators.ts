@@ -33,14 +33,14 @@ import {Arrays, Observables} from '@scion/toolkit/util';
  *   - Continues filtering the source Observable even if some predicate complete without first emission. Such items are not included in the emission.
  *   - Continues filtering the source Observable even if some predicate error. Such items are not included in the emission and the error is not propagated.
  */
-export function filterArray<T, S extends T>(predicate?: (item: T) => item is S): OperatorFunction<T[], S[]>;
-export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Promise<boolean> | boolean): MonoTypeOperatorFunction<T[]>;
-export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Promise<boolean> | boolean): MonoTypeOperatorFunction<T[]> {
+export function filterArray<T, S extends T>(predicate?: (item: T) => item is S): OperatorFunction<T[] | readonly T[], S[]>;
+export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Promise<boolean> | boolean): OperatorFunction<T[] | readonly T[], T[]>;
+export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Promise<boolean> | boolean): OperatorFunction<T[] | readonly T[], T[]> {
   if (!predicate) {
-    return identity;
+    return source$ => source$ as Observable<T[]>;
   }
 
-  return switchMap((items: T[]): Observable<T[]> => {
+  return switchMap((items: T[] | readonly T[]): Observable<T[]> => {
     if (!items.length) {
       return of([]);
     }
@@ -74,22 +74,23 @@ export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Pr
  *
  * @deprecated since version 10.0.0-beta.3. Use {@link mapArray} instead.
  */
-export function pluckArray<I, P>(extractor: (item: I) => P): OperatorFunction<I[], P[]> {
-  return map((items: I[]): P[] => items.map(item => extractor(item)));
+export function pluckArray<I, P>(extractor: (item: I) => P): OperatorFunction<I[] | readonly I[], P[]> {
+  return map((items: I[] | readonly I[]): P[] => items.map(item => extractor(item)));
 }
 
 /**
  * Maps each element in the source array to its mapped value.
  */
-export function mapArray<I, P>(projectFn: (item: I) => P): OperatorFunction<I[], P[]> {
-  return map((items: I[]): P[] => items.map(item => projectFn(item)));
+export function mapArray<I, P>(projectFn: (item: I) => P): OperatorFunction<I[] | readonly I[], P[]> {
+  return map((items: I[] | readonly I[]): P[] => items.map(item => projectFn(item)));
 }
 
 /**
  * Sorts items in the source array and emits an array with those items sorted.
  */
-export function sortArray<T>(comparator: (item1: T, item2: T) => number): MonoTypeOperatorFunction<T[]> {
-  return map((items: T[]): T[] => [...items].sort(comparator));
+
+export function sortArray<T>(comparator: (item1: T, item2: T) => number): OperatorFunction<T[] | readonly T[], T[]> {
+  return map((items: T[] | readonly T[]): T[] => [...items].sort(comparator));
 }
 
 /**
@@ -111,8 +112,8 @@ export function combineArray<T>(): OperatorFunction<Array<Observable<T[]>>, T[]>
  *
  * <span class=“informal”>Each time the source emits, maps the array to a new array with duplicates removed.</span>
  */
-export function distinctArray<T>(keySelector: (item: T) => any = identity): MonoTypeOperatorFunction<T[]> {
-  return pipe(map((items: T[]): T[] => Arrays.distinct(items, keySelector)));
+export function distinctArray<T>(keySelector: (item: T) => any = identity): OperatorFunction<T[] | readonly T[], T[]> {
+  return pipe(map((items: T[] | readonly T[]): T[] => Arrays.distinct(items, keySelector)));
 }
 
 /**
