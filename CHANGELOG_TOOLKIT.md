@@ -1,3 +1,19 @@
+# [1.4.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.3.1...toolkit-1.4.0) (2023-04-19)
+
+
+### Bug Fixes
+
+* **toolkit/util:** fix comparing unordered arrays ([900fe45](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/900fe45ce0c749e4e94ab174ad6d7db34e9afbde))
+
+
+
+### Features
+
+* **toolkit/operators:** accept readonly array ([aed2d5b](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/aed2d5ba344919b24d39555bb639a1457e9d8fcf))
+* **toolkit/util:** accept readonly array ([61de22a](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/61de22abe43126b5b94fa124ec768715954074c6))
+
+
+
 ## [1.3.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.3.0...toolkit-1.3.1) (2022-11-09)
 
 
