@@ -139,33 +139,6 @@ sci-viewport::part(content) {
 
 </details>
 
-<details>
-  <summary><strong>Layouting the viewport's slotted content using CSS variables (DEPRECATED)</strong></summary>
-
-We have deprecated configuring the CSS grid container via CSS variables in favor of the `::part pseudo-element` technique described above. We will discontinue support for CSS variables in version 15.
-
-#### Deprecated CSS variables for configuring the grid container:
-- `--sci-viewport-content-grid-template-columns`\
-  Defines the columns and their track sizes (by default, single column with track size `auto`)
-- `--sci-viewport-content-grid-template-rows`\
-  Defines the rows and their track sizes (by default, single row with track size `auto`)
-- `--sci-viewport-content-grid-auto-columns`\
-  Defines the track size of not explicitly declared columns.
-- `--sci-viewport-content-grid-auto-rows`\
-  Defines the track size of not explicitly declared rows.
-- `--sci-viewport-content-grid-gap`\
-  Sets the gaps (gutters) between rows and columns. 
-
-#### Depreacted example of how to control the CSS grid using CSS variables:
-```css 
-sci-viewport {
-  --sci-viewport-content-grid-auto-rows: min-content;
-  --sci-viewport-content-grid-gap: .5em;
-}
-```
-
-</details>
-
 <!--- SCROLLBAR --->
 <details>
   <summary><strong>Scrollbar styling</strong></summary>

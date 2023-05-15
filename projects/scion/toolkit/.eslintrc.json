@@ -11,27 +11,7 @@
       "parserOptions": {
         "project": "projects/scion/toolkit/tsconfig.(lib|spec).json"
       },
-      "rules": {
-        "@angular-eslint/component-selector": [
-          "error",
-          {
-            "type": "element",
-            "prefix": [
-              "sci",
-              "spec"
-            ],
-            "style": "kebab-case"
-          }
-        ],
-        "@angular-eslint/directive-selector": [
-          "error",
-          {
-            "type": "attribute",
-            "prefix": "sci",
-            "style": "camelCase"
-          }
-        ]
-      }
+      "rules": {}
     },
     {
       "files": [

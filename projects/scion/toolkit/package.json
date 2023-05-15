@@ -15,15 +15,16 @@
     "name": "SCION contributors"
   },
   "dependencies": {
-    "tslib": "^2.4.0"
+    "tslib": "^2.5.0"
   },
   "peerDependencies": {
-    "rxjs": "^7.5.0"
+    "rxjs": "^7.8.0"
   },
   "keywords": [
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit.git"
-  }
+  },
+  "sideEffects": false
 }

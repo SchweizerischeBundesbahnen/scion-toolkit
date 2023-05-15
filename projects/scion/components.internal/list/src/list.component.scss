@@ -20,6 +20,11 @@
     border: 1px solid var(--sci-color-P400);
     border-radius: 5px;
 
+    &::part(content) {
+      display: flex;
+      flex-direction: column;
+    }
+
     sci-list-item {
       &:not(:first-child) {
         border-top: 1px solid var(--sci-color-P400);

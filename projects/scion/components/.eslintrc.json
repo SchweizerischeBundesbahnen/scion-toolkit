@@ -12,6 +12,16 @@
         "project": "projects/scion/components/tsconfig.(lib|spec).json"
       },
       "rules": {
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "type": "attribute",
+            "prefix": [
+              "sci"
+            ],
+            "style": "camelCase"
+          }
+        ],
         "@angular-eslint/component-selector": [
           "error",
           {
@@ -21,16 +31,6 @@
               "spec"
             ],
             "style": "kebab-case"
-          }
-        ],
-        "@angular-eslint/directive-selector": [
-          "error",
-          {
-            "type": "attribute",
-            "prefix": [
-              "sci"
-            ],
-            "style": "camelCase"
           }
         ]
       }
