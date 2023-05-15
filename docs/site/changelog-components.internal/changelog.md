@@ -5,6 +5,28 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+# [16.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-15.0.1...ɵcomponents-16.0.0) (2023-05-15)
+
+
+### Dependencies
+
+* **ɵcomponents:** update `@scion/components.internal` to Angular 16 ([f1813e6](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/f1813e6440cc44660e7da8d3a71466cd59ee7c7c)), closes [#151](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/151)
+
+
+### Features
+
+* **ɵcomponents:** improve accessibility of internal components ([5555800](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/5555800704ea9f67dd90d931714972caeecad52a))
+
+
+### BREAKING CHANGES
+
+* **ɵcomponents:** Updating `@scion/components.internal` to Angular 16 introduced a breaking change.
+
+  To migrate:
+  - Update your application to Angular 16; for detailed migration instructions, refer to https://v16.angular.io/guide/update-to-latest-version;
+
+
+
 ## [15.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-15.0.0...ɵcomponents-15.0.1) (2023-04-19)
 
 
