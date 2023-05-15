@@ -1,11 +1,6 @@
 @use '../scrollbar';
 
 :host {
-  --sci-viewport-content-grid-template-columns: auto; // single column
-  --sci-viewport-content-grid-template-rows: unset; // unset because 'grid-auto-rows' is set
-  --sci-viewport-content-grid-auto-columns: unset;
-  --sci-viewport-content-grid-auto-rows: auto;
-  --sci-viewport-content-grid-gap: 0 0;
   --sci-viewport-scrollbar-color: rgb(78, 78, 78);
 
   // Note: We do not position the internal viewport `DIV` absolutely to allow this component to adapt its size to the
@@ -34,12 +29,7 @@
     -webkit-overflow-scrolling: touch;
 
     > div.viewport-client {
-      display: grid; // This is part of the public API.
-      grid-template-columns: var(--sci-viewport-content-grid-template-columns); // part of API
-      grid-template-rows: var(--sci-viewport-content-grid-template-rows); // part of API
-      grid-auto-rows: var(--sci-viewport-content-grid-auto-rows); // part of API
-      grid-auto-columns: var(--sci-viewport-content-grid-auto-columns); // part of API
-      gap: var(--sci-viewport-content-grid-gap); // part of API
+      display: grid; // public API
     }
   }
 

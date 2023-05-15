@@ -8,7 +8,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {expect, test} from '@playwright/test';
+import {test} from '../../fixtures';
+import {expect} from '@playwright/test';
 import {ViewportFocusPagePO} from './viewport-focus-page.po';
 
 test.describe('sci-viewport/focus', () => {

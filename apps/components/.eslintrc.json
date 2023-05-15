@@ -9,20 +9,9 @@
         "*.ts"
       ],
       "parserOptions": {
-        "project": "apps/components/tsconfig.app.eslint.json"
+        "project": "apps/components/tsconfig.app.json"
       },
       "rules": {
-        "@angular-eslint/component-selector": [
-          "error",
-          {
-            "type": "element",
-            "prefix": [
-              "app",
-              "sci"
-            ],
-            "style": "kebab-case"
-          }
-        ],
         "@angular-eslint/directive-selector": [
           "error",
           {
@@ -32,6 +21,17 @@
               "sci"
             ],
             "style": "camelCase"
+          }
+        ],
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "type": "element",
+            "prefix": [
+              "app",
+              "sci"
+            ],
+            "style": "kebab-case"
           }
         ]
       }

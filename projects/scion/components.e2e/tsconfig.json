@@ -1,11 +1,10 @@
+/* See https://playwright.dev/docs/test-typescript#tsconfigjson */
 {
-  "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../../../out-tsc/components.e2e",
-    "module": "commonjs",
-    "target": "es2018",
-    "types": [
-      "node"
-    ]
+  "extends" : "../../../tsconfig.json",
+  "compilerOptions" : {
+    "outDir" : "../../../out-tsc/components.e2e",
+    "module" : "ES2022",
+    "target" : "ES2022",
+    "strict" : true
   }
 }
