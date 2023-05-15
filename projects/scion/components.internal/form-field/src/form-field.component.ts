@@ -11,6 +11,7 @@
 import {Component, ElementRef, HostBinding, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@angular/core';
 import {ConfigurableFocusTrap, ConfigurableFocusTrapFactory} from '@angular/cdk/a11y';
 import {Defined} from '@scion/toolkit/util';
+import {UUID} from '@scion/toolkit/uuid';
 
 @Component({
   selector: 'sci-form-field',
@@ -20,6 +21,8 @@ import {Defined} from '@scion/toolkit/util';
 export class SciFormFieldComponent implements OnDestroy, OnInit, OnChanges {
 
   private _focusTrap: ConfigurableFocusTrap;
+
+  public readonly id = UUID.randomUUID();
 
   @Input()
   public direction: 'row' | 'column' = 'row';

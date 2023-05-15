@@ -9,7 +9,7 @@
 </div>
 
 <!-- actions -->
-<ul class="actions e2e-actions" *ngIf="listItem.actionTemplates.length" (click)="$event.stopPropagation()">
+<ul class="actions e2e-actions" *ngIf="listItem.actionTemplates.length">
   <li *ngFor="let actionTemplate of listItem.actionTemplates" class="e2e-action">
     <ng-container *ngTemplateOutlet="actionTemplate"></ng-container>
   </li>
