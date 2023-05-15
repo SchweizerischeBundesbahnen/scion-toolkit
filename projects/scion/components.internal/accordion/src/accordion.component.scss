@@ -13,22 +13,25 @@ $background-color: var(--sci-color-P100);
   }
 
   section.accordion-item {
-    padding: 1em;
+    display: flex;
+    flex-direction: column;
+
+    &:has(*:focus-visible) {
+      outline: 1px solid var(--sci-color-accent);
+      box-shadow: 0 0 6px 0 rgba(var(--sci-color-accent-rgb), .25);
+    }
 
     &:not(:first-child) {
       border-top: 1px solid var(--sci-color-P400);
     }
 
-    > header {
+    > button {
+      all: unset;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
-      user-select: none;
-
-      > div.header-content {
-        flex: auto;
-      }
+      padding: 1em;
     }
 
     > section {
@@ -39,7 +42,7 @@ $background-color: var(--sci-color-P100);
   }
 
   &.solid section.accordion-item > section {
-    margin-top: 2em;
+    margin: 0 1em 1em 1em;
   }
 
   &.bubble section.accordion-item > section {
@@ -48,7 +51,7 @@ $background-color: var(--sci-color-P100);
     border-radius: 5px;
     border: 1px solid $border-color;
     padding: 1em;
-    margin: 1em -.5em -.5em -.5em;
+    margin: 0 .5em .5em .5em;
 
     //::before is used as diamond-border
     //::after is used as diamond-content

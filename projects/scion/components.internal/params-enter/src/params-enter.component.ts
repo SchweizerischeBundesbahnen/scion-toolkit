@@ -11,6 +11,7 @@
 import {Component, ElementRef, HostBinding, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
 import {FormArray, FormBuilder} from '@angular/forms';
 import {Defined, Dictionary, Maps} from '@scion/toolkit/util';
+import {UUID} from '@scion/toolkit/uuid';
 
 export const PARAM_NAME = 'paramName';
 export const PARAM_VALUE = 'paramValue';
@@ -27,6 +28,7 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
 
   public readonly PARAM_NAME = PARAM_NAME;
   public readonly PARAM_VALUE = PARAM_VALUE;
+  public readonly id = UUID.randomUUID();
 
   @Input()
   public title?: string;
@@ -59,7 +61,7 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
   public onRemove(index: number): void {
     this.paramsFormArray.removeAt(index);
 
-    // Focus the component to not loose the focus when the remove button is removed from the DOM.
+    // Focus the component to not lose the focus when the remove button is removed from the DOM.
     // Otherwise, if used in a popup, the popup would be closed because no element is focused anymore.
     this._host.nativeElement.focus({preventScroll: true});
   }

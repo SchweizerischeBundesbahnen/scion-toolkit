@@ -4,39 +4,48 @@
 
   > sci-viewport.tabbar {
     flex: none;
-    height: 2em;
+    height: 2rem;
 
-    ul.tabs {
+    &::part(content) {
       display: flex;
-      flex-flow: row nowrap;
-      list-style: none;
-      margin: 0;
-      padding: 0;
+      flex-wrap: nowrap;
+    }
 
-      > li.tab, > li.filler {
-        flex: none;
-        border-bottom: 3px solid var(--sci-color-P300);
-        padding: 0 1em 0 1em;
-        white-space: nowrap;
+    > button.tab {
+      all: unset;
+      flex: none;
+      position: relative; // positioning context for div.outline
+      cursor: pointer;
 
-        &.selected {
-          border-bottom-color: var(--sci-color-accent);
-          color: var(--sci-color-accent);
-        }
-
-        &:hover:not(.filler) {
-          cursor: pointer;
-
-          &:not(.selected) {
-            border-bottom-color: var(--sci-color-P400);
-            color: var(--sci-color-accent);
-          }
-        }
-
-        &.filler {
-          flex: auto;
-        }
+      &:focus-visible > div.outline {
+        border: 1px solid var(--sci-color-accent);
+        box-shadow: 0 0 6px 0 rgba(var(--sci-color-accent-rgb), .25);
       }
+
+      &.selected {
+        border-bottom-color: var(--sci-color-accent);
+        color: var(--sci-color-accent);
+      }
+
+      &:hover:not(.selected) {
+        border-bottom-color: var(--sci-color-P400);
+        color: var(--sci-color-accent);
+      }
+
+      > div.outline {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+    }
+
+    > span.filler {
+      flex: auto;
+    }
+
+    > button.tab, > span.filler {
+      border-bottom: 3px solid var(--sci-color-P300);
+      padding: 0 1em 0 1em;
     }
   }
 

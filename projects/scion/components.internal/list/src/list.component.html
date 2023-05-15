@@ -2,7 +2,7 @@
 <ng-container *ngIf="filterPosition === 'top'; then filter_template"></ng-container>
 
 <!-- viewport and list items -->
-<sci-viewport (keydown)="onAnyKey($event)" [style.--sci-viewport-content-grid-auto-rows]="'min-content'">
+<sci-viewport (keydown)="onAnyKey($event)">
   <sci-list-item #item *ngFor="let listItem of listItems; trackBy: trackByFn"
                  [listItem]="listItem"
                  [style]="style"

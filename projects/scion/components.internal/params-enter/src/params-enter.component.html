@@ -10,12 +10,12 @@
   <!-- label -->
   <ng-container *ngIf="paramGroup.get(PARAM_NAME)!.disabled; then label_readonly; else label_editable"></ng-container>
   <!-- value -->
-  <input [formControl]="$any(paramGroup.get(PARAM_VALUE))" class="e2e-value">
+  <input [formControl]="$any(paramGroup.get(PARAM_VALUE))" [attr.id]="id + '_' + i" class="e2e-value">
   <!-- 'remove' button -->
   <button *ngIf="removable" class="material-icons e2e-remove" type="button" (click)="onRemove(i)" title="remove entry">remove</button>
 
   <ng-template #label_readonly>
-    <label>{{paramGroup.get(PARAM_NAME)!.value}}</label>
+    <label [for]="id + '_' + i">{{paramGroup.get(PARAM_NAME)!.value}}</label>
   </ng-template>
   <ng-template #label_editable>
     <input [formControl]="$any(paramGroup.get(PARAM_NAME))" class="e2e-key">
