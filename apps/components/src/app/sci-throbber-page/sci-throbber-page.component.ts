@@ -9,8 +9,10 @@
  */
 
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {FormBuilder, FormGroup} from '@angular/forms';
+import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {SciThrobberComponent} from '@scion/components/throbber';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
+import {NgFor} from '@angular/common';
 
 export const TYPE = 'type';
 export const COLOR = 'color';
@@ -21,8 +23,15 @@ export const DURATION = 'duration';
   selector: 'sci-throbber-page',
   templateUrl: './sci-throbber-page.component.html',
   styleUrls: ['./sci-throbber-page.component.scss'],
+  standalone: true,
+  imports: [
+    NgFor,
+    ReactiveFormsModule,
+    SciFormFieldComponent,
+    SciThrobberComponent,
+  ],
 })
-export class SciThrobberPageComponent implements OnInit {
+export default class SciThrobberPageComponent implements OnInit {
 
   public TYPE = TYPE;
   public COLOR = COLOR;

@@ -8,16 +8,24 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component} from '@angular/core';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink, RouterOutlet} from '@angular/router';
 import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {sortArray} from '@scion/toolkit/operators';
+import {AsyncPipe, NgFor} from '@angular/common';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
+  standalone: true,
+  imports: [
+    NgFor,
+    AsyncPipe,
+    RouterLink,
+    RouterOutlet,
+  ],
 })
 export class AppComponent {
 

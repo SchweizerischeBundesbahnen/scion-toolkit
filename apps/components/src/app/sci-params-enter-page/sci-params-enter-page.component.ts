@@ -11,13 +11,20 @@ import {Component} from '@angular/core';
 import {FormArray, FormBuilder} from '@angular/forms';
 import {SciParamsEnterComponent} from '@scion/components.internal/params-enter';
 import {Dictionary} from '@scion/toolkit/util';
+import {JsonPipe, NgIf} from '@angular/common';
 
 @Component({
   selector: 'sci-params-enter-page',
   templateUrl: './sci-params-enter-page.component.html',
   styleUrls: ['./sci-params-enter-page.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    JsonPipe,
+    SciParamsEnterComponent,
+  ],
 })
-export class SciParamsEnterPageComponent {
+export default class SciParamsEnterPageComponent {
 
   public formArray: FormArray;
   public output: Dictionary | null = null;
