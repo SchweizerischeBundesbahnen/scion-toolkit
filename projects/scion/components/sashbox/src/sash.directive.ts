@@ -65,7 +65,7 @@ export class SciSashDirective implements OnInit, OnChanges {
    * If the unit is omitted, the value is interpreted as a pixel value.
    */
   @Input()
-  public minSize?: string | number;
+  public minSize?: string | number | undefined;
 
   /**
    * @internal
