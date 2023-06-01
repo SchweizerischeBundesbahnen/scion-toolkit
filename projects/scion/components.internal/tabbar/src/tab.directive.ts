@@ -8,8 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
-import {Defined} from '@scion/toolkit/util';
+import {Directive, Input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
 
 /**
  * Use this directive to model a tab item for {SciTabbarComponent}.
@@ -27,7 +26,7 @@ import {Defined} from '@scion/toolkit/util';
  * </sci-tabbar>
  */
 @Directive({selector: 'ng-template[sciTab]', standalone: true})
-export class SciTabDirective implements OnInit, OnChanges, OnDestroy {
+export class SciTabDirective implements OnDestroy {
 
   private _vcr: ViewContainerRef | undefined;
   private _viewRef: ViewRef | undefined;
@@ -35,7 +34,7 @@ export class SciTabDirective implements OnInit, OnChanges, OnDestroy {
   /**
    * Specifies the title of the tab.
    */
-  @Input()
+  @Input({required: true})
   public label!: string;
 
   /**
@@ -53,18 +52,6 @@ export class SciTabDirective implements OnInit, OnChanges, OnDestroy {
   public cssClass?: string | string[];
 
   constructor(private readonly _templateRef: TemplateRef<void>) {
-  }
-
-  public ngOnInit(): void {
-    this.assertInputProperties();
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this.assertInputProperties();
-  }
-
-  private assertInputProperties(): void {
-    Defined.orElseThrow(this.label, () => Error('[NullInputError] Missing required input: `label`.'));
   }
 
   /**
