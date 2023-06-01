@@ -8,9 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, Input, OnChanges, OnDestroy, OnInit, SimpleChanges} from '@angular/core';
+import {Component, ElementRef, HostBinding, Input, OnDestroy} from '@angular/core';
 import {ConfigurableFocusTrap, ConfigurableFocusTrapFactory} from '@angular/cdk/a11y';
-import {Defined} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
 
 @Component({
@@ -19,7 +18,7 @@ import {UUID} from '@scion/toolkit/uuid';
   styleUrls: ['./form-field.component.scss'],
   standalone: true,
 })
-export class SciFormFieldComponent implements OnDestroy, OnInit, OnChanges {
+export class SciFormFieldComponent implements OnDestroy {
 
   private _focusTrap: ConfigurableFocusTrap;
 
@@ -33,20 +32,12 @@ export class SciFormFieldComponent implements OnDestroy, OnInit, OnChanges {
     return this.direction === 'column';
   }
 
-  @Input()
+  @Input({required: true})
   public label!: string;
 
   constructor(host: ElementRef<HTMLElement>, focusTrapFactory: ConfigurableFocusTrapFactory) {
     this._focusTrap = focusTrapFactory.create(host.nativeElement);
     this._focusTrap.enabled = false;
-  }
-
-  public ngOnInit(): void {
-    this.assertInputProperties();
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this.assertInputProperties();
   }
 
   public onLabelClick(event: MouseEvent): void {
@@ -56,10 +47,6 @@ export class SciFormFieldComponent implements OnDestroy, OnInit, OnChanges {
     this._focusTrap.enabled = true;
     this._focusTrap.focusFirstTabbableElement();
     this._focusTrap.enabled = false;
-  }
-
-  private assertInputProperties(): void {
-    Defined.orElseThrow(this.label, () => Error('[NullInputError] Missing required input: `label`.'));
   }
 
   public ngOnDestroy(): void {

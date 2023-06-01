@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
+import {Component, ElementRef, HostBinding, Input} from '@angular/core';
 import {FormArray, FormBuilder, ReactiveFormsModule} from '@angular/forms';
-import {Defined, Dictionary, Maps} from '@scion/toolkit/util';
+import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
 import {NgFor, NgIf} from '@angular/common';
 
@@ -31,7 +31,7 @@ export const PARAM_VALUE = 'paramValue';
     ReactiveFormsModule,
   ],
 })
-export class SciParamsEnterComponent implements OnInit, OnChanges {
+export class SciParamsEnterComponent {
 
   public readonly PARAM_NAME = PARAM_NAME;
   public readonly PARAM_VALUE = PARAM_VALUE;
@@ -40,7 +40,7 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
   @Input()
   public title?: string;
 
-  @Input()
+  @Input({required: true})
   public paramsFormArray!: FormArray;
 
   @Input()
@@ -55,14 +55,6 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
   public tabindex = -1;
 
   constructor(private _formBuilder: FormBuilder, private _host: ElementRef<HTMLElement>) {
-  }
-
-  public ngOnInit(): void {
-    this.assertInputProperties();
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this.assertInputProperties();
   }
 
   public onRemove(index: number): void {
@@ -82,10 +74,6 @@ export class SciParamsEnterComponent implements OnInit, OnChanges {
 
   public onClear(): void {
     this.paramsFormArray.clear();
-  }
-
-  private assertInputProperties(): void {
-    Defined.orElseThrow(this.paramsFormArray, () => Error('[NullInputError] Missing required input: `paramsFormArray`.'));
   }
 
   /**

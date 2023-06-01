@@ -8,8 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, Input, OnChanges, OnInit, SimpleChanges, TemplateRef} from '@angular/core';
-import {Defined} from '@scion/toolkit/util';
+import {Directive, Input, TemplateRef} from '@angular/core';
 
 /**
  * Use this directive to model an accordion item for {SciAccordionComponent}.
@@ -33,7 +32,7 @@ import {Defined} from '@scion/toolkit/util';
  * </sci-accordion>
  */
 @Directive({selector: 'ng-template[sciAccordionItem]', standalone: true})
-export class SciAccordionItemDirective implements OnInit, OnChanges {
+export class SciAccordionItemDirective {
 
   /**
    * Optional key to identify this item and is used as key for the {TrackBy} function.
@@ -44,7 +43,7 @@ export class SciAccordionItemDirective implements OnInit, OnChanges {
   /**
    * Provide template(s) to be rendered as actions of this list item.
    */
-  @Input()
+  @Input({required: true})
   public panel!: TemplateRef<void>;
 
   /**
@@ -60,17 +59,5 @@ export class SciAccordionItemDirective implements OnInit, OnChanges {
   public cssClass?: string | string[];
 
   constructor(public readonly template: TemplateRef<void>) {
-  }
-
-  public ngOnInit(): void {
-    this.assertInputProperties();
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this.assertInputProperties();
-  }
-
-  private assertInputProperties(): void {
-    Defined.orElseThrow(this.panel, () => Error('[NullInputError] Missing required input: `panel`.'));
   }
 }
