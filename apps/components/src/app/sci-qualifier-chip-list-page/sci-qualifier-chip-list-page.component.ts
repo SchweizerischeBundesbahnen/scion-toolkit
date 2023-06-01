@@ -8,13 +8,16 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component} from '@angular/core';
+import {SciQualifierChipListComponent} from '@scion/components.internal/qualifier-chip-list';
 
 @Component({
   selector: 'sci-qualifier-chip-list-page-page',
   templateUrl: './sci-qualifier-chip-list-page.component.html',
   styleUrls: ['./sci-qualifier-chip-list-page.component.scss'],
+  standalone: true,
+  imports: [SciQualifierChipListComponent],
 })
-export class SciQualifierChipListPageComponent {
+export default class SciQualifierChipListPageComponent {
 
   public items: Item[] = [
     {title: 'SCION', description: 'SCION Microfrontend Platform is a TypeScript-based open-source library that helps to implement a microfrontend architecture using iframes.'},

@@ -8,15 +8,29 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
-import {FormControl, FormGroup} from '@angular/forms';
-import {SciSashboxComponent} from '@scion/components/sashbox';
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
+import {NgFor, NgIf} from '@angular/common';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
+import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 
 @Component({
   selector: 'sci-sashbox-page',
   templateUrl: './sci-sashbox-page.component.html',
   styleUrls: ['./sci-sashbox-page.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    FormsModule,
+    ReactiveFormsModule,
+    SciSashboxComponent,
+    SciSashDirective,
+    SciFormFieldComponent,
+    SciCheckboxComponent,
+  ],
 })
-export class SciSashboxPageComponent implements OnInit {
+export default class SciSashboxPageComponent implements OnInit {
 
   public directionFormControl = new FormControl<'column' | 'row'>('row', {nonNullable: true});
   public stylingFormGroup = new FormGroup({

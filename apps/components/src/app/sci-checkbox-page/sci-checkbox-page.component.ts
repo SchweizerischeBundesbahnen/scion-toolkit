@@ -8,11 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component} from '@angular/core';
+import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 
 @Component({
   selector: 'sci-checkbox-page',
   templateUrl: './sci-checkbox-page.component.html',
   styleUrls: ['./sci-checkbox-page.component.scss'],
+  standalone: true,
+  imports: [SciCheckboxComponent],
 })
-export class SciCheckboxPageComponent {
+export default class SciCheckboxPageComponent {
 }

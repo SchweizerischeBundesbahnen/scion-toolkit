@@ -9,15 +9,30 @@
  */
 
 import {Component, ViewChild} from '@angular/core';
-import {SciTabbarComponent} from '@scion/components.internal/tabbar';
-import {FormControl} from '@angular/forms';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
+import {FormControl, ReactiveFormsModule} from '@angular/forms';
+import {SplitPipe} from '../common/split.pipe';
+import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
+import {NgFor, NgIf} from '@angular/common';
 
 @Component({
   selector: 'sci-tabbar-page',
   templateUrl: './sci-tabbar-page.component.html',
   styleUrls: ['./sci-tabbar-page.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    ReactiveFormsModule,
+    SciCheckboxComponent,
+    SciTabbarComponent,
+    SciTabDirective,
+    SciFormFieldComponent,
+    SplitPipe,
+  ],
 })
-export class SciTabbarPageComponent {
+export default class SciTabbarPageComponent {
 
   public shortContentTabVisible = new FormControl(true);
   public longContentTabVisible = new FormControl(true);

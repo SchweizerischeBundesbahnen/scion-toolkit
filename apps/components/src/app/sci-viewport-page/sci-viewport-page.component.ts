@@ -9,13 +9,15 @@
  */
 
 import {Component, ElementRef, HostBinding, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {FormBuilder, FormGroup} from '@angular/forms';
+import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {startWith, takeUntil} from 'rxjs/operators';
 import {Subject} from 'rxjs';
 import loremIpsum from './lorem-ipsum.json';
 import {Arrays} from '@scion/toolkit/util';
-import {DOCUMENT} from '@angular/common';
+import {DOCUMENT, NgFor} from '@angular/common';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
+import {SplitPipe} from '../common/split.pipe';
 
 export const VIEWPORT_CONTENT_STYLES = 'viewportContentStyles';
 export const VIEWPORT_MIN_HEIGHT = 'viewportMinHeight';
@@ -29,8 +31,16 @@ export const CONTENT = 'content';
   selector: 'sci-viewport-page',
   templateUrl: './sci-viewport-page.component.html',
   styleUrls: ['./sci-viewport-page.component.scss'],
+  standalone: true,
+  imports: [
+    NgFor,
+    ReactiveFormsModule,
+    SplitPipe,
+    SciFormFieldComponent,
+    SciViewportComponent,
+  ],
 })
-export class SciViewportPageComponent implements OnInit, OnDestroy {
+export default class SciViewportPageComponent implements OnInit, OnDestroy {
 
   public VIEWPORT_CONTENT_STYLES = VIEWPORT_CONTENT_STYLES;
   public VIEWPORT_MIN_HEIGHT = VIEWPORT_MIN_HEIGHT;

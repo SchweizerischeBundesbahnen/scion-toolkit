@@ -8,7 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component} from '@angular/core';
-import {FormBuilder, FormGroup} from '@angular/forms';
+import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {NgFor} from '@angular/common';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
+import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
+import {SciAccordionComponent, SciAccordionItemDirective} from '@scion/components.internal/accordion';
 
 export const VARIANT = 'variant';
 export const MULTI = 'multi';
@@ -17,8 +21,17 @@ export const MULTI = 'multi';
   selector: 'sci-accordion-page',
   templateUrl: './sci-accordion-page.component.html',
   styleUrls: ['./sci-accordion-page.component.scss'],
+  standalone: true,
+  imports: [
+    NgFor,
+    ReactiveFormsModule,
+    SciFormFieldComponent,
+    SciCheckboxComponent,
+    SciAccordionComponent,
+    SciAccordionItemDirective,
+  ],
 })
-export class SciAccordionPageComponent {
+export default class SciAccordionPageComponent {
 
   public VARIANT = VARIANT;
   public MULTI = MULTI;

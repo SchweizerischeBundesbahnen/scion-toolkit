@@ -8,11 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component} from '@angular/core';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 
 @Component({
   selector: 'sci-form-field-page',
   templateUrl: './sci-form-field-page.component.html',
   styleUrls: ['./sci-form-field-page.component.scss'],
+  standalone: true,
+  imports: [SciFormFieldComponent],
 })
-export class SciFormFieldPageComponent {
+export default class SciFormFieldPageComponent {
 }

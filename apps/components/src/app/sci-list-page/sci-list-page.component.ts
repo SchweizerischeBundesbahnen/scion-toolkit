@@ -10,13 +10,23 @@
 import {Component} from '@angular/core';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {map, switchMap} from 'rxjs/operators';
+import {SciListComponent, SciListItemDirective} from '@scion/components.internal/list';
+import {AsyncPipe, NgFor, NgIf} from '@angular/common';
 
 @Component({
   selector: 'sci-list-page',
   templateUrl: './sci-list-page.component.html',
   styleUrls: ['./sci-list-page.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    AsyncPipe,
+    SciListComponent,
+    SciListItemDirective,
+  ],
 })
-export class SciListPageComponent {
+export default class SciListPageComponent {
 
   public filter$ = new BehaviorSubject<string>('');
   public flaggedItems = new Set<string>();
