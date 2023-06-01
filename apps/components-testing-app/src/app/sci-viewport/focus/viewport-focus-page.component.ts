@@ -9,15 +9,13 @@
  */
 
 import {Component} from '@angular/core';
-import {SciViewportModule} from '@scion/components/viewport';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
   selector: 'e2e-viewport-focus-page',
   templateUrl: './viewport-focus-page.component.html',
   standalone: true,
-  imports: [
-    SciViewportModule,
-  ],
+  imports: [SciViewportComponent],
 })
 export class ViewportFocusPageComponent {
 }

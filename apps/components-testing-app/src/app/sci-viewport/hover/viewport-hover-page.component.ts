@@ -9,16 +9,14 @@
  */
 
 import {Component} from '@angular/core';
-import {SciViewportModule} from '@scion/components/viewport';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
   selector: 'e2e-viewport-hover-page',
   templateUrl: './viewport-hover-page.component.html',
   styleUrls: ['./viewport-hover-page.component.scss'],
   standalone: true,
-  imports: [
-    SciViewportModule,
-  ],
+  imports: [SciViewportComponent],
 })
 export class ViewportHoverPageComponent {
 }
