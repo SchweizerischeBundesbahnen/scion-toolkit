@@ -9,9 +9,10 @@
  */
 
 import {Component, ElementRef, HostBinding, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
-import {FormArray, FormBuilder} from '@angular/forms';
+import {FormArray, FormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {Defined, Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
+import {NgFor, NgIf} from '@angular/common';
 
 export const PARAM_NAME = 'paramName';
 export const PARAM_VALUE = 'paramValue';
@@ -23,6 +24,12 @@ export const PARAM_VALUE = 'paramValue';
   selector: 'sci-params-enter',
   templateUrl: './params-enter.component.html',
   styleUrls: ['./params-enter.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    ReactiveFormsModule,
+  ],
 })
 export class SciParamsEnterComponent implements OnInit, OnChanges {
 

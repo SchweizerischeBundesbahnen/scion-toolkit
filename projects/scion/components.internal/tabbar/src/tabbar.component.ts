@@ -13,6 +13,8 @@ import {SciTabDirective} from './tab.directive';
 import {map, startWith} from 'rxjs/operators';
 import {Observable} from 'rxjs';
 import {tapFirst} from '@scion/toolkit/operators';
+import {AsyncPipe, NgClass, NgFor} from '@angular/common';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 /**
  * Organizes content into separate tabs where only one tab can be visible at a time.
@@ -34,6 +36,13 @@ import {tapFirst} from '@scion/toolkit/operators';
   templateUrl: './tabbar.component.html',
   styleUrls: ['./tabbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    NgFor,
+    AsyncPipe,
+    NgClass,
+    SciViewportComponent,
+  ],
 })
 export class SciTabbarComponent implements AfterContentInit {
 

@@ -9,16 +9,22 @@
  */
 
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnDestroy} from '@angular/core';
-import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
 import {noop, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
+import {NgIf} from '@angular/common';
 
 @Component({
   selector: 'sci-checkbox',
   templateUrl: './checkbox.component.html',
   styleUrls: ['./checkbox.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    NgIf,
+    ReactiveFormsModule,
+  ],
   providers: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => SciCheckboxComponent)},
   ],

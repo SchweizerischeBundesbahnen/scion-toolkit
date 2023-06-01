@@ -9,20 +9,14 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {ReactiveFormsModule} from '@angular/forms';
 import {SciFormFieldComponent} from './form-field.component';
 
 /**
  * Provides a simple filter field.
  */
 @NgModule({
-  declarations: [
-    SciFormFieldComponent,
-  ],
   imports: [
-    CommonModule,
-    ReactiveFormsModule,
+    SciFormFieldComponent,
   ],
   exports: [
     SciFormFieldComponent,

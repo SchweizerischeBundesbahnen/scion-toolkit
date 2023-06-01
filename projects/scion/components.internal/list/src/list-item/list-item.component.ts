@@ -13,11 +13,18 @@ import {FocusableOption, FocusOrigin} from '@angular/cdk/a11y';
 import {SciListItemDirective} from '../list-item.directive';
 import {SciListStyle} from '../metadata';
 import {Defined} from '@scion/toolkit/util';
+import {NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'sci-list-item',
   templateUrl: './list-item.component.html',
   styleUrls: ['./list-item.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    NgTemplateOutlet,
+  ],
 })
 export class SciListItemComponent implements FocusableOption, OnInit, OnChanges {
 

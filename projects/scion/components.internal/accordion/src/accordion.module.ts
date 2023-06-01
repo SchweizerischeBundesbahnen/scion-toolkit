@@ -9,24 +9,16 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciAccordionComponent} from './accordion.component';
 import {SciAccordionItemDirective} from './accordion-item.directive';
-import {CdkAccordionModule} from '@angular/cdk/accordion';
-import {SciDimensionModule} from '@scion/components/dimension';
 
 /**
  * Provides an accordion component.
  */
 @NgModule({
-  declarations: [
+  imports: [
     SciAccordionComponent,
     SciAccordionItemDirective,
-  ],
-  imports: [
-    CommonModule,
-    CdkAccordionModule,
-    SciDimensionModule,
   ],
   exports: [
     SciAccordionComponent,

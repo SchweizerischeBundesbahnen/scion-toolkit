@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
-import {KeyValue} from '@angular/common';
+import {KeyValue, KeyValuePipe, NgFor} from '@angular/common';
 import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 
 /**
@@ -20,6 +20,11 @@ import {Dictionaries, Dictionary} from '@scion/toolkit/util';
   templateUrl: './property.component.html',
   styleUrls: ['./property.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    NgFor,
+    KeyValuePipe,
+  ],
 })
 export class SciPropertyComponent {
 

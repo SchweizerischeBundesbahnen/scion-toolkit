@@ -23,7 +23,7 @@ import {Directive, Input, TemplateRef} from '@angular/core';
  *   </ng-template>
  * </sci-list>
  */
-@Directive({selector: 'ng-template[sciListItem]'})
+@Directive({selector: 'ng-template[sciListItem]', standalone: true})
 export class SciListItemDirective {
 
   private _actionTemplates: TemplateRef<void>[] = [];

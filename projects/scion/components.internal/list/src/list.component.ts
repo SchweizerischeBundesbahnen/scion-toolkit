@@ -16,6 +16,8 @@ import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 import {Subject} from 'rxjs';
 import {filter, map, takeUntil} from 'rxjs/operators';
 import {SciListStyle} from './metadata';
+import {NgClass, NgFor, NgIf} from '@angular/common';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 /**
  * Component that contains a list of items or options which can be optionally filtered and associated with actions.
@@ -54,6 +56,15 @@ import {SciListStyle} from './metadata';
   selector: 'sci-list',
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    SciViewportComponent,
+    SciListItemComponent,
+    SciFilterFieldComponent,
+    NgClass,
+  ],
 })
 export class SciListComponent implements AfterViewInit, OnDestroy {
 
