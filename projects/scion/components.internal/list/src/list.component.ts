@@ -76,7 +76,7 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
    * If not specified, does not display the filter field.
    */
   @Input()
-  public filterPosition?: 'top' | 'bottom';
+  public filterPosition?: 'top' | 'bottom' | undefined;
 
   /**
    * Specifies whether to render list items or option items.
@@ -89,7 +89,7 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
    * If not specified, the focus order is according to the position in the document (tabindex=0).
    */
   @Input()
-  public tabindex?: number;
+  public tabindex?: number | undefined;
 
   /**
    * Emits filter text on filter change.

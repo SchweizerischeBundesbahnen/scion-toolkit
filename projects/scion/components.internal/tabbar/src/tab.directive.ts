@@ -43,13 +43,13 @@ export class SciTabDirective implements OnDestroy {
    * Can be used to activate this tab via {@link SciTabbarComponent.activateTab}.
    */
   @Input()
-  public name?: string;
+  public name?: string | undefined;
 
   /**
-   * Specifies CSS class(es) added to the tab item, e.g., to select the tab in e2e tests.
+   * Specifies CSS class(es) added to the tab item, e.g., to select the tab in end-to-end tests.
    */
   @Input()
-  public cssClass?: string | string[];
+  public cssClass?: string | string[] | undefined | null;
 
   constructor(private readonly _templateRef: TemplateRef<void>) {
   }

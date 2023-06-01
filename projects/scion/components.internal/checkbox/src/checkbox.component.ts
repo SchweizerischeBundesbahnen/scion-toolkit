@@ -43,7 +43,7 @@ export class SciCheckboxComponent implements ControlValueAccessor, OnDestroy {
    * If not specified, the focus order is according to the position in the document (tabindex=0).
    */
   @Input()
-  public tabindex?: number;
+  public tabindex?: number | undefined;
 
   @Input()
   public set disabled(disabled: boolean | string | undefined | null) {
