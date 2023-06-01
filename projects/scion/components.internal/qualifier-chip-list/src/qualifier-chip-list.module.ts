@@ -9,18 +9,14 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciQualifierChipListComponent} from './qualifier-chip-list.component';
 
 @NgModule({
-  declarations: [
+  imports: [
     SciQualifierChipListComponent,
   ],
   exports: [
     SciQualifierChipListComponent,
-  ],
-  imports: [
-    CommonModule,
   ],
 })
 export class SciQualifierChipListModule {

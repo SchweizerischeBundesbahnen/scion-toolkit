@@ -26,7 +26,7 @@ import {Defined} from '@scion/toolkit/util';
  *   </ng-template>
  * </sci-tabbar>
  */
-@Directive({selector: 'ng-template[sciTab]'})
+@Directive({selector: 'ng-template[sciTab]', standalone: true})
 export class SciTabDirective implements OnInit, OnChanges, OnDestroy {
 
   private _vcr: ViewContainerRef | undefined;

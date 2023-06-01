@@ -11,15 +11,9 @@
 import {NgModule} from '@angular/core';
 import {SciTabbarComponent} from './tabbar.component';
 import {SciTabDirective} from './tab.directive';
-import {CommonModule} from '@angular/common';
-import {SciViewportModule} from '@scion/components/viewport';
 
 @NgModule({
   imports: [
-    CommonModule,
-    SciViewportModule,
-  ],
-  declarations: [
     SciTabbarComponent,
     SciTabDirective,
   ],

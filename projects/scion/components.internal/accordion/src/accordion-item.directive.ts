@@ -32,7 +32,7 @@ import {Defined} from '@scion/toolkit/util';
  *   </ng-container>
  * </sci-accordion>
  */
-@Directive({selector: 'ng-template[sciAccordionItem]'})
+@Directive({selector: 'ng-template[sciAccordionItem]', standalone: true})
 export class SciAccordionItemDirective implements OnInit, OnChanges {
 
   /**

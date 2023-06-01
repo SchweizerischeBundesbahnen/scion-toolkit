@@ -9,23 +9,17 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciParamsEnterComponent} from './params-enter.component';
-import {ReactiveFormsModule} from '@angular/forms';
 
 /**
  * Allows to enter parameters.
  */
 @NgModule({
-  declarations: [
+  imports: [
     SciParamsEnterComponent,
   ],
   exports: [
     SciParamsEnterComponent,
-  ],
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
   ],
 })
 export class SciParamsEnterModule {

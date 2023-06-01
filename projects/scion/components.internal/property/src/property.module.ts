@@ -9,21 +9,17 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciPropertyComponent} from './property.component';
 
 /**
  * Allows to show the properties of an object or the entries of a map
  */
 @NgModule({
-  declarations: [
+  imports: [
     SciPropertyComponent,
   ],
   exports: [
     SciPropertyComponent,
-  ],
-  imports: [
-    CommonModule,
   ],
 })
 export class SciPropertyModule {

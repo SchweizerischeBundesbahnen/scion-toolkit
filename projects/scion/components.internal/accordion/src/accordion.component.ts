@@ -11,10 +11,11 @@
 import {ChangeDetectorRef, Component, ContentChildren, ElementRef, HostBinding, Input, OnDestroy, OnInit, QueryList, SkipSelf, TrackByFunction, ViewChild} from '@angular/core';
 import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciAccordionItemDirective} from './accordion-item.directive';
-import {CdkAccordion, CdkAccordionItem} from '@angular/cdk/accordion';
+import {CdkAccordion, CdkAccordionItem, CdkAccordionModule} from '@angular/cdk/accordion';
 import {fromDimension$} from '@scion/toolkit/observable';
 import {debounceTime, takeUntil} from 'rxjs/operators';
 import {combineLatest, Subject} from 'rxjs';
+import {NgClass, NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
 
 /**
  * Component that shows items in an accordion.
@@ -45,6 +46,14 @@ import {combineLatest, Subject} from 'rxjs';
   selector: 'sci-accordion',
   templateUrl: './accordion.component.html',
   styleUrls: ['./accordion.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    NgClass,
+    NgTemplateOutlet,
+    CdkAccordionModule,
+  ],
   animations: [
     trigger('enter', SciAccordionComponent.provideEnterAnimation()),
   ],

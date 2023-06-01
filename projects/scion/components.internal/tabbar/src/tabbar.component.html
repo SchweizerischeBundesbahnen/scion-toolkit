@@ -2,7 +2,7 @@
   <button *ngFor="let tab of tabs$ | async"
           class="tab e2e-tab"
           [class.selected]="tab.isContentAttached()"
-          [ngClass]="$any(tab.cssClass)"
+          [ngClass]="tab.cssClass"
           (click)="onTabClick(tab)">
     {{tab.label}}
     <div class="outline"></div>
