@@ -42,13 +42,13 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * If not specified, the focus order is according to the position in the document (tabindex=0).
    */
   @Input()
-  public tabindex?: number;
+  public tabindex?: number | undefined;
 
   /**
    * Specifies the hint displayed when this field is empty.
    */
   @Input()
-  public placeholder?: string;
+  public placeholder?: string | undefined;
 
   @HostBinding('class.disabled')
   @Input()

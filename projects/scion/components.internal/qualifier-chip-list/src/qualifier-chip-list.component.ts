@@ -31,7 +31,7 @@ export class SciQualifierChipListComponent implements OnChanges {
   public qualifier?: Qualifier | undefined | null;
 
   @Input()
-  public type?: string;
+  public type?: string | undefined;
 
   public ngOnChanges(changes: SimpleChanges): void {
     this._qualifierKeys = Object.keys(this.qualifier ?? {});

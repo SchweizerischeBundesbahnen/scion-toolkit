@@ -38,7 +38,7 @@ export class SciAccordionItemDirective {
    * Optional key to identify this item and is used as key for the {TrackBy} function.
    */
   @Input()
-  public key?: string;
+  public key?: string | undefined;
 
   /**
    * Provide template(s) to be rendered as actions of this list item.
@@ -50,13 +50,13 @@ export class SciAccordionItemDirective {
    * Indicates whether to expand this item.
    */
   @Input()
-  public expanded?: boolean;
+  public expanded?: boolean | undefined;
 
   /**
    * Specifies CSS class(es) added to the <section> and <wb-view> elements, e.g. used for e2e testing.
    */
   @Input()
-  public cssClass?: string | string[];
+  public cssClass?: string | string[] | undefined | null;
 
   constructor(public readonly template: TemplateRef<void>) {
   }

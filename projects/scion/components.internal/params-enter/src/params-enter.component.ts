@@ -38,7 +38,7 @@ export class SciParamsEnterComponent {
   public readonly id = UUID.randomUUID();
 
   @Input()
-  public title?: string;
+  public title?: string | undefined;
 
   @Input({required: true})
   public paramsFormArray!: FormArray;
