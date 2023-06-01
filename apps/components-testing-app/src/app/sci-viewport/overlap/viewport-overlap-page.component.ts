@@ -9,16 +9,14 @@
  */
 
 import {Component} from '@angular/core';
-import {SciViewportModule} from '@scion/components/viewport';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
   selector: 'e2e-viewport-overlap-page',
   templateUrl: './viewport-overlap-page.component.html',
   styleUrls: ['./viewport-overlap-page.component.scss'],
   standalone: true,
-  imports: [
-    SciViewportModule,
-  ],
+  imports: [SciViewportComponent],
 })
 export class ViewportOverlapPageComponent {
 
