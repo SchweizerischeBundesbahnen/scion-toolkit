@@ -1,6 +1,6 @@
 {
   "name": "@scion/components",
-  "version": "16.0.0",
+  "version": "16.1.0",
   "description": "Provides a collection of Angular components and directives primarily for use in SCION libraries such as `@scion/workbench` and `@scion/microfrontend-platform`. This library is not a comprehensive component library as its focus is on SCION requirements.",
   "license": "EPL-2.0",
   "private": false,
