@@ -13,6 +13,6 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export * from './sashbox.component';
-export * from './sash.directive';
-export * from './sashbox.module';
+export {SciSashboxModule} from './sashbox.module';
+export {SciSashboxComponent} from './sashbox.component';
+export {SciSashDirective} from './sash.directive';

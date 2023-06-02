@@ -14,7 +14,10 @@ import {SciSashDirective} from './sash.directive';
 /**
  * Initializes {SashDirective} with the target {HTMLDivElement}.
  */
-@Directive({selector: 'div[sciSashInitializer].sash'})
+@Directive({
+  selector: 'div[sciSashInitializer].sash',
+  standalone: true,
+})
 export class SciSashInitializerDirective implements OnChanges {
 
   @Input('sciSashInitializer') // eslint-disable-line @angular-eslint/no-input-rename

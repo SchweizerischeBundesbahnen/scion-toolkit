@@ -35,6 +35,7 @@ import {map, switchMap} from 'rxjs/operators';
 @Directive({
   selector: 'ng-template[sciSash]',
   exportAs: 'sciSash',
+  standalone: true,
 })
 export class SciSashDirective implements OnInit, OnChanges {
 

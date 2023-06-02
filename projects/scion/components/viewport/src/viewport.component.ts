@@ -11,6 +11,10 @@
 import {Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild, ViewEncapsulation} from '@angular/core';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 import {coerceElement} from '@angular/cdk/coercion';
+import {SciScrollableDirective} from './scrollable.directive';
+import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
+import {ScrollingModule} from '@angular/cdk/scrolling';
+import {AsyncPipe, NgIf} from '@angular/common';
 
 /**
  * Represents a viewport with slotted content (`<ng-content>`) used as scrollable content. By default, content is added to a CSS grid layout.
@@ -83,6 +87,14 @@ import {coerceElement} from '@angular/cdk/coercion';
   templateUrl: './viewport.component.html',
   styleUrls: ['./viewport.component.scss'],
   encapsulation: ViewEncapsulation.ShadowDom,
+  standalone: true,
+  imports: [
+    NgIf,
+    AsyncPipe,
+    ScrollingModule,
+    SciScrollableDirective,
+    SciScrollbarComponent,
+  ],
 })
 export class SciViewportComponent {
 

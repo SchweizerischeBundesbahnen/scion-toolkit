@@ -16,10 +16,24 @@ The NPM sub-module `@scion/components/dimension` provides an Angular directive f
    ```
    > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
-1. Import `SciDimensionModule` in the module where to use the directive:
-   
+1. Import `SciDimensionDirective` in your component.
+
    ```typescript
-   import { SciDimensionModule } from '@scion/components/dimension';
+   import {SciDimensionDirective} from '@scion/components/dimension';
+
+   @Component({
+     // other metadata skipped
+     standalone: true,
+     imports: [SciDimensionDirective]
+   })
+   export class YourComponent {
+   }
+   ```
+
+   Alternatively, import `SciDimensionModule` in the `NgModule` that declares your component.
+
+   ```typescript
+   import {SciDimensionModule} from '@scion/components/dimension';
 
    @NgModule({
      imports: [SciDimensionModule]

@@ -21,14 +21,14 @@ The bean manager provides operations for obtaining references for beans. A bean 
 1. Register a bean in the bean manager. In its simplest form, the registration could look like this:
 
    ```typescript
-   import { Beans } from '@scion/toolkit/bean-manager';
+   import {Beans} from '@scion/toolkit/bean-manager';
     
    Beans.register(ConsoleLogger);
    ```
    
 1. Start the bean manager:
    ```typescript
-   import { Beans } from '@scion/toolkit/bean-manager';
+   import {Beans} from '@scion/toolkit/bean-manager';
     
    await Beans.start();
    ```
@@ -36,7 +36,7 @@ The bean manager provides operations for obtaining references for beans. A bean 
 1. Look up a bean from the bean manager:
 
    ```typescript
-   import { Beans } from '@scion/toolkit/bean-manager';
+   import {Beans} from '@scion/toolkit/bean-manager';
     
    const logger = Beans.get(ConsoleLogger);
    ```
@@ -127,7 +127,7 @@ Beans are looked up using the symbol under which they were registered. The bean 
 |`Beans.all` |Returns all beans registered under the given symbol. Returns an empty array if no bean is found. |
 
 ```typescript
-import { Beans } from '@scion/toolkit/bean-manager';
+import {Beans} from '@scion/toolkit/bean-manager';
 
 const logger = Beans.get(ConsoleLogger);
 ```
@@ -242,7 +242,7 @@ Beans.registerInitializer({useExisting: YourBean});
 Starting the bean manager runs registered initializers and constructs beans configured with an eager construction strategy. Starting the bean manager returns a Promise that resolves after all initializers complete.
 
 ```typescript
-import { Beans } from '@scion/toolkit/bean-manager';
+import {Beans} from '@scion/toolkit/bean-manager';
 
 await Beans.start();
 ```

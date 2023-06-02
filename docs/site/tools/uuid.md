@@ -17,7 +17,7 @@ The NPM sub-module `@scion/toolkit/uuid` provides a pseudo-random identifier gen
 1. Import the `UUID` symbol from `@scion/toolkit/uuid` and invoke the method `randomUUID`:
    
    ```typescript
-   import { UUID } from '@scion/toolkit/uuid';
+   import {UUID} from '@scion/toolkit/uuid';
  
    const uuid: string = UUID.randomUUID();
    ```   

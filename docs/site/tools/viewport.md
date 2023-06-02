@@ -23,10 +23,24 @@ Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of t
    ```
    > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
-1. Import `SciViewportModule` in the module where to use the viewport:
-   
+1. Import `SciViewportComponent` in your component.
+
    ```typescript
-   import { SciViewportModule } from '@scion/components/viewport';
+   import {SciViewportComponent} from '@scion/components/viewport';
+
+   @Component({
+     // other metadata skipped
+     standalone: true,
+     imports: [SciViewportComponent]
+   })
+   export class YourComponent {
+   }
+   ```
+
+   Alternatively, import `SciViewportModule` in the `NgModule` that declares your component.
+
+   ```typescript
+   import {SciViewportModule} from '@scion/components/viewport';
 
    @NgModule({
      imports: [SciViewportModule]
@@ -173,8 +187,8 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
 1. Import `SciViewportModule` in the module where to use the scrollbar:
    
    ```typescript
-   import { SciViewportModule } from '@scion/components/viewport';
-   import { ScrollingModule } from '@angular/cdk/scrolling';
+   import {SciViewportModule} from '@scion/components/viewport';
+   import {ScrollingModule} from '@angular/cdk/scrolling';
 
    @NgModule({
      imports: [

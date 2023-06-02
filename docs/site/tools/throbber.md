@@ -21,10 +21,24 @@ Click [here](https://components.scion.vercel.app/#/sci-throbber) for a demo of t
    ```
    > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
-1. Import `SciThrobberModule` in the module where to use the throbber:
-   
+1. Import `SciViewportComponent` in your component.
+
    ```typescript
-   import { SciThrobberModule } from '@scion/components/throbber';
+   import {SciThrobberComponent} from '@scion/components/throbber';
+
+   @Component({
+     // other metadata skipped
+     standalone: true,
+     imports: [SciThrobberComponent]
+   })
+   export class YourComponent {
+   }
+   ```
+
+   Alternatively, import `SciThrobberModule` in the `NgModule` that declares your component.
+
+   ```typescript
+   import {SciThrobberModule} from '@scion/components/throbber';
 
    @NgModule({
      imports: [SciThrobberModule]

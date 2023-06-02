@@ -14,7 +14,6 @@
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
 export {SciViewportModule} from './viewport.module';
-export * from './viewport.component';
-export * from './scrollable.directive';
-export * from './scrollbar/scrollbar.component';
-export * from './native-scrollbar-track-size-provider.service';
+export {SciViewportComponent, ScrollbarStyle} from './viewport.component';
+export {SciScrollbarComponent} from './scrollbar/scrollbar.component';
+export {SciScrollableDirective} from './scrollable.directive';

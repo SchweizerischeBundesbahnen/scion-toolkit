@@ -10,7 +10,6 @@
 
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {Component, ElementRef, HostBinding, Input, Renderer2, ViewChild} from '@angular/core';
-import {SciViewportModule} from './viewport.module';
 import {By} from '@angular/platform-browser';
 import {Dictionary} from '@scion/toolkit/util';
 import {SciViewportComponent} from './viewport.component';
@@ -18,22 +17,9 @@ import {Dimension, fromDimension$} from '@scion/toolkit/observable';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 import {asyncScheduler} from 'rxjs';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
+import {NgFor} from '@angular/common';
 
 describe('Viewport', () => {
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [
-        Testee1Component,
-        Testee2Component,
-        Testee3Component,
-        ElementDecimalSizeTestComponent,
-      ],
-      imports: [
-        SciViewportModule,
-      ],
-    });
-  });
 
   it('should show a vertical scrollbar on vertical overflow', async () => {
     const fixture = TestBed.createComponent(Testee1Component);
@@ -1381,6 +1367,11 @@ describe('Viewport', () => {
       height: 100px;
     }
   `],
+  standalone: true,
+  imports: [
+    NgFor,
+    SciViewportComponent,
+  ],
 })
 class Testee1Component {
 
@@ -1418,6 +1409,8 @@ class Testee1Component {
       background-color: #ffefbe;
     }
   `],
+  standalone: true,
+  imports: [SciViewportComponent],
 })
 class Testee2Component {
 
@@ -1481,6 +1474,8 @@ class Testee2Component {
       background-color: cornflowerblue;
     }
   `],
+  standalone: true,
+  imports: [SciViewportComponent],
 })
 class Testee3Component {
 
@@ -1555,6 +1550,8 @@ class Testee3Component {
       flex-direction: column;
     }
   `],
+  standalone: true,
+  imports: [SciViewportComponent],
 })
 class ElementDecimalSizeTestComponent {
 

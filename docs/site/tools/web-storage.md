@@ -20,7 +20,7 @@ The NPM sub-module `@scion/toolkit/storage` allows the observation of values con
 1. Create an instance of the `WebStorage` class by passing the storage implementor as constructor argument.
 
    ```typescript
-   import { WebStorage } from '@scion/toolkit/storage';
+   import {WebStorage} from '@scion/toolkit/storage';
     
    export const sessionStorage = new WebStorage(window.sessionStorage);
    export const localStorage = new WebStorage(window.localStorage);

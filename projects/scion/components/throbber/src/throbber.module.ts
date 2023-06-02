@@ -9,26 +9,14 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciThrobberComponent} from './throbber.component';
-import {SciEllipsisThrobberComponent} from './ellipsis-throbber/ellipsis-throbber.component';
-import {SciRippleThrobberComponent} from './ripple-throbber/ripple-throbber.component';
-import {SciRollerThrobberComponent} from './roller-throbber/roller-throbber.component';
-import {SciSpinnerThrobberComponent} from './spinner-throbber/spinner-throbber.component';
 
 /**
  * Provides {@link SciThrobberComponent}, an animated graphical control to indicate the execution of an action.
  */
 @NgModule({
-  declarations: [
-    SciThrobberComponent,
-    SciEllipsisThrobberComponent,
-    SciRippleThrobberComponent,
-    SciRollerThrobberComponent,
-    SciSpinnerThrobberComponent,
-  ],
   imports: [
-    CommonModule,
+    SciThrobberComponent,
   ],
   exports: [
     SciThrobberComponent,

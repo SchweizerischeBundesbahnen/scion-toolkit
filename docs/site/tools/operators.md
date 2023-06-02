@@ -19,7 +19,7 @@ npm install @scion/toolkit --save
 Filters items in the source array and emits an array with items satisfying given predicate.
 
 ```typescript
-import { filterArray } from '@scion/toolkit/operators';
+import {filterArray} from '@scion/toolkit/operators';
 of(['a', 'b', 'c'])
   .pipe(filterArray(item => item === 'b'))
   .subscribe(items => {
@@ -35,7 +35,7 @@ of(['a', 'b', 'c'])
 Maps each element in the source array to its mapped value.
 
 ```typescript
-import { mapArray } from '@scion/toolkit/operators';
+import {mapArray} from '@scion/toolkit/operators';
 
 const persons = [
   {name: 'John', age: 42},
@@ -58,7 +58,7 @@ of(persons)
 Sorts items in the source array and emits an array with those items sorted.
 
 ```typescript
-import { sortArray } from '@scion/toolkit/operators';
+import {sortArray} from '@scion/toolkit/operators';
 
 const persons = [
   {name: 'John', age: 42},
@@ -81,7 +81,7 @@ of(persons)
 Executes a tap-function for the first perculating value.
 
 ```typescript
-import { tapFirst } from '@scion/toolkit/operators';
+import {tapFirst} from '@scion/toolkit/operators';
 of('a', 'b', 'c')
   .pipe(tapFirst(firstItem => console.log(firstItem))) // prints 'a'
   .subscribe(items => {
@@ -99,8 +99,8 @@ Mirrors the source Observable, but runs downstream operators (operators below th
 This operator is particularly useful in Angular applications to run downstream operators inside or outside the Angular zone, as following: `observeInside(continueFn => ngzone.run(continueFn))`.
 
 ```typescript
-import { tapFirst } from '@scion/toolkit/operators';
-import { interval } from 'rxjs';
+import {tapFirst} from '@scion/toolkit/operators';
+import {interval} from 'rxjs';
 
 // Code running outside Angular
 
@@ -132,8 +132,8 @@ Unlike `observeInside` operator, the `subscribeInside` also acts upstream. By us
 This operator is particularly useful in Angular applications to subscribe to the source inside or outside the Angular zone, as following: `subscribeInside(continueFn => ngzone.run(continueFn))`.
 
 ```typescript
-import { tapFirst } from '@scion/toolkit/operators';
-import { interval } from 'rxjs';
+import {tapFirst} from '@scion/toolkit/operators';
+import {interval} from 'rxjs';
 
 // Code running outside Angular 
 
@@ -163,9 +163,9 @@ Combines the Observables contained in the source array by applying `combineLates
 > Each time the source emits an array of Observables, combines its Observables by subscribing to each of them, cancelling any subscription of a previous source emission.
 
 ```typescript
-import { combineArray } from '@scion/toolkit/operators';
-import { interval } from 'rxjs';
-import { map, take } from 'rxjs/operators';
+import {combineArray} from '@scion/toolkit/operators';
+import {interval} from 'rxjs';
+import {map, take} from 'rxjs/operators';
 
 interval(100)
   .pipe(
@@ -196,8 +196,8 @@ The snippet above prints the following output to the console:
 Removes duplicates of elements in the source array.
 
 ```typescript
-import { distinctArray } from '@scion/toolkit/operators';
-import { of } from 'rxjs';
+import {distinctArray} from '@scion/toolkit/operators';
+import {of} from 'rxjs';
 
 of(['a', 'b', 'a', 'e', 'b', 'd'])
   .pipe(distinctArray())
@@ -223,8 +223,8 @@ After that, mirrors the source Observable, i.e., emits values as they arrive.
 Unlike `bufferWhen` RxJS operator, the buffer is not re-opened once closed.
 
 ```typescript
-import { bufferUntil } from '@scion/toolkit/operators';
-import { Subject } from 'rxjs';
+import {bufferUntil} from '@scion/toolkit/operators';
+import {Subject} from 'rxjs';
 
 const source$ = new Subject();
 const notifier$ = new Subject();
