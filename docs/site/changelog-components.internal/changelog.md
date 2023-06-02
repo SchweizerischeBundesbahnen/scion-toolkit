@@ -5,6 +5,22 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+# [16.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.0.0...ɵcomponents-16.1.0) (2023-06-02)
+
+
+### Bug Fixes
+
+* **ɵcomponents:** include all SASS files, but only if they are not contained in the directory /@scion/ or its subdirectories ([7fc0eb0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7fc0eb0632932a4cd1683ebe94a8d93717f5dcbe))
+
+
+### Features
+
+* **ɵcomponents:** accept passing `undefined` in optional inputs ([9fc3b12](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/9fc3b128db56bbf58483b72feeff733357986c82))
+* **ɵcomponents:** mark required inputs as required ([71264fa](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/71264faf6ae074b47127beee993e4615b9fa2fa8))
+* **ɵcomponents:** migrate to standalone components ([eb79b56](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/eb79b56c8109b9dbc3276963f761977bc982a62f))
+
+
+
 # [16.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-15.0.1...ɵcomponents-16.0.0) (2023-05-15)
 
 
