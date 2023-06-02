@@ -9,21 +9,15 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciViewportComponent} from './viewport.component';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
 import {SciScrollableDirective} from './scrollable.directive';
-import {ScrollingModule} from '@angular/cdk/scrolling';
 
 /**
  * Provides a viewport component with scrollbars that sit on top of the viewport client.
  */
 @NgModule({
   imports: [
-    CommonModule,
-    ScrollingModule,
-  ],
-  declarations: [
     SciViewportComponent,
     SciScrollbarComponent,
     SciScrollableDirective,

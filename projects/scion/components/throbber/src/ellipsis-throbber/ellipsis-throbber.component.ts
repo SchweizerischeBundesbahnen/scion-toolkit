@@ -20,6 +20,7 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
   templateUrl: './ellipsis-throbber.component.html',
   styleUrls: ['./ellipsis-throbber.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
 })
 export class SciEllipsisThrobberComponent {
 }

@@ -21,6 +21,7 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
   templateUrl: './spinner-throbber.component.html',
   styleUrls: ['./spinner-throbber.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
 })
 export class SciSpinnerThrobberComponent {
 }

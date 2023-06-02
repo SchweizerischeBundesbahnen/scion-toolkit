@@ -21,10 +21,27 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
    ```
    > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
-1. Import `SciSashboxModule` in the module where to use the sashbox:
+1. Import `SciSashboxComponent` and `SciSashDirective` in your component.
+
+   ```typescript
+   import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
+
+   @Component({
+     // other metadata skipped
+     standalone: true,
+     imports: [
+       SciSashboxComponent,
+       SciSashDirective,
+     ],
+   })
+   export class YourComponent {
+   }
+   ```
+
+   Alternatively, import `SciSashboxModule` in the `NgModule` that declares your component.
    
    ```typescript
-   import { SciSashboxModule } from '@scion/components/sashbox';
+   import {SciSashboxModule} from '@scion/components/sashbox';
 
    @NgModule({
      imports: [SciSashboxModule]

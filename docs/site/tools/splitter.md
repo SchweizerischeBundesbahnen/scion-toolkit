@@ -21,10 +21,24 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
    ```
    > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
-1. Import `SciSplitterModule` in the module where to use the splitter:
-   
+1. Import `SciViewportComponent` in your component.
+
    ```typescript
-   import { SciSplitterModule } from '@scion/components/splitter';
+   import {SciSplitterComponent} from '@scion/components/splitter';
+
+   @Component({
+     // other metadata skipped
+     standalone: true,
+     imports: [SciSplitterComponent]
+   })
+   export class YourComponent {
+   }
+   ```
+
+   Alternatively, import `SciSplitterModule` in the `NgModule` that declares your component.
+
+   ```typescript
+   import {SciSplitterModule} from '@scion/components/splitter';
 
    @NgModule({
      imports: [SciSplitterModule]

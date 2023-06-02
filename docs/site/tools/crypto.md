@@ -19,7 +19,7 @@ npm install @scion/toolkit --save
 Generates a digest of the given data using the specified algorithm (or SHA-256 by default) and converts it to a hex string.
 
 ```typescript
-import { Crypto } from '@scion/toolkit/crypto';
+import {Crypto} from '@scion/toolkit/crypto';
 
 const hash: string = await Crypto.digest('some-data');
 ```

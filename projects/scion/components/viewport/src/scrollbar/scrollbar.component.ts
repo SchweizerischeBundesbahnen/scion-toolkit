@@ -43,6 +43,7 @@ import {filterArray, subscribeInside} from '@scion/toolkit/operators';
   templateUrl: './scrollbar.component.html',
   styleUrls: ['./scrollbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
 })
 export class SciScrollbarComponent implements OnDestroy {
 
@@ -103,7 +104,7 @@ export class SciScrollbarComponent implements OnDestroy {
   }
 
   constructor(private _host: ElementRef<HTMLElement>,
-              @Inject(DOCUMENT) private _document: any,
+              @Inject(DOCUMENT) private _document: Document,
               private _zone: NgZone) {
     this._viewportChange$
       .pipe(

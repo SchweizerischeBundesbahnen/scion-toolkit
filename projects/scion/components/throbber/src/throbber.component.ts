@@ -9,6 +9,11 @@
  */
 
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common';
+import {SciEllipsisThrobberComponent} from './ellipsis-throbber/ellipsis-throbber.component';
+import {SciRippleThrobberComponent} from './ripple-throbber/ripple-throbber.component';
+import {SciRollerThrobberComponent} from './roller-throbber/roller-throbber.component';
+import {SciSpinnerThrobberComponent} from './spinner-throbber/spinner-throbber.component';
 
 /**
  * Animated graphical control to indicate the execution of an action.
@@ -40,6 +45,16 @@ import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
   templateUrl: './throbber.component.html',
   styleUrls: ['./throbber.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    NgSwitch,
+    NgSwitchCase,
+    NgSwitchDefault,
+    SciEllipsisThrobberComponent,
+    SciRippleThrobberComponent,
+    SciRollerThrobberComponent,
+    SciSpinnerThrobberComponent,
+  ],
 })
 export class SciThrobberComponent {
 

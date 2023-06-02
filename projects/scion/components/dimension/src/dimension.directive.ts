@@ -26,6 +26,7 @@ import {captureElementDimension, Dimension, fromDimension$} from '@scion/toolkit
 @Directive({
   selector: '[sciDimension]',
   exportAs: 'sciDimension',
+  standalone: true,
 })
 export class SciDimensionDirective implements OnInit, OnDestroy {
 

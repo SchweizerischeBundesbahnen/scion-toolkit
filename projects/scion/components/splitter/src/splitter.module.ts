@@ -9,7 +9,6 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciSplitterComponent} from './splitter.component';
 
 /**
@@ -22,11 +21,8 @@ import {SciSplitterComponent} from './splitter.component';
  * ```
  */
 @NgModule({
-  declarations: [
-    SciSplitterComponent,
-  ],
   imports: [
-    CommonModule,
+    SciSplitterComponent,
   ],
   exports: [
     SciSplitterComponent,

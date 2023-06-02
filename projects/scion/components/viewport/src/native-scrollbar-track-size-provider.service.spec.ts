@@ -14,15 +14,6 @@ import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size
 
 describe('SciNativeScrollbarTrackSizeProvider', () => {
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [AppComponent],
-      providers: [
-        SciNativeScrollbarTrackSizeProvider,
-      ],
-    });
-  });
-
   it('computes correct scrollbar track sizes', fakeAsync(inject([SciNativeScrollbarTrackSizeProvider], (testee: SciNativeScrollbarTrackSizeProvider) => {
     const fixture = TestBed.createComponent(AppComponent);
     advance(fixture);
@@ -40,6 +31,7 @@ describe('SciNativeScrollbarTrackSizeProvider', () => {
       </div>
     </div>
   `,
+  standalone: true,
 })
 class AppComponent implements AfterViewInit {
 

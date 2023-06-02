@@ -13,7 +13,11 @@ import {Directive, ElementRef} from '@angular/core';
 /**
  * Provides access to the native {@link HTMLElement} of the host.
  */
-@Directive({selector: '[sciElementRef]', exportAs: 'sciElementRef'})
+@Directive({
+  selector: '[sciElementRef]',
+  exportAs: 'sciElementRef',
+  standalone: true,
+})
 export class SciElementRefDirective {
 
   public readonly nativeElement: HTMLElement;

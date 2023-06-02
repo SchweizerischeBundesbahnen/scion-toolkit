@@ -9,7 +9,6 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciDimensionDirective} from './dimension.directive';
 
 /**
@@ -19,9 +18,6 @@ import {SciDimensionDirective} from './dimension.directive';
  */
 @NgModule({
   imports: [
-    CommonModule,
-  ],
-  declarations: [
     SciDimensionDirective,
   ],
   exports: [

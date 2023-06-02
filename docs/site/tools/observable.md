@@ -19,7 +19,7 @@ npm install @scion/toolkit --save
 Allows observing the dimension of an element. Upon subscription, it emits the element's dimension, and then continuously emits when the dimension of the element changes. It never completes.
 
 ```typescript
-import { Dimension, fromDimension$ } from '@scion/toolkit/observable';
+import {Dimension, fromDimension$} from '@scion/toolkit/observable';
 
 const element: HTMLElement = ...;
 fromDimension$(element).subscribe((dimension: Dimension) => {   
@@ -39,7 +39,7 @@ Allows watching for changes being made to the DOM tree of an HTML element. It ne
 The Observable wraps a [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to watch for changes being made to the DOM tree.
   
 ```typescript
-import { fromMutation$ } from '@scion/toolkit/observable';
+import {fromMutation$} from '@scion/toolkit/observable';
 
 const element: HTMLElement = ...;
 fromMutation$(element).subscribe((mutations: MutationRecord[]) => {
@@ -59,7 +59,7 @@ Allows observing an element's bounding box, providing information about the elem
 Upon subscription, the Observable emits the element's current bounding box, and then continuously emits when its bounding box changes, e.g., due to a change in the layout. The Observable never completes.
 
 ```typescript
-import { fromBoundingClientRect$ } from '@scion/toolkit/observable';
+import {fromBoundingClientRect$} from '@scion/toolkit/observable';
 
 const element: HTMLElement = ...;
 fromBoundingClientRect$(element).subscribe((boundingBox: Readonly<DOMRect>) => {

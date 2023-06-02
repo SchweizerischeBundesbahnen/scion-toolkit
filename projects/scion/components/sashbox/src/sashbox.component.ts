@@ -8,12 +8,15 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ContentChildren, ElementRef, EventEmitter, forwardRef, HostBinding, Input, NgZone, OnDestroy, Output, QueryList} from '@angular/core';
+import {Component, ContentChildren, ElementRef, EventEmitter, HostBinding, inject, Input, NgZone, OnDestroy, Output, QueryList} from '@angular/core';
 import {startWith, takeUntil} from 'rxjs/operators';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
-import {SplitterMoveEvent} from '@scion/components/splitter';
+import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
+import {AsyncPipe, NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
+import {SciSashInitializerDirective} from './sash-initializer.directive';
+import {SciElementRefDirective} from './element-ref.directive';
 
 /**
  * The <sci-sashbox> is like a CSS flexbox container that lays out its content children (sashes) in a row (which is by default)
@@ -71,10 +74,19 @@ import {SciSashBoxAccessor} from './sashbox-accessor';
   selector: 'sci-sashbox',
   templateUrl: './sashbox.component.html',
   styleUrls: ['./sashbox.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    AsyncPipe,
+    NgTemplateOutlet,
+    SciSashInitializerDirective,
+    SciSplitterComponent,
+    SciElementRefDirective,
+  ],
   providers: [{
     provide: SciSashBoxAccessor,
     useFactory: provideSashBoxAccessor,
-    deps: [forwardRef(() => SciSashboxComponent)],
   }],
 })
 export class SciSashboxComponent implements OnDestroy {
@@ -283,7 +295,9 @@ function computePixelToFlexGrowFactor(sashes: SciSashDirective[]): number {
   return proportionSum / pixelSum;
 }
 
-export function provideSashBoxAccessor(component: SciSashboxComponent): SciSashBoxAccessor {
+function provideSashBoxAccessor(): SciSashBoxAccessor {
+  const component = inject(SciSashboxComponent);
+
   return new class implements SciSashBoxAccessor {
 
     public get direction(): 'column' | 'row' {

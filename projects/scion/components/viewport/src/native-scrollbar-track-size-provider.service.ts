@@ -15,8 +15,6 @@ import {debounceTime, distinctUntilChanged, map, startWith, takeUntil} from 'rxj
 
 /**
  * Provides the native scrollbar tracksize.
- *
- * @dynamic ignore 'strictMetadataEmit' errors due to the usage of {@link Document} as ambient type for DI.
  */
 @Injectable({providedIn: 'root'})
 export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {

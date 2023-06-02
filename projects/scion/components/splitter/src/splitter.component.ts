@@ -53,14 +53,13 @@ import {first, takeUntil} from 'rxjs/operators';
  *   --sci-splitter-bgcolor_hover: black;
  * }
  * ```
- *
- * @dynamic ignore 'strictMetadataEmit' errors due to the usage of {@link Document} as ambient type for DI.
  */
 @Component({
   selector: 'sci-splitter',
   templateUrl: './splitter.component.html',
   styleUrls: ['./splitter.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
 })
 export class SciSplitterComponent implements OnInit, OnDestroy {
 

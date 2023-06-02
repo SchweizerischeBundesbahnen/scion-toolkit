@@ -9,12 +9,8 @@
  */
 
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {SciSashboxComponent} from './sashbox.component';
 import {SciSashDirective} from './sash.directive';
-import {SciSashInitializerDirective} from './sash-initializer.directive';
-import {SciSplitterModule} from '@scion/components/splitter';
-import {SciElementRefDirective} from './element-ref.directive';
 
 /**
  * Provides a sashbox component that lays out its children in a row or column arrangement and places a splitter between each child.
@@ -38,15 +34,9 @@ import {SciElementRefDirective} from './element-ref.directive';
  * ```
  */
 @NgModule({
-  declarations: [
+  imports: [
     SciSashboxComponent,
     SciSashDirective,
-    SciSashInitializerDirective,
-    SciElementRefDirective,
-  ],
-  imports: [
-    CommonModule,
-    SciSplitterModule,
   ],
   exports: [
     SciSashboxComponent,
