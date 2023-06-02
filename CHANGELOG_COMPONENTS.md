@@ -1,3 +1,14 @@
+# [16.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-16.0.0...components-16.1.0) (2023-06-02)
+
+
+### Features
+
+* **components:** accept passing `undefined` in optional inputs ([aacdda1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/aacdda16c062c0a7ad9a3b5474a65f5889ff3027))
+* **components:** mark required inputs as required ([010008c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/010008c2dc1ed80be6fb059523fb267d00a778d7))
+* **components:** migrate to standalone components ([78be807](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/78be8077a054f594b11cd3d8a1583b67304de529))
+
+
+
 # [16.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-15.0.2...components-16.0.0) (2023-05-15)
 
 
