@@ -38,8 +38,8 @@ export class SciScrollableDirective implements OnChanges, OnDestroy {
    * Controls whether to display native scrollbars.
    * Has no effect if the native scrollbar sits on top of the content, e.g. in OS X.
    */
-  @Input('sciScrollableDisplayNativeScrollbar') // eslint-disable-line @angular-eslint/no-input-rename
-  public isDisplayNativeScrollbar: boolean = false;
+  @Input('sciScrollableDisplayNativeScrollbar')// eslint-disable-line @angular-eslint/no-input-rename
+  public isDisplayNativeScrollbar = false;
 
   constructor(private _host: ElementRef<HTMLDivElement>,
               private _renderer: Renderer2,

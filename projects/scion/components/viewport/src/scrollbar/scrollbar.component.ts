@@ -97,7 +97,7 @@ export class SciScrollbarComponent implements OnDestroy {
   /**
    * The viewport to provide scrollbars for.
    */
-  @Input('viewport') // eslint-disable-line @angular-eslint/no-input-rename
+  @Input({alias: 'viewport', required: true}) // eslint-disable-line @angular-eslint/no-input-rename
   public set setViewport(viewport: HTMLElement) {
     this._viewport = viewport;
     this._viewportChange$.next();
