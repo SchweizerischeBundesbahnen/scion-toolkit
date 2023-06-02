@@ -20,7 +20,7 @@ import {SciSashDirective} from './sash.directive';
 })
 export class SciSashInitializerDirective implements OnChanges {
 
-  @Input('sciSashInitializer') // eslint-disable-line @angular-eslint/no-input-rename
+  @Input({alias: 'sciSashInitializer', required: true})
   public sash!: SciSashDirective;
 
   constructor(private _host: ElementRef<HTMLDivElement>) {

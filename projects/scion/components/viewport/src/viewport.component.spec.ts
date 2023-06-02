@@ -1377,7 +1377,7 @@ class Testee1Component {
 
   public elements: null[] = [];
 
-  @Input()
+  @Input({required: true})
   public direction!: 'row' | 'column';
 
   public onRemove(): void {
