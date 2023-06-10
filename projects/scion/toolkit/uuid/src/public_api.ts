@@ -14,4 +14,4 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {UUID} from './uuid.util';
+export * as UUID from './uuid.util';
