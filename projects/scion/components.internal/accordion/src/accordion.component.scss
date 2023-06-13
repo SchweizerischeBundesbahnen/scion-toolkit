@@ -27,8 +27,9 @@ $background-color: var(--sci-color-P100);
 
     > button {
       all: unset;
-      display: flex;
-      justify-content: space-between;
+      display: inline-grid;
+      grid-template-columns: 1fr auto;
+      grid-column-gap: .5em;
       align-items: center;
       cursor: pointer;
       padding: 1em;
