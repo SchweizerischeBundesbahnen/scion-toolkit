@@ -6,6 +6,15 @@
 ## [Changelog][menu-changelog] > @scion/toolkit
 
 
+## [1.4.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.4.0...toolkit-1.4.1) (2023-06-14)
+
+
+### Performance Improvements
+
+* **toolkit/uuid:** use faster algorithm to generate UUID ([1fe7039](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/1fe7039c537babbc53ed50a4c8f9c5d6946cf6bd)), closes [#162](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/162)
+
+
+
 # [1.4.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-1.3.1...toolkit-1.4.0) (2023-04-19)
 
 
