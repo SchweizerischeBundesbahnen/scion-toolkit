@@ -1,6 +1,6 @@
 {
   "name": "@scion/components.internal",
-  "version": "16.1.0",
+  "version": "16.1.1",
   "description": "Provides a collection of Angular components designed exclusively for use in SCION library projects. Note that this module is private to SCION and not public API. DO NOT USE THIS MODULE IN YOUR PROJECT AS IT IS NOT GUARANTEED TO BE STABLE AND MAY CHANGE WITHOUT NOTICE.",
   "license": "EPL-2.0",
   "private": false,
