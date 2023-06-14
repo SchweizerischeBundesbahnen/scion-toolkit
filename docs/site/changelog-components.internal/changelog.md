@@ -5,6 +5,15 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+## [16.1.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.1.0...ɵcomponents-16.1.1) (2023-06-14)
+
+
+### Bug Fixes
+
+* **ɵcomponents/accordion:** stretch header content to full width ([7032730](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7032730f1d3cc984a0b5983a06933a522b8132b0))
+
+
+
 # [16.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.0.0...ɵcomponents-16.1.0) (2023-06-02)
 
 
