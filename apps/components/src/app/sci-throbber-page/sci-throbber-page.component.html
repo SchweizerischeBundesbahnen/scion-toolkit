@@ -5,7 +5,7 @@
     <header>Settings</header>
 
     <sci-form-field label="Type" direction="column">
-      <select [formControlName]="TYPE">
+      <select [formControl]="form.controls.type">
         <option *ngFor="let type of types" [value]="type">{{type}}</option>
       </select>
     </sci-form-field>
@@ -15,21 +15,21 @@
     <header>CSS Variables</header>
 
     <sci-form-field label="--sci-throbber-color" direction="column">
-      <input [formControlName]="COLOR">
+      <input [formControl]="form.controls.color">
     </sci-form-field>
 
     <sci-form-field label="--sci-throbber-size" direction="column">
-      <input [formControlName]="SIZE">
+      <input [formControl]="form.controls.size">
     </sci-form-field>
 
     <sci-form-field label="--sci-throbber-duration" direction="column">
-      <input [formControlName]="DURATION">
+      <input [formControl]="form.controls.duration">
     </sci-form-field>
   </section>
 </form>
 
-<sci-throbber [type]="form.get(TYPE)!.value"
-              [style.--sci-throbber-color]="form.get(COLOR)!.value"
-              [style.--sci-throbber-size]="form.get(SIZE)!.value"
-              [style.--sci-throbber-duration]="form.get(DURATION)!.value">
+<sci-throbber [type]="form.controls.type.value"
+              [style.--sci-throbber-color]="form.controls.color.value"
+              [style.--sci-throbber-size]="form.controls.size.value"
+              [style.--sci-throbber-duration]="form.controls.duration.value">
 </sci-throbber>

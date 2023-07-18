@@ -9,7 +9,7 @@
  */
 
 import {Component, ElementRef, HostBinding, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {startWith, takeUntil} from 'rxjs/operators';
 import {Subject} from 'rxjs';
@@ -18,14 +18,6 @@ import {Arrays} from '@scion/toolkit/util';
 import {DOCUMENT, NgFor} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SplitPipe} from '../common/split.pipe';
-
-export const VIEWPORT_CONTENT_STYLES = 'viewportContentStyles';
-export const VIEWPORT_MIN_HEIGHT = 'viewportMinHeight';
-export const VIEWPORT_MAX_HEIGHT = 'viewportMaxHeight';
-export const VIEWPORT_FLEX = 'viewportFlex';
-export const SCROLLBAR_PRESENTATION = 'scrollbarPresentation';
-export const SCROLLBAR_COLOR = 'scrollbarColor';
-export const CONTENT = 'content';
 
 @Component({
   selector: 'sci-viewport-page',
@@ -42,60 +34,51 @@ export const CONTENT = 'content';
 })
 export default class SciViewportPageComponent implements OnInit, OnDestroy {
 
-  public VIEWPORT_CONTENT_STYLES = VIEWPORT_CONTENT_STYLES;
-  public VIEWPORT_MIN_HEIGHT = VIEWPORT_MIN_HEIGHT;
-  public VIEWPORT_MAX_HEIGHT = VIEWPORT_MAX_HEIGHT;
-  public VIEWPORT_FLEX = VIEWPORT_FLEX;
-  public SCROLLBAR_PRESENTATION = SCROLLBAR_PRESENTATION;
-  public SCROLLBAR_COLOR = SCROLLBAR_COLOR;
-  public CONTENT = CONTENT;
-
   private _destroy$ = new Subject<void>();
   private _styleSheet: CSSStyleSheet | null = null;
 
   public scrollbarStyles = ['native', 'on-top', 'hidden'];
-  public form: FormGroup;
+  public form = this._formBuilder.group({
+    viewportContentStyles: this._formBuilder.control(`display: grid;\ngrid-template-columns: 1fr 2fr 1fr;\ngap: 5em;\nbackground-color: ivory`),
+    viewportMinHeight: this._formBuilder.control('300px'),
+    viewportMaxHeight: this._formBuilder.control(''),
+    viewportFlex: this._formBuilder.control('1 1 0'),
+    scrollbarPresentation: this._formBuilder.control<'native' | 'on-top' | 'hidden'>('on-top'),
+    scrollbarColor: this._formBuilder.control(''),
+    content: this._formBuilder.control(loremIpsum),
+  });
 
   @ViewChild(SciViewportComponent, {static: true, read: ElementRef})
   public viewportElement!: ElementRef<HTMLElement>;
 
   @HostBinding('style.--viewport-minheight')
   public get viewportMinHeight(): string {
-    return this.form.get(this.VIEWPORT_MIN_HEIGHT)!.value;
+    return this.form.controls.viewportMinHeight.value;
   }
 
   @HostBinding('style.--viewport-maxheight')
   public get viewportMaxHeight(): string {
-    return this.form.get(this.VIEWPORT_MAX_HEIGHT)!.value;
+    return this.form.controls.viewportMaxHeight.value;
   }
 
   @HostBinding('style.--viewport-flex')
   public get viewportFlex(): string {
-    return this.form.get(this.VIEWPORT_FLEX)!.value;
+    return this.form.controls.viewportFlex.value;
   }
 
-  constructor(formBuilder: FormBuilder, @Inject(DOCUMENT) private _document: any) {
-    this.form = formBuilder.group({
-      [VIEWPORT_CONTENT_STYLES]: formBuilder.control(`display: grid;\ngrid-template-columns: 1fr 2fr 1fr;\ngap: 5em;\nbackground-color: ivory`),
-      [VIEWPORT_MIN_HEIGHT]: formBuilder.control('300px'),
-      [VIEWPORT_MAX_HEIGHT]: formBuilder.control(undefined),
-      [VIEWPORT_FLEX]: formBuilder.control('1 1 0'),
-      [SCROLLBAR_PRESENTATION]: formBuilder.control(undefined),
-      [SCROLLBAR_COLOR]: formBuilder.control(undefined),
-      [CONTENT]: formBuilder.control(loremIpsum),
-    });
+  constructor(private _formBuilder: NonNullableFormBuilder, @Inject(DOCUMENT) private _document: any) {
     this._styleSheet = this.installStyleSheet();
     this.applyViewportContentStylesOnStyleChange();
   }
 
   public ngOnInit(): void {
-    this.form.get(SCROLLBAR_COLOR)!.setValue(this.readCssVariableDefault('--sci-viewport-scrollbar-color'));
+    this.form.controls.scrollbarColor.setValue(this.readCssVariableDefault('--sci-viewport-scrollbar-color'));
   }
 
   private applyViewportContentStylesOnStyleChange(): void {
-    this.form.get(VIEWPORT_CONTENT_STYLES)!.valueChanges
+    this.form.controls.viewportContentStyles.valueChanges
       .pipe(
-        startWith(this.form.get(VIEWPORT_CONTENT_STYLES)!.value),
+        startWith(this.form.controls.viewportContentStyles.value),
         takeUntil(this._destroy$),
       )
       .subscribe((styles: string) => {

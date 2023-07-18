@@ -5,19 +5,19 @@
     <header>Settings</header>
 
     <sci-form-field label="Variant">
-      <select [formControlName]="VARIANT">
+      <select [formControl]="form.controls.variant">
         <option value="solid">solid</option>
         <option value="bubble">bubble</option>
       </select>
     </sci-form-field>
 
     <sci-form-field label="Multi">
-      <sci-checkbox [formControlName]="MULTI"></sci-checkbox>
+      <sci-checkbox [formControl]="form.controls.multi"></sci-checkbox>
     </sci-form-field>
   </section>
 </form>
 
-<sci-accordion [variant]="form.get(VARIANT)!.value" [multi]="form.get(MULTI)!.value">
+<sci-accordion [variant]="form.controls.variant.value" [multi]="form.controls.multi.value">
   <ng-container *ngFor="let item of items">
     <!-- item -->
     <ng-template sciAccordionItem [panel]="panel">

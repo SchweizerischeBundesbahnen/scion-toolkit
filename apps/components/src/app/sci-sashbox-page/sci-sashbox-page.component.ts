@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
-import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {NgFor, NgIf} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -32,18 +32,18 @@ import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 })
 export default class SciSashboxPageComponent implements OnInit {
 
-  public directionFormControl = new FormControl<'column' | 'row'>('row', {nonNullable: true});
-  public stylingFormGroup = new FormGroup({
-    '--sci-sashbox-gap': new FormControl(''),
-    '--sci-sashbox-splitter-bgcolor': new FormControl(''),
-    '--sci-sashbox-splitter-bgcolor_hover': new FormControl(''),
-    '--sci-sashbox-splitter-size': new FormControl(''),
-    '--sci-sashbox-splitter-size_hover': new FormControl(''),
-    '--sci-sashbox-splitter-touch-target-size': new FormControl(''),
-    '--sci-sashbox-splitter-cross-axis-size': new FormControl(''),
-    '--sci-sashbox-splitter-border-radius': new FormControl(''),
-    '--sci-sashbox-splitter-opacity_active': new FormControl(''),
-    '--sci-sashbox-splitter-opacity_hover': new FormControl(''),
+  public directionFormControl = this._formBuilder.control<'column' | 'row'>('row');
+  public stylingFormGroup = this._formBuilder.group({
+    '--sci-sashbox-gap': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-bgcolor': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-bgcolor_hover': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-size': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-size_hover': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-touch-target-size': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-cross-axis-size': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-border-radius': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-opacity_active': this._formBuilder.control(''),
+    '--sci-sashbox-splitter-opacity_hover': this._formBuilder.control(''),
   });
 
   public sashes: Sash[] = [
@@ -56,6 +56,9 @@ export default class SciSashboxPageComponent implements OnInit {
 
   @ViewChild(SciSashboxComponent, {static: true, read: ElementRef})
   public sashBoxComponent!: ElementRef<HTMLElement>;
+
+  constructor(private _formBuilder: NonNullableFormBuilder) {
+  }
 
   public ngOnInit(): void {
     // Set CSS variable default values.

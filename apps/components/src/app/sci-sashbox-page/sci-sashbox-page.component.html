@@ -1,16 +1,16 @@
 <h1>sci-sashbox</h1>
 
 <sci-sashbox [direction]="directionFormControl.value"
-             [style.--sci-sashbox-gap]="stylingFormGroup.get('--sci-sashbox-gap')!.value"
-             [style.--sci-sashbox-splitter-bgcolor]="stylingFormGroup.get('--sci-sashbox-splitter-bgcolor')!.value"
-             [style.--sci-sashbox-splitter-bgcolor_hover]="stylingFormGroup.get('--sci-sashbox-splitter-bgcolor_hover')!.value"
-             [style.--sci-sashbox-splitter-size]="stylingFormGroup.get('--sci-sashbox-splitter-size')!.value"
-             [style.--sci-sashbox-splitter-size_hover]="stylingFormGroup.get('--sci-sashbox-splitter-size_hover')!.value"
-             [style.--sci-sashbox-splitter-touch-target-size]="stylingFormGroup.get('--sci-sashbox-splitter-touch-target-size')!.value"
-             [style.--sci-sashbox-splitter-cross-axis-size]="stylingFormGroup.get('--sci-sashbox-splitter-cross-axis-size')!.value"
-             [style.--sci-sashbox-splitter-border-radius]="stylingFormGroup.get('--sci-sashbox-splitter-border-radius')!.value"
-             [style.--sci-sashbox-splitter-opacity_active]="stylingFormGroup.get('--sci-sashbox-splitter-opacity_active')!.value"
-             [style.--sci-sashbox-splitter-opacity_hover]="stylingFormGroup.get('--sci-sashbox-splitter-opacity_hover')!.value">
+             [style.--sci-sashbox-gap]="stylingFormGroup.controls['--sci-sashbox-gap']"
+             [style.--sci-sashbox-splitter-bgcolor]="stylingFormGroup.controls['--sci-sashbox-splitter-bgcolor'].value"
+             [style.--sci-sashbox-splitter-bgcolor_hover]="stylingFormGroup.controls['--sci-sashbox-splitter-bgcolor_hover'].value"
+             [style.--sci-sashbox-splitter-size]="stylingFormGroup.controls['--sci-sashbox-splitter-size'].value"
+             [style.--sci-sashbox-splitter-size_hover]="stylingFormGroup.controls['--sci-sashbox-splitter-size_hover'].value"
+             [style.--sci-sashbox-splitter-touch-target-size]="stylingFormGroup.controls['--sci-sashbox-splitter-touch-target-size'].value"
+             [style.--sci-sashbox-splitter-cross-axis-size]="stylingFormGroup.controls['--sci-sashbox-splitter-cross-axis-size'].value"
+             [style.--sci-sashbox-splitter-border-radius]="stylingFormGroup.controls['--sci-sashbox-splitter-border-radius'].value"
+             [style.--sci-sashbox-splitter-opacity_active]="stylingFormGroup.controls['--sci-sashbox-splitter-opacity_active'].value"
+             [style.--sci-sashbox-splitter-opacity_hover]="stylingFormGroup.controls['--sci-sashbox-splitter-opacity_hover'].value">
   <ng-container *ngFor="let sash of sashes; index as i;">
     <ng-template sciSash *ngIf="sash.visible" [size]="sash.size" [minSize]="sash.minSize">
       <section class="sash-{{i + 1}}">Sash {{i + 1}}</section>
@@ -54,34 +54,34 @@
   <header>Styling</header>
 
   <sci-form-field label="--sci-sashbox-gap" direction="column">
-    <input formControlName="--sci-sashbox-gap">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-gap']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-bgcolor" direction="column">
-    <input formControlName="--sci-sashbox-splitter-bgcolor">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-bgcolor']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-bgcolor_hover" direction="column">
-    <input formControlName="--sci-sashbox-splitter-bgcolor_hover">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-bgcolor_hover']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-size" direction="column">
-    <input formControlName="--sci-sashbox-splitter-size">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-size']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-size_hover" direction="column">
-    <input formControlName="--sci-sashbox-splitter-size_hover">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-size_hover']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-touch-target-size" direction="column">
-    <input formControlName="--sci-sashbox-splitter-touch-target-size">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-touch-target-size']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-cross-axis-size" direction="column">
-    <input formControlName="--sci-sashbox-splitter-cross-axis-size">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-cross-axis-size']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-border-radius" direction="column">
-    <input formControlName="--sci-sashbox-splitter-border-radius">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-border-radius']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-opacity_active" direction="column">
-    <input formControlName="--sci-sashbox-splitter-opacity_active">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-opacity_active']">
   </sci-form-field>
   <sci-form-field label="--sci-sashbox-splitter-opacity_hover" direction="column">
-    <input formControlName="--sci-sashbox-splitter-opacity_hover">
+    <input [formControl]="stylingFormGroup.controls['--sci-sashbox-splitter-opacity_hover']">
   </sci-form-field>
 </section>
 
