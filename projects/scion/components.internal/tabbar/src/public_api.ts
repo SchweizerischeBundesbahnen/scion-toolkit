@@ -13,6 +13,5 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciTabbarModule} from './tabbar.module';
 export {SciTabbarComponent} from './tabbar.component';
 export {SciTabDirective} from './tab.directive';

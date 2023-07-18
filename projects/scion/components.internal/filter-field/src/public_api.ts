@@ -13,5 +13,4 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciFilterFieldModule} from './filter-field.module';
 export {SciFilterFieldComponent, toFilterRegExp} from './filter-field.component';

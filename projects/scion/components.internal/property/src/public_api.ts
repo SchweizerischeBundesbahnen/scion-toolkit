@@ -13,5 +13,4 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciPropertyModule} from './property.module';
 export {SciPropertyComponent} from './property.component';

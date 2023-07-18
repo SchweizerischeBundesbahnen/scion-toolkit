@@ -13,6 +13,5 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciListModule} from './list.module';
 export {SciListComponent} from './list.component';
 export {SciListItemDirective} from './list-item.directive';

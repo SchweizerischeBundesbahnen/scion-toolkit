@@ -13,5 +13,4 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciQualifierChipListModule} from './qualifier-chip-list.module';
 export {SciQualifierChipListComponent} from './qualifier-chip-list.component';
