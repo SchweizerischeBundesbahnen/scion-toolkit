@@ -46,8 +46,8 @@ export const routes: Routes = [
     data: {internal: true},
   },
   {
-    path: 'sci-params-enter',
-    loadComponent: () => import('./sci-params-enter-page/sci-params-enter-page.component'),
+    path: 'sci-key-value-field',
+    loadComponent: () => import('./sci-key-value-field-page/sci-key-value-field-page.component'),
     data: {internal: true},
   },
   {

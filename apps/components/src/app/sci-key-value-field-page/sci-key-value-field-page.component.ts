@@ -9,22 +9,22 @@
  */
 import {Component} from '@angular/core';
 import {FormArray, FormBuilder} from '@angular/forms';
-import {SciParamsEnterComponent} from '@scion/components.internal/params-enter';
+import {SciKeyValueFieldComponent} from '@scion/components.internal/key-value-field';
 import {Dictionary} from '@scion/toolkit/util';
 import {JsonPipe, NgIf} from '@angular/common';
 
 @Component({
-  selector: 'sci-params-enter-page',
-  templateUrl: './sci-params-enter-page.component.html',
-  styleUrls: ['./sci-params-enter-page.component.scss'],
+  selector: 'sci-key-value-field-page',
+  templateUrl: './sci-key-value-field-page.component.html',
+  styleUrls: ['./sci-key-value-field-page.component.scss'],
   standalone: true,
   imports: [
     NgIf,
     JsonPipe,
-    SciParamsEnterComponent,
+    SciKeyValueFieldComponent,
   ],
 })
-export default class SciParamsEnterPageComponent {
+export default class SciKeyValueFieldPageComponent {
 
   public formArray: FormArray;
   public output: Dictionary | null = null;
@@ -34,6 +34,6 @@ export default class SciParamsEnterPageComponent {
   }
 
   public onPrint(): void {
-    this.output = SciParamsEnterComponent.toParamsDictionary(this.formArray);
+    this.output = SciKeyValueFieldComponent.toDictionary(this.formArray);
   }
 }
