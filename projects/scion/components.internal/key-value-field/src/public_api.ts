@@ -13,4 +13,4 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciKeyValueFieldComponent} from './key-value-field.component';
+export {SciKeyValueFieldComponent, KeyValueEntry} from './key-value-field.component';

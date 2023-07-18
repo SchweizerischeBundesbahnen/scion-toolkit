@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostBinding, HostListener, Input, OnDestroy, Output, ViewChild} from '@angular/core';
-import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
+import {ControlValueAccessor, NG_VALUE_ACCESSOR, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {takeUntil} from 'rxjs/operators';
 import {noop, Subject} from 'rxjs';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
@@ -78,12 +78,12 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   }
 
   /* @docs-private */
-  public formControl: FormControl;
+  public formControl = this._formBuilder.control('', {updateOn: 'change'});
 
   constructor(private _host: ElementRef,
               private _focusManager: FocusMonitor,
-              private _cd: ChangeDetectorRef) {
-    this.formControl = new FormControl('', {updateOn: 'change', nonNullable: true});
+              private _cd: ChangeDetectorRef,
+              private _formBuilder: NonNullableFormBuilder) {
     this.formControl.valueChanges
       .pipe(takeUntil(this._destroy$))
       .subscribe(value => {
