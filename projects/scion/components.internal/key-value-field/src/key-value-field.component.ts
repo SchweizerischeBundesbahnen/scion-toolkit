@@ -18,12 +18,12 @@ export const PARAM_NAME = 'paramName';
 export const PARAM_VALUE = 'paramValue';
 
 /**
- * Allows to enter parameters.
+ * Allows entering key-value pairs.
  */
 @Component({
-  selector: 'sci-params-enter',
-  templateUrl: './params-enter.component.html',
-  styleUrls: ['./params-enter.component.scss'],
+  selector: 'sci-key-value-field',
+  templateUrl: './key-value-field.component.html',
+  styleUrls: ['./key-value-field.component.scss'],
   standalone: true,
   imports: [
     NgIf,
@@ -31,7 +31,7 @@ export const PARAM_VALUE = 'paramValue';
     ReactiveFormsModule,
   ],
 })
-export class SciParamsEnterComponent {
+export class SciKeyValueFieldComponent {
 
   public readonly PARAM_NAME = PARAM_NAME;
   public readonly PARAM_VALUE = PARAM_VALUE;
@@ -41,7 +41,7 @@ export class SciParamsEnterComponent {
   public title?: string | undefined;
 
   @Input({required: true})
-  public paramsFormArray!: FormArray;
+  public keyValueFormArray!: FormArray;
 
   @Input()
   @HostBinding('class.removable')
@@ -58,7 +58,7 @@ export class SciParamsEnterComponent {
   }
 
   public onRemove(index: number): void {
-    this.paramsFormArray.removeAt(index);
+    this.keyValueFormArray.removeAt(index);
 
     // Focus the component to not lose the focus when the remove button is removed from the DOM.
     // Otherwise, if used in a popup, the popup would be closed because no element is focused anymore.
@@ -66,14 +66,14 @@ export class SciParamsEnterComponent {
   }
 
   public onAdd(): void {
-    this.paramsFormArray.push(this._formBuilder.group({
+    this.keyValueFormArray.push(this._formBuilder.group({
       [PARAM_NAME]: this._formBuilder.control(''),
       [PARAM_VALUE]: this._formBuilder.control(''),
     }));
   }
 
   public onClear(): void {
-    this.paramsFormArray.clear();
+    this.keyValueFormArray.clear();
   }
 
   /**
@@ -81,21 +81,21 @@ export class SciParamsEnterComponent {
    *
    * By default, if empty, `null` is returned.
    */
-  public static toParamsDictionary(formArray: FormArray, returnNullIfEmpty?: true): Dictionary | null;
-  public static toParamsDictionary(formArray: FormArray, returnNullIfEmpty: false): Dictionary;
-  public static toParamsDictionary(formArray: FormArray, returnNullIfEmpty: boolean): Dictionary | null;
-  public static toParamsDictionary(formArray: FormArray, returnNullIfEmpty: boolean = true): Dictionary | null {
-    const params: Dictionary = {};
+  public static toDictionary(formArray: FormArray, returnNullIfEmpty?: true): Dictionary | null;
+  public static toDictionary(formArray: FormArray, returnNullIfEmpty: false): Dictionary;
+  public static toDictionary(formArray: FormArray, returnNullIfEmpty: boolean): Dictionary | null;
+  public static toDictionary(formArray: FormArray, returnNullIfEmpty: boolean = true): Dictionary | null {
+    const dictionary: Dictionary = {};
     formArray.controls.forEach(formGroup => {
       const paramName = formGroup.get(PARAM_NAME)!.value;
-      params[paramName] = formGroup.get(PARAM_VALUE)!.value;
+      dictionary[paramName] = formGroup.get(PARAM_VALUE)!.value;
     });
 
-    if (!Object.keys(params).length && returnNullIfEmpty) {
+    if (!Object.keys(dictionary).length && returnNullIfEmpty) {
       return null;
     }
 
-    return params;
+    return dictionary;
   }
 
   /**
@@ -103,10 +103,10 @@ export class SciParamsEnterComponent {
    *
    * By default, if empty, `null` is returned.
    */
-  public static toParamsMap(formArray: FormArray, returnNullIfEmpty?: true): Map<string, any> | null;
-  public static toParamsMap(formArray: FormArray, returnNullIfEmpty: false): Map<string, any>;
-  public static toParamsMap(formArray: FormArray, returnNullIfEmpty: boolean): Map<string, any> | null;
-  public static toParamsMap(formArray: FormArray, returnNullIfEmpty: boolean = true): Map<string, any> | null {
-    return Maps.coerce(SciParamsEnterComponent.toParamsDictionary(formArray, returnNullIfEmpty), {coerceNullOrUndefined: false}) ?? null;
+  public static toMap(formArray: FormArray, returnNullIfEmpty?: true): Map<string, any> | null;
+  public static toMap(formArray: FormArray, returnNullIfEmpty: false): Map<string, any>;
+  public static toMap(formArray: FormArray, returnNullIfEmpty: boolean): Map<string, any> | null;
+  public static toMap(formArray: FormArray, returnNullIfEmpty: boolean = true): Map<string, any> | null {
+    return Maps.coerce(SciKeyValueFieldComponent.toDictionary(formArray, returnNullIfEmpty), {coerceNullOrUndefined: false}) ?? null;
   }
 }

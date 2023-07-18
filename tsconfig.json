@@ -97,8 +97,8 @@
     //      "@scion/components.internal/list": [
     //        "projects/scion/components.internal/list/src/public_api"
     //      ],
-    //      "@scion/components.internal/params-enter": [
-    //        "projects/scion/components.internal/params-enter/src/public_api"
+    //      "@scion/components.internal/key-value-field": [
+    //        "projects/scion/components.internal/key-value-field/src/public_api"
     //      ],
     //      "@scion/components.internal/key-value": [
     //        "projects/scion/components.internal/key-value/src/public_api"

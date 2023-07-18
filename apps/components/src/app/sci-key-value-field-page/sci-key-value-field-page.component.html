@@ -1,0 +1,41 @@
+<h1>sci-key-value-field (ɵ)</h1>
+
+<sci-key-value-field [title]="'title'"
+                     [removable]="true"
+                     [addable]="true"
+                     [keyValueFormArray]="formArray">
+</sci-key-value-field>
+<sci-key-value-field [title]="'title'"
+                     [removable]="true"
+                     [addable]="false"
+                     [keyValueFormArray]="formArray">
+</sci-key-value-field>
+<sci-key-value-field [title]="'title'"
+                     [removable]="false"
+                     [addable]="true"
+                     [keyValueFormArray]="formArray">
+</sci-key-value-field>
+<sci-key-value-field [title]="'title'"
+                     [removable]="false"
+                     [addable]="false"
+                     [keyValueFormArray]="formArray">
+</sci-key-value-field>
+<sci-key-value-field [removable]="true"
+                     [addable]="true"
+                     [keyValueFormArray]="formArray">
+</sci-key-value-field>
+<sci-key-value-field [removable]="true"
+                     [addable]="false"
+                     [keyValueFormArray]="formArray">
+</sci-key-value-field>
+<sci-key-value-field [removable]="false"
+                     [addable]="true"
+                     [keyValueFormArray]="formArray">
+</sci-key-value-field>
+<sci-key-value-field [removable]="false"
+                     [addable]="false"
+                     [keyValueFormArray]="formArray">
+</sci-key-value-field>
+
+<button class="print" (click)="onPrint()">Print</button>
+<output *ngIf="output">{{output | json}}</output>

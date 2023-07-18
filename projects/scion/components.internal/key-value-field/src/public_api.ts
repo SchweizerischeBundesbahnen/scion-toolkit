@@ -9,8 +9,8 @@
  */
 
 /*
- * Secondary entrypoint: '@scion/components.internal/params-enter'
+ * Secondary entrypoint: '@scion/components.internal/key-value-field'
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciParamsEnterComponent} from './params-enter.component';
+export {SciKeyValueFieldComponent} from './key-value-field.component';
