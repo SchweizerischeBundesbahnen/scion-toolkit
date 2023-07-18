@@ -100,8 +100,8 @@
     //      "@scion/components.internal/params-enter": [
     //        "projects/scion/components.internal/params-enter/src/public_api"
     //      ],
-    //      "@scion/components.internal/property": [
-    //        "projects/scion/components.internal/property/src/public_api"
+    //      "@scion/components.internal/key-value": [
+    //        "projects/scion/components.internal/key-value/src/public_api"
     //      ],
     //      "@scion/components.internal/qualifier-chip-list": [
     //        "projects/scion/components.internal/qualifier-chip-list/src/public_api"

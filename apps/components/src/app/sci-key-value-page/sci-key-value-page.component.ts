@@ -8,16 +8,16 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component} from '@angular/core';
-import {SciPropertyComponent} from '@scion/components.internal/property';
+import {SciKeyValueComponent} from '@scion/components.internal/key-value';
 
 @Component({
-  selector: 'sci-property-page',
-  templateUrl: './sci-property-page.component.html',
-  styleUrls: ['./sci-property-page.component.scss'],
+  selector: 'sci-key-value-page',
+  templateUrl: './sci-key-value-page.component.html',
+  styleUrls: ['./sci-key-value-page.component.scss'],
   standalone: true,
-  imports: [SciPropertyComponent],
+  imports: [SciKeyValueComponent],
 })
-export default class SciPropertyPageComponent {
+export default class SciKeyValuePageComponent {
 
   public dictionary = {
     firstname: 'Clarke',

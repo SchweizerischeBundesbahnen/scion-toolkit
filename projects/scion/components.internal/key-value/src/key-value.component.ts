@@ -13,12 +13,12 @@ import {KeyValue, KeyValuePipe, NgFor} from '@angular/common';
 import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 
 /**
- * Show the properties of an object.
+ * Displays key-value pairs of an object.
  */
 @Component({
-  selector: 'sci-property',
-  templateUrl: './property.component.html',
-  styleUrls: ['./property.component.scss'],
+  selector: 'sci-key-value',
+  templateUrl: './key-value.component.html',
+  styleUrls: ['./key-value.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
@@ -26,14 +26,14 @@ import {Dictionaries, Dictionary} from '@scion/toolkit/util';
     KeyValuePipe,
   ],
 })
-export class SciPropertyComponent {
+export class SciKeyValueComponent {
 
   public flattenedProperties: Dictionary = {};
   private _keys: string[] = [];
 
   @Input()
-  public set properties(properties: Dictionary | Map<string, any>) {
-    this.flattenedProperties = this.flattenObject(properties || {});
+  public set object(object: Dictionary | Map<string, any>) {
+    this.flattenedProperties = this.flattenObject(object || {});
     this._keys = Object.keys(this.flattenedProperties);
   }
 
