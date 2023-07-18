@@ -4,26 +4,26 @@
   <section class="content">
     <header>Content</header>
 
-    <textarea [formControlName]="CONTENT" placeholder="Text displayed in the viewport, with each paragraph displayed in its own section."></textarea>
+    <textarea [formControl]="form.controls.content" placeholder="Text displayed in the viewport, with each paragraph displayed in its own section."></textarea>
   </section>
 
   <section class="viewport-slotted-content-layout">
     <header>sci-viewport::part(content)</header>
 
-    <textarea [formControlName]="VIEWPORT_CONTENT_STYLES" placeholder="Configure the viewport layout.&#10;&#10;By default, the viewport's slotted content is added to a CSS grid container with a single column, filling remaining space vertically and horizontally. Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout."></textarea>
+    <textarea [formControl]="form.controls.viewportContentStyles" placeholder="Configure the viewport layout.&#10;&#10;By default, the viewport's slotted content is added to a CSS grid container with a single column, filling remaining space vertically and horizontally. Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout."></textarea>
   </section>
 
   <section class="viewport-scrollbar">
     <header>Viewport Scrollbar</header>
 
     <sci-form-field label="Style" direction="column">
-      <select [formControlName]="SCROLLBAR_PRESENTATION">
+      <select [formControl]="form.controls.scrollbarPresentation">
         <option *ngFor="let scrollbarStyle of scrollbarStyles" [value]="scrollbarStyle">{{scrollbarStyle}}</option>
       </select>
     </sci-form-field>
 
     <sci-form-field label="--sci-scrollbar-color" direction="column">
-      <input [formControlName]="SCROLLBAR_COLOR">
+      <input [formControl]="form.controls.scrollbarColor">
     </sci-form-field>
   </section>
 
@@ -31,22 +31,22 @@
     <header>Viewport Style Properties</header>
 
     <sci-form-field label="min-height" direction="column">
-      <input [formControlName]="VIEWPORT_MIN_HEIGHT">
+      <input [formControl]="form.controls.viewportMinHeight">
     </sci-form-field>
 
     <sci-form-field label="max-height" direction="column">
-      <input [formControlName]="VIEWPORT_MAX_HEIGHT">
+      <input [formControl]="form.controls.viewportMaxHeight">
     </sci-form-field>
 
     <sci-form-field label="flex" direction="column">
-      <input [formControlName]="VIEWPORT_FLEX">
+      <input [formControl]="form.controls.viewportFlex">
     </sci-form-field>
   </section>
 </form>
 
-<sci-viewport [scrollbarStyle]="form.get(SCROLLBAR_PRESENTATION)!.value"
-              [style.--sci-viewport-scrollbar-color]="form.get(SCROLLBAR_COLOR)!.value">
-  <section *ngFor="let content of form.get(CONTENT)!.value | appSplit:'\n+'">
+<sci-viewport [scrollbarStyle]="form.controls.scrollbarPresentation.value"
+              [style.--sci-viewport-scrollbar-color]="form.controls.scrollbarColor.value">
+  <section *ngFor="let content of form.controls.content.value | appSplit:'\n+'">
     {{content}}
   </section>
 </sci-viewport>

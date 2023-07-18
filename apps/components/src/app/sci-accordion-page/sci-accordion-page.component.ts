@@ -8,14 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {NgFor} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciAccordionComponent, SciAccordionItemDirective} from '@scion/components.internal/accordion';
-
-export const VARIANT = 'variant';
-export const MULTI = 'multi';
 
 @Component({
   selector: 'sci-accordion-page',
@@ -33,9 +30,10 @@ export const MULTI = 'multi';
 })
 export default class SciAccordionPageComponent {
 
-  public VARIANT = VARIANT;
-  public MULTI = MULTI;
-  public form: FormGroup;
+  public form = this._formBuilder.group({
+    variant: this._formBuilder.control<'solid' | 'bubble'>('bubble'),
+    multi: this._formBuilder.control(false),
+  });
 
   public items: Item[] = [
     {title: 'SCION', description: 'SCION provides fundamental building blocks for implementing a microfrontend architecture and facilitates the development of Angular web applications that require a complex workbench layout of multiple views and windows.'},
@@ -51,11 +49,7 @@ export default class SciAccordionPageComponent {
     {title: 'Angular Youtube Component', description: 'Angular component built on top of the YouTube Player API.'},
   ];
 
-  constructor(formBuilder: FormBuilder) {
-    this.form = formBuilder.group({
-      [VARIANT]: formBuilder.control('bubble'),
-      [MULTI]: formBuilder.control(false),
-    });
+  constructor(private _formBuilder: NonNullableFormBuilder) {
   }
 }
 
