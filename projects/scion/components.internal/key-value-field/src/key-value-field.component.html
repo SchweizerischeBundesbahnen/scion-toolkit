@@ -8,16 +8,16 @@
 
 <ng-container *ngFor="let keyValueGroup of keyValueFormArray.controls; index as i;">
   <!-- key -->
-  <ng-container *ngIf="keyValueGroup.get(PARAM_NAME)!.disabled; then key_readonly; else key_editable"></ng-container>
+  <ng-container *ngIf="keyValueGroup.controls.key.disabled; then key_readonly; else key_editable"></ng-container>
   <!-- value -->
-  <input [formControl]="$any(keyValueGroup.get(PARAM_VALUE))" [attr.id]="id + '_' + i" class="e2e-value">
+  <input [formControl]="keyValueGroup.controls.value" [attr.id]="id + '_' + i" class="e2e-value">
   <!-- 'remove' button -->
   <button *ngIf="removable" class="material-icons e2e-remove" type="button" (click)="onRemove(i)" title="remove entry">remove</button>
 
   <ng-template #key_readonly>
-    <label [for]="id + '_' + i">{{keyValueGroup.get(PARAM_NAME)!.value}}</label>
+    <label [for]="id + '_' + i">{{keyValueGroup.controls.key.value}}</label>
   </ng-template>
   <ng-template #key_editable>
-    <input [formControl]="$any(keyValueGroup.get(PARAM_NAME))" class="e2e-key">
+    <input [formControl]="keyValueGroup.controls.key" class="e2e-key">
   </ng-template>
 </ng-container>

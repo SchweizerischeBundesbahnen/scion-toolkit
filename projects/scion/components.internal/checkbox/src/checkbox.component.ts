@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnDestroy} from '@angular/core';
-import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
+import {ControlValueAccessor, NG_VALUE_ACCESSOR, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {noop, Subject} from 'rxjs';
 import {takeUntil} from 'rxjs/operators';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
@@ -36,7 +36,7 @@ export class SciCheckboxComponent implements ControlValueAccessor, OnDestroy {
   private _cvaChangeFn: (value: any) => void = noop;
   private _cvaTouchedFn: () => void = noop;
 
-  public formControl = new FormControl(false, {updateOn: 'change', nonNullable: true});
+  public formControl = this._formBuilder.control(false, {updateOn: 'change'});
 
   /**
    * Sets focus order in sequential keyboard navigation.
@@ -50,7 +50,7 @@ export class SciCheckboxComponent implements ControlValueAccessor, OnDestroy {
     coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
   }
 
-  constructor(private _cd: ChangeDetectorRef) {
+  constructor(private _cd: ChangeDetectorRef, private _formBuilder: NonNullableFormBuilder) {
     this.formControl.valueChanges
       .pipe(takeUntil(this._destroy$))
       .subscribe(checked => {

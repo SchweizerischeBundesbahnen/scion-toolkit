@@ -9,13 +9,10 @@
  */
 
 import {Component, ElementRef, HostBinding, Input} from '@angular/core';
-import {FormArray, FormBuilder, ReactiveFormsModule} from '@angular/forms';
+import {FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
 import {NgFor, NgIf} from '@angular/common';
-
-export const PARAM_NAME = 'paramName';
-export const PARAM_VALUE = 'paramValue';
 
 /**
  * Allows entering key-value pairs.
@@ -33,15 +30,13 @@ export const PARAM_VALUE = 'paramValue';
 })
 export class SciKeyValueFieldComponent {
 
-  public readonly PARAM_NAME = PARAM_NAME;
-  public readonly PARAM_VALUE = PARAM_VALUE;
   public readonly id = UUID.randomUUID();
 
   @Input()
   public title?: string | undefined;
 
   @Input({required: true})
-  public keyValueFormArray!: FormArray;
+  public keyValueFormArray!: FormArray<FormGroup<KeyValueEntry>>;
 
   @Input()
   @HostBinding('class.removable')
@@ -54,7 +49,7 @@ export class SciKeyValueFieldComponent {
   @HostBinding('attr.tabindex')
   public tabindex = -1;
 
-  constructor(private _formBuilder: FormBuilder, private _host: ElementRef<HTMLElement>) {
+  constructor(private _formBuilder: NonNullableFormBuilder, private _host: ElementRef<HTMLElement>) {
   }
 
   public onRemove(index: number): void {
@@ -67,8 +62,8 @@ export class SciKeyValueFieldComponent {
 
   public onAdd(): void {
     this.keyValueFormArray.push(this._formBuilder.group({
-      [PARAM_NAME]: this._formBuilder.control(''),
-      [PARAM_VALUE]: this._formBuilder.control(''),
+      key: this._formBuilder.control(''),
+      value: this._formBuilder.control(''),
     }));
   }
 
@@ -81,14 +76,14 @@ export class SciKeyValueFieldComponent {
    *
    * By default, if empty, `null` is returned.
    */
-  public static toDictionary(formArray: FormArray, returnNullIfEmpty?: true): Dictionary | null;
-  public static toDictionary(formArray: FormArray, returnNullIfEmpty: false): Dictionary;
-  public static toDictionary(formArray: FormArray, returnNullIfEmpty: boolean): Dictionary | null;
-  public static toDictionary(formArray: FormArray, returnNullIfEmpty: boolean = true): Dictionary | null {
+  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty?: true): Dictionary | null;
+  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: false): Dictionary;
+  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: boolean): Dictionary | null;
+  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: boolean = true): Dictionary | null {
     const dictionary: Dictionary = {};
     formArray.controls.forEach(formGroup => {
-      const paramName = formGroup.get(PARAM_NAME)!.value;
-      dictionary[paramName] = formGroup.get(PARAM_VALUE)!.value;
+      const key = formGroup.controls.key.value;
+      dictionary[key] = formGroup.controls.value.value;
     });
 
     if (!Object.keys(dictionary).length && returnNullIfEmpty) {
@@ -103,10 +98,18 @@ export class SciKeyValueFieldComponent {
    *
    * By default, if empty, `null` is returned.
    */
-  public static toMap(formArray: FormArray, returnNullIfEmpty?: true): Map<string, any> | null;
-  public static toMap(formArray: FormArray, returnNullIfEmpty: false): Map<string, any>;
-  public static toMap(formArray: FormArray, returnNullIfEmpty: boolean): Map<string, any> | null;
-  public static toMap(formArray: FormArray, returnNullIfEmpty: boolean = true): Map<string, any> | null {
+  public static toMap(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty?: true): Map<string, any> | null;
+  public static toMap(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: false): Map<string, any>;
+  public static toMap(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: boolean): Map<string, any> | null;
+  public static toMap(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: boolean = true): Map<string, any> | null {
     return Maps.coerce(SciKeyValueFieldComponent.toDictionary(formArray, returnNullIfEmpty), {coerceNullOrUndefined: false}) ?? null;
   }
+}
+
+/**
+ * Represents the entry of the form array.
+ */
+export interface KeyValueEntry {
+  key: FormControl<string>;
+  value: FormControl<string>;
 }
