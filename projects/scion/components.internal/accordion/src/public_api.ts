@@ -13,6 +13,5 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciAccordionModule} from './accordion.module';
 export {SciAccordionItemDirective} from './accordion-item.directive';
 export {SciAccordionComponent} from './accordion.component';
