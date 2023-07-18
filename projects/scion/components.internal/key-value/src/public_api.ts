@@ -9,8 +9,8 @@
  */
 
 /*
- * Secondary entrypoint: '@scion/components.internal/property'
+ * Secondary entrypoint: '@scion/components.internal/key-value'
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {SciPropertyComponent} from './property.component';
+export {SciKeyValueComponent} from './key-value.component';
