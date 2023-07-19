@@ -1,3 +1,35 @@
+# [16.2.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.1.1...ɵcomponents-16.2.0) (2023-07-19)
+
+
+### Code Refactoring
+
+* **ɵcomponents:** remove `NgModules` because components are standalone ([217101c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/217101cb7d627fa4d57d25917ea41076b8d37aee))
+* **ɵcomponents:** rename `SciParamsEnterComponent` to `SciKeyValueFieldComponent` ([b591d30](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/b591d30246523e8cd6d469dcf71a4920b714a443))
+* **ɵcomponents:** rename `SciPropertyComponent` to `SciKeyValueComponent` ([fec29be](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/fec29be4576f31b7ed43c60a3f88fcf0b8e05178))
+
+
+### BREAKING CHANGES
+
+* **ɵcomponents:** Renaming `SciParamsEnterComponent` introduced a breaking change.
+
+  To migrate:
+  - Import `SciKeyValueFieldComponent` instead of `SciParamsEnterComponent`
+  - Change input from `paramsFormArray` to `keyValueFormArray`
+  - Use `SciParamsEnterComponent#toMap` instead of `SciParamsEnterComponent#toParamsMap`
+  - Use `SciParamsEnterComponent#toDictionary` instead of `SciParamsEnterComponent#toParamsDictionary`
+
+* **ɵcomponents:** Renaming `SciPropertyComponent` introduced a breaking change.
+
+  To migrate:
+  - Import `SciKeyValueComponent` instead of `SciPropertyComponent`
+  - Change input from `properties` to `object`
+
+* **ɵcomponents:** Removing `NgModules` introduced a breaking change.
+  
+  To migrate, import the components instead of the modules.
+
+
+
 ## [16.1.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.1.0...ɵcomponents-16.1.1) (2023-06-14)
 
 
