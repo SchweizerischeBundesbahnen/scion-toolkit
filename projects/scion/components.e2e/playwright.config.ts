@@ -31,6 +31,6 @@ const config: PlaywrightTestConfig = {
     },
   },
   maxFailures: runInCI ? 1 : undefined,
-  testMatch: /.*\.e2e-spec\.ts/,
+  testMatch: /.*\.e2e-spec\.js/,
 };
 export default config;

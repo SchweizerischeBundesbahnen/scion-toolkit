@@ -1,10 +1,15 @@
-/* See https://playwright.dev/docs/test-typescript#tsconfigjson */
 {
-  "extends" : "../../../tsconfig.json",
-  "compilerOptions" : {
-    "outDir" : "../../../out-tsc/components.e2e",
-    "module" : "ES2022",
-    "target" : "ES2022",
-    "strict" : true
+  "compilerOptions": {
+    "baseUrl": "../../../",
+    "outDir": "../../../out-tsc/components.e2e",
+    "module": "commonjs",
+    "sourceMap": true,
+    "strict": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "target": "es2020",
+    "types": [
+      "node"
+    ],
   }
 }

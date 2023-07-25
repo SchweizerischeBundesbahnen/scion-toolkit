@@ -27,8 +27,8 @@
 
     "components:lint": "ng lint @scion/components",
     "components:test": "ng test @scion/components",
-    "components:e2e:run": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 playwright test --config=projects/scion/components.e2e/playwright.config.ts",
-    "components:e2e:debug": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 PWDEBUG=1 playwright test --config=projects/scion/components.e2e/playwright.config.ts",
+    "components:e2e:run": "tsc --incremental -p projects/scion/components.e2e/tsconfig.json && cross-env PLAYWRIGHT_BROWSERS_PATH=0 playwright test --config out-tsc/components.e2e",
+    "components:e2e:debug": "tsc --incremental -p projects/scion/components.e2e/tsconfig.json && cross-env PLAYWRIGHT_BROWSERS_PATH=0 PWDEBUG=1 playwright test --config out-tsc/components.e2e",
     "components:e2e:lint": "ng lint @scion/components.e2e",
     "components:build": "ng build --configuration production @scion/components",
     "components:changelog": "conventional-changelog --commit-path projects/scion/components -k projects/scion/components -t components- -p angular -i CHANGELOG_COMPONENTS.md -s && markdown-include docs/site/changelog-components/changelog.template.json",
