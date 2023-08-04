@@ -10,6 +10,6 @@
     "target": "es2020",
     "types": [
       "node"
-    ],
+    ]
   }
 }
