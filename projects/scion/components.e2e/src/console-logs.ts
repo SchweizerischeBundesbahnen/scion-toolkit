@@ -22,7 +22,7 @@ export class ConsoleLogs {
     this._page.on('console', this.onConsole);
   }
 
-  public async get(options?: { severity?: Severity; filter?: RegExp; consume?: boolean; probeInterval?: number }): Promise<string[]> {
+  public async get(options?: {severity?: Severity; filter?: RegExp; consume?: boolean; probeInterval?: number}): Promise<string[]> {
     // Wait for log messages to become stable since received asynchronously.
     const messages = await firstValueFrom(this._messages$.pipe(debounceTime(options?.probeInterval ?? 500)));
 
