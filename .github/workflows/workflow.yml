@@ -292,6 +292,11 @@ jobs:
           dist-folder: dist/scion/toolkit
           npm-token: ${{ secrets.NPM_TOKEN }}
           dry-run: false
+      - name: 'Creating GitHub Release'
+        run: gh release create toolkit-$VERSION --title "$VERSION (@scion/toolkit)" --notes-file CHANGELOG_TOOLKIT_LATEST.md --verify-tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-libs.outputs.toolkit-version }}
   release-components:
     name: 'Releasing @scion/components'
     if: ${{ needs.components-release-guard.outputs.should-release == 'true' }}
@@ -310,6 +315,11 @@ jobs:
           dist-folder: dist/scion/components
           npm-token: ${{ secrets.NPM_TOKEN }}
           dry-run: false
+      - name: 'Creating GitHub Release'
+        run: gh release create components-$VERSION --title "$VERSION (@scion/components)" --notes-file CHANGELOG_COMPONENTS_LATEST.md --verify-tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-libs.outputs.components-version }}
   release-components-internal:
     name: 'Releasing @scion/components.internal'
     if: ${{ needs.components-internal-release-guard.outputs.should-release == 'true' }}

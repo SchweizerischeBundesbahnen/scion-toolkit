@@ -23,7 +23,9 @@
     "toolkit:lint": "ng lint @scion/toolkit",
     "toolkit:test": "ng test @scion/toolkit",
     "toolkit:build": "ng build --configuration production @scion/toolkit",
-    "toolkit:changelog": "conventional-changelog --commit-path projects/scion/toolkit -k projects/scion/toolkit -t toolkit- -p angular -i CHANGELOG_TOOLKIT.md -s && markdown-include docs/site/changelog-toolkit/changelog.template.json",
+    "toolkit:changelog": "run-p toolkit:changelog:*",
+    "toolkit:changelog:full": "conventional-changelog --commit-path projects/scion/toolkit -k projects/scion/toolkit -t toolkit- -p angular -i CHANGELOG_TOOLKIT.md -s && markdown-include docs/site/changelog-toolkit/changelog.template.json",
+    "toolkit:changelog:latest": "conventional-changelog --commit-path projects/scion/toolkit -k projects/scion/toolkit -t toolkit- -p angular -o CHANGELOG_TOOLKIT_LATEST.md",
 
     "components:lint": "ng lint @scion/components",
     "components:test": "ng test @scion/components",
@@ -31,7 +33,9 @@
     "components:e2e:debug": "tsc --incremental -p projects/scion/components.e2e/tsconfig.json && cross-env PLAYWRIGHT_BROWSERS_PATH=0 PWDEBUG=1 playwright test --config out-tsc/components.e2e",
     "components:e2e:lint": "ng lint @scion/components.e2e",
     "components:build": "ng build --configuration production @scion/components",
-    "components:changelog": "conventional-changelog --commit-path projects/scion/components -k projects/scion/components -t components- -p angular -i CHANGELOG_COMPONENTS.md -s && markdown-include docs/site/changelog-components/changelog.template.json",
+    "components:changelog": "run-p components:changelog:*",
+    "components:changelog:full": "conventional-changelog --commit-path projects/scion/components -k projects/scion/components -t components- -p angular -i CHANGELOG_COMPONENTS.md -s && markdown-include docs/site/changelog-components/changelog.template.json",
+    "components:changelog:latest": "conventional-changelog --commit-path projects/scion/components -k projects/scion/components -t components- -p angular -o CHANGELOG_COMPONENTS_LATEST.md",
 
     "components.internal:lint": "ng lint @scion/components.internal",
     "components.internal:test": "ng test @scion/components.internal",
