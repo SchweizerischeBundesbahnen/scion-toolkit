@@ -69,9 +69,12 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
     viewportDiv.appendChild(viewportClientDiv);
     this._document.body.appendChild(viewportDiv);
 
+    // Do not use client and offset width/height to calculate the size of the scrollbar, as they are rounded, resulting in unwanted spacing when zooming the page.
+    const viewportBounds = viewportDiv.getBoundingClientRect();
+    const viewportClientBounds = viewportClientDiv.getBoundingClientRect();
     const trackSize: NativeScrollbarTrackSize = {
-      hScrollbarTrackHeight: viewportDiv.offsetHeight - viewportClientDiv.offsetHeight,
-      vScrollbarTrackWidth: viewportDiv.offsetWidth - viewportClientDiv.offsetWidth,
+      hScrollbarTrackHeight: viewportBounds.height - viewportClientBounds.height,
+      vScrollbarTrackWidth: viewportBounds.width - viewportClientBounds.width,
     };
 
     // destroy temporary viewport
