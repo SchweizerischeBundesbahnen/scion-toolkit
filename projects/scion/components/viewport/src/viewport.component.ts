@@ -32,7 +32,7 @@ import {AsyncPipe, NgIf} from '@angular/common';
  *
  * ## Adding the viewport to a layout
  *
- * Typically you would add the viewport component to a flexible layout, filling the remaining space vertically and horizontally, such as a flexbox container
+ * Typically, you would add the viewport component to a flexible layout, filling the remaining space vertically and horizontally, such as a flexbox container
  * with the viewport's `flex` CSS property set to either `flex: auto` or `flex: 1 1 0`.
  *
  * The viewport is sized according to its content width and height. It grows to absorb any free space, thus overflowing its content only when encountering

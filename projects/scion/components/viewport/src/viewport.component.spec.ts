@@ -1123,18 +1123,21 @@ describe('Viewport', () => {
 
         // Set width of element-1 to 100.4 pixel
         component.setElement1Width(100.4);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (A)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
 
         // Set width of element-1 to 100.5 pixel
         component.setElement1Width(100.5);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (B)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (B)').toBeFalse();
 
         // Set width of element-1 to 100.6 pixel
         component.setElement1Width(100.6);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (C)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
@@ -1150,21 +1153,62 @@ describe('Viewport', () => {
 
         // Set width of element-2 to 100.4 pixel
         component.setElement2Width(100.4);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (A)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
 
         // Set width of element-2 to 100.5 pixel
         component.setElement2Width(100.5);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (B)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (B)').toBeFalse();
 
         // Set width of element-2 to 100.6 pixel
         component.setElement2Width(100.6);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (C)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
+      });
+
+      it('should detect overflow if overlapping 0.5 pixels or more', async () => {
+        const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
+        fixture.autoDetectChanges(true);
+        const component = fixture.componentInstance;
+        await flushChanges(fixture);
+
+        // Set fixed viewport width
+        fixture.debugElement.nativeElement.style.width = '300px';
+        await flushChanges(fixture);
+
+        // Set fixed width for element 1
+        component.setElement1Width(100);
+
+        // Set width of element-2 to 200 pixel
+        component.setElement2Width(200.0);
+        await flushChanges(fixture);
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'partial')).withContext('isElementInView(element-2) (A)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+        expect(isScrollbarVisible(fixture, 'vertical')).withContext('scrollbar (A)').toBeFalse();
+
+        // Set width of element-2 to 200.4 pixel
+        component.setElement2Width(200.4);
+        await flushChanges(fixture);
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'partial')).withContext('isElementInView(element-2) (B)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+        expect(isScrollbarVisible(fixture, 'vertical')).withContext('scrollbar (A)').toBeFalse();
+
+        // Set width of element-2 to 200.5 pixel
+        component.setElement2Width(200.5);
+        await flushChanges(fixture);
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeFalse();
+        expect(component.viewportComponent.isElementInView(component.element2, 'partial')).withContext('isElementInView(element-2) (C)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'vertical')).withContext('scrollbar (A)').toBeFalse();
       });
     });
 
@@ -1181,18 +1225,21 @@ describe('Viewport', () => {
 
         // Set height of element-1 to 100.4 pixel
         component.setElement1Height(100.4);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (A)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
 
         // Set height of element-1 to 100.5 pixel
         component.setElement1Height(100.5);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (B)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (B)').toBeFalse();
 
         // Set height of element-1 to 100.6 pixel
         component.setElement1Height(100.6);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (C)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
@@ -1209,21 +1256,64 @@ describe('Viewport', () => {
 
         // Set height of element-2 to 100.4 pixel
         component.setElement2Height(100.4);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (A)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
 
         // Set height of element-2 to 100.5 pixel
         component.setElement2Height(100.5);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (B)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (B)').toBeFalse();
 
         // Set height of element-2 to 100.6 pixel
         component.setElement2Height(100.6);
+        await flushChanges(fixture);
         expect(component.viewportComponent.isElementInView(component.element1, 'full')).withContext('isElementInView(element-1) (C)').toBeTrue();
         expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeTrue();
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
+      });
+
+
+      it('should detect overflow if overlapping 0.5 pixels or more', async () => {
+        const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
+        fixture.autoDetectChanges(true);
+        fixture.componentRef.setInput('columnLayout', true);
+        const component = fixture.componentInstance;
+        await flushChanges(fixture);
+
+        // Set fixed viewport height
+        fixture.debugElement.nativeElement.style.height = '300px';
+        await flushChanges(fixture);
+
+        // Set fixed height for element 1
+        component.setElement1Height(100);
+
+        // Set height of element-2 to 200 pixel
+        component.setElement2Height(200.0);
+        await flushChanges(fixture);
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (A)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'partial')).withContext('isElementInView(element-2) (A)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+        expect(isScrollbarVisible(fixture, 'vertical')).withContext('scrollbar (A)').toBeFalse();
+
+        // Set height of element-2 to 200.4 pixel
+        component.setElement2Height(200.4);
+        await flushChanges(fixture);
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (B)').toBeTrue();
+        expect(component.viewportComponent.isElementInView(component.element2, 'partial')).withContext('isElementInView(element-2) (B)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+        expect(isScrollbarVisible(fixture, 'vertical')).withContext('scrollbar (A)').toBeFalse();
+
+        // Set height of element-2 to 200.5 pixel
+        component.setElement2Height(200.5);
+        await flushChanges(fixture);
+        expect(component.viewportComponent.isElementInView(component.element2, 'full')).withContext('isElementInView(element-2) (C)').toBeFalse();
+        expect(component.viewportComponent.isElementInView(component.element2, 'partial')).withContext('isElementInView(element-2) (C)').toBeTrue();
+        expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (A)').toBeFalse();
+        expect(isScrollbarVisible(fixture, 'vertical')).withContext('scrollbar (A)').toBeTrue();
       });
     });
   });
