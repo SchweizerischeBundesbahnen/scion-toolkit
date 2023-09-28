@@ -108,6 +108,9 @@
     //      ],
     //      "@scion/components.internal/tabbar": [
     //        "projects/scion/components.internal/tabbar/src/public_api"
+    //      ],
+    //      "@scion/components.internal/toggle-button": [
+    //        "projects/scion/components.internal/toggle-button/src/public_api"
     //      ]
     //    }
   },

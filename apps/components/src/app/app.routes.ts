@@ -70,4 +70,9 @@ export const routes: Routes = [
     loadComponent: () => import('./sci-throbber-page/sci-throbber-page.component'),
     data: {internal: false},
   },
+  {
+    path: 'sci-toggle-button',
+    loadComponent: () => import('./sci-toggle-button-page/sci-toggle-button-page.component'),
+    data: {internal: true},
+  },
 ];

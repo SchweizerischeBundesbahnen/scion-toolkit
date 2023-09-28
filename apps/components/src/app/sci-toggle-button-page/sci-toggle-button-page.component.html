@@ -1,0 +1,13 @@
+<h1>sci-toggle-button (ɵ)</h1>
+
+<form [formGroup]="form">
+  <section class="state">
+    <header>State</header>
+
+    <sci-form-field label="Disabled">
+      <sci-checkbox [formControl]="form.controls.state.controls.disabled"></sci-checkbox>
+    </sci-form-field>
+  </section>
+</form>
+
+<sci-toggle-button [formControl]="form.controls.toggleButton"></sci-toggle-button>

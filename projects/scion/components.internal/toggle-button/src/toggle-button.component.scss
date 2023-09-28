@@ -1,0 +1,75 @@
+$size: 1.25rem;
+
+:host {
+  display: inline-grid;
+  border-radius: $size;
+  padding: 1px;
+  background-color: var(--sci-color-border);
+  width: 2 * $size;
+  height: $size;
+  box-sizing: content-box;
+
+  > input[type=checkbox] {
+    all: unset;
+    height: 0;
+    width: 0;
+  }
+
+  > label { // checkbox label filling the entire component
+    cursor: pointer;
+
+    &:after { // on/off circle of the toggle button
+      content: '';
+      display: block;
+      height: $size;
+      width: $size;
+      border-radius: 50%;
+      transition: transform 125ms ease-out;
+      background-color: var(--sci-color-accent-inverse);
+      border: 1px solid var(--sci-color-border);
+      box-sizing: border-box;
+    }
+  }
+
+  &:has(> input:disabled) {
+    > label {
+      cursor: unset;
+    }
+  }
+
+  > input:checked + label:after {
+    transform: translateX(100%); // "on" state
+  }
+
+  &:has(> input:checked:not(:disabled)) {
+    background-color: var(--sci-color-accent);
+
+    > label:after { // "on" state
+      border-color: var(--sci-color-accent);
+    }
+  }
+
+  &:has(> input:checked:disabled) {
+    background-color: var(--sci-color-background-input-disabled);
+
+    > label:after { // "on" state
+      background-color: var(--sci-color-gray-100);
+      border-color: var(--sci-color-gray-100);
+    }
+  }
+
+  &:has(> input:not(:checked):disabled) {
+    background-color: var(--sci-color-background-input-disabled);
+
+    > label:after { // "off" state
+      background-color: var(--sci-color-gray-100);
+      border-color: var(--sci-color-background-input-disabled);
+    }
+  }
+
+  &:has(> input:focus-visible:not(:disabled)  ) {
+    outline: 1px solid var(--sci-color-accent);
+    border-color: transparent;
+    background-clip: content-box;
+  }
+}
