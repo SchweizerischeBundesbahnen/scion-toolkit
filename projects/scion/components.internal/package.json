@@ -15,11 +15,8 @@
     "name": "SCION contributors"
   },
   "exports": {
-    ".": {
-      "sass": "./_index.scss"
-    },
-    "./theme": {
-      "sass": "./theming/_theme.scss"
+    "./design": {
+      "sass": "./design/_index.scss"
     }
   },
   "dependencies": {

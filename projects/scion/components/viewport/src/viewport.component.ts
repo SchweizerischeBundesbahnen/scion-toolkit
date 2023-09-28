@@ -54,7 +54,7 @@ import {AsyncPipe, NgIf} from '@angular/common';
  * By default, the viewport's content is added to a CSS grid container with a single column, filling remaining space vertically and horizontally.
  * Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout.
  *
- * #### Example of adding slotted content to a CSS flex container.
+ * #### Example of adding slotted content to a CSS flex container
  * ```css
  * sci-viewport::part(content) {
  *   display: flex;
@@ -70,11 +70,12 @@ import {AsyncPipe, NgIf} from '@angular/common';
  * }
  * ```
  *
- * ## Styling of scrollbars
+ * ## Styling
  *
- * You can override the following CSS variables to control the appearance of the scrollbar:
+ * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
+ * To style a specific `sci-viewport` component, the following CSS variables can be set directly on the component.
  *
- * - sci-viewport-scrollbar-color:     Sets the color of the scrollbar (by default, uses `rgb(78, 78, 78)`).
+ * - sci-viewport-scrollbar-color:     Sets the color of the scrollbar.
  *
  * ```css
  * sci-viewport {

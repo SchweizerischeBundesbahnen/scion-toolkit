@@ -1,15 +1,13 @@
 $diamond-height: 8;
-$border-color: var(--sci-color-P400);
-$background-color: var(--sci-color-P100);
 
 :host {
   display: block;
-  border: 1px solid var(--sci-color-P400);
-  border-radius: 5px;
+  border: 1px solid var(--sci-color-border);
+  border-radius: var(--sci-corner);
 
   // Collapse bottom borders: Render a bottom border only if the accordion items do not fill available space
   &:not(.filled) section.accordion-item:last-child {
-    border-bottom: 1px solid var(--sci-color-P400);
+    border-bottom: 1px solid var(--sci-color-border);
   }
 
   section.accordion-item {
@@ -18,11 +16,10 @@ $background-color: var(--sci-color-P100);
 
     &:has(*:focus-visible) {
       outline: 1px solid var(--sci-color-accent);
-      box-shadow: 0 0 6px 0 rgba(var(--sci-color-accent-rgb), .25);
     }
 
     &:not(:first-child) {
-      border-top: 1px solid var(--sci-color-P400);
+      border-top: 1px solid var(--sci-color-border);
     }
 
     > button {
@@ -48,9 +45,9 @@ $background-color: var(--sci-color-P100);
 
   &.bubble section.accordion-item > section {
     position: relative; // positioning anchor for the diamond
-    background-color: $background-color;
-    border-radius: 5px;
-    border: 1px solid $border-color;
+    background-color: var(--sci-color-gray-100);
+    border-radius: var(--sci-corner);
+    border: 1px solid var(--sci-color-border);
     padding: 1em;
     margin: 0 .5em .5em .5em;
 
@@ -67,14 +64,14 @@ $background-color: var(--sci-color-P100);
       top: -#{$diamond-height}px;
       left: calc(50px - #{$diamond-height}px);
       border-top-width: 0;
-      border-bottom-color: $border-color;
+      border-bottom-color: var(--sci-color-border);
     }
 
     &::after {
       top: -#{$diamond-height - 1}px;
       left: calc(50px - #{$diamond-height}px);
       border-top-width: 0;
-      border-bottom-color: $background-color;
+      border-bottom-color: var(--sci-color-gray-100);
     }
   }
 }

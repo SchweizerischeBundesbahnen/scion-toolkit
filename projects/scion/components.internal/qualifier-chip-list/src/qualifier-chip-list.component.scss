@@ -1,4 +1,4 @@
-@use '../../theming' as sci-theming;
+@use '../../design' as sci-design;
 
 :host {
   > ul {
@@ -8,7 +8,7 @@
     display: flex;
 
     > li {
-      @include sci-theming.theme-chip(var(--sci-color-P400), null, var(--sci-color-P900));
+      @include sci-design.style-chip(var(--sci-color-border), null, var(--sci-color-text));
 
       display: flex;
       flex-direction: column;
@@ -16,13 +16,7 @@
       padding: .25em 1em;
 
       > span.key {
-        color: var(--sci-color-P800);
-      }
-
-      > span.value {
-        font-size: larger;
-        font-weight: bold;
-        color: var(--sci-color-P900);
+        color: var(--sci-color-text-subtle);
       }
 
       &::before {
@@ -30,23 +24,23 @@
         content: '«qualifier»';
         font-size: smaller;
         margin-bottom: .75em;
-        color: var(--sci-color-P500);
+        color: var(--sci-color-text-subtlest);
       }
     }
 
     > li.type {
-      @include sci-theming.theme-chip(var(--sci-color-P400), var(--sci-color-P100), var(--sci-color-P900));
+      @include sci-design.style-chip(var(--sci-color-border), var(--sci-color-gray-100), var(--sci-color-text));
       min-width: 75px;
 
       > span.type {
         font-size: 1.5em;
         font-variant: small-caps;
         font-weight: bold;
-        color: var(--sci-color-P900);
       }
 
       &::before {
         content: '«type»';
+        color: var(--sci-color-text-subtlest);
       }
     }
   }

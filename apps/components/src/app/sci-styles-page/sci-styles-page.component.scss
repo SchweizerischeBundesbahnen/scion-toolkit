@@ -1,0 +1,31 @@
+@use '@scion/components.internal/design' as sci-design;
+
+:host {
+  display: flex;
+  flex-direction: column;
+
+  > h1 {
+    flex: none;
+  }
+
+  > sci-tabbar {
+    flex: auto;
+
+    section.tab-content {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: .5em 2em;
+      place-content: start;
+      align-items: center;
+      padding: .5em;
+
+      > input {
+        @include sci-design.style-input-field;
+      }
+
+      > *:nth-child(even) {
+        justify-self: center;
+      }
+    }
+  }
+}

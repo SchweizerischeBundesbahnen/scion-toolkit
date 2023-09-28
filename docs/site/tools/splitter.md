@@ -20,6 +20,12 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
 
+1. Import SCION Design Tokens in `styles.scss` to style the splitter:
+   ```scss
+   @use '@scion/components';
+   ```
+   See [SCION Design Tokens][link-scion-design-tokens] for more information.   
+
 1. Import `SciSplitterComponent` in your component.
 
    ```typescript
@@ -93,26 +99,23 @@ Note that this control neither does change the size of adjacent elements nor doe
 
 <!--- STYLING --->
 <details>
-  <summary><strong>CSS Styling</strong></summary>
+  <summary><strong>Styling</strong></summary>
 
-The default style of the splitter is made up of shades of gray.
+To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-splitter` component, the following CSS variables can be set directly on the component.
 
-You can control the appearance by overriding the following CSS variables:
-
-
-- `--sci-splitter-bgcolor`\
+- `--sci-splitter-background-color`\
  Sets the background color of the splitter.
 
-- `--sci-splitter-bgcolor_hover`\
+- `--sci-splitter-background-color-hover`\
  Sets the background color of the splitter when hovering it.
 
 - `--sci-splitter-size:`\
  Sets the size of the splitter along the main axis.
 
-- `--sci-splitter-size_hover:`\
+- `--sci-splitter-size-hover:`\
  Sets the size of the splitter along the main axis when hovering it.
 
-- `sci-splitter-touch-target-size`\
+- `--sci-splitter-touch-target-size`\
  Sets the touch target size to move the splitter (accessibility).
 
 - `--sci-splitter-cross-axis-size:`\
@@ -121,18 +124,18 @@ You can control the appearance by overriding the following CSS variables:
 - `--sci-splitter-border-radius:`\
  Sets the border radius of the splitter.
 
-- `--sci-splitter-opacity_active:`\
+- `--sci-splitter-opacity-active:`\
  Sets the opacity of the splitter while the user moves the splitter.
 
-- `--sci-splitter-opacity_hover`\
+- `--sci-splitter-opacity-hover`\
  Sets the opacity of the splitter when hovering it.
 
 **Example:**
 
 ```css 
 sci-splitter {
-  --sci-splitter-bgcolor: black;
-  --sci-splitter-bgcolor_hover: black;
+  --sci-splitter-background-color: black;
+  --sci-splitter-background-color-hover: black;
 }
 ```
 
@@ -146,3 +149,4 @@ sci-splitter {
 [menu-sponsoring]: /docs/site/sponsoring.md
 
 [link-scion-components]: /docs/site/scion-components.md
+[link-scion-design-tokens]: /docs/site/scion-design-tokens.md

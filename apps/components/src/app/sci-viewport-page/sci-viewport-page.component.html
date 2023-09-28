@@ -1,52 +1,53 @@
-<h1>sci-viewport</h1>
+<main>
+  <h1>sci-viewport</h1>
 
-<form [formGroup]="form">
-  <section class="content">
-    <header>Content</header>
+  <sci-viewport [scrollbarStyle]="form.controls.scrollbarPresentation.value"
+                [style.--sci-viewport-scrollbar-color]="form.controls.scrollbarColor.value"
+                class="demo">
+    <section *ngFor="let content of form.controls.content.value | appSplit:'\n+'">
+      {{content}}
+    </section>
+  </sci-viewport>
+</main>
 
-    <textarea [formControl]="form.controls.content" placeholder="Text displayed in the viewport, with each paragraph displayed in its own section."></textarea>
-  </section>
+<aside [formGroup]="form">
+  <sci-tabbar>
+    <ng-template sciTab label="Content">
+      <div class="tab content">
+        <textarea class="content" [formControl]="form.controls.content" placeholder="Text displayed in the viewport, with each paragraph displayed in its own section."></textarea>
+        <header>sci-viewport::part(content)</header>
+        <textarea class="content-styles" [formControl]="form.controls.viewportContentStyles" placeholder="By default, the viewport's slotted content is added to a CSS grid container with a single column, filling remaining space vertically and horizontally. Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout."></textarea>
+      </div>
+    </ng-template>
 
-  <section class="viewport-slotted-content-layout">
-    <header>sci-viewport::part(content)</header>
+    <ng-template sciTab label="Scrollbar">
+      <div class="tab">
+        <sci-form-field label="Style" direction="column">
+          <select [formControl]="form.controls.scrollbarPresentation">
+            <option *ngFor="let scrollbarStyle of scrollbarStyles" [value]="scrollbarStyle">{{scrollbarStyle}}</option>
+          </select>
+        </sci-form-field>
 
-    <textarea [formControl]="form.controls.viewportContentStyles" placeholder="Configure the viewport layout.&#10;&#10;By default, the viewport's slotted content is added to a CSS grid container with a single column, filling remaining space vertically and horizontally. Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout."></textarea>
-  </section>
+        <sci-form-field label="--sci-scrollbar-color" direction="column">
+          <input [formControl]="form.controls.scrollbarColor">
+        </sci-form-field>
+      </div>
+    </ng-template>
 
-  <section class="viewport-scrollbar">
-    <header>Viewport Scrollbar</header>
+    <ng-template sciTab label="Advanced">
+      <div class="tab">
+        <sci-form-field label="min-height" direction="column">
+          <input [formControl]="form.controls.viewportMinHeight">
+        </sci-form-field>
 
-    <sci-form-field label="Style" direction="column">
-      <select [formControl]="form.controls.scrollbarPresentation">
-        <option *ngFor="let scrollbarStyle of scrollbarStyles" [value]="scrollbarStyle">{{scrollbarStyle}}</option>
-      </select>
-    </sci-form-field>
+        <sci-form-field label="max-height" direction="column">
+          <input [formControl]="form.controls.viewportMaxHeight">
+        </sci-form-field>
 
-    <sci-form-field label="--sci-scrollbar-color" direction="column">
-      <input [formControl]="form.controls.scrollbarColor">
-    </sci-form-field>
-  </section>
-
-  <section class="viewport-style-properties">
-    <header>Viewport Style Properties</header>
-
-    <sci-form-field label="min-height" direction="column">
-      <input [formControl]="form.controls.viewportMinHeight">
-    </sci-form-field>
-
-    <sci-form-field label="max-height" direction="column">
-      <input [formControl]="form.controls.viewportMaxHeight">
-    </sci-form-field>
-
-    <sci-form-field label="flex" direction="column">
-      <input [formControl]="form.controls.viewportFlex">
-    </sci-form-field>
-  </section>
-</form>
-
-<sci-viewport [scrollbarStyle]="form.controls.scrollbarPresentation.value"
-              [style.--sci-viewport-scrollbar-color]="form.controls.scrollbarColor.value">
-  <section *ngFor="let content of form.controls.content.value | appSplit:'\n+'">
-    {{content}}
-  </section>
-</sci-viewport>
+        <sci-form-field label="flex" direction="column">
+          <input [formControl]="form.controls.viewportFlex">
+        </sci-form-field>
+      </div>
+    </ng-template>
+  </sci-tabbar>
+</aside>

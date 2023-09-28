@@ -1,0 +1,126 @@
+/**
+ * Collection of SASS mixins to style the SCION internal component library.
+ */
+
+/**
+ * Styles Material icon buttons.
+ */
+@mixin mat-icon-button() {
+  display: grid; // to center the ligature
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  color: inherit;
+  padding: 0;
+  user-select: none;
+
+  &:focus, &:hover {
+    color: var(--sci-color-accent);
+  }
+
+  &:disabled {
+    color: var(--sci-color-gray-300);
+    cursor: auto;
+  }
+}
+
+/**
+ * Styles buttons.
+ */
+@mixin button() {
+  all: unset;
+  cursor: pointer;
+  padding: .5em 1.5em;
+  color: var(--sci-color-text);
+  border: 1px solid var(--sci-color-text);
+  border-radius: var(--sci-corner);
+  background-color: transparent;
+  background-clip: padding-box;
+  text-align: center;
+
+  &:focus, &:active {
+    border-color: var(--sci-color-accent);
+    outline: none;
+  }
+
+  &:disabled {
+    color: var(--sci-color-text-subtle);
+    border-color: var(--sci-color-border);
+    background-color: var(--sci-color-background-input-disabled);
+    cursor: auto;
+  }
+
+  &[sci-primary]:not(:disabled) {
+    color: var(--sci-color-accent-inverse);
+    background-color: var(--sci-color-accent);
+    border: 1px solid var(--sci-color-accent);
+
+    &:focus, &:active {
+      border-color: transparent;
+      outline: 1px solid var(--sci-color-accent);
+      color: var(--sci-color-accent-inverse);
+    }
+  }
+}
+
+/**
+ * Styles input fields.
+ */
+@mixin input-field() {
+  all: unset;
+  border: 1px solid var(--sci-color-border);
+  border-radius: var(--sci-corner);
+  padding: .5em;
+  transition: border-color ease-in-out .15s, color ease-in-out .15s;
+  background-color: var(--sci-color-background-input);
+
+  &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
+    border-color: var(--sci-color-accent);
+  }
+
+  &.ng-invalid.ng-touched {
+    border-color: var(--sci-color-negative);
+  }
+
+  &:disabled, &:has(input:disabled), &:has(select:disabled) {
+    color: var(--sci-color-text-subtlest);
+    background-color: var(--sci-color-background-input-disabled);
+  }
+
+  &:read-only {
+    color: var(--sci-color-text-subtle);
+  }
+}
+
+/**
+ * Styles a chip.
+ */
+@mixin chip($border-color, $background-color, $color, $borderStyle: solid) {
+  border: 1px $borderStyle $border-color;
+  background-color: $background-color;
+  color: $color;
+  border-radius: var(--sci-corner-small);
+  padding: .25em .5em;
+  font-size: smaller;
+  user-select: none;
+  margin-bottom: .25em;
+
+  &:not(:last-child) {
+    margin-right: .25em;
+  }
+}
+
+/**
+ * Styles a link.
+ */
+@mixin link($radius: 2px) {
+  color: var(--sci-color-accent);
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+
+  &:hover, &:focus {
+    text-decoration: underline;
+  }
+}

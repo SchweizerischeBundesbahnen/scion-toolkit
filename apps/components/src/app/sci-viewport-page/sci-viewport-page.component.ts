@@ -18,6 +18,7 @@ import {Arrays} from '@scion/toolkit/util';
 import {DOCUMENT, NgFor} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SplitPipe} from '../common/split.pipe';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
   selector: 'sci-viewport-page',
@@ -30,6 +31,8 @@ import {SplitPipe} from '../common/split.pipe';
     SplitPipe,
     SciFormFieldComponent,
     SciViewportComponent,
+    SciTabDirective,
+    SciTabbarComponent,
   ],
 })
 export default class SciViewportPageComponent implements OnInit, OnDestroy {
@@ -39,13 +42,13 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
 
   public scrollbarStyles = ['native', 'on-top', 'hidden'];
   public form = this._formBuilder.group({
-    viewportContentStyles: this._formBuilder.control(`display: grid;\ngrid-template-columns: 1fr 2fr 1fr;\ngap: 5em;\nbackground-color: ivory`),
+    content: this._formBuilder.control(loremIpsum),
+    viewportContentStyles: this._formBuilder.control(`display: flex;\nflex-direction: row;\ngap: 3em;`),
     viewportMinHeight: this._formBuilder.control('300px'),
     viewportMaxHeight: this._formBuilder.control(''),
     viewportFlex: this._formBuilder.control('1 1 0'),
     scrollbarPresentation: this._formBuilder.control<'native' | 'on-top' | 'hidden'>('on-top'),
     scrollbarColor: this._formBuilder.control(''),
-    content: this._formBuilder.control(loremIpsum),
   });
 
   @ViewChild(SciViewportComponent, {static: true, read: ElementRef})
@@ -83,7 +86,7 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
       )
       .subscribe((styles: string) => {
         this.replaceCssStyleSheetRule(`
-          sci-viewport::part(content) {
+          sci-viewport.demo::part(content) {
             ${styles}
           }
         `);

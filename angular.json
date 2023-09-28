@@ -284,7 +284,8 @@
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
-                "projects/scion/components"
+                "projects/scion/components",
+                "projects/scion/components.internal"
               ]
             },
             "scripts": []

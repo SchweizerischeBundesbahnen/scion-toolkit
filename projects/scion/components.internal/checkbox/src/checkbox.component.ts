@@ -8,12 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnDestroy} from '@angular/core';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
-import {noop, Subject} from 'rxjs';
-import {takeUntil} from 'rxjs/operators';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input} from '@angular/core';
+import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
+import {noop} from 'rxjs';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {NgIf} from '@angular/common';
+import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {UUID} from '@scion/toolkit/uuid';
 
 @Component({
   selector: 'sci-checkbox',
@@ -24,39 +26,31 @@ import {NgIf} from '@angular/common';
   imports: [
     NgIf,
     ReactiveFormsModule,
+    SciMaterialIconDirective,
   ],
   providers: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => SciCheckboxComponent)},
   ],
 })
-export class SciCheckboxComponent implements ControlValueAccessor, OnDestroy {
-
-  private _destroy$ = new Subject<void>();
+export class SciCheckboxComponent implements ControlValueAccessor {
 
   private _cvaChangeFn: (value: any) => void = noop;
   private _cvaTouchedFn: () => void = noop;
 
-  public formControl = this._formBuilder.control(false, {updateOn: 'change'});
-
-  /**
-   * Sets focus order in sequential keyboard navigation.
-   * If not specified, the focus order is according to the position in the document (tabindex=0).
-   */
-  @Input()
-  public tabindex?: number | undefined;
+  protected formControl = new FormControl<boolean>(false, {nonNullable: true});
+  protected id = UUID.randomUUID();
 
   @Input()
   public set disabled(disabled: boolean | string | undefined | null) {
     coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
   }
 
-  constructor(private _cd: ChangeDetectorRef, private _formBuilder: NonNullableFormBuilder) {
+  constructor(private _cd: ChangeDetectorRef) {
     this.formControl.valueChanges
-      .pipe(takeUntil(this._destroy$))
+      .pipe(takeUntilDestroyed())
       .subscribe(checked => {
         this._cvaChangeFn(checked);
         this._cvaTouchedFn();
-        this._cd.markForCheck();
       });
   }
 
@@ -92,9 +86,5 @@ export class SciCheckboxComponent implements ControlValueAccessor, OnDestroy {
   public writeValue(value: any): void {
     this.formControl.setValue(coerceBooleanProperty(value), {emitEvent: false});
     this._cd.markForCheck();
-  }
-
-  public ngOnDestroy(): void {
-    this._destroy$.next();
   }
 }

@@ -4,11 +4,10 @@
   gap: 1em;
 
   > output {
-    border: 1px solid var(--sci-color-A900);
-    border-radius: 5px;
-    background-color: var(--sci-color-A50);
-    padding: 1em;
-    color: var(--sci-color-A900);
+    border: 1px solid var(--sci-color-border);
+    background-color: var(--sci-color-gray-100);
+    border-radius: var(--sci-corner);
     font-family: monospace;
+    padding: 1em;
   }
 }

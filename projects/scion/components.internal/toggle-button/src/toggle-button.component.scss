@@ -2,17 +2,18 @@ $size: 1.25rem;
 
 :host {
   display: inline-grid;
-  border-radius: $size;
-  padding: 1px;
-  background-color: var(--sci-color-border);
   width: 2 * $size;
   height: $size;
+  border-radius: $size;
+  padding: 2px;
+  background-color: var(--sci-color-border);
   box-sizing: content-box;
 
   > input[type=checkbox] {
     all: unset;
     height: 0;
     width: 0;
+    position: absolute; // out of the document flow
   }
 
   > label { // checkbox label filling the entire component
@@ -33,7 +34,7 @@ $size: 1.25rem;
 
   &:has(> input:disabled) {
     > label {
-      cursor: unset;
+      cursor: auto;
     }
   }
 
@@ -69,7 +70,6 @@ $size: 1.25rem;
 
   &:has(> input:focus-visible:not(:disabled)  ) {
     outline: 1px solid var(--sci-color-accent);
-    border-color: transparent;
     background-clip: content-box;
   }
 }

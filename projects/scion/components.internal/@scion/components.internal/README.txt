@@ -1,26 +1,27 @@
 ## TL;DR
-Allows SASS modules of "@scion/components.internal" to be imported by the Components Application via `@use '@scion/components.internal'`.
+Enable applications in this repository to import the SCSS module `@scion/components.internal` using the `@use '@scion/components.internal'` syntax.
 
 ## Explanation
-The SASS CSS loader allows to reference Sass modules of packages installed in the "node_modules" folder. For example, if having installed '@angular/cdk', its Sass modules can be imported as follows: @use '@angular/cdk'. But, when building or starting the components app, the module `@scion/components.internal` is not installed in the "node_modules". Since we didn't find a way to instruct the Sass CSS loader to load certain Sass modules from the "dist" or project folder instead of "node_modules", we have created the folder "@scion/components.internal" and registered it as style preprocessor options in the application's `angular.json`. Note that both folders and contained files are excluded from the library build and not published to NPM. See included assets in `@scion/components.internal/ng-package.json`.
+The SCSS loader supports referencing SCSS modules from packages installed in the `node_modules` folder, but not from a project folder.
+For this reason, we have added the @scion folder to the project but excluded it from the library build so that it is not published to NPM.
+See excluded assets in `@scion/components.internal/ng-package.json`. We have also instructed `angular.json` to include this project when
+resolving root imports.
 
-## ng-package.json of "components.internal"
+## ng-package.json of "@scion/components.internal"
 {
   "assets": [
     "{,!(@scion)/**/}_*.scss" // include all SASS files starting with a leading underscore, but only if they are not contained in the directory /@scion/ or its subdirectories
   ]
 }
 
-## angular.json of components application
+## angular.json of applications in this repo
 {
   "stylePreprocessorOptions": {
     "includePaths": [
-      "projects/scion/components",
       "projects/scion/components.internal"
     ]
   }
 }
 
-## Usage in components application
-@use '@scion/components.internal/theme';
-@use '@scion/components.internal' as sci-ɵcomponents;
+## Usage in applications in this repo
+@use '@scion/components.internal';

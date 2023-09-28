@@ -17,9 +17,8 @@
       position: relative; // positioning context for div.outline
       cursor: pointer;
 
-      &:focus-visible > div.outline {
+      &:focus-visible:not(.selected) > div.outline {
         border: 1px solid var(--sci-color-accent);
-        box-shadow: 0 0 6px 0 rgba(var(--sci-color-accent-rgb), .25);
       }
 
       &.selected {
@@ -28,7 +27,7 @@
       }
 
       &:hover:not(.selected) {
-        border-bottom-color: var(--sci-color-P400);
+        border-bottom-color: var(--sci-color-border-strong);
         color: var(--sci-color-accent);
       }
 
@@ -44,13 +43,13 @@
     }
 
     > button.tab, > span.filler {
-      border-bottom: 3px solid var(--sci-color-P300);
+      border-bottom: 3px solid var(--sci-color-border);
       padding: 0 1em 0 1em;
     }
   }
 
   > sci-viewport.tabcontent {
-    flex: auto;
+    flex:  1 1 0;
     margin-top: 1em;
   }
 }

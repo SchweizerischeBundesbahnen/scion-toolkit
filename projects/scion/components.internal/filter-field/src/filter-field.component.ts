@@ -15,6 +15,7 @@ import {noop, Subject} from 'rxjs';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {FocusMonitor, FocusOrigin} from '@angular/cdk/a11y';
 import {UUID} from '@scion/toolkit/uuid';
+import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 /**
  * Provides a simple filter control.
@@ -25,7 +26,10 @@ import {UUID} from '@scion/toolkit/uuid';
   styleUrls: ['./filter-field.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    SciMaterialIconDirective,
+  ],
   providers: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => SciFilterFieldComponent)},
   ],
@@ -50,7 +54,6 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   @Input()
   public placeholder?: string | undefined;
 
-  @HostBinding('class.disabled')
   @Input()
   public set disabled(disabled: boolean | string | undefined | null) {
     coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();

@@ -14,6 +14,7 @@ import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciToggleButtonComponent} from '@scion/components.internal/toggle-button';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
   selector: 'sci-toggle-button-page',
@@ -25,11 +26,13 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     SciFormFieldComponent,
     SciToggleButtonComponent,
     SciCheckboxComponent,
+    SciTabDirective,
+    SciTabbarComponent,
   ],
 })
 export default class SciToggleButtonPageComponent {
 
-  public form = this._formBuilder.group({
+  protected form = this._formBuilder.group({
     toggleButton: this._formBuilder.control<boolean>(true),
     state: this._formBuilder.group({
       disabled: this._formBuilder.control<boolean>(false),

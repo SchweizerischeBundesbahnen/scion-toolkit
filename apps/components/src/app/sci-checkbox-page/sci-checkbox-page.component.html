@@ -1,7 +1,18 @@
-<h1>sci-checkbox (ɵ)</h1>
+<main>
+  <h1>sci-checkbox (ɵ)</h1>
 
-<h2>enabled</h2>
-<sci-checkbox [disabled]="false"></sci-checkbox>
+  <sci-checkbox [formControl]="form.controls.checkbox"></sci-checkbox>
+</main>
 
-<h2>disabled</h2>
-<sci-checkbox [disabled]="true"></sci-checkbox>
+<aside [formGroup]="form">
+  <sci-tabbar>
+    <ng-template sciTab label="State">
+      <div class="tab">
+        <label>
+          <sci-checkbox [formControl]="form.controls.state.controls.disabled"></sci-checkbox>
+          Disabled
+        </label>
+      </div>
+    </ng-template>
+  </sci-tabbar>
+</aside>

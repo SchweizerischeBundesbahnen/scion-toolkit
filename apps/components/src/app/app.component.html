@@ -1,11 +1,18 @@
-<nav>
-  <a *ngFor="let tool of tools$ | async"
-     [routerLink]="tool.routerPath"
-     [queryParamsHandling]="'merge'"
-     [class.internal]="tool.internal">
-    {{tool.name}}
-  </a>
-</nav>
+<header>
+  <nav>
+    <a *ngFor="let tool of tools$ | async"
+       [routerLink]="tool.routerPath"
+       [queryParamsHandling]="'merge'"
+       [class.internal]="tool.internal">
+      {{tool.name}}
+    </a>
+  </nav>
+  <div class="theme-switcher">
+    <button (click)="onActivateDarkTheme()" sciMaterialIcon>dark_mode</button>
+    <sci-toggle-button [formControl]="lightThemeFormControl"></sci-toggle-button>
+    <button (click)="onActivateLightTheme()" sciMaterialIcon>light_mode</button>
+  </div>
+</header>
 
 <main>
   <router-outlet></router-outlet>

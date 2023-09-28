@@ -1,13 +1,18 @@
-<h1>sci-toggle-button (ɵ)</h1>
+<main>
+  <h1>sci-toggle-button (ɵ)</h1>
 
-<form [formGroup]="form">
-  <section class="state">
-    <header>State</header>
+  <sci-toggle-button [formControl]="form.controls.toggleButton"></sci-toggle-button>
+</main>
 
-    <sci-form-field label="Disabled">
-      <sci-checkbox [formControl]="form.controls.state.controls.disabled"></sci-checkbox>
-    </sci-form-field>
-  </section>
-</form>
-
-<sci-toggle-button [formControl]="form.controls.toggleButton"></sci-toggle-button>
+<aside [formGroup]="form">
+  <sci-tabbar>
+    <ng-template sciTab label="State">
+      <div class="tab">
+        <label>
+          <sci-checkbox [formControl]="form.controls.state.controls.disabled"></sci-checkbox>
+          Disabled
+        </label>
+      </div>
+    </ng-template>
+  </sci-tabbar>
+</aside>

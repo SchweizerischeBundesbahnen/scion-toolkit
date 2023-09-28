@@ -25,32 +25,33 @@ import {first, takeUntil} from 'rxjs/operators';
  * In the toolkit, {@link SciSashboxComponent} uses this splitter to divide a layout into several resizable sections.
  * Another use case would be a resizable sidebar panel.
  *
- * ### Usage:
+ * ### Usage
  *
  * ```html
  * <sci-splitter (move)="onSplitterMove($event.distance)"></sci-splitter>
  * ```
  *
- * ### Theme override:
- * The default style of the splitter is made up of shades of gray.
- * You can control the appearance by overriding the following CSS variables:
+ * ### Styling
  *
- * - --sci-splitter-bgcolor: Sets the background color of the splitter.
- * - --sci-splitter-bgcolor_hover: Sets the background color of the splitter when hovering it.
+ * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
+ * To style a specific `sci-splitter` component, the following CSS variables can be set directly on the component.
+ *
+ * - --sci-splitter-background-color: Sets the background color of the splitter.
+ * - --sci-splitter-background-color-hover: Sets the background color of the splitter when hovering it.
  * - --sci-splitter-size: Sets the size of the splitter along the main axis.
- * - --sci-splitter-size_hover: Sets the size of the splitter along the main axis when hovering it.
+ * - --sci-splitter-size-hover: Sets the size of the splitter along the main axis when hovering it.
  * - --sci-splitter-touch-target-size: Sets the touch target size to move the splitter (accessibility).
  * - --sci-splitter-cross-axis-size: Sets the splitter size along the cross axis.
  * - --sci-splitter-border-radius: Sets the border radius of the splitter.
- * - --sci-splitter-opacity_active: Sets the opacity of the splitter while the user moves the splitter.
- * - --sci-splitter-opacity_hover: Sets the opacity of the splitter when hovering it.
+ * - --sci-splitter-opacity-active: Sets the opacity of the splitter while the user moves the splitter.
+ * - --sci-splitter-opacity-hover: Sets the opacity of the splitter when hovering it.
  *
  * Example:
  *
  * ```scss
  * sci-splitter {
- *   --sci-splitter-bgcolor: black;
- *   --sci-splitter-bgcolor_hover: black;
+ *   --sci-splitter-background-color: black;
+ *   --sci-splitter-background-color-hover: black;
  * }
  * ```
  */

@@ -7,9 +7,10 @@
            [expanded]="item.expanded ?? false">
     <button (click)="onToggle(cdkAccordionItem)" class="e2e-accordion-item-header">
       <ng-container *ngTemplateOutlet="item.template"></ng-container>
-      <span class="material-icons e2e-toggle"
+      <span class="e2e-toggle"
             [class.e2e-expand]="!cdkAccordionItem.expanded"
-            [class.e2e-collapse]="cdkAccordionItem.expanded">
+            [class.e2e-collapse]="cdkAccordionItem.expanded"
+            sciMaterialIcon>
           {{cdkAccordionItem.expanded ? 'expand_less' : 'expand_more'}}
       </span>
     </button>

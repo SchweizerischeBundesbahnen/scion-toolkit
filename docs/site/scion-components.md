@@ -23,6 +23,9 @@ Provides Angular-based components and directives with a focus on SCION requireme
 - [**Dimension**][link-tool-dimension]\
   Provides a directive for observing changes in the size of the host element.
  
+- [**SCION Design Tokens**][link-scion-design-tokens]\
+  SCION provides a set of design tokens to enable consistent design and theming of SCION components.
+
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
 [menu-changelog]: /docs/site/changelog.md
@@ -34,3 +37,4 @@ Provides Angular-based components and directives with a focus on SCION requireme
 [link-tool-splitter]: /docs/site/tools/splitter.md
 [link-tool-throbber]: /docs/site/tools/throbber.md
 [link-tool-dimension]: /docs/site/tools/dimension.md
+[link-scion-design-tokens]: /docs/site/scion-design-tokens.md

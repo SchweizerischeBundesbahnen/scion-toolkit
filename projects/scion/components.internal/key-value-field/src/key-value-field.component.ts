@@ -13,6 +13,7 @@ import {FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveForms
 import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
 import {NgFor, NgIf} from '@angular/common';
+import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 /**
  * Allows entering key-value pairs.
@@ -26,6 +27,7 @@ import {NgFor, NgIf} from '@angular/common';
     NgIf,
     NgFor,
     ReactiveFormsModule,
+    SciMaterialIconDirective,
   ],
 })
 export class SciKeyValueFieldComponent {
