@@ -3,14 +3,14 @@
 | SCION Toolkit | [Projects Overview][menu-projects-overview] | [Changelog][menu-changelog] | [Contributing][menu-contributing] | [Sponsoring][menu-sponsoring] |  
 | --- | --- | --- | --- | --- |
 
-## [SCION Toolkit][menu-home] > Observable
+## [SCION Toolkit][menu-home] > [@scion/toolkit][link-scion-toolkit] > Observable
 
 The NPM sub-module `@scion/toolkit/observable` provides a set of useful RxJS observables.
 
 To use the observables, install the NPM module `@scion/toolkit` as following:
  
 ```
-npm install @scion/toolkit --save
+npm install @scion/toolkit
 ```
 
 <details>
@@ -84,3 +84,4 @@ We are aware that this approach can be quite expensive, mainly because potential
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
+[link-scion-toolkit]: /docs/site/scion-toolkit.md

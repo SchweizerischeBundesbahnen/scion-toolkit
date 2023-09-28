@@ -3,7 +3,7 @@
 | SCION Toolkit | [Projects Overview][menu-projects-overview] | [Changelog][menu-changelog] | [Contributing][menu-contributing] | [Sponsoring][menu-sponsoring] |  
 | --- | --- | --- | --- | --- |
 
-## [SCION Toolkit][menu-home] > Splitter
+## [SCION Toolkit][menu-home] > [@scion/components][link-scion-components] > Splitter
 
 The NPM sub-module `@scion/components/splitter` provides an Angular splitter component, a visual element that allows the user to control the size of elements next to it.
 
@@ -17,11 +17,10 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
 
 1. Install `@scion/components` using the NPM command-line tool: 
    ```
-   npm install @scion/components @scion/toolkit @angular/cdk --save
+   npm install @scion/components @scion/toolkit @angular/cdk
    ```
-   > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
-1. Import `SciViewportComponent` in your component.
+1. Import `SciSplitterComponent` in your component.
 
    ```typescript
    import {SciSplitterComponent} from '@scion/components/splitter';
@@ -146,3 +145,4 @@ sci-splitter {
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
+[link-scion-components]: /docs/site/scion-components.md

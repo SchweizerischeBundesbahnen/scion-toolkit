@@ -3,14 +3,14 @@
 | SCION Toolkit | [Projects Overview][menu-projects-overview] | [Changelog][menu-changelog] | [Contributing][menu-contributing] | [Sponsoring][menu-sponsoring] |  
 | --- | --- | --- | --- | --- |
 
-## [SCION Toolkit][menu-home] > Operators
+## [SCION Toolkit][menu-home] > [@scion/toolkit][link-scion-toolkit] > Operators
 
 The NPM sub-module `@scion/toolkit/operators` provides a set of useful RxJS operators.
 
 To use the operators, install the NPM module `@scion/toolkit` as following:
 
 ```
-npm install @scion/toolkit --save
+npm install @scion/toolkit
 ```
 
 <details>
@@ -275,3 +275,4 @@ The snippet above prints the following output to the console:
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
+[link-scion-toolkit]: /docs/site/scion-toolkit.md
