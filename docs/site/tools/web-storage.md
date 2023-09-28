@@ -3,7 +3,7 @@
 | SCION Toolkit | [Projects Overview][menu-projects-overview] | [Changelog][menu-changelog] | [Contributing][menu-contributing] | [Sponsoring][menu-sponsoring] |  
 | --- | --- | --- | --- | --- |
 
-## [SCION Toolkit][menu-home] > WebStorage
+## [SCION Toolkit][menu-home] > [@scion/toolkit][link-scion-toolkit] > WebStorage
 
 The NPM sub-module `@scion/toolkit/storage` allows the observation of values contained in local or session storage.
 
@@ -14,7 +14,7 @@ The NPM sub-module `@scion/toolkit/storage` allows the observation of values con
 
 1. Install `@scion/toolkit` using the NPM command-line tool: 
     ```
-    npm install @scion/toolkit --save
+    npm install @scion/toolkit
     ```
 
 1. Create an instance of the `WebStorage` class by passing the storage implementor as constructor argument.
@@ -152,3 +152,4 @@ Checks if an item is present in the storage. Present also includes `null` and `u
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
+[link-scion-toolkit]: /docs/site/scion-toolkit.md

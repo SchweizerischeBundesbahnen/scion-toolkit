@@ -3,7 +3,7 @@
 | SCION Toolkit | [Projects Overview][menu-projects-overview] | [Changelog][menu-changelog] | [Contributing][menu-contributing] | [Sponsoring][menu-sponsoring] |  
 | --- | --- | --- | --- | --- |
 
-## [SCION Toolkit][menu-home] > Viewport
+## [SCION Toolkit][menu-home] > [@scion/components][link-scion-components] > Viewport
 
 The NPM sub-module `@scion/components/viewport` provides an Angular viewport component with scrollbars that sit on top of the viewport client. The component renders slotted content (`<ng-content>`) inside a scrollable viewport, that shows a vertical and/or horizontal scrollbar when content overflows the component's boundaries.
 
@@ -19,9 +19,8 @@ Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of t
 
 1. Install `@scion/components` using the NPM command-line tool: 
    ```
-   npm install @scion/components @scion/toolkit @angular/cdk --save
+   npm install @scion/components @scion/toolkit @angular/cdk
    ```
-   > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
 1. Import `SciViewportComponent` in your component.
 
@@ -180,7 +179,7 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
 
 1. Install `@scion/components` using the NPM command-line tool: 
    ```
-   npm install @scion/components @scion/toolkit @angular/cdk --save
+   npm install @scion/components @scion/toolkit @angular/cdk
    ```
    > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
 
@@ -271,3 +270,4 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
+[link-scion-components]: /docs/site/scion-components.md

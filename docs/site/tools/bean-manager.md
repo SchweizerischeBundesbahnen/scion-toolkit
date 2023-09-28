@@ -3,7 +3,7 @@
 | SCION Toolkit | [Projects Overview][menu-projects-overview] | [Changelog][menu-changelog] | [Contributing][menu-contributing] | [Sponsoring][menu-sponsoring] |  
 | --- | --- | --- | --- | --- |
 
-## [SCION Toolkit][menu-home] > Bean Manager
+## [SCION Toolkit][menu-home] > [@scion/toolkit][link-scion-toolkit] > Bean Manager
 
 The NPM sub-module `@scion/toolkit/bean-manager` provides a registry for singleton objects, so-called beans.
 
@@ -15,7 +15,7 @@ The bean manager provides operations for obtaining references for beans. A bean 
 
 1. Install `@scion/toolkit` using the NPM command-line tool: 
     ```
-    npm install @scion/toolkit --save
+    npm install @scion/toolkit
     ```
 
 1. Register a bean in the bean manager. In its simplest form, the registration could look like this:
@@ -274,3 +274,4 @@ Beans.register(Bean);
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
+[link-scion-toolkit]: /docs/site/scion-toolkit.md

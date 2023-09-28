@@ -3,14 +3,14 @@
 | SCION Toolkit | [Projects Overview][menu-projects-overview] | [Changelog][menu-changelog] | [Contributing][menu-contributing] | [Sponsoring][menu-sponsoring] |  
 | --- | --- | --- | --- | --- |
 
-## [SCION Toolkit][menu-home] > Util
+## [SCION Toolkit][menu-home] > [@scion/toolkit][link-scion-toolkit] > Util
 
 The NPM sub-module `@scion/toolkit/util` provides some utilities for dealing with collections and objects.
 
 To use the utils, install the NPM module `@scion/toolkit` as following:
  
 ```
-npm install @scion/toolkit --save
+npm install @scion/toolkit
 ```
 
 <details>
@@ -104,3 +104,4 @@ npm install @scion/toolkit --save
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
+[link-scion-toolkit]: /docs/site/scion-toolkit.md
