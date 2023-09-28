@@ -1,0 +1,30 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+
+  > h1 {
+    flex: none;
+  }
+
+  > form {
+    flex: none;
+
+    > section.state {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--sci-color-border);
+      border-radius: var(--sci-corner);
+      padding: 1em;
+
+      > header {
+        font-weight: bold;
+        margin-bottom: 1em;
+      }
+    }
+  }
+
+  > sci-toggle-button {
+    flex: none;
+  }
+}
