@@ -20,6 +20,12 @@ Click [here](https://components.scion.vercel.app/#/sci-throbber) for a demo of t
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
 
+1. Import SCION Design Tokens in `styles.scss` to style the throbber:
+   ```scss
+   @use '@scion/components';
+   ```
+   See [SCION Design Tokens][link-scion-design-tokens] for more information.
+
 1. Import `SciViewportComponent` in your component.
 
    ```typescript
@@ -74,20 +80,20 @@ Example:
 
 </details>
 
-<!--- CSS STYLING --->
+<!--- STYLING --->
 <details>
-  <summary><strong>CSS Styling</strong></summary>
+  <summary><strong>Styling</strong></summary>
 
-You can override the following CSS variables to control color, size, and animation duration.
+To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-throbber` component, the following CSS variables can be set directly on the component.
 
 - `--sci-throbber-color`\
-  Sets the color of the throbber (by default, uses `lightgray`).
+  Sets the color of the throbber.
 
 - `--sci-throbber-size`\
-  Defines the size of the throbber. Most throbbers are quadratic having the same width and height. For non-quadratic throbbers, the size usually specifies the height (by default, uses `50px`).
+  Defines the size of the throbber. Most throbbers are quadratic having the same width and height. For non-quadratic throbbers, the size usually specifies the height.
 
 - `--sci-throbber-duration`\
-  Sets the duration of a single animation cycle (by default, uses `1.25s`).
+  Sets the duration of a single animation cycle.
 
 
 Example of how to set CSS variables:
@@ -108,3 +114,4 @@ sci-throbber {
 [menu-sponsoring]: /docs/site/sponsoring.md
 
 [link-scion-components]: /docs/site/scion-components.md
+[link-scion-design-tokens]: /docs/site/scion-design-tokens.md

@@ -12,6 +12,7 @@ import {BehaviorSubject, Observable, of} from 'rxjs';
 import {map, switchMap} from 'rxjs/operators';
 import {SciListComponent, SciListItemDirective} from '@scion/components.internal/list';
 import {AsyncPipe, NgFor, NgIf} from '@angular/common';
+import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 @Component({
   selector: 'sci-list-page',
@@ -24,6 +25,7 @@ import {AsyncPipe, NgFor, NgIf} from '@angular/common';
     AsyncPipe,
     SciListComponent,
     SciListItemDirective,
+    SciMaterialIconDirective,
   ],
 })
 export default class SciListPageComponent {

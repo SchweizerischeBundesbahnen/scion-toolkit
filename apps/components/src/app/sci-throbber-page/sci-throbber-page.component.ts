@@ -13,6 +13,8 @@ import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {NgFor} from '@angular/common';
+import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
   selector: 'sci-throbber-page',
@@ -24,6 +26,9 @@ import {NgFor} from '@angular/common';
     ReactiveFormsModule,
     SciFormFieldComponent,
     SciThrobberComponent,
+    SciCheckboxComponent,
+    SciTabDirective,
+    SciTabbarComponent,
   ],
 })
 export default class SciThrobberPageComponent implements OnInit {

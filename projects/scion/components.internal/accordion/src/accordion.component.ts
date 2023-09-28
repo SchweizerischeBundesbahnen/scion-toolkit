@@ -16,6 +16,7 @@ import {fromDimension$} from '@scion/toolkit/observable';
 import {debounceTime, takeUntil} from 'rxjs/operators';
 import {combineLatest, Subject} from 'rxjs';
 import {NgClass, NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
+import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 /**
  * Component that shows items in an accordion.
@@ -53,6 +54,7 @@ import {NgClass, NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
     NgClass,
     NgTemplateOutlet,
     CdkAccordionModule,
+    SciMaterialIconDirective,
   ],
   animations: [
     trigger('enter', SciAccordionComponent.provideEnterAnimation()),

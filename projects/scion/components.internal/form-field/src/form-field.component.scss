@@ -1,4 +1,4 @@
-@use '../../theming' as sci-theming;
+@use '../../design' as sci-design;
 
 :host {
   display: inline-flex;
@@ -30,7 +30,9 @@
 
     ::ng-deep {
       input, textarea, select {
-        @include sci-theming.theme-input-field();
+        @layer form-field { // apply default styles in named layer to not override slotted content styles, e.g., styles of sci-checkbox.
+          @include sci-design.style-input-field();
+        }
       }
     }
   }

@@ -17,6 +17,12 @@
   "exports": {
     ".": {
       "sass": "./_index.scss"
+    },
+    "./design": {
+      "sass": "./design/_index.scss"
+    },
+    "./scrollbar": {
+      "sass": "./viewport/scrollbar/_index.scss"
     }
   },
   "dependencies": {

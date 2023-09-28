@@ -1,42 +1,67 @@
-@use '@scion/components.internal' as sci-ɵcomponents;
+@use '@scion/components.internal/design' as sci-design;
 
 :host {
-  display: block;
+  display: flex;
+  gap: 1em;
 
-  > sci-tabbar {
-    height: 500px;
+  > main {
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
 
-    pre {
-      white-space: pre-line;
+    > h1 {
+      flex: none;
+    }
+
+    > sci-tabbar {
+      flex: 1 1 0;
+
+      pre {
+        white-space: pre-line;
+      }
+
+      textarea {
+        @include sci-design.style-input-field();
+      }
     }
   }
 
-  > form > section.settings {
+  > aside {
+    flex: none;
     display: grid;
-    grid-template-columns: min-content auto;
-    gap: 1em;
-    margin-top: 2em;
-    border: 1px solid var(--sci-color-P400);
-    border-radius: 5px;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
     padding: 1em;
+    min-width: 350px;
 
-    > header {
-      font-weight: bold;
-      margin-bottom: 1em;
-      grid-column: 1/-1;
-    }
+    > sci-tabbar {
+      div.tab {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+        padding: .25em;
+      }
 
-    > input {
-      @include sci-ɵcomponents.theme-input-field();
-      grid-column: 1/-1;
-    }
+      div.activate-tab {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        column-gap: .25em;
+        place-content: start;
+      }
 
-    > sci-form-field {
-      grid-column: 1/-1;
-    }
+      label {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 1em;
+        align-items: center;
+        user-select: none;
+      }
 
-    > button {
-      grid-column: 1/-1;
+      input, select {
+        @include sci-design.style-input-field();
+      }
     }
   }
 }

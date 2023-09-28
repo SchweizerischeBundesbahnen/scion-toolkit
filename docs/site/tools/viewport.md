@@ -21,6 +21,12 @@ Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of t
    ```
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
+ 
+1. Import SCION Design Tokens in `styles.scss` to style the viewport:
+   ```scss
+   @use '@scion/components';
+   ```
+   See [SCION Design Tokens][link-scion-design-tokens] for more information. 
 
 1. Import `SciViewportComponent` in your component.
 
@@ -154,12 +160,12 @@ sci-viewport::part(content) {
 
 <!--- SCROLLBAR --->
 <details>
-  <summary><strong>Scrollbar styling</strong></summary>
+  <summary><strong>Styling</strong></summary>
 
-You can override the following CSS variables to control the appearance of the scrollbar:
+To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-viewport` component, the following CSS variables can be set directly on the component.
 
 - `--sci-viewport-scrollbar-color`\
-  Sets the color of the scrollbar (by default, uses `rgb(78, 78, 78)`). 
+  Sets the color of the scrollbar. 
 
 Example of how to set CSS variables:
 ```css 
@@ -181,7 +187,12 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
    ```
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
-   > The library requires some peer dependencies to be installed. By using the above command, those are installed as well.
+
+1. Import SCION Design Tokens in `styles.scss` to style the scrollbar:
+   ```scss
+   @use '@scion/components';
+   ```
+   See [SCION Design Tokens][link-scion-design-tokens] for more information.
 
 1. Import `SciViewportModule` in the module where to use the scrollbar:
    
@@ -243,17 +254,17 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
 1. Add the following code to the style template of the component:
 
    ```scss
-     @use '@scion/components' as sci-components;
+     @use '@scion/components/scrollbar' as sci-scrollbar;
    
      main {
        display: grid; // stretches content vertically and horizontally
        position: relative; // positioned anchor for the scrollbars
        overflow: hidden; // hides native scrollbars (shifted out of the visible viewport area)
-       @include sci-components.scrollbar-hide-when-inactive(); // hide scrollbars when the user is not hovering the viewport.
+       @include sci-scrollbar.scrollbar-hide-when-inactive(); // hide scrollbars when the user is not hovering the viewport.
        height: 500px;
    
        > sci-scrollbar {
-         @include sci-components.scrollbar-position(); // positions scrollbars
+         @include sci-scrollbar.scrollbar-position(); // positions scrollbars
        }
      }
    ```
@@ -271,3 +282,4 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
 [menu-sponsoring]: /docs/site/sponsoring.md
 
 [link-scion-components]: /docs/site/scion-components.md
+[link-scion-design-tokens]: /docs/site/scion-design-tokens.md

@@ -1,36 +1,63 @@
-$size: 1.5rem;
+$size: 1.6rem;
 
 :host {
-  display: inline-block;
-  position: relative;
+  display: inline-grid;
   width: $size;
   height: $size;
-  border: 1px solid var(--sci-color-P400);
-  font-size: $size;
-
-  &:focus {
-    outline: 2px solid red;
-  }
-
-  &:focus-within, :focus, :active {
-    border-color: var(--sci-color-accent);
-    box-shadow: 0 0 6px 0 rgba(var(--sci-color-accent-rgb), .25);
-  }
+  border: 1px solid var(--sci-color-border);
+  border-radius: var(--sci-corner-small);
+  background-color: var(--sci-color-background-input);
+  transition: border-color ease-in-out .15s, color ease-in-out .15s;
 
   > input[type="checkbox"] {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
+    all: unset;
+    height: 0;
+    width: 0;
+    position: absolute; // out of the document flow
   }
 
-  > span.checked {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+  > label { // checkbox label filling the entire component
+    display: inline-grid;
+    color: var(--sci-color-accent-inverse);
+    place-content: center;
+    overflow: hidden;
+    font-size: $size;
+    cursor: pointer;
     user-select: none;
-    font-size: 90%;
+  }
+
+  &:has(> input:disabled) {
+    > label {
+      cursor: auto;
+    }
+  }
+
+  &:has(> input:checked:not(:disabled)) {
+    background-color: var(--sci-color-accent);
+    border-color: var(--sci-color-accent);
+    transition: unset;
+  }
+
+  &:has(> input:checked:disabled) {
+    background-color: var(--sci-color-gray-400);
+    transition: unset;
+  }
+
+  &:has(> input:not(:checked):disabled) {
+    background-color: var(--sci-color-background-input-disabled);
+  }
+
+  &:focus-within {
+    border-color: var(--sci-color-accent);
+  }
+
+  &:has(> input:focus-visible:checked) {
+    outline: 1px solid var(--sci-color-accent);
+    border-color: transparent;
+    background-clip: content-box;
+  }
+
+  &:has(> input:focus-visible:not(:checked)) {
+    border-color: var(--sci-color-accent);
   }
 }

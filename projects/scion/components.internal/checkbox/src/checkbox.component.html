@@ -1,2 +1,4 @@
-<input type="checkbox" [formControl]="formControl" [tabIndex]="tabindex ?? 0">
-<span *ngIf="isChecked" class="checked material-icons">checked</span>
+<input type="checkbox" [id]="id" [formControl]="formControl">
+<label [for]="id" sciMaterialIcon>
+  <ng-container *ngIf="isChecked">check</ng-container>
+</label>

@@ -15,6 +15,7 @@ import {SplitPipe} from '../common/split.pipe';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {NgFor, NgIf} from '@angular/common';
+import loremIpsum from './lorem-ipsum.json';
 
 @Component({
   selector: 'sci-tabbar-page',
@@ -34,7 +35,7 @@ import {NgFor, NgIf} from '@angular/common';
 })
 export default class SciTabbarPageComponent {
 
-  public form = this._formBuilder.group({
+  protected form = this._formBuilder.group({
     shortContentTabVisible: this._formBuilder.control(true),
     longContentTabVisible: this._formBuilder.control(true),
     textareaTabVisible: this._formBuilder.control(true),
@@ -42,13 +43,16 @@ export default class SciTabbarPageComponent {
     selectedTabName: this._formBuilder.control<string | undefined>(undefined),
   });
 
+  protected loremIpsum = loremIpsum;
+  protected loremIpsumShort = loremIpsum.slice(0, 495);
+
   @ViewChild(SciTabbarComponent, {static: true})
-  public tabbar!: SciTabbarComponent;
+  private _tabbar!: SciTabbarComponent;
 
   constructor(private _formBuilder: NonNullableFormBuilder) {
   }
 
-  public onActivateTab(): void {
-    this.tabbar.activateTab(this.form.controls.selectedTabName.value);
+  protected onActivateTab(): void {
+    this._tabbar.activateTab(this.form.controls.selectedTabName.value);
   }
 }

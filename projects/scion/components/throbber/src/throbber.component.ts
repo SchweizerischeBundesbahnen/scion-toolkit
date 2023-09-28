@@ -20,9 +20,10 @@ import {SciSpinnerThrobberComponent} from './spinner-throbber/spinner-throbber.c
  *
  * Choose between different throbber presentations by setting the `type` property: `ellipsis`, `ripple`, `roller`, `spinner`.
  *
- * ### CSS styling:
+ * ### Styling:
  *
- * You can override the following CSS variables:
+ * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
+ * To style a specific `sci-throbber` component, the following CSS variables can be set directly on the component.
  *
  * - sci-throbber-color:     Sets the color of the throbber (by default, uses `lightgray`).
  * - sci-throbber-size:      Defines the size of the throbber. Most throbbers are quadratic having the same width and height.

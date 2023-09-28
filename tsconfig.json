@@ -111,7 +111,10 @@
     //      ],
     //      "@scion/components.internal/toggle-button": [
     //        "projects/scion/components.internal/toggle-button/src/public_api"
-    //      ]
+    //      ],
+    //      "@scion/components.internal/material-icon": [
+    //        "projects/scion/components.internal/material-icon/src/public_api"
+    //      ],
     //    }
   },
   "angularCompilerOptions": {

@@ -1,13 +1,19 @@
-<h1>sci-filter-field (ɵ)</h1>
+<main>
+  <h1>sci-filter-field (ɵ)</h1>
 
-<sci-filter-field (filter)="onFilter($event)" placeholder="Enter a filter text" [disabled]="disabled"></sci-filter-field>
+  <sci-filter-field placeholder="Enter a filter text" [formControl]="form.controls.filterField"></sci-filter-field>
+  <output *ngIf="filterText">{{filterText}}</output>
+</main>
 
-<output *ngIf="output">{{output}}</output>
-
-<section class="settings">
-  <header>Settings</header>
-
-  <sci-form-field label="Disabled">
-    <sci-checkbox [(ngModel)]="disabled"></sci-checkbox>
-  </sci-form-field>
-</section>
+<aside [formGroup]="form">
+  <sci-tabbar>
+    <ng-template sciTab label="State">
+      <div class="tab">
+        <label>
+          <sci-checkbox [formControl]="form.controls.state.controls.disabled"></sci-checkbox>
+          Disabled
+        </label>
+      </div>
+    </ng-template>
+  </sci-tabbar>
+</aside>

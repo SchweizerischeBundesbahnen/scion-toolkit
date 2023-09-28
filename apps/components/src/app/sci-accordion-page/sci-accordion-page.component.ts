@@ -13,6 +13,7 @@ import {NgFor} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciAccordionComponent, SciAccordionItemDirective} from '@scion/components.internal/accordion';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
   selector: 'sci-accordion-page',
@@ -26,6 +27,8 @@ import {SciAccordionComponent, SciAccordionItemDirective} from '@scion/component
     SciCheckboxComponent,
     SciAccordionComponent,
     SciAccordionItemDirective,
+    SciTabDirective,
+    SciTabbarComponent,
   ],
 })
 export default class SciAccordionPageComponent {

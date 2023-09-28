@@ -1,32 +1,36 @@
-<h1>sci-accordion (ɵ)</h1>
+<main>
+  <h1>sci-accordion (ɵ)</h1>
 
-<form [formGroup]="form">
-  <section class="settings">
-    <header>Settings</header>
+  <sci-accordion [variant]="form.controls.variant.value" [multi]="form.controls.multi.value">
+    <ng-container *ngFor="let item of items">
+      <!-- item -->
+      <ng-template sciAccordionItem [panel]="panel">
+        <header>{{item.title}}</header>
+      </ng-template>
 
-    <sci-form-field label="Variant">
-      <select [formControl]="form.controls.variant">
-        <option value="solid">solid</option>
-        <option value="bubble">bubble</option>
-      </select>
-    </sci-form-field>
+      <!-- item panel -->
+      <ng-template #panel>
+        {{item.description}}
+      </ng-template>
+    </ng-container>
+  </sci-accordion>
+</main>
 
-    <sci-form-field label="Multi">
-      <sci-checkbox [formControl]="form.controls.multi"></sci-checkbox>
-    </sci-form-field>
-  </section>
-</form>
+<aside [formGroup]="form">
+  <sci-tabbar>
+    <ng-template sciTab label="Settings">
+      <div class="tab">
+        <sci-form-field label="Variant">
+          <select [formControl]="form.controls.variant">
+            <option value="solid">solid</option>
+            <option value="bubble">bubble</option>
+          </select>
+        </sci-form-field>
 
-<sci-accordion [variant]="form.controls.variant.value" [multi]="form.controls.multi.value">
-  <ng-container *ngFor="let item of items">
-    <!-- item -->
-    <ng-template sciAccordionItem [panel]="panel">
-      <header>{{item.title}}</header>
+        <sci-form-field label="Multi">
+          <sci-checkbox [formControl]="form.controls.multi"></sci-checkbox>
+        </sci-form-field>
+      </div>
     </ng-template>
-
-    <!-- item panel -->
-    <ng-template #panel>
-      {{item.description}}
-    </ng-template>
-  </ng-container>
-</sci-accordion>
+  </sci-tabbar>
+</aside>

@@ -56,13 +56,13 @@ export const routes: Routes = [
     data: {internal: true},
   },
   {
-    path: 'sci-checkbox',
-    loadComponent: () => import('./sci-checkbox-page/sci-checkbox-page.component'),
+    path: 'sci-tabbar',
+    loadComponent: () => import('./sci-tabbar-page/sci-tabbar-page.component'),
     data: {internal: true},
   },
   {
-    path: 'sci-tabbar',
-    loadComponent: () => import('./sci-tabbar-page/sci-tabbar-page.component'),
+    path: 'sci-checkbox',
+    loadComponent: () => import('./sci-checkbox-page/sci-checkbox-page.component'),
     data: {internal: true},
   },
   {
@@ -73,6 +73,11 @@ export const routes: Routes = [
   {
     path: 'sci-toggle-button',
     loadComponent: () => import('./sci-toggle-button-page/sci-toggle-button-page.component'),
+    data: {internal: true},
+  },
+  {
+    path: 'sci-styles',
+    loadComponent: () => import('./sci-styles-page/sci-styles-page.component'),
     data: {internal: true},
   },
 ];

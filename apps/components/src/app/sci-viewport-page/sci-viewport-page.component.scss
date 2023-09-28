@@ -1,74 +1,67 @@
-@mixin panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-  border: 1px solid var(--sci-color-P400);
-  border-radius: 5px;
-  padding: 1em;
-
-  > header {
-    flex: none;
-    font-weight: bold;
-    margin-bottom: .5em;
-  }
-}
+@use '@scion/components.internal/design' as sci-design;
 
 :host {
   display: flex;
-  flex-direction: column;
+  gap: 1em;
+
   --viewport-minheight: unset;
   --viewport-maxheight: unset;
   --viewport-flex: unset;
 
-  > h1 {
-    flex: none;
+  > main {
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+
+    > h1 {
+      flex: none;
+    }
+
+    > sci-viewport {
+      flex: var(--viewport-flex);
+      min-height: var(--viewport-minheight);
+      max-height: var(--viewport-maxheight);
+    }
   }
 
-  > form {
+  > aside {
     flex: none;
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 1em;
-    margin-bottom: 2em;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+    padding: 1em;
+    min-width: 350px;
 
-    > section.content {
-      @include panel;
-      grid-row: 1/-1;
+    > sci-tabbar {
+      div.tab {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+        padding: .25em;
 
-      > textarea {
-        flex: auto;
+        &.content {
+          > textarea.content {
+            flex: auto;
+          }
+
+          > header {
+            flex: none;
+            font-weight: bold;
+            margin-top: 1em;
+          }
+
+          > textarea.content-styles {
+            flex: none;
+            height: 10em;
+          }
+        }
       }
-    }
 
-    > section.viewport-slotted-content-layout {
-      @include panel;
-      grid-row: 1/-1;
-
-      > textarea {
-        flex: auto;
+      textarea {
+        @include sci-design.style-input-field;
       }
-    }
-
-    > section.viewport-scrollbar {
-      @include panel();
-      grid-column: 3;
-    }
-
-    > section.viewport-style-properties {
-      @include panel();
-      grid-column: 3;
-    }
-  }
-
-  > sci-viewport {
-    flex: var(--viewport-flex);
-    min-height: var(--viewport-minheight);
-    max-height: var(--viewport-maxheight);
-
-    section {
-      border: 1px dotted var(--sci-color-accent);
-      padding: 1em;
     }
   }
 }

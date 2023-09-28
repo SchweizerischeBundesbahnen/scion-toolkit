@@ -6,7 +6,7 @@ $point-angle: 15;
   display: inline-flex;
   justify-content: center;
   position: relative; // positioning context for points
-  font-size: var(--sci-throbber-size);
+  font-size: var(--ɵsci-throbber-size);
   width: 1em;
   height: 1em;
   box-sizing: border-box;
@@ -18,14 +18,14 @@ $point-angle: 15;
     width: $point-size;
     height: $point-size;
     border-radius: 50%;
-    background-color: var(--sci-throbber-color);
+    background-color: var(--ɵsci-throbber-color);
 
     @for $i from 1 through $point-count {
       $angle: ($i - $point-count)*$point-angle;
 
       &:nth-child(#{$i}) {
-        animation: sci-roller-throbber-#{$i} var(--sci-throbber-duration) cubic-bezier(.5, 0, .5, 1) infinite;
-        animation-delay: calc(var(--sci-throbber-duration) * #{-$i*.02});
+        animation: sci-roller-throbber-#{$i} var(--ɵsci-throbber-duration) cubic-bezier(.5, 0, .5, 1) infinite;
+        animation-delay: calc(var(--ɵsci-throbber-duration) * #{-$i*.02});
       }
 
       @keyframes sci-roller-throbber-#{$i} {

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, forwardRef} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
 import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
@@ -20,6 +20,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   templateUrl: './toggle-button.component.html',
   styleUrls: ['./toggle-button.component.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
   ],
@@ -32,16 +33,25 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
   private _cvaChangeFn: (value: any) => void = noop;
   private _cvaTouchedFn: () => void = noop;
 
-  protected formControl = new FormControl<boolean>(false);
+  protected formControl = new FormControl<boolean>(false, {nonNullable: true});
   protected id = UUID.randomUUID();
 
-  constructor() {
+  @Input()
+  public set disabled(disabled: boolean | string | undefined | null) {
+    coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
+  }
+
+  constructor(private _cd: ChangeDetectorRef) {
     this.formControl.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(value => {
         this._cvaChangeFn(value);
         this._cvaTouchedFn();
       });
+  }
+
+  public get isToggled(): boolean {
+    return this.formControl.value;
   }
 
   /**
@@ -65,12 +75,8 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
    * @docs-private
    */
   public setDisabledState(isDisabled: boolean): void {
-    if (isDisabled) {
-      this.formControl.disable();
-    }
-    else {
-      this.formControl.enable();
-    }
+    this.disabled = isDisabled;
+    this._cd.markForCheck();
   }
 
   /**
@@ -79,5 +85,6 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
    */
   public writeValue(value: any): void {
     this.formControl.setValue(coerceBooleanProperty(value), {emitEvent: false});
+    this._cd.markForCheck();
   }
 }

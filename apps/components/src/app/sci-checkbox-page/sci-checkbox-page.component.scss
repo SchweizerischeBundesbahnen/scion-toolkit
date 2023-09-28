@@ -1,3 +1,36 @@
 :host {
-  display: block;
+  display: flex;
+  gap: 1em;
+
+  > main {
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+  }
+
+  > aside {
+    flex: none;
+    display: grid;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+    padding: 1em;
+    min-width: 350px;
+
+    > sci-tabbar div.tab {
+      display: flex;
+      flex-direction: column;
+      padding: .25em;
+      gap: 1em;
+
+      > label {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 1em;
+        align-items: center;
+        user-select: none;
+      }
+    }
+  }
 }

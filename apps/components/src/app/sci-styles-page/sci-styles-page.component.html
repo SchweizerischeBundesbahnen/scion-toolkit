@@ -1,0 +1,51 @@
+<h1>HTML Element Styling</h1>
+
+<sci-tabbar>
+  <ng-template sciTab label="HTML Input">
+    <section class="tab-content">
+      <span>Default:</span>
+      <input placeholder="Placeholder">
+
+      <span>Readonly:</span>
+      <input value="Readonly Content" readonly>
+
+      <span>Readonly (empty):</span>
+      <input placeholder="Placeholder" readonly>
+
+      <span>Disabled:</span>
+      <input value="Disabled" disabled>
+
+      <span>Disabled (empty):</span>
+      <input placeholder="Placeholder" disabled>
+    </section>
+  </ng-template>
+
+  <ng-template sciTab label="HTML Button">
+    <section class="tab-content">
+      <span>Button:</span>
+      <button>Button</button>
+
+      <span>Button (disabled):</span>
+      <button disabled>Button</button>
+
+      <span>Primary Button:</span>
+      <button sci-primary>Primary Button</button>
+
+      <span>Primary Button (disabled):</span>
+      <button sci-primary disabled>Primary Button</button>
+
+      <span>Material Icon Button:</span>
+      <button sciMaterialIcon>train</button>
+
+      <span>Material Icon Button (disabled):</span>
+      <button sciMaterialIcon disabled>train</button>
+    </section>
+  </ng-template>
+
+  <ng-template sciTab label="HTML Link">
+    <section class="tab-content">
+      <span>Link:</span>
+      <a>Link</a>
+    </section>
+  </ng-template>
+</sci-tabbar>

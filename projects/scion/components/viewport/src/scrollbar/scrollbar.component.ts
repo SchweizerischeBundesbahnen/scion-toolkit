@@ -23,11 +23,12 @@ import {filterArray, subscribeInside} from '@scion/toolkit/operators';
  * - enlarges the thumb if the mouse pointer is near the thumb
  * - allows paging on mousedown on the scroll track
  *
- * ### CSS styling:
+ * ### Styling:
  *
- * You can override the following CSS variables:
+ * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
+ * To style a specific `sci-scrollbar` component, the following CSS variables can be set directly on the component.
  *
- * - sci-scrollbar-color:    Sets the color of the scrollbar (by default, uses `rgb(78, 78, 78)`).
+ * - sci-scrollbar-color:    Sets the color of the scrollbar.
  *
  * Example:
  *

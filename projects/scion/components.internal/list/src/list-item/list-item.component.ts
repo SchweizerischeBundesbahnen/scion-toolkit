@@ -13,6 +13,7 @@ import {FocusableOption, FocusOrigin} from '@angular/cdk/a11y';
 import {SciListItemDirective} from '../list-item.directive';
 import {SciListStyle} from '../metadata';
 import {NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
+import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 @Component({
   selector: 'sci-list-item',
@@ -23,6 +24,7 @@ import {NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
     NgIf,
     NgFor,
     NgTemplateOutlet,
+    SciMaterialIconDirective,
   ],
 })
 export class SciListItemComponent implements FocusableOption {

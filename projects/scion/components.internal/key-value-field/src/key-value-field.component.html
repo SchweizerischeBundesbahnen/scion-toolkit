@@ -1,9 +1,9 @@
 <header>
   <h2 *ngIf="title">{{title}}</h2>
   <!-- add button -->
-  <button *ngIf="addable" (click)="onAdd()" class="e2e-add material-icons" type="button" title="Add entry">add</button>
+  <button *ngIf="addable" (click)="onAdd()" class="e2e-add" type="button" title="Add entry" sciMaterialIcon>add</button>
   <!-- remove button -->
-  <button *ngIf="removable" (click)="onClear()" class="e2e-clear material-icons" type="button" title="Clear all entries">clear</button>
+  <button *ngIf="removable" (click)="onClear()" class="e2e-clear" type="button" title="Clear all entries" sciMaterialIcon>clear</button>
 </header>
 
 <ng-container *ngFor="let keyValueGroup of keyValueFormArray.controls; index as i;">
@@ -12,7 +12,7 @@
   <!-- value -->
   <input [formControl]="keyValueGroup.controls.value" [attr.id]="id + '_' + i" class="e2e-value">
   <!-- 'remove' button -->
-  <button *ngIf="removable" class="material-icons e2e-remove" type="button" (click)="onRemove(i)" title="remove entry">remove</button>
+  <button *ngIf="removable" class="e2e-remove" type="button" (click)="onRemove(i)" title="remove entry" sciMaterialIcon>remove</button>
 
   <ng-template #key_readonly>
     <label [for]="id + '_' + i">{{keyValueGroup.controls.key.value}}</label>

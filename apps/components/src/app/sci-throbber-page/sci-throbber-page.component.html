@@ -1,35 +1,38 @@
-<h1>sci-throbber</h1>
+<main>
+  <h1>sci-throbber</h1>
 
-<form [formGroup]="form">
-  <section class="settings">
-    <header>Settings</header>
+  <sci-throbber [type]="form.controls.type.value"
+                [style.--sci-throbber-color]="form.controls.color.value"
+                [style.--sci-throbber-size]="form.controls.size.value"
+                [style.--sci-throbber-duration]="form.controls.duration.value">
+  </sci-throbber>
+</main>
 
-    <sci-form-field label="Type" direction="column">
-      <select [formControl]="form.controls.type">
-        <option *ngFor="let type of types" [value]="type">{{type}}</option>
-      </select>
-    </sci-form-field>
-  </section>
+<aside [formGroup]="form">
+  <sci-tabbar>
+    <ng-template sciTab label="Settings">
+      <div class="tab">
+        <sci-form-field label="Type" direction="column">
+          <select [formControl]="form.controls.type">
+            <option *ngFor="let type of types" [value]="type">{{type}}</option>
+          </select>
+        </sci-form-field>
+      </div>
+    </ng-template>
+    <ng-template sciTab label="CSS Variables">
+      <div class="tab">
+        <sci-form-field label="--sci-throbber-color" direction="column">
+          <input [formControl]="form.controls.color">
+        </sci-form-field>
 
-  <section class="styling">
-    <header>CSS Variables</header>
+        <sci-form-field label="--sci-throbber-size" direction="column">
+          <input [formControl]="form.controls.size">
+        </sci-form-field>
 
-    <sci-form-field label="--sci-throbber-color" direction="column">
-      <input [formControl]="form.controls.color">
-    </sci-form-field>
-
-    <sci-form-field label="--sci-throbber-size" direction="column">
-      <input [formControl]="form.controls.size">
-    </sci-form-field>
-
-    <sci-form-field label="--sci-throbber-duration" direction="column">
-      <input [formControl]="form.controls.duration">
-    </sci-form-field>
-  </section>
-</form>
-
-<sci-throbber [type]="form.controls.type.value"
-              [style.--sci-throbber-color]="form.controls.color.value"
-              [style.--sci-throbber-size]="form.controls.size.value"
-              [style.--sci-throbber-duration]="form.controls.duration.value">
-</sci-throbber>
+        <sci-form-field label="--sci-throbber-duration" direction="column">
+          <input [formControl]="form.controls.duration">
+        </sci-form-field>
+      </div>
+    </ng-template>
+  </sci-tabbar>
+</aside>

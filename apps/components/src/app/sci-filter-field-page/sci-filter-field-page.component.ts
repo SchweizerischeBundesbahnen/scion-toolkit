@@ -12,7 +12,9 @@ import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 import {NgIf} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
-import {FormsModule} from '@angular/forms';
+import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
   selector: 'sci-filter-field-page',
@@ -21,19 +23,48 @@ import {FormsModule} from '@angular/forms';
   standalone: true,
   imports: [
     NgIf,
-    FormsModule,
-    SciFilterFieldComponent,
+    ReactiveFormsModule,
     SciFormFieldComponent,
+    SciFilterFieldComponent,
     SciCheckboxComponent,
+    SciTabDirective,
+    SciTabbarComponent,
   ],
 })
 export default class SciFilterFieldPageComponent {
 
-  public output: string | null = null;
+  protected filterText: string | null = null;
 
-  public disabled = false;
+  public form = this._formBuilder.group({
+    filterField: this._formBuilder.control<string>(''),
+    state: this._formBuilder.group({
+      disabled: this._formBuilder.control<boolean>(false),
+    }),
+  });
 
-  public onFilter(filterText: string): void {
-    this.output = filterText;
+  constructor(private _formBuilder: NonNullableFormBuilder) {
+    this.installFilterFieldDisabler();
+    this.installFilterFieldValuePrinter();
+  }
+
+  private installFilterFieldDisabler(): void {
+    this.form.controls.state.controls.disabled.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(disabled => {
+        if (disabled) {
+          this.form.controls.filterField.disable();
+        }
+        else {
+          this.form.controls.filterField.enable();
+        }
+      });
+  }
+
+  private installFilterFieldValuePrinter(): void {
+    this.form.controls.filterField.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(filterText => {
+        this.filterText = filterText;
+      });
   }
 }

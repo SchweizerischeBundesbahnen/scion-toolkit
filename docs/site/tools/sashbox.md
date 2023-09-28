@@ -18,7 +18,12 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
 1. Install `@scion/components` using the NPM command-line tool: 
    ```
    npm install @scion/components @scion/toolkit @angular/cdk
+
+1. Import SCION Design Tokens in `styles.scss` to style the sashbox:
+   ```scss
+   @use '@scion/components';
    ```
+   See [SCION Design Tokens][link-scion-design-tokens] for more information.
 
 1. Import `SciSashboxComponent` and `SciSashDirective` in your component.
 
@@ -128,18 +133,24 @@ Sash content modeled in the `<ng-template>` is added to a CSS grid container wit
 
 <!--- STYLING --->
 <details>
-  <summary><strong>CSS Styling</strong></summary>
+  <summary><strong>Styling</strong></summary>
 
-The default style of the sashbox is made up of shades of gray.
-
-You can control the appearance by overriding the following CSS variables:
-
+To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-sashbox` component, the following CSS variables can be set directly on the component.
 
 - `--sci-sashbox-gap`\
  Sets the gaps (gutters) between sashes.
 
+- `--sci-sashbox-splitter-background-color`\
+  Sets the background color of the splitter.
+
+- `--sci-sashbox-splitter-background-color-hover`\
+  Sets the background color of the splitter when hovering it.
+
 - `--sci-sashbox-splitter-size`\
  Sets the size of the splitter along the main axis.
+
+- `--sci-sashbox-splitter-size-hover:`\
+  Sets the size of the splitter along the main axis when hovering it.
 
 - `--sci-sashbox-splitter-touch-target-size:`\
  Sets the touch target size to move the splitter (accessibility).
@@ -147,30 +158,21 @@ You can control the appearance by overriding the following CSS variables:
 - `--sci-sashbox-splitter-cross-axis-size:`\
  Sets the splitter size along the cross axis.
 
-- `--sci-sashbox-splitter-bgcolor`\
- Sets the background color of the splitter.
-
 - `--sci-sashbox-splitter-border-radius:`\
  Sets the border radius of the splitter.
 
-- `--sci-sashbox-splitter-size_hover:`\
- Sets the size of the splitter along the main axis when hovering it.
-
-- `--sci-sashbox-splitter-opacity_hover:`\
+- `--sci-sashbox-splitter-opacity-hover:`\
  Sets the opacity of the splitter when hovering it.
 
-- `--sci-sashbox-splitter-bgcolor_hover`\
- Sets the background color of the splitter when hovering it.
-
-- `--sci-sashbox-splitter-opacity_active:`\
+- `--sci-sashbox-splitter-opacity-active:`\
  Sets the opacity of the splitter while the user moves the splitter.
 
 **Example:**
 
 ```css 
 sci-sashbox {
-  --sci-sashbox-splitter-bgcolor: black;
-  --sci-sashbox-splitter-bgcolor_hover: black;
+  --sci-sashbox-splitter-background-color: black;
+  --sci-sashbox-splitter-background-color-hover: black;
 }
 ```
 
@@ -184,3 +186,4 @@ sci-sashbox {
 [menu-sponsoring]: /docs/site/sponsoring.md
 
 [link-scion-components]: /docs/site/scion-components.md
+[link-scion-design-tokens]: /docs/site/scion-design-tokens.md

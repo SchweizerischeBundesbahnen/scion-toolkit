@@ -9,13 +9,47 @@
  */
 import {Component} from '@angular/core';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
+import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
   selector: 'sci-checkbox-page',
   templateUrl: './sci-checkbox-page.component.html',
   styleUrls: ['./sci-checkbox-page.component.scss'],
   standalone: true,
-  imports: [SciCheckboxComponent],
+  imports: [
+    ReactiveFormsModule,
+    SciCheckboxComponent,
+    SciFormFieldComponent,
+    SciTabDirective,
+    SciTabbarComponent,
+  ],
 })
 export default class SciCheckboxPageComponent {
+
+  protected form = this._formBuilder.group({
+    checkbox: this._formBuilder.control<boolean>(true),
+    state: this._formBuilder.group({
+      disabled: this._formBuilder.control<boolean>(false),
+    }),
+  });
+
+  constructor(private _formBuilder: NonNullableFormBuilder) {
+    this.installCheckboxDisabler();
+  }
+
+  private installCheckboxDisabler(): void {
+    this.form.controls.state.controls.disabled.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(disabled => {
+        if (disabled) {
+          this.form.controls.checkbox.disable();
+        }
+        else {
+          this.form.controls.checkbox.enable();
+        }
+      });
+  }
 }
