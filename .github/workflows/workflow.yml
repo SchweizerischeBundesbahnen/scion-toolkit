@@ -277,7 +277,9 @@ jobs:
   release-toolkit:
     name: 'Releasing @scion/toolkit'
     if: ${{ needs.toolkit-release-guard.outputs.should-release == 'true' }}
-    needs: toolkit-release-guard
+    needs:
+      - build-libs
+      - toolkit-release-guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -300,7 +302,9 @@ jobs:
   release-components:
     name: 'Releasing @scion/components'
     if: ${{ needs.components-release-guard.outputs.should-release == 'true' }}
-    needs: components-release-guard
+    needs:
+      - build-libs
+      - components-release-guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
