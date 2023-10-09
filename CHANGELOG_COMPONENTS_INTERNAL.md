@@ -1,3 +1,12 @@
+# [16.3.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.2.0...ɵcomponents-16.3.0) (2023-10-09)
+
+
+### Features
+
+* **ɵcomponents:** enable theming of SCION components ([e33a358](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/e33a358bfa80b799faf34f1ac6f272f08e007653))
+* **ɵcomponents:** add toggle button component ([6fc9edb](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/6fc9edb6bee2ab9e3ecf2b535d1c68d1332b9f68))
+
+
 # [16.2.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.1.1...ɵcomponents-16.2.0) (2023-07-19)
 
 
