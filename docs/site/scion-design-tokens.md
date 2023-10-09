@@ -5,11 +5,11 @@
 
 ## [SCION Toolkit][menu-home] > [@scion/components][link-scion-components] > SCION Design Tokens
 
-SCION provides a set of design tokens to enable consistent design and theming of SCION components. Design tokens are provided by the `@scion/components` SCSS module in the form of a light and dark theme. Applications can customize or replace the built-in themes.
+SCION provides a set of design tokens to enable consistent design of components of the SCION libraries. Design tokens are provided by the `@scion/components` SCSS module.
 
-A theme is a collection of design tokens. A design token defines a specific design aspect, such as color, spacing, etc. A token can have a different value per theme.
+An application can define a custom theme to change the default look of the SCION components. Multiple themes are supported. A theme is a collection of design tokens, defining specific design aspects such as colors, spacings, etc. A design token can have a different value per theme.
 
-An application typically loads this module in the `styles.scss` file.
+An application typically loads the SCSS module `@scion/components` in the `styles.scss` file.
 
 ```scss
 @use '@scion/components';
