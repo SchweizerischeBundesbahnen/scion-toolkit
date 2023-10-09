@@ -37,6 +37,7 @@
       - `--sci-sashbox-splitter-bgcolor_hover` ➜ `--sci-sashbox-splitter-background-color-hover`
       - `--sci-sashbox-splitter-opacity_active` ➜ `--sci-sashbox-splitter-opacity-active`
     - Scrollbar-related mixins have been moved to the `@scion/components/scrollbar` SCSS module. Migrate as follows:
+  
        **Before:**
        ```scss
        @use '@scion/components' as sci-components;
@@ -289,6 +290,7 @@ Therefore, we have moved Angular-specific components and directives to the NPM p
 The changelog before the separation into `@scion/toolkit` and `@scion/components` can be found [here](/docs/site/changelog-toolkit/changelog.md).
 
 ***
+
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
