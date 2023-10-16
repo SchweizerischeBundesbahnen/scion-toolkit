@@ -9,7 +9,7 @@
  * ```
  * After Migration:
  * ```scss
- * @use '@scion/components/scrollbar' as sci-scrollbar;
+ * @use '@scion/components/viewport/scrollbar' as sci-scrollbar;
  * @include sci-scrollbar.scrollbar-hide-when-inactive();
  * @include sci-scrollbar.scrollbar-position();
  * ```

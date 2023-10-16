@@ -36,7 +36,7 @@
       - `--sci-sashbox-splitter-opacity_hover` ➜ `--sci-sashbox-splitter-opacity-hover`
       - `--sci-sashbox-splitter-bgcolor_hover` ➜ `--sci-sashbox-splitter-background-color-hover`
       - `--sci-sashbox-splitter-opacity_active` ➜ `--sci-sashbox-splitter-opacity-active`
-    - Scrollbar-related mixins have been moved to the `@scion/components/scrollbar` SCSS module. Migrate as follows:
+    - Scrollbar-related mixins have been moved to the `@scion/components/viewport/scrollbar` SCSS module. Migrate as follows:
   
        **Before:**
        ```scss
@@ -46,7 +46,7 @@
        ```
        **After:**
        ```scss
-       @use '@scion/components/scrollbar' as sci-scrollbar;
+       @use '@scion/components/viewport/scrollbar' as sci-scrollbar;
        @include sci-scrollbar.scrollbar-hide-when-inactive()
        @include sci-scrollbar.scrollbar-position()
        ```

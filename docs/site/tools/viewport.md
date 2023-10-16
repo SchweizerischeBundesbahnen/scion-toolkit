@@ -254,7 +254,7 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
 1. Add the following code to the style template of the component:
 
    ```scss
-     @use '@scion/components/scrollbar' as sci-scrollbar;
+     @use '@scion/components/viewport/scrollbar' as sci-scrollbar;
    
      main {
        display: grid; // stretches content vertically and horizontally
