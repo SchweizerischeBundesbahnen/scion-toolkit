@@ -8,7 +8,7 @@
     display: flex;
 
     > li {
-      @include sci-design.style-chip(var(--sci-color-border), null, var(--sci-color-text));
+      @include sci-design.style-chip(var(--sci-color-border), var(--sci-qualifier-chip-list-qualifier-background-color, initial), var(--sci-color-text));
 
       display: flex;
       flex-direction: column;
@@ -29,7 +29,7 @@
     }
 
     > li.type {
-      @include sci-design.style-chip(var(--sci-color-border), var(--sci-color-gray-100), var(--sci-color-text));
+      @include sci-design.style-chip(var(--sci-color-border), var(--sci-qualifier-chip-list-type-background-color, var(--sci-color-gray-100)), var(--sci-color-text));
       min-width: 75px;
 
       > span.type {
