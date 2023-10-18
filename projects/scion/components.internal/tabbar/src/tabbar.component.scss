@@ -1,6 +1,7 @@
 :host {
   display: flex;
   flex-direction: column;
+  overflow: hidden; // enable tab content to overflow when encountering a layout constraint
 
   > sci-viewport.tabbar {
     flex: none;
@@ -49,7 +50,7 @@
   }
 
   > sci-viewport.tabcontent {
-    flex:  1 1 0;
+    flex: auto; // do not use `flex: 1 1 0` to support vertical growing of the tabbar according to its tab content height
     margin-top: 1em;
   }
 }
