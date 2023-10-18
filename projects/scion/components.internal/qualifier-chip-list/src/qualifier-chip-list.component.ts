@@ -11,6 +11,23 @@
 import {ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {KeyValue, KeyValuePipe, NgFor, NgIf} from '@angular/common';
 
+/**
+ * Displays the type and qualifier of a capability as chips.
+ *
+ * ## Styling
+ *
+ * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
+ * To style a specific `sci-qualifier-chip-list` component, the following CSS variables can be set directly on the component.
+ *
+ * - --sci-qualifier-chip-list-type-background-color: Sets the background color of the type chip
+ * - --sci-qualifier-chip-list-qualifier-background-color: Sets the background color of the qualifier chip
+ *
+ * ```css
+ * sci-qualifier-chip-list {
+ *   --sci-qualifier-chip-list-type-background-color: gray;
+ * }
+ * ```
+ */
 @Component({
   selector: 'sci-qualifier-chip-list',
   templateUrl: './qualifier-chip-list.component.html',
