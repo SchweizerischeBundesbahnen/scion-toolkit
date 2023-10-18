@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   outline: none;
-  padding: 1em;
+  padding: var(--sci-list-item-padding, 1em);
 
   > span.option {
     flex: none;
