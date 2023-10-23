@@ -5,6 +5,17 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+## [16.3.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.3.0...ɵcomponents-16.3.1) (2023-10-23)
+
+
+### Bug Fixes
+
+* **ɵcomponents/list:** support for custom padding of list items ([719c627](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/719c627b9b93f636b90d8f88cd081cc77b3d5229))
+* **ɵcomponents/qualifier-chip-list:** support for custom background color ([a7f58d3](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/a7f58d3e990795fbd5dea2e0ad78497fd5fbb2aa))
+* **ɵcomponents/tabbar:** ensure tabbar grows with tab content until encountering a layout constraint ([f899d3c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/f899d3ca0d072917207c0c8856f14b4f00822251))
+
+
+
 # [16.3.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.2.0...ɵcomponents-16.3.0) (2023-10-09)
 
 
