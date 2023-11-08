@@ -1,7 +1,7 @@
 :host {
   display: inline-grid;
 
-  --ɵsci-throbber-color: var(--sci-throbber-color, lightgray); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-throbber-size: var(--sci-throbber-size, 50px); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-throbber-duration: var(--sci-throbber-duration, 1.25s); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-throbber-color: var(--sci-throbber-color, lightgray); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-throbber-size: var(--sci-throbber-size, 50px); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-throbber-duration: var(--sci-throbber-duration, 1.25s); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
 }

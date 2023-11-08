@@ -1,13 +1,13 @@
 :host {
-  --ɵsci-splitter-background-color: var(--sci-splitter-background-color, var(--sci-splitter-bgcolor, #d2d2d2)); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-background-color-hover: var(--sci-splitter-background-color-hover, var(--sci-splitter-bgcolor_hover, var(--ɵsci-splitter-background-color))); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-size: var(--sci-splitter-size, 1px); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-size-hover: var(--sci-splitter-size-hover, var(--sci-splitter-size_hover, 8px)); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-touch-target-size: var(--sci-splitter-touch-target-size, 15px); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-cross-axis-size: var(--sci-splitter-cross-axis-size, 100%); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-border-radius: var(--sci-splitter-border-radius, 0); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-opacity-active: var(--sci-splitter-opacity-active, var(--sci-splitter-opacity_active, 1)); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-opacity-hover: var(--sci-splitter-opacity-hover, var(--sci-splitter-opacity_hover, .3)); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-background-color: var(--sci-splitter-background-color, var(--sci-splitter-bgcolor, #d2d2d2)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-background-color-hover: var(--sci-splitter-background-color-hover, var(--sci-splitter-bgcolor_hover, var(--ɵsci-splitter-background-color))); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-size: var(--sci-splitter-size, 1px); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-size-hover: var(--sci-splitter-size-hover, var(--sci-splitter-size_hover, 8px)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-touch-target-size: var(--sci-splitter-touch-target-size, 15px); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-cross-axis-size: var(--sci-splitter-cross-axis-size, 100%); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-border-radius: var(--sci-splitter-border-radius, 0); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-opacity-active: var(--sci-splitter-opacity-active, var(--sci-splitter-opacity_active, 1)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-splitter-opacity-hover: var(--sci-splitter-opacity-hover, var(--sci-splitter-opacity_hover, .3)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
 
   display: grid; // stretch the touch-target
   position: relative; // positioning context for 'touch-target'

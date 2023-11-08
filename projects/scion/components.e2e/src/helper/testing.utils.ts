@@ -32,10 +32,3 @@ export async function waitUntilStable<A>(value: () => Promise<A> | A, options?: 
     );
   return firstValueFrom(value$);
 }
-
-/**
- * Returns the opacity of given element.
- */
-export function getElementOpacity(locator: Locator): Promise<number> {
-  return locator.evaluate((element: HTMLElement): number => +getComputedStyle(element).opacity);
-}

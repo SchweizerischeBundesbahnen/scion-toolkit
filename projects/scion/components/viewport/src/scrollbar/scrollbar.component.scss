@@ -6,7 +6,7 @@ $thumb-hover-size: 100%;
   display: flex;
   border: 2px solid transparent;
   box-sizing: border-box;
-  --ɵsci-scrollbar-color: var(--sci-scrollbar-color, rgb(78, 78, 78)); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-scrollbar-color: var(--sci-scrollbar-color, rgb(78, 78, 78)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
   --ɵsci-scrollbar-thumb-position-fr: 0;
   --ɵsci-scrollbar-thumb-size-fr: 0;
 

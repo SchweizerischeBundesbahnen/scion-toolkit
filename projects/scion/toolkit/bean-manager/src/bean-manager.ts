@@ -636,7 +636,7 @@ export interface BeanDecorator<T> {
  *
  * @category BeanManager
  */
-export interface AbstractType<T> extends Function {
+export interface AbstractType<T> extends Function { // eslint-disable-line @typescript-eslint/ban-types
   prototype: T;
 }
 
@@ -645,7 +645,7 @@ export interface AbstractType<T> extends Function {
  *
  * @category BeanManager
  */
-export interface Type<T> extends Function {
+export interface Type<T> extends Function { // eslint-disable-line @typescript-eslint/ban-types
   new(...args: any[]): T;
 }
 

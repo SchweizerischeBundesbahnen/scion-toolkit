@@ -2,7 +2,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -10,6 +9,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
     "sourceMap": true,
     "declaration": false,
     "downlevelIteration": true,
@@ -26,13 +26,13 @@
     ],
     "paths": {
       "@scion/toolkit/*": [
-        "dist/scion/toolkit/*"
+        "./dist/scion/toolkit/*"
       ],
       "@scion/components/*": [
-        "dist/scion/components/*"
+        "./dist/scion/components/*"
       ],
       "@scion/components.internal/*": [
-        "dist/scion/components.internal/*"
+        "./dist/scion/components.internal/*"
       ]
     }
     /*
@@ -44,76 +44,76 @@
      */
     //    "paths": {
     //      "@scion/components/dimension": [
-    //        "projects/scion/components/dimension/src/public_api"
+    //        "./projects/scion/components/dimension/src/public_api"
     //      ],
     //      "@scion/components/sashbox": [
-    //        "projects/scion/components/sashbox/src/public_api"
+    //        "./projects/scion/components/sashbox/src/public_api"
     //      ],
     //      "@scion/components/splitter": [
-    //        "projects/scion/components/splitter/src/public_api"
+    //        "./projects/scion/components/splitter/src/public_api"
     //      ],
     //      "@scion/components/throbber": [
-    //        "projects/scion/components/throbber/src/public_api"
+    //        "./projects/scion/components/throbber/src/public_api"
     //      ],
     //      "@scion/components/viewport": [
-    //        "projects/scion/components/viewport/src/public_api"
+    //        "./projects/scion/components/viewport/src/public_api"
     //      ],
     //      "@scion/toolkit/bean-manager": [
-    //        "projects/scion/toolkit/bean-manager/src/public_api"
+    //        "./projects/scion/toolkit/bean-manager/src/public_api"
     //      ],
     //      "@scion/toolkit/crypto": [
-    //        "projects/scion/toolkit/crypto/src/public_api"
+    //        "./projects/scion/toolkit/crypto/src/public_api"
     //      ],
     //      "@scion/toolkit/observable": [
-    //        "projects/scion/toolkit/observable/src/public_api"
+    //        "./projects/scion/toolkit/observable/src/public_api"
     //      ],
     //      "@scion/toolkit/operators": [
-    //        "projects/scion/toolkit/operators/src/public_api"
+    //        "./projects/scion/toolkit/operators/src/public_api"
     //      ],
     //      "@scion/toolkit/storage": [
-    //        "projects/scion/toolkit/storage/src/public_api"
+    //        "./projects/scion/toolkit/storage/src/public_api"
     //      ],
     //      "@scion/toolkit/testing": [
-    //        "projects/scion/toolkit/testing/src/public_api"
+    //        "./projects/scion/toolkit/testing/src/public_api"
     //      ],
     //      "@scion/toolkit/util": [
-    //        "projects/scion/toolkit/util/src/public_api"
+    //        "./projects/scion/toolkit/util/src/public_api"
     //      ],
     //      "@scion/toolkit/uuid": [
-    //        "projects/scion/toolkit/uuid/src/public_api"
+    //        "./projects/scion/toolkit/uuid/src/public_api"
     //      ],
     //      "@scion/components.internal/accordion": [
-    //        "projects/scion/components.internal/accordion/src/public_api"
+    //        "./projects/scion/components.internal/accordion/src/public_api"
     //      ],
     //      "@scion/components.internal/checkbox": [
-    //        "projects/scion/components.internal/checkbox/src/public_api"
+    //        "./projects/scion/components.internal/checkbox/src/public_api"
     //      ],
     //      "@scion/components.internal/filter-field": [
-    //        "projects/scion/components.internal/filter-field/src/public_api"
+    //        "./projects/scion/components.internal/filter-field/src/public_api"
     //      ],
     //      "@scion/components.internal/form-field": [
-    //        "projects/scion/components.internal/form-field/src/public_api"
+    //        "./projects/scion/components.internal/form-field/src/public_api"
     //      ],
     //      "@scion/components.internal/list": [
-    //        "projects/scion/components.internal/list/src/public_api"
+    //        "./projects/scion/components.internal/list/src/public_api"
     //      ],
     //      "@scion/components.internal/key-value-field": [
-    //        "projects/scion/components.internal/key-value-field/src/public_api"
+    //        "./projects/scion/components.internal/key-value-field/src/public_api"
     //      ],
     //      "@scion/components.internal/key-value": [
-    //        "projects/scion/components.internal/key-value/src/public_api"
+    //        "./projects/scion/components.internal/key-value/src/public_api"
     //      ],
     //      "@scion/components.internal/qualifier-chip-list": [
-    //        "projects/scion/components.internal/qualifier-chip-list/src/public_api"
+    //        "./projects/scion/components.internal/qualifier-chip-list/src/public_api"
     //      ],
     //      "@scion/components.internal/tabbar": [
-    //        "projects/scion/components.internal/tabbar/src/public_api"
+    //        "./projects/scion/components.internal/tabbar/src/public_api"
     //      ],
     //      "@scion/components.internal/toggle-button": [
-    //        "projects/scion/components.internal/toggle-button/src/public_api"
+    //        "./projects/scion/components.internal/toggle-button/src/public_api"
     //      ],
     //      "@scion/components.internal/material-icon": [
-    //        "projects/scion/components.internal/material-icon/src/public_api"
+    //        "./projects/scion/components.internal/material-icon/src/public_api"
     //      ],
     //    }
   },
