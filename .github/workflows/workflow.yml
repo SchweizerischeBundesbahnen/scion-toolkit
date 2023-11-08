@@ -1,18 +1,18 @@
 name: Continuous Integration and Delivery
 on: [push, pull_request]
 env:
-  NODE_VERSION: 18.16.0
+  NODE_VERSION: 20.9.0
 jobs:
   install:
     name: 'Installing NPM modules'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Caching NPM modules if necessary'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: node-modules-cache
         with:
           path: ./node_modules
@@ -24,12 +24,12 @@ jobs:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
@@ -43,8 +43,8 @@ jobs:
       components-version: ${{ steps.components-package-json.outputs.version }}
       components-internal-version: ${{ steps.components-internal-package-json.outputs.version }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Reading package.json version of scion/toolkit'
@@ -63,28 +63,28 @@ jobs:
         with:
           path: projects/scion/components.internal/package.json
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Building @scion/toolkit'
         run: npm run toolkit:build
       - name: 'Uploading dist/scion/toolkit'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
       - name: 'Building @scion/components'
         run: npm run components:build
       - name: 'Uploading dist/scion/components'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: components-dist
           path: dist/scion/components
       - name: 'Building @scion/components.internal'
         run: npm run components.internal:build
       - name: 'Uploading dist/scion/components.internal'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: components-internal-dist
           path: dist/scion/components.internal
@@ -100,33 +100,33 @@ jobs:
           - name: components-testing-app
             cmd: npm run components-testing-app:build
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Downloading dist/scion/toolkit'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
       - name: 'Downloading dist/scion/components'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: components-dist
           path: dist/scion/components
       - name: 'Downloading dist/scion/components.internal'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: components-internal-dist
           path: dist/scion/components.internal
       - name: 'Building ${{ matrix.app.name }}'
         run: ${{ matrix.app.cmd }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.app.name }}
           path: dist/${{ matrix.app.name }}
@@ -135,27 +135,27 @@ jobs:
     needs: build-libs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Downloading dist/scion/toolkit'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
       - name: 'Downloading dist/scion/components'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: components-dist
           path: dist/scion/components
       - name: 'Downloading dist/scion/components.internal'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: components-internal-dist
           path: dist/scion/components.internal
@@ -168,17 +168,17 @@ jobs:
       matrix:
         shard: [1/1]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Downloading dist/components-testing-app'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: components-testing-app
           path: dist/components-testing-app
@@ -196,7 +196,7 @@ jobs:
     outputs:
       should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 'If release commit present, add release tag'
         uses: SchweizerischeBundesbahnen/scion-toolkit/.github/actions/tag-release-commit@master
         id: tag-release-commit
@@ -217,7 +217,7 @@ jobs:
     outputs:
       should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 'If release commit present, add release tag'
         uses: SchweizerischeBundesbahnen/scion-toolkit/.github/actions/tag-release-commit@master
         id: tag-release-commit
@@ -238,7 +238,7 @@ jobs:
     outputs:
       should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 'If release commit present, add release tag'
         uses: SchweizerischeBundesbahnen/scion-toolkit/.github/actions/tag-release-commit@master
         id: tag-release-commit
@@ -257,9 +257,9 @@ jobs:
       - e2e
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 'Downloading dist/components-app'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: components-app
           path: dist/components-app
@@ -282,9 +282,9 @@ jobs:
       - toolkit-release-guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 'Downloading dist/scion/toolkit'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
@@ -307,9 +307,9 @@ jobs:
       - components-release-guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 'Downloading dist/scion/components'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: components-dist
           path: dist/scion/components
@@ -330,9 +330,9 @@ jobs:
     needs: components-internal-release-guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: 'Downloading dist/scion/components.internal'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: components-internal-dist
           path: dist/scion/components.internal

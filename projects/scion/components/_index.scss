@@ -1,21 +1,3 @@
-/*
- * TODO [Angular 17] Remove backward compatibility and inform about breaking change
- *
- * Before Migration:
- * ```scss
- * @use '@scion/components' as sci-components;
- * @include sci-components.scrollbar-hide-when-inactive();
- * @include sci-components.scrollbar-position();
- * ```
- * After Migration:
- * ```scss
- * @use '@scion/components/scrollbar' as sci-scrollbar;
- * @include sci-scrollbar.scrollbar-hide-when-inactive();
- * @include sci-scrollbar.scrollbar-position();
- * ```
- */
-@forward './viewport/scrollbar';
-
 /**
  * This SCSS module provides a set of design tokens to enable consistent design of components of the SCION libraries.
  *

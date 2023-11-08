@@ -1,7 +1,7 @@
 @use '../scrollbar';
 
 :host {
-  --ɵsci-viewport-scrollbar-color: var(--sci-viewport-scrollbar-color, rgb(78, 78, 78)); // TODO [Angular 17] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
+  --ɵsci-viewport-scrollbar-color: var(--sci-viewport-scrollbar-color, rgb(78, 78, 78)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
   // Note: We do not position the internal viewport `DIV` absolutely to allow this component to adapt its size to the
   // width and height of its content. i.e., the viewport will grow/shrink with its content, allowing for implementing
   // use cases where the viewport grows with its content up to a maximum height and then starts overflowing its content.

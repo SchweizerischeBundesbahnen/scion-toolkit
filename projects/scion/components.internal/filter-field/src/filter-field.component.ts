@@ -130,13 +130,6 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
     this._cd.markForCheck();
   }
 
-  /**
-   * @deprecated since version 11.0.0-beta.5. Use {@link focusAndApplyKeyboardEvent} instead.
-   */
-  public onKeydown(event: KeyboardEvent): void {
-    this.focusAndApplyKeyboardEvent(event);
-  }
-
   public onClear(): void {
     this.formControl.setValue('');
     this.focus(); // restore the focus

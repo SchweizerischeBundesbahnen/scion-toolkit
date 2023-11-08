@@ -18,39 +18,43 @@ test.describe('sci-viewport/hover', () => {
     const pagePO = new ViewportHoverPagePO(page);
     await pagePO.navigate();
 
-    await expect(await pagePO.isScrollbarVisible({viewport: 'vertical', scrollbar: 'vertical'})).toBe(false);
-    await expect(await pagePO.isScrollbarVisible({viewport: 'vertical', scrollbar: 'horizontal'})).toBe(false);
+    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'vertical'})).toHaveCSS('opacity', '0');
+    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'horizontal'})).toHaveCSS('opacity', '0');
 
     // WHEN hovering viewport
     await pagePO.moveMouseOverViewport({viewport: 'vertical'});
     // THEN expect scrollbar to show
-    await expect(await pagePO.isScrollbarVisible({viewport: 'vertical', scrollbar: 'vertical'})).toBe(true);
-    await expect(await pagePO.isScrollbarVisible({viewport: 'vertical', scrollbar: 'horizontal'})).toBe(false);
+    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'vertical'})).toHaveCSS('opacity', '1');
+    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'horizontal'})).toHaveCSS('opacity', '1');
+    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'vertical'})).toBeVisible();
+    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'horizontal'})).not.toBeVisible();
 
     // WHEN not hovering viewport
     await pagePO.moveMouseOutsideViewport({viewport: 'vertical'});
     // THEN expect scrollbar not to show
-    await expect(await pagePO.isScrollbarVisible({viewport: 'vertical', scrollbar: 'vertical'})).toBe(false);
-    await expect(await pagePO.isScrollbarVisible({viewport: 'vertical', scrollbar: 'horizontal'})).toBe(false);
+    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'vertical'})).toHaveCSS('opacity', '0');
+    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'horizontal'})).toHaveCSS('opacity', '0');
   });
 
   test('should display horizontal scrollbar when hovering the viewport', async ({page}) => {
     const pagePO = new ViewportHoverPagePO(page);
     await pagePO.navigate();
 
-    await expect(await pagePO.isScrollbarVisible({viewport: 'horizontal', scrollbar: 'vertical'})).toBe(false);
-    await expect(await pagePO.isScrollbarVisible({viewport: 'horizontal', scrollbar: 'horizontal'})).toBe(false);
+    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'vertical'})).toHaveCSS('opacity', '0');
+    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'horizontal'})).toHaveCSS('opacity', '0');
 
     // WHEN hovering viewport
     await pagePO.moveMouseOverViewport({viewport: 'horizontal'});
     // THEN expect scrollbar to show
-    await expect(await pagePO.isScrollbarVisible({viewport: 'horizontal', scrollbar: 'vertical'})).toBe(false);
-    await expect(await pagePO.isScrollbarVisible({viewport: 'horizontal', scrollbar: 'horizontal'})).toBe(true);
+    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'vertical'})).toHaveCSS('opacity', '1');
+    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'horizontal'})).toHaveCSS('opacity', '1');
+    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'vertical'})).not.toBeVisible();
+    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'horizontal'})).toBeVisible();
 
     // WHEN not hovering viewport
     await pagePO.moveMouseOutsideViewport({viewport: 'horizontal'});
     // THEN expect scrollbar not to show
-    await expect(await pagePO.isScrollbarVisible({viewport: 'horizontal', scrollbar: 'vertical'})).toBe(false);
-    await expect(await pagePO.isScrollbarVisible({viewport: 'horizontal', scrollbar: 'horizontal'})).toBe(false);
+    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'vertical'})).toHaveCSS('opacity', '0');
+    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'horizontal'})).toHaveCSS('opacity', '0');
   });
 });

@@ -9,7 +9,6 @@
  */
 
 import {Locator, Page} from '@playwright/test';
-import {getElementOpacity, waitUntilStable} from '../../helper/testing.utils';
 
 const PATH = '/#/sci-viewport/hover';
 
@@ -39,12 +38,12 @@ export class ViewportHoverPagePO {
     await this._page.mouse.move(viewportBounds.x + viewportBounds.width + 10, viewportBounds.y + viewportBounds.height + 10);
   }
 
-  public async isScrollbarVisible(selector: {viewport: 'vertical' | 'horizontal'; scrollbar: 'vertical' | 'horizontal'}): Promise<boolean> {
-    const scrollbarLocator = this.locateViewport(selector.viewport).locator(`> sci-scrollbar.e2e-${selector.scrollbar}`);
-    return await scrollbarLocator.isVisible() && (await waitUntilStable(() => getElementOpacity(scrollbarLocator), {probeInterval: 500}) === 1); // animation lasts 1s
-  }
-
   private locateViewport(selector: 'vertical' | 'horizontal'): Locator {
     return selector === 'vertical' ? this._verticalViewportLocator : this._horizontalViewportLocator;
+  }
+
+  public locateScrollbar(selector: {viewport: 'vertical' | 'horizontal'; scrollbar: 'vertical' | 'horizontal'}): Locator {
+    const viewport = this.locateViewport(selector.viewport);
+    return viewport.locator(`> sci-scrollbar.e2e-${selector.scrollbar}`);
   }
 }
