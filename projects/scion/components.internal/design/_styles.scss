@@ -74,6 +74,7 @@
   padding: .5em;
   transition: border-color ease-in-out .15s, color ease-in-out .15s;
   background-color: var(--sci-color-background-input);
+  color: var(--sci-color-text);
   appearance: auto;
 
   &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
@@ -91,6 +92,15 @@
 
   &:read-only {
     color: var(--sci-color-text-subtle);
+  }
+
+  > option {
+    background-color: var(--sci-color-background-elevation);
+    color: var(--sci-color-text);
+
+    &:hover {
+      background-color: var(--sci-color-background-elevation-hover);
+    }
   }
 }
 
