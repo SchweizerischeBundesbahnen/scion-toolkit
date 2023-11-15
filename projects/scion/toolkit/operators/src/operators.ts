@@ -68,17 +68,6 @@ export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Pr
 }
 
 /**
- * Maps each element in the source array to its extracted property.
- *
- * Like rxjs 'pluck' but based on an array with a function to extract the property.
- *
- * @deprecated since version 10.0.0-beta.3. Use {@link mapArray} instead.
- */
-export function pluckArray<I, P>(extractor: (item: I) => P): OperatorFunction<I[] | readonly I[], P[]> {
-  return map((items: I[] | readonly I[]): P[] => items.map(item => extractor(item)));
-}
-
-/**
  * Maps each element in the source array to its mapped value.
  */
 export function mapArray<I, P>(projectFn: (item: I) => P): OperatorFunction<I[] | readonly I[], P[]> {
