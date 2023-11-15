@@ -185,7 +185,7 @@ The scope should be the name of the NPM package affected by the change. Optional
 - `components/<module>`: If the change affects the `@scion/components/<module>` entry point.
 - `ɵcomponents`: If the change affects the `@scion/components.internal` NPM package. We use the Theta (`ɵ`) symbol to have a shorter scope name.
 - `ɵcomponents/<module>`: If the change affects the `@scion/components.internal/<module>` entry point.
-- `component-app`: If the change affects the demo app for `@scion/components`.
+- `components-app`: If the change affects the demo app for `@scion/components`.
 - `components-testing-app`: If the change affects the testing app for `@scion/components` or `@scion/components.internal`.
 
 </details>
