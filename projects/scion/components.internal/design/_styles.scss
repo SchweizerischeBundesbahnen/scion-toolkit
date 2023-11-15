@@ -74,6 +74,7 @@
   padding: .5em;
   transition: border-color ease-in-out .15s, color ease-in-out .15s;
   background-color: var(--sci-color-background-input);
+  appearance: auto;
 
   &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
     border-color: var(--sci-color-accent);
