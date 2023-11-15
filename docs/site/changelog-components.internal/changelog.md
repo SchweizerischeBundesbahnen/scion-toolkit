@@ -5,6 +5,43 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+# [17.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.3.1...ɵcomponents-17.0.0) (2023-11-15)
+
+
+### Bug Fixes
+
+* **ɵcomponents/design:** do not unset the default appearance of input elements ([4c0a170](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/4c0a1706abe6b46e85ac49f36fedbbcd5f5dbb20))
+* **ɵcomponents/design:** use correct background color for menu options of `<select>` HTML element ([a2e4e14](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/a2e4e14e2d5476214c97d3a06d938cdd5435eb82))
+
+
+### Dependencies
+
+* **ɵcomponents:** update @scion/components.internal to Angular 17 ([ac7f284](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/ac7f28401bbbd76b179cd845929b5f258ffab652)), closes [#174](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues/174)
+
+
+### BREAKING CHANGES
+
+* **ɵcomponents:** Updating `@scion/components.internal` to Angular 17 introduced a breaking change.
+
+  To migrate:
+  - Update your application to Angular 17; for detailed migration instructions, refer to https://v17.angular.io/guide/update-to-latest-version;
+  - Scrollbar-related mixins have been moved to the `@scion/components/scrollbar` SCSS module; migrate as follows:
+
+    Before migration:
+    ```scss
+    @use '@scion/components' as sci-components;
+    @include sci-components.scrollbar-hide-when-inactive();
+    @include sci-components.scrollbar-position();
+    ```
+    After migration:
+    ```scss
+    @use '@scion/components/scrollbar' as sci-scrollbar;
+    @include sci-scrollbar.scrollbar-hide-when-inactive();
+    @include sci-scrollbar.scrollbar-position();
+    ```
+
+
+
 ## [16.3.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.3.0...ɵcomponents-16.3.1) (2023-10-23)
 
 
