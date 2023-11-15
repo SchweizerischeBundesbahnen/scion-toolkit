@@ -266,7 +266,7 @@ jobs:
       - name: 'Deploying components application to Vercel'
         uses: ./.github/actions/vercel-deploy
         with:
-          dist-folder: dist/components-app
+          dist-folder: dist/components-app/browser
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           org-id: ${{ secrets.VERCEL_ORG_ID }}
           project-id: ${{ secrets.VERCEL_COMPONENTS_PROJECT_ID }}
