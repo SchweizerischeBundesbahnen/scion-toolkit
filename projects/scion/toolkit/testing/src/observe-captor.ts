@@ -89,15 +89,6 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
   }
 
   /**
-   * Resets captured values. The emit counter is not reset.
-   *
-   * @deprecated since version 11.0.0-beta.10. Use {@link reset} instead.
-   */
-  public resetValues(): void {
-    this._values = [];
-  }
-
-  /**
    * Resets this captor.
    *
    * Pass options to control which aspects of this captor not to reset. By default, all aspects are reset.
