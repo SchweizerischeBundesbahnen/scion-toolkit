@@ -1,7 +1,7 @@
 name: Continuous Integration and Delivery
 on: [push, pull_request, workflow_dispatch]
 env:
-  NODE_VERSION: 20.9.0
+  NODE_VERSION: 20.14.0
 jobs:
   install:
     name: 'Installing NPM modules'
@@ -12,7 +12,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Caching NPM modules if necessary'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: node-modules-cache
         with:
           path: ./node_modules
@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
@@ -63,28 +63,28 @@ jobs:
         with:
           path: projects/scion/components.internal/package.json
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Building @scion/toolkit'
         run: npm run toolkit:build
       - name: 'Uploading dist/scion/toolkit'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
       - name: 'Building @scion/components'
         run: npm run components:build
       - name: 'Uploading dist/scion/components'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: components-dist
           path: dist/scion/components
       - name: 'Building @scion/components.internal'
         run: npm run components.internal:build
       - name: 'Uploading dist/scion/components.internal'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: components-internal-dist
           path: dist/scion/components.internal
@@ -105,28 +105,28 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Downloading dist/scion/toolkit'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
       - name: 'Downloading dist/scion/components'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: components-dist
           path: dist/scion/components
       - name: 'Downloading dist/scion/components.internal'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: components-internal-dist
           path: dist/scion/components.internal
       - name: 'Building ${{ matrix.app.name }}'
         run: ${{ matrix.app.cmd }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.app.name }}
           path: dist/${{ matrix.app.name }}
@@ -140,22 +140,22 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Downloading dist/scion/toolkit'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
       - name: 'Downloading dist/scion/components'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: components-dist
           path: dist/scion/components
       - name: 'Downloading dist/scion/components.internal'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: components-internal-dist
           path: dist/scion/components.internal
@@ -173,12 +173,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./node_modules
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - name: 'Downloading dist/components-testing-app'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: components-testing-app
           path: dist/components-testing-app
@@ -259,7 +259,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 'Downloading dist/components-app'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: components-app
           path: dist/components-app
@@ -271,9 +271,7 @@ jobs:
           org-id: ${{ secrets.VERCEL_ORG_ID }}
           project-id: ${{ secrets.VERCEL_COMPONENTS_PROJECT_ID }}
           version: ${{ needs.build-libs.outputs.components-version }}
-          aliases: |
-            components.scion.vercel.app,
-            components-v%v.scion.vercel.app,
+          aliases: components.scion.vercel.app
   release-toolkit:
     name: 'Releasing @scion/toolkit'
     if: ${{ needs.toolkit-release-guard.outputs.should-release == 'true' }}
@@ -284,7 +282,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 'Downloading dist/scion/toolkit'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
@@ -309,7 +307,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 'Downloading dist/scion/components'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: components-dist
           path: dist/scion/components
@@ -332,7 +330,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 'Downloading dist/scion/components.internal'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: components-internal-dist
           path: dist/scion/components.internal

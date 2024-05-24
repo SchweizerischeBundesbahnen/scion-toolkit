@@ -12,5 +12,5 @@ outputs:
   version-dasherized:
     description: 'Module version as contained in `package.json`, with dots (`.`) replaced by the dash character (`-`) for use in a URL.'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'

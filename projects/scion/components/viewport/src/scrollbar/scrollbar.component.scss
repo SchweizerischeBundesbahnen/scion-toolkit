@@ -6,7 +6,6 @@ $thumb-hover-size: 100%;
   display: flex;
   border: 2px solid transparent;
   box-sizing: border-box;
-  --ɵsci-scrollbar-color: var(--sci-scrollbar-color, rgb(78, 78, 78)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
   --ɵsci-scrollbar-thumb-position-fr: 0;
   --ɵsci-scrollbar-thumb-size-fr: 0;
 
@@ -39,7 +38,7 @@ $thumb-hover-size: 100%;
     > div.thumb {
       flex: auto;
       border-radius: 4px;
-      background-color: var(--ɵsci-scrollbar-color);
+      background-color: var(--sci-scrollbar-color);
       opacity: .4;
       transition-duration: 125ms;
       transition-property: width, height;
@@ -68,7 +67,7 @@ $thumb-hover-size: 100%;
 // enlarge the thumb on hover or while scrolling (e.g. when dragging the thumb outside of the scrolltrack)
 :host-context:hover, :host-context(.scrolling) {
   > div.thumb-handle > div.thumb {
-    background-color: var(--ɵsci-scrollbar-color);
+    background-color: var(--sci-scrollbar-color);
     opacity: .75;
 
     &.vertical {
