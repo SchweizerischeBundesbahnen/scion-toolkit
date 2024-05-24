@@ -1,18 +1,8 @@
 :host {
-  --ɵsci-splitter-background-color: var(--sci-splitter-background-color, var(--sci-splitter-bgcolor, #d2d2d2)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-background-color-hover: var(--sci-splitter-background-color-hover, var(--sci-splitter-bgcolor_hover, var(--ɵsci-splitter-background-color))); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-size: var(--sci-splitter-size, 1px); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-size-hover: var(--sci-splitter-size-hover, var(--sci-splitter-size_hover, 8px)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-touch-target-size: var(--sci-splitter-touch-target-size, 15px); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-cross-axis-size: var(--sci-splitter-cross-axis-size, 100%); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-border-radius: var(--sci-splitter-border-radius, 0); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-opacity-active: var(--sci-splitter-opacity-active, var(--sci-splitter-opacity_active, 1)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-splitter-opacity-hover: var(--sci-splitter-opacity-hover, var(--sci-splitter-opacity_hover, .3)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-
   display: grid; // stretch the touch-target
   position: relative; // positioning context for 'touch-target'
-  background-color: var(--ɵsci-splitter-background-color);
-  border-radius: var(--ɵsci-splitter-border-radius);
+  background-color: var(--sci-splitter-background-color);
+  border-radius: var(--sci-splitter-border-radius);
   place-items: center; // center the touch-target
   align-self: center;
 
@@ -24,9 +14,9 @@
 
     > div.handle {
       position: absolute; // out of the document flow
-      background-color: var(--ɵsci-splitter-background-color);
-      border-radius: var(--ɵsci-splitter-border-radius);
-      opacity: var(--ɵsci-splitter-opacity-hover);
+      background-color: var(--sci-splitter-background-color);
+      border-radius: var(--sci-splitter-border-radius);
+      opacity: var(--sci-splitter-opacity-hover);
       transition-property: width, height;
       transition-timing-function: ease-in;
       transition-duration: 75ms;
@@ -34,46 +24,46 @@
   }
 
   &.vertical {
-    width: var(--ɵsci-splitter-size);
-    height: var(--ɵsci-splitter-cross-axis-size);
+    width: var(--sci-splitter-size);
+    height: var(--sci-splitter-cross-axis-size);
 
     > div.touch-target {
-      width: var(--ɵsci-splitter-touch-target-size);
+      width: var(--sci-splitter-touch-target-size);
       height: 100%;
 
       > div.handle {
-        width: var(--ɵsci-splitter-size);
+        width: var(--sci-splitter-size);
         height: 100%;
       }
     }
   }
 
   &.horizontal {
-    height: var(--ɵsci-splitter-size);
-    width: var(--ɵsci-splitter-cross-axis-size);
+    height: var(--sci-splitter-size);
+    width: var(--sci-splitter-cross-axis-size);
 
     > div.touch-target {
       width: 100%;
-      height: var(--ɵsci-splitter-touch-target-size);
+      height: var(--sci-splitter-touch-target-size);
 
       > div.handle {
         width: 100%;
-        height: var(--ɵsci-splitter-size);
+        height: var(--sci-splitter-size);
       }
     }
   }
 
   > div.touch-target:active > div.handle {
-    opacity: var(--ɵsci-splitter-opacity-active);
+    opacity: var(--sci-splitter-opacity-active);
   }
 
   &.vertical.moving > div.touch-target > div.handle, &.vertical > div.touch-target:hover > div.handle {
-    background-color: var(--ɵsci-splitter-background-color-hover);
-    width: var(--ɵsci-splitter-size-hover);
+    background-color: var(--sci-splitter-background-color-hover);
+    width: var(--sci-splitter-size-hover);
   }
 
   &.horizontal.moving > div.touch-target > div.handle, &.horizontal > div.touch-target:hover > div.handle {
-    background-color: var(--ɵsci-splitter-background-color-hover);
-    height: var(--ɵsci-splitter-size-hover);
+    background-color: var(--sci-splitter-background-color-hover);
+    height: var(--sci-splitter-size-hover);
   }
 }
