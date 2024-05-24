@@ -1,12 +1,8 @@
 {
   "name": "@scion/components.internal",
-  "version": "17.0.0",
+  "version": "18.0.0",
   "description": "Provides a collection of Angular components designed exclusively for use in SCION library projects. Note that this module is private to SCION and not public API. DO NOT USE THIS MODULE IN YOUR PROJECT AS IT IS NOT GUARANTEED TO BE STABLE AND MAY CHANGE WITHOUT NOTICE.",
   "license": "EPL-2.0",
-  "private": false,
-  "publishConfig": {
-    "access": "public"
-  },
   "homepage": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit",
   "bugs": {
     "url": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit/issues"
@@ -23,15 +19,13 @@
     "tslib": "^2.5.0"
   },
   "peerDependencies": {
-    "@angular/common": "^17.0.0",
-    "@angular/core": "^17.0.0",
-    "@angular/cdk": "^17.0.0",
-    "@scion/components": "^17.0.0",
+    "@angular/common": "^18.0.0",
+    "@angular/core": "^18.0.0",
+    "@angular/cdk": "^18.0.0",
+    "@scion/components": "^18.0.0",
     "@scion/toolkit": "^1.0.0",
     "rxjs": "^7.8.0"
   },
-  "keywords": [
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/SchweizerischeBundesbahnen/scion-toolkit.git"
