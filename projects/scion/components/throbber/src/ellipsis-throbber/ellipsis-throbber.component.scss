@@ -3,7 +3,7 @@ $circle-size: .3em;
 :host {
   display: inline-flex;
   justify-content: space-between;
-  font-size: var(--ɵsci-throbber-size);
+  font-size: var(--sci-throbber-size);
   width: 1em;
   box-sizing: border-box;
 
@@ -12,15 +12,15 @@ $circle-size: .3em;
     border-radius: 50%;
     width: $circle-size;
     height: $circle-size;
-    animation: sci-ellipsis-throbber var(--ɵsci-throbber-duration) ease-in-out infinite;
-    background-color: var(--ɵsci-throbber-color);
+    animation: sci-ellipsis-throbber var(--sci-throbber-duration) ease-in-out infinite;
+    background-color: var(--sci-throbber-color);
 
     &:nth-child(1) {
-      animation-delay: calc(var(--ɵsci-throbber-duration) / -6);
+      animation-delay: calc(var(--sci-throbber-duration) / -6);
     }
 
     &:nth-child(2) {
-      animation-delay: calc(var(--ɵsci-throbber-duration) / -12);
+      animation-delay: calc(var(--sci-throbber-duration) / -12);
     }
   }
 

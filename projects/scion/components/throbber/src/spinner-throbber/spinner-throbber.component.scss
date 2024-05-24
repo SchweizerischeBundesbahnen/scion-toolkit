@@ -9,7 +9,7 @@ $stroke-angle: math.div(360, $stroke-count);
   display: inline-flex;
   justify-content: center;
   position: relative; // positioning context for strokes
-  font-size: var(--ɵsci-throbber-size);
+  font-size: var(--sci-throbber-size);
   width: 1em;
   height: 1em;
   box-sizing: border-box;
@@ -22,15 +22,15 @@ $stroke-angle: math.div(360, $stroke-count);
     height: $stroke-height;
     opacity: 0;
     border-radius: 20%;
-    background-color: var(--ɵsci-throbber-color);
-    animation: sci-spinner-throbber var(--ɵsci-throbber-duration) linear infinite;
+    background-color: var(--sci-throbber-color);
+    animation: sci-spinner-throbber var(--sci-throbber-duration) linear infinite;
 
     @for $i from 1 through $stroke-count {
       $angle: ($i - 1) * $stroke-angle;
 
       &:nth-child(#{$i}) {
         transform: rotate(#{$angle}deg);
-        animation-delay: calc(var(--ɵsci-throbber-duration) * #{math.div($i, $stroke-count)});
+        animation-delay: calc(var(--sci-throbber-duration) * #{math.div($i, $stroke-count)});
       }
     }
   }

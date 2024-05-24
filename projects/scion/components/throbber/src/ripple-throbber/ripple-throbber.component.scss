@@ -1,7 +1,7 @@
 :host {
   display: inline-block;
   position: relative; // positioning context for circle
-  font-size: var(--ɵsci-throbber-size);
+  font-size: var(--sci-throbber-size);
   width: 1em;
   height: 1em;
   box-sizing: border-box;
@@ -11,11 +11,11 @@
     width: 1em;
     height: 1em;
     border-radius: 50%;
-    border: 0 solid var(--ɵsci-throbber-color);
-    animation: sci-ripple-throbber var(--ɵsci-throbber-duration) cubic-bezier(0, .2, .8, 1) infinite;
+    border: 0 solid var(--sci-throbber-color);
+    animation: sci-ripple-throbber var(--sci-throbber-duration) cubic-bezier(0, .2, .8, 1) infinite;
 
     &:nth-child(1) {
-      animation-delay: calc(var(--ɵsci-throbber-duration) / -2);
+      animation-delay: calc(var(--sci-throbber-duration) / -2);
     }
   }
 
