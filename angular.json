@@ -183,7 +183,10 @@
             "tsConfig": "apps/components/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "apps/components/src/assets",
+              {
+                "glob": "**/*",
+                "input": "apps/components/public"
+              },
               {
                 "glob": "favicon.ico",
                 "input": "resources/branding",
@@ -206,13 +209,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "2kB",
+                  "maximumError": "4kB"
                 }
               ],
               "outputHashing": "all"
@@ -271,7 +274,10 @@
             "tsConfig": "apps/components-testing-app/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "apps/components-testing-app/src/assets"
+              {
+                "glob": "**/*",
+                "input": "apps/components-testing-app/public"
+              }
             ],
             "styles": [
               "apps/components-testing-app/src/styles.scss"
@@ -289,13 +295,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "2kB",
+                  "maximumError": "4kB"
                 }
               ],
               "outputHashing": "all"
