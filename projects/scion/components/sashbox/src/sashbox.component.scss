@@ -1,16 +1,4 @@
 :host {
-  // CSS variables to override properties of the theme (public API).
-  --ɵsci-sashbox-gap: var(--sci-sashbox-gap, 10px); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-background-color: var(--sci-sashbox-splitter-background-color, var(--sci-sashbox-splitter-bgcolor, #d2d2d2)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-background-color-hover: var(--sci-sashbox-splitter-background-color-hover, var(--sci-sashbox-splitter-bgcolor_hover, var(--ɵsci-sashbox-splitter-background-color))); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-size: var(--sci-sashbox-splitter-size, 1px); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-size-hover: var(--sci-sashbox-splitter-size-hover, var(--sci-sashbox-splitter-size_hover, 8px)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-touch-target-size: var(--sci-sashbox-splitter-touch-target-size, 15px); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-cross-axis-size: var(--sci-sashbox-splitter-cross-axis-size, 100%); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-border-radius: var(--sci-sashbox-splitter-border-radius, 0); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-opacity-active: var(--sci-sashbox-splitter-opacity-active, var(--sci-sashbox-splitter-opacity_active, 1)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-  --ɵsci-sashbox-splitter-opacity-hover: var(--sci-sashbox-splitter-opacity-hover, var(--sci-sashbox-splitter-opacity_hover, .3)); // TODO [Angular 18] Remove fallback and inform about breaking change to import @scion/components SCSS module instead
-
   display: flex;
   align-items: stretch;
   box-sizing: border-box;
@@ -56,7 +44,7 @@
   }
 
   &.row > div.sash {
-    margin: 0 var(--ɵsci-sashbox-gap);
+    margin: 0 var(--sci-sashbox-gap);
 
     &.first {
       margin-left: 0;
@@ -68,7 +56,7 @@
   }
 
   &.column > div.sash {
-    margin: var(--ɵsci-sashbox-gap) 0;
+    margin: var(--sci-sashbox-gap) 0;
 
     &.first {
       margin-top: 0;
@@ -84,15 +72,15 @@
   }
 
   > sci-splitter {
-    --sci-splitter-background-color: var(--ɵsci-sashbox-splitter-background-color);
-    --sci-splitter-background-color-hover: var(--ɵsci-sashbox-splitter-background-color-hover);
-    --sci-splitter-size: var(--ɵsci-sashbox-splitter-size);
-    --sci-splitter-size-hover: var(--ɵsci-sashbox-splitter-size-hover);
-    --sci-splitter-touch-target-size: var(--ɵsci-sashbox-splitter-touch-target-size);
-    --sci-splitter-cross-axis-size: var(--ɵsci-sashbox-splitter-cross-axis-size);
-    --sci-splitter-border-radius: var(--ɵsci-sashbox-splitter-border-radius);
-    --sci-splitter-opacity-active: var(--ɵsci-sashbox-splitter-opacity-active);
-    --sci-splitter-opacity-hover: var(--ɵsci-sashbox-splitter-opacity-hover);
+    --sci-splitter-background-color: var(--sci-sashbox-splitter-background-color);
+    --sci-splitter-background-color-hover: var(--sci-sashbox-splitter-background-color-hover);
+    --sci-splitter-size: var(--sci-sashbox-splitter-size);
+    --sci-splitter-size-hover: var(--sci-sashbox-splitter-size-hover);
+    --sci-splitter-touch-target-size: var(--sci-sashbox-splitter-touch-target-size);
+    --sci-splitter-cross-axis-size: var(--sci-sashbox-splitter-cross-axis-size);
+    --sci-splitter-border-radius: var(--sci-sashbox-splitter-border-radius);
+    --sci-splitter-opacity-active: var(--sci-sashbox-splitter-opacity-active);
+    --sci-splitter-opacity-hover: var(--sci-sashbox-splitter-opacity-hover);
 
     flex: none;
     z-index: 1; // see the explanation above why we set this z-index
