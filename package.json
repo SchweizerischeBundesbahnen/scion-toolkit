@@ -40,7 +40,7 @@
     "components.internal:lint": "ng lint @scion/components.internal",
     "components.internal:test": "ng test @scion/components.internal",
     "components.internal:build": "ng build --configuration production @scion/components.internal",
-    "components.internal:changelog": "conventional-changelog --commit-path projects/scion/components.internal -k projects/scion/components.internal -t ɵcomponents- -p angular -i CHANGELOG_COMPONENTS_INTERNAL.md -s && markdown-include docs/site/changelog-components.internal/changelog.template.json",
+    "components.internal:changelog": "conventional-changelog --commit-path projects/scion/components.internal -k projects/scion/components.internal/package.json -t ɵcomponents- -p angular -i CHANGELOG_COMPONENTS_INTERNAL.md -s && markdown-include docs/site/changelog-components.internal/changelog.template.json",
 
     "components-app:serve": "ng serve components-app",
     "components-app:lint": "ng lint components-app",
