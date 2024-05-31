@@ -5,6 +5,23 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+# [18.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-17.0.0...ɵcomponents-18.0.0) (2024-05-31)
+
+
+### Dependencies
+
+* **ɵcomponents:** update @scion/components.internal to Angular 18 ([2a53650](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/2a5365070f31e6be0a3b4e9665cd2e34a252b495))
+
+
+### BREAKING CHANGES
+
+* **ɵcomponents:** Updating `@scion/components.internal` to Angular 18 introduced a breaking change.
+
+  To migrate:
+  - Update your application to Angular 18; for detailed migration instructions, refer to https://v18.angular.dev/update-guide;
+
+
+
 # [17.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-16.3.1...ɵcomponents-17.0.0) (2023-11-15)
 
 
