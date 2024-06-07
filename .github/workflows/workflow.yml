@@ -271,7 +271,9 @@ jobs:
           org-id: ${{ secrets.VERCEL_ORG_ID }}
           project-id: ${{ secrets.VERCEL_COMPONENTS_PROJECT_ID }}
           version: ${{ needs.build-libs.outputs.components-version }}
-          aliases: components.scion.vercel.app
+          aliases: |
+            components.scion.vercel.app,
+            components-v%v.scion.vercel.app,
   release-toolkit:
     name: 'Releasing @scion/toolkit'
     if: ${{ needs.toolkit-release-guard.outputs.should-release == 'true' }}
