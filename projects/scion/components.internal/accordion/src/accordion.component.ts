@@ -15,7 +15,7 @@ import {CdkAccordion, CdkAccordionItem, CdkAccordionModule} from '@angular/cdk/a
 import {fromDimension$} from '@scion/toolkit/observable';
 import {debounceTime, takeUntil} from 'rxjs/operators';
 import {combineLatest, Subject} from 'rxjs';
-import {NgClass, NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
+import {NgClass, NgTemplateOutlet} from '@angular/common';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 /**
@@ -30,9 +30,9 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
  * Example of a simple accordion:
  *
  * <sci-accordion>
- *   <ng-container *ngFor="let communication of communications$ | async; trackBy: trackByFn">
+ *   @for (item of items$ | async; track item.id) {
  *     <!-- item -->
- *     <ng-template sciAccordionItem [key]="communication.id" [panel]="panel">
+ *     <ng-template sciAccordionItem [key]="item.id" [panel]="panel">
  *       ...
  *     </ng-template>
  *
@@ -40,7 +40,7 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
  *     <ng-template #panel>
  *       ...
  *     </ng-template>
- *   </ng-container>
+ *   }
  * </sci-accordion>
  */
 @Component({
@@ -49,8 +49,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   styleUrls: ['./accordion.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     NgClass,
     NgTemplateOutlet,
     CdkAccordionModule,

@@ -11,7 +11,7 @@ import {Component} from '@angular/core';
 import {FormArray, FormBuilder} from '@angular/forms';
 import {SciKeyValueFieldComponent} from '@scion/components.internal/key-value-field';
 import {Dictionary} from '@scion/toolkit/util';
-import {JsonPipe, NgIf} from '@angular/common';
+import {JsonPipe} from '@angular/common';
 
 @Component({
   selector: 'sci-key-value-field-page',
@@ -19,7 +19,6 @@ import {JsonPipe, NgIf} from '@angular/common';
   styleUrls: ['./sci-key-value-field-page.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
     JsonPipe,
     SciKeyValueFieldComponent,
   ],

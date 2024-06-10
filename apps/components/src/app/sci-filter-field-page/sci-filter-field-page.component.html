@@ -2,7 +2,9 @@
   <h1>sci-filter-field (ɵ)</h1>
 
   <sci-filter-field placeholder="Enter a filter text" [formControl]="form.controls.filterField"></sci-filter-field>
-  <output *ngIf="filterText">{{filterText}}</output>
+  @if (filterText) {
+    <output>{{filterText}}</output>
+  }
 </main>
 
 <aside [formGroup]="form">

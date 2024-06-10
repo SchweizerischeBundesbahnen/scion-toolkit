@@ -12,7 +12,6 @@ import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
-import {NgFor} from '@angular/common';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
@@ -22,7 +21,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   styleUrls: ['./sci-throbber-page.component.scss'],
   standalone: true,
   imports: [
-    NgFor,
     ReactiveFormsModule,
     SciFormFieldComponent,
     SciThrobberComponent,

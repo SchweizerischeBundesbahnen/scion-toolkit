@@ -14,7 +14,6 @@ import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SplitPipe} from '../common/split.pipe';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
-import {NgFor, NgIf} from '@angular/common';
 import loremIpsum from './lorem-ipsum.json';
 
 @Component({
@@ -23,8 +22,6 @@ import loremIpsum from './lorem-ipsum.json';
   styleUrls: ['./sci-tabbar-page.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     ReactiveFormsModule,
     SciCheckboxComponent,
     SciTabbarComponent,

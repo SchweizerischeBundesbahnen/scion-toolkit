@@ -11,7 +11,7 @@ import {Component} from '@angular/core';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {map, switchMap} from 'rxjs/operators';
 import {SciListComponent, SciListItemDirective} from '@scion/components.internal/list';
-import {AsyncPipe, NgFor, NgIf} from '@angular/common';
+import {AsyncPipe} from '@angular/common';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 @Component({
@@ -20,8 +20,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   styleUrls: ['./sci-list-page.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     AsyncPipe,
     SciListComponent,
     SciListItemDirective,

@@ -9,7 +9,6 @@
  */
 import {Component} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
-import {NgFor} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciAccordionComponent, SciAccordionItemDirective} from '@scion/components.internal/accordion';
@@ -21,7 +20,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   styleUrls: ['./sci-accordion-page.component.scss'],
   standalone: true,
   imports: [
-    NgFor,
     ReactiveFormsModule,
     SciFormFieldComponent,
     SciCheckboxComponent,

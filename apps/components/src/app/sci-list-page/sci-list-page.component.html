@@ -1,21 +1,24 @@
 <h1>sci-list (ɵ)</h1>
 
 <sci-list (filter)="onFilter($event)" filterPosition="top">
-  <ng-container *ngFor="let listItem of items$ | async">
+  @for (listItem of items$ | async; track listItem) {
     <!-- list item -->
     <ng-template sciListItem [actions]="[flag_action]">
-      <mark *ngIf="isFlagged(listItem)">
+      @if (isFlagged(listItem)) {
+        <mark>{{listItem}}</mark>
+      }
+      @else {
         {{listItem}}
-      </mark>
-      <ng-container *ngIf="!isFlagged(listItem)">
-        {{listItem}}
-      </ng-container>
+      }
     </ng-template>
-
     <!-- action -->
     <ng-template #flag_action>
-      <button *ngIf="!isFlagged(listItem)" (click)="onFlag(listItem)" sciMaterialIcon>check_box_outline_blank</button>
-      <button *ngIf="isFlagged(listItem)" (click)="onUnflag(listItem)" sciMaterialIcon>check_box</button>
+      @if (isFlagged(listItem)) {
+        <button (click)="onUnflag(listItem)" sciMaterialIcon>check_box</button>
+      }
+      @else {
+        <button (click)="onFlag(listItem)" sciMaterialIcon>check_box_outline_blank</button>
+      }
     </ng-template>
-  </ng-container>
+  }
 </sci-list>

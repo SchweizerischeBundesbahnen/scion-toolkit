@@ -13,7 +13,7 @@ import {map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {sortArray} from '@scion/toolkit/operators';
-import {AsyncPipe, NgFor} from '@angular/common';
+import {AsyncPipe} from '@angular/common';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 import {SciToggleButtonComponent} from '@scion/components.internal/toggle-button';
 import {FormControl, ReactiveFormsModule} from '@angular/forms';
@@ -26,7 +26,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   styleUrls: ['./app.component.scss'],
   standalone: true,
   imports: [
-    NgFor,
     AsyncPipe,
     RouterLink,
     RouterOutlet,

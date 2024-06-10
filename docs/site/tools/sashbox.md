@@ -111,7 +111,7 @@ Sash content modeled in the `<ng-template>` is added to a CSS grid container wit
 <details>
   <summary><strong>Sash Template</strong></summary>
   
-  A sash is added to the sashbox in the form of a `<ng-template>` decorated with the `sciSash` directive. You can control its size by setting a `size` and/or `minSize`. To hide a sash, for example if using the sash as side panel, add a `*ngIf` to the sash `<ng-template>`.
+  A sash is added to the sashbox in the form of a `<ng-template>` decorated with the `sciSash` directive. You can control its size by setting a `size` and/or `minSize`. To hide a sash, for example if using the sash as side panel, place the sash in an `@if` block.
   
 #### Configuration:
   

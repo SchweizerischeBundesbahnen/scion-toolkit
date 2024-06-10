@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges} from '@angular/core';
-import {KeyValue, KeyValuePipe, NgFor, NgIf} from '@angular/common';
+import {KeyValue, KeyValuePipe} from '@angular/common';
 
 /**
  * Displays the type and qualifier of a capability as chips.
@@ -35,8 +35,6 @@ import {KeyValue, KeyValuePipe, NgFor, NgIf} from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     KeyValuePipe,
   ],
 })

@@ -16,7 +16,7 @@ import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 import {Subject} from 'rxjs';
 import {filter, map, takeUntil} from 'rxjs/operators';
 import {SciListStyle} from './metadata';
-import {NgClass, NgFor, NgIf} from '@angular/common';
+import {NgClass, NgTemplateOutlet} from '@angular/common';
 import {SciViewportComponent} from '@scion/components/viewport';
 
 /**
@@ -29,9 +29,11 @@ import {SciViewportComponent} from '@scion/components/viewport';
  * Example of a simple list:
  *
  * <sci-list (filter)="onFilter($event)">
- *   <ng-template sciListItem *ngFor="let contact of contacts$ | async">
- *     ...
- *   </ng-template>
+ *   @for (item of items$ | async; track item.id) {
+ *     <ng-template sciListItem>
+ *       ...
+ *     </ng-template>
+ *   }
  * </sci-list>
  *
  *
@@ -39,7 +41,7 @@ import {SciViewportComponent} from '@scion/components/viewport';
  * Example of a list with actions:
  *
  * <sci-list (filter)="onFilter($event)">
- *   <ng-container *ngFor="let contact of contacts$ | async">
+ *   @for (item of items$ | async; track item.id) {
  *     <!-- list item -->
  *     <ng-template sciListItem [actions]="delete_action">
  *       ...
@@ -47,9 +49,9 @@ import {SciViewportComponent} from '@scion/components/viewport';
  *
  *     <!-- action -->
  *     <ng-template #delete_action>
- *       <button class="material-icons" (click)="onDelete(contact.id)">delete</button>
+ *       <button class="material-icons" (click)="onDelete(item.id)">delete</button>
  *     </ng-template>
- *   </ng-container>
+ *     }
  * </sci-list>
  *
  * ## Styling
@@ -71,12 +73,11 @@ import {SciViewportComponent} from '@scion/components/viewport';
   styleUrls: ['./list.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     SciViewportComponent,
     SciListItemComponent,
     SciFilterFieldComponent,
     NgClass,
+    NgTemplateOutlet,
   ],
 })
 export class SciListComponent implements AfterViewInit, OnDestroy {

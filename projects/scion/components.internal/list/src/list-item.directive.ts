@@ -18,9 +18,11 @@ import {Directive, Input, TemplateRef} from '@angular/core';
  * Example usage:
  *
  * <sci-list (filter)="onFilter($event)">
- *   <ng-template sciListItem *ngFor="let contact of contacts$ | async">
- *     <app-contact-list-item [contact]="contact"></app-contact-list-item>
- *   </ng-template>
+ *   @for (item of items$ | async; track item.id) {
+ *     <ng-template sciListItem>
+ *       <app-list-item [item]="item"></app-list-item>
+ *     </ng-template>
+ *   }
  * </sci-list>
  */
 @Directive({selector: 'ng-template[sciListItem]', standalone: true})

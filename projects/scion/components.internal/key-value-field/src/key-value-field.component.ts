@@ -12,7 +12,6 @@ import {Component, ElementRef, HostBinding, Input} from '@angular/core';
 import {FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
-import {NgFor, NgIf} from '@angular/common';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 /**
@@ -24,8 +23,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   styleUrls: ['./key-value-field.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     ReactiveFormsModule,
     SciMaterialIconDirective,
   ],

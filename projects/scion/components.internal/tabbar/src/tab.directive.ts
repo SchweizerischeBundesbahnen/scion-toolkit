@@ -20,9 +20,11 @@ import {Directive, Input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} fro
  * Example usage:
  *
  * <sci-tabbar>
- *   <ng-template sciTab [label]="item.label" *ngFor="let item of items$ | async">
- *     ...
- *   </ng-template>
+ *   @for (item of items$ | async; track item.id) {
+ *     <ng-template sciTab [label]="item.label">
+ *       ...
+ *     </ng-template>
+ *   }
  * </sci-tabbar>
  */
 @Directive({selector: 'ng-template[sciTab]', standalone: true})

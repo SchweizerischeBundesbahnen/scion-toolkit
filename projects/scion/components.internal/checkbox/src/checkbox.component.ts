@@ -12,7 +12,6 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input
 import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
 import {noop} from 'rxjs';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
-import {NgIf} from '@angular/common';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UUID} from '@scion/toolkit/uuid';
@@ -24,7 +23,6 @@ import {UUID} from '@scion/toolkit/uuid';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
-    NgIf,
     ReactiveFormsModule,
     SciMaterialIconDirective,
   ],

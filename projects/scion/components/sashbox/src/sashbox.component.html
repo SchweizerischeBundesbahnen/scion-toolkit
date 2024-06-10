@@ -1,4 +1,4 @@
-<ng-container *ngFor="let sash of sashes$ | async; index as i; first as first; last as last;">
+@for (sash of sashes$ | async; track sash; let i = $index; let first = $first; let last = $last) {
   <div class="sash"
        [class.first]="first"
        [class.last]="last"
@@ -6,15 +6,14 @@
        [style.flex-grow]="sash.flexGrowNormalized$ | async"
        [style.flex-shrink]="sash.flexShrink"
        [style.flex-basis]="sash.flexBasis">
-    <ng-container *ngTemplateOutlet="sash.sashTemplate"></ng-container>
+    <ng-container *ngTemplateOutlet="sash.sashTemplate"/>
   </div>
-
-  <sci-splitter *ngIf="!last"
-                sciElementRef #sciElementRef="sciElementRef"
-                [orientation]="isRowDirection ? 'vertical' : 'horizontal'"
-                (start)="onSashStart()"
-                (move)="onSash(sciElementRef.nativeElement, i, $event)"
-                (end)="onSashEnd()"
-                (reset)="onSashReset(i)">
-  </sci-splitter>
-</ng-container>
+  @if (!last) {
+    <sci-splitter sciElementRef #sciElementRef="sciElementRef"
+                  [orientation]="isRowDirection ? 'vertical' : 'horizontal'"
+                  (start)="onSashStart()"
+                  (move)="onSash(sciElementRef.nativeElement, i, $event)"
+                  (end)="onSashEnd()"
+                  (reset)="onSashReset(i)"/>
+  }
+}

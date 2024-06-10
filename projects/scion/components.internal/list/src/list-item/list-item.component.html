@@ -1,7 +1,9 @@
 <!-- radio button for option items -->
-<span *ngIf="optionStyle" class="option" sciMaterialIcon>
-  {{active ? 'radio_button_checked' : 'radio_button_unchecked'}}
-</span>
+@if (optionStyle) {
+  <span class="option" sciMaterialIcon>
+    {{active ? 'radio_button_checked' : 'radio_button_unchecked'}}
+  </span>
+}
 
 <!-- item -->
 <div class="item e2e-item">
@@ -9,8 +11,12 @@
 </div>
 
 <!-- actions -->
-<ul class="actions e2e-actions" *ngIf="listItem.actionTemplates.length">
-  <li *ngFor="let actionTemplate of listItem.actionTemplates" class="e2e-action">
-    <ng-container *ngTemplateOutlet="actionTemplate"></ng-container>
-  </li>
-</ul>
+@if (listItem.actionTemplates.length) {
+  <ul class="actions e2e-actions">
+    @for (actionTemplate of listItem.actionTemplates; track actionTemplate) {
+      <li class="e2e-action">
+        <ng-container *ngTemplateOutlet="actionTemplate"></ng-container>
+      </li>
+    }
+  </ul>
+}
