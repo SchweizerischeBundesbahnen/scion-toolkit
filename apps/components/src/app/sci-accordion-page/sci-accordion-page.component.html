@@ -2,17 +2,16 @@
   <h1>sci-accordion (ɵ)</h1>
 
   <sci-accordion [variant]="form.controls.variant.value" [multi]="form.controls.multi.value">
-    <ng-container *ngFor="let item of items">
+    @for (item of items; track item) {
       <!-- item -->
       <ng-template sciAccordionItem [panel]="panel">
         <header>{{item.title}}</header>
       </ng-template>
-
       <!-- item panel -->
       <ng-template #panel>
         {{item.description}}
       </ng-template>
-    </ng-container>
+    }
   </sci-accordion>
 </main>
 

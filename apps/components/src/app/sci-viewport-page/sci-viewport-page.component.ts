@@ -15,7 +15,7 @@ import {startWith, takeUntil} from 'rxjs/operators';
 import {Subject} from 'rxjs';
 import loremIpsum from './lorem-ipsum.json';
 import {Arrays} from '@scion/toolkit/util';
-import {DOCUMENT, NgFor} from '@angular/common';
+import {DOCUMENT} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SplitPipe} from '../common/split.pipe';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
@@ -26,7 +26,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   styleUrls: ['./sci-viewport-page.component.scss'],
   standalone: true,
   imports: [
-    NgFor,
     ReactiveFormsModule,
     SplitPipe,
     SciFormFieldComponent,

@@ -9,7 +9,6 @@
  */
 
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
-import {NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common';
 import {SciEllipsisThrobberComponent} from './ellipsis-throbber/ellipsis-throbber.component';
 import {SciRippleThrobberComponent} from './ripple-throbber/ripple-throbber.component';
 import {SciRollerThrobberComponent} from './roller-throbber/roller-throbber.component';
@@ -48,9 +47,6 @@ import {SciSpinnerThrobberComponent} from './spinner-throbber/spinner-throbber.c
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
-    NgSwitch,
-    NgSwitchCase,
-    NgSwitchDefault,
     SciEllipsisThrobberComponent,
     SciRippleThrobberComponent,
     SciRollerThrobberComponent,

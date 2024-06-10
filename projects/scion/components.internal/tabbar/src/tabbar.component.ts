@@ -13,7 +13,7 @@ import {SciTabDirective} from './tab.directive';
 import {map, startWith} from 'rxjs/operators';
 import {Observable} from 'rxjs';
 import {tapFirst} from '@scion/toolkit/operators';
-import {AsyncPipe, NgClass, NgFor} from '@angular/common';
+import {AsyncPipe, NgClass} from '@angular/common';
 import {SciViewportComponent} from '@scion/components/viewport';
 
 /**
@@ -25,9 +25,11 @@ import {SciViewportComponent} from '@scion/components/viewport';
  *
  * ```
  * <sci-tabbar>
- *   <ng-template sciTab [label]="item.label" *ngFor="let item of items$ | async">
- *     ...
- *   </ng-template>
+ *   @for (item of items$ | async; track item.id) {
+ *     <ng-template sciTab [label]="item.label">
+ *       ...
+ *     </ng-template>
+ *   }
  * </sci-tabbar>
  * ```
  */
@@ -38,7 +40,6 @@ import {SciViewportComponent} from '@scion/components/viewport';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
-    NgFor,
     AsyncPipe,
     NgClass,
     SciViewportComponent,

@@ -3,24 +3,32 @@
 
   <sci-tabbar>
     <!-- short content tab -->
-    <ng-template sciTab label="Short Content" name="Short Content" *ngIf="form.controls.shortContentTabVisible.value">
-      <pre>{{loremIpsumShort}}</pre>
-    </ng-template>
+    @if (form.controls.shortContentTabVisible.value) {
+      <ng-template sciTab label="Short Content" name="Short Content">
+        <pre>{{loremIpsumShort}}</pre>
+      </ng-template>
+    }
 
     <!-- long content tab -->
-    <ng-template sciTab label="Long Content" name="Long Content" *ngIf="form.controls.longContentTabVisible.value">
-      <pre>{{loremIpsum}}</pre>
-    </ng-template>
+    @if (form.controls.longContentTabVisible.value) {
+      <ng-template sciTab label="Long Content" name="Long Content">
+        <pre>{{loremIpsum}}</pre>
+      </ng-template>
+    }
 
     <!-- textarea tab -->
-    <ng-template sciTab label="Textarea" name="Textarea" *ngIf="form.controls.textareaTabVisible.value">
-      <textarea placeholder="Enter some text. The text should be preserved when switching between tabs."></textarea>
-    </ng-template>
+    @if (form.controls.textareaTabVisible.value) {
+      <ng-template sciTab label="Textarea" name="Textarea">
+        <textarea placeholder="Enter some text. The text should be preserved when switching between tabs."></textarea>
+      </ng-template>
+    }
 
     <!-- dynamic tabs -->
-    <ng-template sciTab *ngFor="let tab of form.controls.dynamicTabs.value  | appSplit:','" [label]="tab" [name]="tab">
-      {{tab}}
-    </ng-template>
+    @for (tab of form.controls.dynamicTabs.value | appSplit:','; track tab) {
+      <ng-template sciTab [label]="tab" [name]="tab">
+        {{tab}}
+      </ng-template>
+    }
   </sci-tabbar>
 </main>
 
@@ -57,7 +65,9 @@
           <option value="Short Content">Short Content</option>
           <option value="Long Content">Long Content</option>
           <option value="Textarea">Textarea</option>
-          <option *ngFor="let tab of form.controls.dynamicTabs.value  | appSplit:','" [value]="tab">{{tab}}</option>
+          @for (tab of form.controls.dynamicTabs.value | appSplit:','; track tab) {
+            <option [value]="tab">{{tab}}</option>
+          }
         </select>
 
         <button (click)="onActivateTab()">Activate</button>

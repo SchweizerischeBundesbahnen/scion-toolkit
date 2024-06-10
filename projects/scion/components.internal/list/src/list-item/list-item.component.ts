@@ -12,7 +12,7 @@ import {Component, ElementRef, HostBinding, Input} from '@angular/core';
 import {FocusableOption, FocusOrigin} from '@angular/cdk/a11y';
 import {SciListItemDirective} from '../list-item.directive';
 import {SciListStyle} from '../metadata';
-import {NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
+import {NgTemplateOutlet} from '@angular/common';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
 @Component({
@@ -21,8 +21,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   styleUrls: ['./list-item.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     NgTemplateOutlet,
     SciMaterialIconDirective,
   ],

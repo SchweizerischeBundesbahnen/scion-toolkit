@@ -1,4 +1,6 @@
 <input type="checkbox" [id]="id" [formControl]="formControl">
 <label [for]="id" sciMaterialIcon>
-  <ng-container *ngIf="isChecked">check</ng-container>
+  @if (isChecked) {
+    check
+  }
 </label>

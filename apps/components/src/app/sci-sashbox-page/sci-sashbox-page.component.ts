@@ -10,7 +10,6 @@
 import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
-import {NgFor, NgIf} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
@@ -22,8 +21,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   styleUrls: ['./sci-sashbox-page.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     FormsModule,
     ReactiveFormsModule,
     SciSashboxComponent,

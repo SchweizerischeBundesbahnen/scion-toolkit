@@ -17,7 +17,6 @@ import {Dimension, fromDimension$} from '@scion/toolkit/observable';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 import {asyncScheduler} from 'rxjs';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
-import {NgFor} from '@angular/common';
 
 describe('Viewport', () => {
 
@@ -1276,7 +1275,6 @@ describe('Viewport', () => {
         expect(isScrollbarVisible(fixture, 'horizontal')).withContext('scrollbar (C)').toBeFalse();
       });
 
-
       it('should detect overflow if overlapping 0.5 pixels or more', async () => {
         const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
         fixture.autoDetectChanges(true);
@@ -1427,7 +1425,9 @@ describe('Viewport', () => {
   template: `
     <sci-viewport>
       <div class="container" [class.row]="direction === 'row'" [class.column]="direction === 'column'">
-        <button *ngFor="let element of elements" (click)="onRemove()">Remove element</button>
+        @for (element of elements; track element) {
+          <button (click)="onRemove()">Remove element</button>
+        }
       </div>
     </sci-viewport>
     <button (click)="onAdd()">Add element</button>
@@ -1459,7 +1459,6 @@ describe('Viewport', () => {
   `],
   standalone: true,
   imports: [
-    NgFor,
     SciViewportComponent,
   ],
 })

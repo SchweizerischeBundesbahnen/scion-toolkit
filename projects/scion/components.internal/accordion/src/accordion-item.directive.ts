@@ -18,9 +18,9 @@ import {Directive, Input, TemplateRef} from '@angular/core';
  * Example usage:
  *
  * <sci-accordion>
- *   <ng-container *ngFor="let communication of communications$ | async; trackBy: trackByFn">
+ *   @for (item of items$ | async; track item.id) {
  *     <!-- item -->
- *     <ng-template sciAccordionItem [key]="communication.id" [panel]="panel">
+ *     <ng-template sciAccordionItem [key]="item.id" [panel]="panel">
  *       ...
  *     </ng-template>
  *
@@ -28,7 +28,7 @@ import {Directive, Input, TemplateRef} from '@angular/core';
  *     <ng-template #panel>
  *       ...
  *     </ng-template>
- *   </ng-container>
+ *   }
  * </sci-accordion>
  */
 @Directive({selector: 'ng-template[sciAccordionItem]', standalone: true})

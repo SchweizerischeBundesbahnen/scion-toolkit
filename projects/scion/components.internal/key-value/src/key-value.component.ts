@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
-import {KeyValue, KeyValuePipe, NgFor} from '@angular/common';
+import {KeyValue, KeyValuePipe} from '@angular/common';
 import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 
 /**
@@ -22,7 +22,6 @@ import {Dictionaries, Dictionary} from '@scion/toolkit/util';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
-    NgFor,
     KeyValuePipe,
   ],
 })

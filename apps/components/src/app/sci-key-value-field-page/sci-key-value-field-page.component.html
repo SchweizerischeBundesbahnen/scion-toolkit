@@ -38,4 +38,6 @@
 </sci-key-value-field>
 
 <button class="print" (click)="onPrint()">Print</button>
-<output *ngIf="output">{{output | json}}</output>
+@if (output) {
+  <output>{{output | json}}</output>
+}

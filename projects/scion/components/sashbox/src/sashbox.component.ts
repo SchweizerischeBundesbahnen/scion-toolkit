@@ -14,7 +14,7 @@ import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
-import {AsyncPipe, NgFor, NgIf, NgTemplateOutlet} from '@angular/common';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {SciSashInitializerDirective} from './sash-initializer.directive';
 import {SciElementRefDirective} from './element-ref.directive';
 
@@ -77,8 +77,6 @@ import {SciElementRefDirective} from './element-ref.directive';
   styleUrls: ['./sashbox.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
-    NgFor,
     AsyncPipe,
     NgTemplateOutlet,
     SciSashInitializerDirective,

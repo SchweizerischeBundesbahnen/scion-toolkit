@@ -1,12 +1,13 @@
 <sci-viewport class="tabbar">
-  <button *ngFor="let tab of tabs$ | async"
-          class="tab e2e-tab"
-          [class.selected]="tab.isContentAttached()"
-          [ngClass]="tab.cssClass"
-          (click)="onTabClick(tab)">
-    {{tab.label}}
-    <div class="outline"></div>
-  </button>
+  @for (tab of tabs$ | async; track tab) {
+    <button class="tab e2e-tab"
+            [class.selected]="tab.isContentAttached()"
+            [ngClass]="tab.cssClass"
+            (click)="onTabClick(tab)">
+      {{tab.label}}
+      <div class="outline"></div>
+    </button>
+  }
   <span class="filler"></span>
 </sci-viewport>
 

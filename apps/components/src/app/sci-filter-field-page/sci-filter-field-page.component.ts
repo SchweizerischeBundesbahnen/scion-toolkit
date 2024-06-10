@@ -9,7 +9,6 @@
  */
 import {Component} from '@angular/core';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
-import {NgIf} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
@@ -22,7 +21,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   styleUrls: ['./sci-filter-field-page.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
     ReactiveFormsModule,
     SciFormFieldComponent,
     SciFilterFieldComponent,

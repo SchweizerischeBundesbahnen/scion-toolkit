@@ -14,7 +14,9 @@
       <div class="tab">
         <sci-form-field label="Type" direction="column">
           <select [formControl]="form.controls.type">
-            <option *ngFor="let type of types" [value]="type">{{type}}</option>
+            @for (type of types; track type) {
+              <option [value]="type">{{type}}</option>
+            }
           </select>
         </sci-form-field>
       </div>

@@ -13,7 +13,7 @@
     "before-push": "run-s build lint test:headless e2e:headless",
     "build": "run-s **:*:build",
     "start": "run-s components-app:serve",
-    "lint": "run-p **:*:lint",
+    "lint": "run-s **:*:lint",
     "test": "run-p **:*:test",
     "test:headless": "cross-env HEADLESS=true run-p **:*:test",
     "e2e": "run-s \"**:*:e2e:run -- {@}\" --",

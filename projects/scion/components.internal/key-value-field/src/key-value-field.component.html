@@ -1,23 +1,30 @@
 <header>
-  <h2 *ngIf="title">{{title}}</h2>
+  @if (title) {
+    <h2>{{title}}</h2>
+  }
   <!-- add button -->
-  <button *ngIf="addable" (click)="onAdd()" class="e2e-add" type="button" title="Add entry" sciMaterialIcon>add</button>
+  @if (addable) {
+    <button (click)="onAdd()" class="e2e-add" type="button" title="Add entry" sciMaterialIcon>add</button>
+  }
   <!-- remove button -->
-  <button *ngIf="removable" (click)="onClear()" class="e2e-clear" type="button" title="Clear all entries" sciMaterialIcon>clear</button>
+  @if (removable) {
+    <button (click)="onClear()" class="e2e-clear" type="button" title="Clear all entries" sciMaterialIcon>clear</button>
+  }
 </header>
 
-<ng-container *ngFor="let keyValueGroup of keyValueFormArray.controls; index as i;">
+@for (keyValueGroup of keyValueFormArray.controls; track keyValueGroup; let i = $index) {
   <!-- key -->
-  <ng-container *ngIf="keyValueGroup.controls.key.disabled; then key_readonly; else key_editable"></ng-container>
+  @if (keyValueGroup.controls.key.disabled) {
+    <!-- readonly -->
+    <label [for]="id + '_' + i">{{keyValueGroup.controls.key.value}}</label>
+  } @else {
+    <!-- editable -->
+    <input [formControl]="keyValueGroup.controls.key" class="e2e-key">
+  }
   <!-- value -->
   <input [formControl]="keyValueGroup.controls.value" [attr.id]="id + '_' + i" class="e2e-value">
   <!-- 'remove' button -->
-  <button *ngIf="removable" class="e2e-remove" type="button" (click)="onRemove(i)" title="remove entry" sciMaterialIcon>remove</button>
-
-  <ng-template #key_readonly>
-    <label [for]="id + '_' + i">{{keyValueGroup.controls.key.value}}</label>
-  </ng-template>
-  <ng-template #key_editable>
-    <input [formControl]="keyValueGroup.controls.key" class="e2e-key">
-  </ng-template>
-</ng-container>
+  @if (removable) {
+    <button class="e2e-remove" type="button" (click)="onRemove(i)" title="remove entry" sciMaterialIcon>remove</button>
+  }
+}

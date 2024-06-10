@@ -4,9 +4,9 @@
   <sci-viewport [scrollbarStyle]="form.controls.scrollbarPresentation.value"
                 [style.--sci-viewport-scrollbar-color]="form.controls.scrollbarColor.value"
                 class="demo">
-    <section *ngFor="let content of form.controls.content.value | appSplit:'\n+'">
-      {{content}}
-    </section>
+    @for (content of form.controls.content.value | appSplit:'\n+'; track content) {
+      <section>{{content}}</section>
+    }
   </sci-viewport>
 </main>
 
@@ -24,7 +24,9 @@
       <div class="tab">
         <sci-form-field label="Style" direction="column">
           <select [formControl]="form.controls.scrollbarPresentation">
-            <option *ngFor="let scrollbarStyle of scrollbarStyles" [value]="scrollbarStyle">{{scrollbarStyle}}</option>
+            @for (scrollbarStyle of scrollbarStyles; track scrollbarStyle) {
+              <option [value]="scrollbarStyle">{{scrollbarStyle}}</option>
+            }
           </select>
         </sci-form-field>
 

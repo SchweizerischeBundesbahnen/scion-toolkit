@@ -14,7 +14,7 @@ import {coerceElement} from '@angular/cdk/coercion';
 import {SciScrollableDirective} from './scrollable.directive';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
 import {ScrollingModule} from '@angular/cdk/scrolling';
-import {AsyncPipe, NgIf} from '@angular/common';
+import {AsyncPipe} from '@angular/common';
 
 /**
  * Represents a viewport with slotted content (`<ng-content>`) used as scrollable content. By default, content is added to a CSS grid layout.
@@ -90,7 +90,6 @@ import {AsyncPipe, NgIf} from '@angular/common';
   encapsulation: ViewEncapsulation.ShadowDom,
   standalone: true,
   imports: [
-    NgIf,
     AsyncPipe,
     ScrollingModule,
     SciScrollableDirective,
