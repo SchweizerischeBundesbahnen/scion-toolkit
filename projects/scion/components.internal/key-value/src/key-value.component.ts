@@ -49,7 +49,7 @@ export class SciKeyValueComponent {
     }
 
     return Object.entries(property).reduce((acc, [key, value]) => {
-      if (typeof value === 'object') {
+      if (typeof value === 'object' && value !== null) {
         return {...acc, ...this.flattenObject(value, [...path, key])};
       }
       else {
