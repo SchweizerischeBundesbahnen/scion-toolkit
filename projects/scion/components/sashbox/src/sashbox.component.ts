@@ -91,11 +91,19 @@ import {SciElementRefDirective} from './element-ref.directive';
 export class SciSashboxComponent implements OnDestroy {
 
   private _destroy$ = new Subject<void>();
+  private _host = inject(ElementRef<HTMLElement>).nativeElement;
+  private _zone = inject(NgZone);
 
   public sashes$ = new BehaviorSubject<SciSashDirective[]>([]);
 
   @HostBinding('class.sashing')
   public sashing = false;
+
+  @HostBinding('style.--ɵsci-sashbox-max-height')
+  public maxHeight: number | undefined;
+
+  @HostBinding('style.--ɵsci-sashbox-max-width')
+  public maxWidth: number | undefined;
 
   /**
    * Specifies if to lay out sashes in a row (which is by default) or column arrangement.
@@ -128,18 +136,20 @@ export class SciSashboxComponent implements OnDestroy {
       });
   }
 
-  constructor(private _host: ElementRef<HTMLElement>, private _zone: NgZone) {
-  }
-
   public onSashStart(): void {
     this.sashing = true;
+
+    // Avoid overflow when sashing.
+    const hostBounds = this._host.getBoundingClientRect();
+    this.maxHeight = hostBounds.height;
+    this.maxWidth = hostBounds.width;
     this.sashStart.emit();
 
     // set the effective sash size as the flex-basis for non-fixed sashes (as sashing operates on pixel deltas)
     this.sashes.forEach(sash => {
       if (!sash.isFixedSize) {
         sash.flexGrow = 0;
-        sash.flexShrink = 0;
+        sash.flexShrink = 1;
         sash.flexBasis = `${sash.computedSize}px`;
       }
     });
@@ -147,6 +157,8 @@ export class SciSashboxComponent implements OnDestroy {
 
   public onSashEnd(): void {
     this.sashing = false;
+    this.maxHeight = undefined;
+    this.maxWidth = undefined;
 
     // unset the flex-basis for non-fixed sashes and set the flex-grow accordingly
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes);
@@ -270,7 +282,7 @@ export class SciSashboxComponent implements OnDestroy {
       return value;
     }
     if (value.endsWith('%')) {
-      const hostBounds = this._host.nativeElement.getBoundingClientRect();
+      const hostBounds = this._host.getBoundingClientRect();
       const hostSize = (this.isRowDirection ? hostBounds.width : hostBounds.height);
       return parseInt(value, 10) * hostSize / 100;
     }
