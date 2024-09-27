@@ -67,6 +67,12 @@
     }
   }
 
+  &.sashing {
+    // Avoid overflow when sashing
+    max-height: calc(var(--ɵsci-sashbox-max-height) * 1px);
+    max-width: calc(var(--ɵsci-sashbox-max-width) * 1px);
+  }
+
   &.sashing > div.sash {
     pointer-events: none; // e.g. iframes would swallow pointer events
   }
