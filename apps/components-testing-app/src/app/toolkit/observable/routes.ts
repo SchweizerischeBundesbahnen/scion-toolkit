@@ -9,14 +9,8 @@
  */
 
 import {Routes} from '@angular/router';
+import {BoundingClientRectPageComponent} from './bounding-client-rect/bounding-client-rect-page.component';
 
-export const routes: Routes = [
-  {
-    path: 'components',
-    loadChildren: () => import('./components/routes'),
-  },
-  {
-    path: 'toolkit',
-    loadChildren: () => import('./toolkit/routes'),
-  },
-];
+export default [
+  {path: 'bounding-client-rect', component: BoundingClientRectPageComponent},
+] satisfies Routes;

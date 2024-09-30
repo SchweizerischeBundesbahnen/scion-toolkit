@@ -13,10 +13,11 @@ import {Component, ElementRef, HostBinding, Input, Renderer2, ViewChild} from '@
 import {By} from '@angular/platform-browser';
 import {Dictionary} from '@scion/toolkit/util';
 import {SciViewportComponent} from './viewport.component';
-import {Dimension, fromDimension$} from '@scion/toolkit/observable';
+import {fromResize$} from '@scion/toolkit/observable';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 import {asyncScheduler} from 'rxjs';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
+import {map} from 'rxjs/operators';
 
 describe('Viewport', () => {
 
@@ -924,8 +925,9 @@ describe('Viewport', () => {
     });
     await flushChanges(fixture);
 
-    const viewportClientSizeCaptor = new ObserveCaptor<Dimension>();
-    const fromDimensionSubscription = fromDimension$(component.viewport.viewportClientElement)
+    const viewportClientSizeCaptor = new ObserveCaptor<DOMRect>();
+    const fromDimensionSubscription = fromResize$(component.viewport.viewportClientElement)
+      .pipe(map(() => component.viewport.viewportClientElement.getBoundingClientRect()))
       .subscribe(viewportClientSizeCaptor);
 
     expect(getSize(fixture, 'sci-viewport')).toEqual(jasmine.objectContaining({height: 300}));
@@ -934,7 +936,7 @@ describe('Viewport', () => {
     expect(isScrollbarVisible(fixture, 'horizontal')).toBeFalse();
 
     await viewportClientSizeCaptor.waitUntilEmitCount(1);
-    expect(viewportClientSizeCaptor.getLastValue()).toEqual(jasmine.objectContaining({offsetHeight: 600}));
+    expect(viewportClientSizeCaptor.getLastValue()).toEqual(jasmine.objectContaining({height: 600}));
     expect(component.viewport.scrollHeight).toEqual(600);
 
     // unsubscribe to avoid `ResizeObserver loop limit exceeded` error

@@ -1,0 +1,20 @@
+<div class="testee e2e-testee" #testee></div>
+
+<aside>
+  <section class="e2e-properties">
+    <header>Properties:</header>
+    <span>x:</span><input [(ngModel)]="properties.x" class="e2e-x">
+    <span>y:</span><input [(ngModel)]="properties.y" class="e2e-y">
+    <span>width:</span><input [(ngModel)]="properties.width" class="e2e-width">
+    <span>height:</span><input [(ngModel)]="properties.height" class="e2e-height">
+    <button (click)="applyProperties()" class="apply e2e-apply">Apply</button>
+  </section>
+
+  <section class="e2e-testee-bounding-box">
+    <header>Testee Bounding Box:</header>
+    <span>x:</span><span class="e2e-x">{{testeeBoundingBox.x()}}</span>
+    <span>y:</span><span class="e2e-y">{{testeeBoundingBox.y()}}</span>
+    <span>width:</span><span class="e2e-width">{{testeeBoundingBox.width()}}</span>
+    <span>height:</span><span class="e2e-height">{{testeeBoundingBox.height()}}</span>
+  </section>
+</aside>

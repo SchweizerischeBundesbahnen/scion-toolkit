@@ -12,7 +12,7 @@ import {DOCUMENT} from '@angular/common';
 import {ChangeDetectionStrategy, Component, ElementRef, HostBinding, Inject, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import {fromEvent, merge, Observable, of, Subject, timer} from 'rxjs';
 import {debounceTime, first, map, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
-import {fromDimension$, fromMutation$} from '@scion/toolkit/observable';
+import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
 import {filterArray, subscribeInside} from '@scion/toolkit/operators';
 
 /**
@@ -298,7 +298,7 @@ export class SciScrollbarComponent implements OnDestroy {
    * Emits on subscription, and then each time the size of the viewport changes.
    */
   private viewportDimensionChange$(options: {debounceTime: number}): Observable<void> {
-    return fromDimension$(this._viewport)
+    return fromResize$(this._viewport)
       .pipe(
         // Debouncing is particularly important in the context of Angular animations, since they continuously
         // trigger resize events. Debouncing prevents the scrollbar from flickering, for example, when the user
@@ -315,7 +315,7 @@ export class SciScrollbarComponent implements OnDestroy {
     return this.children$(this._viewport)
       .pipe(
         switchMap(children => merge(...children.map(child => merge(
-          fromDimension$(child),
+          fromResize$(child),
           // Observe style mutations since some transformations change the scroll position without necessarily triggering a dimension change,
           // e.g., `scale` or `translate` used by some virtual scroll implementations
           fromMutation$(child, {subtree: false, childList: false, attributeFilter: ['style']})),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Swiss Federal Railways
+ * Copyright (c) 2018-2024 Swiss Federal Railways
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -11,312 +11,934 @@
 import {fromBoundingClientRect$} from './bounding-client-rect.observable';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 
+const destroyAfterEach = true;
+const disposables = new Array<() => void>();
+
 describe('fromBoundingClientRect$', () => {
 
-  // ** TESTS OPERATE ON THE FOLLOWING DOM **
-  //
-  // +----------+ +-------------------------------+ +-----------+
-  // | DIV#left | |           DIV#middle          | | DIV#right |
-  // |          | |                               | |           |
-  // |          | | +---------------------------+ | |           |
-  // |          | | |        DIV#middle_1       | | |           |
-  // |          | | +---------------------------+ | |           |
-  // |          | |                               | |           |
-  // |          | | +---------------------------+ | |           |
-  // |          | | |        DIV#middle_2       | | |           |
-  // |          | | |                           | | |           |
-  // |          | | | +-----------------------+ | | |           |
-  // |          | | | |      DIV#middle_3     | | | |           |
-  // |          | | | +-----------------------+ | | |           |
-  // |          | | |                           | | |           |
-  // |          | | |     +--------------+      | | |           |
-  // |          | | |     |  DIV#testee  |      | | |           |
-  // |          | | |     |              |      | | |           |
-  // |          | | |     |    100x30    |      | | |           |
-  // |          | | |     | horizontally |      | | |           |
-  // |          | | |     |   centered   |      | | |           |
-  // |          | | |     +--------------+      | | |           |
-  // |          | | +---------------------------+ | |           |
-  // +----------+ +-------------------------------+ +-----------+
-  beforeEach(() => setupTestLayout());
-  afterEach(() => $('div#root').remove());
+  it('should detect position change', async () => {
+    const testee = createDiv({
+      parent: document.body,
+      style: {position: 'absolute', top: '150px', left: '0', height: '100px', width: '100px', background: 'blue'},
+    });
 
-  it('should emit on layout change if affecting the observed element\'s position or size', async () => {
-    const clientRectCaptures = new ClientRects().capture();
-    const emitCaptor = new ObserveCaptor<Readonly<DOMRect>>();
+    let emissionCount = 0;
+    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    onDestroy(() => subscription.unsubscribe());
 
-    // TEST: Subscribe to fromBoundingClientRect$
-    fromBoundingClientRect$($('div#testee')).subscribe(emitCaptor);
+    const {x, y} = testee.getBoundingClientRect();
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
 
-    // expect the initial DOMRect to be emitted
-    await emitCaptor.waitUntilEmitCount(1);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining(clientRectCaptures.get('div#testee')));
+    // Move element to the right.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(1px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 1, y}));
 
-    // add 20px to the width of DIV#left; expect testee to be moved by 20px horizontally
-    addDelta('div#left', {width: 20});
-    await emitCaptor.waitUntilEmitCount(2);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top,
-      left: clientRectCaptures.get('div#testee').left + 20,
-      width: 100,
-      height: 30,
-    }));
+    await waitUntilIdle();
+    testee.style.transform = 'translate(2px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y}));
 
-    // add 20px to the width of DIV#middle; expect testee to be moved by 10px horizontally, as centered horizontally
-    clientRectCaptures.capture();
-    addDelta('div#middle', {minWidth: 20});
-    await emitCaptor.waitUntilEmitCount(3);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top,
-      left: clientRectCaptures.get('div#testee').left + 10,
-      width: 100,
-      height: 30,
-    }));
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y}));
 
-    // add 20px to the width of DIV#middle_1; expect testee to be moved by 10px horizontally, as centered horizontally
-    clientRectCaptures.capture();
-    addDelta('div#middle_1', {minWidth: 20});
-    await emitCaptor.waitUntilEmitCount(4);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top,
-      left: clientRectCaptures.get('div#testee').left + 10,
-      width: 100,
-      height: 30,
-    }));
+    // Move element to the bottom.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 1px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 1}));
 
-    // add 20px to the width of DIV#middle_2; expect testee to be moved by 10px horizontally, as centered horizontally
-    clientRectCaptures.capture();
-    addDelta('div#middle_2', {minWidth: 20});
-    await emitCaptor.waitUntilEmitCount(5);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top,
-      left: clientRectCaptures.get('div#testee').left + 10,
-      width: 100,
-      height: 30,
-    }));
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 2px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 2}));
 
-    // add 20px to the width of DIV#middle_3; expect testee to be moved by 10px horizontally, as centered horizontally
-    clientRectCaptures.capture();
-    addDelta('div#middle_3', {minWidth: 20});
-    await emitCaptor.waitUntilEmitCount(6);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top,
-      left: clientRectCaptures.get('div#testee').left + 10,
-      width: 100,
-      height: 30,
-    }));
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 3}));
 
-    // add 20px to the width of DIV#right; expect testee not to be moved
-    clientRectCaptures.capture();
-    addDelta('div#right', {width: 20});
-    await expectAsync(emitCaptor.waitUntilEmitCount(7, 250)).toBeRejected();
+    // Move element to the left.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(2px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y: y + 3}));
 
-    // add 20px to the height of DIV#left; expect testee not to be moved as vertically aligned on top
-    addDelta('div#left', {minHeight: 20});
-    await expectAsync(emitCaptor.waitUntilEmitCount(7, 250)).toBeRejected();
+    await waitUntilIdle();
+    testee.style.transform = 'translate(1px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 1, y: y + 3}));
 
-    // add 20px to the height of DIV#middle; expect testee not to be moved as vertically aligned on top
-    clientRectCaptures.capture();
-    addDelta('div#middle', {minHeight: 20});
-    await expectAsync(emitCaptor.waitUntilEmitCount(7, 250)).toBeRejected();
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 3}));
 
-    // add 20px to the height of DIV#middle_1; expect testee to be moved by 20px vertically
-    clientRectCaptures.capture();
-    addDelta('div#middle_1', {minHeight: 20});
-    await emitCaptor.waitUntilEmitCount(7);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top + 20,
-      left: clientRectCaptures.get('div#testee').left,
-      width: 100,
-      height: 30,
-    }));
+    // Move element to the top.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 2px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 2}));
 
-    // add 20px to the height of DIV#middle_2; expect testee not to be moved as vertically aligned on top
-    clientRectCaptures.capture();
-    addDelta('div#middle_2', {minHeight: 20});
-    await expectAsync(emitCaptor.waitUntilEmitCount(8, 250)).toBeRejected();
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 1px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 1}));
 
-    // add 20px to the height of DIV#middle_3; expect testee to be moved by 20px vertically
-    clientRectCaptures.capture();
-    addDelta('div#middle_3', {minHeight: 20});
-    await emitCaptor.waitUntilEmitCount(8);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top + 20,
-      left: clientRectCaptures.get('div#testee').left,
-      width: 100,
-      height: 30,
-    }));
-
-    // add 20px to the height of DIV#right; expect testee not to be moved
-    clientRectCaptures.capture();
-    addDelta('div#right', {minHeight: 20});
-    await expectAsync(emitCaptor.waitUntilEmitCount(9, 250)).toBeRejected();
-
-    // remove DIV#left; expect testee to be moved by minus the width of div#left (plus its margin of 5+5=10px)
-    clientRectCaptures.capture();
-
-    $('div#left').remove();
-    await emitCaptor.waitUntilEmitCount(9);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top,
-      left: clientRectCaptures.get('div#testee').left - clientRectCaptures.get('div#left').width - 5 - 5,
-      width: 100,
-      height: 30,
-    }));
-
-    // insert DIV#left again; expect testee to be moved by plus the width of div#left (plus its margin of 5+5=10px)
-    clientRectCaptures.capture();
-    $('div#root').insertBefore(createDiv({id: 'left', style: {'background': '#00AAFF', 'width': '400px', 'margin': '5px'}}), $('DIV#middle'));
-    await emitCaptor.waitUntilEmitCount(10);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top,
-      left: clientRectCaptures.get('div#testee').left + 400 + 5 + 5,
-      width: 100,
-      height: 30,
-    }));
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 0px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y}));
   });
 
-  it('should emit when resizing the observed element', async () => {
-    // Capture current element dimensions and positions
-    const clientRectCaptures = new ClientRects().capture();
-    // Init captor to capture Observable emissions
-    const emitCaptor = new ObserveCaptor<Readonly<DOMRect>>();
+  it('should detect position change (element has border)', async () => {
+    const testee = createDiv({
+      parent: document.body,
+      style: {position: 'absolute', top: '150px', left: '0', height: '100px', width: '100px', border: '1px solid red', background: 'blue'},
+    });
 
-    // TEST: Subscribe to fromBoundingClientRect$
-    fromBoundingClientRect$($('div#testee')).subscribe(emitCaptor);
+    let emissionCount = 0;
+    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    onDestroy(() => subscription.unsubscribe());
 
-    // expect the initial DOMRect to be emitted
-    await emitCaptor.waitUntilEmitCount(1);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining(clientRectCaptures.get('div#testee')));
+    const {x, y} = testee.getBoundingClientRect();
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
 
-    // shrink testee horizontally by 50px
-    addDelta('div#testee', {width: -50});
-    await emitCaptor.waitUntilEmitCount(2);
-    await expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({
-      top: clientRectCaptures.get('div#testee').top,
-      left: clientRectCaptures.get('div#testee').left + 25,
-      width: 50,
-      height: 30,
-    }));
+    // Move element to the right.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(1px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 1, y}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(2px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y}));
+
+    // Move element to the bottom.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 1px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 1}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 2px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 2}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 3}));
+
+    // Move element to the left.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(2px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y: y + 3}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(1px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 1, y: y + 3}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 3}));
+
+    // Move element to the top.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 2px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 2}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 1px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 1}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 0px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y}));
+  });
+
+  it('should detect position change when layout changes', async () => {
+    // Layout:
+    // +---------------+
+    // |     top       |
+    // +------+--------+
+    // | left | testee |
+    // +------+--------+
+    createDiv({
+      parent: document.body,
+      style: {position: 'absolute', top: '150px', left: '0', width: '500px', background: 'gray'},
+      children: [
+        createDiv({id: 'top', style: {height: '50px', background: 'red'}}),
+        createDiv({
+          style: {display: 'flex'},
+          children: [
+            createDiv({id: 'left', style: {flex: 'none', width: '50px', background: 'yellow'}}),
+            createDiv({id: 'testee', style: {flex: 'auto', height: '100px', background: 'blue'}}),
+          ],
+        }),
+      ],
+    });
+
+    let emissionCount = 0;
+    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const testee = queryElement('div#testee');
+    const top = queryElement('div#top');
+    const left = queryElement('div#left');
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    onDestroy(() => subscription.unsubscribe());
+
+    const {x, y} = testee.getBoundingClientRect();
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+    // Change height of 'div#top' from 50px to 75px.
+    await waitUntilIdle();
+    top.style.height = '75px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 25}));
+
+    // Change width of 'div#left' from 50px to 75px.
+    await waitUntilIdle();
+    left.style.width = '75px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 25, y: y + 25}));
+  });
+
+  it('should detect position change when viewport overflows horizontally', async () => {
+    const container = createDiv({
+      parent: document.body,
+      style: {position: 'absolute', top: '150px', left: '0', width: '500px', background: 'gray'},
+      children: [
+        createDiv({id: 'testee', style: {height: '50px', background: 'blue'}}),
+      ],
+    });
+
+    let emissionCount = 0;
+    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const testee = queryElement('div#testee');
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    onDestroy(() => subscription.unsubscribe());
+
+    const {x, y} = testee.getBoundingClientRect();
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+    // Expect no horizontal scrollbar.
+    expect(document.documentElement.scrollWidth).toEqual(document.documentElement.clientWidth);
+
+    // Simulate horizontal scrollbar.
+    container.style.width = '200vw';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+    // Expect horizontal scrollbar to display.
+    expect(document.documentElement.scrollWidth).toBeGreaterThan(document.documentElement.clientWidth);
+
+    // Move element to the right.
+    await waitUntilIdle();
+    testee.style.marginLeft = '25px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 25, y}));
+
+    // Move element to the bottom.
+    await waitUntilIdle();
+    testee.style.marginTop = '25px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 25, y: y + 25}));
+  });
+
+  it('should detect position change when viewport overflows vertically', async () => {
+    const container = createDiv({
+      parent: document.body,
+      style: {position: 'absolute', top: '150px', left: '0', width: '500px', background: 'gray'},
+      children: [
+        createDiv({id: 'testee', style: {height: '50px', background: 'blue'}}),
+      ],
+    });
+
+    let emissionCount = 0;
+    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const testee = queryElement('div#testee');
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    onDestroy(() => subscription.unsubscribe());
+
+    const {x, y} = testee.getBoundingClientRect();
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+    // Expect no vertical scrollbar.
+    expect(document.documentElement.scrollHeight).toEqual(document.documentElement.clientHeight);
+
+    // Simulate vertical scrollbar.
+    container.style.height = '200vh';
+
+    // Expect vertical scrollbar to display.
+    expect(document.documentElement.scrollHeight).toBeGreaterThan(document.documentElement.clientHeight);
+
+    // Move element to the right.
+    await waitUntilIdle();
+    testee.style.marginLeft = '25px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 25, y}));
+
+    // Move element to the bottom.
+    await waitUntilIdle();
+    testee.style.marginTop = '25px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 25, y: y + 25}));
+    await new Promise<void>(resolve => setTimeout(() => resolve()));
+  });
+
+  it('should emit when resizing the element', async () => {
+    const testee = createDiv({
+      parent: document.body,
+      style: {position: 'absolute', top: '150px', left: '0', height: '100px', width: '100px', background: 'blue'},
+    });
+
+    let emissionCount = 0;
+    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    onDestroy(() => subscription.unsubscribe());
+
+    const {x, y} = testee.getBoundingClientRect();
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y, width: 100, height: 100}));
+
+    await waitUntilIdle();
+    testee.style.width = '110px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y, width: 110, height: 100}));
+
+    await waitUntilIdle();
+    testee.style.width = '90px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y, width: 90, height: 100}));
+
+    await waitUntilIdle();
+    testee.style.width = '100px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y, width: 100, height: 100}));
+
+    await waitUntilIdle();
+    testee.style.height = '110px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y, width: 100, height: 110}));
+
+    await waitUntilIdle();
+    testee.style.height = '90px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y, width: 100, height: 90}));
+
+    await waitUntilIdle();
+    testee.style.height = '100px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y, width: 100, height: 100}));
+  });
+
+  it('should detect position change when scrolled the viewport', async () => {
+    createDiv({
+      id: 'container',
+      parent: document.body,
+      style: {position: 'absolute', top: '150px', left: '0'},
+      children: [
+        createDiv({id: 'filler', style: {height: '0', background: 'gray'}}),
+        createDiv({id: 'testee', style: {width: '100px', height: '100px', background: 'blue'}}),
+      ],
+    });
+
+    const testee = queryElement('div#testee');
+    const filler = queryElement('div#filler');
+
+    let emissionCount = 0;
+    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    onDestroy(() => subscription.unsubscribe());
+
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+
+    // Add vertical overflow.
+    await waitUntilIdle();
+    filler.style.height = '2000px';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+
+    // Capture bounding box.
+    const {x: x1, y: y1} = testee.getBoundingClientRect();
+
+    // Expect emission when moving element to the right.
+    await waitUntilIdle();
+    testee.style.transform = 'translateX(10px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x1 + 10, y: y1, width: 100, height: 100}));
+
+    // Expect emission when moving element to the right.
+    await waitUntilIdle();
+    testee.style.transform = 'translateX(20px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x1 + 20, y: y1, width: 100, height: 100}));
+
+    // Expect emission when moving element to the left.
+    await waitUntilIdle();
+    testee.style.transform = '';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x1, y: y1, width: 100, height: 100}));
+
+    // Expect emission when moving element to the top.
+    await waitUntilIdle();
+    testee.style.transform = 'translateY(-10px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x1, y: y1 - 10, width: 100, height: 100}));
+
+    // Expect emission when moving element to the top.
+    await waitUntilIdle();
+    testee.style.transform = 'translateY(-20px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x1, y: y1 - 20, width: 100, height: 100}));
+
+    // Expect emission when moving element to the bottom.
+    await waitUntilIdle();
+    testee.style.transform = '';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x1, y: y1, width: 100, height: 100}));
+
+    // Move viewport to the bottom.
+    await waitUntilIdle();
+    document.documentElement.scrollTop = 2500;
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+
+    // Capture bounding box.
+    const {x: x2, y: y2} = testee.getBoundingClientRect();
+
+    // Expect emission when moving element to the right.
+    await waitUntilIdle();
+    testee.style.transform = 'translateX(10px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x2 + 10, y: y2, width: 100, height: 100}));
+
+    // Expect emission when moving element to the right.
+    await waitUntilIdle();
+    testee.style.transform = 'translateX(20px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x2 + 20, y: y2, width: 100, height: 100}));
+
+    // Expect emission when moving element to the top.
+    await waitUntilIdle();
+    testee.style.transform = 'translateY(-10px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x2, y: y2 - 10, width: 100, height: 100}));
+
+    // Expect emission when moving element to the top.
+    await waitUntilIdle();
+    testee.style.transform = 'translateY(-20px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x2, y: y2 - 20, width: 100, height: 100}));
+  });
+
+  describe('Moving element out of the viewport', async () => {
+
+    it('should emit until moved the element out of the viewport (moving element to the right)', async () => {
+      createDiv({
+        id: 'container',
+        parent: document.body,
+        style: {position: 'absolute', top: '150px', left: '0', height: '100px', width: '100px', overflow: 'auto', background: 'gray'},
+        children: [
+          createDiv({id: 'testee', style: {position: 'absolute', top: '0', left: '0', height: '5px', width: '5px', background: 'blue'}}),
+        ],
+      });
+
+      let emissionCount = 0;
+      const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+      const testee = queryElement('div#testee');
+      const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+      onDestroy(() => subscription.unsubscribe());
+
+      const {x, y} = testee.getBoundingClientRect();
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '94px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 94, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '95px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 95, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '96px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 96, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '97px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 97, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '98px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 98, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '99px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 99, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '100px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 100, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '101px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 100, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '102px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 100, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '101px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 100, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '100px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 100, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '99px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 99, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '98px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 98, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '97px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 97, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '96px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 96, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '95px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 95, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '94px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 94, y}));
+    });
+
+    it('should emit until moved the element out of the viewport (moving element to the left)', async () => {
+      createDiv({
+        id: 'container',
+        parent: document.body,
+        style: {position: 'absolute', top: '150px', left: '0', height: '100px', width: '100px', overflow: 'auto', background: 'gray'},
+        children: [
+          createDiv({id: 'testee', style: {position: 'absolute', top: '0', left: '0', height: '5px', width: '5px', background: 'blue'}}),
+        ],
+      });
+
+      let emissionCount = 0;
+      const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+      const testee = queryElement('div#testee');
+      const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+      onDestroy(() => subscription.unsubscribe());
+
+      const {x, y} = testee.getBoundingClientRect();
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '2px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '1px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 1, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '0';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-1px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 1, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-2px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 2, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-3px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 3, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-4px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 4, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-5px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 5, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-6px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 5, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-7px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 5, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-6px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 5, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-5px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 5, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-4px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 4, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-3px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 3, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-2px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 2, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '-1px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x - 1, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '0px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '1px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 1, y}));
+
+      await waitUntilIdle();
+      testee.style.left = '2px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y}));
+    });
+
+    it('should emit until moved the element out of the viewport (moving element to the bottom)', async () => {
+      createDiv({
+        id: 'container',
+        parent: document.body,
+        style: {position: 'absolute', top: '150px', left: '0', height: '100px', width: '100px', overflow: 'auto', background: 'gray'},
+        children: [
+          createDiv({id: 'testee', style: {position: 'absolute', top: '0', left: '0', height: '5px', width: '5px', background: 'blue'}}),
+        ],
+      });
+
+      let emissionCount = 0;
+      const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+      const testee = queryElement('div#testee');
+      const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+      onDestroy(() => subscription.unsubscribe());
+
+      const {x, y} = testee.getBoundingClientRect();
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+      await waitUntilIdle();
+      testee.style.top = '94px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 94}));
+
+      await waitUntilIdle();
+      testee.style.top = '95px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 95}));
+
+      await waitUntilIdle();
+      testee.style.top = '96px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 96}));
+
+      await waitUntilIdle();
+      testee.style.top = '97px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 97}));
+
+      await waitUntilIdle();
+      testee.style.top = '98px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 98}));
+
+      await waitUntilIdle();
+      testee.style.top = '99px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 99}));
+
+      await waitUntilIdle();
+      testee.style.top = '100px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 100}));
+
+      await waitUntilIdle();
+      testee.style.top = '101px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 100}));
+
+      await waitUntilIdle();
+      testee.style.top = '102px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 100}));
+
+      await waitUntilIdle();
+      testee.style.top = '101px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 100}));
+
+      await waitUntilIdle();
+      testee.style.top = '100px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 100}));
+
+      await waitUntilIdle();
+      testee.style.top = '99px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 99}));
+
+      await waitUntilIdle();
+      testee.style.top = '98px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 98}));
+
+      await waitUntilIdle();
+      testee.style.top = '97px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 97}));
+
+      await waitUntilIdle();
+      testee.style.top = '96px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 96}));
+
+      await waitUntilIdle();
+      testee.style.top = '95px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 95}));
+
+      await waitUntilIdle();
+      testee.style.top = '94px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 94}));
+    });
+
+    it('should emit until moved the element out of the viewport (moving element to the top)', async () => {
+      createDiv({
+        id: 'container',
+        parent: document.body,
+        style: {position: 'absolute', top: '150px', left: '0', height: '100px', width: '100px', overflow: 'auto', background: 'gray'},
+        children: [
+          createDiv({id: 'testee', style: {position: 'absolute', top: '0', left: '0', height: '5px', width: '5px', background: 'blue'}}),
+        ],
+      });
+
+      let emissionCount = 0;
+      const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+      const testee = queryElement('div#testee');
+      const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+      onDestroy(() => subscription.unsubscribe());
+
+      const {x, y} = testee.getBoundingClientRect();
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+      await waitUntilIdle();
+      testee.style.top = '2px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 2}));
+
+      await waitUntilIdle();
+      testee.style.top = '1px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 1}));
+
+      await waitUntilIdle();
+      testee.style.top = '0';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+      await waitUntilIdle();
+      testee.style.top = '-1px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 1}));
+
+      await waitUntilIdle();
+      testee.style.top = '-2px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 2}));
+
+      await waitUntilIdle();
+      testee.style.top = '-3px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 3}));
+
+      await waitUntilIdle();
+      testee.style.top = '-4px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 4}));
+
+      await waitUntilIdle();
+      testee.style.top = '-5px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 5}));
+
+      await waitUntilIdle();
+      testee.style.top = '-6px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 5}));
+
+      await waitUntilIdle();
+      testee.style.top = '-7px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 5}));
+
+      await waitUntilIdle();
+      testee.style.top = '-6px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 5}));
+
+      await waitUntilIdle();
+      testee.style.top = '-5px'; // out of viewport
+      await expectAsync(emitCaptor.waitUntilEmitCount(emissionCount + 1, 250)).toBeRejected();
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 5}));
+
+      await waitUntilIdle();
+      testee.style.top = '-4px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 4}));
+
+      await waitUntilIdle();
+      testee.style.top = '-3px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 3}));
+
+      await waitUntilIdle();
+      testee.style.top = '-2px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 2}));
+
+      await waitUntilIdle();
+      testee.style.top = '-1px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y - 1}));
+
+      await waitUntilIdle();
+      testee.style.top = '0px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+      await waitUntilIdle();
+      testee.style.top = '1px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 1}));
+
+      await waitUntilIdle();
+      testee.style.top = '2px';
+      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 2}));
+    });
+  });
+
+  function onDestroy(callback: () => void): void {
+    disposables.push(callback);
+  }
+
+  function createDiv(options: ElementCreateOptions): HTMLElement {
+    const div = document.createElement('div');
+    destroyAfterEach && onDestroy(() => div.remove());
+    options.id && (div.id = options.id);
+    options.style && setStyle(div, options.style);
+    options.parent?.appendChild(div);
+    options.children?.forEach(child => div.appendChild(child));
+    return div;
+  }
+
+  afterEach(() => {
+    disposables.forEach(callback => callback());
+    disposables.length = 0;
   });
 });
 
-/**
- * +----------+ +-------------------------------+ +-----------+
- * | DIV#left | |           DIV#middle          | | DIV#right |
- * |          | |                               | |           |
- * |          | | +---------------------------+ | |           |
- * |          | | |        DIV#middle_1       | | |           |
- * |          | | +---------------------------+ | |           |
- * |          | |                               | |           |
- * |          | | +---------------------------+ | |           |
- * |          | | |        DIV#middle_2       | | |           |
- * |          | | |                           | | |           |
- * |          | | | +-----------------------+ | | |           |
- * |          | | | |      DIV#middle_3     | | | |           |
- * |          | | | +-----------------------+ | | |           |
- * |          | | |                           | | |           |
- * |          | | |     +--------------+      | | |           |
- * |          | | |     |  DIV#testee  |      | | |           |
- * |          | | |     |              |      | | |           |
- * |          | | |     |   centered   |      | | |           |
- * |          | | |     | horizontally |      | | |           |
- * |          | | |     +--------------+      | | |           |
- * |          | | +---------------------------+ | |           |
- * +----------+ +-------------------------------+ +-----------+
- */
-function setupTestLayout(): void {
-  createDiv({
-    id: 'root',
-    parent: document.body,
-    style: {'display': 'flex', 'background-color': 'gray', 'color': 'white', 'width': '1000px'},
-    children: [
-      createDiv({id: 'left', style: {'background': '#00AAFF', 'min-width': '200px'}}),
-      createDiv({
-        id: 'middle', style: {'background': '#571845', 'min-width': '200px'},
-        children: [
-          createDiv({id: 'middle_1', style: {'background': '#900C3E'}}),
-          createDiv({
-            id: 'middle_2', style: {'background': '#C70039', 'display': 'flex', 'flex-direction': 'column'}, children: [
-              createDiv({id: 'middle_3', style: {'background': '#FF5733'}}),
-              createDiv({id: 'testee', style: {'background': '#FFC300', 'align-self': 'center', 'height': '30px', 'width': '100px'}}),
-            ],
-          }),
-        ],
-      }),
-      createDiv({id: 'right', style: {'background': '#0618D6', 'min-width': '200px'}}),
-    ],
-  });
-}
-
-function $(selector: string): HTMLElement {
-  return document.querySelector(selector) as HTMLElement;
-}
-
-function addDelta(selector: string, delta: {minWidth?: number; minHeight?: number; width?: number; height?: number}): void {
-  const element = $(selector);
-  delta.width && setStyle(element, {'width': `${element.getBoundingClientRect().width + delta.width}px`});
-  delta.height && setStyle(element, {'height': `${element.getBoundingClientRect().height + delta.height}px`});
-  delta.minWidth && setStyle(element, {'min-width': `${element.getBoundingClientRect().width + delta.minWidth}px`});
-  delta.minHeight && setStyle(element, {'min-height': `${element.getBoundingClientRect().height + delta.minHeight}px`});
-}
-
-function createDiv(options: ElementCreateOptions): HTMLElement {
-  const div = document.createElement('div');
-  if (options.id !== 'root') {
-    div.innerText = options.id;
-  }
-  setStyle(div, {
-    'margin': '5px',
-    'padding': '5px',
-    'box-sizing': 'border-box',
-    'text-align': 'center',
-    'font-family': 'sans-serif',
-  });
-  div.id = options.id;
-  options.style && setStyle(div, options.style);
-  options.parent?.appendChild(div);
-  options.children?.forEach(child => div.appendChild(child));
-  return div;
-}
-
 interface ElementCreateOptions {
-  id: string;
+  id?: string;
   parent?: Node;
   style?: {[style: string]: any};
   children?: Node[];
 }
 
-function setStyle(element: HTMLElement, style: {[style: string]: any | null}): void {
-  Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
+/**
+ * Waits for the browser to become idle to have "realistic" Intersection Observer behavior.
+ *
+ * Without throttling, the Intersection Observer may emit events even if the element is outside the viewport, a behavior only observed in unit tests.
+ */
+async function waitUntilIdle(): Promise<void> {
+  await new Promise<void>(resolve => requestIdleCallback(() => resolve()));
 }
 
-type RectId = 'div#left' | 'div#middle' | 'div#right' | 'div#middle_1' | 'div#middle_2' | 'div#middle_3' | 'div#testee';
+function queryElement(selector: string): HTMLElement {
+  return document.querySelector(selector) as HTMLElement;
+}
 
-class ClientRects {
-
-  public rects = new Map<RectId, DOMRect>();
-
-  /**
-   * Captures current bounding boxes.
-   */
-  public capture(): ClientRects {
-    this.rects.clear();
-    this.rects
-      .set('div#left', $('div#left')?.getBoundingClientRect())
-      .set('div#middle', $('div#middle')?.getBoundingClientRect())
-      .set('div#right', $('div#right')?.getBoundingClientRect())
-      .set('div#middle_1', $('div#middle_1')?.getBoundingClientRect())
-      .set('div#middle_2', $('div#middle_2')?.getBoundingClientRect())
-      .set('div#middle_3', $('div#middle_3')?.getBoundingClientRect())
-      .set('div#testee', $('div#testee')?.getBoundingClientRect());
-    return this;
-  }
-
-  /**
-   * Returns the last captured bounding box for the element.
-   */
-  public get(selector: RectId): Readonly<DOMRect> {
-    return this.rects.get(selector)!;
-  }
+function setStyle(element: HTMLElement, style: {[style: string]: any | null}): void {
+  Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
 }

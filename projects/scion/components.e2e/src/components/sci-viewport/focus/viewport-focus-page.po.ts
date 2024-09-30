@@ -9,9 +9,9 @@
  */
 
 import {Locator, Page} from '@playwright/test';
-import {isActiveElement} from '../../helper/testing.utils';
+import {isActiveElement} from '../../../helper/testing.utils';
 
-const PATH = '/#/sci-viewport/focus';
+const PATH = '/#/components/sci-viewport/focus';
 
 export class ViewportFocusPagePO {
 

@@ -1,0 +1,30 @@
+:host {
+  > div.testee {
+    position: absolute;
+    background-color: blue;
+  }
+
+  > aside {
+    position: fixed;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    padding: 1em;
+
+    > section {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: .25em 1em;
+
+      > header {
+        font-weight: bold;
+      }
+
+      > header, > button.apply {
+        grid-column: 1/-1;
+      }
+    }
+  }
+}
