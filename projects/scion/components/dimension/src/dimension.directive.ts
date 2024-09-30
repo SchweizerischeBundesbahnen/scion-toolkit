@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Swiss Federal Railways
+ * Copyright (c) 2018-2024 Swiss Federal Railways
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -8,82 +8,71 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output} from '@angular/core';
-import {Subject} from 'rxjs';
-import {takeUntil} from 'rxjs/operators';
-import {captureElementDimension, Dimension, fromDimension$} from '@scion/toolkit/observable';
+import {Directive, ElementRef, inject, input, NgZone, output} from '@angular/core';
+import {fromResize$} from '@scion/toolkit/observable';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {observeInside, subscribeInside} from '@scion/toolkit/operators';
+import {animationFrameScheduler, observeOn, subscribeOn} from 'rxjs';
 
 /**
- * Allows observing changes to host element's size.
+ * Observes changes to the size of the host element.
  *
- * See {@link fromDimension$} Observable for more information.
+ * Upon subscription, emits the current size, and then continuously when the size changes. The Observable never completes.
  *
  * ---
  * Usage:
  *
+ * ```html
  * <div sciDimension (sciDimensionChange)="onDimensionChange($event)"></div>
+ * ```
  */
 @Directive({
   selector: '[sciDimension]',
-  exportAs: 'sciDimension',
   standalone: true,
 })
-export class SciDimensionDirective implements OnInit, OnDestroy {
-
-  private readonly _host: HTMLElement;
-  private _destroy$ = new Subject<void>();
+export class SciDimensionDirective {
 
   /**
-   * Upon subscription, it emits the host element's dimension, and then continuously emits when the dimension of the host element changes.
+   * Controls if to emit outside the Angular zone. Defaults to `false`.
    */
-  @Output('sciDimensionChange') // eslint-disable-line @angular-eslint/no-output-rename
-  public dimensionChange = new EventEmitter<SciDimension>();
+  public emitOutsideAngular = input(false);
 
   /**
-   * Controls if to emit a dimension change inside or outside of the Angular zone.
-   * If emitted outside of the Angular zone no change detection cycle is triggered.
-   *
-   * By default, if not specified, emits inside the Angular zone.
+   * Upon subscription, emits the current size, and then continuously when the size changes. The Observable never completes.
    */
-  @Input()
-  public emitOutsideAngular = false;
+  public dimensionChange = output<SciDimension>({alias: 'sciDimensionChange'});
 
-  constructor(host: ElementRef<HTMLElement>, private _ngZone: NgZone) {
-    this._host = host.nativeElement;
-  }
+  constructor() {
+    const host = inject(ElementRef<HTMLElement>).nativeElement;
+    const zone = inject(NgZone);
 
-  public ngOnInit(): void {
-    this.installDimensionListener();
-  }
-
-  private installDimensionListener(): void {
-    this._ngZone.runOutsideAngular(() => {
-      fromDimension$(this._host)
-        .pipe(takeUntil(this._destroy$))
-        .subscribe((dimension: SciDimension) => {
-          if (this.emitOutsideAngular) {
-            this.dimensionChange.emit(dimension);
-          }
-          else {
-            this._ngZone.run(() => this.dimensionChange.emit(dimension));
-          }
+    fromResize$(host)
+      .pipe(
+        subscribeInside(continueFn => zone.runOutsideAngular(continueFn)),
+        observeInside(continueFn => this.emitOutsideAngular() ? continueFn() : zone.run(continueFn)),
+        subscribeOn(animationFrameScheduler), // to not block resize callback (ResizeObserver loop completed with undelivered notifications)
+        observeOn(animationFrameScheduler), // to not block resize callback (ResizeObserver loop completed with undelivered notifications)
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => {
+        this.dimensionChange.emit({
+          clientWidth: host.clientWidth,
+          offsetWidth: host.offsetWidth,
+          clientHeight: host.clientHeight,
+          offsetHeight: host.offsetHeight,
+          element: host,
         });
-    });
-  }
-
-  /**
-   * Returns the current dimension of its host element.
-   */
-  public get dimension(): SciDimension {
-    return captureElementDimension(this._host);
-  }
-
-  public ngOnDestroy(): void {
-    this._destroy$.next();
+      });
   }
 }
 
 /**
  * Represents the dimension of an element.
  */
-export type SciDimension = Dimension;
+export interface SciDimension {
+  offsetWidth: number;
+  offsetHeight: number;
+  clientWidth: number;
+  clientHeight: number;
+  element: HTMLElement;
+}

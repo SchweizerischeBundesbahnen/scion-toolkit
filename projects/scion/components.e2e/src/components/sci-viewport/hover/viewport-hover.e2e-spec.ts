@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {test} from '../../fixtures';
+import {test} from '../../../fixtures';
 import {expect} from '@playwright/test';
 import {ViewportHoverPagePO} from './viewport-hover-page.po';
 

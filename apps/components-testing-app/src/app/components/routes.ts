@@ -10,13 +10,9 @@
 
 import {Routes} from '@angular/router';
 
-export const routes: Routes = [
+export default [
   {
-    path: 'components',
-    loadChildren: () => import('./components/routes'),
+    path: 'sci-viewport',
+    loadChildren: () => import('./sci-viewport/routes'),
   },
-  {
-    path: 'toolkit',
-    loadChildren: () => import('./toolkit/routes'),
-  },
-];
+] satisfies Routes;

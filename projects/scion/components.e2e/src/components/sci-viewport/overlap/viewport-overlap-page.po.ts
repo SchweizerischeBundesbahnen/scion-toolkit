@@ -10,7 +10,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
-const PATH = '/#/sci-viewport/overlap';
+const PATH = '/#/components/sci-viewport/overlap';
 
 export class ViewportOverlapPagePO {
 

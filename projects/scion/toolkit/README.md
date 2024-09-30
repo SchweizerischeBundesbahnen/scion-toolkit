@@ -8,7 +8,7 @@ This library is written in plain TypeScript and has no dependency on any other l
 ***
 
 - [**Observable**][link-tool-observable]\
-  Provides RxJS Observables for observing the size or DOM mutations of an HTML element.
+  Provides RxJS observables to observe various aspects of an HTML element, such as size, position, and mutations.
 
 - [**Operators**][link-tool-operators]\
   Provides a set of useful RxJS operators.

@@ -10,7 +10,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
-const PATH = '/#/sci-viewport/hover';
+const PATH = '/#/components/sci-viewport/hover';
 
 export class ViewportHoverPagePO {
 

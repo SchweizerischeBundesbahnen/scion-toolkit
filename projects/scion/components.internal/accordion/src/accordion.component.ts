@@ -12,11 +12,11 @@ import {ChangeDetectorRef, Component, ContentChildren, ElementRef, HostBinding, 
 import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciAccordionItemDirective} from './accordion-item.directive';
 import {CdkAccordion, CdkAccordionItem, CdkAccordionModule} from '@angular/cdk/accordion';
-import {fromDimension$} from '@scion/toolkit/observable';
 import {debounceTime, takeUntil} from 'rxjs/operators';
 import {combineLatest, Subject} from 'rxjs';
 import {NgClass, NgTemplateOutlet} from '@angular/common';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
+import {fromResize$} from '@scion/toolkit/observable';
 
 /**
  * Component that shows items in an accordion.
@@ -119,15 +119,15 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
    */
   private computeFilledStateOnDimensionChange(): void {
     combineLatest([
-      fromDimension$(this._host.nativeElement),
-      fromDimension$(this._cdkAccordion.nativeElement),
+      fromResize$(this._host.nativeElement),
+      fromResize$(this._cdkAccordion.nativeElement),
     ])
       .pipe(
         debounceTime(5), // debounce dimension changes because the animation for expanding/collapsing a panel continuously emits resize events.
         takeUntil(this._destroy$),
       )
-      .subscribe(([hostDimension, accordionDimension]) => {
-        this.filled = hostDimension.clientHeight <= accordionDimension.offsetHeight;
+      .subscribe(() => {
+        this.filled = this._host.nativeElement.clientHeight <= this._cdkAccordion.nativeElement.offsetHeight;
         this._cdRef.detectChanges();
       });
   }

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {test} from '../../fixtures';
+import {test} from '../../../fixtures';
 import {expect} from '@playwright/test';
 import {ViewportOverlapPagePO} from './viewport-overlap-page.po';
 

@@ -18,6 +18,8 @@ import {Observable, Observer, TeardownLogic} from 'rxjs';
  *
  * @param  target - HTMLElement to observe its dimension.
  * @return Observable that emits dimension changes of the passed element.
+ *
+ * @deprecated since version 1.4.2; use `fromResize$` instead; API will be removed in version 2.0.
  */
 export function fromDimension$(target: HTMLElement): Observable<Dimension> {
   return new Observable((observer: Observer<Dimension>): TeardownLogic => {
@@ -32,6 +34,8 @@ export function fromDimension$(target: HTMLElement): Observable<Dimension> {
 
 /**
  * Captures the dimension of the given element.
+ *
+ * @deprecated since version 1.4.2; use {@link HTMLElement.getBoundingClientRect} instead; API will be removed in version 2.0.
  */
 export function captureElementDimension(element: HTMLElement): Dimension {
   return {
