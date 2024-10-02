@@ -9,14 +9,8 @@
  */
 
 import {Routes} from '@angular/router';
+import SciSashboxPageComponent from './sci-sashbox-page/sci-sashbox-page.component';
 
 export default [
-  {
-    path: 'sci-viewport',
-    loadChildren: () => import('./sci-viewport/routes'),
-  },
-  {
-    path: 'sci-sashbox',
-    loadChildren: () => import('./sci-sashbox/routes'),
-  },
+  {path: '', component: SciSashboxPageComponent},
 ] satisfies Routes;

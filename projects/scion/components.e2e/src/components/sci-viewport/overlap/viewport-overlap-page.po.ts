@@ -17,7 +17,7 @@ export class ViewportOverlapPagePO {
   private readonly _locator: Locator;
 
   constructor(private _page: Page) {
-    this._locator = _page.locator('e2e-viewport-overlap-page');
+    this._locator = _page.locator('app-viewport-overlap-page');
   }
 
   public async navigate(): Promise<void> {

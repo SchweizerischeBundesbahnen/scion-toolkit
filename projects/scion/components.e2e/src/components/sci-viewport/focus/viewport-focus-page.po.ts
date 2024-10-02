@@ -18,7 +18,7 @@ export class ViewportFocusPagePO {
   private readonly _locator: Locator;
 
   constructor(private _page: Page) {
-    this._locator = _page.locator('e2e-viewport-focus-page');
+    this._locator = _page.locator('app-viewport-focus-page');
   }
 
   public async navigate(): Promise<void> {

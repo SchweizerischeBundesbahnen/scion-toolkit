@@ -1,0 +1,35 @@
+<sci-sashbox [direction]="directionFormControl.value">
+  @for (sash of sashes; track sash; let i = $index) {
+    <ng-template sciSash [size]="sash.size" [minSize]="sash.minSize">
+      <section class="sash e2e-sash-{{i + 1}}">Sash {{i + 1}}</section>
+    </ng-template>
+  }
+</sci-sashbox>
+
+<aside class="e2e-properties">
+  <sci-tabbar>
+    <ng-template sciTab label="Settings" [cssClass]="'e2e-settings'">
+      <div class="tab e2e-tab">
+        <sci-form-field label="Direction">
+          <select [formControl]="directionFormControl" class="e2e-direction">
+            <option value="column">column</option>
+            <option value="row">row</option>
+          </select>
+        </sci-form-field>
+      </div>
+    </ng-template>
+
+    @for (sash of sashes; track sash; let i = $index) {
+      <ng-template sciTab [label]="'Sash ' + (i + 1)" [cssClass]="'e2e-sash-' + (i + 1)">
+        <div class="tab e2e-tab">
+          <sci-form-field label="Size">
+            <input [(ngModel)]="sash.size" placeholder="Value in any CSS unit or unitless as a ratio" class="e2e-size">
+          </sci-form-field>
+          <sci-form-field label="Min size">
+            <input [(ngModel)]="sash.minSize" placeholder="Value in pixel or percent" class="e2e-min-size">
+          </sci-form-field>
+        </div>
+      </ng-template>
+    }
+  </sci-tabbar>
+</aside>

@@ -205,32 +205,17 @@ export class SciSashboxComponent implements OnDestroy {
 
     const sashSize1 = sash1.computedSize;
     const sashSize2 = sash2.computedSize;
-    const maxSashSize = sashSize1 + sashSize2;
-    const computedNewSashSize1 = Math.round(sashSize1 + distance);
-    const computedNewSashSize2 = Math.round(sashSize2 - distance);
 
-    if (sash1.minSize !== undefined && distance < 0 && computedNewSashSize1 < this.toPixel(sash1.minSize)) {
-      return;
-    }
-    if (sash2.minSize !== undefined && distance > 0 && computedNewSashSize2 < this.toPixel(sash2.minSize)) {
-      return;
-    }
+    const sashMinSize1 = sash1.minSize ? this.toPixel(sash1.minSize) : 0;
+    const sashMinSize2 = sash2.minSize ? this.toPixel(sash2.minSize) : 0;
 
-    const validNewSashSize1 = between(computedNewSashSize1, {min: 0, max: maxSashSize});
-    const validNewSashSize2 = between(computedNewSashSize2, {min: 0, max: maxSashSize});
-
-    // continue only if both sashes adjacent to the splitter change their size (as the event would change other sashes otherwise)
-    if (validNewSashSize1 !== computedNewSashSize1) {
-      return;
-    }
-    if (validNewSashSize2 !== computedNewSashSize2) {
-      return;
-    }
+    const newSashSize1 = between(Math.round(sashSize1 + distance), {min: sashMinSize1, max: sashSize1 + sashSize2 - sashMinSize2});
+    const newSashSize2 = between(Math.round(sashSize2 - distance), {min: sashMinSize2, max: sashSize1 + sashSize2 - sashMinSize1});
 
     // set the new computed sash sizes
     this._zone.run(() => {
-      sash1.flexBasis = `${computedNewSashSize1}px`;
-      sash2.flexBasis = `${computedNewSashSize2}px`;
+      sash1.flexBasis = `${newSashSize1}px`;
+      sash2.flexBasis = `${newSashSize2}px`;
     });
   }
 

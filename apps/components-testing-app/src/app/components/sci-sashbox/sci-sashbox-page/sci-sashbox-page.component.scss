@@ -1,0 +1,29 @@
+:host {
+  display: flex;
+  gap: 1em;
+
+  > sci-sashbox {
+    flex: auto;
+
+    section.sash {
+      text-wrap: nowrap;
+      background-color: cornflowerblue;
+    }
+  }
+
+  > aside {
+    flex: none;
+    display: grid;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+    padding: 1em;
+
+    > sci-tabbar div.tab {
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+      padding: .25em;
+    }
+  }
+}

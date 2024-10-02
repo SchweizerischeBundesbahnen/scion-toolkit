@@ -14,7 +14,7 @@ import {fromBoundingClientRect$} from '@scion/toolkit/observable';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'e2e-bounding-client-rect-page',
+  selector: 'app-bounding-client-rect-page',
   templateUrl: './bounding-client-rect-page.component.html',
   styleUrl: './bounding-client-rect-page.component.scss',
   standalone: true,

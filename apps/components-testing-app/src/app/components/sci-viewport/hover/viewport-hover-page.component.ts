@@ -12,7 +12,7 @@ import {Component} from '@angular/core';
 import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
-  selector: 'e2e-viewport-hover-page',
+  selector: 'app-viewport-hover-page',
   templateUrl: './viewport-hover-page.component.html',
   styleUrls: ['./viewport-hover-page.component.scss'],
   standalone: true,
