@@ -19,7 +19,7 @@ export class ViewportHoverPagePO {
   private readonly _horizontalViewportLocator: Locator;
 
   constructor(private _page: Page) {
-    this._locator = _page.locator('e2e-viewport-hover-page');
+    this._locator = _page.locator('app-viewport-hover-page');
     this._verticalViewportLocator = this._locator.locator('> sci-viewport.e2e-vertical-viewport');
     this._horizontalViewportLocator = this._locator.locator('> sci-viewport.e2e-horizontal-viewport');
   }

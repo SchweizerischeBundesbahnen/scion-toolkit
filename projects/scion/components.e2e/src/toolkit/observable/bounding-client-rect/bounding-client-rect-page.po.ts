@@ -24,7 +24,7 @@ export class BoundingClientRectPagePO {
   };
 
   constructor(private _page: Page) {
-    this._locator = _page.locator('e2e-bounding-client-rect-page');
+    this._locator = _page.locator('app-bounding-client-rect-page');
     this.testeeBoundingBox = {
       x: this._locator.locator('section.e2e-testee-bounding-box span.e2e-x'),
       y: this._locator.locator('section.e2e-testee-bounding-box span.e2e-y'),

@@ -17,8 +17,7 @@
           {
             "type": "attribute",
             "prefix": [
-              "app",
-              "e2e"
+              "app"
             ],
             "style": "camelCase"
           }
@@ -28,8 +27,7 @@
           {
             "type": "element",
             "prefix": [
-              "app",
-              "e2e"
+              "app"
             ],
             "style": "kebab-case"
           }
