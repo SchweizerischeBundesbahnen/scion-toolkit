@@ -1,6 +1,6 @@
 {
   "name": "@scion/components.internal",
-  "version": "18.0.0",
+  "version": "18.0.1",
   "description": "Provides a collection of Angular components designed exclusively for use in SCION library projects. Note that this module is private to SCION and not public API. DO NOT USE THIS MODULE IN YOUR PROJECT AS IT IS NOT GUARANTEED TO BE STABLE AND MAY CHANGE WITHOUT NOTICE.",
   "license": "EPL-2.0",
   "private": false,
@@ -26,8 +26,8 @@
     "@angular/common": "^18.0.0",
     "@angular/core": "^18.0.0",
     "@angular/cdk": "^18.0.0",
-    "@scion/components": "^18.0.0",
-    "@scion/toolkit": "^1.0.0",
+    "@scion/components": "^18.0.1",
+    "@scion/toolkit": "^1.5.0",
     "rxjs": "^7.8.0"
   },
   "repository": {
