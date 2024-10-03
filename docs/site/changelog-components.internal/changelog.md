@@ -5,6 +5,15 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+## [18.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-18.0.0...ɵcomponents-18.0.1) (2024-10-03)
+
+
+### Bug Fixes
+
+* **ɵcomponents/keyvalue:** support `null` properties ([7949ae5](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7949ae5598858f07076788d21c1ac8c1e48f57b5))
+
+
+
 # [18.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-17.0.0...ɵcomponents-18.0.0) (2024-05-31)
 
 
