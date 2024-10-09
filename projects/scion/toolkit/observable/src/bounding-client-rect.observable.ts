@@ -213,10 +213,16 @@ function ensureElementPositioned(element: HTMLElement): void {
     return;
   }
 
-  // Position the HTML root using a constructable stylesheet to not clutter its element styles.
+  // Declare styles for the document root element (`<html>`) in a CSS layer.
+  // CSS layers have lower priority than "normal" CSS declarations, and the layer name indicates the styling originates from `@scion/toolkit`.
   if (element === document.documentElement) {
     const styleSheet = new CSSStyleSheet({});
-    styleSheet.insertRule(`html { position: relative; }`);
+    styleSheet.insertRule(`
+    @layer sci-toolkit {
+      :root {
+        position: relative;
+      }
+    }`);
     document.adoptedStyleSheets.push(styleSheet);
     console?.warn?.('[@scion/toolkit] fromBoundingClientRect$ requires the document root element (<html>) to be positioned relative or absolute. Changing positioning to relative.');
   }
