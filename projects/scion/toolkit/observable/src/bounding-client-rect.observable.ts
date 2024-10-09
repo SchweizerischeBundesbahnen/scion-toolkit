@@ -20,8 +20,9 @@ import {fromResize$} from './resize.observable';
  *
  * Upon subscription, emits the current bounding box, and then continuously when the bounding box changes. The Observable never completes.
  *
- * The target element and the document root (`<html>`) must be positioned (`relative`, `absolute`, or `fixed`). If not, positioning is changed to `relative`.
- *
+ * The element and the document root (`<html>`) must be positioned `relative` or `absolute`.
+ * If not, a warning is logged, and positioning changed to `relative`.
+
  * Note:
  * As of 2024, there is no native browser API to observe the position of an element. This implementation uses {@link IntersectionObserver} and
  * {@link ResizeObserver} to detect position changes. For tracking only size changes, use {@link fromResize$} instead.
@@ -217,6 +218,7 @@ function ensureElementPositioned(element: HTMLElement): void {
     const styleSheet = new CSSStyleSheet({});
     styleSheet.insertRule(`html { position: relative; }`);
     document.adoptedStyleSheets.push(styleSheet);
+    console?.warn?.('[@scion/toolkit] fromBoundingClientRect$ requires the document root element (<html>) to be positioned relative or absolute. Changing positioning to relative.');
   }
   else {
     setStyle(element, {position: 'relative'});
