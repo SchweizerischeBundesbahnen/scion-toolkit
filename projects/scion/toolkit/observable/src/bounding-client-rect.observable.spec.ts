@@ -10,6 +10,7 @@
 
 import {fromBoundingClientRect$} from './bounding-client-rect.observable';
 import {ObserveCaptor} from '@scion/toolkit/testing';
+import {Arrays} from '@scion/toolkit/util';
 
 const destroyAfterEach = true;
 const disposables = new Array<() => void>();
@@ -450,6 +451,52 @@ describe('fromBoundingClientRect$', () => {
     testee.style.transform = 'translateY(-20px)';
     await emitCaptor.waitUntilEmitCount(++emissionCount);
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x2, y: y2 - 20, width: 100, height: 100}));
+  });
+
+  it('should position document root element (html)', async () => {
+    // Precondition: Ensure document root not to be positioned so its position will be changed to 'relative'.
+    document.documentElement.style.setProperty('position', 'static');
+
+    const subscription = fromBoundingClientRect$(document.body).subscribe();
+    onDestroy(() => subscription.unsubscribe());
+
+    // Remove style from precondition.
+    document.documentElement.style.removeProperty('position');
+
+    // Expect document root to be positioned.
+    expect(getComputedStyle(document.documentElement)).toEqual(jasmine.objectContaining({
+      position: 'relative',
+    }));
+  });
+
+  it('should allow overriding positioning of document root element (html)', async () => {
+    // Precondition: Ensure document root not to be positioned so its position will be changed to 'relative'.
+    document.documentElement.style.setProperty('position', 'static');
+
+    const subscription = fromBoundingClientRect$(document.body).subscribe();
+    onDestroy(() => subscription.unsubscribe());
+
+    // Remove style from precondition.
+    document.documentElement.style.removeProperty('position');
+
+    // Expect document root to be positioned.
+    expect(getComputedStyle(document.documentElement)).toEqual(jasmine.objectContaining({
+      position: 'relative',
+    }));
+
+    // Override positioning of root element.
+    const styleSheet = new CSSStyleSheet();
+    styleSheet.insertRule(`
+    html {
+      position: absolute;
+    }`);
+    document.adoptedStyleSheets.push(styleSheet);
+    onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
+
+    // Expect overrides to be applied.
+    expect(getComputedStyle(document.documentElement)).toEqual(jasmine.objectContaining({
+      position: 'absolute',
+    }));
   });
 
   describe('Moving element out of the viewport', async () => {

@@ -85,7 +85,7 @@ fromBoundingClientRect$(element).subscribe((clientRect: DOMRect) => {
 ```
 
 ***
-The target element and the document root (`<html>`) must be positioned (`relative`, `absolute`, or `fixed`). If not, positioning is changed to `relative`.
+The target element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, a warning is logged and positioning is changed to `relative`.
 ***
  
 *Note:*
