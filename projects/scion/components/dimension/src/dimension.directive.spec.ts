@@ -10,7 +10,8 @@
 
 import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {Component, ElementRef, NgZone, viewChild} from '@angular/core';
-import {SciDimension, SciDimensionDirective} from './dimension.directive';
+import {SciDimensionDirective} from './dimension.directive';
+import {SciDimension} from './dimension';
 import {Subject} from 'rxjs';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 
@@ -47,11 +48,6 @@ describe('Dimension Directive', () => {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
       public emissions$ = new Subject<SciDimension & {insideAngular: boolean}>();
 
-      public setSize(size: {width: number; height: number}): void {
-        this.testee().nativeElement.style.width = `${size.width}px`;
-        this.testee().nativeElement.style.height = `${size.height}px`;
-      }
-
       protected onDimensionChange(dimension: SciDimension): void {
         this.emissions$.next({...dimension, insideAngular: NgZone.isInAngularZone()});
       }
@@ -73,7 +69,7 @@ describe('Dimension Directive', () => {
     });
 
     // Change size.
-    fixture.componentInstance.setSize({width: 200, height: 100});
+    setSize(fixture.componentInstance.testee(), {width: 200, height: 100});
 
     // Expect emission because size has changed.
     await captor.waitUntilEmitCount(2);
@@ -118,11 +114,6 @@ describe('Dimension Directive', () => {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
       public emissions$ = new Subject<SciDimension & {insideAngular: boolean}>();
 
-      public setSize(size: {width: number; height: number}): void {
-        this.testee().nativeElement.style.width = `${size.width}px`;
-        this.testee().nativeElement.style.height = `${size.height}px`;
-      }
-
       protected onDimensionChange(dimension: SciDimension): void {
         this.emissions$.next({...dimension, insideAngular: NgZone.isInAngularZone()});
       }
@@ -144,7 +135,7 @@ describe('Dimension Directive', () => {
     });
 
     // Change size.
-    fixture.componentInstance.setSize({width: 200, height: 100});
+    setSize(fixture.componentInstance.testee(), {width: 200, height: 100});
 
     // Expect emission because size has changed.
     await captor.waitUntilEmitCount(2);
@@ -158,3 +149,8 @@ describe('Dimension Directive', () => {
     });
   });
 });
+
+function setSize(element: ElementRef<HTMLElement>, size: {width: number; height: number}): void {
+  element.nativeElement.style.width = `${size.width}px`;
+  element.nativeElement.style.height = `${size.height}px`;
+}

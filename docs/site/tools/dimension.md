@@ -5,19 +5,22 @@
 
 ## [SCION Toolkit][menu-home] > [@scion/components][link-scion-components] > Dimension
 
-The NPM sub-module `@scion/components/dimension` provides an Angular directive for observing the size of an HTML element. The directive emits the element's initial size, and then continuously emits when its size changes. It never completes.
+The NPM sub-module `@scion/components/dimension` provides a set of tools for observing the size of an element.
+
+Install the NPM module `@scion/components` as following:
+
+```
+npm install @scion/components @scion/toolkit @angular/cdk
+```
 
 <details>
-  <summary><strong>Installation and Usage</strong></summary>
+  <summary><strong>Dimension Directive</strong></summary>
 
-1. Install `@scion/components` using the NPM command-line tool: 
-   ```
-   npm install @scion/components @scion/toolkit @angular/cdk
-   ```
+Directive to observe the size of an element in the HTML template.
 
-1. Import `SciDimensionDirective` in your component.
+1. Import `SciDimensionDirective`.
 
-   ```typescript
+   ```ts
    import {SciDimensionDirective} from '@scion/components/dimension';
 
    @Component({
@@ -29,40 +32,81 @@ The NPM sub-module `@scion/components/dimension` provides an Angular directive f
    }
    ```
 
-   Alternatively, import `SciDimensionModule` in the `NgModule` that declares your component.
-
-   ```typescript
-   import {SciDimensionModule} from '@scion/components/dimension';
-
-   @NgModule({
-     imports: [SciDimensionModule]
-   })
-   export class AppModule {
-   }
-   ```
-
-1. Add the `sciDimension` directive to the HTML element for which you want to observe its size:
+1. Add `sciDimension` directive to an element in the template.
 
    ```html
    <div sciDimension (sciDimensionChange)="onDimensionChange($event)"></div>
    ```
 
-1. Add the following method to the component:
-   ```typescript
-   public onDimensionChange(dimension: Dimension): void {
+1. Add method to be notified about size changes of the element.
+   ```ts
+   public onDimensionChange(dimension: SciDimension): void {
      console.log(dimension);
    }
    ```
+
+The directive can be configured with `emitOutsideAngular` to control whether to emit inside or outside the Angular zone. Defaults to `false`.
+
 </details>
 
 <details>
-  <summary><strong>Control if to emit outside of the Angular zone</strong></summary>
-  
-You can control if to emit a dimension change inside or outside of the Angular zone by passing a `boolean` value to the input parameter `emitOutsideAngular`. If emitting outside of the Angular zone, the directive does not trigger an Angular change detection cycle. By default, dimension changes are emitted inside of the Angular zone.
-  
-   ```html
-   <div sciDimension (sciDimensionChange)="onDimensionChange($event)" [emitOutsideAngular]="false"></div>
-   ```
+  <summary><strong><a id="dimension-signal"></a>Dimension Signal</strong></summary>
+
+Signal to observe the size of an element.
+
+The signal subscribes to the native [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to monitor element size changes. Destroying the injection context will unsubscribe the observer.
+
+
+```ts
+import {dimension} from '@scion/components/dimension';
+
+const element: HTMLElement = ...;
+const size = dimension(element);
+
+console.log(size());
+```
+
+- The function must be called within an injection context or an injector provided. Destroying the injector will unsubscribe the signal.
+- The function must not be called within a reactive context to avoid repeated subscriptions.
+
+**Example of observing the size of the component:**
+
+```ts
+import {Component, effect, ElementRef, inject} from '@angular/core';
+import {dimension} from '@scion/components/dimension';
+
+@Component({...})
+class YourComponent {
+
+   private host = inject(ElementRef<HTMLElement>);
+   private dimension = dimension(this.host);
+
+   constructor() {
+     effect(() => console.log(this.dimension()));
+   }
+}
+```
+
+**Example of observing the size of a view child:**
+
+The element can be passed as a signal, enabling observation of view children in the component constructor.
+
+```ts
+import {Component, effect, ElementRef, viewChild} from '@angular/core';
+import {dimension} from '@scion/components/dimension';
+
+@Component({...})
+class YourComponent {
+
+   private viewChild = viewChild<ElementRef<HTMLElement>>('view_child');
+   private dimension = dimension(this.viewChild);
+
+   constructor() {
+     effect(() => console.log(this.dimension()));
+   }
+}
+```
+
 </details>
 
 [menu-home]: /README.md
