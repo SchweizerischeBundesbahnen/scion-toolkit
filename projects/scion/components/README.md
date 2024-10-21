@@ -9,7 +9,7 @@ The SCION Components is a collection of Angular components and directives primar
   Provides a viewport component with scrollbars that sit on top of the viewport client.
 
 - [**Dimension**][link-tool-dimension]\
-  Provides a set of tools for observing the size of an element.
+  Provides a set of tools for observing the size and position of an element.
 
 - [**Sashbox**][link-tool-sashbox]\
   Provides a sashbox component for splitting content into multiple parts, which the user can resize by moving the splitter between the parts.

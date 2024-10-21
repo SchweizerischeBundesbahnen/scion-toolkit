@@ -16,4 +16,5 @@
 export {SciDimensionModule} from './dimension.module';
 export {SciDimensionDirective} from './dimension.directive';
 export {dimension} from './dimension.signal';
+export {boundingClientRect} from './bounding-client-rect.signal';
 export {SciDimension} from './dimension';

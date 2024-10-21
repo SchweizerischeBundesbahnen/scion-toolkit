@@ -14,7 +14,7 @@ npm install @scion/toolkit
 ```
 
 <details>
-  <summary><strong>fromResize$</strong></summary>
+  <summary><strong><a id="from-resize"></a>fromResize$</strong></summary>
 
 Wraps the native [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) in an RxJS observable to observe resizing of an element.
 
@@ -87,9 +87,7 @@ fromBoundingClientRect$(element).subscribe((clientRect: DOMRect) => {
 The element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, a warning is logged, and positioning changed to `relative`.
  
 *Note:*
-As of 2024, there is no native browser API to observe the position of an element. This implementation uses
-[`IntersectionObserver`](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) and [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to detect position changes.
-For tracking only size changes, use `fromResize$` instead.
+There is no native browser API to observe the position of an element. The observable uses [`IntersectionObserver`](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) and [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to detect position changes. For tracking only size changes, use [`fromResize$`](#from-resize) instead.
 </details> 
 
 [menu-home]: /README.md
