@@ -12,9 +12,8 @@ import {BehaviorSubject, concat, EMPTY, NEVER, Observable, Observer, of, Subject
 import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
 import {NgZone} from '@angular/core';
 import {finalize, tap} from 'rxjs/operators';
-import {combineArray, filterArray, mapArray, observeInside, subscribeInside} from './operators';
+import {bufferUntil, combineArray, distinctArray, filterArray, mapArray, observeInside, subscribeInside} from './operators';
 import {ObserveCaptor} from '@scion/toolkit/testing';
-import {bufferUntil, distinctArray} from '@scion/toolkit/operators';
 
 describe('Operators', () => {
 

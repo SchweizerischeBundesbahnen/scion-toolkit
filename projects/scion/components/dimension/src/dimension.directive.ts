@@ -13,11 +13,10 @@ import {fromResize$} from '@scion/toolkit/observable';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {observeInside, subscribeInside} from '@scion/toolkit/operators';
 import {animationFrameScheduler, observeOn, subscribeOn} from 'rxjs';
+import {SciDimension} from './dimension';
 
 /**
- * Observes changes to the size of the host element.
- *
- * Upon subscription, emits the current size, and then continuously when the size changes. The Observable never completes.
+ * Observes the size of the host element.
  *
  * ---
  * Usage:
@@ -33,12 +32,12 @@ import {animationFrameScheduler, observeOn, subscribeOn} from 'rxjs';
 export class SciDimensionDirective {
 
   /**
-   * Controls if to emit outside the Angular zone. Defaults to `false`.
+   * Controls if to output outside the Angular zone. Defaults to `false`.
    */
   public emitOutsideAngular = input(false);
 
   /**
-   * Upon subscription, emits the current size, and then continuously when the size changes. The Observable never completes.
+   * Outputs the size of the element.
    */
   public dimensionChange = output<SciDimension>({alias: 'sciDimensionChange'});
 
@@ -50,8 +49,8 @@ export class SciDimensionDirective {
       .pipe(
         subscribeInside(continueFn => zone.runOutsideAngular(continueFn)),
         observeInside(continueFn => this.emitOutsideAngular() ? continueFn() : zone.run(continueFn)),
-        subscribeOn(animationFrameScheduler), // to not block resize callback (ResizeObserver loop completed with undelivered notifications)
-        observeOn(animationFrameScheduler), // to not block resize callback (ResizeObserver loop completed with undelivered notifications)
+        subscribeOn(animationFrameScheduler), // do not block resize callback (ResizeObserver loop completed with undelivered notifications)
+        observeOn(animationFrameScheduler), // do not block resize callback (ResizeObserver loop completed with undelivered notifications)
         takeUntilDestroyed(),
       )
       .subscribe(() => {
@@ -64,15 +63,4 @@ export class SciDimensionDirective {
         });
       });
   }
-}
-
-/**
- * Represents the dimension of an element.
- */
-export interface SciDimension {
-  offsetWidth: number;
-  offsetHeight: number;
-  clientWidth: number;
-  clientHeight: number;
-  element: HTMLElement;
 }
