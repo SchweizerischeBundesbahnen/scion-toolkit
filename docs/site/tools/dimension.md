@@ -5,7 +5,7 @@
 
 ## [SCION Toolkit][menu-home] > [@scion/components][link-scion-components] > Dimension
 
-The NPM sub-module `@scion/components/dimension` provides a set of tools for observing the size of an element.
+The NPM sub-module `@scion/components/dimension` provides a set of tools for observing the size and position of an element.
 
 Install the NPM module `@scion/components` as following:
 
@@ -108,6 +108,72 @@ class YourComponent {
 ```
 
 </details>
+
+<details>
+  <summary><strong>BoundingClientRect Signal</strong></summary>
+
+Signal to observe the bounding box of an element.
+
+The [bounding box](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect) includes the element's position relative to the top-left of the viewport and its size.
+
+
+```ts
+import {boundingClientRect} from '@scion/components/dimension';
+
+const element: HTMLElement = ...;
+const boundingBox = boundingClientRect(element);
+
+console.log(boundingBox());
+```
+
+- The function must be called within an injection context or an injector provided. Destroying the injector will unsubscribe the signal.
+- The function must not be called within a reactive context to avoid repeated subscriptions.
+- The element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, a warning is logged, and positioning changed to `relative`.
+
+*Note:*
+There is no native browser API to observe the position of an element. The observable uses [`IntersectionObserver`](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) and [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to detect position changes. For tracking only size changes, use [`Dimension`](#dimension-signal) signal instead.
+
+
+**Example of observing the bounding box of the component:**
+
+```ts
+import {Component, effect, ElementRef, inject} from '@angular/core';
+import {boundingClientRect} from '@scion/components/dimension';
+
+@Component({...})
+class YourComponent {
+
+   private host = inject(ElementRef<HTMLElement>);
+   private boundingBox = boundingClientRect(this.host);
+
+   constructor() {
+      effect(() => console.log(this.boundingBox()));
+   }
+}
+```
+
+**Example of observing the bounding box of a view child:**
+
+The element can be passed as a signal, enabling observation of view children in the component constructor.
+
+```ts
+import {Component, effect, ElementRef, viewChild} from '@angular/core';
+import {boundingClientRect} from '@scion/components/dimension';
+
+@Component({...})
+class YourComponent {
+
+   private viewChild = viewChild<ElementRef<HTMLElement>>('view_child');
+   private boundingBox = boundingClientRect(this.viewChild);
+
+   constructor() {
+      effect(() => console.log(this.boundingBox()));
+   }
+}
+```
+
+</details>
+
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md

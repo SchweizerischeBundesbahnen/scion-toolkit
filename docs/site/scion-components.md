@@ -21,7 +21,7 @@ Provides Angular-based components and directives with a focus on SCION requireme
   You can choose between different presentations: `ellipsis`, `ripple`, `roller`, `spinner`.
 
 - [**Dimension**][link-tool-dimension]\
-  Provides a set of tools for observing the size of an element.
+  Provides a set of tools for observing the size and position of an element.
  
 - [**SCION Design Tokens**][link-scion-design-tokens]\
   SCION provides a set of design tokens to enable consistent design and theming of SCION components.

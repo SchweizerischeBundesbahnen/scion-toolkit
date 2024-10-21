@@ -24,7 +24,7 @@ import {fromResize$} from './resize.observable';
  * If not, a warning is logged, and positioning changed to `relative`.
 
  * Note:
- * As of 2024, there is no native browser API to observe the position of an element. This implementation uses {@link IntersectionObserver} and
+ * There is no native browser API to observe the position of an element. The observable uses {@link IntersectionObserver} and
  * {@link ResizeObserver} to detect position changes. For tracking only size changes, use {@link fromResize$} instead.
  *
  * @param element - The element to observe.
@@ -81,7 +81,7 @@ class BoundingClientRectObserver {
   private installElementResizeObserver(): void {
     fromResize$(this._element, {box: 'border-box'})
       .pipe(
-        observeOn(animationFrameScheduler), // to not block resize callback (ResizeObserver loop completed with undelivered notifications)
+        observeOn(animationFrameScheduler), // do not block resize callback (ResizeObserver loop completed with undelivered notifications)
         takeUntil(this._destroy$),
       )
       .subscribe(() => {
@@ -105,7 +105,7 @@ class BoundingClientRectObserver {
   private installChangeEmitter(onChange: (clientRect: DOMRect) => void): void {
     this._clientRect$
       .pipe(
-        distinctUntilChanged((a, b) => a.top === b.top && a.right === b.right && a.bottom === b.bottom && a.left === b.left),
+        distinctUntilChanged(isEqualDomRect),
         takeUntil(this._destroy$),
       )
       .subscribe(boundingBox => {
@@ -243,4 +243,8 @@ function setStyle(element: HTMLElement, styles: {[style: string]: string | null}
       element.style.setProperty(name, value);
     }
   });
+}
+
+function isEqualDomRect(a: DOMRect, b: DOMRect): boolean {
+  return a.top === b.top && a.right === b.right && a.bottom === b.bottom && a.left === b.left;
 }
