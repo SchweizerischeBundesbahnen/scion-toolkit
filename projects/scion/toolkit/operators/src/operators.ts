@@ -9,7 +9,7 @@
  */
 
 import {catchError, defaultIfEmpty, distinctUntilChanged, map, mergeMap, share, switchMap, take} from 'rxjs/operators';
-import {combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, SchedulerLike, Subscriber, Subscription, TeardownLogic} from 'rxjs';
+import {combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, noop, Observable, Observer, of, OperatorFunction, pipe, ReplaySubject, SchedulerLike, Subscriber, Subscription, takeUntil, TeardownLogic} from 'rxjs';
 import {Arrays, Observables} from '@scion/toolkit/util';
 
 /**
@@ -140,6 +140,84 @@ export function tapFirst<T>(tapFn: (value?: T) => void, scheduler?: SchedulerLik
 }
 
 /**
+ * Mirrors the source observable, running downstream operators (operators after the `observeIn` operator) and subscription handlers
+ * (next, error, complete) in the given function.
+ *
+ * This operator is similar to RxJS's {@link observeOn} operator, but instead of a scheduler, it accepts a function.
+ * The function is invoked each time the source emits, errors or completes and must call the provided `doContinue` function
+ * to continue.
+ *
+ * Use this operator to set up a context for downstream operators, such as inside or outside the Angular zone.
+ *
+ * **Usage**
+ *
+ * The following example runs downstream operators inside Angular:
+ *
+ * ```ts
+ * // Code running outside the Angular zone.
+ * const zone = inject(NgZone);
+ *
+ * interval(1000)
+ *   .pipe(
+ *     tap(() => ...), // runs outside Angular
+ *     observeIn(doContinue => zone.run(doContinue)),
+ *     tap(() => ...), // runs inside Angular
+ *   )
+ *   .subscribe(() => ...); // runs inside Angular
+ * ```
+ *
+ * @param fn - A function to set up the execution context. The function must call the provided `doContinue` function to continue.
+ * @return An Observable that mirrors the source, but with downstream operators executed in the provided function.
+ */
+export function observeIn<T>(fn: (doContinue: () => void) => void): MonoTypeOperatorFunction<T> {
+  return (source: Observable<T>): Observable<T> => {
+    return new Observable((observer: Observer<T>): TeardownLogic => {
+      const subscription = source.subscribe({
+        next: next => fn(() => observer.next(next)),
+        error: error => fn(() => observer.error(error)),
+        complete: () => fn(() => observer.complete()),
+      });
+
+      return () => subscription.unsubscribe();
+    });
+  };
+}
+
+/**
+ * Mirrors the source observable, subscribing to the source in the given function.
+ *
+ * This operator is similar to RxJS's {@link subscribeOn} operator, but instead of a scheduler, it accepts a function.
+ * The function is invoked when subscribing to the source and must call the provided `doSubscribe` function to subscribe.
+ *
+ * Use this operator to set up a context for the subscription, such as inside or outside the Angular zone.
+ *
+ * **Usage**
+ *
+ * The following example illustrates subscribing outside Angular:
+ *
+ * ```ts
+ * // Code running inside the Angular zone.
+ * const zone = inject(NgZone);
+ *
+ * interval(1000)
+ *   .pipe(subscribeIn(doSubscribe => zone.runOutsideAngular(doSubscribe)))
+ *   .subscribe(() => ...);
+ * ```
+ *
+ * @param fn - A function to set up the subscription context. The function must call the provided `doSubscribe` function to subscribe.
+ * @return An Observable that mirrors the source, but with the subscription executed in the provided function.
+ */
+export function subscribeIn<T>(fn: (doSubscribe: () => void) => void): MonoTypeOperatorFunction<T> {
+  return (source: Observable<T>): Observable<T> => {
+    return new Observable((observer: Observer<T>): TeardownLogic => {
+      const unsubscribe$ = new ReplaySubject<void>(1);
+      fn(() => source.pipe(takeUntil(unsubscribe$)).subscribe(observer));
+      return () => unsubscribe$.next();
+    });
+  };
+}
+
+/**
  * Mirrors the source Observable, but runs downstream operators (operators below the `observeInside` operator) and subscription handlers
  * (next, error, complete) inside the given execution context.
  *
@@ -166,19 +244,11 @@ export function tapFirst<T>(tapFn: (value?: T) => void, scheduler?: SchedulerLik
  *
  * @param   executionFn - Function for setting up a context in which to continue the execution chain.
  * @return  An Observable mirroring the source, but running downstream operators in a context.
- */
+ *
+ * @deprecated since version 1.6.0; method has been renamed; use {@link observeIn} instead; API will be removed in version 2.0.
+  */
 export function observeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFunction<T> {
-  return (source: Observable<T>): Observable<T> => {
-    return new Observable((observer: Observer<T>): TeardownLogic => {
-      const subscription = source.subscribe({
-        next: next => executionFn(() => observer.next(next)),
-        error: error => executionFn(() => observer.error(error)),
-        complete: () => executionFn(() => observer.complete()),
-      });
-
-      return () => subscription.unsubscribe();
-    });
-  };
+  return observeIn(executionFn);
 }
 
 /**
@@ -212,6 +282,11 @@ export function observeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFunc
  *
  * @param   executionFn - Function for setting up a context in which to continue the execution chain.
  * @return  An Observable mirroring the source, but running upstream and downstream operators in a context.
+ *
+ * @deprecated since version 1.6.0; use {@link subscribeIn} instead; API will be removed in version 2.0.
+ *             **Important**:  Migrating to `subscribeIn` may break your operator chain.
+ *             Unlike `subscribeInside`, `subscribeIn` now only wraps the subscription and no longer downstream operators.
+ *             Depending on your observable's emission, an additional `observeIn` may be necessary if not already present.
  */
 export function subscribeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>): Observable<T> => {
@@ -255,6 +330,8 @@ export function subscribeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFu
  *
  * @see observeInside
  * @see subscribeInside
+ *
+ * @deprecated since version 1.6.0; API will be removed in version 2.0.
  */
 export type ContinueExecutionFn = () => void;
 
@@ -263,5 +340,7 @@ export type ContinueExecutionFn = () => void;
  *
  * @see observeInside
  * @see subscribeInside
+ *
+ * @deprecated since version 1.6.0; API will be removed in version 2.0.
  */
 export type ExecutionFn = (fn: ContinueExecutionFn) => void;
