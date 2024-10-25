@@ -92,67 +92,58 @@ of('a', 'b', 'c')
 </details>
 
 <details>
-  <summary><strong>observeInside</strong></summary>
+  <summary><strong>observeIn</strong></summary>
 
-Mirrors the source Observable, but runs downstream operators (operators below the `observeInside` operator) and subscription handlers (next, error, complete) inside the given execution context.
+Mirrors the source observable, running downstream operators (operators after the `observeIn` operator) and subscription handlers (`next`, `error`, `complete`) in the given function.
 
-This operator is particularly useful in Angular applications to run downstream operators inside or outside the Angular zone, as following: `observeInside(continueFn => ngzone.run(continueFn))`.
+This operator is similar to RxJS's [`observeOn`](https://rxjs.dev/api/operators/observeOn) operator, but instead of a scheduler, it accepts a function.
+The function is invoked each time the source emits, errors or completes and must call the provided `doContinue` function to continue.
 
-```typescript
-import {tapFirst} from '@scion/toolkit/operators';
+Use this operator to set up a context for downstream operators, such as inside or outside the Angular zone.
+
+The following example runs downstream operators inside Angular:
+```ts
+import {inject, NgZone} from '@angular/core';
 import {interval} from 'rxjs';
+import {tap} from 'rxjs/operators';
+import {observeIn} from '@scion/toolkit/operators';
 
-// Code running outside Angular
+// Code running outside the Angular zone.
+const zone = inject(NgZone);
 
-interval(1000) // Observable creation outside Angular
+interval(1000)
   .pipe(
-    tap(() => ...), // outside Angular
-    tap(() => ...), // outside Angular
-    observeInside(continueFn => zone.run(continueFn)),
-    tap(() => ...), // inside Angular
+    tap(() => ...), // runs outside Angular
+    observeIn(doContinue => zone.run(doContinue)),
+    tap(() => ...), // runs inside Angular
   )
-  .subscribe(
-    value => ..., // inside Angular 
-    error => ..., // inside Angular
-    () => ... // inside Angular
-  );
+  .subscribe(() => ...); // runs inside Angular
 ```
-
-This operator is similar to RxJS's `observeOn` operator, but instead of a scheduler, it accepts an executor. An executor is a function to create an execution context in which downstream operators are then executed. The function is called with a single argument, a function to continue the execution chain.
-
 </details>
 
 <details>
-  <summary><strong>subscribeInside</strong></summary>
+  <summary><strong>subscribeIn</strong></summary>
 
-Mirrors the source Observable, but uses the given execution context to subscribe/unsubscribe to the source. It further runs all operators of the execution chain (operators above and below the `subscribeInside` operator) as well as subscription handlers (next, error, complete) in the given context.
+Mirrors the source observable, subscribing to the source in the given function.
 
-Unlike `observeInside` operator, the `subscribeInside` also acts upstream. By using the `observeInside` operator after the `subscribeInside`, you can change the execution context for downstream operators.
+This operator is similar to RxJS's [`subscribeOn`](https://rxjs.dev/api/operators/subscribeOn) operator, but instead of a scheduler, it accepts a function.
+The function is invoked when subscribing to the source and must call the provided `doSubscribe` function to subscribe.
 
-This operator is particularly useful in Angular applications to subscribe to the source inside or outside the Angular zone, as following: `subscribeInside(continueFn => ngzone.run(continueFn))`.
+Use this operator to set up a context for the subscription, such as inside or outside the Angular zone.
 
-```typescript
-import {tapFirst} from '@scion/toolkit/operators';
+The following example illustrates subscribing outside Angular:
+```ts
+import {inject, NgZone} from '@angular/core';
 import {interval} from 'rxjs';
+import {subscribeIn} from '@scion/toolkit/operators';
 
-// Code running outside Angular 
+// Code running inside the Angular zone.
+const zone = inject(NgZone);
 
-interval(1000) // Observable creation inside Angular
-  .pipe(
-    tap(() => ...), // inside Angular
-    tap(() => ...), // inside Angular
-    subscribeInside(continueFn => zone.run(continueFn)),
-    tap(() => ...), // inside Angular
-  )
-  .subscribe(
-    value => ..., // inside Angular 
-    error => ..., // inside Angular
-    () => ... // inside Angular
-  );
+interval(1000)
+  .pipe(subscribeIn(doSubscribe => zone.runOutsideAngular(doSubscribe)))
+  .subscribe(() => ...);
 ```
-
-This operator is similar to RxJS's `subscribeOn` operator, but instead of a scheduler, it accepts an executor. An executor is a function to create an execution context in which upstream and downstream operators are then executed. The function is called with a single argument, a function to continue the execution chain.
-
 </details>
 
 <details>

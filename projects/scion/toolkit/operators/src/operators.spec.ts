@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {BehaviorSubject, concat, EMPTY, NEVER, Observable, Observer, of, Subject, TeardownLogic, throwError} from 'rxjs';
+import {BehaviorSubject, concat, EMPTY, NEVER, Observable, of, Subject, throwError} from 'rxjs';
 import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
 import {NgZone} from '@angular/core';
 import {finalize, tap} from 'rxjs/operators';
-import {bufferUntil, combineArray, distinctArray, filterArray, mapArray, observeInside, subscribeInside} from './operators';
+import {bufferUntil, combineArray, distinctArray, filterArray, mapArray, observeIn, observeInside, subscribeIn, subscribeInside} from './operators';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 
 describe('Operators', () => {
@@ -374,283 +374,560 @@ describe('Operators', () => {
 
   describe('observeInside', () => {
 
-    it('should execute downstream, next operators and the next subscription handler inside the Angular zone', () => {
-      const zone = TestBed.inject(NgZone);
-
+    it('should execute downstream next operators and the next subscription handler in the specified context', () => {
       // GIVEN
-      interface InsideNgZoneCaptor {
-        onObservableCreate?: boolean;
-        onObservableTeardown?: boolean;
-        onNextBeforeObserveInside?: boolean;
-        onNextAfterObserveInside?: boolean;
-        onNext?: boolean;
-        onFinalize?: boolean;
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onNextBeforeObserveInside?: symbol;
+        onNextAfterObserveInside?: symbol;
+        onNext?: symbol;
+        onFinalize?: symbol;
       }
 
-      const insideAngularCaptor: InsideNgZoneCaptor = {};
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        observeInside: Symbol('observeInside'),
+        unsubscription: Symbol('unsubscription'),
+        doNext: Symbol('doNext'),
+      };
 
-      const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
-        insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
-        observer.next(); // emit an event
-        return () => insideAngularCaptor.onObservableTeardown = NgZone.isInAngularZone();
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doNext, () => observer.next());
+        return () => contextCaptor.onTeardown = currentContext();
       })
         .pipe(
-          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap(() => insideAngularCaptor.onNextBeforeObserveInside = NgZone.isInAngularZone()),
-          // use `observeInside` operator to continue operator chain inside the Angular zone
-          observeInside(continueFn => zone.run(continueFn)),
-          tap(() => insideAngularCaptor.onNextAfterObserveInside = NgZone.isInAngularZone()),
+          tap(() => contextCaptor.onNextBeforeObserveInside = currentContext()),
+          observeInside(fn => runInContext(contexts.observeInside, fn)),
+          tap(() => contextCaptor.onNextAfterObserveInside = currentContext()),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
         );
 
       // WHEN
       const subscription = observable$.subscribe(() => {
-        insideAngularCaptor.onNext = NgZone.isInAngularZone();
+        contextCaptor.onNext = currentContext();
       });
 
       // THEN
-      expect(NgZone.isInAngularZone()).toBeFalse();
-      expect(insideAngularCaptor.onObservableCreate).toBeFalse();
-      expect(insideAngularCaptor.onNextBeforeObserveInside).toBeFalse();
-      expect(insideAngularCaptor.onNextAfterObserveInside).toBeTrue();
-      expect(insideAngularCaptor.onNext).toBeTrue();
+      expect(contextCaptor.onConstruct).toBeUndefined();
+      expect(contextCaptor.onNextBeforeObserveInside).toBe(contexts.doNext);
+      expect(contextCaptor.onNextAfterObserveInside).toBe(contexts.observeInside);
+      expect(contextCaptor.onNext).toBe(contexts.observeInside);
 
-      subscription.unsubscribe();
+      runInContext(contexts.unsubscription, () => subscription.unsubscribe());
 
-      expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
-      expect(insideAngularCaptor.onFinalize).toBeFalse();
+      expect(contextCaptor.onTeardown).toBe(contexts.unsubscription);
+      expect(contextCaptor.onFinalize).toBe(contexts.unsubscription);
     });
 
-    it('should execute downstream complete operators and the complete subscription handler inside the Angular zone', () => {
-      const zone = TestBed.inject(NgZone);
-
+    it('should execute downstream complete operators and the complete subscription handler in the specified context', () => {
       // GIVEN
-      interface InsideNgZoneCaptor {
-        onObservableCreate?: boolean;
-        onObservableTeardown?: boolean;
-        onCompleteBeforeObserveInside?: boolean;
-        onCompleteAfterObserveInside?: boolean;
-        onComplete?: boolean;
-        onFinalize?: boolean;
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onCompleteBeforeObserveInside?: symbol;
+        onCompleteAfterObserveInside?: symbol;
+        onComplete?: symbol;
+        onFinalize?: symbol;
       }
 
-      const insideAngularCaptor: InsideNgZoneCaptor = {};
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        observeInside: Symbol('observeInside'),
+        doComplete: Symbol('doComplete'),
+      };
 
-      const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
-        insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
-        observer.complete(); // complete the Observable
-        return () => insideAngularCaptor.onObservableTeardown = NgZone.isInAngularZone();
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doComplete, () => observer.complete());
+        return () => contextCaptor.onTeardown = currentContext();
       })
         .pipe(
-          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap({complete: () => insideAngularCaptor.onCompleteBeforeObserveInside = NgZone.isInAngularZone()}),
-          // use `observeInside` operator to continue operator chain inside the Angular zone
-          observeInside(continueFn => zone.run(continueFn)),
-          tap({complete: () => insideAngularCaptor.onCompleteAfterObserveInside = NgZone.isInAngularZone()}),
+          tap({complete: () => contextCaptor.onCompleteBeforeObserveInside = currentContext()}),
+          observeInside(fn => runInContext(contexts.observeInside, fn)),
+          tap({complete: () => contextCaptor.onCompleteAfterObserveInside = currentContext()}),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
         );
 
       // WHEN
-      const subscription = observable$.subscribe({
-        complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
+      observable$.subscribe({
+        complete: () => contextCaptor.onComplete = currentContext(),
       });
 
       // THEN
-      expect(NgZone.isInAngularZone()).toBeFalse();
-      expect(insideAngularCaptor.onObservableCreate).toBeFalse();
-      expect(insideAngularCaptor.onCompleteBeforeObserveInside).toBeFalse();
-      expect(insideAngularCaptor.onCompleteAfterObserveInside).toBeTrue();
-      expect(insideAngularCaptor.onComplete).toBeTrue();
-
-      subscription.unsubscribe();
-
-      expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
-      expect(insideAngularCaptor.onFinalize).toBeFalse();
+      expect(contextCaptor.onConstruct).toBeUndefined();
+      expect(contextCaptor.onCompleteBeforeObserveInside).toBe(contexts.doComplete);
+      expect(contextCaptor.onCompleteAfterObserveInside).toBe(contexts.observeInside);
+      expect(contextCaptor.onComplete).toBe(contexts.observeInside);
+      expect(contextCaptor.onTeardown).toBeUndefined();
+      expect(contextCaptor.onFinalize).toBeUndefined();
     });
 
-    it('should execute downstream error operators and the error subscription handler inside the Angular zone', () => {
-      const zone = TestBed.inject(NgZone);
-
+    it('should execute downstream error operators and the error subscription handler in the specified context', () => {
       // GIVEN
-      interface InsideNgZoneCaptor {
-        onObservableCreate?: boolean;
-        onObservableTeardown?: boolean;
-        onErrorBeforeObserveInside?: boolean;
-        onErrorAfterObserveInside?: boolean;
-        onError?: boolean;
-        onFinalize?: boolean;
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onErrorBeforeObserveInside?: symbol;
+        onErrorAfterObserveInside?: symbol;
+        onError?: symbol;
+        onFinalize?: symbol;
       }
 
-      const insideAngularCaptor: InsideNgZoneCaptor = {};
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        observeInside: Symbol('observeInside'),
+        doError: Symbol('doError'),
+      };
 
-      const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
-        insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
-        observer.error('error'); // emit an error
-        return () => insideAngularCaptor.onObservableTeardown = NgZone.isInAngularZone();
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doError, () => observer.error());
+        return () => contextCaptor.onTeardown = currentContext();
       })
         .pipe(
-          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap({error: () => insideAngularCaptor.onErrorBeforeObserveInside = NgZone.isInAngularZone()}),
-          // use `observeInside` operator to continue operator chain inside the Angular zone
-          observeInside(continueFn => zone.run(continueFn)),
-          tap({error: () => insideAngularCaptor.onErrorAfterObserveInside = NgZone.isInAngularZone()}),
+          tap({error: () => contextCaptor.onErrorBeforeObserveInside = currentContext()}),
+          observeInside(fn => runInContext(contexts.observeInside, fn)),
+          tap({error: () => contextCaptor.onErrorAfterObserveInside = currentContext()}),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
         );
 
       // WHEN
-      const subscription = observable$.subscribe({
-        error: () => insideAngularCaptor.onError = NgZone.isInAngularZone(),
+      observable$.subscribe({
+        error: () => contextCaptor.onError = currentContext(),
       });
 
       // THEN
-      expect(NgZone.isInAngularZone()).toBeFalse();
-      expect(insideAngularCaptor.onObservableCreate).toBeFalse();
-      expect(insideAngularCaptor.onErrorBeforeObserveInside).toBeFalse();
-      expect(insideAngularCaptor.onErrorAfterObserveInside).toBeTrue();
-      expect(insideAngularCaptor.onError).toBeTrue();
+      expect(contextCaptor.onConstruct).toBeUndefined();
+      expect(contextCaptor.onErrorBeforeObserveInside).toBe(contexts.doError);
+      expect(contextCaptor.onErrorAfterObserveInside).toBe(contexts.observeInside);
+      expect(contextCaptor.onError).toBe(contexts.observeInside);
+      expect(contextCaptor.onTeardown).toBeUndefined();
+      expect(contextCaptor.onFinalize).toBeUndefined();
+    });
+  });
 
-      subscription.unsubscribe();
+  describe('observeIn', () => {
 
-      expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
-      expect(insideAngularCaptor.onFinalize).toBeFalse();
+    it('should execute downstream next operators and the next subscription handler in the specified context', () => {
+      // GIVEN
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onNextBeforeObserveInside?: symbol;
+        onNextAfterObserveInside?: symbol;
+        onNext?: symbol;
+        onFinalize?: symbol;
+      }
+
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        observeIn: Symbol('observeIn'),
+        unsubscription: Symbol('unsubscription'),
+        doNext: Symbol('doNext'),
+      };
+
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doNext, () => observer.next());
+        return () => contextCaptor.onTeardown = currentContext();
+      })
+        .pipe(
+          tap(() => contextCaptor.onNextBeforeObserveInside = currentContext()),
+          observeIn(fn => runInContext(contexts.observeIn, fn)),
+          tap(() => contextCaptor.onNextAfterObserveInside = currentContext()),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
+        );
+
+      // WHEN
+      const subscription = observable$.subscribe(() => {
+        contextCaptor.onNext = currentContext();
+      });
+
+      // THEN
+      expect(contextCaptor.onConstruct).toBeUndefined();
+      expect(contextCaptor.onNextBeforeObserveInside).toBe(contexts.doNext);
+      expect(contextCaptor.onNextAfterObserveInside).toBe(contexts.observeIn);
+      expect(contextCaptor.onNext).toBe(contexts.observeIn);
+
+      runInContext(contexts.unsubscription, () => subscription.unsubscribe());
+
+      expect(contextCaptor.onTeardown).toBe(contexts.unsubscription);
+      expect(contextCaptor.onFinalize).toBe(contexts.unsubscription);
+    });
+
+    it('should execute downstream complete operators and the complete subscription handler in the specified context', () => {
+      // GIVEN
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onCompleteBeforeObserveInside?: symbol;
+        onCompleteAfterObserveInside?: symbol;
+        onComplete?: symbol;
+        onFinalize?: symbol;
+      }
+
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        observeIn: Symbol('observeIn'),
+        doComplete: Symbol('doComplete'),
+      };
+
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doComplete, () => observer.complete());
+        return () => contextCaptor.onTeardown = currentContext();
+      })
+        .pipe(
+          tap({complete: () => contextCaptor.onCompleteBeforeObserveInside = currentContext()}),
+          observeIn(fn => runInContext(contexts.observeIn, fn)),
+          tap({complete: () => contextCaptor.onCompleteAfterObserveInside = currentContext()}),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
+        );
+
+      // WHEN
+      observable$.subscribe({
+        complete: () => contextCaptor.onComplete = currentContext(),
+      });
+
+      // THEN
+      expect(contextCaptor.onConstruct).toBeUndefined();
+      expect(contextCaptor.onCompleteBeforeObserveInside).toBe(contexts.doComplete);
+      expect(contextCaptor.onCompleteAfterObserveInside).toBe(contexts.observeIn);
+      expect(contextCaptor.onComplete).toBe(contexts.observeIn);
+      expect(contextCaptor.onTeardown).toBeUndefined();
+      expect(contextCaptor.onFinalize).toBeUndefined();
+    });
+
+    it('should execute downstream error operators and the error subscription handler in the specified context', () => {
+      // GIVEN
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onErrorBeforeObserveInside?: symbol;
+        onErrorAfterObserveInside?: symbol;
+        onError?: symbol;
+        onFinalize?: symbol;
+      }
+
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        observeIn: Symbol('observeIn'),
+        doError: Symbol('doError'),
+      };
+
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doError, () => observer.error());
+        return () => contextCaptor.onTeardown = currentContext();
+      })
+        .pipe(
+          tap({error: () => contextCaptor.onErrorBeforeObserveInside = currentContext()}),
+          observeIn(fn => runInContext(contexts.observeIn, fn)),
+          tap({error: () => contextCaptor.onErrorAfterObserveInside = currentContext()}),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
+        );
+
+      // WHEN
+      observable$.subscribe({
+        error: () => contextCaptor.onError = currentContext(),
+      });
+
+      // THEN
+      expect(contextCaptor.onConstruct).toBeUndefined();
+      expect(contextCaptor.onErrorBeforeObserveInside).toBe(contexts.doError);
+      expect(contextCaptor.onErrorAfterObserveInside).toBe(contexts.observeIn);
+      expect(contextCaptor.onError).toBe(contexts.observeIn);
+      expect(contextCaptor.onTeardown).toBeUndefined();
+      expect(contextCaptor.onFinalize).toBeUndefined();
     });
   });
 
   describe('subscribeInside', () => {
 
-    it('should create the Observable and execute next operators and the next handler inside the Angular zone', () => {
-      const zone = TestBed.inject(NgZone);
-
+    it('should construct the observable in the specified context (simulate next)', () => {
       // GIVEN
-      interface InsideNgZoneCaptor {
-        onObservableCreate?: boolean;
-        onObservableTeardown?: boolean;
-        onNextBeforeSubscribeInside?: boolean;
-        onNextAfterSubscribeInside?: boolean;
-        onNext?: boolean;
-        onFinalize?: boolean;
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onNextBeforeSubscribeInside?: symbol;
+        onNextAfterSubscribeInside?: symbol;
+        onNext?: symbol;
+        onFinalize?: symbol;
       }
 
-      const insideAngularCaptor: InsideNgZoneCaptor = {};
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        subscribeInside: Symbol('subscribeInside'),
+        unsubscription: Symbol('unsubscription'),
+        doNext: Symbol('doNext'),
+      };
 
-      const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
-        insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
-        observer.next(); // emit an event
-        return () => insideAngularCaptor.onObservableTeardown = NgZone.isInAngularZone();
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doNext, () => observer.next());
+        return () => contextCaptor.onTeardown = currentContext();
       })
         .pipe(
-          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap(() => insideAngularCaptor.onNextBeforeSubscribeInside = NgZone.isInAngularZone()),
-          // use `subscribeInside` operator to run downstream and upstream operators inside the Angular zone
-          subscribeInside(continueFn => zone.run(continueFn)),
-          tap(() => insideAngularCaptor.onNextAfterSubscribeInside = NgZone.isInAngularZone()),
+          tap(() => contextCaptor.onNextBeforeSubscribeInside = currentContext()),
+          subscribeInside(fn => runInContext(contexts.subscribeInside, fn)),
+          tap(() => contextCaptor.onNextAfterSubscribeInside = currentContext()),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
         );
 
       // WHEN
       const subscription = observable$.subscribe(() => {
-        insideAngularCaptor.onNext = NgZone.isInAngularZone();
+        contextCaptor.onNext = currentContext();
       });
 
       // THEN
-      expect(NgZone.isInAngularZone()).toBeFalse();
-      expect(insideAngularCaptor.onObservableCreate).toBeTrue();
-      expect(insideAngularCaptor.onNextBeforeSubscribeInside).toBeTrue();
-      expect(insideAngularCaptor.onNextAfterSubscribeInside).toBeTrue();
-      expect(insideAngularCaptor.onNext).toBeTrue();
+      expect(contextCaptor.onConstruct).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onNextBeforeSubscribeInside).toBe(contexts.doNext);
+      expect(contextCaptor.onNextAfterSubscribeInside).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onNext).toBe(contexts.subscribeInside);
 
-      subscription.unsubscribe();
+      runInContext(contexts.unsubscription, () => subscription.unsubscribe());
 
-      expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
-      expect(insideAngularCaptor.onFinalize).toBeTrue();
+      expect(contextCaptor.onTeardown).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onFinalize).toBe(contexts.unsubscription);
     });
 
-    it('should create the Observable and execute error operators and the error handler inside the Angular zone', () => {
-      const zone = TestBed.inject(NgZone);
-
+    it('should construct the observable in the specified context (simulate error)', () => {
       // GIVEN
-      interface InsideNgZoneCaptor {
-        onObservableCreate?: boolean;
-        onObservableTeardown?: boolean;
-        onErrorBeforeSubscribeInside?: boolean;
-        onErrorAfterSubscribeInside?: boolean;
-        onError?: boolean;
-        onFinalize?: boolean;
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onErrorBeforeSubscribeInside?: symbol;
+        onErrorAfterSubscribeInside?: symbol;
+        onError?: symbol;
+        onFinalize?: symbol;
       }
 
-      const insideAngularCaptor: InsideNgZoneCaptor = {};
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        subscribeInside: Symbol('subscribeInside'),
+        doError: Symbol('doError'),
+      };
 
-      const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
-        insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
-        observer.error('error'); // emit an error
-        return () => insideAngularCaptor.onObservableTeardown = NgZone.isInAngularZone();
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doError, () => observer.error());
+        return () => contextCaptor.onTeardown = currentContext();
       })
         .pipe(
-          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap({error: () => insideAngularCaptor.onErrorBeforeSubscribeInside = NgZone.isInAngularZone()}),
-          // use `subscribeInside` operator to run downstream and upstream operators inside the Angular zone
-          subscribeInside(continueFn => zone.run(continueFn)),
-          tap({error: () => insideAngularCaptor.onErrorAfterSubscribeInside = NgZone.isInAngularZone()}),
+          tap({error: () => contextCaptor.onErrorBeforeSubscribeInside = currentContext()}),
+          subscribeInside(fn => runInContext(contexts.subscribeInside, fn)),
+          tap({error: () => contextCaptor.onErrorAfterSubscribeInside = currentContext()}),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
         );
 
       // WHEN
-      const subscription = observable$.subscribe({
-        error: () => insideAngularCaptor.onError = NgZone.isInAngularZone(),
+      observable$.subscribe({
+        error: () => contextCaptor.onError = currentContext(),
       });
 
       // THEN
-      expect(NgZone.isInAngularZone()).toBeFalse();
-      expect(insideAngularCaptor.onObservableCreate).toBeTrue();
-      expect(insideAngularCaptor.onErrorBeforeSubscribeInside).toBeTrue();
-      expect(insideAngularCaptor.onErrorAfterSubscribeInside).toBeTrue();
-      expect(insideAngularCaptor.onError).toBeTrue();
-
-      subscription.unsubscribe();
-
-      expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
-      expect(insideAngularCaptor.onFinalize).toBeTrue();
+      expect(contextCaptor.onConstruct).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onErrorBeforeSubscribeInside).toBe(contexts.doError);
+      expect(contextCaptor.onErrorAfterSubscribeInside).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onError).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onTeardown).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onFinalize).toBeUndefined();
     });
 
-    it('should create the Observable and execute complete operators and the complete handler inside the Angular zone', () => {
-      const zone = TestBed.inject(NgZone);
-
+    it('should construct the observable in the specified context (simulate complete)', () => {
       // GIVEN
-      interface InsideNgZoneCaptor {
-        onObservableCreate?: boolean;
-        onObservableTeardown?: boolean;
-        onCompleteBeforeSubscribeInside?: boolean;
-        onCompleteAfterSubscribeInside?: boolean;
-        onComplete?: boolean;
-        onFinalize?: boolean;
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onCompleteBeforeSubscribeInside?: symbol;
+        onCompleteAfterSubscribeInside?: symbol;
+        onComplete?: symbol;
+        onFinalize?: symbol;
       }
 
-      const insideAngularCaptor: InsideNgZoneCaptor = {};
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        subscribeInside: Symbol('subscribeInside'),
+        doComplete: Symbol('doComplete'),
+      };
 
-      const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
-        insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
-        observer.complete(); // complete the Observable
-        return () => insideAngularCaptor.onObservableTeardown = NgZone.isInAngularZone();
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doComplete, () => observer.complete());
+        return () => contextCaptor.onTeardown = currentContext();
       })
         .pipe(
-          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-          tap({complete: () => insideAngularCaptor.onCompleteBeforeSubscribeInside = NgZone.isInAngularZone()}),
-          // use `subscribeInside` operator to run downstream and upstream operators inside the Angular zone
-          subscribeInside(continueFn => zone.run(continueFn)),
-          tap({complete: () => insideAngularCaptor.onCompleteAfterSubscribeInside = NgZone.isInAngularZone()}),
+          tap({complete: () => contextCaptor.onCompleteBeforeSubscribeInside = currentContext()}),
+          subscribeInside(fn => runInContext(contexts.subscribeInside, fn)),
+          tap({complete: () => contextCaptor.onCompleteAfterSubscribeInside = currentContext()}),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
         );
 
       // WHEN
-      const subscription = observable$.subscribe({
-        complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
+      observable$.subscribe({
+        complete: () => contextCaptor.onComplete = currentContext(),
       });
 
       // THEN
-      expect(NgZone.isInAngularZone()).toBeFalse();
-      expect(insideAngularCaptor.onObservableCreate).toBeTrue();
-      expect(insideAngularCaptor.onCompleteBeforeSubscribeInside).toBeTrue();
-      expect(insideAngularCaptor.onCompleteAfterSubscribeInside).toBeTrue();
-      expect(insideAngularCaptor.onComplete).toBeTrue();
+      expect(contextCaptor.onConstruct).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onCompleteBeforeSubscribeInside).toBe(contexts.doComplete);
+      expect(contextCaptor.onCompleteAfterSubscribeInside).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onComplete).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onTeardown).toBe(contexts.subscribeInside);
+      expect(contextCaptor.onFinalize).toBeUndefined();
+    });
+  });
 
-      subscription.unsubscribe();
+  describe('subscribeIn', () => {
 
-      expect(insideAngularCaptor.onObservableTeardown).toBeTrue();
-      expect(insideAngularCaptor.onFinalize).toBeTrue();
+    it('should construct the observable in the specified context (simulate next)', () => {
+      // GIVEN
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onNextBeforeSubscribeIn?: symbol;
+        onNextAfterSubscribeIn?: symbol;
+        onNext?: symbol;
+        onFinalize?: symbol;
+      }
+
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        subscribeIn: Symbol('subscribeIn'),
+        unsubscription: Symbol('unsubscription'),
+        doNext: Symbol('doNext'),
+      };
+
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doNext, () => observer.next());
+        return () => contextCaptor.onTeardown = currentContext();
+      })
+        .pipe(
+          tap(() => contextCaptor.onNextBeforeSubscribeIn = currentContext()),
+          subscribeIn(fn => runInContext(contexts.subscribeIn, fn)),
+          tap(() => contextCaptor.onNextAfterSubscribeIn = currentContext()),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
+        );
+
+      // WHEN
+      const subscription = observable$.subscribe(() => {
+        contextCaptor.onNext = currentContext();
+      });
+
+      // THEN
+      expect(contextCaptor.onConstruct).toBe(contexts.subscribeIn);
+      expect(contextCaptor.onNextBeforeSubscribeIn).toBe(contexts.doNext);
+      expect(contextCaptor.onNextAfterSubscribeIn).toBe(contexts.doNext);
+      expect(contextCaptor.onNext).toBe(contexts.doNext);
+
+      runInContext(contexts.unsubscription, () => subscription.unsubscribe());
+
+      expect(contextCaptor.onTeardown).toBe(contexts.unsubscription);
+      expect(contextCaptor.onFinalize).toBe(contexts.unsubscription);
+    });
+
+    it('should construct the observable in the specified context (simulate error)', () => {
+      // GIVEN
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onErrorBeforeSubscribeIn?: symbol;
+        onErrorAfterSubscribeIn?: symbol;
+        onError?: symbol;
+        onFinalize?: symbol;
+      }
+
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        subscribeIn: Symbol('subscribeIn'),
+        doError: Symbol('doError'),
+      };
+
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doError, () => observer.error());
+        return () => contextCaptor.onTeardown = currentContext();
+      })
+        .pipe(
+          tap({error: () => contextCaptor.onErrorBeforeSubscribeIn = currentContext()}),
+          subscribeIn(fn => runInContext(contexts.subscribeIn, fn)),
+          tap({error: () => contextCaptor.onErrorAfterSubscribeIn = currentContext()}),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
+        );
+
+      // WHEN
+      observable$.subscribe({
+        error: () => contextCaptor.onError = currentContext(),
+      });
+
+      // THEN
+      expect(contextCaptor.onConstruct).toBe(contexts.subscribeIn);
+      expect(contextCaptor.onErrorBeforeSubscribeIn).toBe(contexts.doError);
+      expect(contextCaptor.onErrorAfterSubscribeIn).toBe(contexts.doError);
+      expect(contextCaptor.onError).toBe(contexts.doError);
+      expect(contextCaptor.onTeardown).toBe(contexts.subscribeIn);
+      expect(contextCaptor.onFinalize).toBeUndefined();
+    });
+
+    it('should construct the observable in the specified context (simulate complete)', () => {
+      // GIVEN
+      interface ContextCaptor {
+        onConstruct?: symbol;
+        onTeardown?: symbol;
+        onCompleteBeforeSubscribeIn?: symbol;
+        onCompleteAfterSubscribeIn?: symbol;
+        onComplete?: symbol;
+        onFinalize?: symbol;
+      }
+
+      const contextCaptor: ContextCaptor = {};
+      const contexts = {
+        subscribeIn: Symbol('subscribeIn'),
+        doComplete: Symbol('doComplete'),
+      };
+
+      const observable$ = new Observable(observer => {
+        contextCaptor.onConstruct = currentContext();
+        runInContext(contexts.doComplete, () => observer.complete());
+        return () => contextCaptor.onTeardown = currentContext();
+      })
+        .pipe(
+          tap({complete: () => contextCaptor.onCompleteBeforeSubscribeIn = currentContext()}),
+          subscribeIn(fn => runInContext(contexts.subscribeIn, fn)),
+          tap({complete: () => contextCaptor.onCompleteAfterSubscribeIn = currentContext()}),
+          finalize(() => contextCaptor.onFinalize = currentContext()),
+        );
+
+      // WHEN
+      observable$.subscribe({
+        complete: () => contextCaptor.onComplete = currentContext(),
+      });
+
+      // THEN
+      expect(contextCaptor.onConstruct).toBe(contexts.subscribeIn);
+      expect(contextCaptor.onCompleteBeforeSubscribeIn).toBe(contexts.doComplete);
+      expect(contextCaptor.onCompleteAfterSubscribeIn).toBe(contexts.doComplete);
+      expect(contextCaptor.onComplete).toBe(contexts.doComplete);
+      expect(contextCaptor.onTeardown).toBe(contexts.subscribeIn);
+      expect(contextCaptor.onFinalize).toBeUndefined();
+    });
+
+    it('should support for asynchronous subscription ', async () => {
+      const subject = new BehaviorSubject<string>('value');
+      const captor = new ObserveCaptor();
+      subject
+        .pipe(subscribeInside(fn => requestAnimationFrame(fn)))
+        .subscribe(captor);
+
+      // Expect not to be subscribed yet.
+      expect(captor.getLastValue()).toBeUndefined();
+
+      // Wait until subscribed.
+      await captor.waitUntilEmitCount(1);
+      expect(captor.getLastValue()).toEqual('value');
     });
   });
 
@@ -661,8 +938,8 @@ describe('Operators', () => {
 
       // GIVEN
       interface InsideNgZoneCaptor {
-        onObservableCreate?: boolean;
-        onObservableTeardown?: boolean;
+        onConstruct?: boolean;
+        onTeardown?: boolean;
         onNextBeforeSubscribeInside?: boolean;
         onNextAfterSubscribeInside?: boolean;
         onNextAfterObserveInside?: boolean;
@@ -673,21 +950,19 @@ describe('Operators', () => {
 
       const insideAngularCaptor: InsideNgZoneCaptor = {};
 
-      const observable$ = new Observable((observer: Observer<void>): TeardownLogic => {
-        insideAngularCaptor.onObservableCreate = NgZone.isInAngularZone();
-        observer.next(); // emit an event
+      const observable$ = new Observable(observer => {
+        insideAngularCaptor.onConstruct = NgZone.isInAngularZone();
+        observer.next();
         observer.complete();
-        return () => insideAngularCaptor.onObservableTeardown = NgZone.isInAngularZone();
+        return () => insideAngularCaptor.onTeardown = NgZone.isInAngularZone();
       })
         .pipe(
-          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
           tap(() => insideAngularCaptor.onNextBeforeSubscribeInside = NgZone.isInAngularZone()),
-          // use `subscribeInside` operator to run downstream and upstream operators inside the Angular zone
           subscribeInside(continueFn => zone.runOutsideAngular(continueFn)),
           tap(() => insideAngularCaptor.onNextAfterSubscribeInside = NgZone.isInAngularZone()),
-          // use `observeInside` operator to run downstream operators inside the Angular zone
           observeInside(continueFn => zone.run(continueFn)),
           tap(() => insideAngularCaptor.onNextAfterObserveInside = NgZone.isInAngularZone()),
+          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
         );
 
       // WHEN
@@ -699,7 +974,7 @@ describe('Operators', () => {
 
         // THEN
         expect(NgZone.isInAngularZone()).toBeTrue();
-        expect(insideAngularCaptor.onObservableCreate).toBeFalse();
+        expect(insideAngularCaptor.onConstruct).toBeFalse();
         expect(insideAngularCaptor.onNextBeforeSubscribeInside).toBeFalse();
         expect(insideAngularCaptor.onNextAfterSubscribeInside).toBeFalse();
         expect(insideAngularCaptor.onNextAfterObserveInside).toBeTrue();
@@ -708,8 +983,66 @@ describe('Operators', () => {
 
         subscription.unsubscribe();
 
-        expect(insideAngularCaptor.onObservableTeardown).toBeFalse();
-        expect(insideAngularCaptor.onFinalize).toBeFalse();
+        expect(insideAngularCaptor.onTeardown).toBeFalse();
+        expect(insideAngularCaptor.onFinalize).toBeTrue();
+      });
+    });
+  });
+
+  describe('subscribeIn and observeIn', () => {
+
+    it('should subscribe outside the Angular zone, but observe inside of the Angular zone ', () => {
+      const zone = TestBed.inject(NgZone);
+
+      // GIVEN
+      interface InsideNgZoneCaptor {
+        onConstruct?: boolean;
+        onTeardown?: boolean;
+        onNextBeforeSubscribeIn?: boolean;
+        onNextAfterSubscribeIn?: boolean;
+        onNextAfterObserveIn?: boolean;
+        onNext?: boolean;
+        onComplete?: boolean;
+        onFinalize?: boolean;
+      }
+
+      const insideAngularCaptor: InsideNgZoneCaptor = {};
+
+      const observable$ = new Observable(observer => {
+        insideAngularCaptor.onConstruct = NgZone.isInAngularZone();
+        observer.next();
+        observer.complete();
+        return () => insideAngularCaptor.onTeardown = NgZone.isInAngularZone();
+      })
+        .pipe(
+          tap(() => insideAngularCaptor.onNextBeforeSubscribeIn = NgZone.isInAngularZone()),
+          subscribeIn(continueFn => zone.runOutsideAngular(continueFn)),
+          tap(() => insideAngularCaptor.onNextAfterSubscribeIn = NgZone.isInAngularZone()),
+          observeIn(continueFn => zone.run(continueFn)),
+          tap(() => insideAngularCaptor.onNextAfterObserveIn = NgZone.isInAngularZone()),
+          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
+        );
+
+      // WHEN
+      zone.run(() => {
+        const subscription = observable$.subscribe({
+          next: () => insideAngularCaptor.onNext = NgZone.isInAngularZone(),
+          complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
+        });
+
+        // THEN
+        expect(NgZone.isInAngularZone()).toBeTrue();
+        expect(insideAngularCaptor.onConstruct).toBeFalse();
+        expect(insideAngularCaptor.onNextBeforeSubscribeIn).toBeFalse();
+        expect(insideAngularCaptor.onNextAfterSubscribeIn).toBeFalse();
+        expect(insideAngularCaptor.onNextAfterObserveIn).toBeTrue();
+        expect(insideAngularCaptor.onNext).toBeTrue();
+        expect(insideAngularCaptor.onComplete).toBeTrue();
+
+        subscription.unsubscribe();
+
+        expect(insideAngularCaptor.onTeardown).toBeFalse();
+        expect(insideAngularCaptor.onFinalize).toBeTrue();
       });
     });
   });
@@ -1022,3 +1355,21 @@ describe('Operators', () => {
     }));
   });
 });
+
+let CONTEXT: symbol | undefined;
+
+function currentContext(): symbol | undefined {
+  return CONTEXT;
+}
+
+function runInContext(context: symbol, fn: () => void): void {
+  const prevContext = CONTEXT;
+
+  CONTEXT = context;
+  try {
+    fn();
+  }
+  finally {
+    CONTEXT = prevContext;
+  }
+}
