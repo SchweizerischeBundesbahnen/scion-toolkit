@@ -13,8 +13,7 @@ import {SciDimension} from './dimension';
 import {coerceElement} from '@angular/cdk/coercion';
 import {Objects} from '@scion/toolkit/util';
 import {fromResize$} from '@scion/toolkit/observable';
-import {animationFrameScheduler, observeOn} from 'rxjs';
-import {subscribeInside} from '@scion/toolkit/operators';
+import {observeIn, subscribeIn} from '@scion/toolkit/operators';
 
 /**
  * Creates a signal observing the size of an element.
@@ -50,8 +49,12 @@ export function dimension(elementLike: HTMLElement | ElementRef<HTMLElement> | S
     untracked(() => {
       const subscription = fromResize$(el)
         .pipe(
-          subscribeInside(fn => zone.runOutsideAngular(fn)),
-          observeOn(animationFrameScheduler), // do not block resize callback (ResizeObserver loop completed with undelivered notifications)
+          // Avoid triggering change detection cycle.
+          subscribeIn(fn => zone.runOutsideAngular(fn)),
+          // Run in animation frame to prevent 'ResizeObserver loop completed with undelivered notifications' error.
+          // Do not use `animationFrameScheduler` because the scheduler does not necessarily execute in the current execution context, such as inside or outside Angular.
+          // The scheduler always executes tasks in the context (e.g. zone) where the scheduler was first used in the application.
+          observeIn(fn => requestAnimationFrame(fn)),
         )
         .subscribe(() => {
           NgZone.assertNotInAngularZone();

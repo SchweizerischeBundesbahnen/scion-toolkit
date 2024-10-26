@@ -11,8 +11,7 @@
 import {Directive, ElementRef, inject, input, NgZone, output} from '@angular/core';
 import {fromResize$} from '@scion/toolkit/observable';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {observeInside, subscribeInside} from '@scion/toolkit/operators';
-import {animationFrameScheduler, observeOn, subscribeOn} from 'rxjs';
+import {observeIn, subscribeIn} from '@scion/toolkit/operators';
 import {SciDimension} from './dimension';
 
 /**
@@ -47,13 +46,19 @@ export class SciDimensionDirective {
 
     fromResize$(host)
       .pipe(
-        subscribeInside(continueFn => zone.runOutsideAngular(continueFn)),
-        observeInside(continueFn => this.emitOutsideAngular() ? continueFn() : zone.run(continueFn)),
-        subscribeOn(animationFrameScheduler), // do not block resize callback (ResizeObserver loop completed with undelivered notifications)
-        observeOn(animationFrameScheduler), // do not block resize callback (ResizeObserver loop completed with undelivered notifications)
+        // Avoid triggering change detection cycle.
+        subscribeIn(fn => zone.runOutsideAngular(fn)),
+        // Run in animation frame to prevent 'ResizeObserver loop completed with undelivered notifications' error.
+        // Do not use `animationFrameScheduler` because the scheduler does not necessarily execute in the current execution context, such as inside or outside Angular.
+        // The scheduler always executes tasks in the context (e.g. zone) where the scheduler was first used in the application.
+        observeIn(fn => requestAnimationFrame(fn)),
+        observeIn(fn => this.emitOutsideAngular() ? fn() : zone.run(fn)),
         takeUntilDestroyed(),
       )
       .subscribe(() => {
+        // Assert Angular zone.
+        this.emitOutsideAngular() ? NgZone.assertNotInAngularZone() : NgZone.assertInAngularZone();
+
         this.dimensionChange.emit({
           clientWidth: host.clientWidth,
           offsetWidth: host.offsetWidth,
