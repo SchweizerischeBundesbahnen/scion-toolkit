@@ -11,7 +11,7 @@
 import {assertInInjectionContext, assertNotInReactiveContext, computed, effect, ElementRef, inject, Injector, isSignal, NgZone, signal, Signal, untracked} from '@angular/core';
 import {coerceElement} from '@angular/cdk/coercion';
 import {fromBoundingClientRect$} from '@scion/toolkit/observable';
-import {subscribeInside} from '@scion/toolkit/operators';
+import {subscribeIn} from '@scion/toolkit/operators';
 
 /**
  * Creates a signal observing the bounding box of an element.
@@ -51,7 +51,8 @@ export function boundingClientRect(elementLike: HTMLElement | ElementRef<HTMLEle
 
     untracked(() => {
       const subscription = fromBoundingClientRect$(el)
-        .pipe(subscribeInside(fn => zone.runOutsideAngular(fn)))
+        // Avoid triggering change detection cycle.
+        .pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))
         .subscribe(() => {
           NgZone.assertNotInAngularZone();
           onBoundingBoxChange.set();
