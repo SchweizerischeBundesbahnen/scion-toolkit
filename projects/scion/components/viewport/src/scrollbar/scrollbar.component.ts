@@ -9,11 +9,12 @@
  */
 
 import {DOCUMENT} from '@angular/common';
-import {ChangeDetectionStrategy, Component, ElementRef, HostBinding, Inject, Input, NgZone, OnDestroy, ViewChild} from '@angular/core';
-import {fromEvent, merge, Observable, of, Subject, timer} from 'rxjs';
+import {ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, HostBinding, inject, input, NgZone, untracked, viewChild} from '@angular/core';
+import {fromEvent, merge, mergeWith, Observable, of, timer} from 'rxjs';
 import {debounceTime, first, map, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
-import {filterArray, subscribeInside} from '@scion/toolkit/operators';
+import {filterArray, subscribeIn} from '@scion/toolkit/operators';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 /**
  * Renders a vertical or horizontal scrollbar.
@@ -42,11 +43,11 @@ import {filterArray, subscribeInside} from '@scion/toolkit/operators';
 @Component({
   selector: 'sci-scrollbar',
   templateUrl: './scrollbar.component.html',
-  styleUrls: ['./scrollbar.component.scss'],
+  styleUrl: './scrollbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
 })
-export class SciScrollbarComponent implements OnDestroy {
+export class SciScrollbarComponent {
 
   /**
    * Timeout for debouncing viewport resize events that trigger the scroll position computation.
@@ -59,27 +60,27 @@ export class SciScrollbarComponent implements OnDestroy {
    */
   public static readonly VIEWPORT_RESIZE_DEBOUNCE_TIME = 50;
 
-  private _destroy$ = new Subject<void>();
-  private _viewport!: HTMLElement;
-  private _viewportChange$ = new Subject<void>();
-  private _lastDragPosition: number | null = null;
+  private _host = inject(ElementRef<HTMLElement>).nativeElement;
+  private _document = inject(DOCUMENT);
+  private _zone = inject(NgZone);
+  private _destroyRef = inject(DestroyRef);
 
+  private _lastDragPosition: number | null = null;
   private _overflow = false;
   private _thumbSizeFr = 0;
   private _thumbPositionFr = 0;
 
-  /* @docs-private */
-  @ViewChild('thumb_handle', {static: true})
-  public thumbElement!: ElementRef<HTMLDivElement>;
+  private _thumbElement = viewChild.required<ElementRef<HTMLDivElement>>('thumb_handle');
+  private _vertical = computed(() => this.direction() === 'vscroll');
 
   @HostBinding('class.vertical')
   public get vertical(): boolean {
-    return this.direction === 'vscroll';
+    return this._vertical();
   }
 
   @HostBinding('class.horizontal')
   public get horizontal(): boolean {
-    return this.direction === 'hscroll';
+    return !this._vertical();
   }
 
   @HostBinding('class.scrolling')
@@ -92,44 +93,15 @@ export class SciScrollbarComponent implements OnDestroy {
    *
    * By default, if not specified, renders a vertical scrollbar.
    */
-  @Input()
-  public direction: 'vscroll' | 'hscroll' = 'vscroll';
+  public direction = input<'vscroll' | 'hscroll'>('vscroll');
 
   /**
    * The viewport to provide scrollbars for.
    */
-  @Input({alias: 'viewport', required: true}) // eslint-disable-line @angular-eslint/no-input-rename
-  public set setViewport(viewport: HTMLElement) {
-    this._viewport = viewport;
-    this._viewportChange$.next();
-  }
+  public viewport = input.required<HTMLElement>();
 
-  constructor(private _host: ElementRef<HTMLElement>,
-              @Inject(DOCUMENT) private _document: Document,
-              private _zone: NgZone) {
-    this._viewportChange$
-      .pipe(
-        switchMap(() => {
-          if (!this._viewport) {
-            return of(undefined);
-          }
-          return merge(
-            this.viewportScrollChange$(),
-            this.viewportDimensionChange$({debounceTime: SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME}),
-            this.viewportClientDimensionChange$({debounceTime: SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME}),
-          );
-        }),
-        subscribeInside(continueFn => this._zone.runOutsideAngular(continueFn)),
-        takeUntil(this._destroy$),
-      )
-      .subscribe(() => {
-        if (this._viewport) {
-          this.renderScrollPosition();
-        }
-        else {
-          this.unsetScrollPosition();
-        }
-      });
+  constructor() {
+    this.installScrollPositionRenderer();
   }
 
   /**
@@ -152,7 +124,7 @@ export class SciScrollbarComponent implements OnDestroy {
 
     if (overflow !== this._overflow) {
       this._overflow = overflow;
-      overflow ? this._host.nativeElement.classList.add('overflow') : this._host.nativeElement.classList.remove('overflow');
+      overflow ? this._host.classList.add('overflow') : this._host.classList.remove('overflow');
     }
   }
 
@@ -166,17 +138,15 @@ export class SciScrollbarComponent implements OnDestroy {
     this._overflow = false;
     this.setCssVariable('--ɵsci-scrollbar-thumb-position-fr', 0);
     this.setCssVariable('--ɵsci-scrollbar-thumb-size-fr', 0);
-    this._host.nativeElement.classList.remove('overflow');
+    this._host.classList.remove('overflow');
   }
 
-  /* @docs-private */
-  public onTouchStart(event: TouchEvent): void {
+  protected onTouchStart(event: TouchEvent): void {
     event.preventDefault();
     this._lastDragPosition = this.vertical ? event.touches[0].screenY : event.touches[0].screenX;
   }
 
-  /* @docs-private */
-  public onTouchMove(event: TouchEvent): void {
+  protected onTouchMove(event: TouchEvent): void {
     event.preventDefault();
 
     const newDragPositionPx = this.vertical ? event.touches[0].screenY : event.touches[0].screenX;
@@ -186,14 +156,12 @@ export class SciScrollbarComponent implements OnDestroy {
     this.moveViewportClient(viewportPanPx);
   }
 
-  /* @docs-private */
-  public onTouchEnd(event: TouchEvent): void {
+  protected onTouchEnd(event: TouchEvent): void {
     event.preventDefault();
     this._lastDragPosition = null;
   }
 
-  /* @docs-private */
-  public onMouseDown(mousedownEvent: MouseEvent): void {
+  protected onMouseDown(mousedownEvent: MouseEvent): void {
     if (mousedownEvent.button !== 0) {
       return;
     }
@@ -202,34 +170,64 @@ export class SciScrollbarComponent implements OnDestroy {
     this._lastDragPosition = this.vertical ? mousedownEvent.screenY : mousedownEvent.screenX;
 
     // Listen for 'mousemove' events
-    this._zone.runOutsideAngular(() => {
-      const mousemoveListener = merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
-        .pipe(takeUntil(this._destroy$))
-        .subscribe(mousemoveEvent => {
-          mousemoveEvent.preventDefault();
+    const mousemoveListener = merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
+      .pipe(
+        subscribeIn(fn => this._zone.runOutsideAngular(fn)),
+        takeUntilDestroyed(this._destroyRef),
+      )
+      .subscribe(mousemoveEvent => {
+        NgZone.assertNotInAngularZone();
+        mousemoveEvent.preventDefault();
+        const newDragPositionPx = this.vertical ? mousemoveEvent.screenY : mousemoveEvent.screenX;
+        const scrollbarPanPx = newDragPositionPx - this._lastDragPosition!;
+        const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
+        this._lastDragPosition = newDragPositionPx;
+        this.moveViewportClient(viewportPanPx);
+      });
 
-          const newDragPositionPx = this.vertical ? mousemoveEvent.screenY : mousemoveEvent.screenX;
-          const scrollbarPanPx = newDragPositionPx - this._lastDragPosition!;
-          const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
-          this._lastDragPosition = newDragPositionPx;
-          this.moveViewportClient(viewportPanPx);
-        });
-
-      // Listen for 'mouseup' events; use 'capture phase' and 'stop propagation' to not close overlays
-      merge(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup'))
-        .pipe(first(), takeUntil(this._destroy$))
-        .subscribe(mouseupEvent => {
-          mouseupEvent.stopPropagation();
-          mousemoveListener.unsubscribe();
-          this._lastDragPosition = null;
-        });
-    });
+    // Listen for 'mouseup' events; use 'capture phase' and 'stop propagation' to not close overlays
+    merge(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup'))
+      .pipe(
+        subscribeIn(fn => this._zone.runOutsideAngular(fn)),
+        first(),
+        takeUntilDestroyed(this._destroyRef),
+      )
+      .subscribe(mouseupEvent => {
+        NgZone.assertNotInAngularZone();
+        mouseupEvent.stopPropagation();
+        mousemoveListener.unsubscribe();
+        this._lastDragPosition = null;
+      });
   }
 
-  /* @docs-private */
-  public onScrollTrackMouseDown(event: MouseEvent, direction: 'up' | 'down'): void {
+  protected onScrollTrackMouseDown(event: MouseEvent, direction: 'up' | 'down'): void {
     const signum = (direction === 'up' ? -1 : +1);
     this.scrollWhileMouseDown(this.toViewportPanPx(signum * this.thumbSize), event);
+  }
+
+  /**
+   * Renders the current scroll position when the viewport is scrolled.
+   */
+  private installScrollPositionRenderer(): void {
+    effect(onCleanup => {
+      const viewport = this.viewport();
+
+      untracked(() => {
+        if (!viewport) {
+          this.unsetScrollPosition();
+          return;
+        }
+
+        const subscription = viewportScroll$(viewport)
+          .pipe(
+            mergeWith(viewportSize$(viewport, {debounceTime: SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME})),
+            mergeWith(viewportClientSize$(viewport, {debounceTime: SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME})),
+            subscribeIn(fn => this._zone.runOutsideAngular(fn)),
+          )
+          .subscribe(() => this.renderScrollPosition());
+        onCleanup(() => subscription.unsubscribe());
+      });
+    });
   }
 
   /**
@@ -246,10 +244,10 @@ export class SciScrollbarComponent implements OnDestroy {
    */
   private moveViewportClient(viewportPanPx: number): void {
     if (this.vertical) {
-      this._viewport.scrollTop += viewportPanPx;
+      this.viewport().scrollTop += viewportPanPx;
     }
     else {
-      this._viewport.scrollLeft += viewportPanPx;
+      this.viewport().scrollLeft += viewportPanPx;
     }
   }
 
@@ -287,87 +285,81 @@ export class SciScrollbarComponent implements OnDestroy {
       });
   }
 
-  /**
-   * Emits whenever the viewport scrolls.
-   */
-  private viewportScrollChange$(): Observable<void> {
-    return fromEvent(this._viewport, 'scroll', {passive: true}).pipe(map(() => undefined));
-  }
-
-  /**
-   * Emits on subscription, and then each time the size of the viewport changes.
-   */
-  private viewportDimensionChange$(options: {debounceTime: number}): Observable<void> {
-    return fromResize$(this._viewport)
-      .pipe(
-        // Debouncing is particularly important in the context of Angular animations, since they continuously
-        // trigger resize events. Debouncing prevents the scrollbar from flickering, for example, when the user
-        // expands a panel that contains a viewport.
-        debounceTime(options.debounceTime),
-        map(() => undefined),
-      );
-  }
-
-  /**
-   * Emits on subscription, and then each time the size or style property of the viewport client changes.
-   */
-  private viewportClientDimensionChange$(options: {debounceTime: number}): Observable<void> {
-    return this.children$(this._viewport)
-      .pipe(
-        switchMap(children => merge(...children.map(child => merge(
-          fromResize$(child),
-          // Observe style mutations since some transformations change the scroll position without necessarily triggering a dimension change,
-          // e.g., `scale` or `translate` used by some virtual scroll implementations
-          fromMutation$(child, {subtree: false, childList: false, attributeFilter: ['style']})),
-        ))),
-        // Debouncing is particularly important in the context of Angular animations, since they continuously
-        // trigger resize events. Debouncing prevents the scrollbar from flickering, for example, when the user
-        // expands a panel that contains a viewport.
-        debounceTime(options.debounceTime),
-        map(() => undefined),
-      );
-  }
-
-  /**
-   * Emits the children of the passed element, and then each time child elements are added or removed.
-   */
-  private children$(element: HTMLElement): Observable<HTMLElement[]> {
-    return fromMutation$(element, {subtree: false, childList: true})
-      .pipe(
-        startWith(undefined as void),
-        map(() => Array.from(element.children)),
-        filterArray((child: Element): child is HTMLElement => child instanceof HTMLElement),
-      );
-  }
-
   private setCssVariable(key: string, value: any): void {
-    this._host.nativeElement.style.setProperty(key, value);
+    this._host.style.setProperty(key, value);
   }
 
   private get viewportSize(): number {
-    return this._viewport ? (this.vertical ? this._viewport.clientHeight : this._viewport.clientWidth) : 0;
+    return this.viewport() ? (this.vertical ? this.viewport().clientHeight : this.viewport().clientWidth) : 0;
   }
 
   private get viewportClientSize(): number {
-    return this._viewport ? (this.vertical ? this._viewport.scrollHeight : this._viewport.scrollWidth) : 0;
+    return this.viewport() ? (this.vertical ? this.viewport().scrollHeight : this.viewport().scrollWidth) : 0;
   }
 
   private get scrollPosition(): number {
-    return this._viewport ? (this.vertical ? this._viewport.scrollTop : this._viewport.scrollLeft) : 0;
+    return this.viewport() ? (this.vertical ? this.viewport().scrollTop : this.viewport().scrollLeft) : 0;
   }
 
   private get thumbSize(): number {
-    const thumbElement = this.thumbElement.nativeElement;
+    const thumbElement = this._thumbElement().nativeElement;
     return this.vertical ? thumbElement.clientHeight : thumbElement.clientWidth;
   }
 
   private get trackSize(): number {
-    const trackElement = this._host.nativeElement;
-    return this.vertical ? trackElement.clientHeight : trackElement.clientWidth;
+    return this.vertical ? this._host.clientHeight : this._host.clientWidth;
   }
+}
 
-  /* @docs-private */
-  public ngOnDestroy(): void {
-    this._destroy$.next();
-  }
+/**
+ * Emits whenever the viewport scrolls.
+ */
+function viewportScroll$(viewport: HTMLElement): Observable<void> {
+  return fromEvent(viewport, 'scroll', {passive: true}).pipe(map(() => undefined));
+}
+
+/**
+ * Emits on subscription, and then each time the size of the viewport changes.
+ */
+function viewportSize$(viewport: HTMLElement, options: {debounceTime: number}): Observable<void> {
+  return fromResize$(viewport)
+    .pipe(
+      // Debouncing is particularly important in the context of Angular animations, since they continuously
+      // trigger resize events. Debouncing prevents the scrollbar from flickering, for example, when the user
+      // expands a panel that contains a viewport.
+      debounceTime(options.debounceTime),
+      map(() => undefined),
+    );
+}
+
+/**
+ * Emits on subscription, and then each time the size or style property of the viewport client changes.
+ */
+function viewportClientSize$(viewport: HTMLElement, options: {debounceTime: number}): Observable<void> {
+  return children$(viewport)
+    .pipe(
+      switchMap(children => merge(...children.map(child => merge(
+        fromResize$(child),
+        // Observe style mutations since some transformations change the scroll position without necessarily triggering a dimension change,
+        // e.g., `scale` or `translate` used by some virtual scroll implementations
+        fromMutation$(child, {subtree: false, childList: false, attributeFilter: ['style']})),
+      ))),
+      // Debouncing is particularly important in the context of Angular animations, since they continuously
+      // trigger resize events. Debouncing prevents the scrollbar from flickering, for example, when the user
+      // expands a panel that contains a viewport.
+      debounceTime(options.debounceTime),
+      map(() => undefined),
+    );
+}
+
+/**
+ * Emits the children of the passed element, and then each time child elements are added or removed.
+ */
+function children$(element: HTMLElement): Observable<HTMLElement[]> {
+  return fromMutation$(element, {subtree: false, childList: true})
+    .pipe(
+      startWith(undefined as void),
+      map(() => Array.from(element.children)),
+      filterArray((child: Element): child is HTMLElement => child instanceof HTMLElement),
+    );
 }

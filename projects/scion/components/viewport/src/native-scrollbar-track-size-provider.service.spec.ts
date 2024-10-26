@@ -18,8 +18,8 @@ describe('SciNativeScrollbarTrackSizeProvider', () => {
     const fixture = TestBed.createComponent(AppComponent);
     advance(fixture);
 
-    expect(testee.trackSize!.vScrollbarTrackWidth).withContext('vScrollbarTrackWidth').toEqual(fixture.componentInstance.vScrollbarTrackWidth);
-    expect(testee.trackSize!.hScrollbarTrackHeight).withContext('hScrollbarTrackHeight').toEqual(fixture.componentInstance.hScrollbarTrackHeight);
+    expect(testee.trackSize()!.vScrollbarTrackWidth).withContext('vScrollbarTrackWidth').toEqual(fixture.componentInstance.vScrollbarTrackWidth);
+    expect(testee.trackSize()!.hScrollbarTrackHeight).withContext('hScrollbarTrackHeight').toEqual(fixture.componentInstance.hScrollbarTrackHeight);
     tick();
   })));
 });
