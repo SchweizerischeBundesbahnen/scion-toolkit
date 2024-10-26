@@ -8,9 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {animationFrameScheduler, distinctUntilChanged, fromEvent, Observable, observeOn, Subject, switchMap, takeUntil} from 'rxjs';
+import {distinctUntilChanged, fromEvent, Observable, Subject, switchMap, takeUntil} from 'rxjs';
 import {fromIntersection$} from './intersection.observable';
 import {fromResize$} from './resize.observable';
+import {observeIn} from '@scion/toolkit/operators';
 
 /**
  * Observes changes to the bounding box of a specified element.
@@ -81,7 +82,10 @@ class BoundingClientRectObserver {
   private installElementResizeObserver(): void {
     fromResize$(this._element, {box: 'border-box'})
       .pipe(
-        observeOn(animationFrameScheduler), // do not block resize callback (ResizeObserver loop completed with undelivered notifications)
+        // Run in animation frame to prevent 'ResizeObserver loop completed with undelivered notifications' error.
+        // Do not use `animationFrameScheduler` because the scheduler does not necessarily execute in the current execution context, such as inside or outside Angular.
+        // The scheduler always executes tasks in the context (e.g. zone) where the scheduler was first used in the application.
+        observeIn(fn => requestAnimationFrame(fn)),
         takeUntil(this._destroy$),
       )
       .subscribe(() => {
