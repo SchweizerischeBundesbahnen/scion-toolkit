@@ -8,12 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostListener, inject, input, output, viewChild, ViewEncapsulation} from '@angular/core';
+import {Component, effect, ElementRef, HostListener, inject, input, NgZone, output, untracked, viewChild, ViewEncapsulation} from '@angular/core';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 import {coerceElement} from '@angular/cdk/coercion';
 import {SciScrollableDirective} from './scrollable.directive';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
 import {ScrollingModule} from '@angular/cdk/scrolling';
+import {fromEvent} from 'rxjs';
+import {subscribeIn} from '@scion/toolkit/operators';
 
 /**
  * Represents a viewport with slotted content (`<ng-content>`) used as scrollable content. By default, content is added to a CSS grid layout.
@@ -101,25 +103,22 @@ export class SciViewportComponent {
   protected nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   /**
-   * Controls whether to use native scrollbars or, which is by default, emulated scrollbars that sit on top of the viewport client.
-   * In the latter, the viewport client remains natively scrollable.
+   * Controls if to use the native scrollbar or a scrollbar that sits on top of the viewport. Defaults to `on-top`.
    */
   public scrollbarStyle = input<ScrollbarStyle>('on-top');
 
   /**
-   * Emits upon a scroll event.
-   *
-   * You can add [sciDimension] directive to the viewport or viewport client to be notified about layout changes.
+   * Emits when the viewport is scrolled. The event is emitted outside the Angular zone to avoid unnecessary change detection cycles.
    */
   public scroll = output<Event>();
+
+  constructor() {
+    this.installScrollEmitter();
+  }
 
   @HostListener('focus')
   public focus(): void { // do not rename to expose the same focus method like `HTMLElement.focus()`.
     this.viewportElement.focus();
-  }
-
-  protected onScroll(event: Event): void {
-    this.scroll.emit(event);
   }
 
   /**
@@ -278,6 +277,22 @@ export class SciViewportComponent {
     } while (el !== this._host);
 
     return offset;
+  }
+
+  /**
+   * Emits when the scroll position changes.
+   */
+  private installScrollEmitter(): void {
+    const zone = inject(NgZone);
+    effect(onCleanup => {
+      const viewport = this._viewport();
+      untracked(() => {
+        const subscription = fromEvent(viewport.nativeElement, 'scroll')
+          .pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))
+          .subscribe(event => this.scroll.emit(event));
+        onCleanup(() => subscription.unsubscribe());
+      });
+    });
   }
 }
 
