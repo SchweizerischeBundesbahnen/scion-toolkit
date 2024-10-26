@@ -1427,7 +1427,7 @@ describe('Viewport', () => {
   template: `
     <sci-viewport>
       <div class="container" [class.row]="direction === 'row'" [class.column]="direction === 'column'">
-        @for (element of elements; track element) {
+        @for (element of elements; track $index) {
           <button (click)="onRemove()">Remove element</button>
         }
       </div>

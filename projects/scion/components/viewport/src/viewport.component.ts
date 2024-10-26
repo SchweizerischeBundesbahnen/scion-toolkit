@@ -8,13 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild, ViewEncapsulation} from '@angular/core';
+import {Component, ElementRef, HostListener, inject, input, output, viewChild, ViewEncapsulation} from '@angular/core';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 import {coerceElement} from '@angular/cdk/coercion';
 import {SciScrollableDirective} from './scrollable.directive';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
 import {ScrollingModule} from '@angular/cdk/scrolling';
-import {AsyncPipe} from '@angular/common';
 
 /**
  * Represents a viewport with slotted content (`<ng-content>`) used as scrollable content. By default, content is added to a CSS grid layout.
@@ -86,11 +85,10 @@ import {AsyncPipe} from '@angular/common';
 @Component({
   selector: 'sci-viewport',
   templateUrl: './viewport.component.html',
-  styleUrls: ['./viewport.component.scss'],
+  styleUrl: './viewport.component.scss',
   encapsulation: ViewEncapsulation.ShadowDom,
   standalone: true,
   imports: [
-    AsyncPipe,
     ScrollingModule,
     SciScrollableDirective,
     SciScrollbarComponent,
@@ -98,52 +96,30 @@ import {AsyncPipe} from '@angular/common';
 })
 export class SciViewportComponent {
 
-  private _viewportElement!: HTMLDivElement;
-  private _viewportClient!: HTMLDivElement;
-  private _scrollbarStyle: ScrollbarStyle = 'on-top';
-
-  /** @internal */
-  @ViewChild('viewport', {static: true})
-  public set setViewport(viewport: ElementRef<HTMLDivElement>) {
-    this._viewportElement = coerceElement(viewport);
-  }
-
-  /** @internal */
-  @ViewChild('viewport_client', {static: true})
-  public set setViewportClient(viewportClient: ElementRef<HTMLDivElement>) {
-    this._viewportClient = coerceElement(viewportClient);
-  }
+  private _viewport = viewChild.required<ElementRef<HTMLDivElement>>('viewport');
+  private _viewportClient = viewChild.required<ElementRef<HTMLDivElement>>('viewport_client');
+  private _host = inject(ElementRef<HTMLElement>).nativeElement;
+  protected nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   /**
    * Controls whether to use native scrollbars or, which is by default, emulated scrollbars that sit on top of the viewport client.
    * In the latter, the viewport client remains natively scrollable.
    */
-  @Input()
-  public set scrollbarStyle(scrollbarStyle: ScrollbarStyle) {
-    this._scrollbarStyle = scrollbarStyle || 'on-top';
-  }
-
-  public get scrollbarStyle(): ScrollbarStyle {
-    return this._scrollbarStyle;
-  }
+  public scrollbarStyle = input<ScrollbarStyle>('on-top');
 
   /**
    * Emits upon a scroll event.
    *
    * You can add [sciDimension] directive to the viewport or viewport client to be notified about layout changes.
    */
-  @Output()
-  public scroll = new EventEmitter<Event>(); // eslint-disable-line @angular-eslint/no-output-native
-
-  constructor(public host: ElementRef<HTMLElement>, public nativeScrollbarTrackSizeProvider: SciNativeScrollbarTrackSizeProvider) {
-  }
+  public scroll = output<Event>();
 
   @HostListener('focus')
   public focus(): void { // do not rename to expose the same focus method like `HTMLElement.focus()`.
-    this._viewportElement?.focus();
+    this.viewportElement.focus();
   }
 
-  public onScroll(event: Event): void {
+  protected onScroll(event: Event): void {
     this.scroll.emit(event);
   }
 
@@ -153,7 +129,7 @@ export class SciViewportComponent {
    * @see Element.scrollTop
    */
   public get scrollTop(): number {
-    return this._viewportElement.scrollTop;
+    return this.viewportElement.scrollTop;
   }
 
   /**
@@ -162,7 +138,7 @@ export class SciViewportComponent {
    * @see Element.scrollTop
    */
   public set scrollTop(scrollTop: number) {
-    this._viewportElement.scrollTop = scrollTop;
+    this.viewportElement.scrollTop = scrollTop;
   }
 
   /**
@@ -171,7 +147,7 @@ export class SciViewportComponent {
    * @see Element.scrollLeft
    */
   public get scrollLeft(): number {
-    return this._viewportElement.scrollLeft;
+    return this.viewportElement.scrollLeft;
   }
 
   /**
@@ -180,7 +156,7 @@ export class SciViewportComponent {
    * @see Element.scrollLeft
    */
   public set scrollLeft(scrollLeft: number) {
-    this._viewportElement.scrollLeft = scrollLeft;
+    this.viewportElement.scrollLeft = scrollLeft;
   }
 
   /**
@@ -189,7 +165,7 @@ export class SciViewportComponent {
    * @see Element.scrollHeight
    */
   public get scrollHeight(): number {
-    return this._viewportElement.scrollHeight;
+    return this.viewportElement.scrollHeight;
   }
 
   /**
@@ -198,21 +174,21 @@ export class SciViewportComponent {
    * @see Element.scrollWidth
    */
   public get scrollWidth(): number {
-    return this._viewportElement.scrollWidth;
+    return this.viewportElement.scrollWidth;
   }
 
   /**
    * Returns the viewport {HTMLElement}.
    */
   public get viewportElement(): HTMLElement {
-    return this._viewportElement;
+    return this._viewport().nativeElement;
   }
 
   /**
    * Returns the viewport client {HTMLElement}.
    */
   public get viewportClientElement(): HTMLElement {
-    return this._viewportClient;
+    return this._viewportClient().nativeElement;
   }
 
   /**
@@ -236,17 +212,17 @@ export class SciViewportComponent {
     // The calculation of whether an element is scrolled into view may be wrong by a few pixels if the viewport contains elements with decimal sizes.
     // This can happen because `offsetLeft` and `offsetTop` operate on an integer (not a decimal), losing precision that can accumulate.
     // To avoid incorrect calculation when there is no viewport overflow, we consider all contained elements as scrolled into the view.
-    if (this._viewportElement.scrollWidth <= this._viewportElement.clientWidth && this._viewportElement.scrollHeight <= this._viewportElement.clientHeight) {
+    if (this.viewportElement.scrollWidth <= this.viewportElement.clientWidth && this.viewportElement.scrollHeight <= this.viewportElement.clientHeight) {
       return true;
     }
 
     const elBottom = elTop + coerceElement(element).offsetHeight;
     const elRight = elLeft + coerceElement(element).offsetWidth;
 
-    const vpTop = this._viewportElement.scrollTop;
-    const vpLeft = this._viewportElement.scrollLeft;
-    const vpBottom = vpTop + this._viewportElement.clientHeight;
-    const vpRight = vpLeft + this._viewportElement.clientWidth;
+    const vpTop = this.viewportElement.scrollTop;
+    const vpLeft = this.viewportElement.scrollLeft;
+    const vpBottom = vpTop + this.viewportElement.clientHeight;
+    const vpRight = vpLeft + this.viewportElement.clientWidth;
 
     if (fit === 'full') {
       return (elTop >= vpTop && elBottom <= vpBottom) && (elLeft >= vpLeft && elRight <= vpRight);
@@ -272,8 +248,8 @@ export class SciViewportComponent {
       return;
     }
 
-    this._viewportElement.scrollTop = top - offset;
-    this._viewportElement.scrollLeft = left - offset;
+    this.viewportElement.scrollTop = top - offset;
+    this.viewportElement.scrollLeft = left - offset;
   }
 
   /**
@@ -300,7 +276,7 @@ export class SciViewportComponent {
         return null;
       }
       el = offsetParent;
-    } while (el !== this.host.nativeElement);
+    } while (el !== this._host);
 
     return offset;
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Swiss Federal Railways
+ * Copyright (c) 2018-2024 Swiss Federal Railways
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -8,38 +8,29 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Inject, Injectable, NgZone, OnDestroy} from '@angular/core';
+import {inject, Injectable, NgZone, Signal} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
-import {BehaviorSubject, fromEvent, Observable, Subject} from 'rxjs';
-import {debounceTime, distinctUntilChanged, map, startWith, takeUntil} from 'rxjs/operators';
+import {fromEvent} from 'rxjs';
+import {debounceTime, distinctUntilChanged, map, startWith} from 'rxjs/operators';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {subscribeIn} from '@scion/toolkit/operators';
 
 /**
  * Provides the native scrollbar tracksize.
  */
 @Injectable({providedIn: 'root'})
-export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
+export class SciNativeScrollbarTrackSizeProvider {
 
-  private readonly _trackSize$ = new BehaviorSubject<NativeScrollbarTrackSize | null>(null);
-  private readonly _destroy$ = new Subject<void>();
-
-  constructor(@Inject(DOCUMENT) private _document: Document, private _zone: NgZone) {
-    this.installNativeScrollbarTrackSizeListener();
-  }
+  private _document = inject(DOCUMENT);
+  private _zone = inject(NgZone);
 
   /**
-   * Returns an {Observable} which emits the native scrollbar track size, if any, or else `null`.
-   *
-   * Upon subscription, it emits the track size immediately, and then continuously emits when the track size changes.
+   * Provides the track size of the native scrollbar, or `null` if the native scrollbars sit on top of the content.
    */
-  public get trackSize$(): Observable<NativeScrollbarTrackSize | null> {
-    return this._trackSize$;
-  }
+  public trackSize: Signal<NativeScrollbarTrackSize | null>;
 
-  /**
-   * Returns the native scrollbar track size, if any, or else `null`.
-   */
-  public get trackSize(): NativeScrollbarTrackSize | null {
-    return this._trackSize$.getValue();
+  constructor() {
+    this.trackSize = this.createNativeScrollbarTrackSizeSignal();
   }
 
   /**
@@ -48,7 +39,7 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
    * @returns native track size, or `null` if the native scrollbars sit on top of the content.
    */
   private computeTrackSize(): NativeScrollbarTrackSize | null {
-    // create temporary viewport and viewport client with native scrollbars to compute scrolltrack width
+    // Create temporary viewport and viewport client with native scrollbars to compute the scrolltrack width.
     const viewportDiv = this._document.createElement('div');
     setStyle(viewportDiv, {
       position: 'absolute',
@@ -77,7 +68,7 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
       vScrollbarTrackWidth: viewportBounds.width - viewportClientBounds.width,
     };
 
-    // destroy temporary viewport
+    // Destroy temporary viewport.
     this._document.body.removeChild(viewportDiv);
     if (trackSize.hScrollbarTrackHeight === 0 && trackSize.vScrollbarTrackWidth === 0) {
       return null;
@@ -86,27 +77,19 @@ export class SciNativeScrollbarTrackSizeProvider implements OnDestroy {
     return trackSize;
   }
 
-  private installNativeScrollbarTrackSizeListener(): void {
+  private createNativeScrollbarTrackSizeSignal(): Signal<NativeScrollbarTrackSize | null> {
     // We compute the size of the native scrollbar track when the browser fires the onresize window event.
     // This event is also fired on page zoom or when displaying a hidden document. Hidden documents do not have
     // a scrollbar track size until being displayed, e.g., after showing hidden iframes.
-    this._zone.runOutsideAngular(() => {
-      fromEvent(window, 'resize')
-        .pipe(
-          debounceTime(5),
-          startWith(null), // trigger the initial computation
-          map(() => this.computeTrackSize()),
-          distinctUntilChanged((t1, t2) => JSON.stringify(t1) === JSON.stringify(t2)),
-          takeUntil(this._destroy$),
-        )
-        .subscribe(trackSize => {
-          this._zone.run(() => this._trackSize$.next(trackSize));
-        });
-    });
-  }
-
-  public ngOnDestroy(): void {
-    this._destroy$.next();
+    const trackSize$ = fromEvent(window, 'resize')
+      .pipe(
+        subscribeIn(fn => this._zone.runOutsideAngular(fn)),
+        debounceTime(5),
+        startWith(null), // trigger the initial computation
+        map(() => this.computeTrackSize()),
+        distinctUntilChanged((t1, t2) => t1?.hScrollbarTrackHeight === t2?.hScrollbarTrackHeight && t1?.vScrollbarTrackWidth === t2?.vScrollbarTrackWidth),
+      );
+    return toSignal(trackSize$, {initialValue: null});
   }
 }
 

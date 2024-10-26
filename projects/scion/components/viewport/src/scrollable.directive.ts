@@ -8,10 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, ElementRef, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges} from '@angular/core';
+import {Directive, effect, ElementRef, inject, input, Renderer2, untracked} from '@angular/core';
 import {NativeScrollbarTrackSize, SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
-import {map, takeUntil} from 'rxjs/operators';
-import {merge, Subject} from 'rxjs';
 import {Dictionary} from '@scion/toolkit/util';
 
 /**
@@ -29,41 +27,48 @@ import {Dictionary} from '@scion/toolkit/util';
   selector: '[sciScrollable]',
   standalone: true,
 })
-export class SciScrollableDirective implements OnChanges, OnDestroy {
+export class SciScrollableDirective {
 
-  private _destroy$ = new Subject<void>();
-  private _inputChange$ = new Subject<void>();
+  private _host = inject(ElementRef<HTMLDivElement>).nativeElement;
+  private _renderer = inject(Renderer2);
+  private _nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   /**
    * Controls whether to display native scrollbars.
    * Has no effect if the native scrollbar sits on top of the content, e.g. in OS X.
    */
-  @Input('sciScrollableDisplayNativeScrollbar')// eslint-disable-line @angular-eslint/no-input-rename
-  public isDisplayNativeScrollbar = false;
+  public displayNativeScrollbar = input(false, {alias: 'sciScrollableDisplayNativeScrollbar'});
 
-  constructor(private _host: ElementRef<HTMLDivElement>,
-              private _renderer: Renderer2,
-              nativeScrollbarTrackSizeProvider: SciNativeScrollbarTrackSizeProvider) {
-    merge(
-      nativeScrollbarTrackSizeProvider.trackSize$,
-      this._inputChange$.pipe(map(() => nativeScrollbarTrackSizeProvider.trackSize)),
-    )
-      .pipe(takeUntil(this._destroy$))
-      .subscribe(nativeScrollbarTrackSize => {
-        if (nativeScrollbarTrackSize === null) { // the native scrollbar sits on top of the content
-          this.useNativeScrollbars();
-        }
-        else {
-          this.isDisplayNativeScrollbar ? this.useNativeScrollbars() : this.shiftNativeScrollbars(nativeScrollbarTrackSize);
-        }
-      });
+  constructor() {
+    this.controlDisplayOfNativeScrollbar();
+  }
+
+  /**
+   * Controls the display of the native scrollbar based on this directive's configuration.
+   */
+  private controlDisplayOfNativeScrollbar(): void {
+    effect(() => {
+      const displayNativeScrollbar = this.displayNativeScrollbar();
+      if (displayNativeScrollbar) {
+        untracked(() => this.useNativeScrollbars());
+        return;
+      }
+
+      const nativeScrollbarTrackSize = this._nativeScrollbarTrackSizeProvider.trackSize();
+      if (nativeScrollbarTrackSize) {
+        untracked(() => this.shiftNativeScrollbars(nativeScrollbarTrackSize));
+      }
+      else {
+        untracked(() => this.useNativeScrollbars());
+      }
+    });
   }
 
   /**
    * Uses the native scrollbars when content overflows.
    */
   private useNativeScrollbars(): void {
-    this.setStyle(this._host.nativeElement, {
+    this.setStyle(this._host, {
       overflow: 'auto',
       width: '100%',
       height: '100%',
@@ -76,7 +81,7 @@ export class SciScrollableDirective implements OnChanges, OnDestroy {
    * Shifts the native scrollbars out of the visible viewport area.
    */
   private shiftNativeScrollbars(nativeScrollbarTrackSize: NativeScrollbarTrackSize): void {
-    this.setStyle(this._host.nativeElement, {
+    this.setStyle(this._host, {
       overflow: 'scroll',
       width: `calc(100% + ${nativeScrollbarTrackSize.vScrollbarTrackWidth}px`,
       height: `calc(100% + ${nativeScrollbarTrackSize.hScrollbarTrackHeight}px`,
@@ -87,13 +92,5 @@ export class SciScrollableDirective implements OnChanges, OnDestroy {
 
   private setStyle(element: Element, style: Dictionary): void {
     Object.keys(style).forEach(key => this._renderer.setStyle(element, key, style[key]));
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this._inputChange$.next();
-  }
-
-  public ngOnDestroy(): void {
-    this._destroy$.next();
   }
 }
