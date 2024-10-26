@@ -9,7 +9,7 @@
  */
 
 import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {Component, ElementRef, HostBinding, Input, Renderer2, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostBinding, Input, NgZone, Renderer2, viewChild, ViewChild} from '@angular/core';
 import {By} from '@angular/platform-browser';
 import {Dictionary} from '@scion/toolkit/util';
 import {SciViewportComponent} from './viewport.component';
@@ -941,6 +941,51 @@ describe('Viewport', () => {
 
     // unsubscribe to avoid `ResizeObserver loop limit exceeded` error
     fromDimensionSubscription.unsubscribe();
+  });
+
+  it('should emit scroll events outside the Angular zone', async () => {
+    @Component({
+      selector: 'spec-viewport',
+      template: `
+        <sci-viewport (scroll)="onScroll()">
+          <div class="content">Content</div>
+        </sci-viewport>`,
+      styles: `
+        :host {
+          display: grid;
+          border: 1px solid black;
+          width: 300px;
+          height: 200px;
+
+          > sci-viewport > div.content {
+            height: 1000px;
+            background-color: lightblue;
+          }
+        }`,
+      standalone: true,
+      imports: [SciViewportComponent],
+    })
+    class SpecComponent {
+
+      public viewport = viewChild.required(SciViewportComponent);
+      public scrolledInsideAngular: boolean | undefined = undefined;
+
+      protected onScroll(): void {
+        this.scrolledInsideAngular = NgZone.isInAngularZone();
+      }
+    }
+
+    const fixture = TestBed.createComponent(SpecComponent);
+    fixture.autoDetectChanges(true);
+    const testee = fixture.componentInstance;
+    const viewport = testee.viewport();
+
+    // Scroll the viewport.
+    viewport.scrollTop = 100;
+    await flushChanges(fixture);
+
+    // Expect scroll event to be received outside Angular.
+    expect(testee.scrolledInsideAngular).toBeFalse();
   });
 
   describe('computeOffset', () => {

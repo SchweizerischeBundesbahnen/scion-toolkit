@@ -3,8 +3,7 @@
      class="viewport"
      tabindex="-1"
      sciScrollable [sciScrollableDisplayNativeScrollbar]="scrollbarStyle() === 'native'"
-     cdkScrollable
-     (scroll)="onScroll($event)">
+     cdkScrollable>
   <div #viewport_client class="viewport-client" part="content">
     <slot></slot>
   </div>

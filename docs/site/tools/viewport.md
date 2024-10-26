@@ -79,12 +79,12 @@ The viewport component displays scrollbars when its content overflows. Scrollbar
   
 #### Inputs:
 - **scrollbarStyle**\
-  Controls whether to use native scrollbars or, which is by default, emulated scrollbars that sit on top of the viewport client. In the latter, the viewport client remains natively scrollable.\
+  Controls if to use the native scrollbar or a scrollbar that sits on top of the viewport. Defaults to `on-top`.
   Supported values are `native`, `on-top`, or `hidden`.
 
 #### Events:
 - **scroll**\
-  Emits upon a scroll event.
+  Emits when the viewport is scrolled. The event is emitted outside the Angular zone to avoid unnecessary change detection cycles.
 
 </details>
 
