@@ -1,10 +1,14 @@
-# [18.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-18.0.1...components-18.1.0) (2024-10-22)
+## [18.1.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-18.1.0...components-18.1.1) (2024-10-28)
 
 
-### Features
+### Performance Improvements
 
-* **components/dimension:** provide signal to observe the bounding box of an element ([1d1d804](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/1d1d804c817c9536a69afd89d2f148c4da9ea104))
-* **components/dimension:** provide signal to observe the size of an element ([b817e7b](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/b817e7be26ac2beb0b2e9c69d52bf53b657742ef))
+* **components/dimension:** avoid unnecessary change detection cycles ([948061e](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/948061e2382f48fb697b2f639875b1ddc167483c))
+
+
+### Dependencies
+
+* **components:** SCION Components requires `@scion/toolkit` version `1.6.0` or later.
 
 
 
