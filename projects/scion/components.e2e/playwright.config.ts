@@ -16,7 +16,7 @@ const runHeadless = !!process.env['HEADLESS'];
 const config: PlaywrightTestConfig = {
   forbidOnly: runInCI,
   webServer: {
-    command: runInCI ? 'npm run components-testing-app:http-server' : 'npm run components-testing-app:serve',
+    command: runInCI ? 'npm run components-testing-app:dist-serve' : 'npm run components-testing-app:serve',
     port: 4200,
     reuseExistingServer: !runInCI,
   },
