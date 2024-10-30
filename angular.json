@@ -235,7 +235,10 @@
               "buildTarget": "components-app:build:production"
             },
             "development": {
-              "buildTarget": "components-app:build:development"
+              "buildTarget": "components-app:build:development",
+              "headers": {
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
+              }
             }
           },
           "defaultConfiguration": "development"
@@ -321,7 +324,10 @@
               "buildTarget": "components-testing-app:build:production"
             },
             "development": {
-              "buildTarget": "components-testing-app:build:development"
+              "buildTarget": "components-testing-app:build:development",
+              "headers": {
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
+              }
             }
           },
           "defaultConfiguration": "development"
