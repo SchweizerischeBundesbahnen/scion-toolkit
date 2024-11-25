@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {startWith, takeUntil} from 'rxjs/operators';
@@ -24,7 +24,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   selector: 'sci-viewport-page',
   templateUrl: './sci-viewport-page.component.html',
   styleUrls: ['./sci-viewport-page.component.scss'],
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SplitPipe,
@@ -35,6 +34,9 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   ],
 })
 export default class SciViewportPageComponent implements OnInit, OnDestroy {
+
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
+  private readonly _document = inject(DOCUMENT);
 
   private _destroy$ = new Subject<void>();
   private _styleSheet: CSSStyleSheet | null = null;
@@ -68,7 +70,7 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
     return this.form.controls.viewportFlex.value;
   }
 
-  constructor(private _formBuilder: NonNullableFormBuilder, @Inject(DOCUMENT) private _document: any) {
+  constructor() {
     this._styleSheet = this.installStyleSheet();
     this.applyViewportContentStylesOnStyleChange();
   }

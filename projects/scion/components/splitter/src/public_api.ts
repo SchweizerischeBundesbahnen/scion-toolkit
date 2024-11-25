@@ -14,4 +14,4 @@
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
 export {SciSplitterModule} from './splitter.module';
-export {SciSplitterComponent, SplitterMoveEvent, EventPosition} from './splitter.component';
+export {SciSplitterComponent, type SplitterMoveEvent, type EventPosition} from './splitter.component';

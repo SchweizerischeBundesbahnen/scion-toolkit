@@ -127,7 +127,7 @@ export class BeanManager {
 
     // Destroy an already registered bean under the same symbol, if any, unless multi is set to `true`.
     if (!multi && this._beanRegistry.has(symbol)) {
-      this.disposeBean(this._beanRegistry.get(symbol)!.values().next().value);
+      this.disposeBean(this._beanRegistry.get(symbol)!.values().next().value!);
     }
 
     const beanInfo: BeanInfo<T> = {

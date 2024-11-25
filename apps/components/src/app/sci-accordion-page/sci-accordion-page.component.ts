@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
@@ -18,7 +18,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   selector: 'sci-accordion-page',
   templateUrl: './sci-accordion-page.component.html',
   styleUrls: ['./sci-accordion-page.component.scss'],
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SciFormFieldComponent,
@@ -30,6 +29,8 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   ],
 })
 export default class SciAccordionPageComponent {
+
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
 
   public form = this._formBuilder.group({
     variant: this._formBuilder.control<'solid' | 'bubble'>('bubble'),
@@ -50,8 +51,6 @@ export default class SciAccordionPageComponent {
     {title: 'Angular Youtube Component', description: 'Angular component built on top of the YouTube Player API.'},
   ];
 
-  constructor(private _formBuilder: NonNullableFormBuilder) {
-  }
 }
 
 export interface Item {

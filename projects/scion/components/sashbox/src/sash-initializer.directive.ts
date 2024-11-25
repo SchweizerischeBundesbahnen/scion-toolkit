@@ -16,7 +16,6 @@ import {SciSashDirective} from './sash.directive';
  */
 @Directive({
   selector: 'div[sciSashInitializer].sash',
-  standalone: true,
 })
 export class SciSashInitializerDirective implements OnChanges {
 

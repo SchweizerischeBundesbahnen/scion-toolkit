@@ -47,7 +47,6 @@ import {fromResize$} from '@scion/toolkit/observable';
   selector: 'sci-accordion',
   templateUrl: './accordion.component.html',
   styleUrls: ['./accordion.component.scss'],
-  standalone: true,
   imports: [
     NgClass,
     NgTemplateOutlet,

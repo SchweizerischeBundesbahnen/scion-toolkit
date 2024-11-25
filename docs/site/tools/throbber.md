@@ -33,7 +33,6 @@ Click [here](https://components.scion.vercel.app/#/sci-throbber) for a demo of t
 
    @Component({
      // other metadata skipped
-     standalone: true,
      imports: [SciThrobberComponent]
    })
    export class YourComponent {

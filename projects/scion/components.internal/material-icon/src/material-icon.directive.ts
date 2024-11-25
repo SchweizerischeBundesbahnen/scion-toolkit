@@ -19,7 +19,7 @@ import {Directive, HostBinding} from '@angular/core';
  * - https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp
  * - https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp
  */
-@Directive({selector: '[sciMaterialIcon]', standalone: true})
+@Directive({selector: '[sciMaterialIcon]'})
 export class SciMaterialIconDirective {
 
   @HostBinding('class.material-icons')

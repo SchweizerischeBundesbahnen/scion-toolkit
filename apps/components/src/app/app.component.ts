@@ -24,7 +24,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  standalone: true,
   imports: [
     AsyncPipe,
     RouterLink,

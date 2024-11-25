@@ -35,7 +35,6 @@ Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of t
 
    @Component({
      // other metadata skipped
-     standalone: true,
      imports: [SciViewportComponent]
    })
    export class YourComponent {

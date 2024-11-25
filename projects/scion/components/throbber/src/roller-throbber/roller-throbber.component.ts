@@ -20,7 +20,6 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
   templateUrl: './roller-throbber.component.html',
   styleUrls: ['./roller-throbber.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
 })
 export class SciRollerThrobberComponent {
 }

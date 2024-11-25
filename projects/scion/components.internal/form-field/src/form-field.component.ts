@@ -16,7 +16,6 @@ import {UUID} from '@scion/toolkit/uuid';
   selector: 'sci-form-field',
   templateUrl: './form-field.component.html',
   styleUrls: ['./form-field.component.scss'],
-  standalone: true,
 })
 export class SciFormFieldComponent implements OnDestroy {
 

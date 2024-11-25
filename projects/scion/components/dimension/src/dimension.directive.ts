@@ -26,7 +26,6 @@ import {SciDimension} from './dimension';
  */
 @Directive({
   selector: '[sciDimension]',
-  standalone: true,
 })
 export class SciDimensionDirective {
 

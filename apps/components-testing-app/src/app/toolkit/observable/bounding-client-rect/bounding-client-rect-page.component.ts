@@ -17,7 +17,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   selector: 'app-bounding-client-rect-page',
   templateUrl: './bounding-client-rect-page.component.html',
   styleUrl: './bounding-client-rect-page.component.scss',
-  standalone: true,
   imports: [
     FormsModule,
   ],

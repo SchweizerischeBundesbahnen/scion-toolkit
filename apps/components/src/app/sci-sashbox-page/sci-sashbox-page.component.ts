@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, inject, OnInit, ViewChild} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -19,7 +19,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   selector: 'sci-sashbox-page',
   templateUrl: './sci-sashbox-page.component.html',
   styleUrls: ['./sci-sashbox-page.component.scss'],
-  standalone: true,
   imports: [
     FormsModule,
     ReactiveFormsModule,
@@ -33,6 +32,8 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   ],
 })
 export default class SciSashboxPageComponent implements OnInit {
+
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
 
   public directionFormControl = this._formBuilder.control<'column' | 'row'>('row');
   public stylingFormGroup = this._formBuilder.group({
@@ -58,9 +59,6 @@ export default class SciSashboxPageComponent implements OnInit {
 
   @ViewChild(SciSashboxComponent, {static: true, read: ElementRef})
   public sashBoxComponent!: ElementRef<HTMLElement>;
-
-  constructor(private _formBuilder: NonNullableFormBuilder) {
-  }
 
   public ngOnInit(): void {
     // Set CSS variable default values.

@@ -1459,7 +1459,6 @@ describe('Viewport', () => {
       height: 100px;
     }
   `],
-  standalone: true,
   imports: [
     SciViewportComponent,
   ],
@@ -1500,7 +1499,6 @@ class Testee1Component {
       background-color: #ffefbe;
     }
   `],
-  standalone: true,
   imports: [SciViewportComponent],
 })
 class Testee2Component {
@@ -1565,7 +1563,6 @@ class Testee2Component {
       background-color: cornflowerblue;
     }
   `],
-  standalone: true,
   imports: [SciViewportComponent],
 })
 class Testee3Component {
@@ -1641,7 +1638,6 @@ class Testee3Component {
       flex-direction: column;
     }
   `],
-  standalone: true,
   imports: [SciViewportComponent],
 })
 class ElementDecimalSizeTestComponent {

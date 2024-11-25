@@ -19,7 +19,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   selector: 'sci-toggle-button',
   templateUrl: './toggle-button.component.html',
   styleUrls: ['./toggle-button.component.scss'],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,

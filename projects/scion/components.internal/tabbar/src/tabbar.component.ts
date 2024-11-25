@@ -38,7 +38,6 @@ import {SciViewportComponent} from '@scion/components/viewport';
   templateUrl: './tabbar.component.html',
   styleUrls: ['./tabbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [
     AsyncPipe,
     NgClass,

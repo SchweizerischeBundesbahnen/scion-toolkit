@@ -25,7 +25,6 @@ import {Dictionary} from '@scion/toolkit/util';
  */
 @Directive({
   selector: '[sciScrollable]',
-  standalone: true,
 })
 export class SciScrollableDirective {
 

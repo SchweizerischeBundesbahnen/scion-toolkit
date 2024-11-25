@@ -20,7 +20,6 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
   templateUrl: './ripple-throbber.component.html',
   styleUrls: ['./ripple-throbber.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
 })
 export class SciRippleThrobberComponent {
 }

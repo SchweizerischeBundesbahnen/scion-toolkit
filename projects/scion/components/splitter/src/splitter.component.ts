@@ -60,7 +60,6 @@ import {first, takeUntil} from 'rxjs/operators';
   templateUrl: './splitter.component.html',
   styleUrls: ['./splitter.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
 })
 export class SciSplitterComponent implements OnInit, OnDestroy {
 

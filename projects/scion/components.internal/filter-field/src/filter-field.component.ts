@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostBinding, HostListener, Input, OnDestroy, Output, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostBinding, HostListener, inject, Input, OnDestroy, Output, ViewChild} from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {takeUntil} from 'rxjs/operators';
 import {noop, Subject} from 'rxjs';
@@ -25,7 +25,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   templateUrl: './filter-field.component.html',
   styleUrls: ['./filter-field.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SciMaterialIconDirective,
@@ -35,6 +34,11 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   ],
 })
 export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy {
+
+  private readonly _host = inject(ElementRef);
+  private readonly _focusManager = inject(FocusMonitor);
+  private readonly _cd = inject(ChangeDetectorRef);
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
 
   private _destroy$ = new Subject<void>();
   private _cvaChangeFn: (value: any) => void = noop;
@@ -83,10 +87,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   /* @docs-private */
   public formControl = this._formBuilder.control('', {updateOn: 'change'});
 
-  constructor(private _host: ElementRef,
-              private _focusManager: FocusMonitor,
-              private _cd: ChangeDetectorRef,
-              private _formBuilder: NonNullableFormBuilder) {
+  constructor() {
     this.formControl.valueChanges
       .pipe(takeUntil(this._destroy$))
       .subscribe(value => {

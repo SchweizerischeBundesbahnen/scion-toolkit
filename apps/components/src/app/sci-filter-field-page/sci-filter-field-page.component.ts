@@ -7,9 +7,8 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
-import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -19,10 +18,8 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   selector: 'sci-filter-field-page',
   templateUrl: './sci-filter-field-page.component.html',
   styleUrls: ['./sci-filter-field-page.component.scss'],
-  standalone: true,
   imports: [
     ReactiveFormsModule,
-    SciFormFieldComponent,
     SciFilterFieldComponent,
     SciCheckboxComponent,
     SciTabDirective,
@@ -30,6 +27,8 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   ],
 })
 export default class SciFilterFieldPageComponent {
+
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
 
   protected filterText: string | null = null;
 
@@ -40,7 +39,7 @@ export default class SciFilterFieldPageComponent {
     }),
   });
 
-  constructor(private _formBuilder: NonNullableFormBuilder) {
+  constructor() {
     this.installFilterFieldDisabler();
     this.installFilterFieldValuePrinter();
   }

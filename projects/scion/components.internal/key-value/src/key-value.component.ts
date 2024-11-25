@@ -20,7 +20,6 @@ import {Dictionaries, Dictionary} from '@scion/toolkit/util';
   templateUrl: './key-value.component.html',
   styleUrls: ['./key-value.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [
     KeyValuePipe,
   ],

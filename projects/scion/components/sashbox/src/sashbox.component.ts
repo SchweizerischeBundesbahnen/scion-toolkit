@@ -75,7 +75,6 @@ import {SciElementRefDirective} from './element-ref.directive';
   selector: 'sci-sashbox',
   templateUrl: './sashbox.component.html',
   styleUrls: ['./sashbox.component.scss'],
-  standalone: true,
   imports: [
     AsyncPipe,
     NgTemplateOutlet,

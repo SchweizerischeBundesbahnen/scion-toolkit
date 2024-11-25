@@ -33,7 +33,6 @@ import {KeyValue, KeyValuePipe} from '@angular/common';
   templateUrl: './qualifier-chip-list.component.html',
   styleUrls: ['./qualifier-chip-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [
     KeyValuePipe,
   ],

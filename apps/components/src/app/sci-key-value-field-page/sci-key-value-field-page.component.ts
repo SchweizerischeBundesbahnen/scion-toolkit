@@ -17,7 +17,6 @@ import {JsonPipe} from '@angular/common';
   selector: 'sci-key-value-field-page',
   templateUrl: './sci-key-value-field-page.component.html',
   styleUrls: ['./sci-key-value-field-page.component.scss'],
-  standalone: true,
   imports: [
     JsonPipe,
     SciKeyValueFieldComponent,

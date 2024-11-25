@@ -15,7 +15,6 @@ import {SciViewportComponent} from '@scion/components/viewport';
   selector: 'app-viewport-hover-page',
   templateUrl: './viewport-hover-page.component.html',
   styleUrls: ['./viewport-hover-page.component.scss'],
-  standalone: true,
   imports: [SciViewportComponent],
 })
 export class ViewportHoverPageComponent {
