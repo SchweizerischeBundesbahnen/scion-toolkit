@@ -71,7 +71,6 @@ import {SciViewportComponent} from '@scion/components/viewport';
   selector: 'sci-list',
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.scss'],
-  standalone: true,
   imports: [
     SciViewportComponent,
     SciListItemComponent,

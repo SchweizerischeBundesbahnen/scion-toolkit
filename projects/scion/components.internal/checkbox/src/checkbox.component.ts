@@ -21,7 +21,6 @@ import {UUID} from '@scion/toolkit/uuid';
   templateUrl: './checkbox.component.html',
   styleUrls: ['./checkbox.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SciMaterialIconDirective,

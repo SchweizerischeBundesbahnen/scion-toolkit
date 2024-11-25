@@ -16,7 +16,6 @@ import {Directive, ElementRef} from '@angular/core';
 @Directive({
   selector: '[sciElementRef]',
   exportAs: 'sciElementRef',
-  standalone: true,
 })
 export class SciElementRefDirective {
 

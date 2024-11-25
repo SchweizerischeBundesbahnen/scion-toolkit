@@ -8,9 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
-import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciToggleButtonComponent} from '@scion/components.internal/toggle-button';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -20,10 +19,8 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   selector: 'sci-toggle-button-page',
   templateUrl: './sci-toggle-button-page.component.html',
   styleUrls: ['./sci-toggle-button-page.component.scss'],
-  standalone: true,
   imports: [
     ReactiveFormsModule,
-    SciFormFieldComponent,
     SciToggleButtonComponent,
     SciCheckboxComponent,
     SciTabDirective,
@@ -32,6 +29,8 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
 })
 export default class SciToggleButtonPageComponent {
 
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
+
   protected form = this._formBuilder.group({
     toggleButton: this._formBuilder.control<boolean>(true),
     state: this._formBuilder.group({
@@ -39,7 +38,7 @@ export default class SciToggleButtonPageComponent {
     }),
   });
 
-  constructor(private _formBuilder: NonNullableFormBuilder) {
+  constructor() {
     this.installToggleButtonDisabler();
   }
 

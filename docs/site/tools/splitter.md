@@ -33,7 +33,6 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
 
    @Component({
      // other metadata skipped
-     standalone: true,
      imports: [SciSplitterComponent]
    })
    export class YourComponent {

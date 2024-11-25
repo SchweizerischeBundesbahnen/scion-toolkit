@@ -21,7 +21,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   selector: 'sci-key-value-field',
   templateUrl: './key-value-field.component.html',
   styleUrls: ['./key-value-field.component.scss'],
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SciMaterialIconDirective,

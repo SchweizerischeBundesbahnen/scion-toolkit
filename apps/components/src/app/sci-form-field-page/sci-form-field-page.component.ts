@@ -14,7 +14,6 @@ import {SciFormFieldComponent} from '@scion/components.internal/form-field';
   selector: 'sci-form-field-page',
   templateUrl: './sci-form-field-page.component.html',
   styleUrls: ['./sci-form-field-page.component.scss'],
-  standalone: true,
   imports: [SciFormFieldComponent],
 })
 export default class SciFormFieldPageComponent {

@@ -8,28 +8,27 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, OnInit, ViewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
-import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
   selector: 'sci-throbber-page',
   templateUrl: './sci-throbber-page.component.html',
   styleUrls: ['./sci-throbber-page.component.scss'],
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SciFormFieldComponent,
     SciThrobberComponent,
-    SciCheckboxComponent,
     SciTabDirective,
     SciTabbarComponent,
   ],
 })
 export default class SciThrobberPageComponent implements OnInit {
+
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
 
   public types = ['ellipsis', 'ripple', 'roller', 'spinner'];
   public form = this._formBuilder.group({
@@ -41,9 +40,6 @@ export default class SciThrobberPageComponent implements OnInit {
 
   @ViewChild(SciThrobberComponent, {static: true, read: ElementRef})
   public throbberComponent!: ElementRef<HTMLElement>;
-
-  constructor(private _formBuilder: NonNullableFormBuilder) {
-  }
 
   public ngOnInit(): void {
     this.form.controls.color.setValue(this.readCssVariableDefault('--sci-throbber-color'));

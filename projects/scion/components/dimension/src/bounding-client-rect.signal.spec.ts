@@ -39,7 +39,6 @@ describe('Bounding Client Rect Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -94,7 +93,6 @@ describe('Bounding Client Rect Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -148,7 +146,6 @@ describe('Bounding Client Rect Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -194,10 +191,10 @@ describe('Bounding Client Rect Signal', () => {
     @Component({
       selector: 'spec-component',
       template: `
-        @if (observeViewChild === 'testee-1') {
+        @if (observeViewChild() === 'testee-1') {
           <div class="testee-1" #testee #testee_1></div>
         }
-        @if (observeViewChild === 'testee-2') {
+        @if (observeViewChild() === 'testee-2') {
           <div class="testee-2" #testee #testee_2></div>
         }
       `,
@@ -220,10 +217,9 @@ describe('Bounding Client Rect Signal', () => {
           background-color: green;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
-      public observeViewChild: 'testee-1' | 'testee-2' | 'none' = 'none';
+      public observeViewChild = signal<'testee-1' | 'testee-2' | 'none'>('none');
       public testee = viewChild<ElementRef<HTMLElement>>('testee');
       public boundingBox = boundingClientRect(this.testee);
 
@@ -242,7 +238,7 @@ describe('Bounding Client Rect Signal', () => {
     expect(boundingBox()).toBeUndefined();
 
     // Observe testee 1.
-    fixture.componentInstance.observeViewChild = 'testee-1';
+    fixture.componentInstance.observeViewChild.set('testee-1');
     await waitForSignalChange(fixture.componentInstance.boundingBox);
 
     // Expect bounding box.
@@ -260,7 +256,7 @@ describe('Bounding Client Rect Signal', () => {
     }));
 
     // Observe testee 2.
-    fixture.componentInstance.observeViewChild = 'testee-2';
+    fixture.componentInstance.observeViewChild.set('testee-2');
     await waitForSignalChange(fixture.componentInstance.boundingBox);
 
     // Expect bounding box.
@@ -278,7 +274,7 @@ describe('Bounding Client Rect Signal', () => {
     }));
 
     // Unobserve view child.
-    fixture.componentInstance.observeViewChild = 'none';
+    fixture.componentInstance.observeViewChild.set('none');
     await waitForSignalChange(boundingBox);
 
     // Expect bounding box to be undefined.
@@ -319,7 +315,6 @@ describe('Bounding Client Rect Signal', () => {
       template: `
         <div #testee></div>
       `,
-      standalone: true,
     })
     class TestComponent {
 
@@ -356,7 +351,6 @@ describe('Bounding Client Rect Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -412,7 +406,6 @@ describe('Bounding Client Rect Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -484,7 +477,6 @@ describe('Bounding Client Rect Signal', () => {
           background-color: black;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee1 = viewChild.required<ElementRef<HTMLElement>>('testee_1');

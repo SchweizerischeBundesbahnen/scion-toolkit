@@ -1,6 +1,6 @@
 import {Pipe, PipeTransform} from '@angular/core';
 
-@Pipe({name: 'appSplit', standalone: true})
+@Pipe({name: 'appSplit'})
 export class SplitPipe implements PipeTransform {
 
   public transform(value: string | undefined | null, separator: string): string[] {

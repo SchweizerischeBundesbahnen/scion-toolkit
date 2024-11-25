@@ -15,7 +15,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   selector: 'sci-styles-page',
   templateUrl: './sci-styles-page.component.html',
   styleUrls: ['./sci-styles-page.component.scss'],
-  standalone: true,
   imports: [
     SciTabbarComponent,
     SciTabDirective,

@@ -19,7 +19,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   selector: 'sci-list-item',
   templateUrl: './list-item.component.html',
   styleUrls: ['./list-item.component.scss'],
-  standalone: true,
   imports: [
     NgTemplateOutlet,
     SciMaterialIconDirective,

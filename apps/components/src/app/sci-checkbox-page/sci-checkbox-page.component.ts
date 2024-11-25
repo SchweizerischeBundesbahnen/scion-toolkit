@@ -7,10 +7,9 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
-import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
@@ -18,16 +17,16 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   selector: 'sci-checkbox-page',
   templateUrl: './sci-checkbox-page.component.html',
   styleUrls: ['./sci-checkbox-page.component.scss'],
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     SciCheckboxComponent,
-    SciFormFieldComponent,
     SciTabDirective,
     SciTabbarComponent,
   ],
 })
 export default class SciCheckboxPageComponent {
+
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
 
   protected form = this._formBuilder.group({
     checkbox: this._formBuilder.control<boolean>(true),
@@ -36,7 +35,7 @@ export default class SciCheckboxPageComponent {
     }),
   });
 
-  constructor(private _formBuilder: NonNullableFormBuilder) {
+  constructor() {
     this.installCheckboxDisabler();
   }
 

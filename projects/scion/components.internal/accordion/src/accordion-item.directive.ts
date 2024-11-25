@@ -31,7 +31,7 @@ import {Directive, Input, TemplateRef} from '@angular/core';
  *   }
  * </sci-accordion>
  */
-@Directive({selector: 'ng-template[sciAccordionItem]', standalone: true})
+@Directive({selector: 'ng-template[sciAccordionItem]'})
 export class SciAccordionItemDirective {
 
   /**

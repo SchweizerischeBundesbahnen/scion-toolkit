@@ -41,7 +41,6 @@ describe('Dimension Directive', () => {
       imports: [
         SciDimensionDirective,
       ],
-      standalone: true,
     })
     class TestComponent {
 
@@ -107,7 +106,6 @@ describe('Dimension Directive', () => {
       imports: [
         SciDimensionDirective,
       ],
-      standalone: true,
     })
     class TestComponent {
 

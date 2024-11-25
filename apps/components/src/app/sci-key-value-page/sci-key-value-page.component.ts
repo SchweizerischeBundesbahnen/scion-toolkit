@@ -14,7 +14,6 @@ import {SciKeyValueComponent} from '@scion/components.internal/key-value';
   selector: 'sci-key-value-page',
   templateUrl: './sci-key-value-page.component.html',
   styleUrls: ['./sci-key-value-page.component.scss'],
-  standalone: true,
   imports: [SciKeyValueComponent],
 })
 export default class SciKeyValuePageComponent {

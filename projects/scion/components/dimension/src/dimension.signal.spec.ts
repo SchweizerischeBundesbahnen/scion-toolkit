@@ -39,7 +39,6 @@ describe('Dimension Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -90,7 +89,6 @@ describe('Dimension Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -136,7 +134,6 @@ describe('Dimension Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -175,10 +172,10 @@ describe('Dimension Signal', () => {
     @Component({
       selector: 'spec-component',
       template: `
-        @if (observeViewChild === 'testee-1') {
+        @if (observeViewChild() === 'testee-1') {
           <div class="testee-1" #testee #testee_1></div>
         }
-        @if (observeViewChild === 'testee-2') {
+        @if (observeViewChild() === 'testee-2') {
           <div class="testee-2" #testee #testee_2></div>
         }
       `,
@@ -199,10 +196,9 @@ describe('Dimension Signal', () => {
           background-color: green;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
-      public observeViewChild: 'testee-1' | 'testee-2' | 'none' = 'none';
+      public observeViewChild = signal<'testee-1' | 'testee-2' | 'none'>('none');
       public testee = viewChild<ElementRef<HTMLElement>>('testee');
       public size = dimension(this.testee);
 
@@ -221,7 +217,7 @@ describe('Dimension Signal', () => {
     expect(size()).toBeUndefined();
 
     // Observe testee 1.
-    fixture.componentInstance.observeViewChild = 'testee-1';
+    fixture.componentInstance.observeViewChild.set('testee-1');
     await waitForSignalChange(fixture.componentInstance.size);
 
     // Expect size.
@@ -241,7 +237,7 @@ describe('Dimension Signal', () => {
     }));
 
     // Observe testee 2.
-    fixture.componentInstance.observeViewChild = 'testee-2';
+    fixture.componentInstance.observeViewChild.set('testee-2');
     await waitForSignalChange(fixture.componentInstance.size);
 
     // Expect size.
@@ -261,7 +257,7 @@ describe('Dimension Signal', () => {
     }));
 
     // Unobserve view child.
-    fixture.componentInstance.observeViewChild = 'none';
+    fixture.componentInstance.observeViewChild.set('none');
     await waitForSignalChange(size);
 
     // Expect dimension to be undefined.
@@ -302,7 +298,6 @@ describe('Dimension Signal', () => {
       template: `
         <div #testee></div>
       `,
-      standalone: true,
     })
     class TestComponent {
 
@@ -338,7 +333,6 @@ describe('Dimension Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -393,7 +387,6 @@ describe('Dimension Signal', () => {
           background-color: blue;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
@@ -457,7 +450,6 @@ describe('Dimension Signal', () => {
           background-color: black;
         }
       `,
-      standalone: true,
     })
     class TestComponent {
       public testee1 = viewChild.required<ElementRef<HTMLElement>>('testee_1');

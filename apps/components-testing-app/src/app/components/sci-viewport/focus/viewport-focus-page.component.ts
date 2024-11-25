@@ -14,7 +14,6 @@ import {SciViewportComponent} from '@scion/components/viewport';
 @Component({
   selector: 'app-viewport-focus-page',
   templateUrl: './viewport-focus-page.component.html',
-  standalone: true,
   imports: [SciViewportComponent],
 })
 export class ViewportFocusPageComponent {

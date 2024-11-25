@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -17,7 +17,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   selector: 'app-sashbox-page',
   templateUrl: './sci-sashbox-page.component.html',
   styleUrls: ['./sci-sashbox-page.component.scss'],
-  standalone: true,
   imports: [
     FormsModule,
     ReactiveFormsModule,
@@ -30,16 +29,13 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
 })
 export default class SciSashboxPageComponent {
 
-  public directionFormControl = this._formBuilder.control<'column' | 'row'>('row');
+  public directionFormControl = inject(NonNullableFormBuilder).control<'column' | 'row'>('row');
 
   public sashes: Sash[] = [
     {size: '1'},
     {size: '1'},
     {size: '1'},
   ];
-
-  constructor(private _formBuilder: NonNullableFormBuilder) {
-  }
 }
 
 export interface Sash {

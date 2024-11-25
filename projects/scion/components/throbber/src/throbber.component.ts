@@ -45,7 +45,6 @@ import {SciSpinnerThrobberComponent} from './spinner-throbber/spinner-throbber.c
   templateUrl: './throbber.component.html',
   styleUrls: ['./throbber.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [
     SciEllipsisThrobberComponent,
     SciRippleThrobberComponent,

@@ -45,7 +45,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   templateUrl: './scrollbar.component.html',
   styleUrl: './scrollbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
 })
 export class SciScrollbarComponent {
 

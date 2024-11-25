@@ -18,7 +18,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   selector: 'sci-list-page',
   templateUrl: './sci-list-page.component.html',
   styleUrls: ['./sci-list-page.component.scss'],
-  standalone: true,
   imports: [
     AsyncPipe,
     SciListComponent,

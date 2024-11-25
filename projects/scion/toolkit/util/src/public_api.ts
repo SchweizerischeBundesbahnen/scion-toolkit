@@ -17,6 +17,6 @@
 export {Defined} from './defined.util';
 export {Arrays} from './arrays.util';
 export {Objects} from './objects.util';
-export {Dictionaries, Dictionary} from './dictionaries.util';
-export {Maps, PredicateFn} from './maps.util';
+export {Dictionaries, type Dictionary} from './dictionaries.util';
+export {Maps, type PredicateFn} from './maps.util';
 export {Observables} from './observables.util';

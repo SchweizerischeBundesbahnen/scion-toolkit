@@ -25,7 +25,6 @@ Directive to observe the size of an element in the HTML template.
 
    @Component({
      // other metadata skipped
-     standalone: true,
      imports: [SciDimensionDirective]
    })
    export class YourComponent {

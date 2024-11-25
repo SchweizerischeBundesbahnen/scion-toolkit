@@ -31,7 +31,6 @@ describe('SciNativeScrollbarTrackSizeProvider', () => {
       </div>
     </div>
   `,
-  standalone: true,
 })
 class AppComponent implements AfterViewInit {
 

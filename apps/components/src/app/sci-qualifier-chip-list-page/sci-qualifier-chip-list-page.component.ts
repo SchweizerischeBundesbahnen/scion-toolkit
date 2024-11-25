@@ -14,7 +14,6 @@ import {SciQualifierChipListComponent} from '@scion/components.internal/qualifie
   selector: 'sci-qualifier-chip-list-page-page',
   templateUrl: './sci-qualifier-chip-list-page.component.html',
   styleUrls: ['./sci-qualifier-chip-list-page.component.scss'],
-  standalone: true,
   imports: [SciQualifierChipListComponent],
 })
 export default class SciQualifierChipListPageComponent {

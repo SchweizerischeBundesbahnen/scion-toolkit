@@ -27,7 +27,7 @@ import {Directive, Input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} fro
  *   }
  * </sci-tabbar>
  */
-@Directive({selector: 'ng-template[sciTab]', standalone: true})
+@Directive({selector: 'ng-template[sciTab]'})
 export class SciTabDirective implements OnDestroy {
 
   private _vcr: ViewContainerRef | undefined;

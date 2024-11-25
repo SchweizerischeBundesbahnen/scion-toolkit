@@ -87,7 +87,6 @@ import {ScrollingModule} from '@angular/cdk/scrolling';
   templateUrl: './viewport.component.html',
   styleUrl: './viewport.component.scss',
   encapsulation: ViewEncapsulation.ShadowDom,
-  standalone: true,
   imports: [
     ScrollingModule,
     SciScrollableDirective,
