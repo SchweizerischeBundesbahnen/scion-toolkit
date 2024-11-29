@@ -19,8 +19,10 @@ import {SciSplitterComponent} from './splitter.component';
  * ```html
  * <sci-splitter (move)="onSplitterMove($event.distance)"></sci-splitter>
  * ```
+ *
+ * @deprecated since version 19.0.0; Import standalone component; API will be removed in a future release.
  */
-@NgModule({
+@NgModule({ // TODO [Angular 20] Remove deprecated NgModule
   imports: [
     SciSplitterComponent,
   ],

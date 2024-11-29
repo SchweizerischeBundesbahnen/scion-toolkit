@@ -32,8 +32,10 @@ import {SciSashDirective} from './sash.directive';
  *   </ng-template>
  * </sci-sashbox>
  * ```
+ *
+ * @deprecated since version 19.0.0; Import standalone component and directive instead; API will be removed in a future release.
  */
-@NgModule({
+@NgModule({ // TODO [Angular 20] Remove deprecated NgModule
   imports: [
     SciSashboxComponent,
     SciSashDirective,

@@ -14,9 +14,11 @@ import {SciDimensionDirective} from './dimension.directive';
 /**
  * Provides a directive for observing changes to the size of the host element.
  *
+ * @deprecated since version 19.0.0; Import standalone directive instead; API will be removed in a future release.
+ *
  * @see fromDimension$
  */
-@NgModule({
+@NgModule({ // TODO [Angular 20] Remove deprecated NgModule
   imports: [
     SciDimensionDirective,
   ],

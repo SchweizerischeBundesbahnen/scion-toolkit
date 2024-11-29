@@ -15,6 +15,8 @@ import {SciScrollableDirective} from './scrollable.directive';
 
 /**
  * Provides a viewport component with scrollbars that sit on top of the viewport client.
+ *
+ * @deprecated since version 19.0.0; Import standalone components and directive instead; API will be removed in a future release.
  */
 @NgModule({
   imports: [
