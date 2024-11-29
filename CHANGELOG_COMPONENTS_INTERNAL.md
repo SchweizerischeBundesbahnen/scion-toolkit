@@ -1,3 +1,20 @@
+# [19.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-18.0.1...ɵcomponents-19.0.0) (2024-11-29)
+
+
+### Dependencies
+
+* **components:** update `@scion/components` to Angular 19 ([0918769](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/0918769fa37a77e31cd3fe281e11578399ec437c))
+
+
+### BREAKING CHANGES
+
+* **components:** Updating `@scion/components` to Angular 19 introduced a breaking change.
+
+  To migrate:
+  - Update your application to Angular 19; for detailed migration instructions, refer to https://v19.angular.dev/update-guide;
+
+
+
 ## [18.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-18.0.0...ɵcomponents-18.0.1) (2024-10-03)
 
 
