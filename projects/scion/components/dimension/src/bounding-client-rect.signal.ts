@@ -59,7 +59,7 @@ export function boundingClientRect(elementLike: HTMLElement | ElementRef<HTMLEle
         });
       onCleanup(() => subscription.unsubscribe());
     });
-  }, {injector});
+  }, {injector, forceRoot: true}); // Create root effect to not trigger change detection cycle on bounding box change.
 
   // Create signal that recomputes each time the bounding box changes.
   return computed(() => {

@@ -19,4 +19,8 @@ export default [
     path: 'sci-sashbox',
     loadChildren: () => import('./sci-sashbox/routes'),
   },
+  {
+    path: 'dimension',
+    loadChildren: () => import('./dimension/routes'),
+  },
 ] satisfies Routes;

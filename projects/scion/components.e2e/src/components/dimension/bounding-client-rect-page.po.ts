@@ -10,7 +10,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
-const PATH = '/#/toolkit/observable/bounding-client-rect';
+const PATH = '/#/components/dimension/bounding-client-rect';
 
 export class BoundingClientRectPagePO {
 

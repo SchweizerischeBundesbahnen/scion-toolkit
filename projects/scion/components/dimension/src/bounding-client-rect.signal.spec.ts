@@ -9,7 +9,7 @@
  */
 
 import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
-import {Component, computed, createEnvironmentInjector, effect, ElementRef, EnvironmentInjector, Injector, runInInjectionContext, signal, Signal, viewChild} from '@angular/core';
+import {Component, computed, createEnvironmentInjector, DoCheck, effect, ElementRef, EnvironmentInjector, Injector, runInInjectionContext, signal, Signal, viewChild} from '@angular/core';
 import {firstValueFrom, mergeMap, NEVER, race, throwError, timer} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {first} from 'rxjs/operators';
@@ -525,6 +525,75 @@ describe('Bounding Client Rect Signal', () => {
     setSize(fixture.componentInstance.testee1(), {width: 999, height: 999});
     // Expect testee 1 to be disconnected.
     await expectAsync(waitForSignalChange(boundingBox, {timeout: 500})).toBeRejected();
+  });
+
+  xit('should not trigger change detection cycle', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {provide: ComponentFixtureAutoDetect, useValue: true},
+      ],
+      teardown: {
+        destroyAfterEach: false,
+      },
+    });
+
+    @Component({
+      selector: 'spec-component',
+      template: `
+        <div class="testee" #testee></div>
+      `,
+      styles: `
+        div.testee {
+          position: relative;
+          width: 300px;
+          height: 150px;
+          box-sizing: border-box;
+          border: 1px solid red;
+          background-color: blue;
+        }
+      `,
+    })
+    class TestComponent implements DoCheck {
+      public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
+
+      ngDoCheck(): void {
+        console.log('[TestComponent] Angular change detection cycle');
+      }
+    }
+
+    const fixture = TestBed.createComponent(TestComponent);
+    const boundingBox = TestBed.runInInjectionContext(() => boundingClientRect(fixture.componentInstance.testee()));
+    const {x, y} = boundingBox();
+
+    // Spy console.
+    console.log('>>> spy console');
+    spyOn(console, 'log').and.callThrough();
+
+    // Expect initial bounding box.
+    expect(boundingBox()).toEqual(jasmine.objectContaining({
+      width: 300,
+      height: 150,
+      x,
+      y,
+    }));
+
+    // Change size.
+    setSize(fixture.componentInstance.testee(), {width: 200, height: 100});
+    await waitForSignalChange(boundingBox);
+    expect(boundingBox()).toEqual(jasmine.objectContaining({
+      width: 200,
+      height: 100,
+      x: x + 10,
+      y: y + 10,
+    }));
+
+    // Expect no change detection cycle to be triggered.
+    expect(console.log).not.toHaveBeenCalledWith('[TestComponent] Angular change detection cycle');
+
+    fixture.detectChanges();
+
+    // Expect no change detection cycle to be triggered.
+    expect(console.log).not.toHaveBeenCalledWith('[TestComponent] Angular change detection cycle');
   });
 
   it('should error if called from within a reactive context', () => {
