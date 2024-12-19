@@ -145,7 +145,7 @@ describe('fromDimension$', () => {
     }
 
     return new Promise(resolve => {
-      requestAnimationFrame(() => waitUntilRendered(renderCyclesToWait - 1).then(() => resolve()));
+      requestAnimationFrame(() => void waitUntilRendered(renderCyclesToWait - 1).then(() => resolve()));
     });
   }
 });
