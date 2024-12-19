@@ -22,10 +22,10 @@ export namespace Objects {
       return false;
     }
 
-    if (Object.keys(a).length !== Object.keys(b).length) {
+    if (Object.keys(a).length !== Object.keys(b).length) { // eslint-disable-line @typescript-eslint/no-unsafe-argument
       return false;
     }
 
-    return Object.entries(a).every(([key, value]) => (b[key] === value));
+    return Object.entries(a).every(([key, value]) => (b[key] === value)); // eslint-disable-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
   }
 }

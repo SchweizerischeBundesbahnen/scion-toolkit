@@ -106,7 +106,7 @@ export class BeanManager {
    * @param  instructions - Control bean construction; see {@link BeanInstanceConstructInstructions} for more detail.
    * @return handle to unregister the bean.
    */
-  public register<T>(symbol: Type<T | any> | AbstractType<T | any> | symbol, instructions?: BeanInstanceConstructInstructions<T>): Registration {
+  public register<T>(symbol: Type<T> | AbstractType<T> | symbol, instructions?: BeanInstanceConstructInstructions<T>): Registration {
     if (!symbol) {
       throw Error('[BeanRegisterError] Missing bean lookup symbol.');
     }
@@ -133,14 +133,14 @@ export class BeanManager {
     const beanInfo: BeanInfo<T> = {
       symbol: symbol,
       beanConstructFn: createBeanConstructFunction(instructions),
-      eager: Defined.orElse(instructions.eager || instructions.useValue !== undefined, false),
+      eager: Defined.orElse(instructions.eager ?? instructions.useValue !== undefined, false),
       multi: multi,
       instructions: instructions,
       constructing: false,
     };
 
     if (multi) {
-      const beans = this._beanRegistry.get(symbol) || new Set<BeanInfo>();
+      const beans = this._beanRegistry.get(symbol) ?? new Set<BeanInfo>();
       this._beanRegistry.set(symbol, beans.add(beanInfo));
     }
     else {
@@ -163,7 +163,7 @@ export class BeanManager {
    * @param  instructions - Control bean construction; see {@link BeanInstanceConstructInstructions} for more detail.
    * @return handle to unregister the bean.
    */
-  public registerIfAbsent<T>(symbol: Type<T | any> | AbstractType<T | any> | symbol, instructions?: BeanInstanceConstructInstructions<T>): Registration {
+  public registerIfAbsent<T>(symbol: Type<T> | AbstractType<T> | symbol, instructions?: BeanInstanceConstructInstructions<T>): Registration {
     if (!symbol) {
       throw Error('[BeanRegisterError] Missing bean lookup symbol.');
     }
@@ -283,15 +283,15 @@ export class BeanManager {
    * @param symbol - Symbol to look up the beans.
    */
   public all<T>(symbol: Type<T> | AbstractType<T> | Type<any> | AbstractType<any> | symbol): T[] {
-    const beanInfos = Array.from(this._beanRegistry.get(symbol) || new Set<BeanInfo>());
-    if (!beanInfos || !beanInfos.length) {
+    const beanInfos = Array.from(this._beanRegistry.get(symbol) ?? new Set<BeanInfo>());
+    if (!beanInfos?.length) {
       return [];
     }
     if (beanInfos.some(beanInfo => beanInfo.constructing)) {
       throw Error(`[BeanConstructError] Circular bean construction cycle detected [bean={${getSymbolName(symbol)}}].`);
     }
 
-    return beanInfos.map(beanInfo => this.getOrConstructBeanInstance(beanInfo));
+    return beanInfos.map(beanInfo => this.getOrConstructBeanInstance(beanInfo)) as T[];
   }
 
   /**
@@ -320,9 +320,10 @@ export class BeanManager {
 
     // Register initializer to construct eager beans.
     this.registerInitializer({
-      useFunction: async () => {
+      useFunction: () => {
         this.constructEagerBeans();
         this._eagerBeansConstructed = true;
+        return Promise.resolve();
       },
       runlevel: eagerBeanConstructRunlevel,
     });
@@ -354,10 +355,10 @@ export class BeanManager {
   }
 
   private disposeBean(beanInfo: BeanInfo): void {
-    const destroyable = beanInfo.instructions.useClass || beanInfo.instructions.useFactory;
+    const destroyable = beanInfo.instructions.useClass ?? beanInfo.instructions.useFactory;
     if (destroyable && beanInfo.instance && typeof (beanInfo.instance as PreDestroy).preDestroy === 'function') {
       try {
-        beanInfo.instance.preDestroy();
+        (beanInfo.instance as PreDestroy).preDestroy();
       }
       catch (error) {
         console?.error('Bean threw an error in `preDestroy`', error);
@@ -400,7 +401,7 @@ export class BeanManager {
         await Promise.all(initializersGroupedByRunlevel.get(runlevel)!.map(initializerFn => initializerFn()));
       }
       catch (error) {
-        throw Error(`[InitializerError] Initializer rejected with an error: ${error} [runlevel=${runlevel}]`);
+        throw Error(`[InitializerError] Initializer rejected with an error: ${error} [runlevel=${runlevel}]`); // eslint-disable-line @typescript-eslint/restrict-template-expressions
       }
     }
   }
@@ -417,7 +418,7 @@ export class BeanManager {
   /**
    * Returns the bean instance if already constructed, or constructs the bean otherwise.
    */
-  private getOrConstructBeanInstance<T>(beanInfo: BeanInfo): T {
+  private getOrConstructBeanInstance<T>(beanInfo: BeanInfo<T>): T {
     // Check if the bean is already constructed.
     if (beanInfo.instance) {
       return beanInfo.instance;
@@ -426,8 +427,8 @@ export class BeanManager {
     // Construct the bean and decorate it.
     beanInfo.constructing = true;
     try {
-      const bean: T = beanInfo.beanConstructFn();
-      const decorators = this._decoratorRegistry.get(beanInfo.symbol) || [];
+      const bean: T = beanInfo.beanConstructFn()!;
+      const decorators = this._decoratorRegistry.get(beanInfo.symbol) as BeanDecorator<T>[] ?? [];
 
       beanInfo.instance = [...decorators].reverse().reduce((decoratedBean, decorator) => decorator.decorate(decoratedBean), bean);
       beanInfo.constructInstant = ++this._sequence;
@@ -478,7 +479,7 @@ function createBeanConstructFunction<T>(instructions: BeanInstanceConstructInstr
   }
   else if (instructions.useExisting) {
     const useExisting = instructions.useExisting;
-    return (): T => Beans.get(useExisting);
+    return (): T => Beans.get<T>(useExisting);
   }
   throw Error(`[BeanConstructError] Missing bean construction strategy`);
 }
@@ -526,8 +527,8 @@ export interface PreDestroy {
  *
  * @ignore
  */
-interface BeanInfo<T = any> {
-  symbol: Type<T | any> | AbstractType<T | any> | symbol;
+interface BeanInfo<T = unknown> {
+  symbol: Type<T> | AbstractType<T> | symbol;
   instance?: T;
   constructing: boolean;
   beanConstructFn: () => T | null;
@@ -636,7 +637,7 @@ export interface BeanDecorator<T> {
  *
  * @category BeanManager
  */
-export interface AbstractType<T> extends Function { // eslint-disable-line @typescript-eslint/ban-types
+export interface AbstractType<T> extends Function { // eslint-disable-line @typescript-eslint/no-unsafe-function-type
   prototype: T;
 }
 
@@ -645,9 +646,7 @@ export interface AbstractType<T> extends Function { // eslint-disable-line @type
  *
  * @category BeanManager
  */
-export interface Type<T> extends Function { // eslint-disable-line @typescript-eslint/ban-types
-  new(...args: any[]): T;
-}
+export type Type<T> = new(...args: any[]) => T;
 
 /**
  * @ignore

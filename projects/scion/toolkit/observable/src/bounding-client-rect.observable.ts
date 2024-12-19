@@ -138,8 +138,8 @@ class Vertex {
   private readonly _destroy$ = new Subject<void>();
 
   constructor(parent: HTMLElement,
-              position: {top?: 0; right?: 0; bottom?: 0; left?: 0},
-              private _onPositionChange: () => void) {
+              position: {top?: 0; right?: 0; bottom?: 0; left?: 0}, // eslint-disable-line @stylistic/indent
+              private _onPositionChange: () => void) { // eslint-disable-line @stylistic/indent
     this._element = parent.appendChild(this.createVertexElement(position));
     this.installIntersectionObserver();
     this.computeRootMargin();
@@ -238,7 +238,7 @@ function ensureElementPositioned(element: HTMLElement): void {
 /**
  * Apples specified styles for given element.
  */
-function setStyle(element: HTMLElement, styles: {[style: string]: string | null}): void {
+function setStyle(element: HTMLElement, styles: Record<string, string | null>): void {
   Object.entries(styles).forEach(([name, value]) => {
     if (value === null) {
       element.style.removeProperty(name);

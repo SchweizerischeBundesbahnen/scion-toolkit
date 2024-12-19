@@ -39,9 +39,9 @@ describe('Observables', () => {
       expect(captor.hasCompleted()).toBeTrue();
     });
 
-    it('should return the Observable if given an Observable', async () => {
+    it('should return the Observable if given an Observable', () => {
       const observable = new Subject();
-      await expect(Observables.coerce(observable)).toBe(observable);
+      expect(Observables.coerce(observable)).toBe(observable);
     });
 
     it('should return an Observable if given a Promise', fakeAsync(() => {

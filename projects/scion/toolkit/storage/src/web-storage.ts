@@ -39,9 +39,9 @@ export class WebStorage {
   /**
    * Puts the given item into storage. The item is serialized to JSON.
    */
-  public put(key: string, value: any): void {
+  public put(key: string, value: unknown): void {
     if (value === undefined || value === null) {
-      this._storage.setItem(key, value);
+      this._storage.removeItem(key);
     }
     else {
       this._storage.setItem(key, JSON.stringify(value));
@@ -54,9 +54,9 @@ export class WebStorage {
    *
    * Instead of an item you can pass a provider function to produce the item.
    */
-  public putIfAbsent(key: string, value: any | (() => any)): void {
+  public putIfAbsent(key: string, value: unknown): void {
     if (!this.isPresent(key)) {
-      this.put(key, typeof value === 'function' ? value() : value);
+      this.put(key, typeof value === 'function' ? value() : value); // eslint-disable-line @typescript-eslint/no-unsafe-call
     }
   }
 
@@ -83,7 +83,7 @@ export class WebStorage {
       return null;
     }
 
-    return JSON.parse(item);
+    return JSON.parse(item); // eslint-disable-line @typescript-eslint/no-unsafe-return
   }
 
   /**

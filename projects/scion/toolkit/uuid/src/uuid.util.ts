@@ -10,7 +10,7 @@
 
 const uuidIterator = generateUUID();
 
-function* generateUUID(): IterableIterator<string> {
+function* generateUUID(): IterableIterator<string, string, string> {
   const lut = [];
   for (let i = 0; i < 256; i++) {
     lut[i] = (i < 16 ? '0' : '') + (i).toString(16);

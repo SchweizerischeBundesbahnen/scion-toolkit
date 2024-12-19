@@ -89,10 +89,10 @@ export function sortArray<T>(comparator: (item1: T, item2: T) => number): Operat
  * <span class=“informal”>Each time the source emits an array of Observables, combines its Observables by subscribing to each
  * of them, cancelling any subscription of a previous source emission.</span>
  */
-export function combineArray<T>(): OperatorFunction<Array<Observable<T[]>>, T[]> {
+export function combineArray<T>(): OperatorFunction<Observable<T[]>[], T[]> {
   return pipe(
-    switchMap((items: Array<Observable<T[]>>) => items.length ? combineLatest(items) : of([])),
-    map((items: Array<T[]>) => new Array<T>().concat(...items)),
+    switchMap((items: Observable<T[]>[]) => items.length ? combineLatest(items) : of([])),
+    map((items: T[][]) => new Array<T>().concat(...items)),
   );
 }
 
@@ -131,12 +131,12 @@ export function bufferUntil<T>(closingNotifier$: Observable<any> | Promise<any>)
  * Executes a tap-function for the first percolating value.
  */
 export function tapFirst<T>(tapFn: (value?: T) => void, scheduler?: SchedulerLike): MonoTypeOperatorFunction<T> {
-  return map(((value: T, index: number): T => {
+  return map((value: T, index: number): T => {
     if (index === 0) {
       scheduler ? scheduler.schedule(tapFn) : tapFn(value);
     }
     return value;
-  }));
+  });
 }
 
 /**
@@ -315,7 +315,7 @@ export function subscribeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFu
           public override unsubscribe(): void {
             executionFn(() => this.closed ? noop() : super.unsubscribe());
           }
-        });
+        }());
       });
 
       return () => {
