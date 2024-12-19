@@ -42,14 +42,14 @@ export class SciKeyValueComponent {
     return this._keys.indexOf(a.key) - this._keys.indexOf(b.key);
   };
 
-  private flattenObject(property: Dictionary | Map<string, any>, path: string[] = []): Dictionary {
+  private flattenObject(property: Dictionary | Map<string, unknown>, path: string[] = []): Dictionary {
     if (property instanceof Map) {
       return this.flattenObject(Dictionaries.coerce(property), path);
     }
 
-    return Object.entries(property).reduce((acc, [key, value]) => {
+    return Object.entries<unknown>(property).reduce((acc, [key, value]) => {
       if (typeof value === 'object' && value !== null) {
-        return {...acc, ...this.flattenObject(value, [...path, key])};
+        return {...acc, ...this.flattenObject(value as Dictionary | Map<string, unknown>, [...path, key])};
       }
       else {
         const propName = [...path, key].join('.');

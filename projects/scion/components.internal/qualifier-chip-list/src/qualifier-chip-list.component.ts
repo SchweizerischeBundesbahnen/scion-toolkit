@@ -59,6 +59,6 @@ export class SciQualifierChipListComponent implements OnChanges {
   };
 }
 
-export interface Qualifier {
+export interface Qualifier { // eslint-disable-line @typescript-eslint/consistent-indexed-object-style
   [key: string]: string | number | boolean;
 }

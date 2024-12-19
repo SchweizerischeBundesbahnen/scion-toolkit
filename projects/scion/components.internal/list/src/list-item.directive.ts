@@ -41,7 +41,7 @@ export class SciListItemDirective {
    */
   @Input()
   public set actions(actions: TemplateRef<void> | TemplateRef<void>[]) {
-    this._actionTemplates = (Array.isArray(actions) ? actions : actions && [actions] || []);
+    this._actionTemplates = (Array.isArray(actions) ? actions : (actions && [actions]) ?? []);
   }
 
   constructor(public readonly template: TemplateRef<void>) {

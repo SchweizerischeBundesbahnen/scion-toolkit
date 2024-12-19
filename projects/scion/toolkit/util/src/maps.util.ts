@@ -20,14 +20,14 @@ export namespace Maps {
   /**
    * Creates a {@link Map} from the given map-like object. If given a `Map`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Map}.
    */
-  export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined: true} | {}): NonNullable<Map<string, T>>;
+  export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined: true}): NonNullable<Map<string, T>>;
   export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options: {coerceNullOrUndefined: false}): Map<string, T> | null | undefined;
   export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Map<string, T> | null | undefined {
     if (mapLike === null || mapLike === undefined) {
-      if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
+      if (Defined.orElse(options?.coerceNullOrUndefined, true)) {
         return new Map<string, T>();
       }
-      return mapLike as null | undefined;
+      return mapLike;
     }
 
     if (mapLike instanceof Map) {
@@ -40,7 +40,7 @@ export namespace Maps {
     // @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
     // @see http://man.hubwiz.com/docset/JavaScript.docset/Contents/Resources/Documents/developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm.html
     try {
-      return new Map(mapLike as any);
+      return new Map(mapLike as any); // eslint-disable-line @typescript-eslint/no-unsafe-argument
     }
     catch {
       // noop
@@ -49,16 +49,16 @@ export namespace Maps {
     return Object
       .entries(mapLike)
       .reduce(
-        (map: Map<string, any>, [key, value]: [string, any]) => map.set(key, value),
-        new Map<string, any>(),
-      );
+        (map: Map<string, unknown>, [key, value]: [string, unknown]) => map.set(key, value),
+        new Map<string, unknown>(),
+      ) as Map<string, T>;
   }
 
   /**
    * Adds the given value into a {@link Set} in the multi value {@link Map}.
    */
   export function addSetValue<K, V>(multiValueMap: Map<K, Set<V>>, key: K, value: V): Map<K, Set<V>> {
-    const values = multiValueMap.get(key) || new Set<V>();
+    const values = multiValueMap.get(key) ?? new Set<V>();
     return multiValueMap.set(key, values.add(value));
   }
 
@@ -68,7 +68,7 @@ export namespace Maps {
    * @return `true` if the element was removed, or `false` otherwise.
    */
   export function removeSetValue<K, V>(multiValueMap: Map<K, Set<V>>, key: K, value: V | PredicateFn<V>): boolean {
-    const values = multiValueMap.get(key) || new Set<V>();
+    const values = multiValueMap.get(key) ?? new Set<V>();
 
     let hasRemoved;
     if (typeof value === 'function') {
@@ -91,7 +91,7 @@ export namespace Maps {
    * Adds the given value into an {@link Array} in the multi value {@link Map}.
    */
   export function addListValue<K, V>(map: Map<K, V[]>, key: K, value: V): Map<K, V[]> {
-    const values = map.get(key) || [];
+    const values = map.get(key) ?? [];
     return map.set(key, values.concat(value));
   }
 
@@ -101,7 +101,7 @@ export namespace Maps {
    * @return `true` if the element was removed, or `false` otherwise.
    */
   export function removeListValue<K, V>(multiValueMap: Map<K, V[]>, key: K, value: V | PredicateFn<V>): boolean {
-    const values = multiValueMap.get(key) || [];
+    const values = multiValueMap.get(key) ?? [];
     const hasRemoved = Arrays.remove(values, value, {firstOnly: false}).length > 0;
     if (hasRemoved && !values.length) {
       multiValueMap.delete(key);

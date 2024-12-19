@@ -59,7 +59,7 @@ export class SciScrollbarComponent {
    */
   public static readonly VIEWPORT_RESIZE_DEBOUNCE_TIME = 50;
 
-  private _host = inject(ElementRef<HTMLElement>).nativeElement;
+  private _host = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;
   private _document = inject(DOCUMENT);
   private _zone = inject(NgZone);
   private _destroyRef = inject(DestroyRef);
@@ -284,8 +284,8 @@ export class SciScrollbarComponent {
       });
   }
 
-  private setCssVariable(key: string, value: any): void {
-    this._host.style.setProperty(key, value);
+  private setCssVariable(key: string, value: number): void {
+    this._host.style.setProperty(key, `${value}`);
   }
 
   private get viewportSize(): number {

@@ -184,7 +184,7 @@ describe('Arrays', () => {
       const bananaOtherInstance = {...banana};
 
       const array = [apple, banana, cherry, bananaOtherInstance, appleOtherInstance];
-      expect(Arrays.distinct(array, (fruit) => fruit.id)).toEqual([apple, banana, cherry]);
+      expect(Arrays.distinct(array, fruit => fruit.id)).toEqual([apple, banana, cherry]);
     });
 
     it('should not modify the original array', () => {

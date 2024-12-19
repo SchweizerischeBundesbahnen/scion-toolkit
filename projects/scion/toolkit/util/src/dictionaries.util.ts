@@ -18,18 +18,18 @@ export namespace Dictionaries {
   /**
    * Creates a {@link Dictionary} from the given dictionary-like object. If given a `Dictionary`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Dictionary}.
    */
-  export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined: true} | {}): NonNullable<Dictionary<T>>;
+  export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined: true}): NonNullable<Dictionary<T>>;
   export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options: {coerceNullOrUndefined: false}): Dictionary<T> | null | undefined;
   export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Dictionary<T> | null | undefined {
     if (dictionaryLike === null || dictionaryLike === undefined) {
-      if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
+      if (Defined.orElse(options?.coerceNullOrUndefined, true)) {
         return {};
       }
-      return dictionaryLike as null | undefined;
+      return dictionaryLike;
     }
 
     if (dictionaryLike instanceof Map) {
-      return createDictionaryFromMap(dictionaryLike);
+      return createDictionaryFromMap(dictionaryLike) as Dictionary<T>;
     }
 
     // Data sent from one JavaScript realm to another is serialized with the structured clone algorithm.
@@ -38,8 +38,8 @@ export namespace Dictionaries {
     // @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
     // @see http://man.hubwiz.com/docset/JavaScript.docset/Contents/Resources/Documents/developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm.html
     try {
-      const map = new Map(dictionaryLike as any);
-      return createDictionaryFromMap(map);
+      const map = new Map(dictionaryLike as any); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+      return createDictionaryFromMap(map) as Dictionary<T>;
     }
     catch {
       // noop
@@ -64,16 +64,16 @@ export namespace Dictionaries {
 /**
  * Represents an object with a variable number of properties, whose keys are not known at development time.
  */
-export interface Dictionary<T = any> {
+export interface Dictionary<T = unknown> { // eslint-disable-line @typescript-eslint/consistent-indexed-object-style
   [key: string]: T;
 }
 
-function createDictionaryFromMap(map: Map<any, any>): Dictionary {
+function createDictionaryFromMap(map: Map<unknown, unknown>): Dictionary {
   return Array
     .from(map.entries())
     .reduce(
-      (dictionary: Dictionary, [key, value]: [string, any]): Dictionary => {
-        dictionary[key] = value;
+      (dictionary: Dictionary, [key, value]): Dictionary => {
+        dictionary[key as string] = value;
         return dictionary;
       },
       {},

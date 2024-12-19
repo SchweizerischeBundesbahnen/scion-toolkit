@@ -81,9 +81,9 @@ export class SashboxPagePO {
 }
 
 function parseSashIndex(sashIndex: `sash-${number}`): number {
-  return +sashIndex.match(/sash-(?<index>\d+)/)!.groups!['index'];
+  return +/sash-(?<index>\d+)/.exec(sashIndex)!.groups!.index;
 }
 
 function parseSplitterIndex(splitterIndex: `splitter-${number}`): number {
-  return +splitterIndex.match(/splitter-(?<index>\d+)/)!.groups!['index'];
+  return +/splitter-(?<index>\d+)/.exec(splitterIndex)!.groups!.index;
 }

@@ -64,7 +64,7 @@ export class SciTabbarComponent implements AfterContentInit {
       .pipe(
         startWith(this.tabs),
         tapFirst(() => this.activateTab(this.tabs.first)),
-        map(tabs => tabs.toArray()),
+        map((tabs: QueryList<SciTabDirective>) => tabs.toArray()),
       );
   }
 

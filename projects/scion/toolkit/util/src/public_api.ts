@@ -20,3 +20,4 @@ export {Objects} from './objects.util';
 export {Dictionaries, type Dictionary} from './dictionaries.util';
 export {Maps, type PredicateFn} from './maps.util';
 export {Observables} from './observables.util';
+export {stringifyError} from './stringify-error.util';

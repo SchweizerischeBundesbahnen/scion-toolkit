@@ -989,7 +989,7 @@ describe('Viewport', () => {
 
   describe('computeOffset', () => {
 
-    it('should compute offset of element inside viewport', async () => {
+    it('should compute offset of element inside viewport', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1002,7 +1002,7 @@ describe('Viewport', () => {
       expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'top')).toEqual(200);
     });
 
-    it('should compute offset relative to viewport boundaries', async () => {
+    it('should compute offset relative to viewport boundaries', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1015,14 +1015,14 @@ describe('Viewport', () => {
       expect(component.viewportComponent.computeOffset(component.insideViewportElement, 'top')).toEqual(0);
     });
 
-    it('should return `null` when computing the offset of an element not contained in the viewport', async () => {
+    it('should return `null` when computing the offset of an element not contained in the viewport', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
       expect(component.viewportComponent.computeOffset(component.beforeViewportElement, 'left')).toBeNull();
     });
 
-    it('should return `null` when computing the offset for an element whose effective `display` style resolves to `none`.', async () => {
+    it('should return `null` when computing the offset for an element whose effective `display` style resolves to `none`.', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1033,7 +1033,7 @@ describe('Viewport', () => {
 
   describe('isElementInView', () => {
 
-    it('should determine whether element is in view (1/2)', async () => {
+    it('should determine whether element is in view (1/2)', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1069,7 +1069,7 @@ describe('Viewport', () => {
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
     });
 
-    it('should determine whether element is in view (2/2)', async () => {
+    it('should determine whether element is in view (2/2)', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1139,7 +1139,7 @@ describe('Viewport', () => {
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeFalse();
     });
 
-    it('should return `false` for an element not contained in the viewport', async () => {
+    it('should return `false` for an element not contained in the viewport', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1147,7 +1147,7 @@ describe('Viewport', () => {
       expect(component.viewportComponent.isElementInView(component.beforeViewportElement, 'partial')).toBeFalse();
     });
 
-    it('should return `null` for an element whose effective `display` style resolves to `none`', async () => {
+    it('should return `null` for an element whose effective `display` style resolves to `none`', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1225,7 +1225,7 @@ describe('Viewport', () => {
         await flushChanges(fixture);
 
         // Set fixed viewport width
-        fixture.debugElement.nativeElement.style.width = '300px';
+        (fixture.debugElement.nativeElement as HTMLElement).style.width = '300px';
         await flushChanges(fixture);
 
         // Set fixed width for element 1
@@ -1329,7 +1329,7 @@ describe('Viewport', () => {
         await flushChanges(fixture);
 
         // Set fixed viewport height
-        fixture.debugElement.nativeElement.style.height = '300px';
+        (fixture.debugElement.nativeElement as HTMLElement).style.height = '300px';
         await flushChanges(fixture);
 
         // Set fixed height for element 1
@@ -1364,7 +1364,7 @@ describe('Viewport', () => {
 
   describe('scrollIntoView', () => {
 
-    it('should scroll element into view horizontally', async () => {
+    it('should scroll element into view horizontally', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1388,7 +1388,7 @@ describe('Viewport', () => {
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
     });
 
-    it('should scroll element into view vertically', async () => {
+    it('should scroll element into view vertically', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1412,7 +1412,7 @@ describe('Viewport', () => {
       expect(component.viewportComponent.isElementInView(component.insideViewportElement, 'partial')).toBeTrue();
     });
 
-    it('ignore element not contained in the viewport', async () => {
+    it('ignore element not contained in the viewport', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1420,7 +1420,7 @@ describe('Viewport', () => {
       expect(() => component.viewportComponent.scrollIntoView(component.beforeViewportElement)).not.toThrowError();
     });
 
-    it('ignore element if its effective `display` style resolves to `none`', async () => {
+    it('ignore element if its effective `display` style resolves to `none`', () => {
       const fixture = TestBed.createComponent(Testee3Component);
       fixture.autoDetectChanges(true);
       const component = fixture.componentInstance;
@@ -1431,12 +1431,12 @@ describe('Viewport', () => {
   });
 
   function isScrollbarVisible(fixture: ComponentFixture<any>, scrollbar: 'vertical' | 'horizontal'): boolean {
-    const scrollbarElement: HTMLElement = fixture.debugElement.query(By.css(`sci-scrollbar.${scrollbar}`)).nativeElement;
+    const scrollbarElement = fixture.debugElement.query(By.css(`sci-scrollbar.${scrollbar}`)).nativeElement as HTMLElement;
     return scrollbarElement.classList.contains('overflow');
   }
 
   function getSize(fixture: ComponentFixture<any>, selector: string): Readonly<DOMRect> {
-    const viewportElement: HTMLElement = fixture.debugElement.query(By.css(selector)).nativeElement;
+    const viewportElement = fixture.debugElement.query(By.css(selector)).nativeElement as HTMLElement;
     return viewportElement.getBoundingClientRect();
   }
 
@@ -1461,7 +1461,7 @@ describe('Viewport', () => {
     }
 
     return new Promise(resolve => {
-      requestAnimationFrame(() => awaitRenderCycles(renderCyclesToWait - 1).then(() => resolve()));
+      requestAnimationFrame(() => void awaitRenderCycles(renderCyclesToWait - 1).then(() => resolve()));
     });
   }
 });
@@ -1580,8 +1580,6 @@ class Testee2Component {
         return this._container1.nativeElement;
       case 'container2':
         return this._container2.nativeElement;
-      default:
-        throw Error(`[SpecError] Element not found: ${selector}`);
     }
   }
 }

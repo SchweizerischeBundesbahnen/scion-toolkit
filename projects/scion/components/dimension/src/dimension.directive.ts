@@ -37,10 +37,10 @@ export class SciDimensionDirective {
   /**
    * Outputs the size of the element.
    */
-  public dimensionChange = output<SciDimension>({alias: 'sciDimensionChange'});
+  public dimensionChange = output<SciDimension>({alias: 'sciDimensionChange'}); // eslint-disable-line @angular-eslint/no-output-rename
 
   constructor() {
-    const host = inject(ElementRef<HTMLElement>).nativeElement;
+    const host = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;
     const zone = inject(NgZone);
 
     fromResize$(host)

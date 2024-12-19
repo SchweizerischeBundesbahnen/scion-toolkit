@@ -19,6 +19,6 @@ test.describe('sci-viewport/overlap', () => {
     await overlapPO.navigate();
 
     await overlapPO.clickAdjacentElement();
-    await expect(await consoleLogs.get({filter: /ViewportOverlapPageComponent/})).toHaveLength(1);
+    expect(await consoleLogs.get({filter: /ViewportOverlapPageComponent/})).toHaveLength(1);
   });
 });
