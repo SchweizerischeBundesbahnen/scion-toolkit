@@ -12,7 +12,7 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
 
 /**
  * Represents a classic spinner throbber with strokes arranged radially. The strokes light up one after the other in clockwise direction
- * and then then fade out again.
+ * and then fade out again.
  *
  * Throbber type: `spinner`
  */

@@ -25,7 +25,7 @@ export namespace Defined {
    * Unlike JavaScript's "nullish coalescing operator (??)", the "orElse" function only tests for `undefined`, not `null`.
    */
   export function orElse<T>(value: T | undefined, orElseValue: T | (() => T)): T {
-    return (value !== undefined ? value : (typeof orElseValue === 'function' ? (orElseValue as (() => T))() : orElseValue));
+    return (value !== undefined ? value : (typeof orElseValue === 'function' ? (orElseValue as (() => T))() : orElseValue)); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
   }
 
   /**

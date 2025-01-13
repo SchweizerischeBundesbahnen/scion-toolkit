@@ -20,22 +20,22 @@ test.describe('sci-viewport/focus', () => {
 
     // focus input field before viewport
     await focusPO.focusInput('before-viewport');
-    await expect(await focusPO.isInputActive('before-viewport')).toBe(true);
+    await expect.poll(() => focusPO.isInputActive('before-viewport')).toBe(true);
 
     // tab to input field inside viewport
     await focusPO.tab();
-    await expect(await focusPO.isInputActive('inside-viewport')).toBe(true);
+    await expect.poll(() => focusPO.isInputActive('inside-viewport')).toBe(true);
 
     // tab to input field after viewport
     await focusPO.tab();
-    await expect(await focusPO.isInputActive('after-viewport')).toBe(true);
+    await expect.poll(() => focusPO.isInputActive('after-viewport')).toBe(true);
 
     // tab back to input field inside viewport
     await focusPO.shiftTab();
-    await expect(await focusPO.isInputActive('inside-viewport')).toBe(true);
+    await expect.poll(() => focusPO.isInputActive('inside-viewport')).toBe(true);
 
     // tab back to input field before viewport
     await focusPO.shiftTab();
-    await expect(await focusPO.isInputActive('before-viewport')).toBe(true);
+    await expect.poll(() => focusPO.isInputActive('before-viewport')).toBe(true);
   });
 });

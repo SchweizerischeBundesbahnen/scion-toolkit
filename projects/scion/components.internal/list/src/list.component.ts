@@ -123,7 +123,7 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
   private _listItemComponents!: QueryList<SciListItemComponent>;
 
   @ViewChild(SciFilterFieldComponent)
-  private _filterField!: SciFilterFieldComponent;
+  private _filterField: SciFilterFieldComponent | undefined;
 
   @HostBinding('attr.tabindex')
   public componentTabindex = -1; // component itself is not focusable in sequential keyboard navigation, but tabindex (if any) set to filter field
@@ -135,7 +135,7 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('focus')
   public focus(): void {
-    this._filterField && this._filterField.focus();
+    this._filterField?.focus();
   }
 
   public ngAfterViewInit(): void {

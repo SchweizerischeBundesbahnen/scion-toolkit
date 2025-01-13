@@ -40,7 +40,7 @@ export class SciDimensionDirective {
   public dimensionChange = output<SciDimension>({alias: 'sciDimensionChange'});
 
   constructor() {
-    const host = inject(ElementRef<HTMLElement>).nativeElement;
+    const host = inject(ElementRef).nativeElement as HTMLElement;
     const zone = inject(NgZone);
 
     fromResize$(host)

@@ -59,7 +59,7 @@ export class SciScrollbarComponent {
    */
   public static readonly VIEWPORT_RESIZE_DEBOUNCE_TIME = 50;
 
-  private _host = inject(ElementRef<HTMLElement>).nativeElement;
+  private _host = inject(ElementRef).nativeElement as HTMLElement;
   private _document = inject(DOCUMENT);
   private _zone = inject(NgZone);
   private _destroyRef = inject(DestroyRef);
@@ -125,19 +125,6 @@ export class SciScrollbarComponent {
       this._overflow = overflow;
       overflow ? this._host.classList.add('overflow') : this._host.classList.remove('overflow');
     }
-  }
-
-  /**
-   * Clears CSS variables used for rendering the scroll position in the UI.
-   */
-  private unsetScrollPosition(): void {
-    NgZone.assertNotInAngularZone();
-    this._thumbPositionFr = 0;
-    this._thumbSizeFr = 0;
-    this._overflow = false;
-    this.setCssVariable('--ɵsci-scrollbar-thumb-position-fr', 0);
-    this.setCssVariable('--ɵsci-scrollbar-thumb-size-fr', 0);
-    this._host.classList.remove('overflow');
   }
 
   protected onTouchStart(event: TouchEvent): void {
@@ -212,11 +199,6 @@ export class SciScrollbarComponent {
       const viewport = this.viewport();
 
       untracked(() => {
-        if (!viewport) {
-          this.unsetScrollPosition();
-          return;
-        }
-
         const subscription = viewportScroll$(viewport)
           .pipe(
             mergeWith(viewportSize$(viewport, {debounceTime: SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME})),
@@ -284,20 +266,20 @@ export class SciScrollbarComponent {
       });
   }
 
-  private setCssVariable(key: string, value: any): void {
-    this._host.style.setProperty(key, value);
+  private setCssVariable(key: string, value: number): void {
+    this._host.style.setProperty(key, `${value}`);
   }
 
   private get viewportSize(): number {
-    return this.viewport() ? (this.vertical ? this.viewport().clientHeight : this.viewport().clientWidth) : 0;
+    return this.vertical ? this.viewport().clientHeight : this.viewport().clientWidth;
   }
 
   private get viewportClientSize(): number {
-    return this.viewport() ? (this.vertical ? this.viewport().scrollHeight : this.viewport().scrollWidth) : 0;
+    return this.vertical ? this.viewport().scrollHeight : this.viewport().scrollWidth;
   }
 
   private get scrollPosition(): number {
-    return this.viewport() ? (this.vertical ? this.viewport().scrollTop : this.viewport().scrollLeft) : 0;
+    return this.vertical ? this.viewport().scrollTop : this.viewport().scrollLeft;
   }
 
   private get thumbSize(): number {

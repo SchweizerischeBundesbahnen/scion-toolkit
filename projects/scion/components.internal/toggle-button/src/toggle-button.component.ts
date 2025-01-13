@@ -29,7 +29,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 })
 export class SciToggleButtonComponent implements ControlValueAccessor {
 
-  private _cvaChangeFn: (value: any) => void = noop;
+  private _cvaChangeFn: (value: unknown) => void = noop;
   private _cvaTouchedFn: () => void = noop;
 
   protected formControl = new FormControl<boolean>(false, {nonNullable: true});
@@ -57,7 +57,7 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    * @docs-private
    */
-  public registerOnChange(fn: any): void {
+  public registerOnChange(fn: (value: unknown) => void): void {
     this._cvaChangeFn = fn;
   }
 
@@ -65,7 +65,7 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    * @docs-private
    */
-  public registerOnTouched(fn: any): void {
+  public registerOnTouched(fn: () => void): void {
     this._cvaTouchedFn = fn;
   }
 
@@ -82,7 +82,7 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    * @docs-private
    */
-  public writeValue(value: any): void {
+  public writeValue(value: unknown): void {
     this.formControl.setValue(coerceBooleanProperty(value), {emitEvent: false});
     this._cd.markForCheck();
   }

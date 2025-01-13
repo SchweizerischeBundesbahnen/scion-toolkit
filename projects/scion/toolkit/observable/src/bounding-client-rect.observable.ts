@@ -228,7 +228,7 @@ function ensureElementPositioned(element: HTMLElement): void {
       }
     }`);
     document.adoptedStyleSheets.push(styleSheet);
-    console?.warn?.('[@scion/toolkit] fromBoundingClientRect$ requires the document root element (<html>) to be positioned relative or absolute. Changing positioning to relative.');
+    console.warn('[@scion/toolkit] fromBoundingClientRect$ requires the document root element (<html>) to be positioned relative or absolute. Changing positioning to relative.');
   }
   else {
     setStyle(element, {position: 'relative'});

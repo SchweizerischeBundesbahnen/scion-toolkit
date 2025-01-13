@@ -10,13 +10,13 @@
 
 const uuidIterator = generateUUID();
 
-function* generateUUID(): IterableIterator<string> {
+function* generateUUID(): IterableIterator<string, string, string> {
   const lut = [];
   for (let i = 0; i < 256; i++) {
     lut[i] = (i < 16 ? '0' : '') + (i).toString(16);
   }
 
-  while (true) {
+  while (true) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
     const d0 = Math.random() * 0xffffffff | 0;
     const d1 = Math.random() * 0xffffffff | 0;
     const d2 = Math.random() * 0xffffffff | 0;

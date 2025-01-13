@@ -35,7 +35,7 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
 })
 export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy {
 
-  private readonly _host = inject(ElementRef);
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
   private readonly _focusManager = inject(FocusMonitor);
   private readonly _cd = inject(ChangeDetectorRef);
   private readonly _formBuilder = inject(NonNullableFormBuilder);
@@ -95,7 +95,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
         this.filter.emit(value);
       });
 
-    this._focusManager.monitor(this._host.nativeElement, true)
+    this._focusManager.monitor(this._host, true)
       .pipe(takeUntil(this._destroy$))
       .subscribe((focusOrigin: FocusOrigin) => {
         if (!focusOrigin) {
@@ -140,7 +140,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    * @docs-private
    */
-  public registerOnChange(fn: any): void {
+  public registerOnChange(fn: (value: unknown) => void): void {
     this._cvaChangeFn = fn;
   }
 
@@ -148,7 +148,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    * @docs-private
    */
-  public registerOnTouched(fn: any): void {
+  public registerOnTouched(fn: () => void): void {
     this._cvaTouchedFn = fn;
   }
 
@@ -165,14 +165,14 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    * @docs-private
    */
-  public writeValue(value: any): void {
+  public writeValue(value: string): void {
     this.formControl.setValue(value, {emitEvent: false});
     this._cd.markForCheck();
   }
 
   public ngOnDestroy(): void {
     this._destroy$.next();
-    this._focusManager.stopMonitoring(this._host.nativeElement);
+    this._focusManager.stopMonitoring(this._host);
   }
 }
 

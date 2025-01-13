@@ -1,5 +1,5 @@
 @if (filterPosition === 'top') {
-  <ng-container *ngTemplateOutlet="filter_template"></ng-container>
+  <ng-container *ngTemplateOutlet="filter_template"/>
 }
 
 <!-- viewport and list items -->
@@ -9,15 +9,14 @@
                    [listItem]="listItem"
                    [style]="style"
                    [active]="activeItem === item"
-                   (click)="onItemClick(item)">
-    </sci-list-item>
+                   (click)="onItemClick(item)"/>
   }
 </sci-viewport>
 
 @if (filterPosition === 'bottom') {
-  <ng-container *ngTemplateOutlet="filter_template"></ng-container>
+  <ng-container *ngTemplateOutlet="filter_template"/>
 }
 
 <ng-template #filter_template>
-  <sci-filter-field (filter)="onFilter($event)" [ngClass]="filterPosition!" [tabindex]="tabindex ?? 0"></sci-filter-field>
+  <sci-filter-field (filter)="onFilter($event)" [ngClass]="filterPosition!" [tabindex]="tabindex ?? 0"/>
 </ng-template>

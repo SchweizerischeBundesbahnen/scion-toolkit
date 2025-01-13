@@ -19,21 +19,6 @@ jobs:
           key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: npm ci
-  lint:
-    name: 'Linting'
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: 'Restoring NPM modules from cache'
-        uses: actions/cache@v4
-        with:
-          path: ./node_modules
-          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - run: npm run lint
   build-libs:
     name: 'Building Libs'
     needs: install
@@ -130,6 +115,36 @@ jobs:
         with:
           name: ${{ matrix.app.name }}
           path: dist/${{ matrix.app.name }}
+  lint:
+    name: 'Linting'
+    needs: build-libs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 'Restoring NPM modules from cache'
+        uses: actions/cache@v4
+        with:
+          path: ./node_modules
+          key: node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: 'Downloading dist/scion/toolkit'
+        uses: actions/download-artifact@v4
+        with:
+          name: toolkit-dist
+          path: dist/scion/toolkit
+      - name: 'Downloading dist/scion/components'
+        uses: actions/download-artifact@v4
+        with:
+          name: components-dist
+          path: dist/scion/components
+      - name: 'Downloading dist/scion/components.internal'
+        uses: actions/download-artifact@v4
+        with:
+          name: components-internal-dist
+          path: dist/scion/components.internal
+      - run: npm run lint
   test:
     name: 'Unit Testing'
     needs: build-libs

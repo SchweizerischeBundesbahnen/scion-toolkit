@@ -7,9 +7,9 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component} from '@angular/core';
-import {FormArray, FormBuilder} from '@angular/forms';
-import {SciKeyValueFieldComponent} from '@scion/components.internal/key-value-field';
+import {Component, inject} from '@angular/core';
+import {FormGroup, NonNullableFormBuilder} from '@angular/forms';
+import {KeyValueEntry, SciKeyValueFieldComponent} from '@scion/components.internal/key-value-field';
 import {Dictionary} from '@scion/toolkit/util';
 import {JsonPipe} from '@angular/common';
 
@@ -24,12 +24,8 @@ import {JsonPipe} from '@angular/common';
 })
 export default class SciKeyValueFieldPageComponent {
 
-  public formArray: FormArray;
+  public readonly formArray = inject(NonNullableFormBuilder).array<FormGroup<KeyValueEntry>>([]);
   public output: Dictionary | null = null;
-
-  constructor(fb: FormBuilder) {
-    this.formArray = fb.array([]);
-  }
 
   public onPrint(): void {
     this.output = SciKeyValueFieldComponent.toDictionary(this.formArray);
