@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, Input} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, Input} from '@angular/core';
 import {FocusableOption, FocusOrigin} from '@angular/cdk/a11y';
 import {SciListItemDirective} from '../list-item.directive';
 import {SciListStyle} from '../metadata';
@@ -26,6 +26,8 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
 })
 export class SciListItemComponent implements FocusableOption {
 
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
+
   @Input({required: true})
   public listItem!: SciListItemDirective;
 
@@ -39,14 +41,11 @@ export class SciListItemComponent implements FocusableOption {
   @HostBinding('attr.tabindex')
   public tabindex = -1;
 
-  constructor(private _host: ElementRef<HTMLElement>) {
-  }
-
   /**
    * @implements FocusableOption
    */
   public focus(origin?: FocusOrigin): void {
-    this._host.nativeElement.focus();
+    this._host.focus();
   }
 
   @HostBinding('class.option')

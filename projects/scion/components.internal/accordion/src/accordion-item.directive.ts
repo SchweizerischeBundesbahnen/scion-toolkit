@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, Input, TemplateRef} from '@angular/core';
+import {Directive, inject, Input, TemplateRef} from '@angular/core';
 
 /**
  * Use this directive to model an accordion item for {SciAccordionComponent}.
@@ -34,6 +34,8 @@ import {Directive, Input, TemplateRef} from '@angular/core';
 @Directive({selector: 'ng-template[sciAccordionItem]'})
 export class SciAccordionItemDirective {
 
+  public readonly template = inject<TemplateRef<void>>(TemplateRef);
+
   /**
    * Optional key to identify this item and is used as key for the {TrackBy} function.
    */
@@ -57,7 +59,4 @@ export class SciAccordionItemDirective {
    */
   @Input()
   public cssClass?: string | string[] | undefined | null;
-
-  constructor(public readonly template: TemplateRef<void>) {
-  }
 }

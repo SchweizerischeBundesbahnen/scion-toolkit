@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, ElementRef} from '@angular/core';
+import {Directive, ElementRef, inject} from '@angular/core';
 
 /**
  * Provides access to the native {@link HTMLElement} of the host.
@@ -19,9 +19,5 @@ import {Directive, ElementRef} from '@angular/core';
 })
 export class SciElementRefDirective {
 
-  public readonly nativeElement: HTMLElement;
-
-  constructor(public host: ElementRef<HTMLElement>) {
-    this.nativeElement = host.nativeElement;
-  }
+  public readonly host = inject(ElementRef).nativeElement as HTMLElement;
 }
