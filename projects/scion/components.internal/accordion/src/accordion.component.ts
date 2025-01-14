@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, ContentChildren, ElementRef, HostBinding, Input, OnDestroy, OnInit, QueryList, SkipSelf, TrackByFunction, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, ContentChildren, ElementRef, HostBinding, inject, Input, OnDestroy, OnInit, QueryList, TrackByFunction, ViewChild} from '@angular/core';
 import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciAccordionItemDirective} from './accordion-item.directive';
 import {CdkAccordion, CdkAccordionItem, CdkAccordionModule} from '@angular/cdk/accordion';
@@ -59,6 +59,10 @@ import {fromResize$} from '@scion/toolkit/observable';
 })
 export class SciAccordionComponent implements OnInit, OnDestroy {
 
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
+  /** Workaround for setting the filled state on initialization: https://github.com/angular/angular/issues/22560#issuecomment-473958144 */
+  private readonly _cd = inject(ChangeDetectorRef, {skipSelf: true});
+
   private _destroy$ = new Subject<void>();
 
   @ViewChild(CdkAccordion, {static: true, read: ElementRef})
@@ -92,13 +96,6 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
   @Input()
   public variant?: 'solid' | 'bubble' = 'bubble';
 
-  /**
-   * Workaround for setting the filled state on initialization:
-   * @see https://github.com/angular/angular/issues/22560#issuecomment-473958144
-   */
-  constructor(private _host: ElementRef<HTMLElement>, @SkipSelf() private _cdRef: ChangeDetectorRef) {
-  }
-
   public ngOnInit(): void {
     this.computeFilledStateOnDimensionChange();
   }
@@ -118,7 +115,7 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
    */
   private computeFilledStateOnDimensionChange(): void {
     combineLatest([
-      fromResize$(this._host.nativeElement),
+      fromResize$(this._host),
       fromResize$(this._cdkAccordion.nativeElement),
     ])
       .pipe(
@@ -126,8 +123,8 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
         takeUntil(this._destroy$),
       )
       .subscribe(() => {
-        this.filled = this._host.nativeElement.clientHeight <= this._cdkAccordion.nativeElement.offsetHeight;
-        this._cdRef.detectChanges();
+        this.filled = this._host.clientHeight <= this._cdkAccordion.nativeElement.offsetHeight;
+        this._cd.detectChanges();
       });
   }
 

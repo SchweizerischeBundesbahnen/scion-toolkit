@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, Input, TemplateRef} from '@angular/core';
+import {Directive, inject, Input, TemplateRef} from '@angular/core';
 import {Arrays} from '@scion/toolkit/util';
 
 /**
@@ -29,6 +29,8 @@ import {Arrays} from '@scion/toolkit/util';
 @Directive({selector: 'ng-template[sciListItem]'})
 export class SciListItemDirective {
 
+  public readonly template = inject<TemplateRef<void>>(TemplateRef);
+
   private _actionTemplates: TemplateRef<void>[] = [];
 
   /**
@@ -43,9 +45,6 @@ export class SciListItemDirective {
   @Input()
   public set actions(actions: TemplateRef<void> | TemplateRef<void>[]) {
     this._actionTemplates = Arrays.coerce(actions);
-  }
-
-  constructor(public readonly template: TemplateRef<void>) {
   }
 
   public get actionTemplates(): TemplateRef<void>[] {

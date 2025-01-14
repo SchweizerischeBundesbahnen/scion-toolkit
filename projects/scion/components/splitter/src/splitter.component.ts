@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostBinding, Inject, Input, NgZone, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostBinding, inject, Input, NgZone, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
 import {fromEvent, merge, Subject} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {tapFirst} from '@scion/toolkit/operators';
@@ -62,6 +62,10 @@ import {first, takeUntil} from 'rxjs/operators';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SciSplitterComponent implements OnInit, OnDestroy {
+
+  private readonly _zone = inject(NgZone);
+  private readonly _cd = inject(ChangeDetectorRef);
+  private readonly _document = inject(DOCUMENT);
 
   private _destroy$ = new Subject<void>();
 
@@ -120,11 +124,6 @@ export class SciSplitterComponent implements OnInit, OnDestroy {
   /* @docs-private */
   @ViewChild('touch_target', {static: true})
   public touchTargetElementRef!: ElementRef<HTMLElement>;
-
-  constructor(private _zone: NgZone,
-              private _cd: ChangeDetectorRef,
-              @Inject(DOCUMENT) private _document: Document) {
-  }
 
   /* @docs-private */
   public ngOnInit(): void {
