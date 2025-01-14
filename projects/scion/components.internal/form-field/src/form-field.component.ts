@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, Input, OnDestroy} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, Input, OnDestroy} from '@angular/core';
 import {ConfigurableFocusTrap, ConfigurableFocusTrapFactory} from '@angular/cdk/a11y';
 import {UUID} from '@scion/toolkit/uuid';
 
@@ -34,8 +34,11 @@ export class SciFormFieldComponent implements OnDestroy {
   @Input({required: true})
   public label!: string;
 
-  constructor(host: ElementRef<HTMLElement>, focusTrapFactory: ConfigurableFocusTrapFactory) {
-    this._focusTrap = focusTrapFactory.create(host.nativeElement);
+  constructor() {
+    const host = inject(ElementRef).nativeElement as HTMLElement;
+    const focusTrapFactory = inject(ConfigurableFocusTrapFactory);
+
+    this._focusTrap = focusTrapFactory.create(host);
     this._focusTrap.enabled = false;
   }
 

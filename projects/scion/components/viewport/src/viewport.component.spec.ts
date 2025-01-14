@@ -9,7 +9,7 @@
  */
 
 import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {Component, ElementRef, HostBinding, Input, NgZone, Renderer2, viewChild, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, Input, NgZone, Renderer2, ViewChild, viewChild} from '@angular/core';
 import {By} from '@angular/platform-browser';
 import {Dictionary} from '@scion/toolkit/util';
 import {SciViewportComponent} from './viewport.component';
@@ -1547,6 +1547,8 @@ class Testee1Component {
 })
 class Testee2Component {
 
+  private readonly _renderer = inject(Renderer2);
+
   @ViewChild(SciViewportComponent, {static: true, read: ElementRef})
   private _viewportElement!: ElementRef<HTMLElement>;
 
@@ -1561,9 +1563,6 @@ class Testee2Component {
 
   @ViewChild('content', {static: true, read: ElementRef})
   private _contentElement!: ElementRef<HTMLElement>;
-
-  constructor(private _renderer: Renderer2) {
-  }
 
   public setStyle(selector: 'viewport-content' | 'sci-viewport' | 'container1' | 'container2', style: Dictionary): void {
     const element = this.resolveElement(selector);
@@ -1609,6 +1608,8 @@ class Testee2Component {
 })
 class Testee3Component {
 
+  private readonly _renderer = inject(Renderer2);
+
   @ViewChild(SciViewportComponent, {static: true})
   public viewportComponent!: SciViewportComponent;
 
@@ -1620,9 +1621,6 @@ class Testee3Component {
 
   @ViewChild('inside_viewport', {read: ElementRef, static: true})
   public insideViewportElement!: ElementRef<HTMLElement>;
-
-  constructor(private _renderer: Renderer2) {
-  }
 
   public moveElement(element: ElementRef<HTMLElement>, coordinates: {x: number; y: number}): void {
     this.setStyle(element, {
@@ -1684,6 +1682,8 @@ class Testee3Component {
 })
 class ElementDecimalSizeTestComponent {
 
+  private readonly _renderer = inject(Renderer2);
+
   @Input()
   @HostBinding('class.column-layout')
   public columnLayout = false;
@@ -1696,9 +1696,6 @@ class ElementDecimalSizeTestComponent {
 
   @ViewChild('element2', {read: ElementRef, static: true})
   public element2!: ElementRef<HTMLElement>;
-
-  constructor(private _renderer: Renderer2) {
-  }
 
   public setElement1Width(px: number): void {
     this.setStyle(this.element1, {

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, Input, OnChanges, OnInit, SimpleChanges, TemplateRef} from '@angular/core';
+import {Directive, inject, Input, OnChanges, OnInit, SimpleChanges, TemplateRef} from '@angular/core';
 import {SciSashBoxAccessor} from './sashbox-accessor';
 import {BehaviorSubject, merge, Observable} from 'rxjs';
 import {map, switchMap} from 'rxjs/operators';
@@ -37,6 +37,10 @@ import {map, switchMap} from 'rxjs/operators';
   exportAs: 'sciSash',
 })
 export class SciSashDirective implements OnInit, OnChanges {
+
+  private readonly _sashBoxAccessor = inject(SciSashBoxAccessor);
+
+  public readonly sashTemplate = inject<TemplateRef<void>>(TemplateRef);
 
   private _size: string | number = '1';
   private _flexGrow$ = new BehaviorSubject<number>(0);
@@ -102,7 +106,7 @@ export class SciSashDirective implements OnInit, OnChanges {
    */
   public flexGrowNormalized$: Observable<number>;
 
-  constructor(public readonly sashTemplate: TemplateRef<void>, private _sashBoxAccessor: SciSashBoxAccessor) {
+  constructor() {
     this.flexGrowNormalized$ = this._sashBoxAccessor.sashes$
       .pipe(
         switchMap(sashes => merge(...sashes.map(sash => sash._flexGrow$))),

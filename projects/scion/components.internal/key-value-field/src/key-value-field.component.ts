@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, Input} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, Input} from '@angular/core';
 import {FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
@@ -27,6 +27,9 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   ],
 })
 export class SciKeyValueFieldComponent {
+
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
 
   public readonly id = UUID.randomUUID();
 
@@ -47,15 +50,12 @@ export class SciKeyValueFieldComponent {
   @HostBinding('attr.tabindex')
   public tabindex = -1;
 
-  constructor(private _formBuilder: NonNullableFormBuilder, private _host: ElementRef<HTMLElement>) {
-  }
-
   public onRemove(index: number): void {
     this.keyValueFormArray.removeAt(index);
 
     // Focus the component to not lose the focus when the remove button is removed from the DOM.
     // Otherwise, if used in a popup, the popup would be closed because no element is focused anymore.
-    this._host.nativeElement.focus({preventScroll: true});
+    this._host.focus({preventScroll: true});
   }
 
   public onAdd(): void {

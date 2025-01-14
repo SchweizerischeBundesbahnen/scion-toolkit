@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChildren, QueryList, ViewChild, ViewContainerRef} from '@angular/core';
+import {AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChildren, inject, QueryList, ViewChild, ViewContainerRef} from '@angular/core';
 import {SciTabDirective} from './tab.directive';
 import {map, startWith} from 'rxjs/operators';
 import {Observable} from 'rxjs';
@@ -46,6 +46,8 @@ import {SciViewportComponent} from '@scion/components/viewport';
 })
 export class SciTabbarComponent implements AfterContentInit {
 
+  private readonly _cd = inject(ChangeDetectorRef);
+
   @ViewChild('tabcontent', {read: ViewContainerRef, static: true})
   private _vcr!: ViewContainerRef;
 
@@ -55,9 +57,6 @@ export class SciTabbarComponent implements AfterContentInit {
 
   /** @internal */
   public tabs$!: Observable<SciTabDirective[]>;
-
-  constructor(private _cd: ChangeDetectorRef) {
-  }
 
   public ngAfterContentInit(): void {
     this.tabs$ = this.tabs.changes

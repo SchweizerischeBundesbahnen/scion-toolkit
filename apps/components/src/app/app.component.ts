@@ -35,10 +35,12 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 })
 export class AppComponent {
 
+  private readonly _themeSwitcher = inject(ThemeSwitcher);
+
   protected readonly tools$: Observable<Tool[]>;
   protected readonly lightThemeFormControl = new FormControl<boolean>(true);
 
-  constructor(private _themeSwitcher: ThemeSwitcher) {
+  constructor() {
     this.tools$ = this.observeTools$();
     this.installThemeSwitcher();
   }

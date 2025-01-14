@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, inject, Input} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
 import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
@@ -29,6 +29,8 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 })
 export class SciToggleButtonComponent implements ControlValueAccessor {
 
+  private readonly _cd = inject(ChangeDetectorRef);
+
   private _cvaChangeFn: (value: unknown) => void = noop;
   private _cvaTouchedFn: () => void = noop;
 
@@ -40,7 +42,7 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
     coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
   }
 
-  constructor(private _cd: ChangeDetectorRef) {
+  constructor() {
     this.formControl.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(value => {
