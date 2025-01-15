@@ -6,7 +6,7 @@ import {Signal} from '@angular/core';
  */
 export abstract class SciSashBoxAccessor {
 
-  public abstract get sashes(): Signal<readonly SciSashDirective[]>;
+  public abstract readonly sashes: Signal<readonly SciSashDirective[]>;
 
-  public abstract get direction(): 'column' | 'row';
+  public abstract readonly direction: Signal<'column' | 'row'>;
 }

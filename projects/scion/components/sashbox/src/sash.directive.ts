@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, Directive, effect, inject, input, signal, TemplateRef} from '@angular/core';
+import {computed, Directive, inject, input, linkedSignal, signal, Signal, TemplateRef, WritableSignal} from '@angular/core';
 import {SciSashBoxAccessor} from './sashbox-accessor';
 
 /**
@@ -38,6 +38,11 @@ export class SciSashDirective {
 
   private readonly _sashBoxAccessor = inject(SciSashBoxAccessor);
 
+  /**
+   * Represents the template used as sash content.
+   *
+   * @internal
+   */
   public readonly sashTemplate = inject<TemplateRef<void>>(TemplateRef);
 
   /**
@@ -57,61 +62,74 @@ export class SciSashDirective {
    */
   public readonly minSize = input<string | number>();
 
+  /**
+   * Flex properties computed based on the configured {@link size}. Properties are updated when moving this sash.
+   */
+  private readonly _flexProperties = this.computeFlexProperties();
+
+  /**
+   * Flex properties with normalized 'flex-grow' to ensure the sashes fill the entire sash-box space.
+   *
+   * Use these properties to lay out this sash in the sashbox's flex layout.
+   *
+   * @internal
+   */
+  public readonly flexProperties = this.normalizeFlexGrow(this._flexProperties);
+
+  /**
+   * Returns if this sash has a fixed size, meaning that it has not the ability to grow or shrink.
+   *
+   * @internal
+   */
   public readonly isFixedSize = computed(() => Number.isNaN(+this.size()));
 
   /**
-   * @internal
-   */
-  public readonly flexGrow = signal<number>(0);
-
-  /**
-   * Normalized flex-grow proportion of this sash, which is a value >= 1.
+   * Gets the DOM element that renders this sash.
    *
    * @internal
    */
-  public readonly flexGrowNormalized = computed(() => this.normalizeFlexGrow());
+  public readonly element = signal<HTMLElement | undefined>(undefined);
 
   /**
-   * @internal
-   */
-  public element!: HTMLElement;
-
-  /**
-   * @internal
-   */
-  public flexShrink!: number;
-
-  /**
-   * @internal
-   */
-  public flexBasis!: string;
-
-  constructor() {
-    this.setFlexItemProperties();
-  }
-
-  /**
-   * Returns the effective sash size as rendered in the DOM.
+   * Gets the effective size of this sash in the DOM.
    *
    * @internal
    */
-  public get computedSize(): number {
-    // Note: Use `boundingClientRect` to get the fractional size.
-    // see https://developer.mozilla.org/en-US/docs/Web/API/Element/clientWidth
-    return this._sashBoxAccessor.direction === 'row' ? this.element.getBoundingClientRect().width : this.element.getBoundingClientRect().height;
+  public get elementSize(): number {
+    const element = this.element();
+    if (!element) {
+      return 0;
+    }
+    if (this._sashBoxAccessor.direction() === 'row') {
+      return element.getBoundingClientRect().width;
+    }
+    else {
+      return element.getBoundingClientRect().height;
+    }
   }
 
   /**
-   * Computes and sets the flex item properties based on the modelled size.
+   * Updates the flex properties of this sash for layout in the sashbox's flex layout.
+   *
+   * @internal
    */
-  private setFlexItemProperties(): void {
-    effect(() => {
+  public updateFlexProperties(flexProperties: Partial<FlexProperties>): void {
+    this._flexProperties.update(previousFlexProperties => ({...previousFlexProperties, ...flexProperties}));
+  }
+
+  /**
+   * Computes the flex properties to lay out this sash in the sashbox's flex layout based on the configured {@link size}.
+   */
+  private computeFlexProperties(): WritableSignal<FlexProperties> {
+    return linkedSignal(() => {
       const size = this.size();
       if (this.isFixedSize()) {
         // fixed-sized sash
-        this.flexGrow.set(0);
-        this.flexShrink = 0;
-        this.flexBasis = `${size}`;
+        return {
+          flexGrow: 0,
+          flexShrink: 0,
+          flexBasis: `${size}`,
+        };
       }
       else {
         // remaining space is distributed according to given proportion
@@ -119,25 +137,41 @@ export class SciSashDirective {
         if (proportion < 1) {
           throw Error(`[IllegalSashSizeError] The proportion for flexible sized sashes must be >=1 [size=${this.size()}]`);
         }
-
-        this.flexGrow.set(proportion);
-        this.flexShrink = 1;
-        this.flexBasis = '0';
+        return {
+          flexGrow: proportion,
+          flexShrink: 1,
+          flexBasis: '0',
+        };
       }
     });
   }
 
   /**
-   * Computes the normalized flex-grow proportion of the given sash, which is a value >= 1.
+   * Normalizes the 'flex-grow' of the passed {@link FlexProperties} to ensure that the sum of the 'flex-grow' proportions of all sashes is 1.
    *
-   * If the sum of all flex-grow proportions would be less than 1, then, the sashes would not fill the entire sash-box space.
-   * Without normalization in place, e.g., this could happen when removing a sash.
+   * If the sum of all flex-grow proportions were less than 1, the sashes would not fill the entire sash-box space.
+   * Without normalization, this could occur when a sash is removed.
    */
-  private normalizeFlexGrow(): number {
-    const flexGrow = this.flexGrow();
-    const sashes = this._sashBoxAccessor.sashes();
-    const flexGrowSum = sashes.reduce((sum, sash) => sum + sash.flexGrow(), 0);
+  private normalizeFlexGrow(flexProperties: Signal<FlexProperties>): Signal<FlexProperties> {
+    return computed(() => {
+      const sashes = this._sashBoxAccessor.sashes();
+      const {flexGrow, flexShrink, flexBasis} = flexProperties();
+      const flexGrowSum = sashes.reduce((sum, sash) => sum + sash._flexProperties().flexGrow, 0);
 
-    return flexGrow === 0 || flexGrowSum === 0 ? 0 : flexGrow / flexGrowSum;
+      return {
+        flexGrow: flexGrow === 0 || flexGrowSum === 0 ? 0 : flexGrow / flexGrowSum, // Sum of normalized flex-grow proportions must be 1;
+        flexShrink,
+        flexBasis,
+      };
+    });
   }
+}
+
+/**
+ * Flex properties to lay out the sash in the sashbox's flex layout.
+ */
+interface FlexProperties {
+  flexGrow: number;
+  flexShrink: number;
+  flexBasis: string;
 }

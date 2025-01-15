@@ -1549,10 +1549,10 @@ class Testee2Component {
 
   private readonly _renderer = inject(Renderer2);
 
-  private readonly _viewportElement = viewChild.required(SciViewportComponent, {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
-  private readonly _container1 = viewChild.required('container1', {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
-  private readonly _container2 = viewChild.required('container2', {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
-  private readonly _contentElement = viewChild.required('content', {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
+  private readonly _viewportElement: Signal<ElementRef<HTMLElement>> = viewChild.required(SciViewportComponent, {read: ElementRef});
+  private readonly _container1: Signal<ElementRef<HTMLElement>> = viewChild.required('container1', {read: ElementRef});
+  private readonly _container2: Signal<ElementRef<HTMLElement>> = viewChild.required('container2', {read: ElementRef});
+  private readonly _contentElement: Signal<ElementRef<HTMLElement>> = viewChild.required('content', {read: ElementRef});
 
   public readonly viewport = viewChild.required(SciViewportComponent);
 
@@ -1603,9 +1603,9 @@ class Testee3Component {
   private readonly _renderer = inject(Renderer2);
 
   public readonly viewportComponent = viewChild.required(SciViewportComponent);
-  public readonly viewportElement = viewChild.required(SciViewportComponent, {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
-  public readonly beforeViewportElement = viewChild.required('before_viewport', {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
-  public readonly insideViewportElement = viewChild.required('inside_viewport', {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
+  public readonly viewportElement: Signal<ElementRef<HTMLElement>> = viewChild.required(SciViewportComponent, {read: ElementRef});
+  public readonly beforeViewportElement: Signal<ElementRef<HTMLElement>> = viewChild.required('before_viewport', {read: ElementRef});
+  public readonly insideViewportElement: Signal<ElementRef<HTMLElement>> = viewChild.required('inside_viewport', {read: ElementRef});
 
   public moveElement(element: ElementRef<HTMLElement>, coordinates: {x: number; y: number}): void {
     this.setStyle(element, {
@@ -1672,8 +1672,8 @@ class ElementDecimalSizeTestComponent {
   public readonly columnLayout = input(false);
 
   public readonly viewportComponent = viewChild.required(SciViewportComponent);
-  public readonly element1 = viewChild.required('element1', {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
-  public readonly element2 = viewChild.required('element2', {read: ElementRef}) as Signal<ElementRef<HTMLElement>>;
+  public readonly element1: Signal<ElementRef<HTMLElement>> = viewChild.required('element1', {read: ElementRef});
+  public readonly element2: Signal<ElementRef<HTMLElement>> = viewChild.required('element2', {read: ElementRef});
 
   @HostBinding('class.column-layout')
   protected get isColumnLayout(): boolean {

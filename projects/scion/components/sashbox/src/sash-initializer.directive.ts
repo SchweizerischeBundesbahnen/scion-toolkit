@@ -22,10 +22,7 @@ export class SciSashInitializerDirective {
   public readonly sash = input.required<SciSashDirective>({alias: 'sciSashInitializer'});
 
   constructor() {
-    const host = inject<ElementRef<HTMLDivElement>>(ElementRef).nativeElement;
-    effect(() => {
-      const sash = this.sash();
-      sash.element = host;
-    });
+    const host = inject(ElementRef).nativeElement as HTMLDivElement;
+    effect(() => this.sash().element.set(host));
   }
 }

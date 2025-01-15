@@ -8,16 +8,16 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {AfterViewInit, Component, contentChildren, HostBinding, HostListener, input, OnDestroy, output, TrackByFunction, viewChild, viewChildren} from '@angular/core';
+import {Component, contentChildren, HostBinding, HostListener, inject, Injector, input, output, TrackByFunction, viewChild, viewChildren} from '@angular/core';
 import {FocusKeyManager} from '@angular/cdk/a11y';
 import {SciListItemDirective} from './list-item.directive';
 import {SciListItemComponent} from './list-item/list-item.component';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
-import {Subject} from 'rxjs';
-import {filter, map, takeUntil} from 'rxjs/operators';
+import {filter, map} from 'rxjs/operators';
 import {SciListStyle} from './metadata';
 import {NgClass, NgTemplateOutlet} from '@angular/common';
 import {SciViewportComponent} from '@scion/components/viewport';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 /**
  * Component that contains a list of items or options which can be optionally filtered and associated with actions.
@@ -79,10 +79,9 @@ import {SciViewportComponent} from '@scion/components/viewport';
     NgTemplateOutlet,
   ],
 })
-export class SciListComponent implements AfterViewInit, OnDestroy {
+export class SciListComponent {
 
-  private _focusKeyManager: FocusKeyManager<SciListItemComponent> | undefined;
-  private _destroy$ = new Subject<void>();
+  private _focusKeyManager: FocusKeyManager<SciListItemComponent>;
 
   /**
    * Specifies where to position the filter field.
@@ -122,7 +121,7 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('keydown', ['$event'])
   public onKeydown(event: KeyboardEvent): void {
-    this._focusKeyManager!.onKeydown(event);
+    this._focusKeyManager.onKeydown(event);
   }
 
   @HostListener('focus')
@@ -130,14 +129,14 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
     this._filterField()?.focus();
   }
 
-  public ngAfterViewInit(): void {
-    this._focusKeyManager = new FocusKeyManager(this._listItemComponents());
+  constructor() {
+    this._focusKeyManager = new FocusKeyManager(this._listItemComponents, inject(Injector));
     this._focusKeyManager.change
       .pipe(
         map(index => this.listItems()[index]),
         filter(Boolean),
         filter(listItem => !!listItem.key()),
-        takeUntil(this._destroy$),
+        takeUntilDestroyed(),
       )
       .subscribe((listItem: SciListItemDirective) => {
         this.selection.emit(listItem.key()!);
@@ -145,28 +144,23 @@ export class SciListComponent implements AfterViewInit, OnDestroy {
   }
 
   public onItemClick(item: SciListItemComponent): void {
-    this._focusKeyManager!.setActiveItem(item);
+    this._focusKeyManager.setActiveItem(item);
   }
 
   public onFilter(filterText: string): void {
-    this._focusKeyManager!.setActiveItem(-1);
+    this._focusKeyManager.setActiveItem(-1);
     this.filter.emit(filterText);
   }
 
   public onAnyKey(event: KeyboardEvent): void {
-    const _filterField = this._filterField();
-    _filterField && _filterField.focusAndApplyKeyboardEvent(event);
+    this._filterField()?.focusAndApplyKeyboardEvent(event);
   }
 
   public get activeItem(): SciListItemComponent | null {
-    return this._focusKeyManager?.activeItem ?? null;
+    return this._focusKeyManager.activeItem ?? null;
   }
 
   public trackByFn: TrackByFunction<SciListItemDirective> = (index: number, item: SciListItemDirective): any => {
     return item.key() ?? item;
   };
-
-  public ngOnDestroy(): void {
-    this._destroy$.next();
-  }
 }
