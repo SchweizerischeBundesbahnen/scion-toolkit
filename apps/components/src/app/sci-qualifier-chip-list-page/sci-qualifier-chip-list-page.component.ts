@@ -18,7 +18,7 @@ import {SciQualifierChipListComponent} from '@scion/components.internal/qualifie
 })
 export default class SciQualifierChipListPageComponent {
 
-  public items: Item[] = [
+  protected readonly items: Item[] = [
     {title: 'SCION', description: 'SCION Microfrontend Platform is a TypeScript-based open-source library that helps to implement a microfrontend architecture using iframes.'},
     {title: 'SCION Microfrontend Platform', description: 'SCION Microfrontend Platform is a TypeScript-based open-source library that helps to implement a microfrontend architecture using iframes.'},
     {title: 'SCION Workbench', description: 'SCION Workbench helps to build multi-view web applications and integrates separate micro frontends into a consistent rich web application. Views are shown within tabs which can be flexibly arranged and dragged around by the user.'},

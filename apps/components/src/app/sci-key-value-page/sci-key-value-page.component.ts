@@ -18,7 +18,7 @@ import {SciKeyValueComponent} from '@scion/components.internal/key-value';
 })
 export default class SciKeyValuePageComponent {
 
-  public dictionary = {
+  protected readonly dictionary = {
     firstname: 'Clarke',
     lastname: 'Noden',
     address: {
@@ -30,7 +30,7 @@ export default class SciKeyValuePageComponent {
     profession: 'Budget/Accounting Analyst II',
   };
 
-  public map = new Map<string, any>()
+  protected readonly map = new Map<string, any>()
     .set('firstname', 'Clarke')
     .set('lastname', 'Noden')
     .set('address', new Map<string, string>()

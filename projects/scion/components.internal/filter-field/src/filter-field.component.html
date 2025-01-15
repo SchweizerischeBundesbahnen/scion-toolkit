@@ -2,8 +2,8 @@
        [attr.id]="id"
        autocomplete="off"
        [formControl]="formControl"
-       [tabindex]="tabindex ?? 0"
-       [placeholder]="placeholder ?? ''">
+       [tabindex]="tabindex() ?? 0"
+       [placeholder]="placeholder() ?? ''">
 <button class="clear" tabindex="-1" (click)="onClear()" sciMaterialIcon>
   clear
 </button>

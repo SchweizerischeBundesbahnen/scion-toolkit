@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
+import {Component, computed, ElementRef, viewChild} from '@angular/core';
 import {ComponentFixture, fakeAsync, inject, TestBed, tick} from '@angular/core/testing';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 
@@ -18,8 +18,8 @@ describe('SciNativeScrollbarTrackSizeProvider', () => {
     const fixture = TestBed.createComponent(AppComponent);
     advance(fixture);
 
-    expect(testee.trackSize()!.vScrollbarTrackWidth).withContext('vScrollbarTrackWidth').toEqual(fixture.componentInstance.vScrollbarTrackWidth);
-    expect(testee.trackSize()!.hScrollbarTrackHeight).withContext('hScrollbarTrackHeight').toEqual(fixture.componentInstance.hScrollbarTrackHeight);
+    expect(testee.trackSize()!.vScrollbarTrackWidth).withContext('vScrollbarTrackWidth').toEqual(fixture.componentInstance.vScrollbarTrackWidth());
+    expect(testee.trackSize()!.hScrollbarTrackHeight).withContext('hScrollbarTrackHeight').toEqual(fixture.componentInstance.hScrollbarTrackHeight());
     tick();
   })));
 });
@@ -32,21 +32,13 @@ describe('SciNativeScrollbarTrackSizeProvider', () => {
     </div>
   `,
 })
-class AppComponent implements AfterViewInit {
+class AppComponent {
 
-  public vScrollbarTrackWidth!: number;
-  public hScrollbarTrackHeight!: number;
+  private readonly _viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
+  private readonly _viewportClient = viewChild.required<ElementRef<HTMLElement>>('viewport_client');
 
-  @ViewChild('viewport', {static: true})
-  public viewport!: ElementRef<HTMLElement>;
-
-  @ViewChild('viewport_client', {static: true})
-  public viewportClient!: ElementRef<HTMLElement>;
-
-  public ngAfterViewInit(): void {
-    this.vScrollbarTrackWidth = this.viewport.nativeElement.offsetWidth - this.viewportClient.nativeElement.offsetWidth;
-    this.hScrollbarTrackHeight = this.viewport.nativeElement.offsetHeight - this.viewportClient.nativeElement.offsetHeight;
-  }
+  public vScrollbarTrackWidth = computed(() => this._viewport().nativeElement.offsetWidth - this._viewportClient().nativeElement.offsetWidth);
+  public hScrollbarTrackHeight = computed(() => this._viewport().nativeElement.offsetHeight - this._viewportClient().nativeElement.offsetHeight);
 }
 
 /**

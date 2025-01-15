@@ -1,22 +1,22 @@
-@if (filterPosition === 'top') {
+@if (filterPosition() === 'top') {
   <ng-container *ngTemplateOutlet="filter_template"/>
 }
 
 <!-- viewport and list items -->
 <sci-viewport (keydown)="onAnyKey($event)">
-  @for (listItem of listItems; track trackByFn($index, listItem)) {
+  @for (listItem of listItems(); track trackByFn($index, listItem)) {
     <sci-list-item #item
                    [listItem]="listItem"
-                   [style]="style"
+                   [style]="style()"
                    [active]="activeItem === item"
                    (click)="onItemClick(item)"/>
   }
 </sci-viewport>
 
-@if (filterPosition === 'bottom') {
+@if (filterPosition() === 'bottom') {
   <ng-container *ngTemplateOutlet="filter_template"/>
 }
 
 <ng-template #filter_template>
-  <sci-filter-field (filter)="onFilter($event)" [ngClass]="filterPosition!" [tabindex]="tabindex ?? 0"/>
+  <sci-filter-field (filter)="onFilter($event)" [ngClass]="filterPosition()!" [tabindex]="tabindex() ?? 0"/>
 </ng-template>

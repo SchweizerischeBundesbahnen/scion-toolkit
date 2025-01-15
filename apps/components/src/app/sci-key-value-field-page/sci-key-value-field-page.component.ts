@@ -24,10 +24,11 @@ import {JsonPipe} from '@angular/common';
 })
 export default class SciKeyValueFieldPageComponent {
 
-  public readonly formArray = inject(NonNullableFormBuilder).array<FormGroup<KeyValueEntry>>([]);
-  public output: Dictionary | null = null;
+  protected readonly formArray = inject(NonNullableFormBuilder).array<FormGroup<KeyValueEntry>>([]);
 
-  public onPrint(): void {
+  protected output: Dictionary | null = null;
+
+  protected onPrint(): void {
     this.output = SciKeyValueFieldComponent.toDictionary(this.formArray);
   }
 }

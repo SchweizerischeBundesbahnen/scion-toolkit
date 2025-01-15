@@ -1,10 +1,10 @@
 <ul>
-  @if (type) {
+  @if (type()) {
     <li class="type">
-      <span class="type e2e-type">{{type}}</span>
+      <span class="type e2e-type">{{type()}}</span>
     </li>
   }
-  @for (entry of (qualifier ?? {}) | keyvalue:qualifierKeyCompareFn; track entry) {
+  @for (entry of (qualifier() ?? {}) | keyvalue:qualifierKeyCompareFn; track entry) {
     <li class="e2e-qualifier-entry">
       <span class="key e2e-key">{{entry.key}}</span>
       <span class="value e2e-value">{{entry.value}}</span>

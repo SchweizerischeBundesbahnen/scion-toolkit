@@ -30,14 +30,14 @@ export default class SciFilterFieldPageComponent {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
 
-  protected filterText: string | null = null;
-
-  public form = this._formBuilder.group({
+  protected readonly form = this._formBuilder.group({
     filterField: this._formBuilder.control<string>(''),
     state: this._formBuilder.group({
       disabled: this._formBuilder.control<boolean>(false),
     }),
   });
+
+  protected filterText: string | null = null;
 
   constructor() {
     this.installFilterFieldDisabler();

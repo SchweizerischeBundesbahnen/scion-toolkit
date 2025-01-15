@@ -8,17 +8,17 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, OnDestroy, OnInit, Signal, viewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportComponent} from '@scion/components/viewport';
-import {startWith, takeUntil} from 'rxjs/operators';
-import {Subject} from 'rxjs';
+import {startWith} from 'rxjs/operators';
 import loremIpsum from './lorem-ipsum.json';
 import {Arrays} from '@scion/toolkit/util';
 import {DOCUMENT} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SplitPipe} from '../common/split.pipe';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'sci-viewport-page',
@@ -37,12 +37,10 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
   private readonly _document = inject(DOCUMENT);
+  private readonly _viewportElement: Signal<ElementRef<HTMLElement>> = viewChild.required(SciViewportComponent, {read: ElementRef});
 
-  private _destroy$ = new Subject<void>();
-  private _styleSheet: CSSStyleSheet | null = null;
-
-  public scrollbarStyles = ['native', 'on-top', 'hidden'];
-  public form = this._formBuilder.group({
+  protected readonly scrollbarStyles = ['native', 'on-top', 'hidden'];
+  protected readonly form = this._formBuilder.group({
     content: this._formBuilder.control(loremIpsum),
     viewportContentStyles: this._formBuilder.control(`display: flex;\nflex-direction: row;\ngap: 3em;`),
     viewportMinHeight: this._formBuilder.control('300px'),
@@ -52,21 +50,20 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
     scrollbarColor: this._formBuilder.control(''),
   });
 
-  @ViewChild(SciViewportComponent, {static: true, read: ElementRef})
-  public viewportElement!: ElementRef<HTMLElement>;
+  private _styleSheet: CSSStyleSheet | null = null;
 
   @HostBinding('style.--viewport-minheight')
-  public get viewportMinHeight(): string {
+  protected get viewportMinHeight(): string {
     return this.form.controls.viewportMinHeight.value;
   }
 
   @HostBinding('style.--viewport-maxheight')
-  public get viewportMaxHeight(): string {
+  protected get viewportMaxHeight(): string {
     return this.form.controls.viewportMaxHeight.value;
   }
 
   @HostBinding('style.--viewport-flex')
-  public get viewportFlex(): string {
+  protected get viewportFlex(): string {
     return this.form.controls.viewportFlex.value;
   }
 
@@ -83,7 +80,7 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
     this.form.controls.viewportContentStyles.valueChanges
       .pipe(
         startWith(this.form.controls.viewportContentStyles.value),
-        takeUntil(this._destroy$),
+        takeUntilDestroyed(),
       )
       .subscribe((styles: string) => {
         this.replaceCssStyleSheetRule(`
@@ -95,7 +92,7 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
   }
 
   private readCssVariableDefault(cssVariable: string): string {
-    return getComputedStyle(this.viewportElement.nativeElement).getPropertyValue(cssVariable);
+    return getComputedStyle(this._viewportElement().nativeElement).getPropertyValue(cssVariable);
   }
 
   private installStyleSheet(): CSSStyleSheet | null {
@@ -132,7 +129,6 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    this._destroy$.next();
     this.uninstallStyleSheet();
   }
 }

@@ -97,20 +97,21 @@ import {subscribeIn} from '@scion/toolkit/operators';
 })
 export class SciViewportComponent {
 
-  private _viewport = viewChild.required<ElementRef<HTMLDivElement>>('viewport');
-  private _viewportClient = viewChild.required<ElementRef<HTMLDivElement>>('viewport_client');
-  private _host = inject(ElementRef).nativeElement as HTMLElement;
-  protected nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
-
   /**
    * Controls if to use the native scrollbar or a scrollbar that sits on top of the viewport. Defaults to `on-top`.
    */
-  public scrollbarStyle = input<ScrollbarStyle>('on-top');
+  public readonly scrollbarStyle = input<ScrollbarStyle>('on-top');
 
   /**
    * Emits when the viewport is scrolled. The event is emitted outside the Angular zone to avoid unnecessary change detection cycles.
    */
-  public scroll = output<Event>(); // eslint-disable-line @angular-eslint/no-output-native
+  public readonly scroll = output<Event>(); // eslint-disable-line @angular-eslint/no-output-native
+
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
+  private readonly _viewport = viewChild.required<ElementRef<HTMLDivElement>>('viewport');
+  private readonly _viewportClient = viewChild.required<ElementRef<HTMLDivElement>>('viewport_client');
+
+  protected readonly nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   constructor() {
     this.installScrollEmitter();

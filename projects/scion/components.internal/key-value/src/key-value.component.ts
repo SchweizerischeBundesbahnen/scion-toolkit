@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, input, untracked} from '@angular/core';
 import {KeyValue, KeyValuePipe} from '@angular/common';
 import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 
@@ -26,20 +26,19 @@ import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 })
 export class SciKeyValueComponent {
 
-  public flattenedProperties: Dictionary = {};
-  private _keys: string[] = [];
+  public readonly object = input<Dictionary | Map<string, unknown> | null | undefined>();
 
-  @Input()
-  public set object(object: Dictionary | Map<string, unknown> | null | undefined) {
-    this.flattenedProperties = this.flattenObject(object ?? {});
-    this._keys = Object.keys(this.flattenedProperties);
-  }
+  protected readonly flattenedProperties = computed(() => {
+    const object = this.object() ?? {};
+    return untracked(() => this.flattenObject(object));
+  });
 
   /**
    * Compares qualifier entries by their position in the object.
    */
-  public keyCompareFn = (a: KeyValue<string, unknown>, b: KeyValue<string, unknown>): number => {
-    return this._keys.indexOf(a.key) - this._keys.indexOf(b.key);
+  protected keyCompareFn = (a: KeyValue<string, unknown>, b: KeyValue<string, unknown>): number => {
+    const keys = Object.keys(this.flattenedProperties());
+    return keys.indexOf(a.key) - keys.indexOf(b.key);
   };
 
   private flattenObject(property: Dictionary | Map<string, unknown>, path: string[] = []): Dictionary {

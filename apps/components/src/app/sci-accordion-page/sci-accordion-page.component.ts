@@ -32,7 +32,7 @@ export default class SciAccordionPageComponent {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
 
-  public form = this._formBuilder.group({
+  protected readonly form = this._formBuilder.group({
     variant: this._formBuilder.control<'solid' | 'bubble'>('bubble'),
     multi: this._formBuilder.control(false),
   });

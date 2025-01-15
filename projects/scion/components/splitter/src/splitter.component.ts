@@ -8,11 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostBinding, inject, Input, NgZone, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
-import {fromEvent, merge, Subject} from 'rxjs';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostBinding, inject, input, NgZone, OnInit, output, viewChild} from '@angular/core';
+import {fromEvent, merge} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {tapFirst} from '@scion/toolkit/operators';
 import {first, takeUntil} from 'rxjs/operators';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 /**
  * Represents a splitter, a visual element that allows the user to control the size of elements next to it.
@@ -61,82 +62,71 @@ import {first, takeUntil} from 'rxjs/operators';
   styleUrls: ['./splitter.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SciSplitterComponent implements OnInit, OnDestroy {
-
-  private readonly _zone = inject(NgZone);
-  private readonly _cd = inject(ChangeDetectorRef);
-  private readonly _document = inject(DOCUMENT);
-
-  private _destroy$ = new Subject<void>();
-
-  /* @docs-private */
-  @HostBinding('class.moving')
-  public moving = false;
-
-  @HostBinding('class.vertical')
-  public get isVertical(): boolean {
-    return !this.isHorizontal;
-  }
-
-  @HostBinding('class.horizontal')
-  public get isHorizontal(): boolean {
-    return this.orientation === 'horizontal';
-  }
+export class SciSplitterComponent implements OnInit {
 
   /**
-   * Controls whether to render a vertical or horizontal splitter.
-   * By default, if not specified, renders a vertical splitter.
+   * Controls whether to render a vertical or horizontal splitter. By default, if not specified, renders a vertical splitter.
    */
-  @Input()
-  public orientation: 'vertical' | 'horizontal' = 'vertical';
+  public readonly orientation = input<'vertical' | 'horizontal'>('vertical');
 
   /**
    * Emits when starting to move the splitter.
    */
-  @Output()
-  public start = new EventEmitter<void>(); // eslint-disable-line @angular-eslint/no-output-native
+  public readonly start = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
   /**
-   * Emits the distance in pixels when the splitter is moved.
-   * The event is emitted outside of the Angular zone.
+   * Emits the distance in pixels when the splitter is moved. The event is emitted outside the Angular zone.
    */
-  @Output()
-  public move = new EventEmitter<SplitterMoveEvent>();
+  public readonly move = output<SplitterMoveEvent>();
 
   /**
    * Emits when ending to move the splitter.
    */
-  @Output()
-  public end = new EventEmitter<void>(); // eslint-disable-line @angular-eslint/no-output-native
+  public readonly end = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
   /**
    * Emits when to reset the splitter position.
    */
-  @Output()
-  public reset = new EventEmitter<void>(); // eslint-disable-line @angular-eslint/no-output-native
+  public readonly reset = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
-  /* @docs-private */
+  private readonly _zone = inject(NgZone);
+  private readonly _cd = inject(ChangeDetectorRef);
+  private readonly _document = inject(DOCUMENT);
+  private readonly _destroyRef = inject(DestroyRef);
+  private readonly _touchTarget = viewChild.required<ElementRef<HTMLElement>>('touch_target');
+
+  @HostBinding('class.moving')
+  protected moving = false;
+
+  @HostBinding('class.vertical')
+  protected get isVertical(): boolean {
+    return !this.isHorizontal;
+  }
+
+  @HostBinding('class.horizontal')
+  protected get isHorizontal(): boolean {
+    return this.orientation() === 'horizontal';
+  }
+
   @HostBinding('style.cursor')
-  public get splitterCursor(): string {
+  protected get splitterCursor(): string {
     return this.isVertical ? 'ew-resize' : 'ns-resize';
   }
 
   /* @docs-private */
-  @ViewChild('touch_target', {static: true})
-  public touchTargetElementRef!: ElementRef<HTMLElement>;
-
-  /* @docs-private */
   public ngOnInit(): void {
-    fromEvent(this.touchTargetElementRef.nativeElement, 'dblclick')
-      .pipe(takeUntil(this._destroy$))
+    const touchTargetElement = this._touchTarget().nativeElement;
+
+    fromEvent(touchTargetElement, 'dblclick')
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe(() => this.onReset());
 
-    fromEvent<TouchEvent>(this.touchTargetElementRef.nativeElement, 'touchstart')
-      .pipe(takeUntil(this._destroy$))
+    fromEvent<TouchEvent>(touchTargetElement, 'touchstart')
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe((event: TouchEvent) => this.onTouchStart(event));
 
-    fromEvent<MouseEvent>(this.touchTargetElementRef.nativeElement, 'mousedown')
-      .pipe(takeUntil(this._destroy$))
+    fromEvent<MouseEvent>(touchTargetElement, 'mousedown')
+      .pipe(takeUntilDestroyed(this._destroyRef))
       .subscribe((event: MouseEvent) => this.onMouseDown(event));
   }
 
@@ -201,10 +191,11 @@ export class SciSplitterComponent implements OnInit, OnDestroy {
         .pipe(
           tapFirst(() => this._zone.run(() => {
             this.moving = true;
-            this.start.next();
+            this.start.emit();
             this._cd.markForCheck();
           })),
-          takeUntil(merge(endEvent$, this._destroy$)),
+          takeUntilDestroyed(this._destroyRef),
+          takeUntil(endEvent$),
         )
         .subscribe((moveEvent: EVENT) => {
           const eventPos = config.eventPositionFn(moveEvent);
@@ -218,22 +209,20 @@ export class SciSplitterComponent implements OnInit, OnDestroy {
 
       // Listen for 'end' events; call 'stop propagation' to not close overlays
       endEvent$
-        .pipe(first(), takeUntil(this._destroy$))
+        .pipe(
+          first(),
+          takeUntilDestroyed(this._destroyRef),
+        )
         .subscribe((endEvent: EVENT) => {
           endEvent.stopPropagation();
           this._document.body.style.cursor = oldDocumentCursor;
           this.moving && this._zone.run(() => {
-            this.end.next();
+            this.end.emit();
             this.moving = false;
             this._cd.markForCheck();
           });
         });
     });
-  }
-
-  /* @docs-private */
-  public ngOnDestroy(): void {
-    this._destroy$.next();
   }
 }
 

@@ -8,14 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostBinding, HostListener, inject, Input, OnDestroy, Output, ViewChild} from '@angular/core';
+import {booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, ElementRef, forwardRef, HostBinding, HostListener, inject, input, linkedSignal, OnDestroy, output, untracked, viewChild} from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
-import {takeUntil} from 'rxjs/operators';
-import {noop, Subject} from 'rxjs';
-import {coerceBooleanProperty} from '@angular/cdk/coercion';
+import {noop} from 'rxjs';
 import {FocusMonitor, FocusOrigin} from '@angular/cdk/a11y';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 /**
  * Provides a simple filter control.
@@ -35,78 +34,69 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
 })
 export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy {
 
-  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
-  private readonly _focusManager = inject(FocusMonitor);
-  private readonly _cd = inject(ChangeDetectorRef);
-  private readonly _formBuilder = inject(NonNullableFormBuilder);
-
-  private _destroy$ = new Subject<void>();
-  private _cvaChangeFn: (value: any) => void = noop;
-  private _cvaTouchedFn: () => void = noop;
-  public id = UUID.randomUUID();
-
   /**
-   * Sets focus order in sequential keyboard navigation.
-   * If not specified, the focus order is according to the position in the document (tabindex=0).
+   * Sets focus order in sequential keyboard navigation. If not specified, the focus order is according to the position in the document (tabindex=0).
    */
-  @Input()
-  public tabindex?: number | undefined;
+  public readonly tabindex = input<number>();
 
   /**
    * Specifies the hint displayed when this field is empty.
    */
-  @Input()
-  public placeholder?: string | undefined;
-
-  @Input()
-  public set disabled(disabled: boolean | string | undefined | null) {
-    coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
-  }
-
-  public get disabled(): boolean {
-    return this.formControl.disabled;
-  }
+  public readonly placeholder = input<string>();
+  public readonly disabled = input(false, {transform: booleanAttribute});
 
   /**
    * Emits on filter change.
    */
-  @Output()
-  public filter = new EventEmitter<string>();
+  public readonly filter = output<string>();
 
-  @ViewChild('input', {static: true})
-  private _inputElement!: ElementRef<HTMLInputElement>;
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
+  private readonly _focusManager = inject(FocusMonitor);
+  private readonly _cd = inject(ChangeDetectorRef);
+  private readonly _formBuilder = inject(NonNullableFormBuilder);
+  private readonly _inputElement = viewChild.required<ElementRef<HTMLInputElement>>('input');
+  private readonly _disabled = linkedSignal(() => this.disabled());
+
+  protected readonly id = UUID.randomUUID();
+  protected readonly formControl = this._formBuilder.control('', {updateOn: 'change'});
+
+  private _cvaChangeFn: (value: any) => void = noop;
+  private _cvaTouchedFn: () => void = noop;
 
   @HostBinding('attr.tabindex')
-  public componentTabindex = -1; // component is not focusable in sequential keyboard navigation, but tabindex (if any) is installed on input field
+  protected componentTabindex = -1; // component is not focusable in sequential keyboard navigation, but tabindex (if any) is installed on input field
 
   @HostBinding('class.empty')
-  public get empty(): boolean {
+  protected get empty(): boolean {
     return !this.formControl.value;
   }
 
-  /* @docs-private */
-  public formControl = this._formBuilder.control('', {updateOn: 'change'});
-
   constructor() {
     this.formControl.valueChanges
-      .pipe(takeUntil(this._destroy$))
+      .pipe(takeUntilDestroyed())
       .subscribe(value => {
         this._cvaChangeFn(value);
         this.filter.emit(value);
       });
 
     this._focusManager.monitor(this._host, true)
-      .pipe(takeUntil(this._destroy$))
+      .pipe(takeUntilDestroyed())
       .subscribe((focusOrigin: FocusOrigin) => {
         if (!focusOrigin) {
           this._cvaTouchedFn(); // triggers form field validation and signals a blur event
         }
       });
+
+    effect(() => {
+      const disabled = this._disabled();
+      // Prevent value emission when changing form control enabled state.
+      untracked(() => disabled ? this.formControl.disable({emitEvent: false}) : this.formControl.enable({emitEvent: false}));
+    });
   }
 
   @HostListener('focus')
   public focus(): void {
-    this._inputElement.nativeElement.focus();
+    this._inputElement().nativeElement.focus();
   }
 
   /**
@@ -116,7 +106,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * This allows to start filtering without having to focus the filter field, e.g. if another element has the focus.
    */
   public focusAndApplyKeyboardEvent(event: KeyboardEvent): void {
-    if (event.target === this._inputElement.nativeElement) {
+    if (event.target === this._inputElement().nativeElement) {
       return; // Ignore the keyboard event if its target is equal to the input element.
     }
     if (event.ctrlKey || event.altKey || event.shiftKey) {
@@ -131,7 +121,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
     this._cd.markForCheck();
   }
 
-  public onClear(): void {
+  protected onClear(): void {
     this.formControl.setValue('');
     this.focus(); // restore the focus
   }
@@ -157,21 +147,19 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * @docs-private
    */
   public setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
-    this._cd.markForCheck();
+    this._disabled.set(isDisabled);
   }
 
   /**
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    * @docs-private
    */
-  public writeValue(value: string): void {
-    this.formControl.setValue(value, {emitEvent: false});
+  public writeValue(value: string | undefined | null): void {
+    this.formControl.setValue(value ?? '', {emitEvent: false});
     this._cd.markForCheck();
   }
 
   public ngOnDestroy(): void {
-    this._destroy$.next();
     this._focusManager.stopMonitoring(this._host);
   }
 }

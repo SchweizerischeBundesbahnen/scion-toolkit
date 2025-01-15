@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, inject, Input, TemplateRef} from '@angular/core';
+import {Directive, inject, input, TemplateRef} from '@angular/core';
 
 /**
  * Use this directive to model an accordion item for {SciAccordionComponent}.
@@ -37,26 +37,22 @@ export class SciAccordionItemDirective {
   public readonly template = inject<TemplateRef<void>>(TemplateRef);
 
   /**
-   * Optional key to identify this item and is used as key for the {TrackBy} function.
-   */
-  @Input()
-  public key?: string | undefined;
-
-  /**
    * Provide template(s) to be rendered as actions of this list item.
    */
-  @Input({required: true})
-  public panel!: TemplateRef<void>;
+  public readonly panel = input.required<TemplateRef<void>>();
+
+  /**
+   * Optional key to identify this item and is used as key for the {TrackBy} function.
+   */
+  public readonly key = input<string>();
 
   /**
    * Indicates whether to expand this item.
    */
-  @Input()
-  public expanded?: boolean | undefined;
+  public readonly expanded = input<boolean>();
 
   /**
    * Specifies CSS class(es) added to the <section> and <wb-view> elements, e.g. used for e2e testing.
    */
-  @Input()
-  public cssClass?: string | string[] | undefined | null;
+  public readonly cssClass = input<string | string[] | null | undefined>();
 }

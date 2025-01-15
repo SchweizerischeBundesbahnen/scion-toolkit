@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, Input} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, input} from '@angular/core';
 import {FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
@@ -28,45 +28,46 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
 })
 export class SciKeyValueFieldComponent {
 
+  public readonly keyValueFormArray = input.required<FormArray<FormGroup<KeyValueEntry>>>();
+  public readonly title = input<string>();
+  public readonly removable = input(false);
+  public readonly addable = input(false);
+
   private readonly _formBuilder = inject(NonNullableFormBuilder);
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
 
-  public readonly id = UUID.randomUUID();
-
-  @Input()
-  public title?: string | undefined;
-
-  @Input({required: true})
-  public keyValueFormArray!: FormArray<FormGroup<KeyValueEntry>>;
-
-  @Input()
-  @HostBinding('class.removable')
-  public removable = false;
-
-  @Input()
-  @HostBinding('class.addable')
-  public addable = false;
+  protected readonly id = UUID.randomUUID();
 
   @HostBinding('attr.tabindex')
-  public tabindex = -1;
+  protected tabindex = -1;
 
-  public onRemove(index: number): void {
-    this.keyValueFormArray.removeAt(index);
+  @HostBinding('class.removable')
+  protected get isRemovable(): boolean {
+    return this.removable();
+  }
+
+  @HostBinding('class.addable')
+  protected get isAddable(): boolean {
+    return this.addable();
+  }
+
+  protected onRemove(index: number): void {
+    this.keyValueFormArray().removeAt(index);
 
     // Focus the component to not lose the focus when the remove button is removed from the DOM.
     // Otherwise, if used in a popup, the popup would be closed because no element is focused anymore.
     this._host.focus({preventScroll: true});
   }
 
-  public onAdd(): void {
-    this.keyValueFormArray.push(this._formBuilder.group({
+  protected onAdd(): void {
+    this.keyValueFormArray().push(this._formBuilder.group({
       key: this._formBuilder.control(''),
       value: this._formBuilder.control(''),
     }));
   }
 
-  public onClear(): void {
-    this.keyValueFormArray.clear();
+  protected onClear(): void {
+    this.keyValueFormArray().clear();
   }
 
   /**

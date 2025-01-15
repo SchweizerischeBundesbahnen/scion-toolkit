@@ -29,9 +29,9 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
 })
 export default class SciSashboxPageComponent {
 
-  public directionFormControl = inject(NonNullableFormBuilder).control<'column' | 'row'>('row');
+  protected readonly directionFormControl = inject(NonNullableFormBuilder).control<'column' | 'row'>('row');
 
-  public sashes: Sash[] = [
+  protected readonly sashes: Sash[] = [
     {size: '1'},
     {size: '1'},
     {size: '1'},

@@ -59,45 +59,42 @@ export class SciScrollbarComponent {
    */
   public static readonly VIEWPORT_RESIZE_DEBOUNCE_TIME = 50;
 
-  private _host = inject(ElementRef).nativeElement as HTMLElement;
-  private _document = inject(DOCUMENT);
-  private _zone = inject(NgZone);
-  private _destroyRef = inject(DestroyRef);
+  /**
+   * Specifies the direction of the scrollbar. Defaults to a vertical scrollbar.
+   */
+  public readonly direction = input<'vscroll' | 'hscroll'>('vscroll');
+
+  /**
+   * The viewport to provide scrollbars for.
+   */
+  public readonly viewport = input.required<HTMLElement>();
+
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
+  private readonly _document = inject(DOCUMENT);
+  private readonly _zone = inject(NgZone);
+  private readonly _destroyRef = inject(DestroyRef);
+  private readonly _thumbElement = viewChild.required<ElementRef<HTMLDivElement>>('thumb_handle');
+  private readonly _vertical = computed(() => this.direction() === 'vscroll');
 
   private _lastDragPosition: number | null = null;
   private _overflow = false;
   private _thumbSizeFr = 0;
   private _thumbPositionFr = 0;
 
-  private _thumbElement = viewChild.required<ElementRef<HTMLDivElement>>('thumb_handle');
-  private _vertical = computed(() => this.direction() === 'vscroll');
-
   @HostBinding('class.vertical')
-  public get vertical(): boolean {
+  protected get vertical(): boolean {
     return this._vertical();
   }
 
   @HostBinding('class.horizontal')
-  public get horizontal(): boolean {
+  protected get horizontal(): boolean {
     return !this._vertical();
   }
 
   @HostBinding('class.scrolling')
-  public get scrolling(): boolean {
+  protected get scrolling(): boolean {
     return this._lastDragPosition !== null;
   }
-
-  /**
-   * Specifies the direction of the scrollbar.
-   *
-   * By default, if not specified, renders a vertical scrollbar.
-   */
-  public direction = input<'vscroll' | 'hscroll'>('vscroll');
-
-  /**
-   * The viewport to provide scrollbars for.
-   */
-  public viewport = input.required<HTMLElement>();
 
   constructor() {
     this.installScrollPositionRenderer();

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges} from '@angular/core';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
 import {KeyValue, KeyValuePipe} from '@angular/common';
 
 /**
@@ -37,25 +37,17 @@ import {KeyValue, KeyValuePipe} from '@angular/common';
     KeyValuePipe,
   ],
 })
-export class SciQualifierChipListComponent implements OnChanges {
+export class SciQualifierChipListComponent {
 
-  private _qualifierKeys: string[] = [];
-
-  @Input()
-  public qualifier?: Qualifier | undefined | null;
-
-  @Input()
-  public type?: string | undefined;
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this._qualifierKeys = Object.keys(this.qualifier ?? {});
-  }
+  public readonly type = input<string | undefined>();
+  public readonly qualifier = input<Qualifier | undefined | null>();
 
   /**
    * Compares qualifier entries by their position in the object.
    */
-  public qualifierKeyCompareFn = (a: KeyValue<string, any>, b: KeyValue<string, any>): number => {
-    return this._qualifierKeys.indexOf(a.key) - this._qualifierKeys.indexOf(b.key);
+  protected qualifierKeyCompareFn = (a: KeyValue<string, any>, b: KeyValue<string, any>): number => {
+    const keys = Object.keys(this.qualifier() ?? {});
+    return keys.indexOf(a.key) - keys.indexOf(b.key);
   };
 }
 
