@@ -79,6 +79,7 @@ module.exports = tseslint.config(
       "@typescript-eslint/no-invalid-void-type": "off",
       "@typescript-eslint/require-await": "off",
       "@typescript-eslint/consistent-indexed-object-style": "off",
+      "@typescript-eslint/no-unnecessary-type-arguments": "off",
 
       // https://eslint.style/packages/default
       "@stylistic/indent": ["error", 2,  {

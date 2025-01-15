@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, input} from '@angular/core';
 import {SciEllipsisThrobberComponent} from './ellipsis-throbber/ellipsis-throbber.component';
 import {SciRippleThrobberComponent} from './ripple-throbber/ripple-throbber.component';
 import {SciRollerThrobberComponent} from './roller-throbber/roller-throbber.component';
@@ -66,6 +66,5 @@ export class SciThrobberComponent {
    * - **spinner** (default)
    * Represents a classic spinner throbber with strokes arranged radially. The strokes light up one after the other in clockwise direction and then then fade out again.
    */
-  @Input()
-  public type: 'ellipsis' | 'ripple' | 'roller' | 'spinner' = 'spinner';
+  public readonly type = input<'ellipsis' | 'ripple' | 'roller' | 'spinner'>('spinner');
 }
