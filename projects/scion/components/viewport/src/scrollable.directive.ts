@@ -26,15 +26,12 @@ import {Dictionary} from '@scion/toolkit/util';
 @Directive({selector: '[sciScrollable]'})
 export class SciScrollableDirective {
 
-  private _host = inject(ElementRef<HTMLDivElement>).nativeElement as HTMLElement;
-  private _renderer = inject(Renderer2);
-  private _nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
+  /** Controls whether to display native scrollbars. Has no effect if the native scrollbar sits on top of the content, e.g. in OS X. */
+  public readonly displayNativeScrollbar = input(false, {alias: 'sciScrollableDisplayNativeScrollbar'});
 
-  /**
-   * Controls whether to display native scrollbars.
-   * Has no effect if the native scrollbar sits on top of the content, e.g. in OS X.
-   */
-  public displayNativeScrollbar = input(false, {alias: 'sciScrollableDisplayNativeScrollbar'});
+  private readonly _host = inject(ElementRef<HTMLDivElement>).nativeElement as HTMLElement;
+  private readonly _renderer = inject(Renderer2);
+  private readonly _nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   constructor() {
     this.controlDisplayOfNativeScrollbar();

@@ -23,17 +23,17 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 })
 export class BoundingClientRectPageComponent implements OnInit {
 
-  private _testee = viewChild.required<ElementRef<HTMLElement>>('testee');
-  private _destroyRef = inject(DestroyRef);
+  private readonly _destroyRef = inject(DestroyRef);
+  private readonly _testee = viewChild.required<ElementRef<HTMLElement>>('testee');
 
-  protected properties = {
+  protected readonly properties = {
     x: signal<string>('0px'),
     y: signal<string>('0px'),
     width: signal<string>('100px'),
     height: signal<string>('100px'),
   };
 
-  protected testeeBoundingBox = {
+  protected readonly testeeBoundingBox = {
     x: signal<number | undefined>(undefined),
     y: signal<number | undefined>(undefined),
     width: signal<number | undefined>(undefined),
@@ -53,7 +53,7 @@ export class BoundingClientRectPageComponent implements OnInit {
       });
   }
 
-  public applyProperties(): void {
+  protected applyProperties(): void {
     this._testee().nativeElement.style.left = this.properties.x();
     this._testee().nativeElement.style.top = this.properties.y();
     this._testee().nativeElement.style.width = this.properties.width();

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, inject, Input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
+import {Directive, inject, input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
 
 /**
  * Use this directive to model a tab item for {SciTabbarComponent}.
@@ -30,30 +30,27 @@ import {Directive, inject, Input, OnDestroy, TemplateRef, ViewContainerRef, View
 @Directive({selector: 'ng-template[sciTab]'})
 export class SciTabDirective implements OnDestroy {
 
-  private readonly _templateRef = inject<TemplateRef<void>>(TemplateRef);
-
-  private _vcr: ViewContainerRef | undefined;
-  private _viewRef: ViewRef | undefined;
-
   /**
    * Specifies the title of the tab.
    */
-  @Input({required: true})
-  public label!: string;
+  public readonly label = input.required<string>();
 
   /**
    * Specifies the identity of this tab.
    *
    * Can be used to activate this tab via {@link SciTabbarComponent.activateTab}.
    */
-  @Input()
-  public name?: string | undefined;
+  public readonly name = input<string>();
 
   /**
    * Specifies CSS class(es) added to the tab item, e.g., to select the tab in end-to-end tests.
    */
-  @Input()
-  public cssClass?: string | string[] | undefined | null;
+  public readonly cssClass = input<string | string[] | null | undefined>();
+
+  private readonly _templateRef = inject<TemplateRef<void>>(TemplateRef);
+
+  private _vcr: ViewContainerRef | undefined;
+  private _viewRef: ViewRef | undefined;
 
   /**
    * Attaches the content of this tab.

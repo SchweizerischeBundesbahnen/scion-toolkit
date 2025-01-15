@@ -1,11 +1,11 @@
-@for (sash of sashes$ | async; track sash; let i = $index; let first = $first; let last = $last) {
+@for (sash of sashes(); track sash; let i = $index; let first = $first; let last = $last) {
   <div class="sash"
        [class.first]="first"
        [class.last]="last"
        [sciSashInitializer]="sash"
-       [style.flex-grow]="sash.flexGrowNormalized$ | async"
-       [style.flex-shrink]="sash.flexShrink"
-       [style.flex-basis]="sash.flexBasis">
+       [style.flex-grow]="sash.flexProperties().flexGrow"
+       [style.flex-shrink]="sash.flexProperties().flexShrink"
+       [style.flex-basis]="sash.flexProperties().flexBasis">
     <ng-container *ngTemplateOutlet="sash.sashTemplate"/>
   </div>
   @if (!last) {

@@ -1,4 +1,4 @@
-@for (property of flattenedProperties | keyvalue:keyCompareFn; track property) {
+@for (property of flattenedProperties() | keyvalue:keyCompareFn; track property) {
   <span class="key"><span class="e2e-key">{{property.key}}</span>:</span>
   <span class="value e2e-value">{{property.value}}</span>
 }

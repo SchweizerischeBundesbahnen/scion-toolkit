@@ -82,9 +82,9 @@ The `<sci-sashbox>` is like a CSS flexbox container that lays out its content ch
 or column arrangement (as specified by the direction property). A splitter is added between each child to allow the user to
 shrink or stretch the individual sashes.
 
-Sashes are modelled as content children inside a `<ng-template>` decorated with the `sciSash` directive. A sash can have a fixed size with an explicit unit, or a unitless proportion to distibute remaining space. A proportional sash has the ability to grow or shrink if necessary.
+Sashes are modelled as `<ng-template>` decorated with the `sciSash` directive. A sash can have a fixed size with an explicit unit, or a unitless proportion to distribute remaining space. A proportional sash has the ability to grow or shrink if necessary.
 
-Sash content modeled in the `<ng-template>` is added to a CSS grid container with a single column, stretching the content vertically and horizontally.
+Sash content is added to a CSS grid container with a single column, stretching the content vertically and horizontally.
 
 </details>
 
@@ -115,7 +115,7 @@ Sash content modeled in the `<ng-template>` is added to a CSS grid container wit
 #### Configuration:
   
   - **size**\
-    Specifies the sash size, either as fixed size with an explicit unit, or as a unitless proportion to distibute remaining space. A proportional sash has the ability to grow or shrink if necessary, and must be `>= 1`. If not set, remaining space is distributed equally.
+    Specifies the sash size, either as fixed size with an explicit unit, or as a unitless proportion to distribute remaining space. A proportional sash has the ability to grow or shrink if necessary, and must be `>= 1`. If not set, remaining space is distributed equally.
     
   - **minSize**\
     Specifies the minimal sash size in pixel or percent. The min-size prevents the user from shrinking the sash below this minimal size. If the unit is omitted, the value is interpreted as a pixel value.

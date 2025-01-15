@@ -32,12 +32,12 @@ export class SciDimensionDirective {
   /**
    * Controls if to output outside the Angular zone. Defaults to `false`.
    */
-  public emitOutsideAngular = input(false);
+  public readonly emitOutsideAngular = input(false);
 
   /**
    * Outputs the size of the element.
    */
-  public dimensionChange = output<SciDimension>({alias: 'sciDimensionChange'});
+  public readonly dimensionChange = output<SciDimension>({alias: 'sciDimensionChange'});
 
   constructor() {
     const host = inject(ElementRef).nativeElement as HTMLElement;

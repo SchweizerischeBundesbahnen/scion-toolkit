@@ -1,10 +1,10 @@
 <sci-viewport class="tabbar">
-  @for (tab of tabs$ | async; track tab) {
+  @for (tab of tabs(); track tab) {
     <button class="tab e2e-tab"
             [class.selected]="tab.isContentAttached()"
-            [ngClass]="tab.cssClass"
+            [ngClass]="tab.cssClass()"
             (click)="onTabClick(tab)">
-      {{tab.label}}
+      {{tab.label()}}
       <div class="outline"></div>
     </button>
   }

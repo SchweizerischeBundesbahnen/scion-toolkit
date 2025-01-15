@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, Input, OnDestroy} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, input, OnDestroy} from '@angular/core';
 import {ConfigurableFocusTrap, ConfigurableFocusTrapFactory} from '@angular/cdk/a11y';
 import {UUID} from '@scion/toolkit/uuid';
 
@@ -19,20 +19,17 @@ import {UUID} from '@scion/toolkit/uuid';
 })
 export class SciFormFieldComponent implements OnDestroy {
 
+  public readonly label = input.required<string>();
+  public readonly direction = input<'row' | 'column'>('row');
+
+  protected readonly id = UUID.randomUUID();
+
   private _focusTrap: ConfigurableFocusTrap;
 
-  public readonly id = UUID.randomUUID();
-
-  @Input()
-  public direction: 'row' | 'column' = 'row';
-
   @HostBinding('class.column-direction')
-  public get isColumnDirection(): boolean {
-    return this.direction === 'column';
+  protected get isColumnDirection(): boolean {
+    return this.direction() === 'column';
   }
-
-  @Input({required: true})
-  public label!: string;
 
   constructor() {
     const host = inject(ElementRef).nativeElement as HTMLElement;

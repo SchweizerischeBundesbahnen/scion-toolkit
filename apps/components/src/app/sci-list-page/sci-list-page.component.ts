@@ -27,10 +27,9 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
 })
 export default class SciListPageComponent {
 
-  public filter$ = new BehaviorSubject<string>('');
-  public flaggedItems = new Set<string>();
-
-  public items$: Observable<string[]> = of([
+  protected readonly filter$ = new BehaviorSubject<string>('');
+  protected readonly flaggedItems = new Set<string>();
+  protected readonly items$: Observable<string[]> = of([
     'SCION Microfrontend Platform',
     'SCION Workbench',
     'SCION Toolkit',
@@ -45,19 +44,19 @@ export default class SciListPageComponent {
     switchMap(items => this.filter$.pipe(map(filterText => items.filter(item => !filterText || item.toUpperCase().includes(filterText))))),
   );
 
-  public onFilter(filter: string): void {
+  protected onFilter(filter: string): void {
     this.filter$.next(filter.toUpperCase());
   }
 
-  public onFlag(item: string): void {
+  protected onFlag(item: string): void {
     this.flaggedItems.add(item);
   }
 
-  public onUnflag(item: string): void {
+  protected onUnflag(item: string): void {
     this.flaggedItems.delete(item);
   }
 
-  public isFlagged(item: string): boolean {
+  protected isFlagged(item: string): boolean {
     return this.flaggedItems.has(item);
   }
 }

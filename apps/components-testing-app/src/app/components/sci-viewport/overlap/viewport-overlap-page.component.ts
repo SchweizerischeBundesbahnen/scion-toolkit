@@ -19,7 +19,7 @@ import {SciViewportComponent} from '@scion/components/viewport';
 })
 export class ViewportOverlapPageComponent {
 
-  public onClick(): void {
+  protected onClick(): void {
     console.debug('[ViewportOverlapPageComponent] Button clicked');
   }
 }

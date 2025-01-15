@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, ElementRef, HostListener, inject, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, inject, OnInit, Signal, viewChild} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -34,9 +34,10 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
 export default class SciSashboxPageComponent implements OnInit {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
+  private readonly _sashBoxComponent: Signal<ElementRef<HTMLElement>> = viewChild.required(SciSashboxComponent, {read: ElementRef<HTMLElement>});
 
-  public directionFormControl = this._formBuilder.control<'column' | 'row'>('row');
-  public stylingFormGroup = this._formBuilder.group({
+  protected readonly directionFormControl = this._formBuilder.control<'column' | 'row'>('row');
+  protected readonly stylingFormGroup = this._formBuilder.group({
     '--sci-sashbox-gap': this._formBuilder.control(''),
     '--sci-sashbox-splitter-background-color': this._formBuilder.control(''),
     '--sci-sashbox-splitter-background-color-hover': this._formBuilder.control(''),
@@ -49,27 +50,24 @@ export default class SciSashboxPageComponent implements OnInit {
     '--sci-sashbox-splitter-opacity-hover': this._formBuilder.control(''),
   });
 
-  public sashes: Sash[] = [
+  protected readonly sashes: Sash[] = [
     {visible: true, size: '250px', minSize: 75},
     {visible: true, size: '1', minSize: 50},
     {visible: true, size: '250px', minSize: 75},
   ];
 
-  public glasspaneVisible = false;
-
-  @ViewChild(SciSashboxComponent, {static: true, read: ElementRef})
-  public sashBoxComponent!: ElementRef<HTMLElement>;
+  protected glasspaneVisible = false;
 
   public ngOnInit(): void {
     // Set CSS variable default values.
     Object.entries(this.stylingFormGroup.controls).forEach(([key, formControl]) => {
-      const defaultValue = getComputedStyle(this.sashBoxComponent.nativeElement).getPropertyValue(key);
+      const defaultValue = getComputedStyle(this._sashBoxComponent().nativeElement).getPropertyValue(key);
       formControl.setValue(defaultValue);
     });
   }
 
   @HostListener('keydown.escape')
-  public onGlasspaneToggle(): void {
+  protected onGlasspaneToggle(): void {
     this.glasspaneVisible = !this.glasspaneVisible;
   }
 }
