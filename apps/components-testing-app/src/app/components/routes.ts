@@ -19,4 +19,8 @@ export default [
     path: 'sci-sashbox',
     loadChildren: () => import('./sci-sashbox/routes'),
   },
+  {
+    path: 'sci-splitter',
+    loadChildren: () => import('./sci-splitter/routes'),
+  },
 ] satisfies Routes;
