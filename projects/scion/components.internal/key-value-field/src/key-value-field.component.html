@@ -1,18 +1,18 @@
 <header>
-  @if (title) {
-    <h2>{{title}}</h2>
+  @if (title()) {
+    <h2>{{title()}}</h2>
   }
   <!-- add button -->
-  @if (addable) {
+  @if (addable()) {
     <button (click)="onAdd()" class="e2e-add" type="button" title="Add entry" sciMaterialIcon>add</button>
   }
   <!-- remove button -->
-  @if (removable) {
+  @if (removable()) {
     <button (click)="onClear()" class="e2e-clear" type="button" title="Clear all entries" sciMaterialIcon>clear</button>
   }
 </header>
 
-@for (keyValueGroup of keyValueFormArray.controls; track keyValueGroup; let i = $index) {
+@for (keyValueGroup of keyValueFormArray().controls; track keyValueGroup; let i = $index) {
   <!-- key -->
   @if (keyValueGroup.controls.key.disabled) {
     <!-- readonly -->
@@ -24,7 +24,7 @@
   <!-- value -->
   <input [formControl]="keyValueGroup.controls.value" [attr.id]="id + '_' + i" class="e2e-value">
   <!-- 'remove' button -->
-  @if (removable) {
+  @if (removable()) {
     <button class="e2e-remove" type="button" (click)="onRemove(i)" title="remove entry" sciMaterialIcon>remove</button>
   }
 }

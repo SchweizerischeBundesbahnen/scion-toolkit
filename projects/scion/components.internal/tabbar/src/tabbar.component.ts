@@ -8,12 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChildren, inject, QueryList, ViewChild, ViewContainerRef} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, contentChildren, effect, inject, viewChild, ViewContainerRef} from '@angular/core';
 import {SciTabDirective} from './tab.directive';
-import {map, startWith} from 'rxjs/operators';
-import {Observable} from 'rxjs';
-import {tapFirst} from '@scion/toolkit/operators';
-import {AsyncPipe, NgClass} from '@angular/common';
+import {NgClass} from '@angular/common';
 import {SciViewportComponent} from '@scion/components/viewport';
 
 /**
@@ -39,32 +36,22 @@ import {SciViewportComponent} from '@scion/components/viewport';
   styleUrls: ['./tabbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    AsyncPipe,
     NgClass,
     SciViewportComponent,
   ],
 })
-export class SciTabbarComponent implements AfterContentInit {
-
+export class SciTabbarComponent {
   private readonly _cd = inject(ChangeDetectorRef);
 
-  @ViewChild('tabcontent', {read: ViewContainerRef, static: true})
-  private _vcr!: ViewContainerRef;
+  private readonly _vcr = viewChild.required('tabcontent', {read: ViewContainerRef});
 
-  /** @internal */
-  @ContentChildren(SciTabDirective)
-  public tabs!: QueryList<SciTabDirective>;
+  public readonly tabs = contentChildren(SciTabDirective);
 
-  /** @internal */
-  public tabs$!: Observable<SciTabDirective[]>;
-
-  public ngAfterContentInit(): void {
-    this.tabs$ = this.tabs.changes
-      .pipe(
-        startWith(this.tabs),
-        tapFirst(() => this.activateTab(this.tabs.first)),
-        map((tabs: QueryList<SciTabDirective>) => tabs.toArray()),
-      );
+  constructor() {
+    const effectRef = effect(() => {
+      this.activateTab(this.tabs().at(0));
+      effectRef.destroy();
+    });
   }
 
   public onTabClick(tab: SciTabDirective | undefined): void {
@@ -88,13 +75,13 @@ export class SciTabbarComponent implements AfterContentInit {
 
     // Activate the new tab, if any.
     if (tab) {
-      tab.attachContent(this._vcr);
+      tab.attachContent(this._vcr());
     }
     this._cd.markForCheck();
   }
 
   private getActiveTab(): SciTabDirective | undefined {
-    return this.tabs.find(tab => tab.isContentAttached());
+    return this.tabs().find(tab => tab.isContentAttached());
   }
 
   private coerceTab(tabOrIdentity: SciTabDirective | string | undefined): SciTabDirective | undefined {
@@ -102,7 +89,7 @@ export class SciTabbarComponent implements AfterContentInit {
       return undefined;
     }
     if (typeof tabOrIdentity === 'string') {
-      return this.tabs.find(it => it.name === tabOrIdentity) ?? undefined;
+      return this.tabs().find(it => it.name() === tabOrIdentity) ?? undefined;
     }
     return tabOrIdentity;
   }

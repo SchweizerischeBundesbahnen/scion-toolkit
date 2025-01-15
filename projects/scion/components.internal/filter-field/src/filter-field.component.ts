@@ -8,11 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostBinding, HostListener, inject, Input, OnDestroy, Output, ViewChild} from '@angular/core';
+import {booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, ElementRef, forwardRef, HostBinding, HostListener, inject, input, OnDestroy, output, untracked, viewChild} from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {takeUntil} from 'rxjs/operators';
 import {noop, Subject} from 'rxjs';
-import {coerceBooleanProperty} from '@angular/cdk/coercion';
 import {FocusMonitor, FocusOrigin} from '@angular/cdk/a11y';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
@@ -40,41 +39,30 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   private readonly _cd = inject(ChangeDetectorRef);
   private readonly _formBuilder = inject(NonNullableFormBuilder);
 
+  private readonly _inputElement = viewChild.required<ElementRef<HTMLInputElement>>('input');
+
+  /**
+   * Sets focus order in sequential keyboard navigation.
+   * If not specified, the focus order is according to the position in the document (tabindex=0).
+   */
+  public readonly tabindex = input<number>();
+
+  /**
+   * Specifies the hint displayed when this field is empty.
+   */
+  public readonly placeholder = input<string>();
+
+  public readonly disabled = input(false, {transform: booleanAttribute});
+
   private _destroy$ = new Subject<void>();
   private _cvaChangeFn: (value: any) => void = noop;
   private _cvaTouchedFn: () => void = noop;
   public id = UUID.randomUUID();
 
   /**
-   * Sets focus order in sequential keyboard navigation.
-   * If not specified, the focus order is according to the position in the document (tabindex=0).
-   */
-  @Input()
-  public tabindex?: number | undefined;
-
-  /**
-   * Specifies the hint displayed when this field is empty.
-   */
-  @Input()
-  public placeholder?: string | undefined;
-
-  @Input()
-  public set disabled(disabled: boolean | string | undefined | null) {
-    coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
-  }
-
-  public get disabled(): boolean {
-    return this.formControl.disabled;
-  }
-
-  /**
    * Emits on filter change.
    */
-  @Output()
-  public filter = new EventEmitter<string>();
-
-  @ViewChild('input', {static: true})
-  private _inputElement!: ElementRef<HTMLInputElement>;
+  public readonly filter = output<string>();
 
   @HostBinding('attr.tabindex')
   public componentTabindex = -1; // component is not focusable in sequential keyboard navigation, but tabindex (if any) is installed on input field
@@ -102,11 +90,16 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
           this._cvaTouchedFn(); // triggers form field validation and signals a blur event
         }
       });
+
+    effect(() => {
+      const disabled = this.disabled();
+      untracked(() => disabled ? this.formControl.disable({emitEvent: false}) : this.formControl.enable({emitEvent: false}));
+    });
   }
 
   @HostListener('focus')
   public focus(): void {
-    this._inputElement.nativeElement.focus();
+    this._inputElement().nativeElement.focus();
   }
 
   /**
@@ -116,7 +109,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * This allows to start filtering without having to focus the filter field, e.g. if another element has the focus.
    */
   public focusAndApplyKeyboardEvent(event: KeyboardEvent): void {
-    if (event.target === this._inputElement.nativeElement) {
+    if (event.target === this._inputElement().nativeElement) {
       return; // Ignore the keyboard event if its target is equal to the input element.
     }
     if (event.ctrlKey || event.altKey || event.shiftKey) {
@@ -157,7 +150,7 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
    * @docs-private
    */
   public setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+    isDisabled ? this.formControl.disable() : this.formControl.enable();
     this._cd.markForCheck();
   }
 

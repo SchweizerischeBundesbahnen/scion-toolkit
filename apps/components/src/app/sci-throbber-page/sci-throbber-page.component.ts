@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, inject, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, inject, OnInit, Signal, viewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -30,6 +30,8 @@ export default class SciThrobberPageComponent implements OnInit {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
 
+  private readonly _throbberComponent: Signal<ElementRef<HTMLElement>> = viewChild.required(SciThrobberComponent, {read: ElementRef});
+
   public types = ['ellipsis', 'ripple', 'roller', 'spinner'];
   public form = this._formBuilder.group({
     type: this._formBuilder.control<'ellipsis' | 'ripple' | 'roller' | 'spinner'>('spinner'),
@@ -38,9 +40,6 @@ export default class SciThrobberPageComponent implements OnInit {
     duration: this._formBuilder.control(''),
   });
 
-  @ViewChild(SciThrobberComponent, {static: true, read: ElementRef})
-  public throbberComponent!: ElementRef<HTMLElement>;
-
   public ngOnInit(): void {
     this.form.controls.color.setValue(this.readCssVariableDefault('--sci-throbber-color'));
     this.form.controls.size.setValue(this.readCssVariableDefault('--sci-throbber-size'));
@@ -48,6 +47,6 @@ export default class SciThrobberPageComponent implements OnInit {
   }
 
   private readCssVariableDefault(cssVariable: string): string {
-    return getComputedStyle(this.throbberComponent.nativeElement).getPropertyValue(cssVariable);
+    return getComputedStyle(this._throbberComponent().nativeElement).getPropertyValue(cssVariable);
   }
 }

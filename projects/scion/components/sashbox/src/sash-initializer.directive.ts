@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, ElementRef, Input, OnChanges, SimpleChanges} from '@angular/core';
+import {Directive, effect, ElementRef, inject, input} from '@angular/core';
 import {SciSashDirective} from './sash.directive';
 
 /**
@@ -17,15 +17,15 @@ import {SciSashDirective} from './sash.directive';
 @Directive({
   selector: 'div[sciSashInitializer].sash',
 })
-export class SciSashInitializerDirective implements OnChanges {
+export class SciSashInitializerDirective {
 
-  @Input({alias: 'sciSashInitializer', required: true})
-  public sash!: SciSashDirective;
+  public readonly sash = input.required<SciSashDirective>({alias: 'sciSashInitializer'});
 
-  constructor(private _host: ElementRef<HTMLDivElement>) {
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this.sash.element = this._host.nativeElement;
+  constructor() {
+    const host = inject<ElementRef<HTMLDivElement>>(ElementRef).nativeElement;
+    effect(() => {
+      const sash = this.sash();
+      sash.element = host;
+    });
   }
 }

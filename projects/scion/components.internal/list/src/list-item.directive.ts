@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, inject, Input, TemplateRef} from '@angular/core';
+import {Directive, inject, input, TemplateRef} from '@angular/core';
 import {Arrays} from '@scion/toolkit/util';
 
 /**
@@ -31,23 +31,12 @@ export class SciListItemDirective {
 
   public readonly template = inject<TemplateRef<void>>(TemplateRef);
 
-  private _actionTemplates: TemplateRef<void>[] = [];
-
   /**
    * Optional key to identify this item and is used to emit selection and internally as key for the {TrackBy} function.
    */
-  @Input()
-  public key?: string | undefined;
-
+  public readonly key = input<string>();
   /**
    * Provide template(s) to be rendered as actions of this list item.
    */
-  @Input()
-  public set actions(actions: TemplateRef<void> | TemplateRef<void>[]) {
-    this._actionTemplates = Arrays.coerce(actions);
-  }
-
-  public get actionTemplates(): TemplateRef<void>[] {
-    return this._actionTemplates;
-  }
+  public readonly actions = input([], {transform: (actions: TemplateRef<void> | TemplateRef<void>[]) => Arrays.coerce(actions)});
 }

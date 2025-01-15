@@ -8,13 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ContentChildren, ElementRef, EventEmitter, HostBinding, inject, Input, NgZone, OnDestroy, Output, QueryList} from '@angular/core';
-import {startWith, takeUntil} from 'rxjs/operators';
-import {BehaviorSubject, Observable, Subject} from 'rxjs';
+import {Component, contentChildren, ElementRef, HostBinding, inject, input, NgZone, output, Signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
-import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
+import {NgTemplateOutlet} from '@angular/common';
 import {SciSashInitializerDirective} from './sash-initializer.directive';
 import {SciElementRefDirective} from './element-ref.directive';
 
@@ -76,7 +74,6 @@ import {SciElementRefDirective} from './element-ref.directive';
   templateUrl: './sashbox.component.html',
   styleUrls: ['./sashbox.component.scss'],
   imports: [
-    AsyncPipe,
     NgTemplateOutlet,
     SciSashInitializerDirective,
     SciSplitterComponent,
@@ -87,13 +84,27 @@ import {SciElementRefDirective} from './element-ref.directive';
     useFactory: provideSashBoxAccessor,
   }],
 })
-export class SciSashboxComponent implements OnDestroy {
+export class SciSashboxComponent {
 
-  private _destroy$ = new Subject<void>();
-  private _host = inject(ElementRef).nativeElement as HTMLElement;
-  private _zone = inject(NgZone);
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
+  private readonly _zone = inject(NgZone);
 
-  public sashes$ = new BehaviorSubject<SciSashDirective[]>([]);
+  /**
+   * Specifies if to lay out sashes in a row (which is by default) or column arrangement.
+   */
+  public readonly direction = input<'column' | 'row'>('row');
+
+  /**
+   * Emits when start sashing.
+   */
+  public readonly sashStart = output<void>();
+
+  /**
+   * Emits the absolute sash sizes (px) when finished sashing.
+   */
+  public readonly sashEnd = output<number[]>();
+
+  public sashes = contentChildren(SciSashDirective);
 
   @HostBinding('class.sashing')
   public sashing = false;
@@ -103,37 +114,6 @@ export class SciSashboxComponent implements OnDestroy {
 
   @HostBinding('style.--ɵsci-sashbox-max-width')
   public maxWidth: number | undefined;
-
-  /**
-   * Specifies if to lay out sashes in a row (which is by default) or column arrangement.
-   */
-  @Input()
-  public direction: 'column' | 'row' = 'row';
-
-  /**
-   * Emits when start sashing.
-   */
-  @Output()
-  public sashStart = new EventEmitter<void>();
-
-  /**
-   * Emits the absolute sash sizes (px) when finished sashing.
-   */
-  @Output()
-  public sashEnd = new EventEmitter<number[]>();
-
-  /** @internal */
-  @ContentChildren(SciSashDirective)
-  public set setSashes(queryList: QueryList<SciSashDirective>) {
-    queryList.changes
-      .pipe(
-        startWith(queryList),
-        takeUntil(this._destroy$),
-      )
-      .subscribe((sashes: QueryList<SciSashDirective>) => {
-        this.sashes$.next(sashes.toArray());
-      });
-  }
 
   public onSashStart(): void {
     this.sashing = true;
@@ -145,9 +125,9 @@ export class SciSashboxComponent implements OnDestroy {
     this.sashStart.emit();
 
     // set the effective sash size as the flex-basis for non-fixed sashes (as sashing operates on pixel deltas)
-    this.sashes.forEach(sash => {
-      if (!sash.isFixedSize) {
-        sash.flexGrow = 0;
+    this.sashes().forEach(sash => {
+      if (!sash.isFixedSize()) {
+        sash.flexGrow.set(0);
         sash.flexShrink = 1;
         sash.flexBasis = `${sash.computedSize}px`;
       }
@@ -160,12 +140,12 @@ export class SciSashboxComponent implements OnDestroy {
     this.maxWidth = undefined;
 
     // unset the flex-basis for non-fixed sashes and set the flex-grow accordingly
-    const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes);
-    const absoluteSashSizes = this.sashes.map(sash => sash.computedSize);
+    const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes());
+    const absoluteSashSizes = this.sashes().map(sash => sash.computedSize);
 
-    this.sashes.forEach((sash, i) => {
-      if (!sash.isFixedSize) {
-        sash.flexGrow = pixelToFlexGrowFactor * absoluteSashSizes[i];
+    this.sashes().forEach((sash, i) => {
+      if (!sash.isFixedSize()) {
+        sash.flexGrow.set(pixelToFlexGrowFactor * absoluteSashSizes[i]);
         sash.flexShrink = 1;
         sash.flexBasis = '0';
       }
@@ -186,7 +166,7 @@ export class SciSashboxComponent implements OnDestroy {
     const splitterStart = (this.isRowDirection ? splitterRect.left : splitterRect.top);
     const splitterEnd = (this.isRowDirection ? splitterRect.left + splitterRect.width : splitterRect.top + splitterRect.height);
 
-    // ignore the event if outside of the splitter's action scope
+    // ignore the event if outside the splitter's action scope
     const eventPos = moveEvent.position.clientPos;
     // i.e. the sash should not grow if moved the mouse pointer beyond the left bounds of the sash, and if now moving the mouse pointer back toward the current sash.
     if (distance > 0 && eventPos < splitterStart) {
@@ -199,14 +179,14 @@ export class SciSashboxComponent implements OnDestroy {
     }
 
     // compute the new sash sizes
-    const sash1 = this.sashes[sashIndex];
-    const sash2 = this.sashes[sashIndex + 1];
+    const sash1 = this.sashes()[sashIndex];
+    const sash2 = this.sashes()[sashIndex + 1];
 
     const sashSize1 = sash1.computedSize;
     const sashSize2 = sash2.computedSize;
 
-    const sashMinSize1 = sash1.minSize ? this.toPixel(sash1.minSize) : 0;
-    const sashMinSize2 = sash2.minSize ? this.toPixel(sash2.minSize) : 0;
+    const sashMinSize1 = sash1.minSize() ? this.toPixel(sash1.minSize()!) : 0;
+    const sashMinSize2 = sash2.minSize() ? this.toPixel(sash2.minSize()!) : 0;
 
     const newSashSize1 = between(Math.round(sashSize1 + distance), {min: sashMinSize1, max: sashSize1 + sashSize2 - sashMinSize2});
     const newSashSize2 = between(Math.round(sashSize2 - distance), {min: sashMinSize2, max: sashSize1 + sashSize2 - sashMinSize1});
@@ -219,11 +199,11 @@ export class SciSashboxComponent implements OnDestroy {
   }
 
   public onSashReset(sashIndex: number): void {
-    const sash1 = this.sashes[sashIndex];
-    const sash2 = this.sashes[sashIndex + 1];
+    const sash1 = this.sashes()[sashIndex];
+    const sash2 = this.sashes()[sashIndex + 1];
     const equalSashSize = (sash1.computedSize + sash2.computedSize) / 2;
-    const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes);
-    const absoluteSashSizesAfterReset = this.sashes.map((sash, index) => {
+    const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes());
+    const absoluteSashSizesAfterReset = this.sashes().map((sash, index) => {
       if (index === sashIndex || index === sashIndex + 1) {
         return equalSashSize;
       }
@@ -231,11 +211,11 @@ export class SciSashboxComponent implements OnDestroy {
     });
 
     [sash1, sash2].forEach(sash => {
-      if (sash.isFixedSize) {
+      if (sash.isFixedSize()) {
         sash.flexBasis = `${equalSashSize}px`;
       }
       else {
-        sash.flexGrow = pixelToFlexGrowFactor * equalSashSize;
+        sash.flexGrow.set(pixelToFlexGrowFactor * equalSashSize);
       }
     });
 
@@ -245,20 +225,12 @@ export class SciSashboxComponent implements OnDestroy {
 
   @HostBinding('class.column')
   public get isColumnDirection(): boolean {
-    return this.direction === 'column';
+    return this.direction() === 'column';
   }
 
   @HostBinding('class.row')
   public get isRowDirection(): boolean {
-    return this.direction === 'row';
-  }
-
-  private get sashes(): SciSashDirective[] {
-    return this.sashes$.value;
-  }
-
-  public ngOnDestroy(): void {
-    this._destroy$.next();
+    return this.direction() === 'row';
   }
 
   private toPixel(value: string | number): number {
@@ -281,10 +253,10 @@ function between(value: number, minmax: {min: number; max: number}): number {
 /**
  * Returns the factor to compute the flex-grow proportion from the pixel size of a sash.
  */
-function computePixelToFlexGrowFactor(sashes: SciSashDirective[]): number {
-  const flexibleSashes = sashes.filter(sash => !sash.isFixedSize);
+function computePixelToFlexGrowFactor(sashes: readonly SciSashDirective[]): number {
+  const flexibleSashes = sashes.filter(sash => !sash.isFixedSize());
 
-  const proportionSum = flexibleSashes.reduce((sum, sash) => sum + Number(sash.size), 0);
+  const proportionSum = flexibleSashes.reduce((sum, sash) => sum + Number(sash.size()), 0);
   const pixelSum = flexibleSashes.reduce((sum, sash) => sum + sash.computedSize, 0);
 
   return proportionSum / pixelSum;
@@ -296,15 +268,11 @@ function provideSashBoxAccessor(): SciSashBoxAccessor {
   return new class implements SciSashBoxAccessor {
 
     public get direction(): 'column' | 'row' {
-      return component.direction;
+      return component.direction();
     }
 
-    public get sashes$(): Observable<SciSashDirective[]> {
-      return component.sashes$;
-    }
-
-    public get sashes(): SciSashDirective[] {
-      return component.sashes$.value;
+    public get sashes(): Signal<readonly SciSashDirective[]> {
+      return component.sashes;
     }
   }();
 }

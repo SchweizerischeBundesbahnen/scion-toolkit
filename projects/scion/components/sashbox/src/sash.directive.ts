@@ -8,10 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, inject, Input, OnChanges, OnInit, SimpleChanges, TemplateRef} from '@angular/core';
+import {computed, Directive, effect, inject, input, signal, TemplateRef} from '@angular/core';
 import {SciSashBoxAccessor} from './sashbox-accessor';
-import {BehaviorSubject, merge, Observable} from 'rxjs';
-import {map, switchMap} from 'rxjs/operators';
 
 /**
  * Use this directive to model a sash for {@link SciSashboxComponent}.
@@ -36,30 +34,20 @@ import {map, switchMap} from 'rxjs/operators';
   selector: 'ng-template[sciSash]',
   exportAs: 'sciSash',
 })
-export class SciSashDirective implements OnInit, OnChanges {
+export class SciSashDirective {
 
   private readonly _sashBoxAccessor = inject(SciSashBoxAccessor);
 
   public readonly sashTemplate = inject<TemplateRef<void>>(TemplateRef);
 
-  private _size: string | number = '1';
-  private _flexGrow$ = new BehaviorSubject<number>(0);
-
   /**
    * Specifies the sash size, either as fixed size with an explicit unit,
-   * or as a unitless proportion to distibute remaining space. A proportional
+   * or as a unitless proportion to distribute remaining space. A proportional
    * sash has the ability to grow or shrink if necessary, and must be >= 1.
    *
    * If not set, remaining space is distributed equally.
    */
-  @Input()
-  public set size(size: string | number | null | undefined) {
-    this._size = size ?? '1';
-  }
-
-  public get size(): string | number {
-    return this._size;
-  }
+  public readonly size = input('1', {transform: (size: string | number | null | undefined): string | number => size ?? '1'});
 
   /**
    * Specifies the minimal sash size in pixel or percent.
@@ -67,27 +55,26 @@ export class SciSashDirective implements OnInit, OnChanges {
    *
    * If the unit is omitted, the value is interpreted as a pixel value.
    */
-  @Input()
-  public minSize?: string | number | undefined;
+  public readonly minSize = input<string | number>();
+
+  public readonly isFixedSize = computed(() => Number.isNaN(+this.size()));
+
+  /**
+   * @internal
+   */
+  public readonly flexGrow = signal<number>(0);
+
+  /**
+   * Normalized flex-grow proportion of this sash, which is a value >= 1.
+   *
+   * @internal
+   */
+  public readonly flexGrowNormalized = computed(() => this.normalizeFlexGrow());
 
   /**
    * @internal
    */
   public element!: HTMLElement;
-
-  /**
-   * @internal
-   */
-  public set flexGrow(flexGrow: number) {
-    this._flexGrow$.next(flexGrow);
-  }
-
-  /**
-   * @internal
-   */
-  public get flexGrow(): number {
-    return this._flexGrow$.value;
-  }
 
   /**
    * @internal
@@ -99,36 +86,8 @@ export class SciSashDirective implements OnInit, OnChanges {
    */
   public flexBasis!: string;
 
-  /**
-   * Normalized flex-grow proportion of this sash, which is a value >= 1.
-   *
-   * @internal
-   */
-  public flexGrowNormalized$: Observable<number>;
-
   constructor() {
-    this.flexGrowNormalized$ = this._sashBoxAccessor.sashes$
-      .pipe(
-        switchMap(sashes => merge(...sashes.map(sash => sash._flexGrow$))),
-        map(() => this.normalizeFlexGrow(this.flexGrow)),
-      );
-  }
-
-  public ngOnInit(): void {
     this.setFlexItemProperties();
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    this.setFlexItemProperties();
-  }
-
-  /**
-   * Returns if this sash has a fixed size, meaning that it has not the ability to grow or shrink if necessary.
-   *
-   * @internal
-   */
-  public get isFixedSize(): boolean {
-    return Number.isNaN(+this.size);
   }
 
   /**
@@ -146,23 +105,26 @@ export class SciSashDirective implements OnInit, OnChanges {
    * Computes and sets the flex item properties based on the modelled size.
    */
   private setFlexItemProperties(): void {
-    if (this.isFixedSize) {
-      // fixed-sized sash
-      this.flexGrow = 0;
-      this.flexShrink = 0;
-      this.flexBasis = `${this.size}`;
-    }
-    else {
-      // remaining space is distributed according to given proportion
-      const proportion = +this.size;
-      if (proportion < 1) {
-        throw Error(`[IllegalSashSizeError] The proportion for flexible sized sashes must be >=1 [size=${this.size}]`);
+    effect(() => {
+      const size = this.size();
+      if (this.isFixedSize()) {
+        // fixed-sized sash
+        this.flexGrow.set(0);
+        this.flexShrink = 0;
+        this.flexBasis = `${size}`;
       }
+      else {
+        // remaining space is distributed according to given proportion
+        const proportion = +size;
+        if (proportion < 1) {
+          throw Error(`[IllegalSashSizeError] The proportion for flexible sized sashes must be >=1 [size=${this.size()}]`);
+        }
 
-      this.flexGrow = proportion;
-      this.flexShrink = 1;
-      this.flexBasis = '0';
-    }
+        this.flexGrow.set(proportion);
+        this.flexShrink = 1;
+        this.flexBasis = '0';
+      }
+    });
   }
 
   /**
@@ -171,16 +133,11 @@ export class SciSashDirective implements OnInit, OnChanges {
    * If the sum of all flex-grow proportions would be less than 1, then, the sashes would not fill the entire sash-box space.
    * Without normalization in place, e.g., this could happen when removing a sash.
    */
-  private normalizeFlexGrow(flexGrow: number): number {
-    if (flexGrow === 0) {
-      return 0;
-    }
+  private normalizeFlexGrow(): number {
+    const flexGrow = this.flexGrow();
+    const sashes = this._sashBoxAccessor.sashes();
+    const flexGrowSum = sashes.reduce((sum, sash) => sum + sash.flexGrow(), 0);
 
-    const sashes = this._sashBoxAccessor.sashes;
-    const flexGrowSum = sashes.reduce((sum, sash) => sum + sash.flexGrow, 0);
-    if (flexGrowSum === 0) {
-      return 0;
-    }
-    return flexGrow / flexGrowSum;
+    return flexGrow === 0 || flexGrowSum === 0 ? 0 : flexGrow / flexGrowSum;
   }
 }

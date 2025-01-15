@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, Input} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, input} from '@angular/core';
 import {FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
@@ -33,25 +33,21 @@ export class SciKeyValueFieldComponent {
 
   public readonly id = UUID.randomUUID();
 
-  @Input()
-  public title?: string | undefined;
+  public readonly title = input<string>();
 
-  @Input({required: true})
-  public keyValueFormArray!: FormArray<FormGroup<KeyValueEntry>>;
+  public readonly keyValueFormArray = input.required<FormArray<FormGroup<KeyValueEntry>>>();
 
-  @Input()
   @HostBinding('class.removable')
-  public removable = false;
+  public readonly removable = input(false);
 
-  @Input()
   @HostBinding('class.addable')
-  public addable = false;
+  public readonly addable = input(false);
 
   @HostBinding('attr.tabindex')
   public tabindex = -1;
 
   public onRemove(index: number): void {
-    this.keyValueFormArray.removeAt(index);
+    this.keyValueFormArray().removeAt(index);
 
     // Focus the component to not lose the focus when the remove button is removed from the DOM.
     // Otherwise, if used in a popup, the popup would be closed because no element is focused anymore.
@@ -59,14 +55,14 @@ export class SciKeyValueFieldComponent {
   }
 
   public onAdd(): void {
-    this.keyValueFormArray.push(this._formBuilder.group({
+    this.keyValueFormArray().push(this._formBuilder.group({
       key: this._formBuilder.control(''),
       value: this._formBuilder.control(''),
     }));
   }
 
   public onClear(): void {
-    this.keyValueFormArray.clear();
+    this.keyValueFormArray().clear();
   }
 
   /**

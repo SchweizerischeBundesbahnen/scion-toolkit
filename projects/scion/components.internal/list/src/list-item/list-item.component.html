@@ -1,21 +1,21 @@
 <!-- radio button for option items -->
 @if (optionStyle) {
   <span class="option" sciMaterialIcon>
-    {{active ? 'radio_button_checked' : 'radio_button_unchecked'}}
+    {{active() ? 'radio_button_checked' : 'radio_button_unchecked'}}
   </span>
 }
 
 <!-- item -->
 <div class="item e2e-item">
-  <ng-container *ngTemplateOutlet="listItem.template"></ng-container>
+  <ng-container *ngTemplateOutlet="listItem().template"></ng-container>
 </div>
 
 <!-- actions -->
-@if (listItem.actionTemplates.length) {
+@if (listItem().actions().length) {
   <ul class="actions e2e-actions">
-    @for (actionTemplate of listItem.actionTemplates; track actionTemplate) {
+    @for (action of listItem().actions(); track action) {
       <li class="e2e-action">
-        <ng-container *ngTemplateOutlet="actionTemplate"></ng-container>
+        <ng-container *ngTemplateOutlet="action"></ng-container>
       </li>
     }
   </ul>

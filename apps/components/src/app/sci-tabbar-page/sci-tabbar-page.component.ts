@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, inject, ViewChild} from '@angular/core';
+import {Component, inject, viewChild} from '@angular/core';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SplitPipe} from '../common/split.pipe';
@@ -31,6 +31,8 @@ export default class SciTabbarPageComponent {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
 
+  private readonly _tabbar = viewChild.required(SciTabbarComponent);
+
   protected form = this._formBuilder.group({
     shortContentTabVisible: this._formBuilder.control(true),
     longContentTabVisible: this._formBuilder.control(true),
@@ -42,10 +44,7 @@ export default class SciTabbarPageComponent {
   protected loremIpsum = loremIpsum;
   protected loremIpsumShort = loremIpsum.slice(0, 495);
 
-  @ViewChild(SciTabbarComponent, {static: true})
-  private _tabbar!: SciTabbarComponent;
-
   protected onActivateTab(): void {
-    this._tabbar.activateTab(this.form.controls.selectedTabName.value);
+    this._tabbar().activateTab(this.form.controls.selectedTabName.value);
   }
 }

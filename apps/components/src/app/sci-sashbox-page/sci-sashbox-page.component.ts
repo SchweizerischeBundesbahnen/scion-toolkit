@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, ElementRef, HostListener, inject, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, inject, OnInit, Signal, viewChild} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -35,6 +35,8 @@ export default class SciSashboxPageComponent implements OnInit {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
 
+  public readonly sashBoxComponent: Signal<ElementRef<HTMLElement>> = viewChild.required(SciSashboxComponent, {read: ElementRef<HTMLElement>});
+
   public directionFormControl = this._formBuilder.control<'column' | 'row'>('row');
   public stylingFormGroup = this._formBuilder.group({
     '--sci-sashbox-gap': this._formBuilder.control(''),
@@ -57,13 +59,10 @@ export default class SciSashboxPageComponent implements OnInit {
 
   public glasspaneVisible = false;
 
-  @ViewChild(SciSashboxComponent, {static: true, read: ElementRef})
-  public sashBoxComponent!: ElementRef<HTMLElement>;
-
   public ngOnInit(): void {
     // Set CSS variable default values.
     Object.entries(this.stylingFormGroup.controls).forEach(([key, formControl]) => {
-      const defaultValue = getComputedStyle(this.sashBoxComponent.nativeElement).getPropertyValue(key);
+      const defaultValue = getComputedStyle(this.sashBoxComponent().nativeElement).getPropertyValue(key);
       formControl.setValue(defaultValue);
     });
   }

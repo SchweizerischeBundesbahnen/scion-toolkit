@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, inject, Input} from '@angular/core';
+import {booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, forwardRef, inject, input, untracked} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
 import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
@@ -31,16 +31,13 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
 
   private readonly _cd = inject(ChangeDetectorRef);
 
+  public readonly disabled = input(false, {transform: booleanAttribute});
+
   private _cvaChangeFn: (value: unknown) => void = noop;
   private _cvaTouchedFn: () => void = noop;
 
   protected formControl = new FormControl<boolean>(false, {nonNullable: true});
   protected id = UUID.randomUUID();
-
-  @Input()
-  public set disabled(disabled: boolean | string | undefined | null) {
-    coerceBooleanProperty(disabled) ? this.formControl.disable() : this.formControl.enable();
-  }
 
   constructor() {
     this.formControl.valueChanges
@@ -49,6 +46,11 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
         this._cvaChangeFn(value);
         this._cvaTouchedFn();
       });
+
+    effect(() => {
+      const disabled = this.disabled();
+      untracked(() => disabled ? this.formControl.disable({emitEvent: false}) : this.formControl.enable({emitEvent: false}));
+    });
   }
 
   public get isToggled(): boolean {
@@ -76,7 +78,7 @@ export class SciToggleButtonComponent implements ControlValueAccessor {
    * @docs-private
    */
   public setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+    isDisabled ? this.formControl.disable() : this.formControl.enable();
     this._cd.markForCheck();
   }
 

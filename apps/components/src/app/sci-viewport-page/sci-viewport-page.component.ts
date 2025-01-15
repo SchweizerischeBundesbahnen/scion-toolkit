@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostBinding, inject, OnDestroy, OnInit, Signal, viewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {startWith, takeUntil} from 'rxjs/operators';
@@ -38,6 +38,8 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
   private readonly _formBuilder = inject(NonNullableFormBuilder);
   private readonly _document = inject(DOCUMENT);
 
+  private readonly _viewportElement: Signal<ElementRef<HTMLElement>> = viewChild.required(SciViewportComponent, {read: ElementRef});
+
   private _destroy$ = new Subject<void>();
   private _styleSheet: CSSStyleSheet | null = null;
 
@@ -51,9 +53,6 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
     scrollbarPresentation: this._formBuilder.control<'native' | 'on-top' | 'hidden'>('on-top'),
     scrollbarColor: this._formBuilder.control(''),
   });
-
-  @ViewChild(SciViewportComponent, {static: true, read: ElementRef})
-  public viewportElement!: ElementRef<HTMLElement>;
 
   @HostBinding('style.--viewport-minheight')
   public get viewportMinHeight(): string {
@@ -95,7 +94,7 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
   }
 
   private readCssVariableDefault(cssVariable: string): string {
-    return getComputedStyle(this.viewportElement.nativeElement).getPropertyValue(cssVariable);
+    return getComputedStyle(this._viewportElement().nativeElement).getPropertyValue(cssVariable);
   }
 
   private installStyleSheet(): CSSStyleSheet | null {

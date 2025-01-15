@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, input} from '@angular/core';
 import {KeyValue, KeyValuePipe} from '@angular/common';
 import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 
@@ -26,20 +26,16 @@ import {Dictionaries, Dictionary} from '@scion/toolkit/util';
 })
 export class SciKeyValueComponent {
 
-  public flattenedProperties: Dictionary = {};
-  private _keys: string[] = [];
+  public readonly object = input<Dictionary | Map<string, unknown> | null | undefined>();
 
-  @Input()
-  public set object(object: Dictionary | Map<string, unknown> | null | undefined) {
-    this.flattenedProperties = this.flattenObject(object ?? {});
-    this._keys = Object.keys(this.flattenedProperties);
-  }
+  public flattenedProperties = computed(() => this.flattenObject(this.object() ?? {}));
+  private _keys = computed(() => Object.keys(this.flattenedProperties()));
 
   /**
    * Compares qualifier entries by their position in the object.
    */
   public keyCompareFn = (a: KeyValue<string, unknown>, b: KeyValue<string, unknown>): number => {
-    return this._keys.indexOf(a.key) - this._keys.indexOf(b.key);
+    return this._keys().indexOf(a.key) - this._keys().indexOf(b.key);
   };
 
   private flattenObject(property: Dictionary | Map<string, unknown>, path: string[] = []): Dictionary {
