@@ -13,10 +13,10 @@ import {fakeAsync, tick} from '@angular/core/testing';
 
 describe('BeanManager', () => {
 
-  beforeEach(async () => Beans.destroy());
-  afterEach(async () => Beans.destroy());
+  beforeEach(() => Beans.destroy());
+  afterEach(() => Beans.destroy());
 
-  it('should allow looking up a bean', async () => {
+  it('should allow looking up a bean', () => {
     class Bean {
     }
 
@@ -25,7 +25,7 @@ describe('BeanManager', () => {
     expect(Beans.get(Bean)).toBe(Beans.get(Bean));
   });
 
-  it('should allow looking up a bean by a symbol', async () => {
+  it('should allow looking up a bean by a symbol', () => {
     const symbol1 = Symbol('SYMBOL');
     Beans.register(symbol1, {useValue: 'bean'});
     expect(Beans.get(symbol1)).toEqual('bean');
@@ -36,19 +36,19 @@ describe('BeanManager', () => {
     expect(Beans.get(symbol1)).not.toBe(symbol2);
   });
 
-  it('should throw when looking up a bean not present in the bean manager', async () => {
+  it('should throw when looking up a bean not present in the bean manager', () => {
     expect(() => Beans.get(Symbol())).toThrowError(/NullBeanError/);
   });
 
-  it('should return \'undefined\' when looking up an optional bean not present in the bean manager', async () => {
+  it('should return \'undefined\' when looking up an optional bean not present in the bean manager', () => {
     expect(Beans.opt(Symbol())).toBeUndefined();
   });
 
-  it('should return \'orElseGet\' value when looking up a bean not present in the bean manager', async () => {
+  it('should return \'orElseGet\' value when looking up a bean not present in the bean manager', () => {
     expect(Beans.get(Symbol(), {orElseGet: 'not-found'})).toEqual('not-found');
   });
 
-  it('should return "falsy" bean value', async () => {
+  it('should return "falsy" bean value', () => {
     const symbol = Symbol();
     Beans.register(symbol, {useValue: 0});
     expect(Beans.get(symbol, {orElseGet: 123})).toEqual(0);
@@ -60,17 +60,17 @@ describe('BeanManager', () => {
     expect(Beans.get(symbol, {orElseGet: 'abc'})).toEqual('');
   });
 
-  it('should return "falsy" \'orElseGet\' value', async () => {
+  it('should return "falsy" \'orElseGet\' value', () => {
     expect(Beans.get(Symbol(), {orElseGet: 0})).toEqual(0);
     expect(Beans.get(Symbol(), {orElseGet: null})).toBeNull();
     expect(Beans.get(Symbol(), {orElseGet: ''})).toEqual('');
   });
 
-  it('should invoke \'orElseSupply\' function when looking up a bean not present in the bean manager', async () => {
+  it('should invoke \'orElseSupply\' function when looking up a bean not present in the bean manager', () => {
     expect(Beans.get(Symbol(), {orElseSupply: (): string => 'not-found'})).toEqual('not-found');
   });
 
-  it('should allow looking up multiple beans', async () => {
+  it('should allow looking up multiple beans', () => {
     class Bean {
     }
 
@@ -86,7 +86,7 @@ describe('BeanManager', () => {
     expect(Beans.all(Bean)).toEqual([bean1, bean2, bean3]);
   });
 
-  it('should throw when registering a bean as \'multi-bean\' on a symbol that has already registered a \'non-multi\' bean', async () => {
+  it('should throw when registering a bean as \'multi-bean\' on a symbol that has already registered a \'non-multi\' bean', () => {
     class Bean {
     }
 
@@ -94,7 +94,7 @@ describe('BeanManager', () => {
     expect(() => Beans.register(Bean, {useValue: new Bean(), multi: true})).toThrowError(/BeanRegisterError/);
   });
 
-  it('should throw when registering a bean on a symbol that has already registered a \'multi-bean\'', async () => {
+  it('should throw when registering a bean on a symbol that has already registered a \'multi-bean\'', () => {
     class Bean {
     }
 
@@ -102,7 +102,7 @@ describe('BeanManager', () => {
     expect(() => Beans.register(Bean, {useValue: new Bean(), multi: false})).toThrowError(/BeanRegisterError/);
   });
 
-  it('should construct beans as a singleton', async () => {
+  it('should construct beans as a singleton', () => {
     class Bean {
     }
 
@@ -112,7 +112,7 @@ describe('BeanManager', () => {
     expect(Beans.get(Bean)).toBeInstanceOf(Bean);
   });
 
-  it('should construct beans lazily unless specified differently', async () => {
+  it('should construct beans lazily unless specified differently', () => {
     let constructed = false;
 
     class Bean {
@@ -145,7 +145,7 @@ describe('BeanManager', () => {
     expect(actualBeanInInitializer!).toBe(Beans.get(Bean));
   });
 
-  it('should construct lazy beans when looking it up for the first time', async () => {
+  it('should construct lazy beans when looking it up for the first time', () => {
     let constructed = false;
 
     class Bean {
@@ -160,7 +160,7 @@ describe('BeanManager', () => {
     expect(Beans.get(Bean)).toBeInstanceOf(Bean);
   });
 
-  it('should invoke the bean\'s \'preDestroy\' lifecycle hook on destroy', async () => {
+  it('should invoke the bean\'s \'preDestroy\' lifecycle hook on destroy', () => {
     let state: 'constructed' | 'destroyed' | undefined = undefined;
 
     class Bean implements PreDestroy {
@@ -186,7 +186,7 @@ describe('BeanManager', () => {
     expect(Beans.opt(Bean)).toBeUndefined();
   });
 
-  it('should destroy beans which have no \'preDestroy\' lifecycle hook', async () => {
+  it('should destroy beans which have no \'preDestroy\' lifecycle hook', () => {
     let state: 'constructed' | 'destroyed' | undefined = undefined;
 
     class Bean {
@@ -207,7 +207,7 @@ describe('BeanManager', () => {
     expect(Beans.opt(Bean)).toBeUndefined();
   });
 
-  it('should allow replacing a bean and destroy the replaced bean', async () => {
+  it('should allow replacing a bean and destroy the replaced bean', () => {
     let bean1Destroyed = false;
 
     const symbol = Symbol();
@@ -230,7 +230,7 @@ describe('BeanManager', () => {
     expect(bean1Destroyed).toBeTrue();
   });
 
-  it('should allow looking up other beans in a bean constructor', async () => {
+  it('should allow looking up other beans in a bean constructor', () => {
     let bean1Constructed = false;
     let bean2Constructed = false;
     let bean3Constructed = false;
@@ -268,7 +268,7 @@ describe('BeanManager', () => {
     expect(bean3Constructed).toBeFalse();
   });
 
-  it('should throw when looking up a bean which causes a circular construction cycle', async () => {
+  it('should throw when looking up a bean which causes a circular construction cycle', () => {
     class Bean1 {
       constructor() {
         Beans.get(Bean2);
@@ -294,7 +294,7 @@ describe('BeanManager', () => {
     expect(() => Beans.get(Bean1)).toThrowError(/BeanConstructError/);
   });
 
-  it('should allow registering a bean under another symbol', async () => {
+  it('should allow registering a bean under another symbol', () => {
     let constructed = false;
 
     class Bean {
@@ -313,7 +313,7 @@ describe('BeanManager', () => {
     expect(() => Beans.get(Bean)).toThrowError(/NullBeanError/);
   });
 
-  it('should allow registering some arbitrary object as a bean', async () => {
+  it('should allow registering some arbitrary object as a bean', () => {
     abstract class SomeSymbol {
     }
 
@@ -323,7 +323,7 @@ describe('BeanManager', () => {
     expect(Beans.get(SomeSymbol)).toBe(someObject);
   });
 
-  it('should allow registering a bean representing a boolean value', async () => {
+  it('should allow registering a bean representing a boolean value', () => {
     abstract class TrueValueBean {
     }
 
@@ -367,7 +367,7 @@ describe('BeanManager', () => {
     expect(() => Beans.get(symbol)).toThrowError(/NullBeanError/);
   });
 
-  it('should allow registering a bean using a factory construction function', async () => {
+  it('should allow registering a bean using a factory construction function', () => {
     abstract class SomeSymbol {
     }
 
@@ -377,7 +377,7 @@ describe('BeanManager', () => {
     expect(Beans.get(SomeSymbol)).toBe(someObject);
   });
 
-  it('should register a bean only if absent', async () => {
+  it('should register a bean only if absent', () => {
     abstract class SomeSymbol {
     }
 
@@ -390,7 +390,7 @@ describe('BeanManager', () => {
     expect(Beans.get(SomeSymbol)).toBe(bean1);
   });
 
-  it('should allow decorating a bean', async () => {
+  it('should allow decorating a bean', () => {
     abstract class Bean {
       public abstract getName(): string;
     }
@@ -407,7 +407,7 @@ describe('BeanManager', () => {
           public getName(): string {
             return bean.getName().toUpperCase();
           }
-        };
+        }();
       }
     }
 
@@ -416,7 +416,7 @@ describe('BeanManager', () => {
     expect(Beans.get(Bean).getName()).toEqual('NAME');
   });
 
-  it('should allow decorating multiple beans', async () => {
+  it('should allow decorating multiple beans', () => {
     abstract class Bean {
       public abstract getName(): string;
     }
@@ -439,7 +439,7 @@ describe('BeanManager', () => {
           public getName(): string {
             return bean.getName().toUpperCase();
           }
-        };
+        }();
       }
     }
 
@@ -483,7 +483,7 @@ describe('BeanManager', () => {
 
     await Beans.start();
     Beans.destroy();
-    await expect(beanDestroyCaptor).toEqual(['bean1', 'bean4', 'bean3', 'bean2']);
+    expect(beanDestroyCaptor).toEqual(['bean1', 'bean4', 'bean3', 'bean2']);
   });
 
   it('should destroy beans of the same destroy order in reverse construction order', async () => {
@@ -542,7 +542,7 @@ describe('BeanManager', () => {
     Beans.get(Bean2);
 
     Beans.destroy(); // 1, 6, 3, 5, 4, 2
-    await expect(beanDestroyCaptor).toEqual(['bean2', 'bean4', 'bean5', 'bean3', 'bean6', 'bean1']);
+    expect(beanDestroyCaptor).toEqual(['bean2', 'bean4', 'bean5', 'bean3', 'bean6', 'bean1']);
   });
 
   it('should not construct \'not-yet-constructed\' beans when destroying the bean manager', async () => {
@@ -558,10 +558,10 @@ describe('BeanManager', () => {
 
     await Beans.start();
     Beans.destroy();
-    await expect(constructed).toBeFalse();
+    expect(constructed).toBeFalse();
   });
 
-  it('should destroy a bean when unregistering it', async () => {
+  it('should destroy a bean when unregistering it', () => {
     class Bean {
     }
 
@@ -571,7 +571,7 @@ describe('BeanManager', () => {
     expect(() => Beans.get(Bean)).toThrowError(/NullBeanError/);
   });
 
-  it('should allow decorating a bean with multiple decorators invoked in the order as registered', async () => {
+  it('should allow decorating a bean with multiple decorators invoked in the order as registered', () => {
     const decoratorInvocationCaptor: string[] = [];
 
     class PingBean {
@@ -588,7 +588,7 @@ describe('BeanManager', () => {
             decoratorInvocationCaptor.push('decorator1');
             return `${bean.ping(ping)} [decorator1]`;
           }
-        };
+        }();
       }
     }
 
@@ -599,7 +599,7 @@ describe('BeanManager', () => {
             decoratorInvocationCaptor.push('decorator2');
             return `${bean.ping(ping)} [decorator2]`;
           }
-        };
+        }();
       }
     }
 
@@ -610,7 +610,7 @@ describe('BeanManager', () => {
             decoratorInvocationCaptor.push('toUppercaseDecorator');
             return bean.ping(ping).toUpperCase();
           }
-        };
+        }();
       }
     }
 
@@ -638,7 +638,7 @@ describe('BeanManager', () => {
     expect(() => Beans.get(Bean)).toThrowError(/NullBeanError/);
   });
 
-  it('should allow registering an alias for an existing bean [useExisting]', async () => {
+  it('should allow registering an alias for an existing bean [useExisting]', () => {
     abstract class Bean {
     }
 
@@ -655,7 +655,7 @@ describe('BeanManager', () => {
     expect(alias).not.toBeInstanceOf(Alias);
   });
 
-  it('should not destroy the referenced bean when its alias is destroyed [useExisting]', async () => {
+  it('should not destroy the referenced bean when its alias is destroyed [useExisting]', () => {
     let beanDestroyed = false;
 
     abstract class Bean implements PreDestroy {
@@ -673,24 +673,24 @@ describe('BeanManager', () => {
 
     const actualBean = Beans.get(Bean);
     const alias = Beans.get(Alias);
-    expect(actualBean).toBe(alias as any);
+    expect(actualBean).toBe(alias as Bean);
 
     // Replace the alias bean. When replacing a regular bean, the bean instance would be destroyed.
     Beans.register(Alias, {useValue: 'some-other-bean'});
 
     expect(Beans.get(Bean)).toBe(actualBean);
     expect(beanDestroyed).toBeFalse();
-    expect(Beans.get(Alias)).toEqual('some-other-bean' as any);
+    expect(Beans.get(Alias)).toEqual('some-other-bean' as Alias);
   });
 
-  it('should not invoke \'preDestroy\' on value bean', async () => {
+  it('should not invoke \'preDestroy\' on value bean', () => {
     let destroyed = false;
 
     const value = new class implements PreDestroy {
       public preDestroy(): void {
         destroyed = true;
       }
-    };
+    }();
 
     const VALUE_BEAN = Symbol();
     Beans.register(VALUE_BEAN, {useValue: value});
@@ -700,7 +700,7 @@ describe('BeanManager', () => {
     expect(destroyed).toBeFalse();
   });
 
-  it('should invoke \'preDestroy\' on class bean', async () => {
+  it('should invoke \'preDestroy\' on class bean', () => {
     let destroyed = false;
 
     class Bean implements PreDestroy {
@@ -716,7 +716,7 @@ describe('BeanManager', () => {
     expect(destroyed).toBeTrue();
   });
 
-  it('should invoke \'preDestroy\' on factory bean', async () => {
+  it('should invoke \'preDestroy\' on factory bean', () => {
     let destroyed = false;
 
     class Bean implements PreDestroy {
@@ -804,7 +804,7 @@ describe('BeanManager', () => {
       runlevel: 2,
     });
 
-    Beans.start();
+    void Beans.start();
 
     // after 100ms
     tick(100);
@@ -901,35 +901,35 @@ describe('BeanManager', () => {
     const log: string[] = [];
 
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer runlevel 0')),
+      useFunction: async () => void log.push('initializer runlevel 0'),
       runlevel: 0,
     });
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer runlevel 1')),
+      useFunction: async () => void log.push('initializer runlevel 1'),
       runlevel: 1,
     });
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer runlevel 2')),
+      useFunction: async () => void log.push('initializer runlevel 2'),
       runlevel: 2,
     });
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer runlevel 3')),
+      useFunction: async () => void log.push('initializer runlevel 3'),
       runlevel: 3,
     });
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer-1 (no runlevel specified)')),
+      useFunction: async () => void log.push('initializer-1 (no runlevel specified)'),
     });
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer-2 (no runlevel specified)')),
+      useFunction: async () => void log.push('initializer-2 (no runlevel specified)'),
     });
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer-3 (no runlevel specified)')),
+      useFunction: async () => void log.push('initializer-3 (no runlevel specified)'),
     });
 
     await Beans.start({initializerDefaultRunlevel: 2});
 
     // after 1s
-    await expect(log).toEqual([
+    expect(log).toEqual([
       'initializer runlevel 0',
       'initializer runlevel 1',
       'initializer runlevel 2',
@@ -944,31 +944,25 @@ describe('BeanManager', () => {
     const log: string[] = [];
 
     Beans.registerInitializer({
-      useFunction: async () => {
-        log.push('initializer [runlevel 1]');
-      },
+      useFunction: async () => void log.push('initializer [runlevel 1]'),
       runlevel: 1,
     });
 
     Beans.registerInitializer({
-      useFunction: async () => {
-        log.push('initializer [runlevel 2]');
-      },
+      useFunction: async () => void log.push('initializer [runlevel 2]'),
       runlevel: 2,
     });
 
     Beans.registerInitializer({
       useFunction: () => {
         log.push('initializer [runlevel 2]');
-        return Promise.reject();
+        return Promise.reject(Error());
       },
       runlevel: 2,
     });
 
     Beans.registerInitializer({
-      useFunction: async () => {
-        log.push('initializer [runlevel 3]');
-      },
+      useFunction: async () => void log.push('initializer [runlevel 3]'),
       runlevel: 3,
     });
 
@@ -1188,7 +1182,7 @@ describe('BeanManager', () => {
     }
 
     Beans.register(Bean, {eager: true});
-    Beans.registerInitializer(() => Promise.reject('initializer rejected'));
+    Beans.registerInitializer(() => Promise.reject(Error('initializer rejected')));
 
     await expectAsync(Beans.start()).toBeRejectedWithError(/InitializerError/);
     expect(constructed).toBeFalse();
@@ -1211,16 +1205,12 @@ describe('BeanManager', () => {
 
     Beans.register(Bean1, {eager: true});
     Beans.register(Bean2, {eager: true});
-    Beans.registerInitializer(async () => {
-      log.push('initializer-1 [no runlevel specified]');
-    });
+    Beans.registerInitializer(async () => void log.push('initializer-1 [no runlevel specified]'));
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer-2 [runlevel 5]')),
+      useFunction: async () => void log.push('initializer-2 [runlevel 5]'),
       runlevel: 5,
     });
-    Beans.registerInitializer(async () => {
-      log.push('initializer-3 [no runlevel specified]');
-    });
+    Beans.registerInitializer(async () => void log.push('initializer-3 [no runlevel specified]'));
 
     await Beans.start();
 
@@ -1283,16 +1273,12 @@ describe('BeanManager', () => {
 
     Beans.register(Bean1, {eager: true});
     Beans.register(Bean2, {eager: true});
-    Beans.registerInitializer(async () => {
-      log.push('initializer-1 [no runlevel specified]');
-    });
+    Beans.registerInitializer(async () => void log.push('initializer-1 [no runlevel specified]'));
     Beans.registerInitializer({
-      useFunction: async () => void (log.push('initializer-2 [runlevel 6]')),
+      useFunction: async () => void log.push('initializer-2 [runlevel 6]'),
       runlevel: 6,
     });
-    Beans.registerInitializer(async () => {
-      log.push('initializer-3 [no runlevel specified]');
-    });
+    Beans.registerInitializer(async () => void log.push('initializer-3 [no runlevel specified]'));
 
     await Beans.start({eagerBeanConstructRunlevel: 5});
 
@@ -1363,7 +1349,7 @@ describe('BeanManager', () => {
 
   it('should reject the \'start\' Promise when an initializer rejects', async () => {
     Beans.registerInitializer(() => Promise.resolve());
-    Beans.registerInitializer(() => Promise.reject());
+    Beans.registerInitializer(() => Promise.reject(Error()));
     Beans.registerInitializer(() => Promise.resolve());
 
     await expectAsync(Beans.start()).toBeRejectedWithError(/InitializerError/);
@@ -1372,7 +1358,9 @@ describe('BeanManager', () => {
   it('should allow registration of a function initializer', async () => {
     let initializerInvoked = false;
 
-    Beans.registerInitializer(async () => void (initializerInvoked = true));
+    Beans.registerInitializer(async () => {
+      initializerInvoked = true;
+    });
     await Beans.start();
 
     expect(initializerInvoked).toBeTrue();
@@ -1381,7 +1369,11 @@ describe('BeanManager', () => {
   it('should allow registration of a function initializer (useFunction)', async () => {
     let initializerInvoked = false;
 
-    Beans.registerInitializer({useFunction: async () => void (initializerInvoked = true)});
+    Beans.registerInitializer({
+      useFunction: async () => {
+        initializerInvoked = true;
+      },
+    });
     await Beans.start();
 
     expect(initializerInvoked).toBeTrue();
@@ -1430,7 +1422,8 @@ describe('BeanManager', () => {
 
   it('should error if not registered the bean specified as initializer (useExisting)', async () => {
     class Bean implements Initializer {
-      public async init(): Promise<void> { // eslint-disable-line @typescript-eslint/no-empty-function
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      public async init(): Promise<void> {
       }
     }
 

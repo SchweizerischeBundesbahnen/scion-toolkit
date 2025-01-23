@@ -231,7 +231,7 @@ describe('Bounding Client Rect Signal', () => {
     const boundingBox = fixture.componentInstance.boundingBox;
 
     // Capture emissions.
-    const emissions = new Array<DOMRect | undefined>;
+    const emissions = new Array<DOMRect | undefined>();
     effect(() => emissions.push(boundingBox()), {injector: TestBed.inject(Injector)});
 
     // Expect null bounding box.
@@ -303,7 +303,7 @@ describe('Bounding Client Rect Signal', () => {
     ]);
   });
 
-  it('should error if reading signal for required view child in constructor', async () => {
+  it('should error if reading signal for required view child in constructor', () => {
     TestBed.configureTestingModule({
       providers: [
         {provide: ComponentFixtureAutoDetect, useValue: true},

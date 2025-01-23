@@ -8,7 +8,6 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Defined} from './defined.util';
 import {identity} from 'rxjs';
 
 /**
@@ -19,11 +18,11 @@ export namespace Arrays {
   /**
    * Returns the value, if an array, or adds it to an array. If `null` or `undefined` is given, by default, returns an empty array.
    */
-  export function coerce<T>(value: T | T[] | readonly T[] | null | undefined, options?: {coerceNullOrUndefined: true} | {}): NonNullable<T[]>;
+  export function coerce<T>(value: T | T[] | readonly T[] | null | undefined, options?: {coerceNullOrUndefined: true}): NonNullable<T[]>;
   export function coerce<T>(value: T | T[] | readonly T[] | null | undefined, options: {coerceNullOrUndefined: false}): T[] | null | undefined;
   export function coerce<T>(value: T | T[] | readonly T[] | null | undefined, options?: {coerceNullOrUndefined?: boolean}): T[] | null | undefined {
     if (value === null || value === undefined) {
-      if (Defined.orElse(options && options.coerceNullOrUndefined, true)) {
+      if (options?.coerceNullOrUndefined ?? true) {
         return [];
       }
       return value as null | undefined;
@@ -63,7 +62,7 @@ export namespace Arrays {
    * @return the elements removed from the array.
    */
   export function remove<T>(array: T[], element: T | ((element: T) => boolean), options?: {firstOnly: boolean}): T[] {
-    const firstOnly = Defined.orElse(options && options.firstOnly, false);
+    const firstOnly = options?.firstOnly ?? false;
 
     // define a function to resolve the element's index in the original array
     const indexOfElementFn = ((): () => number => {

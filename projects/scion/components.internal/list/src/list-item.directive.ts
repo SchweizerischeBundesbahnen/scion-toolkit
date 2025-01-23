@@ -9,6 +9,7 @@
  */
 
 import {Directive, Input, TemplateRef} from '@angular/core';
+import {Arrays} from '@scion/toolkit/util';
 
 /**
  * Use this directive to model a list item for {SciListComponent}.
@@ -41,7 +42,7 @@ export class SciListItemDirective {
    */
   @Input()
   public set actions(actions: TemplateRef<void> | TemplateRef<void>[]) {
-    this._actionTemplates = (Array.isArray(actions) ? actions : actions && [actions] || []);
+    this._actionTemplates = Arrays.coerce(actions);
   }
 
   constructor(public readonly template: TemplateRef<void>) {

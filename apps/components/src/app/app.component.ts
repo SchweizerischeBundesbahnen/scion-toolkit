@@ -62,7 +62,7 @@ export class AppComponent {
             return tools.concat({
               routerPath: `/${route.path}`,
               name: route.path!,
-              internal: route.data?.['internal'] ?? false,
+              internal: (route.data?.['internal'] ?? false) as boolean,
             });
           }, new Array<Tool>())),
         sortArray((tool1, tool2) => Number(tool1.internal) - Number(tool2.internal)),

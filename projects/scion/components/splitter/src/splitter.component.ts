@@ -147,20 +147,19 @@ export class SciSplitterComponent implements OnInit, OnDestroy {
 
   private onTouchStart(startEvent: TouchEvent): void {
     this.installMoveListener({
-        startEvent: startEvent,
-        moveEventNames: ['touchmove'],
-        endEventNames: ['touchend', 'touchcancel'],
-        eventPositionFn: (touchEvent: TouchEvent): EventPosition => {
-          const touch: Touch = touchEvent.touches[0];
-          if (this.isVertical) {
-            return {screenPos: touch.screenX, clientPos: touch.clientX, pagePos: touch.pageX};
-          }
-          else {
-            return {screenPos: touch.screenY, clientPos: touch.clientY, pagePos: touch.pageY};
-          }
-        },
+      startEvent: startEvent,
+      moveEventNames: ['touchmove'],
+      endEventNames: ['touchend', 'touchcancel'],
+      eventPositionFn: (touchEvent: TouchEvent): EventPosition => {
+        const touch: Touch = touchEvent.touches[0];
+        if (this.isVertical) {
+          return {screenPos: touch.screenX, clientPos: touch.clientX, pagePos: touch.pageX};
+        }
+        else {
+          return {screenPos: touch.screenY, clientPos: touch.clientY, pagePos: touch.pageY};
+        }
       },
-    );
+    });
   }
 
   private onMouseDown(startEvent: MouseEvent): void {
@@ -169,19 +168,18 @@ export class SciSplitterComponent implements OnInit, OnDestroy {
     }
 
     this.installMoveListener({
-        startEvent: startEvent,
-        moveEventNames: ['mousemove', 'sci-mousemove'],
-        endEventNames: ['mouseup', 'sci-mouseup'],
-        eventPositionFn: (mouseEvent: MouseEvent): EventPosition => {
-          if (this.isVertical) {
-            return {screenPos: mouseEvent.screenX, clientPos: mouseEvent.clientX, pagePos: mouseEvent.pageX};
-          }
-          else {
-            return {screenPos: mouseEvent.screenY, clientPos: mouseEvent.clientY, pagePos: mouseEvent.pageY};
-          }
-        },
+      startEvent: startEvent,
+      moveEventNames: ['mousemove', 'sci-mousemove'],
+      endEventNames: ['mouseup', 'sci-mouseup'],
+      eventPositionFn: (mouseEvent: MouseEvent): EventPosition => {
+        if (this.isVertical) {
+          return {screenPos: mouseEvent.screenX, clientPos: mouseEvent.clientX, pagePos: mouseEvent.pageX};
+        }
+        else {
+          return {screenPos: mouseEvent.screenY, clientPos: mouseEvent.clientY, pagePos: mouseEvent.pageY};
+        }
       },
-    );
+    });
   }
 
   private installMoveListener<EVENT extends Event>(config: {startEvent: EVENT; moveEventNames: string[]; endEventNames: string[]; eventPositionFn: (event: EVENT) => EventPosition}): void {

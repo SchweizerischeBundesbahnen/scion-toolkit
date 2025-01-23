@@ -12,7 +12,6 @@ import {fromBoundingClientRect$} from './bounding-client-rect.observable';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 import {Arrays} from '@scion/toolkit/util';
 
-const destroyAfterEach = true;
 const disposables = new Array<() => void>();
 
 describe('fromBoundingClientRect$', () => {
@@ -24,7 +23,7 @@ describe('fromBoundingClientRect$', () => {
     });
 
     let emissionCount = 0;
-    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
     const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
     onDestroy(() => subscription.unsubscribe());
 
@@ -104,7 +103,7 @@ describe('fromBoundingClientRect$', () => {
     });
 
     let emissionCount = 0;
-    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
     const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
     onDestroy(() => subscription.unsubscribe());
 
@@ -200,7 +199,7 @@ describe('fromBoundingClientRect$', () => {
     });
 
     let emissionCount = 0;
-    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
     const testee = queryElement('div#testee');
     const top = queryElement('div#top');
     const left = queryElement('div#left');
@@ -234,7 +233,7 @@ describe('fromBoundingClientRect$', () => {
     });
 
     let emissionCount = 0;
-    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
     const testee = queryElement('div#testee');
     const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
     onDestroy(() => subscription.unsubscribe());
@@ -277,7 +276,7 @@ describe('fromBoundingClientRect$', () => {
     });
 
     let emissionCount = 0;
-    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
     const testee = queryElement('div#testee');
     const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
     onDestroy(() => subscription.unsubscribe());
@@ -316,7 +315,7 @@ describe('fromBoundingClientRect$', () => {
     });
 
     let emissionCount = 0;
-    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
     const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
     onDestroy(() => subscription.unsubscribe());
 
@@ -370,7 +369,7 @@ describe('fromBoundingClientRect$', () => {
     const filler = queryElement('div#filler');
 
     let emissionCount = 0;
-    const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+    const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
     const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
     onDestroy(() => subscription.unsubscribe());
 
@@ -453,7 +452,7 @@ describe('fromBoundingClientRect$', () => {
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x2, y: y2 - 20, width: 100, height: 100}));
   });
 
-  it('should position document root element (html)', async () => {
+  it('should position document root element (html)', () => {
     // Precondition: Ensure document root not to be positioned so its position will be changed to 'relative'.
     document.documentElement.style.setProperty('position', 'static');
 
@@ -469,7 +468,7 @@ describe('fromBoundingClientRect$', () => {
     }));
   });
 
-  it('should allow overriding positioning of document root element (html)', async () => {
+  it('should allow overriding positioning of document root element (html)', () => {
     // Precondition: Ensure document root not to be positioned so its position will be changed to 'relative'.
     document.documentElement.style.setProperty('position', 'static');
 
@@ -499,7 +498,7 @@ describe('fromBoundingClientRect$', () => {
     }));
   });
 
-  describe('Moving element out of the viewport', async () => {
+  describe('Moving element out of the viewport', () => {
 
     it('should emit until moved the element out of the viewport (moving element to the right)', async () => {
       createDiv({
@@ -512,7 +511,7 @@ describe('fromBoundingClientRect$', () => {
       });
 
       let emissionCount = 0;
-      const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+      const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
       const testee = queryElement('div#testee');
       const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
       onDestroy(() => subscription.unsubscribe());
@@ -618,7 +617,7 @@ describe('fromBoundingClientRect$', () => {
       });
 
       let emissionCount = 0;
-      const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+      const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
       const testee = queryElement('div#testee');
       const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
       onDestroy(() => subscription.unsubscribe());
@@ -734,7 +733,7 @@ describe('fromBoundingClientRect$', () => {
       });
 
       let emissionCount = 0;
-      const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+      const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
       const testee = queryElement('div#testee');
       const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
       onDestroy(() => subscription.unsubscribe());
@@ -840,7 +839,7 @@ describe('fromBoundingClientRect$', () => {
       });
 
       let emissionCount = 0;
-      const emitCaptor = new ObserveCaptor<DOMRect>(domRect => domRect.toJSON());
+      const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
       const testee = queryElement('div#testee');
       const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
       onDestroy(() => subscription.unsubscribe());
@@ -952,7 +951,7 @@ describe('fromBoundingClientRect$', () => {
 
   function createDiv(options: ElementCreateOptions): HTMLElement {
     const div = document.createElement('div');
-    destroyAfterEach && onDestroy(() => div.remove());
+    onDestroy(() => div.remove());
     options.id && (div.id = options.id);
     options.style && setStyle(div, options.style);
     options.parent?.appendChild(div);
@@ -969,7 +968,7 @@ describe('fromBoundingClientRect$', () => {
 interface ElementCreateOptions {
   id?: string;
   parent?: Node;
-  style?: {[style: string]: any};
+  style?: {[style: string]: string};
   children?: Node[];
 }
 
@@ -983,9 +982,16 @@ async function waitUntilIdle(): Promise<void> {
 }
 
 function queryElement(selector: string): HTMLElement {
-  return document.querySelector(selector) as HTMLElement;
+  return document.querySelector(selector)!;
 }
 
-function setStyle(element: HTMLElement, style: {[style: string]: any | null}): void {
+function setStyle(element: HTMLElement, style: {[style: string]: string}): void {
   Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
+}
+
+/**
+ * Projects the provided {@link DOMRect} to an object literal for better error message.
+ */
+function toJsonDOMRect(domRect: DOMRect): DOMRect {
+  return domRect.toJSON() as DOMRect;
 }

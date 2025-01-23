@@ -23,12 +23,10 @@ import {Dictionary} from '@scion/toolkit/util';
  * fill up the entire space (width and height set to 100%). The parent element must have its CSS `overflow` property set to `hidden`
  * to hide the pushed out native scrollbars.
  */
-@Directive({
-  selector: '[sciScrollable]',
-})
+@Directive({selector: '[sciScrollable]'})
 export class SciScrollableDirective {
 
-  private _host = inject(ElementRef<HTMLDivElement>).nativeElement;
+  private _host = inject(ElementRef<HTMLDivElement>).nativeElement as HTMLElement;
   private _renderer = inject(Renderer2);
   private _nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 

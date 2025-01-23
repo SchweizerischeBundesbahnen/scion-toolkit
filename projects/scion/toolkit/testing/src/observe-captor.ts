@@ -19,7 +19,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
    * Constructs this captor. Optionally, you can provide a project function to map emitted values.
    */
   constructor(projectFn?: (value: T) => R) {
-    this._projectFn = projectFn || ((value) => value as any);
+    this._projectFn = projectFn ?? (value => value as unknown as R);
   }
 
   /**
@@ -37,7 +37,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
    *
    * Note: Write as arrow function to retain the `this` reference when being invoked from another scope, e.g., from the global scope.
    */
-  public error = (error: any): void => {
+  public error = (error: unknown): void => {
     this._state = 'errored';
     this._error = error;
     this._completeOrError$.complete();
@@ -119,7 +119,7 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
           timeout({first: timeoutMs, with: () => throwError(() => new Error('[CaptorTimeoutError] Timeout elapsed.'))}),
         )
         .subscribe({
-          error: error => reject(error),
+          error: error => reject(error instanceof Error ? error : Error(`${error}`)),
           complete: resolve,
         });
     });

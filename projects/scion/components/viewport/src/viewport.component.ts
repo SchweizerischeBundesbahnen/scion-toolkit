@@ -99,7 +99,7 @@ export class SciViewportComponent {
 
   private _viewport = viewChild.required<ElementRef<HTMLDivElement>>('viewport');
   private _viewportClient = viewChild.required<ElementRef<HTMLDivElement>>('viewport_client');
-  private _host = inject(ElementRef<HTMLElement>).nativeElement;
+  private _host = inject(ElementRef).nativeElement as HTMLElement;
   protected nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   /**
@@ -110,7 +110,7 @@ export class SciViewportComponent {
   /**
    * Emits when the viewport is scrolled. The event is emitted outside the Angular zone to avoid unnecessary change detection cycles.
    */
-  public scroll = output<Event>();
+  public scroll = output<Event>(); // eslint-disable-line @angular-eslint/no-output-native
 
   constructor() {
     this.installScrollEmitter();
