@@ -31,7 +31,7 @@ import {UUID} from '@scion/toolkit/uuid';
 })
 export class SciCheckboxComponent implements ControlValueAccessor {
 
-  private _cvaChangeFn: (value: any) => void = noop;
+  private _cvaChangeFn: (value: unknown) => void = noop;
   private _cvaTouchedFn: () => void = noop;
 
   protected formControl = new FormControl<boolean>(false, {nonNullable: true});
@@ -58,14 +58,14 @@ export class SciCheckboxComponent implements ControlValueAccessor {
   /**
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    */
-  public registerOnChange(fn: any): void {
+  public registerOnChange(fn: (value: unknown) => void): void {
     this._cvaChangeFn = fn;
   }
 
   /**
    * Method implemented as part of `ControlValueAccessor` to work with Angular forms API
    */
-  public registerOnTouched(fn: any): void {
+  public registerOnTouched(fn: () => void): void {
     this._cvaTouchedFn = fn;
   }
 

@@ -147,4 +147,3 @@ export class SciAccordionComponent implements OnInit, OnDestroy {
     ];
   }
 }
-

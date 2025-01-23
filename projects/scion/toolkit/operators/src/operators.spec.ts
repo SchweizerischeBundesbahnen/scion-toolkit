@@ -94,7 +94,7 @@ describe('Operators', () => {
 
         const predicates = new Map<string, Promise<boolean>>()
           .set('a', Promise.resolve(true))
-          .set('b', Promise.reject('error'))
+          .set('b', Promise.reject(Error('error')))
           .set('c', Promise.resolve(true));
 
         concat(of(['a', 'b', 'c']), NEVER)
@@ -257,7 +257,7 @@ describe('Operators', () => {
 
         const predicates = new Map<string, Subject<boolean>>()
           .set('a', new Subject<boolean>())
-          .set('b', throwError(() => 'error') as any)
+          .set('b', throwError(() => 'error') as never)
           .set('c', new Subject<boolean>())
           .set('d', new Subject<boolean>())
           .set('e', new Subject<boolean>());
@@ -315,7 +315,7 @@ describe('Operators', () => {
           .set('a', new Subject<boolean>())
           .set('b', new Subject<boolean>())
           .set('c', new Subject<boolean>())
-          .set('d', EMPTY as any);
+          .set('d', EMPTY as never);
 
         of(['a', 'b', 'c', 'd'])
           .pipe(filterArray(item => predicates.get(item)!))

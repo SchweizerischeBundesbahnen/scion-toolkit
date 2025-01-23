@@ -6,12 +6,12 @@
 import {ConsoleLogs} from './console-logs';
 import {test as playwrightTest} from '@playwright/test';
 
-export type TestFixtures = {
+export interface TestFixtures {
   /**
    * Provides messages logged to the browser console.
    */
   consoleLogs: ConsoleLogs;
-};
+}
 
 export const test = playwrightTest.extend<TestFixtures>({
   consoleLogs: async ({page}, use) => {

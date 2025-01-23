@@ -90,7 +90,8 @@
             "lintFilePatterns": [
               "projects/scion/components/**/*.ts",
               "projects/scion/components/**/*.html"
-            ]
+            ],
+            "eslintConfig": "projects/scion/components/eslint.config.js"
           }
         }
       }
@@ -105,7 +106,8 @@
             "lintFilePatterns": [
               "projects/scion/components.e2e/**/*.ts",
               "projects/scion/components.e2e/**/*.html"
-            ]
+            ],
+            "eslintConfig": "projects/scion/components.e2e/eslint.config.js"
           }
         }
       }
@@ -155,7 +157,8 @@
             "lintFilePatterns": [
               "projects/scion/components.internal/**/*.ts",
               "projects/scion/components.internal/**/*.html"
-            ]
+            ],
+            "eslintConfig": "projects/scion/components.internal/eslint.config.js"
           }
         }
       }
@@ -249,7 +252,8 @@
             "lintFilePatterns": [
               "apps/components/**/*.ts",
               "apps/components/**/*.html"
-            ]
+            ],
+            "eslintConfig": "apps/components/eslint.config.js"
           }
         }
       }
@@ -338,7 +342,8 @@
             "lintFilePatterns": [
               "apps/components-testing-app/**/*.ts",
               "apps/components-testing-app/**/*.html"
-            ]
+            ],
+            "eslintConfig": "apps/components-testing-app/eslint.config.js"
           }
         }
       }

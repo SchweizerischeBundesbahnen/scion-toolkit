@@ -90,7 +90,7 @@ import {SciElementRefDirective} from './element-ref.directive';
 export class SciSashboxComponent implements OnDestroy {
 
   private _destroy$ = new Subject<void>();
-  private _host = inject(ElementRef<HTMLElement>).nativeElement;
+  private _host = inject(ElementRef).nativeElement as HTMLElement;
   private _zone = inject(NgZone);
 
   public sashes$ = new BehaviorSubject<SciSashDirective[]>([]);
@@ -306,5 +306,5 @@ function provideSashBoxAccessor(): SciSashBoxAccessor {
     public get sashes(): SciSashDirective[] {
       return component.sashes$.value;
     }
-  };
+  }();
 }

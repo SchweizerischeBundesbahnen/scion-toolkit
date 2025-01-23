@@ -10,8 +10,8 @@
 
 import {PlaywrightTestConfig} from '@playwright/test';
 
-const runInCI = !!process.env['CI'];
-const runHeadless = !!process.env['HEADLESS'];
+const runInCI = !!process.env.CI;
+const runHeadless = !!process.env.HEADLESS;
 
 const config: PlaywrightTestConfig = {
   forbidOnly: runInCI,

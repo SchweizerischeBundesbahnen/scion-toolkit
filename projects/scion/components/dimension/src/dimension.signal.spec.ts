@@ -210,7 +210,7 @@ describe('Dimension Signal', () => {
     const size = fixture.componentInstance.size;
 
     // Capture emissions.
-    const emissions = new Array<SciDimension | undefined>;
+    const emissions = new Array<SciDimension | undefined>();
     effect(() => emissions.push(size()), {injector: TestBed.inject(Injector)});
 
     // Expect null dimension.
@@ -286,7 +286,7 @@ describe('Dimension Signal', () => {
     ]);
   });
 
-  it('should error if reading signal for required view child in constructor', async () => {
+  it('should error if reading signal for required view child in constructor', () => {
     TestBed.configureTestingModule({
       providers: [
         {provide: ComponentFixtureAutoDetect, useValue: true},

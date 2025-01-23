@@ -184,7 +184,7 @@ describe('Arrays', () => {
       const bananaOtherInstance = {...banana};
 
       const array = [apple, banana, cherry, bananaOtherInstance, appleOtherInstance];
-      expect(Arrays.distinct(array, (fruit) => fruit.id)).toEqual([apple, banana, cherry]);
+      expect(Arrays.distinct(array, fruit => fruit.id)).toEqual([apple, banana, cherry]);
     });
 
     it('should not modify the original array', () => {
@@ -309,7 +309,7 @@ describe('Arrays', () => {
     });
 
     it('should return `undefined` for an empty array', () => {
-      expect(Arrays.last([])).toBeUndefined();
+      expect(Arrays.last<unknown>([])).toBeUndefined();
     });
 
     it('should return the last element', () => {

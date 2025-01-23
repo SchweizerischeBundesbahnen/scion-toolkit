@@ -131,12 +131,12 @@ export function bufferUntil<T>(closingNotifier$: Observable<any> | Promise<any>)
  * Executes a tap-function for the first percolating value.
  */
 export function tapFirst<T>(tapFn: (value?: T) => void, scheduler?: SchedulerLike): MonoTypeOperatorFunction<T> {
-  return map(((value: T, index: number): T => {
+  return map((value: T, index: number): T => {
     if (index === 0) {
       scheduler ? scheduler.schedule(tapFn) : tapFn(value);
     }
     return value;
-  }));
+  });
 }
 
 /**
@@ -246,7 +246,7 @@ export function subscribeIn<T>(fn: (doSubscribe: () => void) => void): MonoTypeO
  * @return  An Observable mirroring the source, but running downstream operators in a context.
  *
  * @deprecated since version 1.6.0; method has been renamed; use {@link observeIn} instead; API will be removed in version 2.0.
-  */
+ */
 export function observeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFunction<T> {
   return observeIn(executionFn);
 }
@@ -291,7 +291,7 @@ export function observeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFunc
 export function subscribeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>): Observable<T> => {
     return new Observable((observer: Observer<T>): TeardownLogic => {
-      let subscription: Subscription;
+      let subscription: Subscription | undefined;
 
       executionFn(() => {
         subscription = source.subscribe(new class extends Subscriber<T> {
@@ -315,7 +315,7 @@ export function subscribeInside<T>(executionFn: ExecutionFn): MonoTypeOperatorFu
           public override unsubscribe(): void {
             executionFn(() => this.closed ? noop() : super.unsubscribe());
           }
-        });
+        }());
       });
 
       return () => {

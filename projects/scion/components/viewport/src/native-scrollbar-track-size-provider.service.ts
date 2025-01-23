@@ -46,7 +46,7 @@ export class SciNativeScrollbarTrackSizeProvider {
       overflow: 'scroll',
       height: '100px',
       width: '100px',
-      border: 0,
+      border: '0',
       visibility: 'hidden',
     });
 
@@ -54,7 +54,7 @@ export class SciNativeScrollbarTrackSizeProvider {
     setStyle(viewportClientDiv, {
       height: '100%',
       width: '100%',
-      border: 0,
+      border: '0',
     });
 
     viewportDiv.appendChild(viewportClientDiv);
@@ -101,7 +101,7 @@ export class SciNativeScrollbarTrackSizeProvider {
  *
  * @ignore
  */
-function setStyle(element: HTMLElement, style: {[style: string]: any | null}): void {
+function setStyle(element: HTMLElement, style: Record<string, string | null>): void {
   Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
 }
 

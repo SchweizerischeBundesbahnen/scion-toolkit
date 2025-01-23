@@ -30,26 +30,26 @@ export class SciKeyValueComponent {
   private _keys: string[] = [];
 
   @Input()
-  public set object(object: Dictionary | Map<string, any>) {
-    this.flattenedProperties = this.flattenObject(object || {});
+  public set object(object: Dictionary | Map<string, unknown> | null | undefined) {
+    this.flattenedProperties = this.flattenObject(object ?? {});
     this._keys = Object.keys(this.flattenedProperties);
   }
 
   /**
    * Compares qualifier entries by their position in the object.
    */
-  public keyCompareFn = (a: KeyValue<string, any>, b: KeyValue<string, any>): number => {
+  public keyCompareFn = (a: KeyValue<string, unknown>, b: KeyValue<string, unknown>): number => {
     return this._keys.indexOf(a.key) - this._keys.indexOf(b.key);
   };
 
-  private flattenObject(property: Dictionary | Map<string, any>, path: string[] = []): Dictionary {
+  private flattenObject(property: Dictionary | Map<string, unknown>, path: string[] = []): Dictionary {
     if (property instanceof Map) {
       return this.flattenObject(Dictionaries.coerce(property), path);
     }
 
     return Object.entries(property).reduce((acc, [key, value]) => {
       if (typeof value === 'object' && value !== null) {
-        return {...acc, ...this.flattenObject(value, [...path, key])};
+        return {...acc, ...this.flattenObject(value as Dictionary | Map<string, unknown>, [...path, key])};
       }
       else {
         const propName = [...path, key].join('.');
