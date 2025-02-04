@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostBinding, inject, input, NgZone, OnInit, output, viewChild} from '@angular/core';
-import {fromEvent, merge} from 'rxjs';
+import {audit, fromEvent, merge, Observable} from 'rxjs';
 import {DOCUMENT} from '@angular/common';
 import {tapFirst} from '@scion/toolkit/operators';
 import {first, takeUntil} from 'rxjs/operators';
@@ -70,22 +70,22 @@ export class SciSplitterComponent implements OnInit {
   public readonly orientation = input<'vertical' | 'horizontal'>('vertical');
 
   /**
-   * Emits when starting to move the splitter.
+   * Notifies when start moving the splitter.
    */
   public readonly start = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
   /**
-   * Emits the distance in pixels when the splitter is moved. The event is emitted outside the Angular zone.
+   * Notifies when moving the splitter. The event is emitted outside the Angular zone.
    */
   public readonly move = output<SplitterMoveEvent>();
 
   /**
-   * Emits when ending to move the splitter.
+   * Notifies when end moving the splitter.
    */
   public readonly end = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
   /**
-   * Emits when to reset the splitter position.
+   * Notifies when resetting the spliter position.
    */
   public readonly reset = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
@@ -194,16 +194,19 @@ export class SciSplitterComponent implements OnInit {
             this.start.emit();
             this._cd.markForCheck();
           })),
+          // Throttle emission to a single event per animation frame.
+          audit(() => nextAnimationFrame$()),
           takeUntilDestroyed(this._destroyRef),
           takeUntil(endEvent$),
         )
         .subscribe((moveEvent: EVENT) => {
+          NgZone.assertNotInAngularZone();
+
           const eventPos = config.eventPositionFn(moveEvent);
           const newClientPos = eventPos.clientPos;
           const distance = newClientPos - lastClientPos;
           lastClientPos = newClientPos;
 
-          NgZone.assertNotInAngularZone();
           this.move.emit({distance, position: eventPos});
         });
 
@@ -244,4 +247,19 @@ export interface SplitterMoveEvent {
    * The position where the mouse or touch event has occurred.
    */
   position: EventPosition;
+}
+
+/**
+ * Emits when the next animation frame is executed.
+ *
+ * Unlike using `timer(0, animationFrameScheduler)`, this observable emits within the zone where it is subscribed.
+ *
+ * Note that the RxJS `animationFrameScheduler` may not necessarily execute in the current execution context, such as inside or outside Angular.
+ * The scheduler always executes tasks in the zone where it was first used in the application.
+ */
+function nextAnimationFrame$(): Observable<void> {
+  return new Observable<void>(observer => {
+    const animationFrame = requestAnimationFrame(() => observer.next());
+    return () => cancelAnimationFrame(animationFrame);
+  });
 }

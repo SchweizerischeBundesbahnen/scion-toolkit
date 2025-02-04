@@ -24,7 +24,9 @@ export class SciNativeScrollbarTrackSizeProvider {
   private readonly _document = inject(DOCUMENT);
   private readonly _zone = inject(NgZone);
 
-  /** Provides the track size of the native scrollbar, or `null` if the native scrollbars sit on top of the content. */
+  /**
+   * Provides the track size of the native scrollbar, or `null` if the native scrollbars sit on top of the content.
+   */
   public trackSize: Signal<NativeScrollbarTrackSize | null>;
 
   constructor() {

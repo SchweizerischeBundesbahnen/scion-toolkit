@@ -75,11 +75,11 @@ export class SciKeyValueFieldComponent {
    *
    * By default, if empty, `null` is returned.
    */
-  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty?: true): Dictionary | null;
-  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: false): Dictionary;
-  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: boolean): Dictionary | null;
-  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: boolean = true): Dictionary | null {
-    const dictionary: Dictionary = {};
+  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty?: true): Dictionary<string> | null;
+  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: false): Dictionary<string>;
+  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: boolean): Dictionary<string> | null;
+  public static toDictionary(formArray: FormArray<FormGroup<KeyValueEntry>>, returnNullIfEmpty: boolean = true): Dictionary<string> | null {
+    const dictionary: Dictionary<string> = {};
     formArray.controls.forEach(formGroup => {
       const key = formGroup.controls.key.value;
       dictionary[key] = formGroup.controls.value.value;
