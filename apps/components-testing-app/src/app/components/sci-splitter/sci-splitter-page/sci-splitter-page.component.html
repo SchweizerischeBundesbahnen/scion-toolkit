@@ -1,0 +1,14 @@
+<main>
+  <sci-splitter [orientation]="orientation()"
+                [style.transform]="translate()"
+                (move)="onMove($event)"/>
+</main>
+
+<aside class="e2e-settings">
+  <sci-form-field label="Orientation">
+    <select [(ngModel)]="orientation" class="e2e-orientation">
+      <option value="vertical">vertical</option>
+      <option value="horizontal">horizontal</option>
+    </select>
+  </sci-form-field>
+</aside>
