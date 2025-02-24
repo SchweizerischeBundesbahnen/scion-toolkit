@@ -99,8 +99,8 @@ export class SciNativeScrollbarTrackSizeProvider {
  *
  * @ignore
  */
-function setStyle(element: HTMLElement, style: Record<string, string | null>): void {
-  Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
+function setStyle(element: HTMLElement, styles: {[style: string]: string}): void {
+  Object.entries(styles).forEach(([name, value]) => element.style.setProperty(name, value));
 }
 
 /**

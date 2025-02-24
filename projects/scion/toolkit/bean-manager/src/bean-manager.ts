@@ -247,7 +247,7 @@ export class BeanManager {
         throw Error(`[NullBeanError] No bean registered under the symbol '${getSymbolName(symbol)}'.`);
       }
       case 1: {
-        return beans[0];
+        return beans[0]!;
       }
       default: {
         throw Error(`[MultiBeanError] Multiple beans registered under the symbol '${getSymbolName(symbol)}'.`);

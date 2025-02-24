@@ -126,13 +126,13 @@ export class SciScrollbarComponent {
 
   protected onTouchStart(event: TouchEvent): void {
     event.preventDefault();
-    this._lastDragPosition = this.vertical ? event.touches[0].screenY : event.touches[0].screenX;
+    this._lastDragPosition = this.vertical ? event.touches[0]!.screenY : event.touches[0]!.screenX;
   }
 
   protected onTouchMove(event: TouchEvent): void {
     event.preventDefault();
 
-    const newDragPositionPx = this.vertical ? event.touches[0].screenY : event.touches[0].screenX;
+    const newDragPositionPx = this.vertical ? event.touches[0]!.screenY : event.touches[0]!.screenX;
     const scrollbarPanPx = newDragPositionPx - this._lastDragPosition!;
     const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
     this._lastDragPosition = newDragPositionPx;

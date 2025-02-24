@@ -63,8 +63,8 @@ export class ObserveCaptor<T = any, R = T> implements Observer<T> {
   /**
    * Returns the last captured value, if any.
    */
-  public getLastValue(): R {
-    return this._values[this._values.length - 1];
+  public getLastValue(): R | undefined {
+    return this._values.at(-1);
   }
 
   /**

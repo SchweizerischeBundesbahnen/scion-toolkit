@@ -116,16 +116,16 @@ export namespace Arrays {
    * Returns `undefined` if no element is found.
    */
   export function last<T>(array: T[] | readonly T[] | null | undefined, predicate?: (item: T) => boolean): T | undefined {
-    if (!array) {
+    if (!array?.length) {
       return undefined;
     }
 
     if (!predicate) {
-      return array[array.length - 1];
+      return array.at(-1);
     }
 
     for (let i = array.length - 1; i >= 0; i--) {
-      if (predicate(array[i])) {
+      if (predicate(array[i]!)) {
         return array[i];
       }
     }
