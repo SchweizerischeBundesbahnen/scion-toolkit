@@ -985,8 +985,8 @@ function queryElement(selector: string): HTMLElement {
   return document.querySelector(selector)!;
 }
 
-function setStyle(element: HTMLElement, style: {[style: string]: string}): void {
-  Object.keys(style).forEach(key => element.style.setProperty(key, style[key]));
+function setStyle(element: HTMLElement, styles: {[style: string]: string}): void {
+  Object.entries(styles).forEach(([name, value]) => element.style.setProperty(name, value));
 }
 
 /**

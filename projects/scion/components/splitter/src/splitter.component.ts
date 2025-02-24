@@ -140,7 +140,7 @@ export class SciSplitterComponent implements OnInit {
       moveEventNames: ['touchmove'],
       endEventNames: ['touchend', 'touchcancel'],
       eventPositionFn: (touchEvent: TouchEvent): EventPosition => {
-        const touch: Touch = touchEvent.touches[0];
+        const touch: Touch = touchEvent.touches[0]!;
         if (this.isVertical) {
           return {screenPos: touch.screenX, clientPos: touch.clientX, pagePos: touch.pageX};
         }

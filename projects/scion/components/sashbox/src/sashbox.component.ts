@@ -184,8 +184,8 @@ export class SciSashboxComponent {
     }
 
     // Compute the new sash sizes.
-    const sash1 = this.sashes()[sashIndex];
-    const sash2 = this.sashes()[sashIndex + 1];
+    const sash1 = this.sashes()[sashIndex]!;
+    const sash2 = this.sashes()[sashIndex + 1]!;
 
     const sashSize1 = sash1.elementSize;
     const sashSize2 = sash2.elementSize;
@@ -202,8 +202,8 @@ export class SciSashboxComponent {
   }
 
   protected onSashReset(sashIndex: number): void {
-    const sash1 = this.sashes()[sashIndex];
-    const sash2 = this.sashes()[sashIndex + 1];
+    const sash1 = this.sashes()[sashIndex]!;
+    const sash2 = this.sashes()[sashIndex + 1]!;
     const equalSashSize = (sash1.elementSize + sash2.elementSize) / 2;
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes());
     const absoluteSashSizesAfterReset = this.sashes().map((sash, index) => {
