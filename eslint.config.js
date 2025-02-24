@@ -71,24 +71,27 @@ module.exports = tseslint.config(
       }],
       "@typescript-eslint/no-unnecessary-type-parameters": "off",
       "@typescript-eslint/no-redundant-type-constituents": "off",
-      "@typescript-eslint/restrict-template-expressions": ["error", {
-        allowBoolean: true,
-        allowNumber: true,
-      }],
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-base-to-string": "off",
       "@typescript-eslint/no-extraneous-class": "off",
       "@typescript-eslint/no-invalid-void-type": "off",
       "@typescript-eslint/require-await": "off",
       "@typescript-eslint/consistent-indexed-object-style": "off",
       "@typescript-eslint/no-unnecessary-type-arguments": "off",
+      "@typescript-eslint/unbound-method": "off",
+      "@typescript-eslint/unified-signatures": ["error", {ignoreDifferentlyNamedParameters: true}],
+      "@typescript-eslint/related-getter-setter-pairs": "off",
+      "@typescript-eslint/no-unsafe-enum-comparison": "off",
+      "@typescript-eslint/prefer-reduce-type-parameter": "off",
 
       // https://eslint.style/packages/default
-      "@stylistic/indent": ["error", 2,  {
+      "@stylistic/indent": ["error", 2, {
         "FunctionExpression": {"parameters": "first"},
         "SwitchCase": 1,
       }],
       "@stylistic/semi": ["error", "always"],
       "@stylistic/block-spacing": ["error", "never"],
-      "@stylistic/quote-props": ["error", "consistent"],
+      "@stylistic/quote-props": "off",
       "@stylistic/member-delimiter-style": ["error",
         {
           "multiline": {
@@ -107,6 +110,9 @@ module.exports = tseslint.config(
       "@stylistic/nonblock-statement-body-position": "error",
       "@stylistic/padded-blocks": "off",
       "@stylistic/operator-linebreak": ["error", "after"],
+      "@stylistic/no-floating-decimal": "off",
+      "@stylistic/lines-between-class-members": "off",
+      "@stylistic/multiline-ternary": "off",
 
       // https://github.com/angular-eslint/angular-eslint/tree/main/packages/eslint-plugin
       "@angular-eslint/no-input-rename": "off",
@@ -118,7 +124,9 @@ module.exports = tseslint.config(
   },
   {
     files: ["**/*.spec.ts"],
-    rules: {},
+    rules: {
+      "@typescript-eslint/no-unsafe-member-access": "off",
+    },
   },
   {
     files: ["**/*.html"],
