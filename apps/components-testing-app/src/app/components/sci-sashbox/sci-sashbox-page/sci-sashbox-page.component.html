@@ -1,6 +1,6 @@
-<sci-sashbox [direction]="directionFormControl.value">
+<sci-sashbox [direction]="directionFormControl.value" (sashEnd)="onSashEnd($event)" (sashEnd2)="onSashEnd2($event)">
   @for (sash of sashes; track sash; let i = $index) {
-    <ng-template sciSash [size]="sash.size" [minSize]="sash.minSize">
+    <ng-template sciSash [size]="sash.size" [minSize]="sash.minSize" [key]="sash.key || undefined">
       <section class="sash e2e-sash-{{i + 1}}">Sash {{i + 1}}</section>
     </ng-template>
   }
@@ -27,6 +27,9 @@
           </sci-form-field>
           <sci-form-field label="Min size">
             <input [(ngModel)]="sash.minSize" placeholder="Value in pixel or percent" class="e2e-min-size">
+          </sci-form-field>
+          <sci-form-field label="Key">
+            <input [(ngModel)]="sash.key" class="e2e-key">
           </sci-form-field>
         </div>
       </ng-template>

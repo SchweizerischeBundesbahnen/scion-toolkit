@@ -123,4 +123,64 @@ test.describe('sci-sashbox', () => {
       await expect.poll(() => sashboxPage.getSashBoundingBox('sash-3').then(bounds => bounds.height)).toBeCloseTo(sash3.height, 0);
     });
   });
+
+  test('should emit sash size on sash end (sashes with key)', async ({page, consoleLogs}) => {
+    const sashboxPage = new SashboxPagePO(page);
+    await sashboxPage.navigate();
+
+    await sashboxPage.enterDirection('row');
+    await sashboxPage.enterSashProperties('sash-1', {size: '100px', key: 'sash1'});
+    await sashboxPage.enterSashProperties('sash-2', {size: '500px', key: 'sash2'});
+    await sashboxPage.enterSashProperties('sash-3', {size: '50px', key: 'sash3'});
+
+    // Move splitter 100px to the right.
+    await sashboxPage.moveSplitter('splitter-1', {distance: 100, steps: 5});
+
+    await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd]/})).toEqual([
+      `[SciSashboxPageComponent:onSashEnd] [200,400,50]`,
+    ]);
+    await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd2]/})).toEqual([
+      `[SciSashboxPageComponent:onSashEnd2] {"sash1":200,"sash2":400,"sash3":50}`,
+    ]);
+  });
+
+  test('should emit sash size on sash end (sashes with and without keys)', async ({page, consoleLogs}) => {
+    const sashboxPage = new SashboxPagePO(page);
+    await sashboxPage.navigate();
+
+    await sashboxPage.enterDirection('row');
+    await sashboxPage.enterSashProperties('sash-1', {size: '100px', key: 'sash1'});
+    await sashboxPage.enterSashProperties('sash-2', {size: '500px'});
+    await sashboxPage.enterSashProperties('sash-3', {size: '50px', key: 'sash3'});
+
+    // Move splitter 100px to the right.
+    await sashboxPage.moveSplitter('splitter-1', {distance: 100, steps: 5});
+
+    await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd]/})).toEqual([
+      `[SciSashboxPageComponent:onSashEnd] [200,400,50]`,
+    ]);
+    await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd2]/})).toEqual([
+      `[SciSashboxPageComponent:onSashEnd2] {"1":400,"sash1":200,"sash3":50}`,
+    ]);
+  });
+
+  test('should emit sash size on sash end (sashes without key)', async ({page, consoleLogs}) => {
+    const sashboxPage = new SashboxPagePO(page);
+    await sashboxPage.navigate();
+
+    await sashboxPage.enterDirection('row');
+    await sashboxPage.enterSashProperties('sash-1', {size: '100px'});
+    await sashboxPage.enterSashProperties('sash-2', {size: '500px'});
+    await sashboxPage.enterSashProperties('sash-3', {size: '50px'});
+
+    // Move splitter 100px to the right.
+    await sashboxPage.moveSplitter('splitter-1', {distance: 100, steps: 5});
+
+    await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd]/})).toEqual([
+      `[SciSashboxPageComponent:onSashEnd] [200,400,50]`,
+    ]);
+    await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd2]/})).toEqual([
+      `[SciSashboxPageComponent:onSashEnd2] {"0":200,"1":400,"2":50}`,
+    ]);
+  });
 });

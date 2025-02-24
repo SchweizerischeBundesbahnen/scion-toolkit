@@ -98,9 +98,24 @@ export class SciSashboxComponent {
   public readonly sashStart = output<void>();
 
   /**
-   * Notifies when end sashing, providing the effective sash sizes in pixel.
+   * Emits an array with new sash sizes when sashing ends.
+   *
+   * The array contains the sash sizes in display order.
+   *
+   * TODO [Angular 20] BREAKING CHANGE: Change signature from `number[]` to `{[key: string]: number}` and remove {@link sashEnd2}.
    */
   public readonly sashEnd = output<number[]>();
+
+  /**
+   * Emits an object with new sash sizes when sashing ends.
+   *
+   * Each sash size is associated with its {@link SciSashDirective.key} or its display position (zero-based) if not set.
+   *
+   * Note: This output will be renamed to `sashEnd` in version 20, changing the signature of {@link sashEnd} from `number[]` to `{[key: string]: number}`.
+   *
+   * TODO [Angular 20] BREAKING CHANGE: Replace with {@link sashEnd}.
+   */
+  public readonly sashEnd2 = output<{[key: string]: number}>();
 
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
 
@@ -144,18 +159,20 @@ export class SciSashboxComponent {
 
     // Unset the flex-basis for non-fixed sashes and set the flex-grow accordingly.
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes());
-    const absoluteSashSizes = this.sashes().map(sash => sash.elementSize);
+    const sashSizes = this.sashes().reduce((acc, sash, i) => acc.set(sash.computeKey(i), sash.elementSize), new Map<string, number>());
 
     this.sashes().forEach((sash, i) => {
       if (!sash.isFixedSize()) {
         sash.updateFlexProperties({
-          flexGrow: pixelToFlexGrowFactor * absoluteSashSizes[i],
+          flexGrow: pixelToFlexGrowFactor * sashSizes.get(sash.computeKey(i))!,
           flexShrink: 1,
           flexBasis: '0',
         });
       }
     });
-    this.sashEnd.emit(absoluteSashSizes);
+
+    this.sashEnd.emit(Array.from(sashSizes.values()));
+    this.sashEnd2.emit(Object.fromEntries(sashSizes));
   }
 
   protected onSash(splitter: HTMLElement, sashIndex: number, moveEvent: SplitterMoveEvent): void {
@@ -206,12 +223,11 @@ export class SciSashboxComponent {
     const sash2 = this.sashes()[sashIndex + 1]!;
     const equalSashSize = (sash1.elementSize + sash2.elementSize) / 2;
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes());
-    const absoluteSashSizesAfterReset = this.sashes().map((sash, index) => {
-      if (index === sashIndex || index === sashIndex + 1) {
-        return equalSashSize;
-      }
-      return sash.elementSize;
-    });
+
+    const sashSizesAfterReset = this.sashes().reduce((acc, sash, index) => {
+      const size = index === sashIndex || index === sashIndex + 1 ? equalSashSize : sash.elementSize;
+      return acc.set(sash.computeKey(index), size);
+    }, new Map<string, number>());
 
     [sash1, sash2].forEach(sash => {
       if (sash.isFixedSize()) {
@@ -223,7 +239,8 @@ export class SciSashboxComponent {
     });
 
     this.sashStart.emit();
-    this.sashEnd.emit(absoluteSashSizesAfterReset);
+    this.sashEnd.emit(Array.from(sashSizesAfterReset.values()));
+    this.sashEnd2.emit(Object.fromEntries(sashSizesAfterReset));
   }
 
   @HostBinding('class.column')
