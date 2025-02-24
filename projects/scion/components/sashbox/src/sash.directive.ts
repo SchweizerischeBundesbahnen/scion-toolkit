@@ -54,6 +54,13 @@ export class SciSashDirective {
   public readonly minSize = input<string | number | undefined>();
 
   /**
+   * Optional key to identify this sash.
+   *
+   * If set, this key is used as the property key in the object emitted by {@link SciSashboxComponent.sashEnd2} to associate the size of this sash.
+   */
+  public readonly key = input<string | undefined>();
+
+  /**
    * Represents the template used as sash content.
    *
    * @internal
@@ -105,6 +112,15 @@ export class SciSashDirective {
     else {
       return element.getBoundingClientRect().height;
     }
+  }
+
+  /**
+   * Returns the identity of this sash, or the passed index if not configured.
+   *
+   * @internal
+   */
+  public computeKey(index: number): string {
+    return this.key() ?? `${index}`;
   }
 
   /**

@@ -11,10 +11,12 @@
                [style.--sci-sashbox-splitter-cross-axis-size]="stylingFormGroup.controls['--sci-sashbox-splitter-cross-axis-size'].value"
                [style.--sci-sashbox-splitter-border-radius]="stylingFormGroup.controls['--sci-sashbox-splitter-border-radius'].value"
                [style.--sci-sashbox-splitter-opacity-active]="stylingFormGroup.controls['--sci-sashbox-splitter-opacity-active'].value"
-               [style.--sci-sashbox-splitter-opacity-hover]="stylingFormGroup.controls['--sci-sashbox-splitter-opacity-hover'].value">
+               [style.--sci-sashbox-splitter-opacity-hover]="stylingFormGroup.controls['--sci-sashbox-splitter-opacity-hover'].value"
+               (sashEnd)="onSashEnd($event)"
+               (sashEnd2)="onSashEnd2($event)">
     @for (sash of sashes; track sash; let i = $index) {
       @if (sash.visible) {
-        <ng-template sciSash [size]="sash.size" [minSize]="sash.minSize">
+        <ng-template sciSash [size]="sash.size" [minSize]="sash.minSize" [key]="sash.key || undefined">
           <section class="sash sash-{{i + 1}}">Sash {{i + 1}}</section>
         </ng-template>
       }
@@ -46,6 +48,9 @@
           </sci-form-field>
           <sci-form-field label="Min size">
             <input [(ngModel)]="sash.minSize" placeholder="Value in pixel or percent">
+          </sci-form-field>
+          <sci-form-field label="Key">
+            <input [(ngModel)]="sash.key">
           </sci-form-field>
         </div>
       </ng-template>

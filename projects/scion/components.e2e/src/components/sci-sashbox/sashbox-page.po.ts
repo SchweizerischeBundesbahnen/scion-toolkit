@@ -39,7 +39,7 @@ export class SashboxPagePO {
     await this._properties.locator('select.e2e-direction').selectOption(direction);
   }
 
-  public async enterSashProperties(sash: 'sash-1' | 'sash-2' | 'sash-3', properties: {size?: string; minSize?: string}): Promise<void> {
+  public async enterSashProperties(sash: 'sash-1' | 'sash-2' | 'sash-3', properties: {size?: string; minSize?: string; key?: string}): Promise<void> {
     const index = parseSashIndex(sash);
     await this._tabbar.locator(`button.e2e-sash-${index}`).click();
 
@@ -48,6 +48,9 @@ export class SashboxPagePO {
     }
     if (properties.minSize !== undefined) {
       await this._properties.locator('input.e2e-min-size').fill(properties.minSize);
+    }
+    if (properties.key !== undefined) {
+      await this._properties.locator('input.e2e-key').fill(properties.key);
     }
   }
 

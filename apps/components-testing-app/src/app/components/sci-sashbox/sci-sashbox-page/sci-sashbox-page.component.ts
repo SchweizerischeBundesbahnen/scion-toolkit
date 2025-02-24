@@ -36,9 +36,18 @@ export default class SciSashboxPageComponent {
     {size: '1'},
     {size: '1'},
   ];
+
+  protected onSashEnd(sashSizes: number[]): void {
+    console.log(`[SciSashboxPageComponent:onSashEnd] ${JSON.stringify(sashSizes)}`);
+  }
+
+  protected onSashEnd2(sashSizes: {[sashKey: string]: number}): void {
+    console.log(`[SciSashboxPageComponent:onSashEnd2] ${JSON.stringify(sashSizes)}`);
+  }
 }
 
 export interface Sash {
   size?: string;
   minSize?: number;
+  key?: string;
 }

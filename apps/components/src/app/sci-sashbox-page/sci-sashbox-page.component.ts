@@ -70,10 +70,19 @@ export default class SciSashboxPageComponent implements OnInit {
   protected onGlasspaneToggle(): void {
     this.glasspaneVisible = !this.glasspaneVisible;
   }
+
+  protected onSashEnd(sashSizes: number[]): void {
+    console.log('[SciSashboxPageComponent:onSashEnd]', sashSizes);
+  }
+
+  protected onSashEnd2(sashSizes: {[sashKey: string]: number}): void {
+    console.log('[SciSashboxPageComponent:onSashEnd2]', sashSizes);
+  }
 }
 
 export interface Sash {
   visible: boolean;
   size?: string;
   minSize?: number;
+  key?: string;
 }
