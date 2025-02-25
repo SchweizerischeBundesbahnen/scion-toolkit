@@ -24,7 +24,7 @@ SCION Toolkit is a collection of UI components and utilities designed primarily 
 [link-toolkit-download]: https://www.npmjs.com/package/@scion/toolkit
 [link-components-download]: https://www.npmjs.com/package/@scion/components
 [link-github-actions-workflow]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
-[link-github-actions-workflow:status]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/workflows/Continuous%20Integration%20and%20Delivery/badge.svg?branch=master&event=push
+[link-github-actions-workflow:status]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions/workflows/workflow.yml/badge.svg
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
