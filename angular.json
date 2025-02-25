@@ -284,6 +284,11 @@
               {
                 "glob": "**/*",
                 "input": "apps/components-testing-app/public"
+              },
+              {
+                "glob": "favicon.ico",
+                "input": "resources/branding",
+                "output": "/"
               }
             ],
             "styles": [
