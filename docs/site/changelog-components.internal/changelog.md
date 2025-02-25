@@ -5,6 +5,12 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+## [19.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-19.0.0...ɵcomponents-19.0.1) (2025-02-25)
+
+### Chore
+
+* **ɵcomponents/key-value-field:** parse entries as `string` dictionary ([f636fde](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/f636fde5df16b7589d2a73e2bec5e8c74a37774c))
+
 # [19.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-18.0.1...ɵcomponents-19.0.0) (2024-11-29)
 
 
