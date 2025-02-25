@@ -1,35 +1,14 @@
-# [19.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-18.1.1...components-19.0.0) (2024-11-29)
+# [19.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-19.0.0...components-19.1.0) (2025-02-25)
 
 
-### Dependencies
+### Features
 
-* **components:** update `@scion/components` to Angular 19 ([0918769](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/0918769fa37a77e31cd3fe281e11578399ec437c))
+* **components/sashbox:** enable accessing new sash sizes by key on `sashEnd` ([1b648a7](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/1b648a70778851f57d60ec237384e014ba7420b1))
 
 
 ### Performance Improvements
 
-* **components/viewport:** avoid change detection cycle when scrolling the viewport ([402b408](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/402b408b91ba2b7feca76def5289499458d353e4))
+* **components/splitter:** throttle move event to emit once per animation frame ([a423ce5](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/a423ce569585938ae99a89a651be9f6829b7212c))
 
-
-### BREAKING CHANGES
-
-* **components:** Updating `@scion/components` to Angular 19 introduced a breaking change.
-
-  To migrate:
-  - Update your application to Angular 19; for detailed migration instructions, refer to https://v19.angular.dev/update-guide;
-* **components/viewport:** Changed viewport to emit scroll events outside the Angular zone.
-
-  To handle scroll events inside the Angular zone, e.g., if updating component bindings, manually synchronize with the Angular zone, as follows:
-
-  ```ts
-  inject(NgZone).run(() => {
-    ...
-  });
-  ```
-
-
-### Deprecations
-
-* **components:** `SciDimensionModule`, `SciViewportModule`, `SciSashboxModule`, `SciSplitterModule` and `SciThrobberModule` have been deprecated. Import respective standalone components and directives instead. The modules will be removed in a future release.
 
 
