@@ -34,7 +34,7 @@
     flex-direction: row;
   }
 
-  > div.sash {
+  > sci-sash {
     overflow: hidden;
     display: grid; // stretch the sash content
     grid-auto-rows: 100%;
@@ -43,7 +43,7 @@
     // flex properties are set programmatically.
   }
 
-  &.row > div.sash {
+  &.row > sci-sash {
     margin: 0 var(--sci-sashbox-gap);
 
     &.first {
@@ -55,7 +55,7 @@
     }
   }
 
-  &.column > div.sash {
+  &.column > sci-sash {
     margin: var(--sci-sashbox-gap) 0;
 
     &.first {
@@ -73,7 +73,7 @@
     max-width: calc(var(--ɵsci-sashbox-max-width) * 1px);
   }
 
-  &.sashing > div.sash {
+  &.sashing > sci-sash {
     pointer-events: none; // e.g. iframes would swallow pointer events
   }
 
