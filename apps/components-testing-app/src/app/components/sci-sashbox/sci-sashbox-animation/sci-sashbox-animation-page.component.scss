@@ -1,0 +1,15 @@
+:host {
+  display: flex;
+
+  > sci-sashbox {
+    flex: auto;
+  }
+
+  > aside {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+    user-select: none;
+  }
+}

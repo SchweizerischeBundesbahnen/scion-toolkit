@@ -27,7 +27,7 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
 
 1. Import `SciSashboxComponent` and `SciSashDirective` in your component.
 
-   ```typescript
+   ```ts
    import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 
    @Component({
@@ -43,7 +43,7 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
 
    Alternatively, import `SciSashboxModule` in the `NgModule` that declares your component.
    
-   ```typescript
+   ```ts
    import {SciSashboxModule} from '@scion/components/sashbox';
 
    @NgModule({
@@ -119,6 +119,15 @@ Sash content is added to a CSS grid container with a single column, stretching t
     
   - **minSize**\
     Specifies the minimal sash size in pixel or percent. The min-size prevents the user from shrinking the sash below this minimal size. If the unit is omitted, the value is interpreted as a pixel value.
+    
+  - **key**\
+    Specifies an optional key to identify this sash.\
+    The key is used as the property key in the object emitted by `SciSashboxComponent.sashEnd` to associate the size of this sash.
+ 
+  - **animate**\
+    Controls whether to animate the entering and leaving of this sash, only if fixed-sized. Defaults to `false`.\
+    Enabling animation will mimic the behavior of a side panel that slides in or out.\
+    Note: Animates only sashes added or removed after the initial rendering.
 
 </details>
 
