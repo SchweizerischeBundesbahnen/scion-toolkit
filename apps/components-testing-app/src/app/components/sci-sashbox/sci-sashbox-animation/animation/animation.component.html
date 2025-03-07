@@ -1,0 +1,4 @@
+<header>{{content()}} ({{label()}})</header>
+
+<button (click)="onAnimate()" class="e2e-animate-content">Animate</button>
+<div [@size]="state()" class="animated-content" #animated_content>Animated Content</div>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Swiss Federal Railways
+ * Copyright (c) 2018-2025 Swiss Federal Railways
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -8,8 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, Directive, inject, input, linkedSignal, signal, Signal, TemplateRef, WritableSignal} from '@angular/core';
+import {booleanAttribute, computed, Directive, inject, input, linkedSignal, signal, Signal, TemplateRef, WritableSignal} from '@angular/core';
 import {SciSashBoxAccessor} from './sashbox-accessor';
+import {SashComponent} from './sash/sash.component';
 
 /**
  * Use this directive to model a sash for {@link SciSashboxComponent}.
@@ -54,11 +55,28 @@ export class SciSashDirective {
   public readonly minSize = input<string | number | undefined>();
 
   /**
-   * Optional key to identify this sash.
+   * Specifies an optional key to identify this sash.
    *
-   * If set, this key is used as the property key in the object emitted by {@link SciSashboxComponent.sashEnd2} to associate the size of this sash.
+   * The key is used as the property key in the object emitted by {@link SciSashboxComponent.sashEnd2} to associate the size of this sash.
    */
   public readonly key = input<string | undefined>();
+
+  /**
+   * Controls whether to animate the entering and leaving of this sash, only if fixed-sized. Defaults to `false`.
+   *
+   * Enabling animation will mimic the behavior of a side panel that slides in or out.
+   *
+   * Note: Animates only sashes added or removed after the initial rendering.
+   */
+  public readonly animate = input(false, {transform: booleanAttribute});
+
+  private readonly _sashBoxAccessor = inject(SciSashBoxAccessor);
+  private readonly _component = signal<SashComponent | undefined>(undefined);
+
+  /**
+   * Flex properties computed based on the configured {@link size}. Properties are updated when moving this sash.
+   */
+  private readonly _flexProperties = this.computeFlexProperties();
 
   /**
    * Represents the template used as sash content.
@@ -66,12 +84,6 @@ export class SciSashDirective {
    * @internal
    */
   public readonly sashTemplate = inject<TemplateRef<void>>(TemplateRef);
-  private readonly _sashBoxAccessor = inject(SciSashBoxAccessor);
-
-  /**
-   * Flex properties computed based on the configured {@link size}. Properties are updated when moving this sash.
-   */
-  private readonly _flexProperties = this.computeFlexProperties();
 
   /**
    * Flex properties with normalized 'flex-grow' to ensure the sashes fill the entire sash-box space.
@@ -90,28 +102,19 @@ export class SciSashDirective {
   public readonly isFixedSize = computed(() => Number.isNaN(+this.size()));
 
   /**
-   * Gets the DOM element that renders this sash.
+   * Gets the component that renders this sash.
    *
    * @internal
    */
-  public readonly element = signal<HTMLElement | undefined>(undefined);
+  public readonly component = computed(() => this._component() ?? throwError('[SciSashbox] SashComponent not available yet.'));
 
   /**
-   * Gets the effective size of this sash in the DOM.
+   * Sets the component that renders this sash.
    *
    * @internal
    */
-  public get elementSize(): number {
-    const element = this.element();
-    if (!element) {
-      return 0;
-    }
-    if (this._sashBoxAccessor.direction() === 'row') {
-      return element.getBoundingClientRect().width;
-    }
-    else {
-      return element.getBoundingClientRect().height;
-    }
+  public setComponent(component: SashComponent): void {
+    this._component.set(component);
   }
 
   /**
@@ -189,4 +192,8 @@ interface FlexProperties {
   flexGrow: number;
   flexShrink: number;
   flexBasis: string;
+}
+
+function throwError(error: string): never {
+  throw Error(error);
 }

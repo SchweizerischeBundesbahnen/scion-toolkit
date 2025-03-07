@@ -1,0 +1,10 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: .5em;
+
+  > div.animated-content {
+    background-color: cornflowerblue;
+    text-wrap: nowrap;
+  }
+}

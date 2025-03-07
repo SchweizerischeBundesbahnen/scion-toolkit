@@ -10,7 +10,9 @@
 
 import {Routes} from '@angular/router';
 import SciSashboxPageComponent from './sci-sashbox-page/sci-sashbox-page.component';
+import SciSashboxAnimationPageComponent from './sci-sashbox-animation/sci-sashbox-animation-page.component';
 
 export default [
   {path: '', component: SciSashboxPageComponent},
+  {path: 'animation', component: SciSashboxAnimationPageComponent},
 ] satisfies Routes;

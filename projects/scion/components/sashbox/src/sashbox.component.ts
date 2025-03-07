@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Swiss Federal Railways
+ * Copyright (c) 2018-2025 Swiss Federal Railways
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -8,13 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, contentChildren, ElementRef, HostBinding, inject, input, NgZone, output} from '@angular/core';
+import {afterNextRender, Component, contentChildren, effect, ElementRef, HostBinding, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
-import {NgTemplateOutlet} from '@angular/common';
-import {SciSashInitializerDirective} from './sash-initializer.directive';
 import {SciElementRefDirective} from './element-ref.directive';
+import {SashComponent} from './sash/sash.component';
 
 /**
  * The <sci-sashbox> is like a CSS flexbox container that lays out its content children (sashes) in a row (which is by default)
@@ -75,10 +74,9 @@ import {SciElementRefDirective} from './element-ref.directive';
   templateUrl: './sashbox.component.html',
   styleUrls: ['./sashbox.component.scss'],
   imports: [
-    NgTemplateOutlet,
-    SciSashInitializerDirective,
     SciSplitterComponent,
     SciElementRefDirective,
+    SashComponent,
   ],
   providers: [{
     provide: SciSashBoxAccessor,
@@ -118,9 +116,12 @@ export class SciSashboxComponent {
   public readonly sashEnd2 = output<{[key: string]: number}>();
 
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
+  private readonly _contentChildren = contentChildren(SciSashDirective);
 
   /** @internal */
-  public readonly sashes = contentChildren(SciSashDirective);
+  public readonly sashes = this.computeSashes(this._contentChildren);
+  /** @internal */
+  public afterFirstRender = signal(false);
 
   @HostBinding('class.sashing')
   protected sashing = false;
@@ -130,6 +131,10 @@ export class SciSashboxComponent {
 
   @HostBinding('style.--ɵsci-sashbox-max-width')
   protected maxWidth: number | undefined;
+
+  constructor() {
+    this.detectFirstRendering();
+  }
 
   protected onSashStart(): void {
     this.sashing = true;
@@ -146,7 +151,7 @@ export class SciSashboxComponent {
         sash.updateFlexProperties({
           flexGrow: 0,
           flexShrink: 1,
-          flexBasis: `${sash.elementSize}px`,
+          flexBasis: `${sash.component().size}px`,
         });
       }
     });
@@ -159,7 +164,7 @@ export class SciSashboxComponent {
 
     // Unset the flex-basis for non-fixed sashes and set the flex-grow accordingly.
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes());
-    const sashSizes = this.sashes().reduce((acc, sash, i) => acc.set(sash.computeKey(i), sash.elementSize), new Map<string, number>());
+    const sashSizes = this.sashes().reduce((acc, sash, i) => acc.set(sash.computeKey(i), sash.component().size), new Map<string, number>());
 
     this.sashes().forEach((sash, i) => {
       if (!sash.isFixedSize()) {
@@ -204,8 +209,8 @@ export class SciSashboxComponent {
     const sash1 = this.sashes()[sashIndex]!;
     const sash2 = this.sashes()[sashIndex + 1]!;
 
-    const sashSize1 = sash1.elementSize;
-    const sashSize2 = sash2.elementSize;
+    const sashSize1 = sash1.component().size;
+    const sashSize2 = sash2.component().size;
 
     const sashMinSize1 = sash1.minSize() ? this.toPixel(sash1.minSize()!) : 0;
     const sashMinSize2 = sash2.minSize() ? this.toPixel(sash2.minSize()!) : 0;
@@ -221,11 +226,11 @@ export class SciSashboxComponent {
   protected onSashReset(sashIndex: number): void {
     const sash1 = this.sashes()[sashIndex]!;
     const sash2 = this.sashes()[sashIndex + 1]!;
-    const equalSashSize = (sash1.elementSize + sash2.elementSize) / 2;
+    const equalSashSize = (sash1.component().size + sash2.component().size) / 2;
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes());
 
     const sashSizesAfterReset = this.sashes().reduce((acc, sash, index) => {
-      const size = index === sashIndex || index === sashIndex + 1 ? equalSashSize : sash.elementSize;
+      const size = index === sashIndex || index === sashIndex + 1 ? equalSashSize : sash.component().size;
       return acc.set(sash.computeKey(index), size);
     }, new Map<string, number>());
 
@@ -264,6 +269,52 @@ export class SciSashboxComponent {
     }
     return parseInt(value, 10);
   }
+
+  /**
+   * Detects when rendered this component for the first time.
+   */
+  private detectFirstRendering(): void {
+    afterNextRender({
+      read: () => this.afterFirstRender.set(true),
+    });
+  }
+
+  /**
+   * Mirrors the provided signal. If animated sashes are being removed, delays emission until the animation completes,
+   * effectively removing the element after the animation.
+   *
+   * Delayed removal is required for CDK Portals to not remove displayed content immediately.
+   */
+  private computeSashes(contentChildren: Signal<readonly SciSashDirective[]>): Signal<readonly SciSashDirective[]> {
+    const differ = inject(IterableDiffers).find([]).create<SciSashDirective>();
+    const sashes = signal<readonly SciSashDirective[]>([]);
+
+    effect(() => {
+      // Compute removed sashes to be removed with an animation.
+      const removedAnimatedSashes = new Array<SciSashDirective>();
+      differ.diff(contentChildren())?.forEachRemovedItem(({item: sash}) => untracked(() => {
+        if (sash.animate()) {
+          removedAnimatedSashes.push(sash);
+        }
+      }));
+
+      // Emit if no sashes are removed with an animation.
+      if (!removedAnimatedSashes.length) {
+        sashes.set(contentChildren());
+        return;
+      }
+
+      // Delay emission until a leave animation completes.
+      removedAnimatedSashes.forEach(sash => {
+        // Start the leave animation.
+        const done = sash.component().startLeaveAnimation();
+        // Track animation completion, re-running this effect to finally emit the sashes.
+        done();
+      });
+    });
+
+    return sashes;
+  }
 }
 
 function between(value: number, minmax: {min: number; max: number}): number {
@@ -277,7 +328,7 @@ function computePixelToFlexGrowFactor(sashes: readonly SciSashDirective[]): numb
   const flexibleSashes = sashes.filter(sash => !sash.isFixedSize());
 
   const proportionSum = flexibleSashes.reduce((sum, sash) => sum + Number(sash.size()), 0);
-  const pixelSum = flexibleSashes.reduce((sum, sash) => sum + sash.elementSize, 0);
+  const pixelSum = flexibleSashes.reduce((sum, sash) => sum + sash.component().size, 0);
 
   return proportionSum / pixelSum;
 }
@@ -286,7 +337,8 @@ function provideSashBoxAccessor(): SciSashBoxAccessor {
   const component = inject(SciSashboxComponent);
 
   return new class implements SciSashBoxAccessor {
-    public readonly direction = component.direction;
     public readonly sashes = component.sashes;
+    public readonly direction = component.direction;
+    public readonly afterFirstRender = component.afterFirstRender;
   }();
 }

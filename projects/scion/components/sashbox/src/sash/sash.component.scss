@@ -1,0 +1,6 @@
+:host {
+  display: grid; // stretch the sash content
+  grid-auto-rows: 100%;
+  grid-auto-columns: 100%;
+  overflow: hidden;
+}
