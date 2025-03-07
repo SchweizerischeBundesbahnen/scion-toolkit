@@ -1,0 +1,83 @@
+<sci-sashbox>
+  @if (visible.sash1()) {
+    <ng-template sciSash [size]="'200px'" [animate]="animated.sash1()">
+      <app-sash-content [content]="'Component'" [label]="'sash-1'"/>
+    </ng-template>
+  }
+
+  @if (visible.sash2()) {
+    <ng-template sciSash [size]="'200px'" [animate]="animated.sash2()">
+      <ng-container *ngComponentOutlet="SashContentComponent; inputs: {content: 'Component Outlet', label: 'sash-2'}"/>
+    </ng-template>
+  }
+
+  @if (visible.sash3()) {
+    <ng-template sciSash [size]="'200px'" [animate]="animated.sash3()">
+      <ng-container *cdkPortalOutlet="portal"/>
+    </ng-template>
+  }
+
+  @if (visible.sash4()) {
+    <ng-template sciSash [size]="'200px'" [animate]="animated.sash4()">
+      <app-animation [content]="'Inner Animation'" [label]="'sash-4'"/>
+    </ng-template>
+  }
+
+  @if (visible.sash5()) {
+    <ng-template sciSash [size]="'200px'" [animate]="animated.sash5()">
+      @if (visible.sash5()) {
+        <app-sash-content [content]="'Change Detection'" [label]="'sash-5'"/>
+      }
+    </ng-template>
+  }
+</sci-sashbox>
+
+<aside>
+  <fieldset class="e2e-visibility">
+    <legend>Visibility</legend>
+    <label>
+      <input type="checkbox" [(ngModel)]="visible.sash1" data-sash="sash-1"/>
+      Sash 1
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="visible.sash2" data-sash="sash-2"/>
+      Sash 2
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="visible.sash3" data-sash="sash-3"/>
+      Sash 3
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="visible.sash4" data-sash="sash-4"/>
+      Sash 4
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="visible.sash5" data-sash="sash-5"/>
+      Sash 5
+    </label>
+  </fieldset>
+
+  <fieldset class="e2e-animation">
+    <legend>Animated</legend>
+    <label>
+      <input type="checkbox" [(ngModel)]="animated.sash1" data-sash="sash-1"/>
+      Sash 1
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="animated.sash2" data-sash="sash-2"/>
+      Sash 2
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="animated.sash3" data-sash="sash-3"/>
+      Sash 3
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="animated.sash4" data-sash="sash-4"/>
+      Sash 4
+    </label>
+    <label>
+      <input type="checkbox" [(ngModel)]="animated.sash5" data-sash="sash-5"/>
+      Sash 5
+    </label>
+  </fieldset>
+</aside>
