@@ -4,11 +4,11 @@
   }
   <!-- add button -->
   @if (addable()) {
-    <button (click)="onAdd()" class="e2e-add" type="button" title="Add entry" sciMaterialIcon>add</button>
+    <button (click)="onAdd()" class="e2e-add" type="button" title="Add Entry" sciMaterialIcon>add</button>
   }
   <!-- remove button -->
   @if (removable()) {
-    <button (click)="onClear()" class="e2e-clear" type="button" title="Clear all entries" sciMaterialIcon>clear</button>
+    <button (click)="onClear()" class="e2e-clear" type="button" title="Clear All Entries" sciMaterialIcon>clear</button>
   }
 </header>
 
@@ -25,6 +25,6 @@
   <input [formControl]="keyValueGroup.controls.value" [attr.id]="id + '_' + i" class="e2e-value">
   <!-- 'remove' button -->
   @if (removable()) {
-    <button class="e2e-remove" type="button" (click)="onRemove(i)" title="remove entry" sciMaterialIcon>remove</button>
+    <button class="e2e-remove" type="button" (click)="onRemove(i)" title="Remove Entry" sciMaterialIcon>remove</button>
   }
 }
