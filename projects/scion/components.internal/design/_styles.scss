@@ -6,22 +6,36 @@
  * Styles Material icon buttons.
  */
 @mixin mat-icon-button() {
-  display: grid; // to center the ligature
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  outline: none;
-  color: inherit;
-  padding: 0;
+  display: inline-grid;
+  place-content: center;
+  place-items: center;
+  padding: .25em;
+  font-size: 20px; // Material default is 24px
+  color: var(--sci-color-text);
+  border-radius: var(--sci-corner);
+  border: unset;
+  background-color: unset;
   user-select: none;
+  overflow: hidden;
 
-  &:focus, &:hover {
-    color: var(--sci-color-accent);
+  &:hover:not(:disabled) {
+    background-color: #{light-dark}(color-mix(in srgb, var(--sci-color-gray-200) 95%, var(--sci-static-color-white)), var(--sci-color-gray-200));
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--sci-color-gray-300);
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sci-color-accent);
   }
 
   &:disabled {
     color: var(--sci-color-gray-300);
-    cursor: auto;
   }
 }
 
@@ -30,36 +44,47 @@
  */
 @mixin button() {
   all: unset;
-  cursor: pointer;
   padding: .5em 1.5em;
-  color: var(--sci-color-text);
-  border: 1px solid var(--sci-color-text);
+  color: var(--sci-color-accent);
+  border: 1px solid var(--sci-color-accent);
+  font-weight: 500;
   border-radius: var(--sci-corner);
-  background-color: transparent;
-  background-clip: padding-box;
   text-align: center;
+  user-select: none;
 
-  &:focus, &:active {
-    border-color: var(--sci-color-accent);
+  &:hover:not(:disabled) {
+    background-color: #{light-dark}(color-mix(in srgb, var(--sci-color-gray-100) 95%, var(--sci-static-color-white)), color-mix(in srgb, var(--sci-color-gray-100) 75%, var(--sci-static-color-black)));
+  }
+
+  &:active:not(:disabled) {
+    background-color: #{light-dark}(color-mix(in srgb, var(--sci-color-gray-100) 97%, var(--sci-static-color-black)), color-mix(in srgb, var(--sci-color-gray-100) 85%, var(--sci-static-color-black)));
+  }
+
+  &:focus:not(:focus-visible) {
     outline: none;
+  }
+
+  &:focus-visible {
+    outline-offset: 2px;
+    outline: 2px solid var(--sci-color-accent);
   }
 
   &:disabled {
     color: var(--sci-color-text-subtle);
     border-color: var(--sci-color-border);
     background-color: var(--sci-color-background-input-disabled);
-    cursor: auto;
   }
 
   &[sci-primary]:not(:disabled) {
     color: var(--sci-color-accent-inverse);
     background-color: var(--sci-color-accent);
-    border: 1px solid var(--sci-color-accent);
 
-    &:focus, &:active {
-      border-color: transparent;
-      outline: 1px solid var(--sci-color-accent);
-      color: var(--sci-color-accent-inverse);
+    &:hover {
+      background-color: color-mix(in srgb, var(--sci-color-accent) 95%, var(--sci-static-color-black));
+    }
+
+    &:active {
+      background-color: color-mix(in srgb, var(--sci-color-accent) 90%, var(--sci-static-color-black));
     }
   }
 }

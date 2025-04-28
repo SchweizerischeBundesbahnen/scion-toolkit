@@ -16,9 +16,8 @@ $size: 1.25rem;
     position: absolute; // out of the document flow
   }
 
-  > label { // checkbox label filling the entire component
-    cursor: pointer;
-
+  > label {
+    // checkbox label filling the entire component
     &:after { // on/off circle of the toggle button
       content: '';
       display: block;

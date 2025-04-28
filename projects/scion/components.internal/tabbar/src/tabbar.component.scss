@@ -16,10 +16,9 @@
       all: unset;
       flex: none;
       position: relative; // positioning context for div.outline
-      cursor: pointer;
 
-      &:focus-visible:not(.selected) > div.outline {
-        border: 1px solid var(--sci-color-accent);
+      &:focus-visible > div.outline {
+        display: unset;
       }
 
       &.selected {
@@ -33,9 +32,12 @@
       }
 
       > div.outline {
+        display: none;
         position: absolute;
-        inset: 0;
+        inset: 1px;
         pointer-events: none;
+        border-radius: var(--sci-corner);
+        border: 2px solid var(--sci-color-accent);
       }
     }
 
