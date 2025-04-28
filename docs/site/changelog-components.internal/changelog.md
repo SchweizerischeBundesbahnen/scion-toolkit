@@ -5,6 +5,21 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+## [19.1.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-19.0.1...ɵcomponents-19.1.1) (2025-04-28)
+
+
+### Bug Fixes
+
+* **ɵcomponents/form-field:** do not corrupt `focusin` event when clicking on label ([b9c5f60](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/b9c5f6032099056381a86e760c0f6fd6f4b3e610))
+* **ɵcomponents/key-value-field:** capitalize tooltips ([bca1d9c](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/bca1d9cb02263049b580f586d1b741bcefa8c5f5))
+
+
+### Features
+
+* **ɵcomponents:** replace hover cursor with subtle background color ([5b1cdc1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/5b1cdc1cbb5b45b0a997525350da38476c373432))
+
+
+
 ## [19.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-19.0.0...ɵcomponents-19.0.1) (2025-02-25)
 
 ### Chore
