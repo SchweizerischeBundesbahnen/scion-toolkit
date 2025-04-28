@@ -22,8 +22,10 @@ $theme: sci-theming.map-merge(scion-static-colors.$tokens, scion-dark-colors.$to
   --sci-color-notice-inverse: var(--sci-static-color-white),
   --sci-color-background-notice: var(--sci-color-orange-1200),
   // Use for skeleton loading progress indicators.
+  --sci-color-skeleton-subtle: var(--sci-color-gray-200),
   --sci-color-skeleton: var(--sci-color-gray-300),
-  --sci-color-skeleton-subtle: var(--sci-color-gray-400),
+  --sci-color-skeleton-hover: var(--sci-color-gray-400),
+  --sci-color-skeleton-active: var(--sci-color-gray-400),
   // Use as the primary background for the UI.
   --sci-color-background-primary: var(--sci-color-gray-50),
   // Use as the background for navbars, menubars, toolbars, tabbars, sidebars and panels
