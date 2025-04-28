@@ -11,7 +11,7 @@
 export namespace Objects {
 
   /**
-   * Compares the two objects for shallow equality.
+   * Compares the two objects for shallow equality, ignoring the propery order.
    */
   export function isEqual(a: unknown, b: unknown): boolean {
     if (a === b) {
