@@ -18,11 +18,11 @@
   user-select: none;
   overflow: hidden;
 
-  &:hover:not(:disabled) {
+  &:hover:where(:not(:disabled)) {
     background-color: #{light-dark}(color-mix(in srgb, var(--sci-color-gray-200) 95%, var(--sci-static-color-white)), var(--sci-color-gray-200));
   }
 
-  &:active:not(:disabled) {
+  &:active:where(:not(:disabled)) {
     background-color: var(--sci-color-gray-300);
   }
 
@@ -52,11 +52,11 @@
   text-align: center;
   user-select: none;
 
-  &:hover:not(:disabled) {
+  &:hover:where(:not(:disabled)) {
     background-color: #{light-dark}(color-mix(in srgb, var(--sci-color-gray-100) 95%, var(--sci-static-color-white)), color-mix(in srgb, var(--sci-color-gray-100) 75%, var(--sci-static-color-black)));
   }
 
-  &:active:not(:disabled) {
+  &:active:where(:not(:disabled)) {
     background-color: #{light-dark}(color-mix(in srgb, var(--sci-color-gray-100) 97%, var(--sci-static-color-black)), color-mix(in srgb, var(--sci-color-gray-100) 85%, var(--sci-static-color-black)));
   }
 
@@ -75,7 +75,7 @@
     background-color: var(--sci-color-background-input-disabled);
   }
 
-  &[sci-primary]:not(:disabled) {
+  &[sci-primary]:where(:not(:disabled)) {
     color: var(--sci-color-accent-inverse);
     background-color: var(--sci-color-accent);
 
