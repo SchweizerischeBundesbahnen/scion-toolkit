@@ -26,11 +26,11 @@
     box-sizing: border-box;
   }
 
-  &.column {
+  &[data-direction="column"] {
     flex-direction: column;
   }
 
-  &.row {
+  &[data-direction="row"] {
     flex-direction: row;
   }
 
@@ -38,7 +38,7 @@
     // flex properties are set programmatically.
   }
 
-  &.row > sci-sash {
+  &[data-direction="row"] > sci-sash {
     margin: 0 var(--sci-sashbox-gap);
 
     &.first {
@@ -50,7 +50,7 @@
     }
   }
 
-  &.column > sci-sash {
+  &[data-direction="column"] > sci-sash {
     margin: var(--sci-sashbox-gap) 0;
 
     &.first {
