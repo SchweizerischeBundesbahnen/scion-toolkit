@@ -10,7 +10,6 @@
 
 import {Component, ElementRef, HostBinding, inject, input, OnDestroy} from '@angular/core';
 import {ConfigurableFocusTrap, ConfigurableFocusTrapFactory} from '@angular/cdk/a11y';
-import {UUID} from '@scion/toolkit/uuid';
 
 @Component({
   selector: 'sci-form-field',
@@ -21,8 +20,6 @@ export class SciFormFieldComponent implements OnDestroy {
 
   public readonly label = input.required<string>();
   public readonly direction = input<'row' | 'column'>('row');
-
-  protected readonly id = UUID.randomUUID();
 
   private _focusTrap: ConfigurableFocusTrap;
 
@@ -39,10 +36,7 @@ export class SciFormFieldComponent implements OnDestroy {
     this._focusTrap.enabled = false;
   }
 
-  public onLabelClick(event: MouseEvent): void {
-    event.stopPropagation();
-    event.preventDefault();
-
+  public onLabelClick(): void {
     this._focusTrap.enabled = true;
     this._focusTrap.focusFirstTabbableElement();
     this._focusTrap.enabled = false;
