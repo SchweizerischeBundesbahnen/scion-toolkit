@@ -1,3 +1,13 @@
+## [19.1.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-19.1.1...ɵcomponents-19.1.2) (2025-04-28)
+
+
+### Bug Fixes
+
+* **ɵcomponents:** preserve specificity of button hover state ([7eef958](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/7eef958ef72a45d4f412929d2a33db8de18e30fe))
+* **ɵcomponents:** reduce padding of button hover state ([6c638b5](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/6c638b5873237a768c23c8d82e2d269f8ab7d794))
+
+
+
 ## [19.1.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-19.0.1...ɵcomponents-19.1.1) (2025-04-28)
 
 
