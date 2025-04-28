@@ -82,6 +82,9 @@ import {SashComponent} from './sash/sash.component';
     provide: SciSashBoxAccessor,
     useFactory: provideSashBoxAccessor,
   }],
+  host: {
+    '[attr.data-direction]': 'direction()',
+  },
 })
 export class SciSashboxComponent {
 
@@ -190,8 +193,8 @@ export class SciSashboxComponent {
 
     // Compute the splitter position.
     const splitterRect = splitter.getBoundingClientRect();
-    const splitterStart = (this.isRowDirection ? splitterRect.left : splitterRect.top);
-    const splitterEnd = (this.isRowDirection ? splitterRect.left + splitterRect.width : splitterRect.top + splitterRect.height);
+    const splitterStart = (this.direction() === 'row' ? splitterRect.left : splitterRect.top);
+    const splitterEnd = (this.direction() === 'row' ? splitterRect.left + splitterRect.width : splitterRect.top + splitterRect.height);
 
     // Ignore the event if outside the splitter's action scope.
     const eventPos = moveEvent.position.clientPos;
@@ -248,23 +251,13 @@ export class SciSashboxComponent {
     this.sashEnd2.emit(Object.fromEntries(sashSizesAfterReset));
   }
 
-  @HostBinding('class.column')
-  protected get isColumnDirection(): boolean {
-    return this.direction() === 'column';
-  }
-
-  @HostBinding('class.row')
-  protected get isRowDirection(): boolean {
-    return this.direction() === 'row';
-  }
-
   private toPixel(value: string | number): number {
     if (typeof value === 'number') {
       return value;
     }
     if (value.endsWith('%')) {
       const hostBounds = this._host.getBoundingClientRect();
-      const hostSize = (this.isRowDirection ? hostBounds.width : hostBounds.height);
+      const hostSize = (this.direction() === 'row' ? hostBounds.width : hostBounds.height);
       return parseInt(value, 10) * hostSize / 100;
     }
     return parseInt(value, 10);
