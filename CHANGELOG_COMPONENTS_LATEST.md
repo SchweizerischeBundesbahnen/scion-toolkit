@@ -1,9 +1,9 @@
-# [19.2.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-19.1.0...components-19.2.0) (2025-03-12)
+## [19.2.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-19.2.0...components-19.2.1) (2025-04-28)
 
 
-### Features
+### Bug Fixes
 
-* **components/sashbox:** enable sash to slide in and out ([626e59b](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/626e59b5fdf71daafe50773fef1950b2b5280759))
+* **components/sashbox:** prevent style corruption if using the Bootstrap CSS framework ([403679e](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/403679e8b9d08ed5d0d1ad9840b3625e092e84e3))
 
 
 
