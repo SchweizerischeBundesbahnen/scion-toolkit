@@ -1,8 +1,8 @@
 @use '@angular/cdk';
 @use '@scion/components';
 
-@import url('https://fonts.googleapis.com/css?family=Roboto:normal,bold,italic,bolditalic|Roboto+Mono');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght@24..48,300..400');
 
 html, body {
   font-size: 14px; // defines 1rem as 14px
@@ -12,6 +12,7 @@ html, body {
 
 body {
   font-family: Roboto, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
   margin: 0;
 }
 
