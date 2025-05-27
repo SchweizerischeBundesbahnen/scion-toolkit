@@ -52,6 +52,7 @@ export function fromBoundingClientRect$(element: HTMLElement): Observable<DOMRec
 class BoundingClientRectObserver {
 
   private readonly _destroy$ = new Subject<void>();
+  private readonly _disposables = new Array<DisposeFn>();
   private readonly _clientRect$ = new Subject<DOMRect>();
   private readonly _vertices: {
     topLeft: Vertex;
@@ -61,8 +62,7 @@ class BoundingClientRectObserver {
   };
 
   constructor(private _element: HTMLElement, onChange: (clientRect: DOMRect) => void) {
-    ensureElementPositioned(document.documentElement);
-    ensureElementPositioned(this._element);
+    this._disposables.push(positionElement(this._element));
 
     this._vertices = {
       topLeft: new Vertex(this._element, {top: 0, left: 0}, () => this.emitClientRect()),
@@ -127,6 +127,7 @@ class BoundingClientRectObserver {
 
   public destroy(): void {
     this.forEachVertex(vertex => vertex.destroy());
+    this._disposables.forEach(disposable => disposable());
     this._destroy$.next();
   }
 }
@@ -211,29 +212,42 @@ class Vertex {
 
 /**
  * Ensures that the given HTML element is positioned, setting its position to `relative` if it is not already positioned.
+ *
+ * Positioning is set using a constructable CSS stylesheet with a CSS layer. CSS layers have lower priority than "normal"
+ * CSS declarations, and the layer name indicates the styling originates from `@scion/toolkit`.
+ *
+ * This function adds a data attribute to the element to locate it from the stylesheet.
+ *
+ * The function returns a {@link DisposeFn}, that when called, removes the attribute from the element.
  */
-function ensureElementPositioned(element: HTMLElement): void {
-  if (getComputedStyle(element).position !== 'static') {
-    return;
-  }
+const positionElement: PositionElementFn = (() => {
+  const attribute = 'data-sci-bounding-client-rect';
+  const styleSheet = new CSSStyleSheet({});
 
-  // Declare styles for the document root element (`<html>`) in a CSS layer.
-  // CSS layers have lower priority than "normal" CSS declarations, and the layer name indicates the styling originates from `@scion/toolkit`.
-  if (element === document.documentElement) {
-    const styleSheet = new CSSStyleSheet({});
-    styleSheet.insertRule(`
+  // BoundingClientRectObserver requires the HTML root element to be positioned.
+  styleSheet.insertRule(`
     @layer sci-toolkit {
-      :root {
+      :root, [${attribute}] {
         position: relative;
       }
-    }`);
-    document.adoptedStyleSheets.push(styleSheet);
-    console.warn('[@scion/toolkit] fromBoundingClientRect$ requires the document root element (<html>) to be positioned relative or absolute. Changing positioning to relative.');
-  }
-  else {
-    setStyle(element, {position: 'relative'});
-  }
-}
+    }`,
+  );
+  document.adoptedStyleSheets.push(styleSheet);
+  return element => {
+    element.setAttribute(attribute, '');
+    return () => element.removeAttribute(attribute);
+  };
+})();
+
+/**
+ * Signature of a function to position specified element, if necessary.
+ */
+type PositionElementFn = (element: Element) => DisposeFn;
+
+/**
+ * Signature of a function to clean up allocated resources.
+ */
+type DisposeFn = () => void;
 
 /**
  * Apples specified styles for given element.
