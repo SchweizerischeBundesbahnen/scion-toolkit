@@ -84,7 +84,7 @@ fromBoundingClientRect$(element).subscribe((clientRect: DOMRect) => {
 });
 ```
 
-The element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, a warning is logged, and positioning changed to `relative`.
+The element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, positioning is changed to `relative`.
  
 *Note:*
 There is no native browser API to observe the position of an element. The observable uses [`IntersectionObserver`](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) and [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to detect position changes. For tracking only size changes, use [`fromResize$`](#from-resize) instead.

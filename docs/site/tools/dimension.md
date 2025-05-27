@@ -127,7 +127,7 @@ console.log(boundingBox());
 
 - The function must be called within an injection context or an injector provided. Destroying the injector will unsubscribe the signal.
 - The function must not be called within a reactive context to avoid repeated subscriptions.
-- The element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, a warning is logged, and positioning changed to `relative`.
+- The element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, positioning is changed to `relative`.
 
 *Note:*
 There is no native browser API to observe the position of an element. The signal uses [`IntersectionObserver`](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) and [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver) to detect position changes. For tracking only size changes, use [`Dimension`](#dimension-signal) signal instead.

@@ -27,7 +27,7 @@ import {subscribeIn} from '@scion/toolkit/operators';
  * Usage:
  * - Must be called within an injection context or an injector provided. Destroying the injector will unsubscribe the signal.
  * - Must not be called within a reactive context to avoid repeated subscriptions.
- * - The element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, a warning is logged, and positioning changed to `relative`.
+ * - The element and the document root (`<html>`) must be positioned `relative` or `absolute`. If not, positioning is changed to `relative`.
  */
 export function boundingClientRect(elementLike: HTMLElement | ElementRef<HTMLElement> | Signal<HTMLElement | ElementRef<HTMLElement>>, options?: {injector?: Injector}): Signal<DOMRect>;
 export function boundingClientRect(elementLike: HTMLElement | ElementRef<HTMLElement> | Signal<HTMLElement | ElementRef<HTMLElement> | undefined>, options?: {injector?: Injector}): Signal<DOMRect | undefined>;
