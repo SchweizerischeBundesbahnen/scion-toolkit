@@ -221,21 +221,49 @@ class Vertex {
  * The function returns a {@link DisposeFn}, that when called, removes the attribute from the element.
  */
 const positionElement: PositionElementFn = (() => {
-  const attribute = 'data-sci-bounding-client-rect';
   const styleSheet = new CSSStyleSheet({});
 
-  // BoundingClientRectObserver requires the HTML root element to be positioned.
+  // Add styles to change the root element's position to relative, required by BoundingClientRectObserver.
   styleSheet.insertRule(`
     @layer sci-toolkit {
-      :root, [${attribute}] {
+      :root {
         position: relative;
       }
     }`,
   );
+
+  // Add styles to change the element's position to relative, required by BoundingClientRectObserver.
+  const elementIdentifier = 'data-sci-bounding-client-rect';
+  const elementIdentifierImportant = 'data-sci-bounding-client-rect-important';
+  styleSheet.insertRule(`
+    @layer sci-toolkit {
+      [${elementIdentifier}] {
+        position: relative;
+      }
+      [${elementIdentifierImportant}] {
+        position: relative !important;
+      }
+    }`,
+  );
   document.adoptedStyleSheets.push(styleSheet);
-  return element => {
-    element.setAttribute(attribute, '');
-    return () => element.removeAttribute(attribute);
+
+  return (element: Element): DisposeFn => {
+    const disposables = new Array<DisposeFn>();
+
+    // Add attribute to locate the element from the stylesheet.
+    element.setAttribute(elementIdentifier, '');
+    disposables.push(() => element.removeAttribute(elementIdentifier));
+
+    // If CSS layer styles have no effect due to 'static' positioning or unset styles, enforce positioning with !important.
+    const animationFrame = requestAnimationFrame(() => {
+      if (getComputedStyle(element).position === 'static') {
+        element.setAttribute(elementIdentifierImportant, '');
+        disposables.push(() => element.removeAttribute(elementIdentifierImportant));
+      }
+    });
+    disposables.push(() => cancelAnimationFrame(animationFrame));
+
+    return () => disposables.forEach(disposable => disposable());
   };
 })();
 

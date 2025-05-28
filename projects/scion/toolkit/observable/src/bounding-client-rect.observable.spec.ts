@@ -498,6 +498,135 @@ describe('fromBoundingClientRect$', () => {
     }));
   });
 
+  it('should change position of the element to relative if not positioned', async () => {
+    const testee = createDiv({
+      parent: document.body,
+      cssClass: 'testee',
+      stylesheet: `
+        div.testee {
+          display: block;
+          height: 100px;
+          width: 100px;
+          background: blue;
+        }`,
+    });
+
+    // Subscribe to fromBoundingClientRect$.
+    const emitCaptor = new ObserveCaptor();
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    await emitCaptor.waitUntilEmitCount(1);
+    onDestroy(() => subscription.unsubscribe());
+
+    // Expect element to be positioned relative.
+    expect(getComputedStyle(testee)).toEqual(jasmine.objectContaining({
+      position: 'relative',
+    }));
+  });
+
+  it('should change position of the element to relative if position is unset (position: unset)', async () => {
+    const testee = createDiv({
+      parent: document.body,
+      cssClass: 'testee',
+      stylesheet: `
+        div.testee {
+          position: unset;
+          display: block;
+          height: 100px;
+          width: 100px;
+          background: blue;
+        }`,
+    });
+
+    // Subscribe to fromBoundingClientRect$.
+    const emitCaptor = new ObserveCaptor();
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    await emitCaptor.waitUntilEmitCount(1);
+    onDestroy(() => subscription.unsubscribe());
+
+    // Expect element to be positioned relative.
+    expect(getComputedStyle(testee)).toEqual(jasmine.objectContaining({
+      position: 'relative',
+    }));
+  });
+
+  it('should change position of the element to relative if position is static (position: static)', async () => {
+    const testee = createDiv({
+      parent: document.body,
+      cssClass: 'testee',
+      stylesheet: `
+        div.testee {
+          position: static;
+          display: block;
+          height: 100px;
+          width: 100px;
+          background: blue;
+        }`,
+    });
+
+    // Subscribe to fromBoundingClientRect$.
+    const emitCaptor = new ObserveCaptor();
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    await emitCaptor.waitUntilEmitCount(1);
+    onDestroy(() => subscription.unsubscribe());
+
+    // Expect element to be positioned relative.
+    expect(getComputedStyle(testee)).toEqual(jasmine.objectContaining({
+      position: 'relative',
+    }));
+  });
+
+  it('should change position of the element to relative if position is static (via style attribute)', async () => {
+    const testee = createDiv({
+      parent: document.body,
+      style: {position: 'static'},
+      cssClass: 'testee',
+      stylesheet: `
+        div.testee {
+          display: block;
+          height: 100px;
+          width: 100px;
+          background: blue;
+        }`,
+    });
+
+    // Subscribe to fromBoundingClientRect$.
+    const emitCaptor = new ObserveCaptor();
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    await emitCaptor.waitUntilEmitCount(1);
+    onDestroy(() => subscription.unsubscribe());
+
+    // Expect element to be positioned relative.
+    expect(getComputedStyle(testee)).toEqual(jasmine.objectContaining({
+      position: 'relative',
+    }));
+  });
+
+  it('should not change position of the element if position is absolute (position: absolute)', async () => {
+    const testee = createDiv({
+      parent: document.body,
+      cssClass: 'testee',
+      stylesheet: `
+        div.testee {
+          position: absolute;
+          display: block;
+          height: 100px;
+          width: 100px;
+          background: blue;
+        }`,
+    });
+
+    // Subscribe to fromBoundingClientRect$.
+    const emitCaptor = new ObserveCaptor();
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    await emitCaptor.waitUntilEmitCount(1);
+    onDestroy(() => subscription.unsubscribe());
+
+    // Expect element to be positioned absolute.
+    expect(getComputedStyle(testee)).toEqual(jasmine.objectContaining({
+      position: 'absolute',
+    }));
+  });
+
   describe('Moving element out of the viewport', () => {
 
     it('should emit until moved the element out of the viewport (moving element to the right)', async () => {
@@ -954,8 +1083,15 @@ describe('fromBoundingClientRect$', () => {
     onDestroy(() => div.remove());
     options.id && (div.id = options.id);
     options.style && setStyle(div, options.style);
+    options.cssClass && div.classList.add(...Arrays.coerce(options.cssClass));
     options.parent?.appendChild(div);
     options.children?.forEach(child => div.appendChild(child));
+    if (options.stylesheet) {
+      const styleSheet = new CSSStyleSheet();
+      styleSheet.replaceSync(options.stylesheet);
+      document.adoptedStyleSheets.push(styleSheet);
+      onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
+    }
     return div;
   }
 
@@ -969,6 +1105,8 @@ interface ElementCreateOptions {
   id?: string;
   parent?: Node;
   style?: {[style: string]: string};
+  cssClass?: string | string[];
+  stylesheet?: string;
   children?: Node[];
 }
 
