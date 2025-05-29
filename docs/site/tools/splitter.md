@@ -39,18 +39,6 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
    }
    ```
 
-   Alternatively, import `SciSplitterModule` in the `NgModule` that declares your component.
-
-   ```typescript
-   import {SciSplitterModule} from '@scion/components/splitter';
-
-   @NgModule({
-     imports: [SciSplitterModule]
-   })
-   export class AppModule {
-   }
-   ```
-
 1. Add `sci-splitter` component as following:
 
    ```html
