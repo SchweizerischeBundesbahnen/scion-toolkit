@@ -141,10 +141,7 @@ test.describe('sci-sashbox', () => {
       await sashboxPage.moveSplitter('splitter-1', {distance: 100, steps: 5});
 
       await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd]/})).toEqual([
-        `[SciSashboxPageComponent:onSashEnd] [200,400,50]`,
-      ]);
-      await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd2]/})).toEqual([
-        `[SciSashboxPageComponent:onSashEnd2] {"sash1":200,"sash2":400,"sash3":50}`,
+        `[SciSashboxPageComponent:onSashEnd] {"sash1":200,"sash2":400,"sash3":50}`,
       ]);
     });
 
@@ -161,10 +158,7 @@ test.describe('sci-sashbox', () => {
       await sashboxPage.moveSplitter('splitter-1', {distance: 100, steps: 5});
 
       await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd]/})).toEqual([
-        `[SciSashboxPageComponent:onSashEnd] [200,400,50]`,
-      ]);
-      await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd2]/})).toEqual([
-        `[SciSashboxPageComponent:onSashEnd2] {"1":400,"sash1":200,"sash3":50}`,
+        `[SciSashboxPageComponent:onSashEnd] {"1":400,"sash1":200,"sash3":50}`,
       ]);
     });
 
@@ -181,10 +175,7 @@ test.describe('sci-sashbox', () => {
       await sashboxPage.moveSplitter('splitter-1', {distance: 100, steps: 5});
 
       await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd]/})).toEqual([
-        `[SciSashboxPageComponent:onSashEnd] [200,400,50]`,
-      ]);
-      await expect.poll(() => consoleLogs.get({message: /\[SciSashboxPageComponent:onSashEnd2]/})).toEqual([
-        `[SciSashboxPageComponent:onSashEnd2] {"0":200,"1":400,"2":50}`,
+        `[SciSashboxPageComponent:onSashEnd] {"0":200,"1":400,"2":50}`,
       ]);
     });
   });
