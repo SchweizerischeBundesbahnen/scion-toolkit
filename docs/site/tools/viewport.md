@@ -41,18 +41,6 @@ Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of t
    }
    ```
 
-   Alternatively, import `SciViewportModule` in the `NgModule` that declares your component.
-
-   ```typescript
-   import {SciViewportModule} from '@scion/components/viewport';
-
-   @NgModule({
-     imports: [SciViewportModule]
-   })
-   export class AppModule {
-   }
-   ```
-
 1. Put your content inside the `<sci-viewport></sci-viewport>` component, as following:
 
    ```html
