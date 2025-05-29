@@ -41,18 +41,6 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
    }
    ```
 
-   Alternatively, import `SciSashboxModule` in the `NgModule` that declares your component.
-   
-   ```ts
-   import {SciSashboxModule} from '@scion/components/sashbox';
-
-   @NgModule({
-     imports: [SciSashboxModule]
-   })
-   export class AppModule {
-   }
-   ```
-
 1. Add `sci-sashbox` component as following:
 
    ```html
