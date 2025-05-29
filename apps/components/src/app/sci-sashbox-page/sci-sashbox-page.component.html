@@ -12,8 +12,7 @@
                [style.--sci-sashbox-splitter-border-radius]="formGroup.controls.styling.controls['--sci-sashbox-splitter-border-radius'].value"
                [style.--sci-sashbox-splitter-opacity-active]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-active'].value"
                [style.--sci-sashbox-splitter-opacity-hover]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-hover'].value"
-               (sashEnd)="onSashEnd($event)"
-               (sashEnd2)="onSashEnd2($event)">
+               (sashEnd)="onSashEnd($event)">
     @for (sash of sashes; track sash; let i = $index) {
       @if (sash.visible) {
         <ng-template sciSash [size]="sash.size" [minSize]="sash.minSize" [key]="sash.key || undefined" [animate]="sash.animate">
