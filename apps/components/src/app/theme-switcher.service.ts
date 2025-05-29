@@ -9,8 +9,8 @@
  */
 
 import {distinctUntilChanged, Observable, ReplaySubject, share} from 'rxjs';
-import {inject, Injectable} from '@angular/core';
-import {DOCUMENT} from '@angular/common';
+import {inject, Injectable, DOCUMENT} from '@angular/core';
+
 import {fromMutation$} from '@scion/toolkit/observable';
 import {map, startWith} from 'rxjs/operators';
 

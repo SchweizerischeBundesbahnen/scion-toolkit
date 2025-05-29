@@ -30,7 +30,7 @@ Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of t
 
 1. Import `SciViewportComponent` in your component.
 
-   ```typescript
+   ```ts
    import {SciViewportComponent} from '@scion/components/viewport';
 
    @Component({
@@ -193,20 +193,26 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
    ```
    See [SCION Design Tokens][link-scion-design-tokens] for more information.
 
-1. Import `SciViewportModule` in the module where to use the scrollbar:
-   
-   ```typescript
-   import {SciViewportModule} from '@scion/components/viewport';
-   import {ScrollingModule} from '@angular/cdk/scrolling';
+1. Import `SciScrollbarComponent` in the component where to use the scrollbar. 
+   Added lines are marked with `[+]`.
 
-   @NgModule({
-     imports: [
-       SciViewportModule,
-       ScrollingModule
-     ]
-   })
-   export class YourModule {
-   }
+   ```ts
+       import {Component} from '@angular/core';
+   [+] import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
+   [+] import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
+    
+       @Component({
+         // other metadata skipped
+         imports: [
+   [+]     SciScrollableDirective,
+   [+]     SciScrollbarComponent,
+   [+]     CdkVirtualScrollViewport,
+   [+]     CdkFixedSizeVirtualScroll,
+   [+]     CdkVirtualForOf,
+         ],
+       })
+       export class YourComponent {
+       }
    ```
 
 1. Add the following code to the HTML template:
@@ -222,7 +228,7 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
      </cdk-virtual-scroll-viewport>
 
      <!-- render vertical scrollbar which sits on top of the cdk viewport -->
-     <sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"></sci-scrollbar>
+     <sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
    </main>
    ```
    
@@ -235,7 +241,7 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
 
 1. Add the following code to the component:
 
-   ```typescript
+   ```ts
    export class YourComponent {
 
      public items: string[] = [];
