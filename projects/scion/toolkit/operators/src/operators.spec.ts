@@ -392,7 +392,7 @@ describe('Operators', () => {
         doNext: Symbol('doNext'),
       };
 
-      const observable$ = new Observable(observer => {
+      const observable$ = new Observable<void>(observer => {
         contextCaptor.onConstruct = currentContext();
         runInContext(contexts.doNext, () => observer.next());
         return () => contextCaptor.onTeardown = currentContext();
@@ -528,7 +528,7 @@ describe('Operators', () => {
         doNext: Symbol('doNext'),
       };
 
-      const observable$ = new Observable(observer => {
+      const observable$ = new Observable<void>(observer => {
         contextCaptor.onConstruct = currentContext();
         runInContext(contexts.doNext, () => observer.next());
         return () => contextCaptor.onTeardown = currentContext();
@@ -664,7 +664,7 @@ describe('Operators', () => {
         doNext: Symbol('doNext'),
       };
 
-      const observable$ = new Observable(observer => {
+      const observable$ = new Observable<void>(observer => {
         contextCaptor.onConstruct = currentContext();
         runInContext(contexts.doNext, () => observer.next());
         return () => contextCaptor.onTeardown = currentContext();
@@ -800,7 +800,7 @@ describe('Operators', () => {
         doNext: Symbol('doNext'),
       };
 
-      const observable$ = new Observable(observer => {
+      const observable$ = new Observable<void>(observer => {
         contextCaptor.onConstruct = currentContext();
         runInContext(contexts.doNext, () => observer.next());
         return () => contextCaptor.onTeardown = currentContext();
@@ -950,7 +950,7 @@ describe('Operators', () => {
 
       const insideAngularCaptor: InsideNgZoneCaptor = {};
 
-      const observable$ = new Observable(observer => {
+      const observable$ = new Observable<void>(observer => {
         insideAngularCaptor.onConstruct = NgZone.isInAngularZone();
         observer.next();
         observer.complete();
@@ -1008,7 +1008,7 @@ describe('Operators', () => {
 
       const insideAngularCaptor: InsideNgZoneCaptor = {};
 
-      const observable$ = new Observable(observer => {
+      const observable$ = new Observable<void>(observer => {
         insideAngularCaptor.onConstruct = NgZone.isInAngularZone();
         observer.next();
         observer.complete();

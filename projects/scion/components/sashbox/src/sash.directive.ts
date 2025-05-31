@@ -57,7 +57,7 @@ export class SciSashDirective {
   /**
    * Specifies an optional key to identify this sash.
    *
-   * The key is used as the property key in the object emitted by {@link SciSashboxComponent.sashEnd2} to associate the size of this sash.
+   * The key is used as the property key in the object emitted by {@link SciSashboxComponent.sashEnd} to associate the size of this sash.
    */
   public readonly key = input<string | undefined>();
 

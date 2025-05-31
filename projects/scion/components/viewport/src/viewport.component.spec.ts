@@ -25,7 +25,7 @@ describe('Viewport', () => {
   it('should show a vertical scrollbar on vertical overflow', async () => {
     const fixture = TestBed.createComponent(Testee1Component);
     fixture.componentRef.setInput('direction', 'column');
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     await flushChanges(fixture);
@@ -86,7 +86,7 @@ describe('Viewport', () => {
   it('should show a horizontal scrollbar on horizontal overflow', async () => {
     const fixture = TestBed.createComponent(Testee1Component);
     fixture.componentRef.setInput('direction', 'row');
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     await flushChanges(fixture);
@@ -146,7 +146,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '1 1 0', content.height: '0'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -174,7 +174,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '1 1 0', content.height: '150px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -202,7 +202,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '1 1 0', content.height: '300px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -230,7 +230,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '1 1 0', content.height: '600px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -258,7 +258,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '0 1 auto', content.height: '0'] => expect viewport height to be 0`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -287,7 +287,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '0 1 auto', content.height: '150px'] => expect viewport height to be 150px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -316,7 +316,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '0 1 auto', content.height: '300px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -345,7 +345,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: '0 1 auto', content.height: '600px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -374,7 +374,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: 'auto', content.height: '0'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -402,7 +402,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: 'auto', content.height: '150px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -430,7 +430,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: 'auto', content.height: '300px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -458,7 +458,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.flex: 'auto', content.height: '600px'] => expect viewport height to be 600px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -486,7 +486,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container1.height: '300px', container2.overflow: 'hidden', viewport.flex: 'auto', content.height: '0'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -515,7 +515,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container1.height: '300px', container2.overflow: 'hidden', viewport.flex: 'auto', content.height: '150px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -544,7 +544,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container1.height: '300px', container2.overflow: 'hidden', viewport.flex: 'auto', content.height: '300px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -573,7 +573,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container1.height: '300px', container2.overflow: 'hidden', viewport.flex: 'auto', content.height: '600px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -602,7 +602,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container1.height: '300px', container2.height: '100%', viewport.flex: 'auto', content.height: '0'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -631,7 +631,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container1.height: '300px', container2.height: '100%', viewport.flex: 'auto', content.height: '150px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -660,7 +660,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container1.height: '300px', container2.height: '100%', viewport.flex: 'auto', content.height: '300px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -689,7 +689,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container1.height: '300px', container2.height: '100%', viewport.flex: 'auto', content.height: '600px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -718,7 +718,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.max-height: '100%', content.height: '0'] => expect viewport height to be 0`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {});
@@ -740,7 +740,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.max-height: '100%', content.height: '150px'] => expect viewport height to be 150px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {});
@@ -762,7 +762,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.max-height: '100%', content.height: '350px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {});
@@ -784,7 +784,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [container.height: '300px', viewport.max-height: '100%', content.height: '600px'] => expect viewport height to be 300px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {});
@@ -806,7 +806,7 @@ describe('Viewport', () => {
 
   it(`should fill up available space [content.height: '600px'] => expect viewport height to be 600px`, async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {});
@@ -824,7 +824,7 @@ describe('Viewport', () => {
 
   it('should allow to scroll if setting a min-height', async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {});
@@ -850,7 +850,7 @@ describe('Viewport', () => {
 
   it('should allow to scroll if setting a min-height even when the scrollable container becomes smaller than this min-height', async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {});
@@ -876,7 +876,7 @@ describe('Viewport', () => {
 
   it('should not expand the viewport to the right when displaying wide content', async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -905,7 +905,7 @@ describe('Viewport', () => {
 
   it('should stretch the viewport client\'s `DIV` (direct child of the internal viewport element) to the effective height of its content (tests that no `min-height` is set, so that the viewport\'s `scrollHeight` corresponds to the viewport client height)', async () => {
     const fixture = TestBed.createComponent(Testee2Component);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const component = fixture.componentInstance;
 
     component.setStyle('container1', {
@@ -976,7 +976,7 @@ describe('Viewport', () => {
     }
 
     const fixture = TestBed.createComponent(SpecComponent);
-    fixture.autoDetectChanges(true);
+    fixture.autoDetectChanges();
     const testee = fixture.componentInstance;
     const viewport = testee.viewport();
 
@@ -992,7 +992,7 @@ describe('Viewport', () => {
 
     it('should compute offset of element inside viewport', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       expect(component.viewportComponent().computeOffset(component.insideViewportElement(), 'left')).toEqual(0);
       expect(component.viewportComponent().computeOffset(component.insideViewportElement(), 'top')).toEqual(0);
@@ -1005,7 +1005,7 @@ describe('Viewport', () => {
 
     it('should compute offset relative to viewport boundaries', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       expect(component.viewportComponent().computeOffset(component.insideViewportElement(), 'left')).toEqual(0);
       expect(component.viewportComponent().computeOffset(component.insideViewportElement(), 'top')).toEqual(0);
@@ -1018,14 +1018,14 @@ describe('Viewport', () => {
 
     it('should return `null` when computing the offset of an element not contained in the viewport', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       expect(component.viewportComponent().computeOffset(component.beforeViewportElement(), 'left')).toBeNull();
     });
 
     it('should return `null` when computing the offset for an element whose effective `display` style resolves to `none`.', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       component.setStyle(component.insideViewportElement(), {'display': 'none'});
       expect(component.viewportComponent().computeOffset(component.insideViewportElement(), 'left')).toBeNull();
@@ -1036,7 +1036,7 @@ describe('Viewport', () => {
 
     it('should determine whether element is in view (1/2)', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       component.setStyle(component.viewportElement(), {
         'width': '100px',
@@ -1072,7 +1072,7 @@ describe('Viewport', () => {
 
     it('should determine whether element is in view (2/2)', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       component.setStyle(component.viewportElement(), {
         'width': '100px',
@@ -1142,7 +1142,7 @@ describe('Viewport', () => {
 
     it('should return `false` for an element not contained in the viewport', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       expect(component.viewportComponent().isElementInView(component.beforeViewportElement(), 'full')).toBeFalse();
       expect(component.viewportComponent().isElementInView(component.beforeViewportElement(), 'partial')).toBeFalse();
@@ -1150,7 +1150,7 @@ describe('Viewport', () => {
 
     it('should return `null` for an element whose effective `display` style resolves to `none`', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       component.setStyle(component.insideViewportElement(), {'display': 'none'});
       expect(component.viewportComponent().isElementInView(component.insideViewportElement(), 'full')).toBeFalse();
@@ -1161,7 +1161,7 @@ describe('Viewport', () => {
 
       it('should report all elements to be in the viewport if the viewport does not overflow (1/2)', async () => {
         const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
-        fixture.autoDetectChanges(true);
+        fixture.autoDetectChanges();
         const component = fixture.componentInstance;
         await flushChanges(fixture);
 
@@ -1191,7 +1191,7 @@ describe('Viewport', () => {
 
       it('should report all elements to be in the viewport if the viewport does not overflow (2/2)', async () => {
         const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
-        fixture.autoDetectChanges(true);
+        fixture.autoDetectChanges();
         const component = fixture.componentInstance;
         await flushChanges(fixture);
 
@@ -1221,7 +1221,7 @@ describe('Viewport', () => {
 
       it('should detect overflow if overlapping 0.5 pixels or more', async () => {
         const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
-        fixture.autoDetectChanges(true);
+        fixture.autoDetectChanges();
         const component = fixture.componentInstance;
         await flushChanges(fixture);
 
@@ -1262,7 +1262,7 @@ describe('Viewport', () => {
 
       it('should report all elements to be in the viewport if the viewport does not overflow (1/2)', async () => {
         const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
-        fixture.autoDetectChanges(true);
+        fixture.autoDetectChanges();
         fixture.componentRef.setInput('columnLayout', true);
         const component = fixture.componentInstance;
         await flushChanges(fixture);
@@ -1293,7 +1293,7 @@ describe('Viewport', () => {
 
       it('should report all elements to be in the viewport if the viewport does not overflow (2/2)', async () => {
         const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
-        fixture.autoDetectChanges(true);
+        fixture.autoDetectChanges();
         fixture.componentRef.setInput('columnLayout', true);
         const component = fixture.componentInstance;
         await flushChanges(fixture);
@@ -1324,7 +1324,7 @@ describe('Viewport', () => {
 
       it('should detect overflow if overlapping 0.5 pixels or more', async () => {
         const fixture = TestBed.createComponent(ElementDecimalSizeTestComponent);
-        fixture.autoDetectChanges(true);
+        fixture.autoDetectChanges();
         fixture.componentRef.setInput('columnLayout', true);
         const component = fixture.componentInstance;
         await flushChanges(fixture);
@@ -1367,7 +1367,7 @@ describe('Viewport', () => {
 
     it('should scroll element into view horizontally', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       component.setStyle(component.viewportElement(), {
         'width': '100px',
@@ -1391,7 +1391,7 @@ describe('Viewport', () => {
 
     it('should scroll element into view vertically', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
       component.setStyle(component.viewportElement(), {
         'width': '100px',
@@ -1415,7 +1415,7 @@ describe('Viewport', () => {
 
     it('ignore element not contained in the viewport', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
 
       expect(() => component.viewportComponent().scrollIntoView(component.beforeViewportElement())).not.toThrowError();
@@ -1423,7 +1423,7 @@ describe('Viewport', () => {
 
     it('ignore element if its effective `display` style resolves to `none`', () => {
       const fixture = TestBed.createComponent(Testee3Component);
-      fixture.autoDetectChanges(true);
+      fixture.autoDetectChanges();
       const component = fixture.componentInstance;
 
       component.setStyle(component.insideViewportElement(), {'display': 'none'});

@@ -13,9 +13,9 @@ import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size
 import {coerceElement} from '@angular/cdk/coercion';
 import {SciScrollableDirective} from './scrollable.directive';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
-import {ScrollingModule} from '@angular/cdk/scrolling';
 import {fromEvent} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
+import {CdkScrollable} from '@angular/cdk/scrolling';
 
 /**
  * Represents a viewport with slotted content (`<ng-content>`) used as scrollable content. By default, content is added to a CSS grid layout.
@@ -90,9 +90,9 @@ import {subscribeIn} from '@scion/toolkit/operators';
   styleUrl: './viewport.component.scss',
   encapsulation: ViewEncapsulation.ShadowDom,
   imports: [
-    ScrollingModule,
     SciScrollableDirective,
     SciScrollbarComponent,
+    CdkScrollable,
   ],
 })
 export class SciViewportComponent {

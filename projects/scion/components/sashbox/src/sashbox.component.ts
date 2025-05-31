@@ -99,24 +99,11 @@ export class SciSashboxComponent {
   public readonly sashStart = output<void>();
 
   /**
-   * Emits an array with new sash sizes when sashing ends.
-   *
-   * The array contains the sash sizes in display order.
-   *
-   * TODO [Angular 20] BREAKING CHANGE: Change signature from `number[]` to `{[key: string]: number}` and remove {@link sashEnd2}.
-   */
-  public readonly sashEnd = output<number[]>();
-
-  /**
    * Emits an object with new sash sizes when sashing ends.
    *
    * Each sash size is associated with its {@link SciSashDirective.key} or its display position (zero-based) if not set.
-   *
-   * Note: This output will be renamed to `sashEnd` in version 20, changing the signature of {@link sashEnd} from `number[]` to `{[key: string]: number}`.
-   *
-   * TODO [Angular 20] BREAKING CHANGE: Replace with {@link sashEnd}.
    */
-  public readonly sashEnd2 = output<{[key: string]: number}>();
+  public readonly sashEnd = output<{[key: string]: number}>();
 
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
   private readonly _contentChildren = contentChildren(SciSashDirective);
@@ -179,8 +166,7 @@ export class SciSashboxComponent {
       }
     });
 
-    this.sashEnd.emit(Array.from(sashSizes.values()));
-    this.sashEnd2.emit(Object.fromEntries(sashSizes));
+    this.sashEnd.emit(Object.fromEntries(sashSizes));
   }
 
   protected onSash(splitter: HTMLElement, sashIndex: number, moveEvent: SplitterMoveEvent): void {
@@ -247,8 +233,7 @@ export class SciSashboxComponent {
     });
 
     this.sashStart.emit();
-    this.sashEnd.emit(Array.from(sashSizesAfterReset.values()));
-    this.sashEnd2.emit(Object.fromEntries(sashSizesAfterReset));
+    this.sashEnd.emit(Object.fromEntries(sashSizesAfterReset));
   }
 
   private toPixel(value: string | number): number {

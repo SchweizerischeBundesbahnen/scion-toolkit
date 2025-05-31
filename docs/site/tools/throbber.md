@@ -39,18 +39,6 @@ Click [here](https://components.scion.vercel.app/#/sci-throbber) for a demo of t
    }
    ```
 
-   Alternatively, import `SciThrobberModule` in the `NgModule` that declares your component.
-
-   ```typescript
-   import {SciThrobberModule} from '@scion/components/throbber';
-
-   @NgModule({
-     imports: [SciThrobberModule]
-   })
-   export class AppModule {
-   }
-   ```
-
 1. Add `sci-throbber` component as following:
 
    ```html
