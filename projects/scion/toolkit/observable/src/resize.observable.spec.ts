@@ -8,18 +8,18 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Dimension, fromDimension$} from './dimension.observable';
+import {fromResize$} from './resize.observable';
 import {ObserveCaptor} from '@scion/toolkit/testing';
 
-describe('fromDimension$', () => {
+describe('fromResize$', () => {
 
   it('should emit on size change of the element', async () => {
-    // create the testee <div> and subscribe for dimension changes
+    // create the testee <div> and subscribe for size changes
     const testeeDiv = document.createElement('div');
     testeeDiv.style.width = '100px';
 
-    const observeCaptor = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
-    fromDimension$(testeeDiv).subscribe(observeCaptor);
+    const observeCaptor = new ObserveCaptor<unknown, number>(() => testeeDiv.clientWidth);
+    fromResize$(testeeDiv).subscribe(observeCaptor);
 
     // append the testee <div> to the DOM
     document.body.appendChild(testeeDiv);
@@ -44,11 +44,11 @@ describe('fromDimension$', () => {
     parentDiv.style.width = '100px';
     document.body.appendChild(parentDiv);
 
-    // create the testee <div> and subscribe for dimension changes
+    // create the testee <div> and subscribe for size changes
     const testeeDiv = document.createElement('div');
 
-    const observeCaptor = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
-    fromDimension$(testeeDiv).subscribe(observeCaptor);
+    const observeCaptor = new ObserveCaptor<unknown, number>(() => testeeDiv.clientWidth);
+    fromResize$(testeeDiv).subscribe(observeCaptor);
 
     // append the testee <div> to the DOM
     parentDiv.appendChild(testeeDiv);
@@ -75,22 +75,22 @@ describe('fromDimension$', () => {
     await waitUntilRendered();
 
     // 1. subscription
-    const observeCaptor1 = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
-    const subscription1 = fromDimension$(testeeDiv).subscribe(observeCaptor1);
+    const observeCaptor1 = new ObserveCaptor<unknown, number>(() => testeeDiv.clientWidth);
+    const subscription1 = fromResize$(testeeDiv).subscribe(observeCaptor1);
     await waitUntilRendered();
 
     expect(observeCaptor1.getValues()).toEqual([100]);
 
     // 2. subscription
-    const observeCaptor2 = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
-    const subscription2 = fromDimension$(testeeDiv).subscribe(observeCaptor2);
+    const observeCaptor2 = new ObserveCaptor<unknown, number>(() => testeeDiv.clientWidth);
+    const subscription2 = fromResize$(testeeDiv).subscribe(observeCaptor2);
     await waitUntilRendered();
 
     expect(observeCaptor2.getValues()).toEqual([100]);
 
     // 3. subscription
-    const observeCaptor3 = new ObserveCaptor<Dimension, number>(dimension => dimension.clientWidth);
-    const subscription3 = fromDimension$(testeeDiv).subscribe(observeCaptor3);
+    const observeCaptor3 = new ObserveCaptor<unknown, number>(() => testeeDiv.clientWidth);
+    const subscription3 = fromResize$(testeeDiv).subscribe(observeCaptor3);
     await waitUntilRendered();
 
     expect(observeCaptor3.getValues()).toEqual([100]);
@@ -137,7 +137,7 @@ describe('fromDimension$', () => {
   });
 
   /**
-   * Wait until the browser reported the dimension change.
+   * Wait until the browser reported the size change.
    */
   function waitUntilRendered(renderCyclesToWait: number = 2): Promise<void> {
     if (renderCyclesToWait === 0) {
