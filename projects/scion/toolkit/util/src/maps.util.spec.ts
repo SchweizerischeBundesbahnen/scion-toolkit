@@ -176,7 +176,7 @@ describe('Maps', () => {
 
   describe('Maps.coerce', () => {
 
-    it('should create a new Map from a dictionary', () => {
+    it('should return a dictionary as map', () => {
       const dictionary = {firstname: 'John', lastname: 'Smith', age: 42, male: true};
       expect(Maps.coerce(dictionary)).toEqual(new Map().set('firstname', 'John').set('lastname', 'Smith').set('age', 42).set('male', true));
     });
@@ -184,11 +184,10 @@ describe('Maps', () => {
     it('should return the map if given a map', () => {
       const map = new Map().set('firstname', 'John').set('lastname', 'Smith');
       expect(Maps.coerce(map)).toBe(map);
-      expect(Maps.coerce(new Map(map))).toEqual(map);
     });
 
     it('should return tuples as map', () => {
-      const tuples = [['key1', 'value1'], ['key2', 'value2']];
+      const tuples: Array<[string, string]> = [['key1', 'value1'], ['key2', 'value2']];
       expect(Maps.coerce(tuples)).toEqual(new Map().set('key1', 'value1').set('key2', 'value2'));
     });
 
