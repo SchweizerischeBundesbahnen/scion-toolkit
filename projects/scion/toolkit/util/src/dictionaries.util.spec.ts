@@ -14,7 +14,7 @@ describe('Dictionaries', () => {
 
   describe('Dictionaries.coerce', () => {
 
-    it('should create a new dictionary from a Map', () => {
+    it('should return a Map as dictionary', () => {
       const map = new Map()
         .set('firstname', 'John')
         .set('lastname', 'Smith')
@@ -29,7 +29,7 @@ describe('Dictionaries', () => {
     });
 
     it('should return tuples as dictionary', () => {
-      const tuples = [['key1', 'value1'], ['key2', 'value2']];
+      const tuples: Array<[string, string]> = [['key1', 'value1'], ['key2', 'value2']];
       expect(Dictionaries.coerce(tuples)).toEqual({key1: 'value1', key2: 'value2'});
     });
 
