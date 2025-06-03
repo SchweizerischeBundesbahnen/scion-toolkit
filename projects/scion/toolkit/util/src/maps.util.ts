@@ -12,45 +12,30 @@ import {Arrays} from './arrays.util';
 import {Dictionary} from './dictionaries.util';
 
 /**
- * Provides utility methods for {@link Map}.
+ * Provides utilities for {@link Map}.
  */
 export namespace Maps {
 
   /**
    * Creates a {@link Map} from the given map-like object. If given a `Map`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Map}.
    */
-  export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined: true}): NonNullable<Map<string, T>>;
-  export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options: {coerceNullOrUndefined: false}): Map<string, T> | null | undefined;
-  export function coerce<T = any>(mapLike: Map<string, T> | Dictionary<T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Map<string, T> | null | undefined {
-    if (mapLike === null || mapLike === undefined) {
-      if (options?.coerceNullOrUndefined ?? true) {
-        return new Map<string, T>();
-      }
-      return mapLike;
+  export function coerce<T = unknown>(mapLike: Map<string, T> | Dictionary<T> | Iterable<[string, T]> | undefined | null, options?: {coerceNullOrUndefined: true}): NonNullable<Map<string, T>>;
+  export function coerce<T = unknown>(mapLike: Map<string, T> | Dictionary<T> | Iterable<[string, T]> | undefined | null, options: {coerceNullOrUndefined: false}): Map<string, T> | null | undefined;
+  export function coerce<T = unknown>(mapLike: Map<string, T> | Dictionary<T> | Iterable<[string, T]> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Map<string, T> | null | undefined {
+    if (!mapLike) {
+      const orElseEmpty = options?.coerceNullOrUndefined ?? true;
+      return orElseEmpty ? new Map() : mapLike;
     }
 
     if (mapLike instanceof Map) {
       return mapLike;
     }
 
-    // Data sent from one JavaScript realm to another is serialized with the structured clone algorithm.
-    // Although the algorithm supports the `Map` data type, a deserialized map object cannot be checked to be instance of `Map`.
-    // This is most likely because the serialization takes place in a different realm.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-    // @see http://man.hubwiz.com/docset/JavaScript.docset/Contents/Resources/Documents/developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm.html
-    try {
-      return new Map(mapLike as unknown as Map<string, T>);
-    }
-    catch {
-      // noop
+    if (Symbol.iterator in mapLike) {
+      return new Map(mapLike);
     }
 
-    return Object
-      .entries(mapLike)
-      .reduce(
-        (map: Map<string, T>, [key, value]: [string, T]) => map.set(key, value),
-        new Map<string, T>(),
-      );
+    return new Map(Object.entries(mapLike));
   }
 
   /**
