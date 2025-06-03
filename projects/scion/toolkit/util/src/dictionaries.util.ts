@@ -9,38 +9,23 @@
  */
 
 /**
- * Provides dictionary utility methods.
+ * Provides utilities for a dictionary.
  */
 export namespace Dictionaries {
 
   /**
    * Creates a {@link Dictionary} from the given dictionary-like object. If given a `Dictionary`, it is returned. If given `null` or `undefined`, by default, returns an empty {@link Dictionary}.
    */
-  export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined: true}): NonNullable<Dictionary<T>>;
-  export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options: {coerceNullOrUndefined: false}): Dictionary<T> | null | undefined;
-  export function coerce<T = any>(dictionaryLike: Dictionary<T> | Map<string, T> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Dictionary<T> | null | undefined {
-    if (dictionaryLike === null || dictionaryLike === undefined) {
-      if (options?.coerceNullOrUndefined ?? true) {
-        return {};
-      }
-      return dictionaryLike;
+  export function coerce<T = unknown>(dictionaryLike: Dictionary<T> | Map<string, T> | Iterable<[string, T]> | undefined | null, options?: {coerceNullOrUndefined: true}): NonNullable<Dictionary<T>>;
+  export function coerce<T = unknown>(dictionaryLike: Dictionary<T> | Map<string, T> | Iterable<[string, T]> | undefined | null, options: {coerceNullOrUndefined: false}): Dictionary<T> | null | undefined;
+  export function coerce<T = unknown>(dictionaryLike: Dictionary<T> | Map<string, T> | Iterable<[string, T]> | undefined | null, options?: {coerceNullOrUndefined?: boolean}): Dictionary<T> | null | undefined {
+    if (!dictionaryLike) {
+      const orElseEmpty = options?.coerceNullOrUndefined ?? true;
+      return orElseEmpty ? {} : dictionaryLike;
     }
 
-    if (dictionaryLike instanceof Map) {
-      return createDictionaryFromMap(dictionaryLike);
-    }
-
-    // Data sent from one JavaScript realm to another is serialized with the structured clone algorithm.
-    // Although the algorithm supports the `Map` data type, a deserialized map object cannot be checked to be instance of `Map`.
-    // This is most likely because the serialization takes place in a different realm.
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-    // @see http://man.hubwiz.com/docset/JavaScript.docset/Contents/Resources/Documents/developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm.html
-    try {
-      const map = new Map<string, T>(dictionaryLike as unknown as Map<string, T>);
-      return createDictionaryFromMap(map);
-    }
-    catch {
-      // noop
+    if (Symbol.iterator in dictionaryLike) {
+      return Object.fromEntries(dictionaryLike);
     }
 
     return dictionaryLike;
@@ -64,16 +49,4 @@ export namespace Dictionaries {
  */
 export interface Dictionary<T = unknown> {
   [key: string]: T;
-}
-
-function createDictionaryFromMap<T>(map: Map<string, T>): Dictionary<T> {
-  return Array
-    .from(map.entries())
-    .reduce(
-      (dictionary: Dictionary<T>, [key, value]): Dictionary<T> => {
-        dictionary[key] = value;
-        return dictionary;
-      },
-      {},
-    );
 }
