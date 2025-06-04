@@ -23,11 +23,12 @@
     "tslib": "^2.5.0"
   },
   "peerDependencies": {
-    "@angular/common": "^19.0.0",
-    "@angular/core": "^19.0.0",
-    "@angular/cdk": "^19.0.0",
-    "@scion/components": "^19.0.0",
-    "@scion/toolkit": "^1.6.0",
+    "@angular/core": "^20.0.0",
+    "@angular/common": "^20.0.0",
+    "@angular/animations": "^20.0.0",
+    "@angular/cdk": "^20.0.0",
+    "@scion/components": "^20.0.0",
+    "@scion/toolkit": "^1.6.0 || ^2.0.0",
     "rxjs": "^7.8.0"
   },
   "repository": {

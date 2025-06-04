@@ -8,13 +8,14 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {PlaywrightTestConfig} from '@playwright/test';
+import {defineConfig} from '@playwright/test';
 
 const runInCI = !!process.env.CI;
 const runHeadless = !!process.env.HEADLESS;
 
-const config: PlaywrightTestConfig = {
+export default defineConfig({
   forbidOnly: runInCI,
+  fullyParallel: true,
   webServer: {
     command: runInCI ? 'npm run components-testing-app:dist-serve' : 'npm run components-testing-app:serve',
     port: 4200,
@@ -32,6 +33,5 @@ const config: PlaywrightTestConfig = {
     },
   },
   maxFailures: runInCI ? 1 : undefined,
-  testMatch: /.*\.e2e-spec\.js/,
-};
-export default config;
+  testMatch: /.*\.e2e-spec\.ts/,
+});

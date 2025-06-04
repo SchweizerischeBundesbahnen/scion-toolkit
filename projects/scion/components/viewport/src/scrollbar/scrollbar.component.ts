@@ -8,8 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {DOCUMENT} from '@angular/common';
-import {ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, HostBinding, inject, input, NgZone, untracked, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, HostBinding, inject, input, NgZone, untracked, viewChild, DOCUMENT} from '@angular/core';
 import {fromEvent, merge, mergeWith, Observable, of, timer} from 'rxjs';
 import {debounceTime, first, map, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';

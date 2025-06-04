@@ -62,9 +62,7 @@ export class SciTabDirective implements OnDestroy {
     this._vcr = vcr;
 
     // Construct the view, if not already constructed.
-    if (!this._viewRef) {
-      this._viewRef = this._templateRef.createEmbeddedView(undefined);
-    }
+    this._viewRef ??= this._templateRef.createEmbeddedView(undefined);
 
     // Attach the content, if not already attached.
     if (!this.isContentAttached()) {

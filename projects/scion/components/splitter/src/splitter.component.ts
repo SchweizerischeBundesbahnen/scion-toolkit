@@ -8,9 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostBinding, inject, input, NgZone, OnInit, output, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostBinding, inject, input, NgZone, OnInit, output, viewChild, DOCUMENT} from '@angular/core';
 import {audit, fromEvent, merge, Observable} from 'rxjs';
-import {DOCUMENT} from '@angular/common';
 import {tapFirst} from '@scion/toolkit/operators';
 import {first, takeUntil} from 'rxjs/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -82,7 +81,7 @@ export class SciSplitterComponent implements OnInit {
   /**
    * Notifies when end moving the splitter.
    */
-  public readonly end = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
+  public readonly end = output<void>();
 
   /**
    * Notifies when resetting the spliter position.

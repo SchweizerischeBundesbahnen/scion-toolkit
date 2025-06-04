@@ -8,8 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {inject, Injectable, NgZone, Signal} from '@angular/core';
-import {DOCUMENT} from '@angular/common';
+import {inject, Injectable, NgZone, Signal, DOCUMENT} from '@angular/core';
 import {fromEvent} from 'rxjs';
 import {debounceTime, distinctUntilChanged, map, startWith} from 'rxjs/operators';
 import {toSignal} from '@angular/core/rxjs-interop';

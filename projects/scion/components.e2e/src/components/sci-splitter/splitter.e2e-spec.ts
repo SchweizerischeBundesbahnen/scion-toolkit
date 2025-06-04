@@ -28,7 +28,7 @@ test.describe('sci-splitter', () => {
     // Expect a single event per animation frame at maximum.
     const logs = consoleLogs.get({message: logFilter});
     for (const log of logs) {
-      const count = +logFilter.exec(log)!.groups!.count;
+      const count = +logFilter.exec(log)!.groups!.count!;
       expect(count).toBe(1);
     }
   });
