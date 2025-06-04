@@ -8,13 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, OnDestroy, OnInit, Signal, viewChild} from '@angular/core';
+import {Component, DOCUMENT, ElementRef, HostBinding, inject, OnDestroy, OnInit, Signal, viewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {startWith} from 'rxjs/operators';
 import loremIpsum from './lorem-ipsum.json';
 import {Arrays} from '@scion/toolkit/util';
-import {DOCUMENT} from '@angular/common';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SplitPipe} from '../common/split.pipe';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';

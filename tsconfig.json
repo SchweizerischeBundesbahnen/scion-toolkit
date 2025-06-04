@@ -3,7 +3,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./dist/out-tsc",
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -11,18 +10,12 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "esModuleInterop": true,
     "experimentalDecorators": true,
-    "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "ES2022",
-    "module": "ES2022",
+    "module": "preserve",
     "noUnusedLocals": true,
     "noUncheckedIndexedAccess": true,
-    "lib": [
-      "ES2022",
-      "dom"
-    ],
     "paths": {
       "@scion/toolkit/*": [
         "./dist/scion/toolkit/*"
@@ -120,6 +113,33 @@
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
+    "typeCheckHostBindings": true,
     "strictTemplates": true
-  }
+  },
+  "references": [
+    {
+      "path": "./projects/scion/toolkit/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/scion/toolkit/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/scion/components/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/scion/components/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/scion/components.internal/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/scion/components.internal/tsconfig.spec.json"
+    },
+    {
+      "path": "./apps/components/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/components-testing-app/tsconfig.app.json"
+    }
+  ]
 }

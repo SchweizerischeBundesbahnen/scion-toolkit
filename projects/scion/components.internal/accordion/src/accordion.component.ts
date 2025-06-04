@@ -11,7 +11,7 @@
 import {ChangeDetectorRef, Component, contentChildren, DestroyRef, ElementRef, HostBinding, inject, input, OnInit, Signal, TrackByFunction, viewChild} from '@angular/core';
 import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciAccordionItemDirective} from './accordion-item.directive';
-import {CdkAccordion, CdkAccordionItem, CdkAccordionModule} from '@angular/cdk/accordion';
+import {CdkAccordion, CdkAccordionItem} from '@angular/cdk/accordion';
 import {debounceTime} from 'rxjs/operators';
 import {combineLatest} from 'rxjs';
 import {NgClass, NgTemplateOutlet} from '@angular/common';
@@ -51,7 +51,8 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   imports: [
     NgClass,
     NgTemplateOutlet,
-    CdkAccordionModule,
+    CdkAccordion,
+    CdkAccordionItem,
     SciMaterialIconDirective,
   ],
   animations: [
