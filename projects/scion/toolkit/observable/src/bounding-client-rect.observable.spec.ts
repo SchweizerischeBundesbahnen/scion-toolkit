@@ -464,7 +464,7 @@ describe('fromBoundingClientRect$', () => {
 
     // Expect document root to be positioned.
     expect(getComputedStyle(document.documentElement)).toEqual(jasmine.objectContaining({
-      position: 'relative',
+      position: 'absolute',
     }));
   });
 
@@ -480,21 +480,21 @@ describe('fromBoundingClientRect$', () => {
 
     // Expect document root to be positioned.
     expect(getComputedStyle(document.documentElement)).toEqual(jasmine.objectContaining({
-      position: 'relative',
+      position: 'absolute',
     }));
 
     // Override positioning of root element.
     const styleSheet = new CSSStyleSheet();
     styleSheet.insertRule(`
     html {
-      position: absolute;
+      position: relative;
     }`);
     document.adoptedStyleSheets.push(styleSheet);
     onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
 
     // Expect overrides to be applied.
     expect(getComputedStyle(document.documentElement)).toEqual(jasmine.objectContaining({
-      position: 'absolute',
+      position: 'relative',
     }));
   });
 

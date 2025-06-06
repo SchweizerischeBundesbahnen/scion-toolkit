@@ -223,11 +223,14 @@ class Vertex {
 const positionElement: PositionElementFn = (() => {
   const styleSheet = new CSSStyleSheet({});
 
-  // Add styles to change the root element's position to relative, required by BoundingClientRectObserver.
+  // Add styles to position the document root element, required by BoundingClientRectObserver.
+  // - Ensures the document root element is positioned to support `@scion/toolkit/observable/fromBoundingClientRect$` for observing element bounding boxes.
+  // - Aligns the document root with the page viewport so the top-level positioning context fills the page viewport (as expected by applications).
   styleSheet.insertRule(`
     @layer sci-toolkit {
       :root {
-        position: relative;
+        position: absolute;
+        inset: 0;
       }
     }`,
   );
