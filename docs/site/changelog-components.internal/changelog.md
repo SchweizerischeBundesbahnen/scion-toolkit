@@ -5,6 +5,22 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+# [20.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-19.1.2...ɵcomponents-20.0.0) (2025-06-06)
+
+
+### Features
+
+* **ɵcomponents:** add support for Angular 20 ([aab8386](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/aab8386bfad1d4b5dda1fe79687f8c7c61484112))
+
+
+### BREAKING CHANGES
+
+* **ɵcomponents:** Updating `@scion/components.internal` to Angular 20 introduced a breaking change.
+
+  Update your application to Angular 20. For detailed migration instructions, refer to Angular's update guide: https://v20.angular.dev/update-guide.
+
+
+
 ## [19.1.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-19.1.1...ɵcomponents-19.1.2) (2025-04-28)
 
 
