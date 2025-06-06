@@ -14,10 +14,6 @@
 * **components:** add support for Angular 20 ([aab8386](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/aab8386bfad1d4b5dda1fe79687f8c7c61484112))
 * **components/sashbox:** allow key-based access to sash sizes ([13a74a8](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/13a74a8018b4e6a3d32deed74036a43ae55fa750))
 
-### Bug Fixes
-
-* **toolkit/observable/bounding-client-rect:** position element only if necessary ([3b97195](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/3b97195e6c201abd0f2c35bb3e1edf4fad1e7a5a))
-
 
 ### Code Refactoring
 
