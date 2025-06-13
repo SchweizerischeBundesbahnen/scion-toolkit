@@ -10,7 +10,7 @@
     "name": "SCION contributors"
   },
   "scripts": {
-    "before-push": "run-s build lint test:headless e2e:headless",
+    "before-push": "run-s build lint \"test:headless -- --no-watch\" e2e:headless",
     "build": "run-s **:*:build",
     "start": "run-s components-app:serve",
     "lint": "run-p **:*:lint",
