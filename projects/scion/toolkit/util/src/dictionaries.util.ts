@@ -34,7 +34,7 @@ export namespace Dictionaries {
   /**
    * Returns a new {@link Dictionary} with `undefined` values removed.
    */
-  export function withoutUndefinedEntries<T = unknown>(object: Dictionary<T>): Dictionary<T> {
+  export function withoutUndefinedEntries<T = unknown>(object: Dictionary<T | undefined>): Dictionary<T> {
     return Object.entries(object).reduce<Dictionary<T>>((dictionary, [key, value]) => {
       if (value !== undefined) {
         dictionary[key] = value;

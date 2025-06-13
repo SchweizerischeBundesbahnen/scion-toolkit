@@ -60,8 +60,10 @@ describe('Dictionaries', () => {
     });
 
     it('should remove undefined entries (resulting dictionary contains entries)', () => {
-      const dictionary = {firstname: 'John', lastname: undefined};
-      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual({firstname: 'John'});
+      // Use explicit typing to test the correct signature.
+      const given: Record<string, string | undefined> = {firstname: 'John', lastname: undefined};
+      const actual: Record<string, string> = Dictionaries.withoutUndefinedEntries(given);
+      expect(actual).toEqual({firstname: 'John'});
     });
 
     it('should not alter dictionary without undefined entries', () => {
