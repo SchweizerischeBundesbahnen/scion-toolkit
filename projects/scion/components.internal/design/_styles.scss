@@ -11,6 +11,9 @@
   place-items: center;
   padding: 3px;
   font-size: 20px; // Material default is 24px
+  box-sizing: content-box;
+  width: 1em;
+  height: 1em;
   color: var(--sci-color-text);
   border-radius: var(--sci-corner);
   border: unset;
