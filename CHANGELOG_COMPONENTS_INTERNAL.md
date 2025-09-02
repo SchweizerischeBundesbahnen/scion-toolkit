@@ -1,3 +1,12 @@
+## [20.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-20.0.0...ɵcomponents-20.0.1) (2025-09-02)
+
+
+### Features
+
+* **ɵcomponents:** maintain padding of Material Icon Button in layouts with limited space ([4dc8344](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/4dc83441e65a1dc226366c9d1593923ffa744013))
+
+
+
 # [20.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-19.1.2...ɵcomponents-20.0.0) (2025-06-06)
 
 
