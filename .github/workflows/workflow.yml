@@ -181,7 +181,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        shard: [1/1]
+        shardIndex: [ 1 ]
+        shardTotal: [ 1 ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -197,7 +198,15 @@ jobs:
         with:
           name: components-testing-app
           path: dist/components-testing-app
-      - run: npm run e2e:headless -- --shard=${{ matrix.shard }}
+      - name: Run shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: npm run e2e:headless -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-${{ matrix.shardIndex }}
+          path: test-results/
+          retention-days: 7
   toolkit-release-guard:
     name: 'Should release @scion/toolkit?'
     if: github.ref == 'refs/heads/master'
