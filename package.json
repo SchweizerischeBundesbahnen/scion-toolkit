@@ -78,7 +78,7 @@
     "@angular/build": "20.0.1",
     "@angular/cli": "20.0.1",
     "@angular/compiler-cli": "20.0.2",
-    "@playwright/test": "1.52.0",
+    "@playwright/test": "1.56.1",
     "@smarttools/eslint-plugin-rxjs": "1.0.20",
     "@stylistic/eslint-plugin": "4.4.1",
     "@types/jasmine": "5.1.8",
