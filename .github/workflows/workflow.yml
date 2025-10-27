@@ -301,6 +301,9 @@ jobs:
   release-toolkit:
     name: 'Releasing @scion/toolkit'
     if: ${{ needs.toolkit-release-guard.outputs.should-release == 'true' }}
+    permissions:
+      id-token: write # Required for OIDC. See also https://docs.npmjs.com/trusted-publishers
+      contents: read
     needs:
       - build-libs
       - toolkit-release-guard
@@ -313,11 +316,7 @@ jobs:
           name: toolkit-dist
           path: dist/scion/toolkit
       - name: 'Publishing @scion/toolkit to NPM'
-        uses: ./.github/actions/npm-publish
-        with:
-          dist-folder: dist/scion/toolkit
-          npm-token: ${{ secrets.NPM_TOKEN }}
-          dry-run: false
+        run: npm publish dist/scion/toolkit
       - name: 'Creating GitHub Release'
         run: gh release create toolkit-$VERSION --title "$VERSION (@scion/toolkit)" --notes-file CHANGELOG_TOOLKIT_LATEST.md --verify-tag
         env:
@@ -326,6 +325,9 @@ jobs:
   release-components:
     name: 'Releasing @scion/components'
     if: ${{ needs.components-release-guard.outputs.should-release == 'true' }}
+    permissions:
+      id-token: write # Required for OIDC. See also https://docs.npmjs.com/trusted-publishers
+      contents: read
     needs:
       - build-libs
       - components-release-guard
@@ -338,11 +340,7 @@ jobs:
           name: components-dist
           path: dist/scion/components
       - name: 'Publishing @scion/components to NPM'
-        uses: ./.github/actions/npm-publish
-        with:
-          dist-folder: dist/scion/components
-          npm-token: ${{ secrets.NPM_TOKEN }}
-          dry-run: false
+        run: npm publish dist/scion/components
       - name: 'Creating GitHub Release'
         run: gh release create components-$VERSION --title "$VERSION (@scion/components)" --notes-file CHANGELOG_COMPONENTS_LATEST.md --verify-tag
         env:
@@ -351,6 +349,9 @@ jobs:
   release-components-internal:
     name: 'Releasing @scion/components.internal'
     if: ${{ needs.components-internal-release-guard.outputs.should-release == 'true' }}
+    permissions:
+      id-token: write # Required for OIDC. See also https://docs.npmjs.com/trusted-publishers
+      contents: read
     needs: components-internal-release-guard
     runs-on: ubuntu-latest
     steps:
@@ -361,8 +362,4 @@ jobs:
           name: components-internal-dist
           path: dist/scion/components.internal
       - name: 'Publishing @scion/components.internal to NPM'
-        uses: ./.github/actions/npm-publish
-        with:
-          dist-folder: dist/scion/components.internal
-          npm-token: ${{ secrets.NPM_TOKEN }}
-          dry-run: false
+        run: npm publish dist/scion/components.internal
