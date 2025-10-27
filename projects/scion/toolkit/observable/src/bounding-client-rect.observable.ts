@@ -154,10 +154,10 @@ class Vertex {
     const documentClientRect = documentRoot.getBoundingClientRect();
     const elementClientRect = this._element.getBoundingClientRect();
 
-    const top = elementClientRect.top + documentRoot.scrollTop;
-    const left = elementClientRect.left + documentRoot.scrollLeft;
-    const right = documentClientRect.width - elementClientRect.right - documentRoot.scrollLeft;
-    const bottom = documentClientRect.height - elementClientRect.bottom - documentRoot.scrollTop;
+    const top = elementClientRect.top;
+    const left = elementClientRect.left;
+    const right = documentClientRect.width - elementClientRect.right;
+    const bottom = documentClientRect.height - elementClientRect.bottom;
     this._rootMargin$.next(`${Math.ceil(-1 * top)}px ${Math.ceil(-1 * right)}px ${Math.ceil(-1 * bottom)}px ${Math.ceil(-1 * left)}px`);
   }
 
@@ -165,7 +165,7 @@ class Vertex {
     this._rootMargin$
       .pipe(
         distinctUntilChanged(),
-        switchMap(rootMargin => fromIntersection$(this._element, {rootMargin, threshold: 1, root: document.documentElement})),
+        switchMap(rootMargin => fromIntersection$(this._element, {rootMargin, threshold: 1, root: document})),
         takeUntil(this._destroy$),
       )
       .subscribe((entries: IntersectionObserverEntry[]) => {

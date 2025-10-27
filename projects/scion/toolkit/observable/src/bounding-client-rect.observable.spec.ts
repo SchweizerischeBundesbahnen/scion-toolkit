@@ -96,6 +96,91 @@ describe('fromBoundingClientRect$', () => {
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y}));
   });
 
+  it('should detect position change (element contained in fixed positioned parent)', async () => {
+    createDiv({
+      parent: document.body,
+      style: {position: 'fixed', top: '0', left: '0', height: '100%', width: '100%'},
+      children: [
+        createDiv({id: 'testee', style: {position: 'absolute', top: '150px', left: '0', height: '100px', width: '100px', background: 'blue'}}),
+      ],
+    });
+
+    const testee = queryElement('div#testee');
+
+    let emissionCount = 0;
+    const emitCaptor = new ObserveCaptor<DOMRect>(toJsonDOMRect);
+    const subscription = fromBoundingClientRect$(testee).subscribe(emitCaptor);
+    onDestroy(() => subscription.unsubscribe());
+
+    const {x, y} = testee.getBoundingClientRect();
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y}));
+
+    // Move element to the right.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(1px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 1, y}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(2px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 0)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y}));
+
+    // Move element to the bottom.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 1px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 1}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 2px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 2}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(3px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 3, y: y + 3}));
+
+    // Move element to the left.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(2px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y: y + 3}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(1px, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 1, y: y + 3}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 3px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 3}));
+
+    // Move element to the top.
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 2px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 2}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 1px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y + 1}));
+
+    await waitUntilIdle();
+    testee.style.transform = 'translate(0, 0px)';
+    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y}));
+  });
+
   it('should detect position change (element has border)', async () => {
     const testee = createDiv({
       parent: document.body,
