@@ -1,7 +1,9 @@
 name: Continuous Integration and Delivery
-on: [push, pull_request, workflow_dispatch]
+on: [ push, pull_request, workflow_dispatch ]
 env:
-  NODE_VERSION: 22.16.0
+  NODE_VERSION: 24.11.0
+permissions:
+  contents: read
 jobs:
   install:
     name: 'Installing NPM modules'
@@ -210,6 +212,8 @@ jobs:
   toolkit-release-guard:
     name: 'Should release @scion/toolkit?'
     if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
     needs:
       - build-libs
       - build-apps
@@ -231,6 +235,8 @@ jobs:
   components-release-guard:
     name: 'Should release @scion/components?'
     if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
     needs:
       - build-libs
       - build-apps
@@ -252,6 +258,8 @@ jobs:
   components-internal-release-guard:
     name: 'Should release @scion/components.internal?'
     if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
     needs:
       - build-libs
       - build-apps
@@ -301,23 +309,25 @@ jobs:
   release-toolkit:
     name: 'Releasing @scion/toolkit'
     if: ${{ needs.toolkit-release-guard.outputs.should-release == 'true' }}
+    permissions:
+      id-token: write # Required for OIDC. See also https://docs.npmjs.com/trusted-publishers
+      contents: write # Required for GitHub release.
     needs:
       - build-libs
       - toolkit-release-guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - name: 'Downloading dist/scion/toolkit'
         uses: actions/download-artifact@v4
         with:
           name: toolkit-dist
           path: dist/scion/toolkit
       - name: 'Publishing @scion/toolkit to NPM'
-        uses: ./.github/actions/npm-publish
-        with:
-          dist-folder: dist/scion/toolkit
-          npm-token: ${{ secrets.NPM_TOKEN }}
-          dry-run: false
+        run: npm publish dist/scion/toolkit
       - name: 'Creating GitHub Release'
         run: gh release create toolkit-$VERSION --title "$VERSION (@scion/toolkit)" --notes-file CHANGELOG_TOOLKIT_LATEST.md --verify-tag
         env:
@@ -326,23 +336,25 @@ jobs:
   release-components:
     name: 'Releasing @scion/components'
     if: ${{ needs.components-release-guard.outputs.should-release == 'true' }}
+    permissions:
+      id-token: write # Required for OIDC. See also https://docs.npmjs.com/trusted-publishers
+      contents: write # Required for GitHub release.
     needs:
       - build-libs
       - components-release-guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - name: 'Downloading dist/scion/components'
         uses: actions/download-artifact@v4
         with:
           name: components-dist
           path: dist/scion/components
       - name: 'Publishing @scion/components to NPM'
-        uses: ./.github/actions/npm-publish
-        with:
-          dist-folder: dist/scion/components
-          npm-token: ${{ secrets.NPM_TOKEN }}
-          dry-run: false
+        run: npm publish dist/scion/components
       - name: 'Creating GitHub Release'
         run: gh release create components-$VERSION --title "$VERSION (@scion/components)" --notes-file CHANGELOG_COMPONENTS_LATEST.md --verify-tag
         env:
@@ -351,18 +363,19 @@ jobs:
   release-components-internal:
     name: 'Releasing @scion/components.internal'
     if: ${{ needs.components-internal-release-guard.outputs.should-release == 'true' }}
+    permissions:
+      id-token: write # Required for OIDC. See also https://docs.npmjs.com/trusted-publishers
     needs: components-internal-release-guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - name: 'Downloading dist/scion/components.internal'
         uses: actions/download-artifact@v4
         with:
           name: components-internal-dist
           path: dist/scion/components.internal
       - name: 'Publishing @scion/components.internal to NPM'
-        uses: ./.github/actions/npm-publish
-        with:
-          dist-folder: dist/scion/components.internal
-          npm-token: ${{ secrets.NPM_TOKEN }}
-          dry-run: false
+        run: npm publish dist/scion/components.internal
