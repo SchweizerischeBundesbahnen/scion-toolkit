@@ -1,9 +1,9 @@
-## [2.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-2.0.0...toolkit-2.0.1) (2025-06-13)
+## [2.0.2](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-2.0.1...toolkit-2.0.2) (2025-10-31)
 
 
 ### Bug Fixes
 
-* **toolkit/util:** exclude `undefined` from return type signature of `Dictionaries.withoutUndefinedEntries` ([e7c54d1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/e7c54d1dd510c9ac32e283785ad8cdf2cf8bbb4e))
+* **toolkit/observable/bounding-client-rect:** support observing element contained in fixed-positioned parent element ([4bf58fc](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/4bf58fc76fb292e759f8eb20e486c07ac538ac92))
 
 
 
