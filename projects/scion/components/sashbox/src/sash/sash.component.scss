@@ -3,4 +3,34 @@
   grid-auto-rows: 100%;
   grid-auto-columns: 100%;
   overflow: hidden;
+
+  &.slide-in {
+    animation: slide-in 125ms ease-out;
+  }
+
+  &.slide-out {
+    animation: slide-out 125ms ease-out;
+  }
+
+  //@starting-style {
+  //  flex-basis: 0;
+  //}
+
+  @keyframes slide-in {
+    from {
+      flex-basis: 0;
+    }
+    to {
+      flex-basis: auto;
+    }
+  }
+
+  @keyframes slide-out {
+    from {
+      flex-basis: auto;
+    }
+    to {
+      flex-basis: 0;
+    }
+  }
 }

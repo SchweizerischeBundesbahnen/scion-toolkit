@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, computed, effect, ElementRef, inject, input, linkedSignal, Signal} from '@angular/core';
+import {AnimationCallbackEvent, ChangeDetectorRef, Component, computed, effect, ElementRef, inject, input, linkedSignal, Signal} from '@angular/core';
 import {NgTemplateOutlet} from '@angular/common';
 import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciSashBoxAccessor} from '../sashbox-accessor';
@@ -30,6 +30,9 @@ import {SciSashDirective} from '../sash.directive';
   host: {
     '[@sash-animation]': 'animationState()',
     '(@sash-animation.done)': 'onAnimationEnd();',
+    // '(animate.enter)': 'animationState() === "enter" ? slideIn($event) : null',
+    // '(animate.leave)': 'animationState() === "leave" ? slideOut($event) : null',
+    '(animationend)': 'onAnimationEnd()',
   },
 })
 export class SashComponent {
@@ -66,6 +69,7 @@ export class SashComponent {
    * Notifies when ending the animation.
    */
   protected onAnimationEnd(): void {
+    console.log('>>> onAnimationEnd');
     this.animationState.set(null);
   }
 
@@ -75,6 +79,16 @@ export class SashComponent {
   public get size(): number {
     const {width, height} = this._host.getBoundingClientRect();
     return this._sashBoxAccessor.direction() === 'row' ? width : height;
+  }
+
+  protected slideIn(event: AnimationCallbackEvent): void {
+    event.target.classList.add('slide-in');
+    console.log('>>> slidein');
+  }
+
+  protected slideOut(event: AnimationCallbackEvent): void {
+    event.target.classList.add('slide-out');
+    console.log('>>> slide out');
   }
 }
 
