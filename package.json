@@ -86,7 +86,7 @@
     "angular-eslint": "20.0.0",
     "conventional-changelog-cli": "5.0.0",
     "cross-env": "7.0.3",
-    "eslint": "9.28.0",
+    "eslint": "9.39.1",
     "jasmine-core": "5.7.1",
     "karma": "6.4.4",
     "karma-chrome-launcher": "3.2.0",
@@ -97,7 +97,7 @@
     "ng-packagr": "20.0.0",
     "npm-run-all2": "8.0.4",
     "serve": "14.2.4",
-    "typescript": "5.8.3",
+    "typescript": "5.9.3",
     "typescript-eslint": "8.33.1",
     "vercel": "42.3.0"
   },
