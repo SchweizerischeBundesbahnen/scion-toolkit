@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ApplicationConfig} from '@angular/core';
+import {ApplicationConfig, provideZoneChangeDetection} from '@angular/core';
 import {provideRouter, withHashLocation} from '@angular/router';
 import {provideAnimations} from '@angular/platform-browser/animations';
 import {routes} from './app.routes';
@@ -20,5 +20,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withHashLocation()),
     provideAnimations(),
+    provideZoneChangeDetection(),
   ],
 };
