@@ -445,7 +445,7 @@ function compareByDestroyOrder(bean1: BeanInfo, bean2: BeanInfo): number {
     return -1;
   }
   if ((bean1.instructions.destroyOrder ?? 0) > (bean2.instructions.destroyOrder ?? 0)) {
-    return +1;
+    return 1;
   }
   return (bean2.constructInstant ?? 0) - (bean1.constructInstant ?? 0); // reverse construction order
 }

@@ -183,7 +183,7 @@ export class SciScrollbarComponent {
   }
 
   protected onScrollTrackMouseDown(event: MouseEvent, direction: 'up' | 'down'): void {
-    const signum = (direction === 'up' ? -1 : +1);
+    const signum = (direction === 'up' ? -1 : 1);
     this.scrollWhileMouseDown(this.toViewportPanPx(signum * this.thumbSize), event);
   }
 

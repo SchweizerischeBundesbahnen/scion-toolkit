@@ -7,6 +7,12 @@
 
 Provides Angular-based components and directives with a focus on SCION requirements.
 
+> [!WARNING]
+> `@scion/components` does not support zoneless mode and may not work as expected. Support is planned for 2026.
+
+> [!NOTE]
+> `@scion/components` still requires `@angular/animations`. Removal is planned for 2026.
+
 - [**Viewport**][link-tool-viewport]\
   Provides a viewport component with scrollbars that sit on top of the viewport client.
 
