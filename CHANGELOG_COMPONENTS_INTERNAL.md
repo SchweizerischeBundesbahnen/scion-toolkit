@@ -1,3 +1,21 @@
+# [21.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-20.0.1...ɵcomponents-21.0.0) (2025-11-21)
+
+
+### Features
+
+* **ɵcomponents:** add support for Angular 21 ([be8c19f](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/be8c19fccec48de7b0b70fa981057a0f03979868))
+
+
+### BREAKING CHANGES
+
+* **ɵcomponents:** SCION Components requires Angular 21.
+
+  Note that:
+  - SCION Components does not support zoneless mode and may not work as expected. Support is planned for 2026.
+  - SCION Components still requires `@angular/animations`. Removal is planned for 2026.
+
+
+
 ## [20.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-20.0.0...ɵcomponents-20.0.1) (2025-09-02)
 
 
