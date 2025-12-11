@@ -5,6 +5,15 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+## [21.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-21.0.0...ɵcomponents-21.0.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* **ɵcomponents/key-value-field:** support display of `Set` ([5e12436](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/5e12436eb1d022f55aac6c69210c9770efe858d4))
+
+
+
 # [21.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-20.0.1...ɵcomponents-21.0.0) (2025-11-21)
 
 
