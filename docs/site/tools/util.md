@@ -20,8 +20,6 @@ npm install @scion/toolkit
   
   - **coerce**\
     Creates an array from the given value, or returns the value if already an array. If given `null` or `undefined`, by default, returns an empty array.
-  - **isEqual**\
-    Compares items of given arrays for reference equality.
   - **remove**\
     Removes the specified element from an array, or the elements which satisfy the provided predicate function. The original array will be changed.
   - **distinct**\
@@ -69,7 +67,19 @@ npm install @scion/toolkit
   The `Objects` utility provides the following methods.
   
   - **isEqual**\
-    Compares the two objects for shallow equality.
+    Compares two objects for deep equality.
+  
+  - **toMatrixNotation**\
+    Stringifies given object to matrix notation: a=b;c=d;e=f.
+  
+  - **keys**\
+    Like `Object.keys`, but preserving the data type of keys.
+  
+  - **values**\
+    Like `Object.values`, but preserving the data type of values and supporting optional properties.
+  
+  - **entries**\
+    Like `Object.entries`, but preserving the data type of keys and supporting optional properties.
 
 </details>
 
