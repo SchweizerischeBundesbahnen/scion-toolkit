@@ -10,7 +10,7 @@
 
 import {catchError, defaultIfEmpty, distinctUntilChanged, map, mergeMap, share, switchMap, take} from 'rxjs/operators';
 import {combineLatest, concat, EMPTY, from, identity, MonoTypeOperatorFunction, Observable, Observer, of, OperatorFunction, pipe, ReplaySubject, SchedulerLike, takeUntil, TeardownLogic} from 'rxjs';
-import {Arrays, Observables} from '@scion/toolkit/util';
+import {Arrays, Objects, Observables} from '@scion/toolkit/util';
 
 /**
  * Filters items in the source array and emits an array with items satisfying given predicate.
@@ -61,7 +61,7 @@ export function filterArray<T>(predicate?: (item: T) => Observable<boolean> | Pr
      */
     return combineLatest(matches.map(match => Observables.coerce(match).pipe(defaultIfEmpty(false), catchError(() => of(false)))))
       .pipe(
-        distinctUntilChanged((previous, current) => Arrays.isEqual(previous, current)),
+        distinctUntilChanged((previous, current) => Objects.isEqual(previous, current)),
         map(matches => items.filter((item, i) => matches[i])),
       );
   });

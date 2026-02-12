@@ -35,6 +35,8 @@ export namespace Arrays {
    * Compares items of given arrays for reference equality.
    *
    * Use the parameter `exactOrder` to control if the item order must be equal (which is by default) or not.
+   *
+   * @deprecated since version 2.1.0; use {@link Objects.isEqual} instead; API will be removed in version 3.0.0.
    */
   export function isEqual(array1: any[] | null | undefined, array2: any[] | null | undefined, options?: {exactOrder?: boolean}): boolean {
     if (array1 === array2) {
