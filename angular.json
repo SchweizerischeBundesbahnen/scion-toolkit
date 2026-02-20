@@ -25,11 +25,7 @@
           "builder": "@angular/build:karma",
           "options": {
             "tsConfig": "projects/scion/toolkit/tsconfig.spec.json",
-            "karmaConfig": "projects/scion/toolkit/karma.conf.js",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
+            "karmaConfig": "projects/scion/toolkit/karma.conf.js"
           }
         },
         "lint": {
@@ -72,11 +68,7 @@
               "includePaths": [
                 "projects/scion/components"
               ]
-            },
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
+            }
           }
         },
         "lint": {
@@ -137,10 +129,7 @@
                 "projects/scion/components.internal"
               ]
             },
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
+            "polyfills": []
           }
         },
         "lint": {
@@ -170,9 +159,7 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "apps/components/src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": [],
             "tsConfig": "apps/components/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -262,9 +249,7 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "apps/components-testing-app/src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": [],
             "tsConfig": "apps/components-testing-app/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [

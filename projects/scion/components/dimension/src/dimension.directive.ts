@@ -31,6 +31,8 @@ export class SciDimensionDirective {
 
   /**
    * Controls if to output outside the Angular zone. Defaults to `false`.
+   *
+   * The `emitOutsideAngular` has effect only for zoned applications.
    */
   public readonly emitOutsideAngular = input(false);
 

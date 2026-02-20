@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, ElementRef, HostListener, inject, OnInit, Signal, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, effect, ElementRef, inject, Signal, untracked, viewChild} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -30,8 +30,12 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciTabDirective,
     SciTabbarComponent,
   ],
+  host: {
+    '(keydown.escape)': 'onGlasspaneToggle()',
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class SciSashboxPageComponent implements OnInit {
+export default class SciSashboxPageComponent {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
   private readonly _sashBoxComponent: Signal<ElementRef<HTMLElement>> = viewChild.required(SciSashboxComponent, {read: ElementRef<HTMLElement>});
@@ -60,15 +64,18 @@ export default class SciSashboxPageComponent implements OnInit {
 
   protected glasspaneVisible = false;
 
-  public ngOnInit(): void {
-    // Set CSS variable default values.
-    Object.entries(this.formGroup.controls.styling.controls).forEach(([key, formControl]) => {
-      const defaultValue = getComputedStyle(this._sashBoxComponent().nativeElement).getPropertyValue(key);
-      formControl.setValue(defaultValue);
+  constructor() {
+    effect(() => {
+      const sashBoxComponent = this._sashBoxComponent();
+      untracked(() => {
+        Object.entries(this.formGroup.controls.styling.controls).forEach(([key, formControl]) => {
+          const defaultValue = getComputedStyle(sashBoxComponent.nativeElement).getPropertyValue(key);
+          formControl.setValue(defaultValue);
+        });
+      });
     });
   }
 
-  @HostListener('keydown.escape')
   protected onGlasspaneToggle(): void {
     this.glasspaneVisible = !this.glasspaneVisible;
   }

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {afterNextRender, Component, contentChildren, effect, ElementRef, HostBinding, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked} from '@angular/core';
+import {afterNextRender, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
@@ -84,6 +84,9 @@ import {SashComponent} from './sash/sash.component';
   }],
   host: {
     '[attr.data-direction]': 'direction()',
+    '[class.sashing]': 'sashing()',
+    '[style.--ɵsci-sashbox-max-height]': 'maxHeight()',
+    '[style.--ɵsci-sashbox-max-width]': 'maxWidth()',
   },
 })
 export class SciSashboxComponent {
@@ -111,28 +114,23 @@ export class SciSashboxComponent {
   /** @internal */
   public readonly sashes = this.computeSashes(this._contentChildren);
   /** @internal */
-  public afterFirstRender = signal(false);
+  public readonly afterFirstRender = signal(false);
 
-  @HostBinding('class.sashing')
-  protected sashing = false;
-
-  @HostBinding('style.--ɵsci-sashbox-max-height')
-  protected maxHeight: number | undefined;
-
-  @HostBinding('style.--ɵsci-sashbox-max-width')
-  protected maxWidth: number | undefined;
+  protected readonly sashing = signal(false);
+  protected maxHeight = signal<number | undefined>(undefined);
+  protected maxWidth = signal<number | undefined>(undefined);
 
   constructor() {
     this.detectFirstRendering();
   }
 
   protected onSashStart(): void {
-    this.sashing = true;
+    this.sashing.set(true);
 
     // Avoid overflow when sashing.
     const hostBounds = this._host.getBoundingClientRect();
-    this.maxHeight = hostBounds.height;
-    this.maxWidth = hostBounds.width;
+    this.maxHeight.set(hostBounds.height);
+    this.maxWidth.set(hostBounds.width);
     this.sashStart.emit();
 
     // Set the effective sash size as the flex-basis for non-fixed sashes (as sashing operates on pixel deltas).
@@ -148,9 +146,9 @@ export class SciSashboxComponent {
   }
 
   protected onSashEnd(): void {
-    this.sashing = false;
-    this.maxHeight = undefined;
-    this.maxWidth = undefined;
+    this.sashing.set(false);
+    this.maxHeight.set(undefined);
+    this.maxWidth.set(undefined);
 
     // Unset the flex-basis for non-fixed sashes and set the flex-grow accordingly.
     const pixelToFlexGrowFactor = computePixelToFlexGrowFactor(this.sashes());
