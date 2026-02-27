@@ -1,0 +1,29 @@
+
+<div class="table">
+  <div class="table-header">
+    @for (col of sciTable().columns(); track $index) {
+      @let _sort = sort();
+      <div class="column-header" [style.width]="col.width()" [style.min-width]="col.minWidth()" [style.max-width]="col.maxWidth()">
+        <button class="column-sort"
+                [attr.data-has-sort]="sciTable().isSortable() && col.sortable()"
+                [attr.data-sort]="_sort?.[0] === col.id && _sort?.[1]"
+                (click)="onSort(col)">
+          {{ col.header() }}
+        </button>
+        <button class="column-resize" (mousedown)="onMouseDown(col, $event)">
+
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="table-rows" tabindex="-1">
+    @for (row of data(); track sciTable().trackByFn(row, $index)) {
+      <div class="table-row">
+        @for (cell of row.cells; track $index) {
+          <div class="table-cell">{{cell.text}}</div>
+        }
+      </div>
+    }
+  </div>
+</div>

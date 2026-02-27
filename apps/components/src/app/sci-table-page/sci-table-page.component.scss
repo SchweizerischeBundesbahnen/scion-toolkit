@@ -1,0 +1,23 @@
+:host {
+  display: flex;
+  gap: 1em;
+
+  > main {
+    flex: auto;
+
+    > sci-splitter {
+      position: relative;
+    }
+  }
+
+  > aside {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+    padding: 1em;
+  }
+}

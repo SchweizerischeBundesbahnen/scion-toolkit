@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ *  SPDX-License-Identifier: EPL-2.0
+ */
+
+import {Signal} from '@angular/core';
+
+export type ValueType = string | number | boolean;
+export type ValueAccessorFn<T, V extends ValueType> = (row: T) => V;
+
+export type ColumnType = 'custom' | 'string' | 'number' | 'boolean';
+export type MaybeSignal<T> = T | Signal<T>;
+
+/**
+ * Table Model fluent API
+ */
+export interface SciTable<T> {
+  addStringColumn(valueAccessorOrConfig: ValueAccessorFn<T, string> | SciColumnDescriptor<T, string>): this;
+  addBooleanColumn(valueAccessorOrConfig: ValueAccessorFn<T, boolean> | SciColumnDescriptor<T, boolean>): this;
+  addNumberColumn(valueAccessorOrConfig: ValueAccessorFn<T, number> | SciColumnDescriptor<T, number>): this;
+  addColumn(valueAccessorOrConfig: SciColumnDescriptor<T, ValueType>): this;
+
+  trackBy(trackByFn: (row: T, index: number) => unknown): this;
+  sortable(sortable: boolean): this;
+  filterable(filterable: boolean): this;
+  resizable(resizable: boolean): this;
+  selectable(selectable: boolean): this;
+}
+
+/**
+ * Column Config options
+ */
+export interface SciColumnDescriptor<T, V extends ValueType> {
+  value: ValueAccessorFn<T, V>;
+  id?: string;
+  header?: MaybeSignal<string>;
+  text?: ValueAccessorFn<T, string>; // | ComponentRef<unknown> naming: text / label / displayValue
+  /**
+   * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
+   */
+  sort?: ((a: V, b: V) => number) | boolean;
+  /**
+   * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
+   */
+  filter?: (text: string, value: V, row: T) => boolean;
+  resizable?: MaybeSignal<boolean>;
+  width?: MaybeSignal<string>;
+  minWidth?: MaybeSignal<string>;
+  maxWidth?: MaybeSignal<string>;
+}
+
+/**
+ * Column Model
+ */
+export interface SciColumn<T, V extends ValueType> {
+  type: ColumnType;
+  id: string;
+
+  header: Signal<string | undefined>;
+  sortable: Signal<boolean>;
+  filterable: Signal<boolean>;
+  resizable: Signal<boolean>;
+  order: Signal<number>; // Column order
+  width: Signal<string>;
+  minWidth: Signal<string | undefined>;
+  maxWidth: Signal<string | undefined>;
+
+  value: ValueAccessorFn<T, V>;
+  text: ValueAccessorFn<T, string>; // | ComponentRef<unknown>
+  sort: (a: V, b: V) => number;
+  filter: (text: string, value: V, row: T) => boolean;
+}
