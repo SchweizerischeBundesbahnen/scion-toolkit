@@ -1,0 +1,36 @@
+@let values = filterValues() | async;
+@if (values && values.length >= 0) {
+  <select [formControl]="query">
+    <option [value]="''">All</option>
+    @for (value of values; track value) {
+      <option [value]="value">{{value}}</option>
+    }
+  </select>
+} @else {
+  @switch (column().type) {
+    @case ('number') {
+      <input [formControl]="query" type="number" />
+    }
+    @case ('boolean') {
+      <select [formControl]="query">
+        <option [value]="''">All</option>
+        <option [value]="true">True</option>
+        <option [value]="false">False</option>
+      </select>
+    }
+    @default {
+      <input [formControl]="query" />
+    }
+  }
+}
+
+
+<span class="filter-icon material-symbols-outlined">
+  filter_alt
+</span>
+
+@if (query.value && column().type !== 'boolean') {
+  <button class="clear e2e-clear" (click)="reset()">
+    <span class="material-symbols-outlined">clear</span>
+  </button>
+}

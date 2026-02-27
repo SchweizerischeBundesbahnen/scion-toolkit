@@ -1,0 +1,34 @@
+<div class="header" [class.filterable]="table().filterable">
+  <button class="column-sort e2e-column-sort"
+          [tabIndex]="column().sortable ? 0 : -1"
+          [attr.data-sort]="columnSort()"
+          [class.sortable]="column().sortable"
+          (click)="onSort($event)">
+    <span class="text">{{ column().header() }}</span>
+    @if (column().sortable) {
+      @switch (columnSort()) {
+        @case ('asc') {
+          <span class="material-symbols-outlined">arrow_upward</span>
+        }
+        @case ('desc') {
+          <span class="material-symbols-outlined">arrow_downward</span>
+        }
+        @default {
+          <span class="material-symbols-outlined sort">swap_vert</span>
+        }
+      }
+    }
+  </button>
+  @if (column().filterable) {
+    <sci-column-filter [column]="column()" />
+  }
+</div>
+@if (column().resizable) {
+  <sci-splitter orientation="vertical"
+                (start)="onResizeStart()"
+                (move)="onResize($event)"
+                (end)="onResizeEnd()"
+                (reset)="onResizeAuto()" />
+} @else {
+  <div class="delimiter"></div>
+}

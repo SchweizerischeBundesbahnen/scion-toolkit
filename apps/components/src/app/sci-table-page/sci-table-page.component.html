@@ -1,0 +1,47 @@
+<main>
+  <sci-table [table]="settings().slowDataSource ? slowTable() : table()" (activateItem)="onActivateRow($event)" (selectItems)="onSelectRows($event)" />
+</main>
+
+<aside class="e2e-settings">
+  <form>
+    <label>
+      <input [field]="form.filterable" type="checkbox" />
+      Filterable
+    </label>
+
+    <label>
+      <input [field]="form.sortable" type="checkbox" />
+      Sortable
+    </label>
+
+    <label>
+      <input [field]="form.resizable" type="checkbox" />
+      Resizable
+    </label>
+
+    <label>
+      <input [field]="form.showHeader" type="checkbox" />
+      Show Header
+    </label>
+
+    <select [field]="form.language">
+      <option value="de">DE</option>
+      <option value="fr">FR</option>
+    </select>
+
+    <button (click)="onUpdateSignal()">Update local state</button>
+
+    <label>
+      <input [field]="form.slowDataSource" type="checkbox" />
+      Use Slow DataSource
+    </label>
+  </form>
+
+  <dl>
+    <dt>Active Code:</dt>
+    <dd>{{activeItem() ?? '-'}}</dd>
+
+    <dt>Selected Codes:</dt>
+    <dd>{{selectedItems() ?? '-'}}</dd>
+  </dl>
+</aside>

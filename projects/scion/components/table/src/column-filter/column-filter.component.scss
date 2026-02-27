@@ -1,0 +1,56 @@
+:host {
+  position: relative;
+
+  > input, > select {
+    all: unset;
+    width: 100%;
+    height: 100%;
+    border: 1px solid transparent;
+    padding: .25em 24px;
+    transition: border-color ease-in-out .15s, color ease-in-out .15s;
+    background-color: var(--sci-color-background-input);
+    color: var(--sci-color-text);
+    appearance: auto;
+    box-sizing: border-box;
+
+    &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
+      border-color: var(--sci-color-accent);
+    }
+  }
+
+  > .filter-icon {
+    font-size: 16px;
+    position: absolute;
+    top: 50%;
+    left: .25em;
+    transform: translateY(-50%);
+  }
+
+  > .clear {
+    all: unset;
+    position: absolute;
+    top: 50%;
+    right: .25em;
+    transform: translateY(-50%);
+    background-color: var(--sci-color-background-elevation);
+    height: 20px;
+    width: 20px;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &:hover, &:focus-visible {
+      background-color: var(--sci-color-background-elevation-hover);
+    }
+
+    &:focus-visible {
+      outline: 1px solid var(--sci-color-accent);
+    }
+
+    > span {
+      font-size: 16px;
+    }
+  }
+}

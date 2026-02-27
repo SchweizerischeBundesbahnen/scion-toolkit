@@ -95,4 +95,9 @@ export const routes: Routes = [
     loadComponent: () => import('./sci-styles-page/sci-styles-page.component'),
     data: {internal: true},
   },
+  {
+    path: 'sci-table',
+    loadComponent: () => import('./sci-table-page/sci-table-page.component'),
+    data: {internal: false},
+  },
 ];

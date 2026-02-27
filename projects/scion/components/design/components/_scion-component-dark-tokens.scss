@@ -101,6 +101,12 @@ $sci-button: (
   --sci-button-icon-size: 16px,
 );
 
+$sci-table: (
+  --sci-table-cell-padding: .5em,
+  --sci-table-header-row-size: 30px,
+  --sci-table-border-size: 1px,
+);
+
 $tokens: sci-theming.map-merge(
   $sci-scrollbar,
   $sci-viewport,
@@ -111,4 +117,5 @@ $tokens: sci-theming.map-merge(
   $sci-menubar,
   $sci-toolbar,
   $sci-button,
+  $sci-table,
 );

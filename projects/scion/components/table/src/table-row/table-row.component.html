@@ -1,0 +1,8 @@
+@let _row = row();
+@for (cell of _row.cells; track cell.columnName) {
+  <sci-table-cell [cell]="cell" [item]="_row.item" #cell />
+} @empty {
+  @for (column of table().columns; track column.name) {
+    <div class="skeleton"></div>
+  }
+}

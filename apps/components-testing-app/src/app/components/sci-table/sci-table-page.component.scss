@@ -1,0 +1,54 @@
+:host {
+  display: flex;
+  gap: 1em;
+
+  > main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+    flex: 1;
+
+    > sci-table {
+      height: var(--table-page-height);
+
+      &:first-child:last-child {
+        grid-column: 1 / -1;
+      }
+
+      &::part(red-cell),
+      &::part(red-row) {
+        background-color: rgba(255, 0, 0, 0.2);
+      }
+    }
+  }
+
+  > aside {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+    padding: 1em;
+    width: 300px;
+
+    form {
+      display: grid;
+      grid-auto-flow: row;
+      gap: 1em;
+    }
+  }
+}
+
+.custom-cell {
+  padding-inline: .5em;
+
+  &.up {
+    color: var(--sci-color-positive);
+  }
+
+  &.down {
+    color: var(--sci-color-negative);
+  }
+}

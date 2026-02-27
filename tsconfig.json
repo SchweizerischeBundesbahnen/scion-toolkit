@@ -12,7 +12,7 @@
     "isolatedModules": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "ES2022",
+    "target": "ES2023",
     "module": "preserve",
     "noUnusedLocals": true,
     "noUncheckedIndexedAccess": true,
@@ -49,6 +49,9 @@
     //      ],
     //      "@scion/components/splitter": [
     //        "./projects/scion/components/splitter/src/public_api"
+    //      ],
+    //      "@scion/components/table": [
+    //        "./projects/scion/components/table/src/public_api"
     //      ],
     //      "@scion/components/throbber": [
     //        "./projects/scion/components/throbber/src/public_api"
