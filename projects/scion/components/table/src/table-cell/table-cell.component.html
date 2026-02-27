@@ -1,0 +1,22 @@
+@let _cell = cell();
+<div class="cell" [class.selected]="isSelected()" #cellElement>
+  @switch (_cell.type) {
+    @case ('template') {
+      <ng-template *ngTemplateOutlet="_cell.template().template; context: templateContext()" />
+    }
+    @case ('component') {
+      <ng-container *sciComponentOutlet="_cell.component"/>
+    }
+    @case ('boolean') {
+      @let value = _cell.value();
+      @if (value) {
+        <sci-icon class="checkbox" data-checked="true">scion.checkmark</sci-icon>
+      } @else {
+        <sci-icon class="checkbox">scion.clear</sci-icon>
+      }
+    }
+    @default {
+      {{_cell.value()}}
+    }
+  }
+</div>

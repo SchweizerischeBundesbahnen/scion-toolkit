@@ -1,0 +1,29 @@
+:host {
+  position: absolute;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+
+  > sci-splitter {
+    position: absolute;
+    top: 0;
+    --sci-splitter-background-color: transparent;
+    --sci-splitter-background-color-hover: transparent;
+    --sci-splitter-size: var(--sci-table-border-size);
+
+    &.resizing {
+      --sci-splitter-background-color: var(--sci-table-active-color);
+    }
+  }
+
+  > div.delimiter {
+    position: absolute;
+    top: 0;
+    width: var(--sci-table-border-size);
+    height: 100%;
+    background-color: var(--sci-table-border-color);
+  }
+}

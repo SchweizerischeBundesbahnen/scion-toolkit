@@ -1,0 +1,23 @@
+:host {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-content: center;
+  position: relative;
+
+  &[data-type="number"] {
+    text-align: right;
+  }
+
+  &:not([data-type="template"], [data-type="component"]) > .cell {
+    padding-inline: var(--sci-table-cell-horizontal-padding);
+  }
+
+  > .cell {
+    display: inline; // makes sure text-overflow works inside
+
+    &:not(.selected) > .checkbox[data-checked="true"] {
+      color: var(--sci-color-accent);
+    }
+  }
+}

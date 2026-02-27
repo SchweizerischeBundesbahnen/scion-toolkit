@@ -30,6 +30,7 @@
     flex: auto;
     padding: 1em;
     display: grid;
+    grid-template-columns: 100%;
 
     > router-outlet {
       position: absolute; // out of the document flow

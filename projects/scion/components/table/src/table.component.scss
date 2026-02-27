@@ -1,0 +1,103 @@
+@use '@scion/components/scrollbar' as sci-scrollbar;
+
+:host {
+  position: relative;
+  background-color: var(--sci-table-background-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @include sci-scrollbar.scrollbar-hide-when-inactive();
+
+  > div.horizontal-viewport {
+    flex: var(--sci-table-flex);
+    display: flex;
+
+    > div.horizontal-content {
+      width: var(--ɵsci-table-width); // width cannot be set on sciScrollable viewports, because it is overwritten.
+      height: 100%;
+      display: grid;
+      grid-template-columns: var(--ɵsci-table-columns);
+      grid-template-rows: auto 1fr;
+      position: relative; // positioning context for sci-column-resize.
+      overflow: hidden;
+      flex: none;
+
+      > header {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+      }
+
+      > div.vertical-viewport {
+          display: grid;
+          grid-template-columns: subgrid;
+          grid-column: 1 / -1;
+          position: relative;
+
+          > div.body {
+            display: grid;
+            grid-template-columns: subgrid;
+            grid-column: 1 / -1;
+            height: max(var(--ɵsci-table-virtual-scroll-height), 100%);
+
+            &:focus {
+              outline: none;
+            }
+
+            > div.rows {
+              display: grid;
+              grid-template-columns: subgrid;
+              grid-column: 1 / -1;
+              grid-auto-rows: var(--ɵsci-table-item-size);
+              height: fit-content;
+
+              > div.empty-state {
+                grid-column: 1 / -1;
+                text-align: center;
+                padding: 1em;
+                color: var(--sci-color-text-subtle);
+              }
+
+              > sci-table-row {
+                display: grid;
+                grid-template-columns: subgrid;
+                grid-column: 1 / -1;
+              }
+            }
+          }
+        }
+    }
+
+    > .row-actions {
+      position: sticky; // actions should always stick to the right of the viewport.
+      top: var(--ɵsci-table-toolbar-offset);
+      right: var(--sci-table-cell-horizontal-padding);
+      height: var(--ɵsci-table-item-size); // match the height of row elements.
+      width: 0; // should not take up space next to the table.
+      display: flex; // vertically position actions in the middle of the row.
+      align-items: center;
+      justify-content: flex-end;
+
+      // Hide toolbar while scrolling.
+      @container style(--ɵsci-table-scrolling: true) {
+        visibility: hidden; // preserve space to avoid layout shift.
+      }
+
+      > sci-toolbar {
+        background-color: var(--sci-table-background-color);
+        border-radius: var(--sci-corner);
+      }
+    }
+    }
+
+  > sci-scrollbar {
+    @include sci-scrollbar.scrollbar-position();
+
+    &.vscroll {
+      top: var(--ɵsci-table-header-height);
+      right: max(calc(100% - var(--ɵsci-table-width)), 0px);
+    }
+  }
+
+}

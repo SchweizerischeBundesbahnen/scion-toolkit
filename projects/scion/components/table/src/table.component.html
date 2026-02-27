@@ -1,0 +1,32 @@
+<div class="horizontal-viewport e2e-horizontal-viewport" #horizontalViewport sciScrollable>
+  <div class="horizontal-content">
+    @if (sciTable().headerVisible()) {
+      <header #header>
+        @for (column of table().columns(); track column.name) {
+          <sci-column-header [column]="column" />
+        }
+      </header>
+    }
+    <div class="vertical-viewport" #verticalViewport sciScrollable>
+      <div class="body" sciTableKeyboardNavigator tabindex="0">
+        <div class="rows" [style.transform]="`translateY(${range().start * sciTable().itemSize()}px)`">
+          <!-- Track index to reuse the table row elements -->
+          @for (row of visibleRows(); track $index) {
+            <sci-table-row [row]="row" [index]="range().start + $index" (mouseenter)="onRowHover(row.id)" />
+          } @empty {
+            <div class="empty-state">Nothing to show.</div>
+          }
+        </div>
+      </div>
+    </div>
+    <sci-table-overlay [columnWidths]="absoluteColumnWidths()" (resizeStart)="onResizeStart()" (autoResize)="onResizeAuto($event)" (resize)="onResize($event)" />
+  </div>
+  <div class="row-actions">
+    <sci-toolbar [name]="toolbarId()" />
+  </div>
+</div>
+
+@if (nativeScrollbarTrackSizeProvider.trackSize() !== null) {
+  <sci-scrollbar [direction]="'hscroll'" [viewport]="horizontalViewport" />
+  <sci-scrollbar [direction]="'vscroll'" class="vscroll" [viewport]="verticalViewport"/>
+}

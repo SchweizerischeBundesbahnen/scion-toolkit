@@ -1,0 +1,44 @@
+:host {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1em;
+
+  > main {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+
+    > sci-table {
+      flex: 1;
+
+      &::part(red-row) {
+        color: indianred;
+      }
+
+      &::part(green-cell) {
+        background-color: rgba(0, 255, 0, 0.2);
+      }
+    }
+  }
+
+  > aside {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+    padding: 1em;
+
+    > form {
+      display: grid;
+      grid-auto-flow: row;
+      gap: 0.5em;
+    }
+  }
+}
+
+.custom-cell {
+  padding-inline: .5em;
+}

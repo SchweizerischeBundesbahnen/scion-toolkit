@@ -1,0 +1,35 @@
+:host {
+  user-select: none; // has to be disabled because of selection
+  border: 1px solid transparent;
+  border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
+
+  // Prevent hovering row while scrolling.
+  @container not style(--ɵsci-table-scrolling: true) {
+    &:hover {
+      background-color: var(--sci-table-row-hover-color);
+    }
+  }
+
+  &.active {
+    border-bottom-color: transparent;
+    outline: 1px solid var(--sci-table-active-color);
+    outline-offset: -1px;
+  }
+
+  &.selected {
+    background-color: var(--sci-table-row-selected-color);
+  }
+
+  &.loading {
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+
+    > .skeleton {
+      border-radius: var(--sci-table-skeleton-border-radius);
+      background-color: var(--sci-table-skeleton-color);
+      height: 1em;
+      margin-inline: .5em;
+    }
+  }
+}

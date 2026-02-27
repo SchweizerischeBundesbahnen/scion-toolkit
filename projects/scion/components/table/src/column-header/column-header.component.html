@@ -1,0 +1,29 @@
+<div class="header" [class.filterable]="table().filterable()">
+  <button class="column-sort e2e-column-sort"
+          [tabIndex]="column().sortable ? 0 : -1"
+          [attr.data-sort]="columnSort()"
+          [class.sortable]="column().sortable"
+          [title]="column().header()"
+          (click)="onSort($event)">
+    <span class="text">{{ column().header() }}</span>
+    @if (column().sortable) {
+      @switch (columnSort()) {
+        @case ('asc') {
+          <sci-icon>scion.chevron_up</sci-icon>
+        }
+        @case ('desc') {
+          <sci-icon>scion.chevron_down</sci-icon>
+        }
+        @default {
+          <span class="sort">
+            <sci-icon>scion.chevron_up</sci-icon>
+            <sci-icon>scion.chevron_down</sci-icon>
+          </span>
+        }
+      }
+    }
+  </button>
+  @if (column().filterable) {
+    <sci-column-filter [column]="column()" />
+  }
+</div>
