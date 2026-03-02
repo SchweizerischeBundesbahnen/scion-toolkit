@@ -47,7 +47,7 @@ export interface SciColumnDescriptor<T, V extends ValueType> {
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: (text: string, value: V, row: T) => boolean;
+  filter?: ((text: string, value: V, row: T) => boolean) | boolean;
   resizable?: MaybeSignal<boolean>;
   width?: MaybeSignal<string>;
   minWidth?: MaybeSignal<string>;
@@ -67,8 +67,8 @@ export interface SciColumn<T, V extends ValueType> {
   resizable: Signal<boolean>;
   order: Signal<number>; // Column order
   width: Signal<string>;
-  minWidth: Signal<string | undefined>;
-  maxWidth: Signal<string | undefined>;
+  minWidth: Signal<string | null>;
+  maxWidth: Signal<string | null>;
 
   value: ValueAccessorFn<T, V>;
   text: ValueAccessorFn<T, string>; // | ComponentRef<unknown>

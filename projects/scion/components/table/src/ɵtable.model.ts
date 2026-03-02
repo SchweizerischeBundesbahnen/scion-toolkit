@@ -45,7 +45,7 @@ function defaultSort(a: ValueType, b: ValueType): number {
 }
 
 export class ɵSciTable<T> implements SciTable<T> {
-  public readonly _columns = signal<SciColumn<T, ValueType>[]>([]);
+  private readonly _columns = signal<SciColumn<T, ValueType>[]>([]);
   private readonly _isSortable = signal(true);
   private readonly _isFilterable = signal(true);
   private readonly _isResizable = signal(true);
@@ -95,13 +95,13 @@ export class ɵSciTable<T> implements SciTable<T> {
     return this;
   }
 
-  private _trackByFn = (row: T, index: number): unknown => index;
+  private _trackByFn = (_: T, index: number): unknown => index;
   public trackBy(trackByFn: (row: T, index: number) => unknown): this {
     this._trackByFn = trackByFn;
     return this;
   }
 
-  public trackByFn(row: T, index: number): unknown {
+  public trackByFn(index: number, row: T): unknown {
     return this._trackByFn(row, index);
   }
 
@@ -117,13 +117,13 @@ export class ɵSciTable<T> implements SciTable<T> {
         filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
         sort: typeof config.sort === 'function' ? config.sort : defaultSort,
         header: coerceSignal(config.header, {defaultValue: ''}),
-        sortable: coerceSignal(!!config.sort, {defaultValue: true}),
-        filterable: coerceSignal(!!config.filter, {defaultValue: true}),
+        sortable: coerceSignal(config.sort !== false, {defaultValue: true}),
+        filterable: coerceSignal(config.filter !== false, {defaultValue: true}),
         resizable: coerceSignal(config.resizable, {defaultValue: true}),
         order: signal(columns.length),
-        width: coerceSignal(config.width, {defaultValue: '200px'}),
-        minWidth: coerceSignal(config.minWidth, {defaultValue: ''}),
-        maxWidth: coerceSignal(config.maxWidth, {defaultValue: ''}),
+        width: coerceSignal(config.width, {defaultValue: '1fr'}),
+        minWidth: coerceSignal(config.minWidth, {defaultValue: null}),
+        maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),
       },
     ]);
     return this;

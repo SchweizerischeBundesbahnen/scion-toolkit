@@ -1,6 +1,16 @@
 <main>
-  <sci-table [table]="table" />
+  <sci-table [table]="table" (activateRow)="activeRow.set($event)" (selectRows)="onSelectRows($event)" ) />
 </main>
 
 <aside class="e2e-settings">
+  <dl>
+    <dt>Active Row Index:</dt>
+    <dd>{{activeRow()?.index ?? '-'}}</dd>
+
+    <dt>Active Sloid:</dt>
+    <dd>{{ activeRow()?.row?.sloid ?? '-' }}</dd>
+
+    <dt>Selected Row Indices:</dt>
+    <dd>{{selectedRows() ?? '-'}}</dd>
+  </dl>
 </aside>

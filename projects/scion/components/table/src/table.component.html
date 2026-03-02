@@ -1,29 +1,34 @@
+@let table = sciTable();
+<div class="table-header">
+  @for (col of table.columns(); track $index) {
+    <div class="column-header">
+      <button class="column-sort"
+              [attr.data-has-sort]="table.isSortable() && col.sortable()"
+              [attr.data-sort]="sort()?.[0] === col.id && sort()?.[1]"
+              (click)="onSort(col)">
+        {{ col.header() }}
+      </button>
+      <button class="column-resize" (dblclick)="onResizeDblClick(col)" (mousedown)="onResizeMouseDown(col, $event)" tabindex="-1">
 
-<div class="table">
-  <div class="table-header">
-    @for (col of sciTable().columns(); track $index) {
-      @let _sort = sort();
-      <div class="column-header" [style.width]="col.width()" [style.min-width]="col.minWidth()" [style.max-width]="col.maxWidth()">
-        <button class="column-sort"
-                [attr.data-has-sort]="sciTable().isSortable() && col.sortable()"
-                [attr.data-sort]="_sort?.[0] === col.id && _sort?.[1]"
-                (click)="onSort(col)">
-          {{ col.header() }}
-        </button>
-        <button class="column-resize" (mousedown)="onMouseDown(col, $event)">
-
-        </button>
-      </div>
-    }
-  </div>
-
-  <div class="table-rows" tabindex="-1">
-    @for (row of data(); track sciTable().trackByFn(row, $index)) {
-      <div class="table-row">
-        @for (cell of row.cells; track $index) {
-          <div class="table-cell">{{cell.text}}</div>
-        }
-      </div>
-    }
-  </div>
+      </button>
+    </div>
+  }
+</div>
+<div class="table-body">
+  <cdk-virtual-scroll-viewport itemSize="26" sciScrollable #cdkViewport>
+    <div class="table-row" tabindex="-1"
+         *cdkVirtualFor="let row of data(); let i = index; trackBy: table.trackByFn.bind(table)"
+         [class.active]="activeRow()?.index === i"
+         [class.selected]="selectedRowIndices().includes(i)"
+         (click)="onRowClick(row, i, $event)"
+         (keydown.enter)="onRowEnter(row, i)"
+    >
+      @for (cell of row.cells; track $index) {
+        <div class="table-cell" [attr.data-type]="cell.type">
+          <span [attr.data-column]="cell.columnId" #cell>{{cell.text}}</span>
+        </div>
+      }
+    </div>
+  </cdk-virtual-scroll-viewport>
+  <sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
 </div>

@@ -5,8 +5,8 @@
   > main {
     flex: auto;
 
-    > sci-splitter {
-      position: relative;
+    > sci-table {
+      height: 600px;
     }
   }
 
@@ -19,5 +19,6 @@
     border-radius: var(--sci-corner);
     background-color: var(--sci-color-background-secondary);
     padding: 1em;
+    width: 300px;
   }
 }
