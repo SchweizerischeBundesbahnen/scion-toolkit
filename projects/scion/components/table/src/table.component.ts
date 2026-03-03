@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, Component, computed, effect, input, output, Signal, signal, untracked, viewChildren} from '@angular/core';
-import {SciColumn, SciRow, SciTable, ValueType} from './table.model';
+import {SciCell, SciColumn, SciRow, SciTable, ValueType} from './table.model';
 import {ɵSciTable} from './ɵtable.model';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
@@ -64,7 +64,7 @@ export class SciTableComponent<T> {
   private readonly _resizeContext = signal<{width: number; columnId: string} | undefined>(undefined);
   private readonly _resizedColumnWidths = signal<Map<string, string>>(new Map());
 
-  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
+  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>); // TODO [eg]: Is there a better way to not expose the private ɵSciTable?
   protected readonly selectedRowIndices = computed(() => this.selectedRows().map(selection => selection.index));
   protected readonly columnWidths = computed(() => {
     const columns = this.sciTable().columns();
@@ -78,8 +78,8 @@ export class SciTableComponent<T> {
     const table = this.sciTable();
     const [id, dir] = this.sort() ?? [];
     const columns = table.columns();
-    const data = table.data().map(row => ({
-      data: row,
+    const data: SciRow<T>[] = table.data().map(row => ({
+      record: row,
       cells: columns.map(col => ({
         label: col.label(row),
         type: col.type,
@@ -92,10 +92,15 @@ export class SciTableComponent<T> {
       return data;
     }
 
+    const toSortParam = (record: T, cell: SciCell<ValueType>): {record: T; label: ValueType} => ({
+      record,
+      label: typeof cell.label !== 'object' ? cell.label : undefined,
+    });
+
     return untracked(() => {
       const sortColIdx = columns.indexOf(sortCol);
       const sortDir = dir === 'asc' ? 1 : -1;
-      return data.sort((a, b) => sortCol.sort(a.cells[sortColIdx]!.label, b.cells[sortColIdx]!.label) * sortDir);
+      return data.sort((a, b) => sortCol.sort(toSortParam(a.record, a.cells[sortColIdx]!) as never, toSortParam(b.record, b.cells[sortColIdx]!) as never) * sortDir);
     });
   });
 
@@ -110,10 +115,10 @@ export class SciTableComponent<T> {
   }
 
   protected trackBy(i: number, row: SciRow<T>): any {
-    return this.sciTable().trackByFn(i, row.data);
+    return this.sciTable().trackByFn(i, row.record);
   }
 
-  protected onSort(col: SciColumn<T, ValueType>): void {
+  protected onSort(col: SciColumn<T>): void {
     if (!this.sciTable().isSortable() || !col.sortable()) {
       return;
     }
@@ -146,7 +151,7 @@ export class SciTableComponent<T> {
     this.selectedRows.update(selection => {
       const existing = selection.find(s => s.index === index);
       if (existing) {
-        // Deselect row, if it was already selected
+        // Deselect row, if it was already selected.
         return selection.filter(s => s !== existing);
       }
 
@@ -158,11 +163,11 @@ export class SciTableComponent<T> {
     });
   }
 
-  protected onResizeStart(column: SciColumn<T, ValueType>, header: HTMLDivElement): void {
+  protected onResizeStart(column: SciColumn<T>, header: HTMLDivElement): void {
     this._resizeContext.set({width: header.offsetWidth, columnId: column.id});
   }
 
-  protected onResize(column: SciColumn<T, ValueType>, event: SplitterMoveEvent): void {
+  protected onResize(column: SciColumn<T>, event: SplitterMoveEvent): void {
     const context = this._resizeContext();
     if (!context) {
       return;
@@ -177,7 +182,7 @@ export class SciTableComponent<T> {
     this._resizeContext.set(undefined);
   }
 
-  protected onResizeAuto(column: SciColumn<T, ValueType>): void {
+  protected onResizeAuto(column: SciColumn<T>): void {
     const cellWidths = this.rows().map(row => row.getCellWidth(column.id));
     const maxWidth = Math.max(...cellWidths, 0) + 20; // TODO [eg]: configurable buffer?
     this._resizedColumnWidths.update(overrides => new Map(overrides).set(column.id, `${maxWidth}px`));

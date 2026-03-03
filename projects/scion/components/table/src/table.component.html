@@ -32,8 +32,8 @@
       [index]="i"
       [selectedRows]="selectedRowIndices()"
       [activeRow]="activeRow()?.index"
-      (activateRow)="onActivateRow(row.data, i)"
-      (selectRow)="onSelectRow(row.data, i, $event)"
+      (activateRow)="onActivateRow(row.record, i)"
+      (selectRow)="onSelectRow(row.record, i, $event)"
     />
   </cdk-virtual-scroll-viewport>
   <sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>

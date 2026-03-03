@@ -12,25 +12,9 @@
 
   &.active {
     border-color: var(--sci-color-border-strong);
-
-    & + div.table-row {
-      border-top: 0;
-    }
   }
 
   &.selected {
     background-color: var(--sci-color-background-secondary);
-  }
-
-  > div.table-cell {
-    padding-inline: .5em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    align-content: center;
-
-    &[data-type="number"] {
-      text-align: right;
-    }
   }
 }

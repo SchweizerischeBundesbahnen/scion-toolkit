@@ -10,42 +10,42 @@
 
 import {signal, Signal} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
-import {ColumnType, SciColumn, SciColumnDescriptor, SciTable, ValueAccessorFn, ValueType} from './table.model';
+import {ColumnType, SciBooleanColumnDescriptor, SciColumn, SciColumnDescriptor, SciCustomColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTable, ValueType} from './table.model';
 import {coerceSignal} from './common';
 
-function defaultFilter(text: string, value: ValueType): boolean {
-  switch (typeof value) {
+function defaultFilter({text, label}: {text: string; label: ValueType}): boolean {
+  switch (typeof label) {
     case 'string':
-      return value.toLowerCase().includes(text.toLowerCase());
+      return label.toLowerCase().includes(text.toLowerCase());
     case 'number':
-      return isNaN(+text) ? false : +text === value;
+      return isNaN(+text) ? false : +text === label;
     case 'boolean':
-      return text === String(value);
+      return text === String(label);
     default:
       return false;
   }
 }
 
-function defaultSort(a: ValueType, b: ValueType): number {
+function defaultSort(a: {label?: ValueType}, b: {label?: ValueType}): number {
   // TODO: improve default sort for non matching types (maybe pass columntype?)
-  if (typeof a !== typeof b) {
+  if (a.label === undefined || b.label === undefined || typeof a !== typeof b) {
     return 0;
   }
 
-  switch (typeof a) {
+  switch (typeof a.label) {
     case 'string':
-      return a.localeCompare(b as string);
+      return a.label.localeCompare(b.label as string);
     case 'number':
-      return a - (b as number);
+      return a.label - (b.label as number);
     case 'boolean':
-      return a === b ? 0 : (a ? -1 : 1);
+      return a.label === b.label ? 0 : (a.label ? -1 : 1);
     default:
       return 0;
   }
 }
 
 export class ɵSciTable<T> implements SciTable<T> {
-  private readonly _columns = signal<SciColumn<T, ValueType>[]>([]);
+  private readonly _columns = signal<SciColumn<T>[]>([]);
   private readonly _isSortable = signal(true);
   private readonly _isFilterable = signal(true);
   private readonly _isResizable = signal(true);
@@ -57,22 +57,23 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly isResizable = this._isResizable.asReadonly();
   public readonly isSelectable = this._isSelectable.asReadonly();
 
-  constructor(public readonly data: Signal<T[]>) {}
-
-  public addBooleanColumn(valueAccessorOrConfig: ValueAccessorFn<T, boolean> | SciColumnDescriptor<T, boolean>): this {
-    return this.addColumnWithType(valueAccessorOrConfig as ValueAccessorFn<T, ValueType> | SciColumnDescriptor<T, ValueType>, 'boolean');
+  constructor(public readonly data: Signal<T[]>) {
   }
 
-  public addNumberColumn(valueAccessorOrConfig: ValueAccessorFn<T, number> | SciColumnDescriptor<T, number>): this {
-    return this.addColumnWithType(valueAccessorOrConfig as ValueAccessorFn<T, ValueType> | SciColumnDescriptor<T, ValueType>, 'number');
+  public addBooleanColumn(valueAccessorOrConfig: ((record: T) => boolean) | SciBooleanColumnDescriptor<T>): this {
+    return this.addColumnWithType(typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig, 'boolean');
   }
 
-  public addStringColumn(valueAccessorOrConfig: ValueAccessorFn<T, string> | SciColumnDescriptor<T, string>): this {
-    return this.addColumnWithType(valueAccessorOrConfig as ValueAccessorFn<T, ValueType> | SciColumnDescriptor<T, ValueType>, 'string');
+  public addNumberColumn(valueAccessorOrConfig: ((record: T) => number) | SciNumberColumnDescriptor<T>): this {
+    return this.addColumnWithType(typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig, 'number');
   }
 
-  public addColumn(valueAccessorOrConfig: SciColumnDescriptor<T, ValueType>): this {
-    return this.addColumnWithType(valueAccessorOrConfig as ValueAccessorFn<T, ValueType> | SciColumnDescriptor<T, ValueType>, 'custom');
+  public addStringColumn(valueAccessorOrConfig: ((record: T) => string) | SciStringColumnDescriptor<T>): this {
+    return this.addColumnWithType(typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig, 'string');
+  }
+
+  public addColumn(config: SciCustomColumnDescriptor<T>): this {
+    return this.addColumnWithType(config, 'custom');
   }
 
   public filterable(filterable: boolean): this {
@@ -105,8 +106,17 @@ export class ɵSciTable<T> implements SciTable<T> {
     return this._trackByFn(row, index);
   }
 
-  private addColumnWithType(valueAccessorOrConfig: ValueAccessorFn<T, ValueType> | SciColumnDescriptor<T, ValueType>, type: ColumnType): this {
-    const config = typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig;
+  private addColumnWithType(config: SciColumnDescriptor<T>, type: ColumnType): this {
+    // columns with a custom component must provide a sort function to be sortable, because the default sort function does not work.
+    const sortable = typeof config.label === 'function' ?
+      config.sort !== false :
+      !!config.sort;
+
+    // columns with a custom component must provide a filter function to be filterable, because the default filter function does not work.
+    const filterable = typeof config.label === 'function' ?
+      config.filter !== false :
+      !!config.filter;
+
     this._columns.update(columns => [
       ...columns,
       {
@@ -116,14 +126,14 @@ export class ɵSciTable<T> implements SciTable<T> {
         filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
         sort: typeof config.sort === 'function' ? config.sort : defaultSort,
         header: coerceSignal(config.header, {defaultValue: ''}),
-        sortable: coerceSignal(config.sort !== false, {defaultValue: true}),
-        filterable: coerceSignal(config.filter !== false, {defaultValue: true}),
+        sortable: signal(sortable),
+        filterable: signal(filterable),
         resizable: coerceSignal(config.resizable, {defaultValue: true}),
         order: signal(columns.length),
         width: coerceSignal(config.width, {defaultValue: '1fr'}),
         minWidth: coerceSignal(config.minWidth, {defaultValue: null}),
         maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),
-      },
+      } as SciColumn<T>,
     ]);
     return this;
   }

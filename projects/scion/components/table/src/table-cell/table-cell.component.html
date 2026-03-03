@@ -1,0 +1,6 @@
+@if (customCell(); as customCell) {
+  <ng-container *ngComponentOutlet="customCell.component"></ng-container>
+} @else {
+  <span #textCell>{{cell().label}}</span>
+}
+

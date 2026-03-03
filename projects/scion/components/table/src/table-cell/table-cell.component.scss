@@ -1,0 +1,11 @@
+:host {
+  padding-inline: .5em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-content: center;
+
+  &[data-type="number"] {
+    text-align: right;
+  }
+}

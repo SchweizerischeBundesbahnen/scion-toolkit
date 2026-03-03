@@ -8,22 +8,27 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Signal} from '@angular/core';
+import {Binding, Signal} from '@angular/core';
 import {MaybeSignal} from './common';
+import {ComponentType} from '@angular/cdk/portal';
 
-export type ValueType = string | number | boolean;
-export type ValueAccessorFn<T, V extends ValueType> = (record: T) => V;
+export type ValueType = string | number | boolean | undefined;
 
 export type ColumnType = 'custom' | 'string' | 'number' | 'boolean';
+
+export interface ComponentWithBindings {
+  component: ComponentType<unknown>;
+  bindings: Binding[];
+}
 
 /**
  * Table Model fluent API
  */
 export interface SciTable<T> {
-  addStringColumn(valueAccessorOrConfig: ValueAccessorFn<T, string> | SciColumnDescriptor<T, string>): this;
-  addBooleanColumn(valueAccessorOrConfig: ValueAccessorFn<T, boolean> | SciColumnDescriptor<T, boolean>): this;
-  addNumberColumn(valueAccessorOrConfig: ValueAccessorFn<T, number> | SciColumnDescriptor<T, number>): this;
-  addColumn(valueAccessorOrConfig: SciColumnDescriptor<T, ValueType>): this;
+  addStringColumn(valueAccessorOrConfig: ((record: T) => string) | SciStringColumnDescriptor<T>): this;
+  addBooleanColumn(valueAccessorOrConfig: ((record: T) => boolean) | SciBooleanColumnDescriptor<T>): this;
+  addNumberColumn(valueAccessorOrConfig: ((record: T) => number) | SciNumberColumnDescriptor<T>): this;
+  addColumn(descriptor: SciCustomColumnDescriptor<T>): this;
 
   trackBy(trackByFn: (record: T, index: number) => unknown): this;
   sortable(sortable: boolean): this;
@@ -32,31 +37,51 @@ export interface SciTable<T> {
   selectable(selectable: boolean): this;
 }
 
-/**
- * Column Config options
- */
-export interface SciColumnDescriptor<T, V extends ValueType> {
-  label: ValueAccessorFn<T, V>; // | ComponentRef<unknown> / DirectiveWithBindings naming: text / label / displayValue / content
+interface BaseSciColumnDescriptor {
   id?: string;
   header?: MaybeSignal<string>;
-  /**
-   * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
-   */
-  sort?: ((a: V, b: V) => number) | boolean;
-  /**
-   * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
-   */
-  filter?: ((text: string, value: V, row: T) => boolean) | boolean;
   resizable?: MaybeSignal<boolean>;
   width?: MaybeSignal<string>;
   minWidth?: MaybeSignal<string>;
   maxWidth?: MaybeSignal<string>;
 }
 
+export interface SciCustomColumnDescriptor<T> extends BaseSciColumnDescriptor {
+  label: (record: T) => ComponentWithBindings;
+  sort?: ((a: {record: T}, b: {record: T}) => number) | boolean;
+  filter?: ((filter: {text: string; record: T}) => boolean) | boolean;
+}
+
 /**
- * Column Model
+ * Column Config options
  */
-export interface SciColumn<T, V extends ValueType> {
+export interface SciStringColumnDescriptor<T> extends BaseSciColumnDescriptor {
+  label: (record: T) => string; // Muss im InjectionContext aufgerufen werden
+  /**
+   * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
+   */
+  sort?: ((a: {record: T; label: string}, b: {record: T; label: string}) => number) | boolean;
+  /**
+   * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
+   */
+  filter?: ((filter: {text: string; label: string; record: T}) => boolean) | boolean;
+}
+
+export interface SciNumberColumnDescriptor<T> extends BaseSciColumnDescriptor {
+  label: (record: T) => number;
+  sort?: ((a: {record: T; label: number}, b: {record: T; label: number}) => number) | boolean;
+  filter?: ((filter: {text: string; label: number; record: T}) => boolean) | boolean;
+}
+
+export interface SciBooleanColumnDescriptor<T> extends BaseSciColumnDescriptor {
+  label: (record: T) => boolean;
+  sort?: ((a: {record: T; label: boolean}, b: {record: T; label: boolean}) => number) | boolean;
+  filter?: ((filter: {text: string; label: boolean; record: T}) => boolean) | boolean;
+}
+
+export type SciColumnDescriptor<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciCustomColumnDescriptor<T>;
+
+interface SciBaseColumn {
   type: ColumnType;
   id: string;
 
@@ -68,17 +93,39 @@ export interface SciColumn<T, V extends ValueType> {
   width: Signal<string>;
   minWidth: Signal<string | null>;
   maxWidth: Signal<string | null>;
-
-  label: ValueAccessorFn<T, V>;
-  sort: (a: V, b: V) => number;
-  filter: (text: string, value: V, record: T) => boolean;
 }
+
+export interface SciStringColumn<T> extends SciBaseColumn {
+  label: (record: T) => string;
+  sort: (a: {record: T; label: string}, b: {record: T; label: string}) => number;
+  filter: (filter: {text: string; record: T; label: string}) => boolean;
+}
+
+export interface SciNumberColumn<T> extends SciBaseColumn {
+  label: (record: T) => number;
+  sort: (a: {record: T; label: number}, b: {record: T; label: number}) => number;
+  filter: (filter: {text: string; record: T; label: number}) => boolean;
+}
+
+export interface SciBooleanColumn<T> extends SciBaseColumn {
+  label: (record: T) => boolean;
+  sort: (a: {record: T; label: boolean}, b: {record: T; label: boolean}) => number;
+  filter: (filter: {text: string; record: T; label: boolean}) => boolean;
+}
+
+export interface SciCustomColumn<T> extends SciBaseColumn {
+  label: (record: T) => ComponentWithBindings;
+  sort: (a: {record: T}, b: {record: T}) => number;
+  filter: (filter: {text: string; record: T}) => boolean;
+}
+
+export type SciColumn<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciCustomColumn<T>;
 
 /**
  * Internally used Row Model
  */
 export interface SciRow<T> {
-  data: T;
+  record: T;
   cells: SciCell<ValueType>[];
 }
 
@@ -88,5 +135,5 @@ export interface SciRow<T> {
 export interface SciCell<V extends ValueType> {
   type: ColumnType;
   columnId: string;
-  label: V;
+  label: V | ComponentWithBindings;
 }

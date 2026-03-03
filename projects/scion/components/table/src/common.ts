@@ -20,3 +20,6 @@ export function coerceSignal<T>(value: MaybeSignal<T> | undefined, options?: {de
   }
   return isSignal(value) ? value : signal(value);
 }
+
+
+export type MaybeAsync<T> = T | Promise<T>;
