@@ -1,34 +1,40 @@
 @let table = sciTable();
 <div class="table-header">
   @for (col of table.columns(); track $index) {
-    <div class="column-header">
+    <div class="column-header" #header>
       <button class="column-sort"
-              [attr.data-has-sort]="table.isSortable() && col.sortable()"
+              [attr.data-sortable]="table.isSortable() && col.sortable()"
               [attr.data-sort]="sort()?.[0] === col.id && sort()?.[1]"
               (click)="onSort(col)">
         {{ col.header() }}
       </button>
-      <button class="column-resize" (dblclick)="onResizeDblClick(col)" (mousedown)="onResizeMouseDown(col, $event)" tabindex="-1">
-
-      </button>
+      <sci-splitter
+        orientation="vertical"
+        (start)="onResizeStart(col, header)"
+        (move)="onResize(col, $event)"
+        (end)="onResizeEnd()"
+        (reset)="onResizeAuto(col)"
+      />
+<!--      <button class="column-resize"-->
+<!--              [attr.data-resizable]="table.isResizable() && col.resizable()"-->
+<!--              (dblclick)="onResizeDblClick(col)"-->
+<!--              (mousedown)="onResizeMouseDown(col, $event)"-->
+<!--              tabindex="-1">-->
+<!--      </button>-->
     </div>
   }
 </div>
 <div class="table-body">
   <cdk-virtual-scroll-viewport itemSize="26" sciScrollable #cdkViewport>
-    <div class="table-row" tabindex="-1"
-         *cdkVirtualFor="let row of data(); let i = index; trackBy: table.trackByFn.bind(table)"
-         [class.active]="activeRow()?.index === i"
-         [class.selected]="selectedRowIndices().includes(i)"
-         (click)="onRowClick(row, i, $event)"
-         (keydown.enter)="onRowEnter(row, i)"
-    >
-      @for (cell of row.cells; track $index) {
-        <div class="table-cell" [attr.data-type]="cell.type">
-          <span [attr.data-column]="cell.columnId" #cell>{{cell.text}}</span>
-        </div>
-      }
-    </div>
+    <sci-table-row
+      *cdkVirtualFor="let row of data(); let i = index; trackBy: trackBy.bind(this)"
+      [row]="row"
+      [index]="i"
+      [selectedRows]="selectedRowIndices()"
+      [activeRow]="activeRow()?.index"
+      (activateRow)="onActivateRow(row.data, i)"
+      (selectRow)="onSelectRow(row.data, i, $event)"
+    />
   </cdk-virtual-scroll-viewport>
   <sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
 </div>

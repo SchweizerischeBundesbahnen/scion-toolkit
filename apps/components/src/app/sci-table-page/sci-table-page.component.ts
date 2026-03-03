@@ -21,29 +21,29 @@ import {RowSelection, table} from '../../../../../projects/scion/components/tabl
 })
 export default class SciTablePageComponent {
   protected data = signal(data);
-  protected activeRow = signal<RowSelection<{ sloid: string }> | undefined>(undefined);
+  protected activeRow = signal<RowSelection<{sloid: string}> | undefined>(undefined);
   protected selectedRows = signal<string | undefined>(undefined);
 
   protected table = table(this.data, table => table
     .addStringColumn({
-      value: station => station.sloid,
+      label: station => station.sloid,
       width: '150px',
       maxWidth: '200px',
       minWidth: '100px',
       header: 'Sloid',
     })
     .addNumberColumn({
-      value: station => +station.sloid.split(':').at(-1)!,
+      label: station => +station.sloid.split(':').at(-1)!,
       width: '150px',
       header: 'Sloid Nr.',
     })
     .addStringColumn({
-      value: station => station.designationofficial,
+      label: station => station.designationofficial,
       width: '150px',
       header: 'Name',
     })
     .addStringColumn({
-      value: station => station.districtname,
+      label: station => station.districtname,
       width: '1fr',
       header: 'District',
     }));

@@ -26,7 +26,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
 
-        &[data-has-sort="true"] {
+        &[data-sortable="true"] {
           cursor: pointer;
         }
 
@@ -48,11 +48,14 @@
         all: unset;
         box-sizing: border-box;
         padding: .5em;
-        cursor: ew-resize;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+
+        &[data-resizable="true"] {
+          cursor: ew-resize;
+        }
 
         &:after {
           content: '';
@@ -74,48 +77,10 @@
       @include sci-scrollbar.scrollbar-position();
     }
 
-    // TODO: move styling to external stylesheet?
+    // TODO [eg]: move styling to external stylesheet?
     &::ng-deep .cdk-virtual-scroll-content-wrapper {
       display: grid;
       grid-template-columns: var(--ɵsci-table-columns);
-      overflow-x: auto;
-
-      > div.table-row {
-        display: grid;
-        grid-template-columns: subgrid;
-        grid-column: 1 / -1;
-        height: 26px;
-        border: 1px solid transparent;
-        border-top-color: var(--sci-color-border);
-
-        &:hover {
-          background-color: var(--sci-color-background-elevation-hover);
-        }
-
-        &.active {
-          border-color: var(--sci-color-border-strong);
-
-          & + div.table-row {
-            border-top: 0;
-          }
-        }
-
-        &.selected {
-          background-color: var(--sci-color-background-secondary);
-        }
-
-        > div.table-cell {
-          padding-inline: .5em;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          align-content: center;
-
-          &[data-type="number"] {
-            text-align: right;
-          }
-        }
-      }
     }
   }
 }

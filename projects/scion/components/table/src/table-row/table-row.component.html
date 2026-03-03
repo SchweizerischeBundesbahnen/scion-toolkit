@@ -1,0 +1,5 @@
+@for (cell of row().cells; track $index) {
+  <div class="table-cell" [attr.data-type]="cell.type">
+    <span [attr.data-column]="cell.columnId" #cell>{{cell.label}}</span>
+  </div>
+}

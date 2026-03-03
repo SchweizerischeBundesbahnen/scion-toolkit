@@ -10,9 +10,11 @@
 
 import {isSignal, signal, Signal} from '@angular/core';
 
-export function coerceSignal<T>(value: Signal<T> | T | undefined): Signal<T> | undefined;
-export function coerceSignal<T>(value: Signal<T> | T | undefined, options: {defaultValue: T}): Signal<T>;
-export function coerceSignal<T>(value: Signal<T> | T | undefined, options?: {defaultValue?: T}): Signal<T> | undefined {
+export type MaybeSignal<T> = T | Signal<T>;
+
+export function coerceSignal<T>(value: MaybeSignal<T> | undefined): Signal<T> | undefined;
+export function coerceSignal<T>(value: MaybeSignal<T> | undefined, options: {defaultValue: T}): Signal<T>;
+export function coerceSignal<T>(value: MaybeSignal<T> | undefined, options?: {defaultValue?: T}): Signal<T> | undefined {
   if (value === undefined) {
     return options?.defaultValue !== undefined ? signal(options.defaultValue) : undefined;
   }

@@ -8,12 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, output, Signal, signal, untracked, viewChildren} from '@angular/core';
-import {SciColumn, SciTable, ValueType} from './table.model';
+import {ChangeDetectionStrategy, Component, computed, effect, input, output, Signal, signal, untracked, viewChildren} from '@angular/core';
+import {SciColumn, SciRow, SciTable, ValueType} from './table.model';
 import {ɵSciTable} from './ɵtable.model';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
-import {fromEvent} from 'rxjs';
+import {TableRowComponent} from './table-row/table-row.component';
+import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 
 export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T> {
   return factory(new ɵSciTable<T>(data));
@@ -43,6 +44,8 @@ export interface RowSelection<T> {
     CdkVirtualScrollViewport,
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
+    TableRowComponent,
+    SciSplitterComponent,
   ],
 })
 export class SciTableComponent<T> {
@@ -52,34 +55,33 @@ export class SciTableComponent<T> {
   public readonly activateRow = output<RowSelection<T> | undefined>();
   public readonly selectRows = output<RowSelection<T>[]>();
 
-  protected readonly cells = viewChildren<ElementRef<HTMLDivElement>>('cell');
+  protected readonly rows = viewChildren<TableRowComponent<T>>(TableRowComponent);
 
   protected readonly activeRow = signal<RowSelection<T> | undefined>(undefined);
   protected readonly selectedRows = signal<RowSelection<T>[]>([]);
   protected readonly sort = signal<[string, 'asc' | 'desc'] | undefined>(undefined);
-  protected readonly columnWidthOverrides = signal<Map<string, string>>(new Map());
 
-  private readonly _resizeContext = signal<{originalX: number; originalWidth: number; column: SciColumn<T, ValueType>} | undefined>(undefined);
+  private readonly _resizeContext = signal<{width: number; columnId: string} | undefined>(undefined);
+  private readonly _resizedColumnWidths = signal<Map<string, string>>(new Map());
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly selectedRowIndices = computed(() => this.selectedRows().map(selection => selection.index));
   protected readonly columnWidths = computed(() => {
     const columns = this.sciTable().columns();
-    const overrides = this.columnWidthOverrides();
+    const overrides = this._resizedColumnWidths();
     return columns
       .map(c => clamp(c.minWidth(), overrides.get(c.id) ?? c.width(), c.maxWidth()))
       .join(' ');
   });
 
-  protected readonly data = computed(() => {
+  protected readonly data = computed<SciRow<T>[]>(() => {
     const table = this.sciTable();
     const [id, dir] = this.sort() ?? [];
     const columns = table.columns();
     const data = table.data().map(row => ({
-      ...row,
+      data: row,
       cells: columns.map(col => ({
-        value: col.value(row),
-        text: col.text(row),
+        label: col.label(row),
         type: col.type,
         columnId: col.id,
       })),
@@ -90,9 +92,11 @@ export class SciTableComponent<T> {
       return data;
     }
 
-    const sortColIdx = columns.indexOf(sortCol);
-    const sortDir = dir === 'asc' ? 1 : -1;
-    return data.sort((a, b) => sortCol.sort(a.cells[sortColIdx]!.value, b.cells[sortColIdx]!.value) * sortDir);
+    return untracked(() => {
+      const sortColIdx = columns.indexOf(sortCol);
+      const sortDir = dir === 'asc' ? 1 : -1;
+      return data.sort((a, b) => sortCol.sort(a.cells[sortColIdx]!.label, b.cells[sortColIdx]!.label) * sortDir);
+    });
   });
 
   constructor() {
@@ -103,30 +107,10 @@ export class SciTableComponent<T> {
     effect(() => {
       this.selectRows.emit(this.selectedRows());
     });
+  }
 
-    effect(cleanup => {
-      const context = this._resizeContext();
-      if (!context) {
-        return;
-      }
-
-      const {originalX, column, originalWidth} = context;
-      untracked(() => {
-        const mouseMoveSub = fromEvent<MouseEvent>(document, 'mousemove').subscribe(event => {
-          const width = Math.max(50, originalWidth + (event.x - originalX));
-          this.columnWidthOverrides.update(overrides => new Map(overrides).set(column.id, `${width}px`));
-        });
-
-        const mouseUpSub = fromEvent(document, 'mouseup').subscribe(() => {
-          this._resizeContext.set(undefined);
-        });
-
-        cleanup(() => {
-          mouseMoveSub.unsubscribe();
-          mouseUpSub.unsubscribe();
-        });
-      });
-    });
+  protected trackBy(i: number, row: SciRow<T>): any {
+    return this.sciTable().trackByFn(i, row.data);
   }
 
   protected onSort(col: SciColumn<T, ValueType>): void {
@@ -143,24 +127,11 @@ export class SciTableComponent<T> {
     });
   }
 
-  protected onResizeMouseDown(column: SciColumn<T, ValueType>, event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    this._resizeContext.set({originalX: event.x, originalWidth: target.parentElement!.clientWidth, column});
+  protected onSelectRow(row: T, index: number, {ctrlKey}: {ctrlKey: boolean}): void {
+    this.selectRow(row, index, !ctrlKey);
   }
 
-  protected onResizeDblClick(column: SciColumn<T, ValueType>): void {
-    const cellWidths = this.cells()
-      .filter(c => c.nativeElement.dataset['column'] === column.id)
-      .map(c => c.nativeElement.offsetWidth);
-    const maxWidth = Math.max(...cellWidths) + 20;
-    this.columnWidthOverrides.update(overrides => new Map(overrides).set(column.id, `${maxWidth}px`));
-  }
-
-  protected onRowClick(row: T, index: number, event: MouseEvent): void {
-    this.selectRow(row, index, !event.ctrlKey && !event.metaKey);
-  }
-
-  protected onRowEnter(row: T, index: number): void {
+  protected onActivateRow(row: T, index: number): void {
     this.selectRow(row, index, true);
   }
 
@@ -175,6 +146,7 @@ export class SciTableComponent<T> {
     this.selectedRows.update(selection => {
       const existing = selection.find(s => s.index === index);
       if (existing) {
+        // Deselect row, if it was already selected
         return selection.filter(s => s !== existing);
       }
 
@@ -184,5 +156,30 @@ export class SciTableComponent<T> {
 
       return [...selection, rowSelection];
     });
+  }
+
+  protected onResizeStart(column: SciColumn<T, ValueType>, header: HTMLDivElement): void {
+    this._resizeContext.set({width: header.offsetWidth, columnId: column.id});
+  }
+
+  protected onResize(column: SciColumn<T, ValueType>, event: SplitterMoveEvent): void {
+    const context = this._resizeContext();
+    if (!context) {
+      return;
+    }
+
+    const width = Math.max(20, context.width + event.distance);
+    this._resizeContext.set({columnId: column.id, width: width});
+    this._resizedColumnWidths.update(widths => new Map(widths).set(column.id, `${width}px`));
+  }
+
+  protected onResizeEnd(): void {
+    this._resizeContext.set(undefined);
+  }
+
+  protected onResizeAuto(column: SciColumn<T, ValueType>): void {
+    const cellWidths = this.rows().map(row => row.getCellWidth(column.id));
+    const maxWidth = Math.max(...cellWidths, 0) + 20; // TODO [eg]: configurable buffer?
+    this._resizedColumnWidths.update(overrides => new Map(overrides).set(column.id, `${maxWidth}px`));
   }
 }

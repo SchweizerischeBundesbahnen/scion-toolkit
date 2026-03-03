@@ -106,14 +106,13 @@ export class ɵSciTable<T> implements SciTable<T> {
   }
 
   private addColumnWithType(valueAccessorOrConfig: ValueAccessorFn<T, ValueType> | SciColumnDescriptor<T, ValueType>, type: ColumnType): this {
-    const config = typeof valueAccessorOrConfig === 'function' ? {value: valueAccessorOrConfig} : valueAccessorOrConfig;
+    const config = typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig;
     this._columns.update(columns => [
       ...columns,
       {
         type,
         id: config.id ?? UUID.randomUUID(),
-        value: config.value,
-        text: config.text ?? (row => String(config.value(row))),
+        label: config.label,
         filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
         sort: typeof config.sort === 'function' ? config.sort : defaultSort,
         header: coerceSignal(config.header, {defaultValue: ''}),

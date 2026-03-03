@@ -9,12 +9,12 @@
  */
 
 import {Signal} from '@angular/core';
+import {MaybeSignal} from './common';
 
 export type ValueType = string | number | boolean;
-export type ValueAccessorFn<T, V extends ValueType> = (row: T) => V;
+export type ValueAccessorFn<T, V extends ValueType> = (record: T) => V;
 
 export type ColumnType = 'custom' | 'string' | 'number' | 'boolean';
-export type MaybeSignal<T> = T | Signal<T>;
 
 /**
  * Table Model fluent API
@@ -25,7 +25,7 @@ export interface SciTable<T> {
   addNumberColumn(valueAccessorOrConfig: ValueAccessorFn<T, number> | SciColumnDescriptor<T, number>): this;
   addColumn(valueAccessorOrConfig: SciColumnDescriptor<T, ValueType>): this;
 
-  trackBy(trackByFn: (row: T, index: number) => unknown): this;
+  trackBy(trackByFn: (record: T, index: number) => unknown): this;
   sortable(sortable: boolean): this;
   filterable(filterable: boolean): this;
   resizable(resizable: boolean): this;
@@ -36,10 +36,9 @@ export interface SciTable<T> {
  * Column Config options
  */
 export interface SciColumnDescriptor<T, V extends ValueType> {
-  value: ValueAccessorFn<T, V>;
+  label: ValueAccessorFn<T, V>; // | ComponentRef<unknown> / DirectiveWithBindings naming: text / label / displayValue / content
   id?: string;
   header?: MaybeSignal<string>;
-  text?: ValueAccessorFn<T, string>; // | ComponentRef<unknown> naming: text / label / displayValue
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
@@ -70,8 +69,24 @@ export interface SciColumn<T, V extends ValueType> {
   minWidth: Signal<string | null>;
   maxWidth: Signal<string | null>;
 
-  value: ValueAccessorFn<T, V>;
-  text: ValueAccessorFn<T, string>; // | ComponentRef<unknown>
+  label: ValueAccessorFn<T, V>;
   sort: (a: V, b: V) => number;
-  filter: (text: string, value: V, row: T) => boolean;
+  filter: (text: string, value: V, record: T) => boolean;
+}
+
+/**
+ * Internally used Row Model
+ */
+export interface SciRow<T> {
+  data: T;
+  cells: SciCell<ValueType>[];
+}
+
+/**
+ * Internally used Cell Model
+ */
+export interface SciCell<V extends ValueType> {
+  type: ColumnType;
+  columnId: string;
+  label: V;
 }
