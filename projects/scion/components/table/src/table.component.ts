@@ -8,13 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, input, output, Signal, signal, untracked, viewChildren} from '@angular/core';
-import {SciCell, SciColumn, SciRow, SciTable, ValueType} from './table.model';
+import {ChangeDetectionStrategy, Component, computed, effect, input, output, Signal, signal, viewChildren} from '@angular/core';
+import {SciColumn, SciRow, SciTable} from './table.model';
 import {ɵSciTable} from './ɵtable.model';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {TableRowComponent} from './table-row/table-row.component';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
+import {coerceSignal} from './common';
 
 export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T> {
   return factory(new ɵSciTable<T>(data));
@@ -76,32 +77,34 @@ export class SciTableComponent<T> {
 
   protected readonly data = computed<SciRow<T>[]>(() => {
     const table = this.sciTable();
-    const [id, dir] = this.sort() ?? [];
+    // const [id, dir] = this.sort() ?? [];
     const columns = table.columns();
-    const data: SciRow<T>[] = table.data().map(row => ({
+    console.log('mapping data');
+
+    return table.data().map(row => ({
       record: row,
       cells: columns.map(col => ({
-        label: col.label(row),
+        label: coerceSignal(col.label(row)),
         type: col.type,
         columnId: col.id,
       })),
-    }));
+    } as SciRow<T>));
 
-    const sortCol = columns.find(c => c.id === id);
-    if (!id || !table.isSortable() || !sortCol?.sortable()) {
-      return data;
-    }
-
-    const toSortParam = (record: T, cell: SciCell<ValueType>): {record: T; label: ValueType} => ({
-      record,
-      label: typeof cell.label !== 'object' ? cell.label : undefined,
-    });
-
-    return untracked(() => {
-      const sortColIdx = columns.indexOf(sortCol);
-      const sortDir = dir === 'asc' ? 1 : -1;
-      return data.sort((a, b) => sortCol.sort(toSortParam(a.record, a.cells[sortColIdx]!) as never, toSortParam(b.record, b.cells[sortColIdx]!) as never) * sortDir);
-    });
+    // const sortCol = columns.find(c => c.id === id);
+    // if (!id || !table.isSortable() || !sortCol?.sortable()) {
+    //   return data;
+    // }
+    //
+    // const toSortParam = (record: T, cell: SciCell<ValueType>): {record: T; label: ValueType} => ({
+    //   record,
+    //   label: typeof cell.label !== 'object' ? cell.label : undefined,
+    // });
+    //
+    // return untracked(() => {
+    //   const sortColIdx = columns.indexOf(sortCol);
+    //   const sortDir = dir === 'asc' ? 1 : -1;
+    //   return data.sort((a, b) => sortCol.sort(toSortParam(a.record, a.cells[sortColIdx]!) as never, toSortParam(b.record, b.cells[sortColIdx]!) as never) * sortDir);
+    // });
   });
 
   constructor() {

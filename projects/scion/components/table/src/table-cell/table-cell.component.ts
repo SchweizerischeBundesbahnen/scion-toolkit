@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, ElementRef, input, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input} from '@angular/core';
 import {SciCell, ValueType} from '../table.model';
 import {NgComponentOutlet} from '@angular/common';
 
@@ -28,20 +28,14 @@ export class TableCellComponent<V extends ValueType> {
 
   public readonly cell = input.required<SciCell<V>>();
 
-  protected readonly textCell = viewChild<ElementRef<HTMLElement>>('textCell');
+  private readonly _element = inject(ElementRef);
 
   protected readonly customCell = computed(() => {
-    const label = this.cell().label;
+    const label = this.cell().label();
     return typeof label === 'object' ? label : undefined;
   });
 
   public getWidth(): number {
-    const textCell = this.textCell()?.nativeElement;
-
-    if (textCell) {
-      return textCell.offsetWidth;
-    }
-
-    return 0;
+    return ((this._element.nativeElement as HTMLElement).firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;
   }
 }

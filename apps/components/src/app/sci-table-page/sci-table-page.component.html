@@ -1,4 +1,5 @@
 <main>
+  <button (click)="onUpdateSignal()">Update Signal</button>
   <sci-table [table]="table" (activateRow)="activeRow.set($event)" (selectRows)="onSelectRows($event)" ) />
 </main>
 

@@ -7,9 +7,35 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, signal} from '@angular/core';
+import {Component, computed, input, Signal, signal} from '@angular/core';
 import {RowSelection, SciTableComponent, table} from '@scion/components/table';
-import {stations} from './sci-table-page.data';
+import {Station, stations} from './sci-table-page.data';
+import {httpResource} from '@angular/common/http';
+
+@Component({
+  selector: 'app-custom-cell',
+  styles: `
+    div.skeleton {
+      background-color: var(--sci-color-skeleton);
+      border-radius: var(--sci-corner-small);
+      height: 1em;
+      max-width: 100px;
+    }
+  `,
+  template: `
+    @if (sloid.isLoading()) {
+      <div class="skeleton">
+        
+      </div>
+    } @else if (sloid.value(); as res) {
+      {{ res.sloid }}      
+    }
+  `,
+})
+class CustomCellComponent {
+  public readonly station = input.required<Station>();
+  public readonly sloid = httpResource<{sloid: string}>(() => `http://localhost:3000/api?placeRef=${this.station().sloid}`);
+}
 
 @Component({
   selector: 'app-table-page',
@@ -24,16 +50,26 @@ export default class SciTablePageComponent {
   protected activeRow = signal<RowSelection<{sloid: string}> | undefined>(undefined);
   protected selectedRows = signal<string | undefined>(undefined);
 
+  // TODO: Example language switch
+
+  private _additionalData = signal(0);
+
   protected table = table(this.data, table => table
     .addStringColumn({
-      label: station => station.sloid,
+      label: station => computed(() => `${station.sloid} (${this._additionalData()})`),
       width: '150px',
       maxWidth: '200px',
       minWidth: '100px',
       header: 'Sloid',
     })
+    .addColumn({
+      width: '150px',
+      header: 'Custom Component',
+      label: station => ({
+        component: CustomCellComponent, inputs: {station}}),
+    })
     .addNumberColumn({
-      label: station => +station.sloid.split(':').at(-1)!,
+      label: station => this.getData(station),
       width: '150px',
       header: 'Sloid Nr.',
     })
@@ -48,7 +84,22 @@ export default class SciTablePageComponent {
       header: 'District',
     }));
 
+  private getData(station: Station): Signal<number> {
+    const data = signal<number>(0);
+
+    void fetch(`http://localhost:3000/api?placeRef=${station.sloid}`)
+      .then(res => res.json())
+      .then((res: {sloid: string}) => data.set(+res.sloid));
+
+    return data;
+    // return httpResource<{sloid: string}>(() => `http://localhost:3000/api?placeRef=${station.sloid}`).value;
+  }
+
   protected onSelectRows(selection: RowSelection<any>[]): void {
     this.selectedRows.set(selection.length ? selection.map(s => s.index).join(', ') : undefined);
+  }
+
+  protected onUpdateSignal(): void {
+    this._additionalData.update(d => d + 1);
   }
 }

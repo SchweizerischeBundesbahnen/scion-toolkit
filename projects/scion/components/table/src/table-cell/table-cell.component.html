@@ -1,6 +1,6 @@
 @if (customCell(); as customCell) {
-  <ng-container *ngComponentOutlet="customCell.component"></ng-container>
+  <ng-container *ngComponentOutlet="customCell.component; inputs: customCell.inputs" />
 } @else {
-  <span #textCell>{{cell().label}}</span>
+  <span>{{cell().label()}}</span>
 }
 

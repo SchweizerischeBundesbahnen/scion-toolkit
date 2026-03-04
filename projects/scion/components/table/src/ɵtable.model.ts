@@ -10,10 +10,10 @@
 
 import {signal, Signal} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
-import {ColumnType, SciBooleanColumnDescriptor, SciColumn, SciColumnDescriptor, SciCustomColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTable, ValueType} from './table.model';
+import {ColumnType, SciBooleanColumnDescriptor, SciColumn, SciColumnDescriptor, SciCustomColumnDescriptor, SciNumberColumnDescriptor, SciRowContext, SciStringColumnDescriptor, SciTable, ValueType} from './table.model';
 import {coerceSignal} from './common';
 
-function defaultFilter({text, label}: {text: string; label: ValueType}): boolean {
+function defaultFilter<T>(text: string, {label}: SciRowContext<T, ValueType>): boolean {
   switch (typeof label) {
     case 'string':
       return label.toLowerCase().includes(text.toLowerCase());
@@ -26,7 +26,7 @@ function defaultFilter({text, label}: {text: string; label: ValueType}): boolean
   }
 }
 
-function defaultSort(a: {label?: ValueType}, b: {label?: ValueType}): number {
+function defaultSort<T>(a: SciRowContext<T, ValueType>, b: SciRowContext<T, ValueType>): number {
   // TODO: improve default sort for non matching types (maybe pass columntype?)
   if (a.label === undefined || b.label === undefined || typeof a !== typeof b) {
     return 0;
@@ -58,6 +58,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly isSelectable = this._isSelectable.asReadonly();
 
   constructor(public readonly data: Signal<T[]>) {
+    // DataSource from data (paging, filtering, sorting) evtl. ArrayDataSource
   }
 
   public addBooleanColumn(valueAccessorOrConfig: ((record: T) => boolean) | SciBooleanColumnDescriptor<T>): this {
@@ -129,7 +130,7 @@ export class ɵSciTable<T> implements SciTable<T> {
         sortable: signal(sortable),
         filterable: signal(filterable),
         resizable: coerceSignal(config.resizable, {defaultValue: true}),
-        order: signal(columns.length),
+        // order: signal(columns.length),
         width: coerceSignal(config.width, {defaultValue: '1fr'}),
         minWidth: coerceSignal(config.minWidth, {defaultValue: null}),
         maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),

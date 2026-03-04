@@ -12,6 +12,7 @@ import {isSignal, signal, Signal} from '@angular/core';
 
 export type MaybeSignal<T> = T | Signal<T>;
 
+export function coerceSignal<T>(value: MaybeSignal<T>): Signal<T>;
 export function coerceSignal<T>(value: MaybeSignal<T> | undefined): Signal<T> | undefined;
 export function coerceSignal<T>(value: MaybeSignal<T> | undefined, options: {defaultValue: T}): Signal<T>;
 export function coerceSignal<T>(value: MaybeSignal<T> | undefined, options?: {defaultValue?: T}): Signal<T> | undefined {
@@ -20,6 +21,5 @@ export function coerceSignal<T>(value: MaybeSignal<T> | undefined, options?: {de
   }
   return isSignal(value) ? value : signal(value);
 }
-
 
 export type MaybeAsync<T> = T | Promise<T>;
