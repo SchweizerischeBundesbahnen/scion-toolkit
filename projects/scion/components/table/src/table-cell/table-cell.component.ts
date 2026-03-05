@@ -31,8 +31,8 @@ export class TableCellComponent<V extends ValueType> {
   private readonly _element = inject(ElementRef);
 
   protected readonly customCell = computed(() => {
-    const label = this.cell().label();
-    return typeof label === 'object' ? label : undefined;
+    const component = this.cell().component;
+    return typeof component === 'object' ? component : undefined;
   });
 
   public getWidth(): number {

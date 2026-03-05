@@ -26,10 +26,19 @@ export interface ComponentWithInputs {
  * Table Model fluent API
  */
 export interface SciTable<T> {
-  addStringColumn(valueAccessorOrConfig: ((record: T) => string) | SciStringColumnDescriptor<T>): this;
-  addBooleanColumn(valueAccessorOrConfig: ((record: T) => boolean) | SciBooleanColumnDescriptor<T>): this;
-  addNumberColumn(valueAccessorOrConfig: ((record: T) => number) | SciNumberColumnDescriptor<T>): this;
-  addColumn(descriptor: SciCustomColumnDescriptor<T>): this;
+  addStringColumn(label: ((item: T) => string)): this;
+  addStringColumn(header: string, label: ((item: T) => string)): this;
+  addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
+
+  addBooleanColumn(label: ((item: T) => boolean)): this;
+  addBooleanColumn(header: string, label: ((item: T) => boolean)): this;
+  addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
+
+  addNumberColumn(label: ((item: T) => number)): this;
+  addNumberColumn(header: string, label: ((item: T) => number)): this;
+  addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
+
+  addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
   trackBy(trackByFn: (record: T, index: number) => unknown): this;
   sortable(sortable: boolean): this;
@@ -38,37 +47,92 @@ export interface SciTable<T> {
   selectable(selectable: boolean): this;
 }
 
-export interface SciRowContext<T, V> {
-  record: T;
+export interface SciGetItemsPagination {
+  start: number;
+  end: number;
+  pageSize: number;
+}
+
+export interface SciGetItemsOptions {
+  sortCriteria: {
+    columnName: string;
+    direction: 'asc' | 'desc';
+  }[];
+  filterCriteria: {
+    columnName: string;
+    text: string;
+    // maybe more filter params?
+  }[];
+}
+
+export interface SciCellContext<T, V> {
+  item: T;
   label: V;
 }
 
-interface BaseSciColumnDescriptor<T, TLabel = unknown, TValue = TLabel> {
-  id?: string;
+interface SciColumnDescriptor<ITEM> {
+  name?: string;
   header?: MaybeSignal<string>;
   resizable?: MaybeSignal<boolean>;
   width?: MaybeSignal<string>;
   minWidth?: MaybeSignal<string>;
   maxWidth?: MaybeSignal<string>;
-  label: (record: T) => MaybeSignal<TLabel>; // Muss im InjectionContext aufgerufen werden
+  label?: (item: ITEM) => MaybeSignal<ValueType>;
+  component?: (item: ITEM) => ComponentWithInputs;
+}
+
+export interface SciComponentColumnDescriptor<ITEM> extends SciColumnDescriptor<ITEM> {
+  component: (item: ITEM) => ComponentWithInputs; // Muss im InjectionContext aufgerufen werden
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sort?: ((a: SciRowContext<T, TValue>, b: SciRowContext<T, TValue>) => number) | boolean;
+  sort?: ((a: SciCellContext<ITEM, void>, b: SciCellContext<ITEM, void>) => number) | boolean;
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: ((text: string, context: SciRowContext<T, TValue>) => boolean) | boolean;
+  filter?: ((text: string, context: SciCellContext<ITEM, void>) => boolean) | boolean;
 }
-export type SciCustomColumnDescriptor<T> = BaseSciColumnDescriptor<T, ComponentWithInputs, undefined>;
-export type SciStringColumnDescriptor<T> = BaseSciColumnDescriptor<T, string>;
-export type SciNumberColumnDescriptor<T> = BaseSciColumnDescriptor<T, number>;
-export type SciBooleanColumnDescriptor<T> = BaseSciColumnDescriptor<T, boolean>;
-export type SciColumnDescriptor<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciCustomColumnDescriptor<T>;
 
-export interface SciBaseColumn<T, TLabel = unknown, TValue = TLabel> {
+export interface SciStringColumnDescriptor<ITEM> extends SciColumnDescriptor<ITEM> {
+  label: (item: ITEM) => MaybeSignal<string>; // Muss im InjectionContext aufgerufen werden
+  /**
+   * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
+   */
+  sort?: ((a: SciCellContext<ITEM, string>, b: SciCellContext<ITEM, string>) => number) | boolean;
+  /**
+   * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
+   */
+  filter?: ((text: string, context: SciCellContext<ITEM, string>) => boolean) | boolean;
+}
+
+export interface SciNumberColumnDescriptor<ITEM> extends SciColumnDescriptor<ITEM> {
+  label: (item: ITEM) => MaybeSignal<number>; // Muss im InjectionContext aufgerufen werden
+  /**
+   * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
+   */
+  sort?: ((a: SciCellContext<ITEM, number>, b: SciCellContext<ITEM, number>) => number) | boolean;
+  /**
+   * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
+   */
+  filter?: ((text: string, context: SciCellContext<ITEM, number>) => boolean) | boolean;
+}
+
+export interface SciBooleanColumnDescriptor<ITEM> extends SciColumnDescriptor<ITEM> {
+  label: (item: ITEM) => MaybeSignal<boolean>; // Muss im InjectionContext aufgerufen werden
+  /**
+   * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
+   */
+  sort?: ((a: SciCellContext<ITEM, boolean>, b: SciCellContext<ITEM, boolean>) => number) | boolean;
+  /**
+   * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
+   */
+  filter?: ((text: string, context: SciCellContext<ITEM, boolean>) => boolean) | boolean;
+}
+export type SciColumnDescriptors<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T>;
+
+export interface SciBaseColumn {
   type: ColumnType;
-  id: string;
+  name: string;
   header: Signal<string | undefined>;
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;
@@ -77,21 +141,42 @@ export interface SciBaseColumn<T, TLabel = unknown, TValue = TLabel> {
   width: Signal<string>;
   minWidth: Signal<string | null>;
   maxWidth: Signal<string | null>;
-  label: (record: T) => MaybeSignal<TLabel>;
-  sort: (a: SciRowContext<T, TValue>, b: SciRowContext<T, TValue>) => number;
-  filter: (text: string, context: SciRowContext<T, TValue>) => boolean;
 }
-export type SciStringColumn<T> = SciBaseColumn<T, string>;
-export type SciNumberColumn<T> = SciBaseColumn<T, number>;
-export type SciBooleanColumn<T> = SciBaseColumn<T, boolean>;
-export type SciCustomColumn<T> = SciBaseColumn<T, ComponentWithInputs, undefined>;
-export type SciColumn<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciCustomColumn<T>;
+
+export interface SciStringColumn<T> extends SciBaseColumn {
+  type: 'string';
+  label: (record: T) => MaybeSignal<string>;
+  sort: (a: SciCellContext<T, string>, b: SciCellContext<T, string>) => number;
+  filter: (text: string, context: SciCellContext<T, string>) => boolean;
+}
+
+export interface SciBooleanColumn<T> extends SciBaseColumn {
+  type: 'boolean';
+  label: (record: T) => MaybeSignal<boolean>;
+  sort: (a: SciCellContext<T, boolean>, b: SciCellContext<T, boolean>) => number;
+  filter: (text: string, context: SciCellContext<T, boolean>) => boolean;
+}
+
+export interface SciNumberColumn<T> extends SciBaseColumn {
+  type: 'number';
+  label: (record: T) => MaybeSignal<number>;
+  sort: (a: SciCellContext<T, number>, b: SciCellContext<T, number>) => number;
+  filter: (text: string, context: SciCellContext<T, number>) => boolean;
+}
+
+export interface SciComponentColumn<T> extends SciBaseColumn {
+  type: 'custom';
+  component: (record: T) => ComponentWithInputs;
+  sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
+  filter: (text: string, context: SciCellContext<T, void>) => boolean;
+}
+export type SciColumn<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T>;
 
 /**
  * Internally used Row Model
  */
 export interface SciRow<T> {
-  record: T;
+  item: T;
   cells: SciCell<ValueType>[];
 }
 
@@ -101,5 +186,6 @@ export interface SciRow<T> {
 export interface SciCell<V extends ValueType> {
   type: ColumnType;
   columnId: string;
-  label: Signal<V> | Signal<ComponentWithInputs>;
+  label?: Signal<V>;
+  component?: ComponentWithInputs;
 }

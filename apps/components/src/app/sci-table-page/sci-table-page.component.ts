@@ -7,10 +7,11 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, input, Signal, signal} from '@angular/core';
+import {Component, computed, input, signal} from '@angular/core';
 import {RowSelection, SciTableComponent, table} from '@scion/components/table';
 import {Station, stations} from './sci-table-page.data';
 import {httpResource} from '@angular/common/http';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-custom-cell',
@@ -43,57 +44,57 @@ class CustomCellComponent {
   styleUrls: ['./sci-table-page.component.scss'],
   imports: [
     SciTableComponent,
+    FormsModule,
   ],
 })
 export default class SciTablePageComponent {
   protected data = signal(stations);
   protected activeRow = signal<RowSelection<{sloid: string}> | undefined>(undefined);
   protected selectedRows = signal<string | undefined>(undefined);
-
-  // TODO: Example language switch
+  protected language = signal('de');
 
   private _additionalData = signal(0);
 
   protected table = table(this.data, table => table
     .addStringColumn({
-      label: station => computed(() => `${station.sloid} (${this._additionalData()})`),
+      label: station => computed(() => `${crypto.randomUUID().slice(0, 4)} ${station.sloid} (${this._additionalData()})`),
       width: '150px',
       maxWidth: '200px',
       minWidth: '100px',
       header: 'Sloid',
     })
-    .addColumn({
+    .addComponentColumn({
       width: '150px',
       header: 'Custom Component',
-      label: station => ({
+      component: station => ({
         component: CustomCellComponent, inputs: {station}}),
     })
-    .addNumberColumn({
-      label: station => this.getData(station),
-      width: '150px',
-      header: 'Sloid Nr.',
-    })
+    // .addNumberColumn({
+    //   label: station => this.getData(station),
+    //   width: '150px',
+    //   header: 'Sloid Nr.',
+    // })
     .addStringColumn({
       label: station => station.designationofficial,
       width: '150px',
       header: 'Name',
     })
     .addStringColumn({
-      label: station => station.districtname,
+      label: station => computed(() => this.language() === 'fr' ? station.districtnameFr : station.districtname),
       width: '1fr',
       header: 'District',
     }));
 
-  private getData(station: Station): Signal<number> {
-    const data = signal<number>(0);
-
-    void fetch(`http://localhost:3000/api?placeRef=${station.sloid}`)
-      .then(res => res.json())
-      .then((res: {sloid: string}) => data.set(+res.sloid));
-
-    return data;
-    // return httpResource<{sloid: string}>(() => `http://localhost:3000/api?placeRef=${station.sloid}`).value;
-  }
+  // private getData(station: Station): Signal<number> {
+  //   const data = signal<number>(0);
+  //
+  //   void fetch(`http://localhost:3000/api?placeRef=${station.sloid}`)
+  //     .then(res => res.json())
+  //     .then((res: {sloid: string}) => data.set(+res.sloid));
+  //
+  //   return data;
+  //   // return httpResource<{sloid: string}>(() => `http://localhost:3000/api?placeRef=${station.sloid}`).value;
+  // }
 
   protected onSelectRows(selection: RowSelection<any>[]): void {
     this.selectedRows.set(selection.length ? selection.map(s => s.index).join(', ') : undefined);

@@ -4,7 +4,7 @@
     <div class="column-header" #header>
       <button class="column-sort"
               [attr.data-sortable]="table.isSortable() && col.sortable()"
-              [attr.data-sort]="sort()?.[0] === col.id && sort()?.[1]"
+              [attr.data-sort]="sort()?.[0] === col.name && sort()?.[1]"
               (click)="onSort(col)">
         {{ col.header() }}
       </button>
@@ -25,15 +25,15 @@
   }
 </div>
 <div class="table-body">
-  <cdk-virtual-scroll-viewport itemSize="26" sciScrollable #cdkViewport>
+  <cdk-virtual-scroll-viewport itemSize="26" (scrolledIndexChange)="onScrolledIndexChanged($event)" sciScrollable #cdkViewport>
     <sci-table-row
-      *cdkVirtualFor="let row of data(); let i = index; trackBy: trackBy.bind(this)"
+      *cdkVirtualFor="let row of dataSource; let i = index; trackBy: trackBy.bind(this)"
       [row]="row"
       [index]="i"
       [selectedRows]="selectedRowIndices()"
       [activeRow]="activeRow()?.index"
-      (activateRow)="onActivateRow(row.record, i)"
-      (selectRow)="onSelectRow(row.record, i, $event)"
+      (activateRow)="onActivateRow(row.item, i)"
+      (selectRow)="onSelectRow(row.item, i, $event)"
     />
   </cdk-virtual-scroll-viewport>
   <sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>

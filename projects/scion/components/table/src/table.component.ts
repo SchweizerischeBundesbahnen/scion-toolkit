@@ -15,10 +15,16 @@ import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} fr
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {TableRowComponent} from './table-row/table-row.component';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
-import {coerceSignal} from './common';
+import {SciArrayDataSource, SciCdkDataSource, SciDataSource} from './data-source.model';
 
-export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T> {
-  return factory(new ɵSciTable<T>(data));
+export function table<T>(dataSource: SciDataSource<T>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
+export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
+export function table<T>(dataOrSource: Signal<T[]> | SciDataSource<T>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T> {
+  if (typeof dataOrSource === 'function') {
+    return factory(new ɵSciTable<T>(new SciArrayDataSource(dataOrSource)));
+  }
+
+  return factory(new ɵSciTable<T>(dataOrSource));
 }
 
 function clamp(min: string | null, preferred: string, max: string | null): string {
@@ -66,46 +72,20 @@ export class SciTableComponent<T> {
   private readonly _resizedColumnWidths = signal<Map<string, string>>(new Map());
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>); // TODO [eg]: Is there a better way to not expose the private ɵSciTable?
+  protected readonly sciDataSource = computed(() => this.sciTable().dataSource);
+  protected readonly columns = computed(() => this.sciTable().columns());
+
   protected readonly selectedRowIndices = computed(() => this.selectedRows().map(selection => selection.index));
+
   protected readonly columnWidths = computed(() => {
-    const columns = this.sciTable().columns();
+    const columns = this.columns();
     const overrides = this._resizedColumnWidths();
     return columns
-      .map(c => clamp(c.minWidth(), overrides.get(c.id) ?? c.width(), c.maxWidth()))
+      .map(c => clamp(c.minWidth(), overrides.get(c.name) ?? c.width(), c.maxWidth()))
       .join(' ');
   });
 
-  protected readonly data = computed<SciRow<T>[]>(() => {
-    const table = this.sciTable();
-    // const [id, dir] = this.sort() ?? [];
-    const columns = table.columns();
-    console.log('mapping data');
-
-    return table.data().map(row => ({
-      record: row,
-      cells: columns.map(col => ({
-        label: coerceSignal(col.label(row)),
-        type: col.type,
-        columnId: col.id,
-      })),
-    } as SciRow<T>));
-
-    // const sortCol = columns.find(c => c.id === id);
-    // if (!id || !table.isSortable() || !sortCol?.sortable()) {
-    //   return data;
-    // }
-    //
-    // const toSortParam = (record: T, cell: SciCell<ValueType>): {record: T; label: ValueType} => ({
-    //   record,
-    //   label: typeof cell.label !== 'object' ? cell.label : undefined,
-    // });
-    //
-    // return untracked(() => {
-    //   const sortColIdx = columns.indexOf(sortCol);
-    //   const sortDir = dir === 'asc' ? 1 : -1;
-    //   return data.sort((a, b) => sortCol.sort(toSortParam(a.record, a.cells[sortColIdx]!) as never, toSortParam(b.record, b.cells[sortColIdx]!) as never) * sortDir);
-    // });
-  });
+  protected readonly dataSource = new SciCdkDataSource(this.sciDataSource, this.columns);
 
   constructor() {
     effect(() => {
@@ -118,7 +98,7 @@ export class SciTableComponent<T> {
   }
 
   protected trackBy(i: number, row: SciRow<T>): any {
-    return this.sciTable().trackByFn(i, row.record);
+    return this.sciTable().trackByFn(i, row.item);
   }
 
   protected onSort(col: SciColumn<T>): void {
@@ -127,11 +107,11 @@ export class SciTableComponent<T> {
     }
 
     this.sort.update(sort => {
-      if (col.id !== sort?.[0]) {
-        return [col.id, 'asc'];
+      if (col.name !== sort?.[0]) {
+        return [col.name, 'asc'];
       }
 
-      return [col.id, sort[1] === 'asc' ? 'desc' : 'asc'];
+      return [col.name, sort[1] === 'asc' ? 'desc' : 'asc'];
     });
   }
 
@@ -167,7 +147,7 @@ export class SciTableComponent<T> {
   }
 
   protected onResizeStart(column: SciColumn<T>, header: HTMLDivElement): void {
-    this._resizeContext.set({width: header.offsetWidth, columnId: column.id});
+    this._resizeContext.set({width: header.offsetWidth, columnId: column.name});
   }
 
   protected onResize(column: SciColumn<T>, event: SplitterMoveEvent): void {
@@ -177,8 +157,8 @@ export class SciTableComponent<T> {
     }
 
     const width = Math.max(20, context.width + event.distance);
-    this._resizeContext.set({columnId: column.id, width: width});
-    this._resizedColumnWidths.update(widths => new Map(widths).set(column.id, `${width}px`));
+    this._resizeContext.set({columnId: column.name, width: width});
+    this._resizedColumnWidths.update(widths => new Map(widths).set(column.name, `${width}px`));
   }
 
   protected onResizeEnd(): void {
@@ -186,8 +166,12 @@ export class SciTableComponent<T> {
   }
 
   protected onResizeAuto(column: SciColumn<T>): void {
-    const cellWidths = this.rows().map(row => row.getCellWidth(column.id));
+    const cellWidths = this.rows().map(row => row.getCellWidth(column.name));
     const maxWidth = Math.max(...cellWidths, 0) + 20; // TODO [eg]: configurable buffer?
-    this._resizedColumnWidths.update(overrides => new Map(overrides).set(column.id, `${maxWidth}px`));
+    this._resizedColumnWidths.update(overrides => new Map(overrides).set(column.name, `${maxWidth}px`));
+  }
+
+  protected onScrolledIndexChanged(index: number): void {
+    // console.log(`Scrkolled index: ${index}`);
   }
 }

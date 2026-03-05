@@ -1,5 +1,9 @@
 <main>
   <button (click)="onUpdateSignal()">Update Signal</button>
+  <select [(ngModel)]="language">
+    <option value="de">DE</option>
+    <option value="fr">FR</option>
+  </select>
   <sci-table [table]="table" (activateRow)="activeRow.set($event)" (selectRows)="onSelectRows($event)" ) />
 </main>
 

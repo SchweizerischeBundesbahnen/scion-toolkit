@@ -8,12 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {signal, Signal} from '@angular/core';
+import {signal} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
-import {ColumnType, SciBooleanColumnDescriptor, SciColumn, SciColumnDescriptor, SciCustomColumnDescriptor, SciNumberColumnDescriptor, SciRowContext, SciStringColumnDescriptor, SciTable, ValueType} from './table.model';
+import {ColumnType, SciBooleanColumnDescriptor, SciColumn, SciColumnDescriptors, SciNumberColumnDescriptor, SciCellContext, SciStringColumnDescriptor, SciTable, ValueType, SciComponentColumnDescriptor} from './table.model';
 import {coerceSignal} from './common';
+import {SciDataSource} from './data-source.model';
 
-function defaultFilter<T>(text: string, {label}: SciRowContext<T, ValueType>): boolean {
+function defaultFilter<T>(text: string, {label}: SciCellContext<T, ValueType>): boolean {
   switch (typeof label) {
     case 'string':
       return label.toLowerCase().includes(text.toLowerCase());
@@ -26,7 +27,7 @@ function defaultFilter<T>(text: string, {label}: SciRowContext<T, ValueType>): b
   }
 }
 
-function defaultSort<T>(a: SciRowContext<T, ValueType>, b: SciRowContext<T, ValueType>): number {
+function defaultSort<T>(a: SciCellContext<T, ValueType>, b: SciCellContext<T, ValueType>): number {
   // TODO: improve default sort for non matching types (maybe pass columntype?)
   if (a.label === undefined || b.label === undefined || typeof a !== typeof b) {
     return 0;
@@ -57,23 +58,57 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly isResizable = this._isResizable.asReadonly();
   public readonly isSelectable = this._isSelectable.asReadonly();
 
-  constructor(public readonly data: Signal<T[]>) {
+  constructor(public readonly dataSource: SciDataSource<T>) {
     // DataSource from data (paging, filtering, sorting) evtl. ArrayDataSource
   }
 
-  public addBooleanColumn(valueAccessorOrConfig: ((record: T) => boolean) | SciBooleanColumnDescriptor<T>): this {
-    return this.addColumnWithType(typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig, 'boolean');
+  // public addBooleanColumn(valueAccessorOrConfig: ((record: T) => boolean) | SciBooleanColumnDescriptor<T>): this {
+  //   return this.addColumnWithType(typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig, 'boolean');
+  // }
+
+  public addBooleanColumn(label: (item: T) => boolean): this;
+  public addBooleanColumn(header: string, label: (item: T) => boolean): this;
+  public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
+  public addBooleanColumn(labelHeaderDescriptor: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, label?: (item: T) => boolean): this {
+    switch (typeof labelHeaderDescriptor) {
+      case 'string':
+        return this.addColumnWithType({header: labelHeaderDescriptor, label: label!}, 'boolean');
+      case 'function':
+        return this.addColumnWithType({label: labelHeaderDescriptor}, 'boolean');
+      default:
+        return this.addColumnWithType(labelHeaderDescriptor, 'boolean');
+    }
   }
 
-  public addNumberColumn(valueAccessorOrConfig: ((record: T) => number) | SciNumberColumnDescriptor<T>): this {
-    return this.addColumnWithType(typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig, 'number');
+  public addStringColumn(label: (item: T) => string): this;
+  public addStringColumn(header: string, label: (item: T) => string): this;
+  public addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
+  public addStringColumn(labelHeaderDescriptor: ((item: T) => string) | string | SciStringColumnDescriptor<T>, label?: (item: T) => string): this {
+    switch (typeof labelHeaderDescriptor) {
+      case 'string':
+        return this.addColumnWithType({header: labelHeaderDescriptor, label: label!}, 'string');
+      case 'function':
+        return this.addColumnWithType({label: labelHeaderDescriptor}, 'string');
+      default:
+        return this.addColumnWithType(labelHeaderDescriptor, 'string');
+    }
   }
 
-  public addStringColumn(valueAccessorOrConfig: ((record: T) => string) | SciStringColumnDescriptor<T>): this {
-    return this.addColumnWithType(typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig, 'string');
+  public addNumberColumn(label: (item: T) => number): this;
+  public addNumberColumn(header: string, label: (item: T) => number): this;
+  public addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
+  public addNumberColumn(labelHeaderDescriptor: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, label?: (item: T) => number): this {
+    switch (typeof labelHeaderDescriptor) {
+      case 'string':
+        return this.addColumnWithType({header: labelHeaderDescriptor, label: label!}, 'number');
+      case 'function':
+        return this.addColumnWithType({label: labelHeaderDescriptor}, 'number');
+      default:
+        return this.addColumnWithType(labelHeaderDescriptor, 'number');
+    }
   }
 
-  public addColumn(config: SciCustomColumnDescriptor<T>): this {
+  public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
     return this.addColumnWithType(config, 'custom');
   }
 
@@ -107,7 +142,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     return this._trackByFn(row, index);
   }
 
-  private addColumnWithType(config: SciColumnDescriptor<T>, type: ColumnType): this {
+  private addColumnWithType(config: SciColumnDescriptors<T>, type: ColumnType): this {
     // columns with a custom component must provide a sort function to be sortable, because the default sort function does not work.
     const sortable = typeof config.label === 'function' ?
       config.sort !== false :
@@ -122,8 +157,9 @@ export class ɵSciTable<T> implements SciTable<T> {
       ...columns,
       {
         type,
-        id: config.id ?? UUID.randomUUID(),
+        name: config.name ?? UUID.randomUUID(),
         label: config.label,
+        component: config.component,
         filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
         sort: typeof config.sort === 'function' ? config.sort : defaultSort,
         header: coerceSignal(config.header, {defaultValue: ''}),
@@ -138,4 +174,5 @@ export class ɵSciTable<T> implements SciTable<T> {
     ]);
     return this;
   }
+
 }
