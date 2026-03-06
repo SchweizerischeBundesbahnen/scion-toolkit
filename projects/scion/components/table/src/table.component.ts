@@ -8,14 +8,17 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, input, output, Signal, signal, viewChildren} from '@angular/core';
-import {SciColumn, SciRow, SciTable} from './table.model';
+import {ChangeDetectionStrategy, Component, computed, effect, input, linkedSignal, output, Signal, signal, viewChild, viewChildren} from '@angular/core';
+import {SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTable} from './ɵtable.model';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {TableRowComponent} from './table-row/table-row.component';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
-import {SciArrayDataSource, SciCdkDataSource, SciDataSource} from './data-source.model';
+import {SciArrayDataSource, SciDataSource} from './data-source.model';
+import {toObservable} from '@angular/core/rxjs-interop';
+import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
+import {coerceObservable} from './common';
 
 export function table<T>(dataSource: SciDataSource<T>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
 export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
@@ -62,17 +65,22 @@ export class SciTableComponent<T> {
   public readonly activateRow = output<RowSelection<T> | undefined>();
   public readonly selectRows = output<RowSelection<T>[]>();
 
+  private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
+  private readonly viewport$ = toObservable(this.viewport);
+
   protected readonly rows = viewChildren<TableRowComponent<T>>(TableRowComponent);
 
   protected readonly activeRow = signal<RowSelection<T> | undefined>(undefined);
   protected readonly selectedRows = signal<RowSelection<T>[]>([]);
-  protected readonly sort = signal<[string, 'asc' | 'desc'] | undefined>(undefined);
+  protected readonly sort = signal<{columnName: string; direction: 'asc' | 'desc'}[]>([]);
+  protected readonly filter = signal<{columnName: string; text: string}[]>([]);
 
+  private readonly _size = signal<number>(0);
   private readonly _resizeContext = signal<{width: number; columnId: string} | undefined>(undefined);
   private readonly _resizedColumnWidths = signal<Map<string, string>>(new Map());
 
+  protected readonly items = linkedSignal(() => new Array<SciRow<T>>(this._size()).fill({item: {} as T, cells: []}));
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>); // TODO [eg]: Is there a better way to not expose the private ɵSciTable?
-  protected readonly sciDataSource = computed(() => this.sciTable().dataSource);
   protected readonly columns = computed(() => this.sciTable().columns());
 
   protected readonly selectedRowIndices = computed(() => this.selectedRows().map(selection => selection.index));
@@ -85,8 +93,6 @@ export class SciTableComponent<T> {
       .join(' ');
   });
 
-  protected readonly dataSource = new SciCdkDataSource(this.sciDataSource, this.columns);
-
   constructor() {
     effect(() => {
       this.activateRow.emit(this.activeRow());
@@ -95,18 +101,48 @@ export class SciTableComponent<T> {
     effect(() => {
       this.selectRows.emit(this.selectedRows());
     });
+
+    this.viewport$.pipe(
+      switchMap(viewport => viewport.renderedRangeStream),
+      startWith({start: 0, end: 0}),
+      combineLatestWith(
+        toObservable(this.sciTable),
+        toObservable(this.columns),
+        toObservable(this.sort),
+        toObservable(this.filter),
+      ),
+      switchMap(([range, table, columns, sort, filter]) => {
+        const limit = range.end - range.start;
+        const response = table.dataSource.getItems({
+          start: range.start,
+          end: range.end,
+          limit,
+          sortCriteria: sort,
+          filterCriteria: filter,
+        }, columns);
+
+        return coerceObservable(response).pipe(map(r => ({response: r, start: range.start, limit})));
+      }),
+    ).subscribe(({response, start, limit}) => {
+      this._size.set(response.totalCount);
+      this.items.update(old => {
+        const newItems = [...old];
+        newItems.splice(start, limit, ...response.items);
+        return newItems;
+      });
+    });
   }
 
   protected trackBy(i: number, row: SciRow<T>): any {
     return this.sciTable().trackByFn(i, row.item);
   }
 
-  protected onSort(col: SciColumn<T>): void {
+  protected onSort(col: SciColumns<T>): void {
     if (!this.sciTable().isSortable() || !col.sortable()) {
       return;
     }
 
-    this.dataSource.sort.update(([sort]) => {
+    this.sort.update(([sort]) => {
       if (col.name !== sort?.columnName) {
         return [{columnName: col.name, direction: 'asc'}];
       }
@@ -146,11 +182,11 @@ export class SciTableComponent<T> {
     });
   }
 
-  protected onResizeStart(column: SciColumn<T>, header: HTMLDivElement): void {
+  protected onResizeStart(column: SciColumns<T>, header: HTMLDivElement): void {
     this._resizeContext.set({width: header.offsetWidth, columnId: column.name});
   }
 
-  protected onResize(column: SciColumn<T>, event: SplitterMoveEvent): void {
+  protected onResize(column: SciColumns<T>, event: SplitterMoveEvent): void {
     const context = this._resizeContext();
     if (!context) {
       return;
@@ -165,13 +201,9 @@ export class SciTableComponent<T> {
     this._resizeContext.set(undefined);
   }
 
-  protected onResizeAuto(column: SciColumn<T>): void {
+  protected onResizeAuto(column: SciColumns<T>): void {
     const cellWidths = this.rows().map(row => row.getCellWidth(column.name));
     const maxWidth = Math.max(...cellWidths, 0) + 20; // TODO [eg]: configurable buffer?
     this._resizedColumnWidths.update(overrides => new Map(overrides).set(column.name, `${maxWidth}px`));
-  }
-
-  protected onScrolledIndexChanged(index: number): void {
-    // console.log(`Scrkolled index: ${index}`);
   }
 }

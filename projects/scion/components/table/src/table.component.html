@@ -4,17 +4,15 @@
     <div class="column-header" #header>
       <button class="column-sort"
               [attr.data-sortable]="table.isSortable() && col.sortable()"
-              [attr.data-sort]="dataSource.sort()[0]?.columnName === col.name && dataSource.sort()[0]?.direction"
+              [attr.data-sort]="sort()[0]?.columnName === col.name && sort()[0]?.direction"
               (click)="onSort(col)">
         {{ col.header() }}
       </button>
-      <sci-splitter
-        orientation="vertical"
-        (start)="onResizeStart(col, header)"
-        (move)="onResize(col, $event)"
-        (end)="onResizeEnd()"
-        (reset)="onResizeAuto(col)"
-      />
+      <sci-splitter orientation="vertical"
+                    (start)="onResizeStart(col, header)"
+                    (move)="onResize(col, $event)"
+                    (end)="onResizeEnd()"
+                    (reset)="onResizeAuto(col)" />
 <!--      <button class="column-resize"-->
 <!--              [attr.data-resizable]="table.isResizable() && col.resizable()"-->
 <!--              (dblclick)="onResizeDblClick(col)"-->
@@ -25,9 +23,9 @@
   }
 </div>
 <div class="table-body">
-  <cdk-virtual-scroll-viewport itemSize="26" (scrolledIndexChange)="onScrolledIndexChanged($event)" sciScrollable #cdkViewport>
+  <cdk-virtual-scroll-viewport itemSize="26" sciScrollable #cdkViewport>
     <sci-table-row
-      *cdkVirtualFor="let row of dataSource; let i = index; trackBy: trackBy.bind(this)"
+      *cdkVirtualFor="let row of items(); let i = index; trackBy: trackBy.bind(this)"
       [row]="row"
       [index]="i"
       [selectedRows]="selectedRowIndices()"

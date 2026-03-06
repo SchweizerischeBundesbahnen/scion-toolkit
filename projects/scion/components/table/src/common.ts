@@ -9,6 +9,7 @@
  */
 
 import {isSignal, signal, Signal} from '@angular/core';
+import {from, isObservable, Observable, of} from 'rxjs';
 
 export type MaybeSignal<T> = T | Signal<T>;
 
@@ -22,4 +23,11 @@ export function coerceSignal<T>(value: MaybeSignal<T> | undefined, options?: {de
   return isSignal(value) ? value : signal(value);
 }
 
-export type MaybeAsync<T> = T | Promise<T>;
+export type MaybeAsync<T> = T | Promise<T> | Observable<T>;
+
+export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
+  if (input instanceof Promise || isObservable(input)) {
+    return from(input);
+  }
+  return of(input);
+};

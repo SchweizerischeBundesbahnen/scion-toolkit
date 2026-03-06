@@ -10,7 +10,7 @@
 
 import {signal} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
-import {ColumnType, SciBooleanColumnDescriptor, SciColumn, SciColumnDescriptors, SciNumberColumnDescriptor, SciCellContext, SciStringColumnDescriptor, SciTable, ValueType, SciComponentColumnDescriptor} from './table.model';
+import {ColumnType, SciBooleanColumnDescriptor, SciCellContext, SciColumnDescriptors, SciColumns, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTable, ValueType} from './table.model';
 import {coerceSignal} from './common';
 import {SciDataSource} from './data-source.model';
 
@@ -46,7 +46,7 @@ function defaultSort<T>(a: SciCellContext<T, ValueType>, b: SciCellContext<T, Va
 }
 
 export class ɵSciTable<T> implements SciTable<T> {
-  private readonly _columns = signal<SciColumn<T>[]>([]);
+  private readonly _columns = signal<SciColumns<T>[]>([]);
   private readonly _isSortable = signal(true);
   private readonly _isFilterable = signal(true);
   private readonly _isResizable = signal(true);
@@ -144,33 +144,32 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   private addColumnWithType(config: SciColumnDescriptors<T>, type: ColumnType): this {
     // columns with a custom component must provide a sort function to be sortable, because the default sort function does not work.
-    const sortable = typeof config.label === 'function' ?
-      config.sort !== false :
-      !!config.sort;
+    const sortable = type === 'custom' ?
+      !!config.sort :
+      config.sort !== false;
 
     // columns with a custom component must provide a filter function to be filterable, because the default filter function does not work.
-    const filterable = typeof config.label === 'function' ?
-      config.filter !== false :
-      !!config.filter;
+    const filterable = type === 'custom' ?
+      !!config.filter :
+      config.filter !== false;
 
     this._columns.update(columns => [
       ...columns,
       {
+        ...config,
         type,
         name: config.name ?? UUID.randomUUID(),
-        label: config.label,
-        component: config.component,
         filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
         sort: typeof config.sort === 'function' ? config.sort : defaultSort,
         header: coerceSignal(config.header, {defaultValue: ''}),
         sortable: signal(sortable),
         filterable: signal(filterable),
         resizable: coerceSignal(config.resizable, {defaultValue: true}),
-        // order: signal(columns.length),
+        index: signal(columns.length),
         width: coerceSignal(config.width, {defaultValue: '1fr'}),
         minWidth: coerceSignal(config.minWidth, {defaultValue: null}),
         maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),
-      } as SciColumn<T>,
+      } as SciColumns<T>,
     ]);
     return this;
   }
