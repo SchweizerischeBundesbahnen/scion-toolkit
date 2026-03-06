@@ -1,5 +1,5 @@
 import {computed, effect, linkedSignal, signal, Signal} from '@angular/core';
-import {SciColumn, SciGetItemsOptions, SciGetItemsPagination, SciRow} from './table.model';
+import {SciBooleanCell, SciCell, SciColumn, SciGetItemsOptions, SciGetItemsPagination, SciNumberCell, SciRow, SciStringCell} from './table.model';
 import {coerceSignal} from './common';
 import {CollectionViewer, DataSource} from '@angular/cdk/collections';
 import {Observable, Subject} from 'rxjs';
@@ -12,13 +12,18 @@ const mapRecordToRow = <T>(record: T, columns: SciColumn<T>[]): SciRow<T> => ({
     label: col.type !== 'custom' ? coerceSignal(col.label(record)) : undefined,
     component: col.type === 'custom' ? col.component(record) : undefined,
     type: col.type,
-    columnId: col.name,
-  })),
+    columnName: col.name,
+  } as SciCell)),
 });
+
+export type Response<T> = {
+  state: 'resolved';
+  value: T;
+} | {state: 'loading'} | {state: 'error'};
 
 export interface SciDataSource<T> {
   size: Signal<number>;
-  getItems(pagination: SciGetItemsPagination, options: SciGetItemsOptions, columns: Signal<SciColumn<T>[]>): Signal<SciRow<T>[]>;
+  getItems(pagination: SciGetItemsPagination, options: SciGetItemsOptions, columns: Signal<SciColumn<T>[]>): Signal<Response<SciRow<T>[]>>;
 }
 
 export class SciCdkDataSource<T> extends DataSource<SciRow<T>> {
@@ -36,24 +41,28 @@ export class SciCdkDataSource<T> extends DataSource<SciRow<T>> {
     const sortCriteria = this.sort();
     const filterCriteria = this.filter();
 
-    const items = dataSource.getItems({
+    const response = dataSource.getItems({
       start: page.start,
       end: page.end,
       pageSize: page.end - page.start,
-    }, {sortCriteria, filterCriteria}, this._columns)();
+    }, {sortCriteria, filterCriteria}, this._columns);
 
-    return {page, items};
+    return {page, response};
   });
 
   constructor(private _dataSource: Signal<SciDataSource<T>>, private _columns: Signal<SciColumn<T>[]>) {
     super();
 
     effect(() => {
-      const {page, items} = this._currentPage();
+      const {page, response} = this._currentPage();
+      const res = response();
+      if (res.state !== 'resolved') {
+        return;
+      }
 
       this._items.update(old => {
         const newItems = [...old];
-        newItems.splice(page.start, page.end - page.start, ...items);
+        newItems.splice(page.start, page.end - page.start, ...res.value);
         return newItems;
       });
     });
@@ -61,25 +70,10 @@ export class SciCdkDataSource<T> extends DataSource<SciRow<T>> {
 
   public connect(collectionViewer: CollectionViewer): Observable<SciRow<T>[]> {
     collectionViewer.viewChange.pipe(
-      debounceTime(100),
+      debounceTime(10),
       takeUntil(this._destroy$),
     ).subscribe(viewChange => this._page.set(viewChange));
     return this._items$;
-    // return combineLatest([
-    //   this._sort$,
-    //   this._filter$,
-    //   collectionViewer.viewChange,
-    // ]).pipe(
-    //   switchMap(([sort, filter, viewChange]) => runInInjectionContext(this._injector, () => toObservable(this._dataSource().getItems({
-    //     start: viewChange.start,
-    //     end: viewChange.end,
-    //     pageSize: viewChange.end - viewChange.start,
-    //   }, {
-    //     sortCriteria: sort,
-    //     filterCriteria: filter,
-    //   }, this._columns)))),
-    //   takeUntil(this._destroy$),
-    // );
   }
 
   public disconnect(collectionViewer: CollectionViewer): void {
@@ -94,9 +88,12 @@ export class SciRemoteDataSource<T> implements SciDataSource<T> {
   constructor(private _getItems: (pagination: SciGetItemsPagination, options: SciGetItemsOptions) => Signal<T[]>) {
   }
 
-  public getItems(pagination: SciGetItemsPagination, options: SciGetItemsOptions, columns: Signal<SciColumn<T>[]>): Signal<SciRow<T>[]> {
+  public getItems(pagination: SciGetItemsPagination, options: SciGetItemsOptions, columns: Signal<SciColumn<T>[]>): Signal<Response<SciRow<T>[]>> {
     const items = this._getItems(pagination, options);
-    return computed(() => items().map(r => mapRecordToRow(r, columns())));
+    return computed(() => ({
+      state: 'resolved',
+      value: items().map(r => mapRecordToRow(r, columns())),
+    }));
   }
 }
 
@@ -106,29 +103,78 @@ export class SciArrayDataSource<T> implements SciDataSource<T> {
   constructor(private _data: Signal<T[]>) {
   }
 
-  public getItems(pagination: SciGetItemsPagination, options: SciGetItemsOptions, columnsSignal: Signal<SciColumn<T>[]>): Signal<SciRow<T>[]> {
+  private sort(a: SciRow<T>, b: SciRow<T>, sortCriteria: {columnIndex: number; column: SciColumn<T>; direction: 'asc' | 'desc'}[]): number {
+    if (sortCriteria.length === 0) {
+      return 0;
+    }
+
+    for (const criterion of sortCriteria) {
+      const aCell = a.cells[criterion.columnIndex];
+      const bCell = b.cells[criterion.columnIndex];
+
+      if (!aCell || !bCell) {
+        continue;
+      }
+
+      const sort = (() => {
+        switch (criterion.column.type) {
+          case 'string':
+            return criterion.column.sort({item: a.item, label: (aCell as SciStringCell).label()}, {item: b.item, label: (bCell as SciStringCell).label()});
+          case 'number':
+            return criterion.column.sort({item: a.item, label: (aCell as SciNumberCell).label()}, {item: b.item, label: (bCell as SciNumberCell).label()});
+          case 'boolean':
+            return criterion.column.sort({item: a.item, label: (aCell as SciBooleanCell).label()}, {item: b.item, label: (bCell as SciBooleanCell).label()});
+          case 'custom':
+            return criterion.column.sort({item: a.item, label: undefined}, {item: b.item, label: undefined});
+          default:
+            return 0;
+        }
+      })();
+
+      if (sort !== 0) {
+        const dir = criterion.direction === 'asc' ? 1 : -1;
+        return sort * dir;
+      }
+    }
+
+    return 0;
+  }
+
+  public getItems(pagination: SciGetItemsPagination, options: SciGetItemsOptions, columnsSignal: Signal<SciColumn<T>[]>): Signal<Response<SciRow<T>[]>> {
     console.log('GET ITEMS', pagination);
+
+    // Fake loading
+    const loading = signal(true);
+    setTimeout(() => {
+      loading.set(false);
+    }, 1000);
+
     return computed(() => {
       const data = this._data();
       const columns = columnsSignal();
-      return data.map(r => mapRecordToRow(r, columns))
+      const l = loading();
+      if (l) {
+        return {state: 'loading'};
+      }
+
+      const sortCols = options.sortCriteria.map(sc => ({
+        columnIndex: columns.findIndex(c => sc.columnName === c.name),
+        column: columns.find(c => sc.columnName === c.name),
+        direction: sc.direction,
+      })).filter((sc): sc is {
+        columnIndex: number;
+        column: SciColumn<T>;
+        direction: 'asc' | 'desc';
+      } => sc.columnIndex >= 0);
+
+      const items = data.map(r => mapRecordToRow(r, columns))
+        .sort((a, b) => this.sort(a, b, sortCols))
         .slice(pagination.start, pagination.end);
 
-      // const sortCol = columns.find(c => c.id === options.sortCriteria?.columnId);
-      // if (!sortCol) {
-      //   return rows.slice(pagination.offset, pagination.pageSize);
-      // }
-      //
-      // const colIdx = columns.indexOf(sortCol);
-      // const sortDir = options.sortCriteria!.direction === 'asc' ? 1 : -1;
-      // return rows
-      //   .sort((a, b) => sortDir * sortCol.sort(
-      //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      //     {record: a.item, label: a.cells[colIdx]?.label()} as any,
-      //     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      //     {record: b.item, label: b.cells[colIdx]?.label()} as any),
-      //   )
-      //   .slice(params.pagination.offset, params.pagination.pageSize);
+      return {
+        state: 'resolved',
+        value: items,
+      };
     });
   }
 }

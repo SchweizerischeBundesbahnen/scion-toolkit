@@ -12,7 +12,7 @@ import {Binding, Signal} from '@angular/core';
 import {MaybeSignal} from './common';
 import {ComponentType} from '@angular/cdk/portal';
 
-export type ValueType = string | number | boolean | undefined;
+export type ValueType = string | number | boolean | void;
 
 export type ColumnType = 'custom' | 'string' | 'number' | 'boolean';
 
@@ -153,6 +153,7 @@ export interface SciStringColumn<T> extends SciBaseColumn {
 export interface SciBooleanColumn<T> extends SciBaseColumn {
   type: 'boolean';
   label: (record: T) => MaybeSignal<boolean>;
+  sortRows: (rows: SciRow<T>[]) => SciRow<T>[];
   sort: (a: SciCellContext<T, boolean>, b: SciCellContext<T, boolean>) => number;
   filter: (text: string, context: SciCellContext<T, boolean>) => boolean;
 }
@@ -160,6 +161,7 @@ export interface SciBooleanColumn<T> extends SciBaseColumn {
 export interface SciNumberColumn<T> extends SciBaseColumn {
   type: 'number';
   label: (record: T) => MaybeSignal<number>;
+  sortRows: (rows: SciRow<T>[]) => SciRow<T>[];
   sort: (a: SciCellContext<T, number>, b: SciCellContext<T, number>) => number;
   filter: (text: string, context: SciCellContext<T, number>) => boolean;
 }
@@ -177,15 +179,35 @@ export type SciColumn<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanC
  */
 export interface SciRow<T> {
   item: T;
-  cells: SciCell<ValueType>[];
+  cells: SciCell[];
 }
 
 /**
  * Internally used Cell Model
  */
-export interface SciCell<V extends ValueType> {
+export interface SciBaseCell {
   type: ColumnType;
-  columnId: string;
-  label?: Signal<V>;
-  component?: ComponentWithInputs;
+  columnName: string;
 }
+
+export interface SciStringCell extends SciBaseCell {
+  type: 'string';
+  label: Signal<string>;
+}
+
+export interface SciNumberCell extends SciBaseCell {
+  type: 'number';
+  label: Signal<number>;
+}
+
+export interface SciBooleanCell extends SciBaseCell {
+  type: 'boolean';
+  label: Signal<boolean>;
+}
+
+export interface SciComponentCell extends SciBaseCell {
+  type: 'custom';
+  component: ComponentWithInputs;
+}
+
+export type SciCell = SciStringCell | SciNumberCell | SciBooleanCell | SciComponentCell;

@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input} from '@angular/core';
-import {SciCell, ValueType} from '../table.model';
+import {SciCell} from '../table.model';
 import {NgComponentOutlet} from '@angular/common';
 
 @Component({
@@ -24,15 +24,20 @@ import {NgComponentOutlet} from '@angular/common';
     NgComponentOutlet,
   ],
 })
-export class TableCellComponent<V extends ValueType> {
+export class TableCellComponent {
 
-  public readonly cell = input.required<SciCell<V>>();
+  public readonly cell = input.required<SciCell>();
 
   private readonly _element = inject(ElementRef);
 
   protected readonly customCell = computed(() => {
-    const component = this.cell().component;
-    return typeof component === 'object' ? component : undefined;
+    const cell = this.cell();
+    return cell.type === 'custom' ? cell.component : undefined;
+  });
+
+  protected readonly label = computed(() => {
+    const cell = this.cell();
+    return cell.type !== 'custom' ? cell.label() : undefined;
   });
 
   public getWidth(): number {

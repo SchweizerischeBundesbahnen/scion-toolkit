@@ -45,7 +45,7 @@ export class TableRowComponent<T> {
 
   // TODO [eg]: Should we access this differently?
   public getCellWidth(columnId: string): number {
-    return this.cells().find(cell => cell.cell().columnId === columnId)?.getWidth() ?? 0;
+    return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;
   }
 
   protected onRowEnter(): void {

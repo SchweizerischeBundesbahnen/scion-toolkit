@@ -106,12 +106,12 @@ export class SciTableComponent<T> {
       return;
     }
 
-    this.sort.update(sort => {
-      if (col.name !== sort?.[0]) {
-        return [col.name, 'asc'];
+    this.dataSource.sort.update(([sort]) => {
+      if (col.name !== sort?.columnName) {
+        return [{columnName: col.name, direction: 'asc'}];
       }
 
-      return [col.name, sort[1] === 'asc' ? 'desc' : 'asc'];
+      return [{columnName: col.name, direction: sort.direction === 'asc' ? 'desc' : 'asc'}];
     });
   }
 
