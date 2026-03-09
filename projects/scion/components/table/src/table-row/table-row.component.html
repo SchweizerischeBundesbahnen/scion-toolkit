@@ -1,3 +1,4 @@
-@for (cell of row().cells; track $index) {
-  <sci-table-cell [cell]="cell" #cell />
+@let _row = row();
+@for (cell of _row?.cells; track $index) {
+  <sci-table-cell [cell]="cell" [item]="_row!.item" #cell />
 }

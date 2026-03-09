@@ -30,4 +30,13 @@ export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
     return from(input);
   }
   return of(input);
-};
+}
+
+export function rangeInSet(start: number, end: number, set: Set<number>): boolean {
+  for (let i = start; i < end; i++) {
+    if (!set.has(i)) {
+      return false;
+    }
+  }
+  return true;
+}

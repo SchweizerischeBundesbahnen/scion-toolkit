@@ -7,10 +7,9 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, input, signal} from '@angular/core';
+import {Component, computed, input, resource, signal, TemplateRef, viewChild} from '@angular/core';
 import {RowSelection, SciTableComponent, table} from '@scion/components/table';
 import {Station, stations} from './sci-table-page.data';
-import {httpResource} from '@angular/common/http';
 import {FormsModule} from '@angular/forms';
 
 @Component({
@@ -29,13 +28,16 @@ import {FormsModule} from '@angular/forms';
         
       </div>
     } @else if (sloid.value(); as res) {
-      {{ res.sloid }}      
+      {{ res }}      
     }
   `,
 })
 class CustomCellComponent {
   public readonly station = input.required<Station>();
-  public readonly sloid = httpResource<{sloid: string}>(() => `http://localhost:3000/api?placeRef=${this.station().sloid}`);
+  public readonly sloid = resource({
+    params: () => ({sloid: this.station().sloid}),
+    loader: ({params}) => new Promise(resolve => setTimeout(() => resolve(params.sloid.split(':').at(-1)), Math.floor(Math.random() * 1500) + 500)),
+  });
 }
 
 @Component({
@@ -55,6 +57,8 @@ export default class SciTablePageComponent {
 
   private _additionalData = signal(0);
 
+  private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
+
   protected table = table(this.data, table => table
     .addStringColumn({
       label: station => computed(() => `${crypto.randomUUID().slice(0, 4)} ${station.sloid} (${this._additionalData()})`),
@@ -62,12 +66,16 @@ export default class SciTablePageComponent {
       maxWidth: '200px',
       minWidth: '100px',
       header: 'Sloid',
+      resizable: false,
     })
     .addComponentColumn({
-      width: '150px',
       header: 'Custom Component',
       component: station => ({
         component: CustomCellComponent, inputs: {station}}),
+    })
+    .addTemplateColumn({
+      header: 'Template',
+      template: station => computed(() => ({template: this.cellTemplate(), context: {custom: 'bla'}})),
     })
     // .addNumberColumn({
     //   label: station => this.getData(station),
@@ -76,8 +84,8 @@ export default class SciTablePageComponent {
     // })
     .addStringColumn({
       label: station => station.designationofficial,
-      width: '150px',
       header: 'Name',
+      name: 'name',
     })
     .addStringColumn({
       label: station => computed(() => this.language() === 'fr' ? station.districtnameFr : station.districtname),

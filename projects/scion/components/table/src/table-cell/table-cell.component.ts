@@ -9,8 +9,8 @@
  */
 
 import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input} from '@angular/core';
-import {SciCell} from '../table.model';
-import {NgComponentOutlet} from '@angular/common';
+import {SciCells} from '../table.model';
+import {NgComponentOutlet, NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'sci-table-cell',
@@ -22,23 +22,25 @@ import {NgComponentOutlet} from '@angular/common';
   },
   imports: [
     NgComponentOutlet,
+    NgTemplateOutlet,
   ],
 })
-export class TableCellComponent {
+export class TableCellComponent<T> {
 
-  public readonly cell = input.required<SciCell>();
+  public readonly cell = input.required<SciCells>();
+  public readonly item = input.required<T>();
+
+  protected readonly templateContext = computed(() => {
+    const cell = this.cell();
+    const item = this.item();
+
+    return cell.type === 'template' ? {
+      $implicit: item,
+      ...cell.template().context,
+    } : null;
+  });
 
   private readonly _element = inject(ElementRef);
-
-  protected readonly customCell = computed(() => {
-    const cell = this.cell();
-    return cell.type === 'custom' ? cell.component : undefined;
-  });
-
-  protected readonly label = computed(() => {
-    const cell = this.cell();
-    return cell.type !== 'custom' ? cell.label() : undefined;
-  });
 
   public getWidth(): number {
     return ((this._element.nativeElement as HTMLElement).firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;

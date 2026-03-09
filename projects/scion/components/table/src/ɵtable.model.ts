@@ -10,7 +10,7 @@
 
 import {signal} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
-import {ColumnType, SciBooleanColumnDescriptor, SciCellContext, SciColumnDescriptors, SciColumns, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTable, ValueType} from './table.model';
+import {ColumnType, SciBooleanColumnDescriptor, SciCellContext, SciColumnDescriptors, SciColumns, SciComponentColumnDescriptor, SciTemplateColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTable, ValueType} from './table.model';
 import {coerceSignal} from './common';
 import {SciDataSource} from './data-source.model';
 
@@ -62,10 +62,6 @@ export class ɵSciTable<T> implements SciTable<T> {
     // DataSource from data (paging, filtering, sorting) evtl. ArrayDataSource
   }
 
-  // public addBooleanColumn(valueAccessorOrConfig: ((record: T) => boolean) | SciBooleanColumnDescriptor<T>): this {
-  //   return this.addColumnWithType(typeof valueAccessorOrConfig === 'function' ? {label: valueAccessorOrConfig} : valueAccessorOrConfig, 'boolean');
-  // }
-
   public addBooleanColumn(label: (item: T) => boolean): this;
   public addBooleanColumn(header: string, label: (item: T) => boolean): this;
   public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
@@ -109,7 +105,11 @@ export class ɵSciTable<T> implements SciTable<T> {
   }
 
   public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
-    return this.addColumnWithType(config, 'custom');
+    return this.addColumnWithType(config, 'component');
+  }
+
+  public addTemplateColumn(config: SciTemplateColumnDescriptor<T>): this {
+    return this.addColumnWithType(config, 'template');
   }
 
   public filterable(filterable: boolean): this {
@@ -143,13 +143,13 @@ export class ɵSciTable<T> implements SciTable<T> {
   }
 
   private addColumnWithType(config: SciColumnDescriptors<T>, type: ColumnType): this {
-    // columns with a custom component must provide a sort function to be sortable, because the default sort function does not work.
-    const sortable = type === 'custom' ?
+    // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
+    const sortable = type === 'component' || type === 'template' ?
       !!config.sort :
       config.sort !== false;
 
-    // columns with a custom component must provide a filter function to be filterable, because the default filter function does not work.
-    const filterable = type === 'custom' ?
+    // columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
+    const filterable = type === 'component' || type === 'template' ?
       !!config.filter :
       config.filter !== false;
 
@@ -166,6 +166,7 @@ export class ɵSciTable<T> implements SciTable<T> {
         filterable: signal(filterable),
         resizable: coerceSignal(config.resizable, {defaultValue: true}),
         index: signal(columns.length),
+        // TODO: Default should be auto, but that does not work with multiple grids
         width: coerceSignal(config.width, {defaultValue: '1fr'}),
         minWidth: coerceSignal(config.minWidth, {defaultValue: null}),
         maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),

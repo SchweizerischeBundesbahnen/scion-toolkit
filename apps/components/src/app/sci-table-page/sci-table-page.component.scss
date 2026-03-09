@@ -3,6 +3,9 @@
   gap: 1em;
 
   > main {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
     flex: auto;
 
     > sci-table {

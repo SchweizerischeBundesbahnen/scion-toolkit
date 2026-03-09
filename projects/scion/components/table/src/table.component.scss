@@ -1,11 +1,20 @@
 @use '@scion/components/scrollbar' as sci-scrollbar;
 
 :host {
+  display: grid;
+  background-color: var(--sci-color-background-primary);
+  overflow: hidden;
+  position: relative; // anchor for the scroll bars
+  @include sci-scrollbar.scrollbar-hide-when-inactive();
+
+  > sci-scrollbar {
+    @include sci-scrollbar.scrollbar-position();
+  }
+}
+
+div.table-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
-  background-color: var(--sci-color-background-primary);
 
   > div.table-header {
     display: grid;
@@ -44,25 +53,9 @@
         }
       }
 
-      > button.column-resize {
-        all: unset;
-        box-sizing: border-box;
-        padding: .5em;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-
-        &[data-resizable="true"] {
-          cursor: ew-resize;
-        }
-
-        &:after {
-          content: '';
-          width: 2px;
-          height: 12px;
-          background-color: var(--sci-color-border);
-        }
+      > div.delimiter {
+        width: 1px;
+        background-color: var(--sci-splitter-background-color);
       }
     }
   }
@@ -70,12 +63,6 @@
   > div.table-body {
     flex: 1;
     overflow: hidden;
-    position: relative;
-    @include sci-scrollbar.scrollbar-hide-when-inactive();
-
-    > sci-scrollbar {
-      @include sci-scrollbar.scrollbar-position();
-    }
 
     // TODO [eg]: move styling to external stylesheet?
     &::ng-deep .cdk-virtual-scroll-content-wrapper {

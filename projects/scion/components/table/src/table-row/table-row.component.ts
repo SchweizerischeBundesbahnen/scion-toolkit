@@ -29,7 +29,7 @@ import {TableCellComponent} from '../table-cell/table-cell.component';
 })
 export class TableRowComponent<T> {
 
-  public readonly row = input.required<SciRow<T>>();
+  public readonly row = input<SciRow<T>>();
   public readonly index = input.required<number>();
 
   // TODO [eg]: Move row selection to service

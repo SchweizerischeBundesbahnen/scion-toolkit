@@ -18,7 +18,8 @@ import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitte
 import {SciArrayDataSource, SciDataSource} from './data-source.model';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
-import {coerceObservable} from './common';
+import {rangeInSet} from './common';
+import {EMPTY} from 'rxjs';
 
 export function table<T>(dataSource: SciDataSource<T>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
 export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
@@ -66,7 +67,6 @@ export class SciTableComponent<T> {
   public readonly selectRows = output<RowSelection<T>[]>();
 
   private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
-  private readonly viewport$ = toObservable(this.viewport);
 
   protected readonly rows = viewChildren<TableRowComponent<T>>(TableRowComponent);
 
@@ -75,13 +75,20 @@ export class SciTableComponent<T> {
   protected readonly sort = signal<{columnName: string; direction: 'asc' | 'desc'}[]>([]);
   protected readonly filter = signal<{columnName: string; text: string}[]>([]);
 
-  private readonly _size = signal<number>(0);
+  private readonly _totalCount = signal<number>(0, {equal: (a, b) => a === b});
   private readonly _resizeContext = signal<{width: number; columnId: string} | undefined>(undefined);
   private readonly _resizedColumnWidths = signal<Map<string, string>>(new Map());
 
-  protected readonly items = linkedSignal(() => new Array<SciRow<T>>(this._size()).fill({item: {} as T, cells: []}));
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>); // TODO [eg]: Is there a better way to not expose the private ɵSciTable?
   protected readonly columns = computed(() => this.sciTable().columns());
+  protected readonly sortAndFilter = computed(() => ({sortCriteria: this.sort(), filterCriteria: this.filter()}));
+
+  // Reset to the cache as soon as either the total count, sort or filter changes
+  protected readonly placeholderItems = linkedSignal(() => new Array<SciRow<T>>(this._totalCount()).fill({item: {} as T, cells: []}));
+  protected readonly cachedItems = linkedSignal({
+    source: () => this.sortAndFilter(),
+    computation: () => new Map<number, SciRow<T>>(),
+  });
 
   protected readonly selectedRowIndices = computed(() => this.selectedRows().map(selection => selection.index));
 
@@ -102,33 +109,38 @@ export class SciTableComponent<T> {
       this.selectRows.emit(this.selectedRows());
     });
 
-    this.viewport$.pipe(
+    toObservable(this.viewport).pipe(
       switchMap(viewport => viewport.renderedRangeStream),
-      startWith({start: 0, end: 0}),
+      startWith({start: 0, end: 30}),
       combineLatestWith(
         toObservable(this.sciTable),
         toObservable(this.columns),
-        toObservable(this.sort),
-        toObservable(this.filter),
+        toObservable(this.sortAndFilter),
       ),
-      switchMap(([range, table, columns, sort, filter]) => {
-        const limit = range.end - range.start;
+      switchMap(([{start, end}, table, columns, {sortCriteria, filterCriteria}]) => {
+        // If all indices are already cached, don't call the backend
+        if (rangeInSet(start, end, new Set(this.cachedItems().keys()))) {
+          return EMPTY;
+        }
+
         const response = table.dataSource.getItems({
-          start: range.start,
-          end: range.end,
-          limit,
-          sortCriteria: sort,
-          filterCriteria: filter,
+          start: start,
+          end: end,
+          limit: end - start,
+          sortCriteria,
+          filterCriteria,
         }, columns);
 
-        return coerceObservable(response).pipe(map(r => ({response: r, start: range.start, limit})));
+        return response.pipe(map(r => ({response: r, start})));
       }),
-    ).subscribe(({response, start, limit}) => {
-      this._size.set(response.totalCount);
-      this.items.update(old => {
-        const newItems = [...old];
-        newItems.splice(start, limit, ...response.items);
-        return newItems;
+    ).subscribe(({response, start}) => {
+      this._totalCount.set(response.totalCount);
+      this.cachedItems.update(cache => {
+        const newCache = new Map(cache);
+        for (let i = 0; i < response.items.length; i++) {
+          newCache.set(start + i, response.items[i]!);
+        }
+        return newCache;
       });
     });
   }

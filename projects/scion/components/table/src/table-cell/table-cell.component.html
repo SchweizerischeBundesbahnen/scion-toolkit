@@ -1,6 +1,16 @@
-@if (customCell(); as customCell) {
-  <ng-container *ngComponentOutlet="customCell.component; inputs: customCell.inputs" />
-} @else if (label(); as label) {
-  <span>{{label}}</span>
-}
+@let _cell = cell();
+<div class="wrapper">
+  @switch (_cell.type) {
+    @case ('template') {
+      <ng-template *ngTemplateOutlet="_cell.template().template; context: templateContext()" />
+    }
+    @case ('component') {
+      <ng-container *ngComponentOutlet="_cell.component.component; inputs: _cell.component.inputs" />
+    }
+    @default {
+      {{_cell.label()}}
+    }
+  }
+</div>
+
 

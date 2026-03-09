@@ -8,18 +8,23 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Binding, Signal} from '@angular/core';
+import {Binding, Signal, TemplateRef} from '@angular/core';
 import {MaybeSignal} from './common';
 import {ComponentType} from '@angular/cdk/portal';
 
 export type ValueType = string | number | boolean | void;
 
-export type ColumnType = 'custom' | 'string' | 'number' | 'boolean';
+export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
 
 export interface ComponentWithInputs {
   component: ComponentType<unknown>;
   inputs?: Record<string, unknown>;
   bindings?: Binding[];
+}
+
+export interface TemplateWithContext {
+  template: TemplateRef<unknown>;
+  context?: {[key: string]: unknown};
 }
 
 /**
@@ -39,7 +44,7 @@ export interface SciTable<T> {
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
-  // addTemplateColumn(descriptor: SciComponentColumnDescriptor<T>): this;
+  addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
 
   trackBy(trackByFn: (record: T, index: number) => unknown): this;
   sortable(sortable: boolean): this;
@@ -101,6 +106,18 @@ export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {
   filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
 }
 
+export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
+  template: (item: T) => MaybeSignal<TemplateWithContext>;
+  /**
+   * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
+   */
+  sort?: ((a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number) | boolean;
+  /**
+   * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
+   */
+  filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
+}
+
 export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
   label: (item: T) => MaybeSignal<string>; // Muss im InjectionContext aufgerufen werden
   /**
@@ -136,7 +153,7 @@ export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
    */
   filter?: ((text: string, context: SciCellContext<T, boolean>) => boolean) | boolean;
 }
-export type SciColumnDescriptors<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T>;
+export type SciColumnDescriptors<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
 
 export interface SciColumn {
   type: ColumnType;
@@ -175,47 +192,60 @@ export interface SciNumberColumn<T> extends SciColumn {
 }
 
 export interface SciComponentColumn<T> extends SciColumn {
-  type: 'custom';
+  type: 'component';
   component: (item: T) => ComponentWithInputs;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
 }
-export type SciColumns<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T>;
+
+export interface SciTemplateColumn<T> extends SciColumn {
+  type: 'template';
+  template: (item: T) => MaybeSignal<TemplateWithContext>;
+  sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
+  filter: (text: string, context: SciCellContext<T, void>) => boolean;
+}
+
+export type SciColumns<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
 
 /**
  * Internally used Row Model
  */
 export interface SciRow<T> {
   item: T;
-  cells: SciCell[];
+  cells: SciCells[];
 }
 
 /**
  * Internally used Cell Model
  */
-export interface SciBaseCell {
+export interface SciCell {
   type: ColumnType;
   columnName: string;
 }
 
-export interface SciStringCell extends SciBaseCell {
+export interface SciStringCell extends SciCell {
   type: 'string';
   label: Signal<string>;
 }
 
-export interface SciNumberCell extends SciBaseCell {
+export interface SciNumberCell extends SciCell {
   type: 'number';
   label: Signal<number>;
 }
 
-export interface SciBooleanCell extends SciBaseCell {
+export interface SciBooleanCell extends SciCell {
   type: 'boolean';
   label: Signal<boolean>;
 }
 
-export interface SciComponentCell extends SciBaseCell {
-  type: 'custom';
+export interface SciComponentCell extends SciCell {
+  type: 'component';
   component: ComponentWithInputs;
 }
 
-export type SciCell = SciStringCell | SciNumberCell | SciBooleanCell | SciComponentCell;
+export interface SciTemplateCell extends SciCell {
+  type: 'template';
+  template: Signal<TemplateWithContext>;
+}
+
+export type SciCells = SciStringCell | SciNumberCell | SciBooleanCell | SciComponentCell | SciTemplateCell;
