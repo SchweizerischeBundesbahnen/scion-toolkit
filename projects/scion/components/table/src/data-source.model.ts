@@ -1,5 +1,5 @@
 import {computed, Signal} from '@angular/core';
-import {SciBooleanCell, SciCells, SciColumns, SciNumberCell, SciRow, SciStringCell, SciTableRequest, SciTableResponse} from './table.model';
+import {SciBooleanCell, SciCells, SciColumns, SciFilterCriterion, SciNumberCell, SciRow, SciSortCriterion, SciStringCell, SciTableRequest, SciTableResponse} from './table.model';
 import {coerceObservable, coerceSignal, MaybeAsync} from './common';
 import {Observable, of} from 'rxjs';
 import {map} from 'rxjs/operators';
@@ -48,6 +48,8 @@ export class SciArrayDataSource<T> implements SciDataSource<T> {
   }
 
   public getItems(request: SciTableRequest, columns: SciColumns<T>[]): Observable<SciTableResponse<SciRow<T>>> {
+    console.log(request);
+
     const data = this._data();
 
     if (!this.isCacheInvalid(request)) {
@@ -85,7 +87,7 @@ export class SciArrayDataSource<T> implements SciDataSource<T> {
     }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.columnIndex >= 0);
   }
 
-  private filter(row: SciRow<T>, filterCriteria: MappedCriterion<T, {columnName: string; text: string}>[]): boolean {
+  private filter(row: SciRow<T>, filterCriteria: MappedCriterion<T, SciFilterCriterion>[]): boolean {
     if (filterCriteria.length === 0) {
       return true;
     }
@@ -99,14 +101,14 @@ export class SciArrayDataSource<T> implements SciDataSource<T> {
       const filter = (() => {
         switch (criterion.column.type) {
           case 'string':
-            return criterion.column.filter(criterion.text, {item: row.item, label: (cell as SciStringCell).label()});
+            return criterion.column.filter(criterion.text as string, {item: row.item, label: (cell as SciStringCell).label()});
           case 'number':
-            return criterion.column.filter(criterion.text, {item: row.item, label: (cell as SciNumberCell).label()});
+            return criterion.column.filter(criterion.text as number, {item: row.item, label: (cell as SciNumberCell).label()});
           case 'boolean':
-            return criterion.column.filter(criterion.text, {item: row.item, label: (cell as SciBooleanCell).label()});
+            return criterion.column.filter(criterion.text as boolean, {item: row.item, label: (cell as SciBooleanCell).label()});
           case 'component':
           case 'template':
-            return criterion.column.filter(criterion.text, {item: row.item, label: undefined});
+            return criterion.column.filter(criterion.text as string, {item: row.item, label: undefined});
           default:
             return true;
         }
@@ -121,7 +123,7 @@ export class SciArrayDataSource<T> implements SciDataSource<T> {
     return true;
   }
 
-  private sort(a: SciRow<T>, b: SciRow<T>, sortCriteria: MappedCriterion<T, {columnName: string; direction: 'asc' | 'desc'}>[]): number {
+  private sort(a: SciRow<T>, b: SciRow<T>, sortCriteria: MappedCriterion<T, SciSortCriterion>[]): number {
     if (sortCriteria.length === 0) {
       return 0;
     }

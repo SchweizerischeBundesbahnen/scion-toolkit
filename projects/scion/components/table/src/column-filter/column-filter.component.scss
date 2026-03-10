@@ -1,0 +1,9 @@
+:host {
+  display: grid;
+  padding: .125em .25em;
+  border-right: 1px solid var(--sci-color-border);
+
+  > input {
+    width: 100%;
+  }
+}

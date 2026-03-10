@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, Signal, signal, viewChild, viewChildren} from '@angular/core';
-import {SciColumns, SciRow, SciTable} from './table.model';
+import {SciColumns, SciFilterCriterion, SciRow, SciSortCriterion, SciTable} from './table.model';
 import {ɵSciTable} from './ɵtable.model';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
@@ -22,6 +22,7 @@ import {EMPTY} from 'rxjs';
 import {MapGetPipe} from './map-get.pipe';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableStateService} from './table-state.service';
+import {ColumnFilterComponent} from './column-filter/column-filter.component';
 
 export function table<T>(dataSource: SciDataSource<T>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
 export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
@@ -60,6 +61,7 @@ export interface RowSelection<T> {
     TableRowComponent,
     MapGetPipe,
     ColumnHeaderComponent,
+    ColumnFilterComponent,
   ],
   providers: [
     TableStateService,
@@ -79,8 +81,8 @@ export class SciTableComponent<T> {
 
   protected readonly activeRow = signal<RowSelection<T> | undefined>(undefined);
   protected readonly selectedRows = signal<RowSelection<T>[]>([]);
-  protected readonly sort = signal<{columnName: string; direction: 'asc' | 'desc'}[]>([]);
-  protected readonly filter = signal<{columnName: string; text: string}[]>([]);
+  protected readonly sort = signal<SciSortCriterion[]>([]);
+  protected readonly filter = signal<SciFilterCriterion[]>([]);
 
   private readonly _totalCount = signal<number>(0, {equal: (a, b) => a === b});
 
@@ -116,7 +118,7 @@ export class SciTableComponent<T> {
 
     toObservable(this._viewport).pipe(
       switchMap(viewport => viewport.renderedRangeStream),
-      startWith({start: 0, end: 30}),
+      startWith({start: 0, end: 0}),
       combineLatestWith(
         toObservable(this.sciTable),
         toObservable(this.columns),
@@ -124,7 +126,8 @@ export class SciTableComponent<T> {
       ),
       switchMap(([{start, end}, table, columns, {sortCriteria, filterCriteria}]) => {
         // If all indices are already cached, don't call the backend
-        if (rangeInSet(start, end, new Set(this.cachedItems().keys()))) {
+        // Never use cache if end === 0 (used for initial call and when no items are found)
+        if (end !== 0 && rangeInSet(start, end, new Set(this.cachedItems().keys()))) {
           return EMPTY;
         }
 
@@ -174,6 +177,20 @@ export class SciTableComponent<T> {
 
       const newSort = {columnName: col.name, direction: nextDirection};
       return isMulti ? [...otherSorts, newSort] : [newSort];
+    });
+  }
+
+  protected onFilter(column: SciColumns<T>, text: string | boolean | number | null): void {
+    this.filter.update(filter => {
+      const other = filter.filter(f => f.columnName !== column.name);
+      if (!text) {
+        return other;
+      }
+
+      return [
+        ...other,
+        {columnName: column.name, text},
+      ];
     });
   }
 

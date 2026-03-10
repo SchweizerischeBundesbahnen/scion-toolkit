@@ -1,0 +1,13 @@
+@if (isFilterable() && column().filterable()) {
+  @switch (column().type) {
+    @case ('number') {
+      <input [formControl]="query" type="number" />
+    }
+    @case ('boolean') {
+      <input [formControl]="query" type="checkbox" />
+    }
+    @default {
+      <input [formControl]="query" />
+    }
+  }
+}

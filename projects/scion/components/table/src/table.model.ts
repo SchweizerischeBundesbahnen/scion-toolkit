@@ -65,19 +65,22 @@ export interface SciTableResponse<T> {
   totalCount: number;
 }
 
+export interface SciFilterCriterion {
+  columnName: string;
+  text: string | boolean | number;
+}
+
+export interface SciSortCriterion {
+  columnName: string;
+  direction: 'asc' | 'desc';
+}
+
 export interface SciTableRequest {
   start: number;
   end: number;
   limit: number;
-  sortCriteria: {
-    columnName: string;
-    direction: 'asc' | 'desc';
-  }[];
-  filterCriteria: {
-    columnName: string;
-    text: string;
-    // maybe more filter params?
-  }[];
+  sortCriteria: SciSortCriterion[];
+  filterCriteria: SciFilterCriterion[];
 }
 
 export interface SciCellContext<T, LABEL> {
@@ -139,7 +142,7 @@ export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: ((text: string, context: SciCellContext<T, number>) => boolean) | boolean;
+  filter?: ((text: number, context: SciCellContext<T, number>) => boolean) | boolean;
 }
 
 export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
@@ -151,7 +154,7 @@ export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: ((text: string, context: SciCellContext<T, boolean>) => boolean) | boolean;
+  filter?: ((text: boolean, context: SciCellContext<T, boolean>) => boolean) | boolean;
 }
 export type SciColumnDescriptors<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
 
@@ -180,7 +183,7 @@ export interface SciBooleanColumn<T> extends SciColumn {
   label: (item: T) => MaybeSignal<boolean>;
   sortRows: (rows: SciRow<T>[]) => SciRow<T>[];
   sort: (a: SciCellContext<T, boolean>, b: SciCellContext<T, boolean>) => number;
-  filter: (text: string, context: SciCellContext<T, boolean>) => boolean;
+  filter: (text: boolean, context: SciCellContext<T, boolean>) => boolean;
 }
 
 export interface SciNumberColumn<T> extends SciColumn {
@@ -188,7 +191,7 @@ export interface SciNumberColumn<T> extends SciColumn {
   label: (item: T) => MaybeSignal<number>;
   sortRows: (rows: SciRow<T>[]) => SciRow<T>[];
   sort: (a: SciCellContext<T, number>, b: SciCellContext<T, number>) => number;
-  filter: (text: string, context: SciCellContext<T, number>) => boolean;
+  filter: (text: number, context: SciCellContext<T, number>) => boolean;
 }
 
 export interface SciComponentColumn<T> extends SciColumn {

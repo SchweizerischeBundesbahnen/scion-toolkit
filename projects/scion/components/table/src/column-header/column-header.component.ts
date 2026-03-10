@@ -1,20 +1,22 @@
-import {Component, computed, ElementRef, inject, input, output, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciColumns} from '@scion/components/table';
 import {TableStateService} from '../table-state.service';
+import { SciSortCriterion } from '../table.model';
 
 @Component({
   selector: 'sci-column-header',
   imports: [
     SciSplitterComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-header.component.html',
   styleUrl: './column-header.component.scss',
 })
 export class ColumnHeaderComponent<T> {
 
   public readonly column = input.required<SciColumns<T>>();
-  public readonly sorts = input.required<{columnName: string; direction: 'asc' | 'desc'}[]>();
+  public readonly sorts = input.required<SciSortCriterion[]>();
   public readonly isResizable = input.required<boolean>();
   public readonly isSortable = input.required<boolean>();
 

@@ -21,6 +21,13 @@ div.table-wrapper {
     grid-template-columns: var(--ɵsci-table-columns);
     height: 30px;
     background-color: var(--sci-color-background-secondary);
+    border-bottom: 1px solid var(--sci-color-border);
+  }
+
+  > div.table-filter {
+    display: grid;
+    grid-template-columns: var(--ɵsci-table-columns);
+    background-color: var(--sci-color-background-secondary);
   }
 
   > div.table-body {

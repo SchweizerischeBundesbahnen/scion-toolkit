@@ -70,13 +70,17 @@ export default class SciTablePageComponent {
     })
     .addComponentColumn({
       header: 'Custom Component',
+      filter: (text, cell) => cell.item.sloid.includes(text),
+      sort: (a, b) => a.item.sloid.localeCompare(b.item.sloid),
       component: station => ({
         component: CustomCellComponent, inputs: {station}}),
     })
     .addTemplateColumn({
       header: 'Template',
-      template: station => computed(() => ({template: this.cellTemplate(), context: {custom: 'bla'}})),
+      template: () => computed(() => ({template: this.cellTemplate(), context: {custom: 'bla'}})),
     })
+    .addNumberColumn('Number', () => Math.floor(Math.random() * 100))
+    .addBooleanColumn('Boolean', () => Math.random() > 0.5)
     // .addNumberColumn({
     //   label: station => this.getData(station),
     //   width: '150px',

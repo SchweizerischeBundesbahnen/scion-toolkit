@@ -14,16 +14,16 @@ import {ColumnType, SciBooleanColumnDescriptor, SciCellContext, SciColumnDescrip
 import {coerceSignal} from './common';
 import {SciDataSource} from './data-source.model';
 
-function defaultFilter<T>(text: string, {label}: SciCellContext<T, ValueType>): boolean {
+function defaultFilter<T>(text: string | boolean | number, {label}: SciCellContext<T, ValueType>): boolean {
+  if (typeof label !== typeof text) {
+    return false;
+  }
+
   switch (typeof label) {
     case 'string':
-      return label.toLowerCase().includes(text.toLowerCase());
-    case 'number':
-      return isNaN(+text) ? false : +text === label;
-    case 'boolean':
-      return text === String(label);
+      return label.toLowerCase().includes((text as string).toLowerCase());
     default:
-      return false;
+      return text === label;
   }
 }
 
