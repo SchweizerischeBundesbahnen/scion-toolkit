@@ -10261,6 +10261,12 @@ export const stations: Station[] = [
     'districtnameFr': 'Jura bernois FR',
   },
   {
+    'designationofficial': 'ZTavannes',
+    'sloid': 'ch:1:sloid:100',
+    'districtname': 'Jura bernois',
+    'districtnameFr': 'Jura bernois FR',
+  },
+  {
     'designationofficial': 'Court',
     'sloid': 'ch:1:sloid:104',
     'districtname': 'Jura bernois',

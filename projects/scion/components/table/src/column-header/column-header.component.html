@@ -1,0 +1,15 @@
+<button class="column-sort"
+        [attr.data-sortable]="isSortable() && column().sortable()"
+        [attr.data-sort]="columnSort()"
+        (click)="onSort($event)">
+  {{ column().header() }}
+</button>
+@if (isResizable() && column().resizable()) {
+  <sci-splitter orientation="vertical"
+                (start)="onResizeStart()"
+                (move)="onResize($event)"
+                (end)="onResizeEnd()"
+                (reset)="onResizeAuto()" />
+} @else {
+  <div class="delimiter"></div>
+}

@@ -61,7 +61,7 @@ export default class SciTablePageComponent {
 
   protected table = table(this.data, table => table
     .addStringColumn({
-      label: station => computed(() => `${crypto.randomUUID().slice(0, 4)} ${station.sloid} (${this._additionalData()})`),
+      label: station => computed(() => `${station.sloid} (${this._additionalData()})`),
       width: '150px',
       maxWidth: '200px',
       minWidth: '100px',

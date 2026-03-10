@@ -21,43 +21,6 @@ div.table-wrapper {
     grid-template-columns: var(--ɵsci-table-columns);
     height: 30px;
     background-color: var(--sci-color-background-secondary);
-
-    > div.column-header {
-      display: flex;
-      font-weight: bold;
-
-      > button.column-sort {
-        all: unset;
-        box-sizing: border-box;
-        padding: .25em .5em;
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-
-        &[data-sortable="true"] {
-          cursor: pointer;
-        }
-
-        &::after {
-          content: '';
-          height: 100%;
-        }
-
-        &[data-sort="asc"]::after {
-          content: '↑';
-        }
-
-        &[data-sort="desc"]::after {
-          content: '↓';
-        }
-      }
-
-      > div.delimiter {
-        width: 1px;
-        background-color: var(--sci-splitter-background-color);
-      }
-    }
   }
 
   > div.table-body {

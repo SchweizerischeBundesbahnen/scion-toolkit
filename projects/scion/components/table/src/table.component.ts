@@ -8,18 +8,20 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, input, linkedSignal, output, Signal, signal, viewChild, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, Signal, signal, viewChild, viewChildren} from '@angular/core';
 import {SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTable} from './ɵtable.model';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {TableRowComponent} from './table-row/table-row.component';
-import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciArrayDataSource, SciDataSource} from './data-source.model';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
 import {rangeInSet} from './common';
 import {EMPTY} from 'rxjs';
+import {MapGetPipe} from './map-get.pipe';
+import {ColumnHeaderComponent} from './column-header/column-header.component';
+import {TableStateService} from './table-state.service';
 
 export function table<T>(dataSource: SciDataSource<T>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
 export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
@@ -56,7 +58,11 @@ export interface RowSelection<T> {
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
     TableRowComponent,
-    SciSplitterComponent,
+    MapGetPipe,
+    ColumnHeaderComponent,
+  ],
+  providers: [
+    TableStateService,
   ],
 })
 export class SciTableComponent<T> {
@@ -66,9 +72,10 @@ export class SciTableComponent<T> {
   public readonly activateRow = output<RowSelection<T> | undefined>();
   public readonly selectRows = output<RowSelection<T>[]>();
 
-  private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
-
   protected readonly rows = viewChildren<TableRowComponent<T>>(TableRowComponent);
+  private readonly _viewport = viewChild.required(CdkVirtualScrollViewport);
+
+  private readonly _tableStateService = inject(TableStateService);
 
   protected readonly activeRow = signal<RowSelection<T> | undefined>(undefined);
   protected readonly selectedRows = signal<RowSelection<T>[]>([]);
@@ -76,15 +83,13 @@ export class SciTableComponent<T> {
   protected readonly filter = signal<{columnName: string; text: string}[]>([]);
 
   private readonly _totalCount = signal<number>(0, {equal: (a, b) => a === b});
-  private readonly _resizeContext = signal<{width: number; columnId: string} | undefined>(undefined);
-  private readonly _resizedColumnWidths = signal<Map<string, string>>(new Map());
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>); // TODO [eg]: Is there a better way to not expose the private ɵSciTable?
   protected readonly columns = computed(() => this.sciTable().columns());
   protected readonly sortAndFilter = computed(() => ({sortCriteria: this.sort(), filterCriteria: this.filter()}));
 
-  // Reset to the cache as soon as either the total count, sort or filter changes
   protected readonly placeholderItems = linkedSignal(() => new Array<SciRow<T>>(this._totalCount()).fill({item: {} as T, cells: []}));
+  // Reset to the cache as soon as either the total count, sort or filter changes
   protected readonly cachedItems = linkedSignal({
     source: () => this.sortAndFilter(),
     computation: () => new Map<number, SciRow<T>>(),
@@ -94,7 +99,7 @@ export class SciTableComponent<T> {
 
   protected readonly columnWidths = computed(() => {
     const columns = this.columns();
-    const overrides = this._resizedColumnWidths();
+    const overrides = this._tableStateService.columnWidths();
     return columns
       .map(c => clamp(c.minWidth(), overrides.get(c.name) ?? c.width(), c.maxWidth()))
       .join(' ');
@@ -109,7 +114,7 @@ export class SciTableComponent<T> {
       this.selectRows.emit(this.selectedRows());
     });
 
-    toObservable(this.viewport).pipe(
+    toObservable(this._viewport).pipe(
       switchMap(viewport => viewport.renderedRangeStream),
       startWith({start: 0, end: 30}),
       combineLatestWith(
@@ -149,17 +154,26 @@ export class SciTableComponent<T> {
     return this.sciTable().trackByFn(i, row.item);
   }
 
-  protected onSort(col: SciColumns<T>): void {
+  protected onSort(col: SciColumns<T>, event: MouseEvent): void {
     if (!this.sciTable().isSortable() || !col.sortable()) {
       return;
     }
 
-    this.sort.update(([sort]) => {
-      if (col.name !== sort?.columnName) {
-        return [{columnName: col.name, direction: 'asc'}];
+    this.sort.update(sort => {
+      const isMulti = event.ctrlKey || event.metaKey;
+      const existing = sort.find(s => s.columnName === col.name);
+      let nextDirection = 'asc' as 'asc' | 'desc' | undefined;
+      if (existing) {
+        nextDirection = existing.direction === 'asc' ? 'desc' : undefined;
       }
 
-      return [{columnName: col.name, direction: sort.direction === 'asc' ? 'desc' : 'asc'}];
+      const otherSorts = sort.filter(s => s.columnName !== col.name);
+      if (!nextDirection) {
+        return isMulti ? otherSorts : [];
+      }
+
+      const newSort = {columnName: col.name, direction: nextDirection};
+      return isMulti ? [...otherSorts, newSort] : [newSort];
     });
   }
 
@@ -194,28 +208,9 @@ export class SciTableComponent<T> {
     });
   }
 
-  protected onResizeStart(column: SciColumns<T>, header: HTMLDivElement): void {
-    this._resizeContext.set({width: header.offsetWidth, columnId: column.name});
-  }
-
-  protected onResize(column: SciColumns<T>, event: SplitterMoveEvent): void {
-    const context = this._resizeContext();
-    if (!context) {
-      return;
-    }
-
-    const width = Math.max(20, context.width + event.distance);
-    this._resizeContext.set({columnId: column.name, width: width});
-    this._resizedColumnWidths.update(widths => new Map(widths).set(column.name, `${width}px`));
-  }
-
-  protected onResizeEnd(): void {
-    this._resizeContext.set(undefined);
-  }
-
   protected onResizeAuto(column: SciColumns<T>): void {
     const cellWidths = this.rows().map(row => row.getCellWidth(column.name));
     const maxWidth = Math.max(...cellWidths, 0) + 20; // TODO [eg]: configurable buffer?
-    this._resizedColumnWidths.update(overrides => new Map(overrides).set(column.name, `${maxWidth}px`));
+    this._tableStateService.setResizedColumn(column.name, `${maxWidth}px`);
   }
 }
