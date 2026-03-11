@@ -3,7 +3,9 @@
 :host {
   display: grid;
   background-color: var(--sci-color-background-primary);
-  overflow: hidden;
+}
+
+div.h-scroll {
   position: relative; // anchor for the scroll bars
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
@@ -13,8 +15,16 @@
 }
 
 div.table-wrapper {
-  display: flex;
-  flex-direction: column;
+  height: 100%;
+  width: var(--ɵsci-table-width);
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  position: relative;
+  @include sci-scrollbar.scrollbar-hide-when-inactive();
+
+  > sci-scrollbar {
+    @include sci-scrollbar.scrollbar-position();
+  }
 
   > div.table-header {
     display: grid;

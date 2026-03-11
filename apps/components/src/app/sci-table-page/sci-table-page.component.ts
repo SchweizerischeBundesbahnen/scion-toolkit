@@ -59,43 +59,57 @@ export default class SciTablePageComponent {
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
 
-  protected table = table(this.data, table => table
-    .addStringColumn({
-      label: station => computed(() => `${station.sloid} (${this._additionalData()})`),
-      width: '150px',
-      maxWidth: '200px',
-      minWidth: '100px',
-      header: 'Sloid',
-      resizable: false,
-    })
-    .addComponentColumn({
-      header: 'Custom Component',
-      filter: (text, cell) => cell.item.sloid.includes(text),
-      sort: (a, b) => a.item.sloid.localeCompare(b.item.sloid),
-      component: station => ({
-        component: CustomCellComponent, inputs: {station}}),
-    })
-    .addTemplateColumn({
-      header: 'Template',
-      template: () => computed(() => ({template: this.cellTemplate(), context: {custom: 'bla'}})),
-    })
-    .addNumberColumn('Number', () => Math.floor(Math.random() * 100))
-    .addBooleanColumn('Boolean', () => Math.random() > 0.5)
-    // .addNumberColumn({
-    //   label: station => this.getData(station),
-    //   width: '150px',
-    //   header: 'Sloid Nr.',
-    // })
-    .addStringColumn({
-      label: station => station.designationofficial,
-      header: 'Name',
-      name: 'name',
-    })
-    .addStringColumn({
-      label: station => computed(() => this.language() === 'fr' ? station.districtnameFr : station.districtname),
-      width: '1fr',
-      header: 'District',
-    }));
+  protected table = table(this.data, table => {
+    if (this._additionalData() > 2) {
+      table.addStringColumn({
+        value: station => computed(() => `${station.sloid} (${this._additionalData()})`),
+        width: '150px',
+        maxWidth: '200px',
+        minWidth: '100px',
+        header: 'Sloid',
+        resizable: false,
+      });
+    }
+
+    return table
+      // .addStringColumn({
+      //   value: station => computed(() => `${station.sloid} (${this._additionalData()})`),
+      //   width: '150px',
+      //   maxWidth: '200px',
+      //   minWidth: '100px',
+      //   header: 'Sloid',
+      //   resizable: false,
+      // })
+      .addComponentColumn({
+        header: 'Custom Component',
+        filter: (text, cell) => cell.item.sloid.includes(text),
+        sort: (a, b) => a.item.sloid.localeCompare(b.item.sloid),
+        component: station => ({
+          component: CustomCellComponent, inputs: {station},
+        }),
+      })
+      .addTemplateColumn({
+        header: 'Template',
+        template: () => computed(() => ({template: this.cellTemplate(), context: {custom: 'bla'}})),
+      })
+      .addNumberColumn('Number', () => Math.floor(Math.random() * 100))
+      .addBooleanColumn('Boolean', () => Math.random() > 0.5)
+      // .addNumberColumn({
+      //   label: station => this.getData(station),
+      //   width: '150px',
+      //   header: 'Sloid Nr.',
+      // })
+      .addStringColumn({
+        value: station => station.designationofficial,
+        header: 'Name',
+        name: 'name',
+      })
+      .addStringColumn({
+        value: station => computed(() => this.language() === 'fr' ? station.districtnameFr : station.districtname),
+        width: '1fr',
+        header: 'District',
+      });
+  });
 
   // private getData(station: Station): Signal<number> {
   //   const data = signal<number>(0);

@@ -19,6 +19,7 @@ import {NgComponentOutlet, NgTemplateOutlet} from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-type]': 'cell().type',
+    '[attr.part]': 'cell',
   },
   imports: [
     NgComponentOutlet,

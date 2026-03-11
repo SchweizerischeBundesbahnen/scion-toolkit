@@ -1,0 +1,168 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ *  SPDX-License-Identifier: EPL-2.0
+ */
+
+import {signal} from '@angular/core';
+import {UUID} from '@scion/toolkit/uuid';
+import {coerceSignal} from './common';
+import {SciBooleanColumnDescriptor, SciColumnDescriptors, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableFactory, SciTemplateColumnDescriptor} from './table.factory';
+import {ColumnType, SciCellContext, SciColumns} from './table.model';
+
+function defaultFilter<T>(text: string | boolean | number, {value}: SciCellContext<T, string | boolean | number>): boolean {
+  if (typeof value !== typeof text) {
+    return false;
+  }
+
+  switch (typeof value) {
+    case 'string':
+      return value.toLowerCase().includes((text as string).toLowerCase());
+    default:
+      return text === value;
+  }
+}
+
+function defaultSort<T>(a: SciCellContext<T, string | boolean | number>, b: SciCellContext<T, string | boolean | number>): number {
+  // TODO: improve default sort for non matching types (maybe pass columntype?)
+  if (typeof a !== typeof b) {
+    return 0;
+  }
+
+  switch (typeof a.value) {
+    case 'string':
+      return a.value.localeCompare(b.value as string);
+    case 'number':
+      return a.value - (b.value as number);
+    case 'boolean':
+      return a.value === b.value ? 0 : (a.value ? -1 : 1);
+    default:
+      return 0;
+  }
+}
+
+export class ɵSciTableFactory<T> implements SciTableFactory<T> {
+
+  public readonly columns: SciColumns<T>[] = [];
+  public tableName: string | undefined = undefined;
+  public isSortable = true;
+  public isFilterable = true;
+  public isResizable = true;
+  public isSelectable = true;
+  public trackByFn = (_: T, index: number): unknown => index;
+
+  public name(name: string): this {
+    this.tableName = name;
+    return this;
+  }
+
+  public addBooleanColumn(value: (item: T) => boolean): this;
+  public addBooleanColumn(header: string, value: (item: T) => boolean): this;
+  public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
+  public addBooleanColumn(valueHeaderDescriptor: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): this {
+    switch (typeof valueHeaderDescriptor) {
+      case 'string':
+        return this.addColumnWithType({header: valueHeaderDescriptor, value: value!}, 'boolean');
+      case 'function':
+        return this.addColumnWithType({value: valueHeaderDescriptor}, 'boolean');
+      default:
+        return this.addColumnWithType(valueHeaderDescriptor, 'boolean');
+    }
+  }
+
+  public addStringColumn(value: (item: T) => string): this;
+  public addStringColumn(header: string, value: (item: T) => string): this;
+  public addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
+  public addStringColumn(valueHeaderDescriptor: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): this {
+    switch (typeof valueHeaderDescriptor) {
+      case 'string':
+        return this.addColumnWithType({header: valueHeaderDescriptor, value: value!}, 'string');
+      case 'function':
+        return this.addColumnWithType({value: valueHeaderDescriptor}, 'string');
+      default:
+        return this.addColumnWithType(valueHeaderDescriptor, 'string');
+    }
+  }
+
+  public addNumberColumn(value: (item: T) => number): this;
+  public addNumberColumn(header: string, value: (item: T) => number): this;
+  public addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
+  public addNumberColumn(valueHeaderDescriptor: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): this {
+    switch (typeof valueHeaderDescriptor) {
+      case 'string':
+        return this.addColumnWithType({header: valueHeaderDescriptor, value: value!}, 'number');
+      case 'function':
+        return this.addColumnWithType({value: valueHeaderDescriptor}, 'number');
+      default:
+        return this.addColumnWithType(valueHeaderDescriptor, 'number');
+    }
+  }
+
+  public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
+    return this.addColumnWithType(config, 'component');
+  }
+
+  public addTemplateColumn(config: SciTemplateColumnDescriptor<T>): this {
+    return this.addColumnWithType(config, 'template');
+  }
+
+  public filterable(filterable: boolean): this {
+    this.isFilterable = filterable;
+    return this;
+  }
+
+  public resizable(resizable: boolean): this {
+    this.isResizable = resizable;
+    return this;
+  }
+
+  public selectable(selectable: boolean): this {
+    this.isSelectable = selectable;
+    return this;
+  }
+
+  public sortable(sortable: boolean): this {
+    this.isSortable = sortable;
+    return this;
+  }
+
+  public trackBy(trackByFn: (row: T, index: number) => unknown): this {
+    this.trackByFn = trackByFn;
+    return this;
+  }
+
+  private addColumnWithType(config: SciColumnDescriptors<T>, type: ColumnType): this {
+    // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
+    const sortable = type === 'component' || type === 'template' ?
+      !!config.sort :
+      config.sort !== false;
+
+    // columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
+    const filterable = type === 'component' || type === 'template' ?
+      !!config.filter :
+      config.filter !== false;
+
+    this.columns.push({
+      ...config,
+      type,
+      name: config.name ?? UUID.randomUUID(),
+      filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
+      sort: typeof config.sort === 'function' ? config.sort : defaultSort,
+      header: coerceSignal(config.header, {defaultValue: ''}),
+      sortable: signal(sortable),
+      filterable: signal(filterable),
+      resizable: coerceSignal(config.resizable, {defaultValue: true}),
+      index: signal(this.columns.length),
+      // TODO: Default should be auto, but that does not work with multiple grids
+      width: coerceSignal(config.width, {defaultValue: '1fr'}),
+      minWidth: coerceSignal(config.minWidth, {defaultValue: '100px'}),
+      maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),
+    } as SciColumns<T>);
+    return this;
+  }
+
+}

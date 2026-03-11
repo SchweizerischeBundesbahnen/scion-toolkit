@@ -4,7 +4,7 @@
     <option value="de">DE</option>
     <option value="fr">FR</option>
   </select>
-  <sci-table [table]="table" (activateRow)="activeRow.set($event)" (selectRows)="onSelectRows($event)" />
+  <sci-table [table]="table()" (activateRow)="activeRow.set($event)" (selectRows)="onSelectRows($event)" />
   <ng-template let-station let-custom="custom" #cell>
     {{station.sloid}} / {{custom}}
   </ng-template>

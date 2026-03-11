@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input,
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciColumns} from '@scion/components/table';
 import {TableStateService} from '../table-state.service';
-import { SciSortCriterion } from '../table.model';
+import {SciSortCriterion} from '../data-source.model';
 
 @Component({
   selector: 'sci-column-header',

@@ -9,4 +9,4 @@
  */
 
 export {SciTableComponent, table, type RowSelection} from './table.component';
-export type {ValueType, ColumnType, SciTable, SciColumns} from './table.model';
+export type {ColumnType, SciColumns} from './table.model';

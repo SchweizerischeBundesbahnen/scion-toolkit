@@ -9,12 +9,12 @@
  */
 
 import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, Signal, signal, viewChild, viewChildren} from '@angular/core';
-import {SciColumns, SciFilterCriterion, SciRow, SciSortCriterion, SciTable} from './table.model';
-import {ɵSciTable} from './ɵtable.model';
+import {SciColumns, SciRow, SciTable} from './table.model';
+import {ɵSciTableFactory} from './ɵtable.factory';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {TableRowComponent} from './table-row/table-row.component';
-import {SciArrayDataSource, SciDataSource} from './data-source.model';
+import {SciDataSource, SciFilterCriterion, SciSortCriterion} from './data-source.model';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
 import {rangeInSet} from './common';
@@ -23,20 +23,22 @@ import {MapGetPipe} from './map-get.pipe';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableStateService} from './table-state.service';
 import {ColumnFilterComponent} from './column-filter/column-filter.component';
+import {SciTableFactory} from './table.factory';
+import {ɵSciTable} from './ɵtable.model';
 
-export function table<T>(dataSource: SciDataSource<T>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
-export function table<T>(data: Signal<T[]>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T>;
-export function table<T>(dataOrSource: Signal<T[]> | SciDataSource<T>, factory: (table: SciTable<T>) => SciTable<T>): SciTable<T> {
-  if (typeof dataOrSource === 'function') {
-    return factory(new ɵSciTable<T>(new SciArrayDataSource(dataOrSource)));
-  }
-
-  return factory(new ɵSciTable<T>(dataOrSource));
+export function table<T>(dataSource: SciDataSource<T>, factoryFn: (table: SciTableFactory<T>) => void): Signal<SciTable<T>>;
+export function table<T>(data: Signal<T[]>, factoryFn: (table: SciTableFactory<T>) => void): Signal<SciTable<T>>;
+export function table<T>(dataOrSource: Signal<T[]> | SciDataSource<T>, factoryFn: (table: SciTableFactory<T>) => void): Signal<SciTable<T>> {
+  return computed(() => {
+    const factory = new ɵSciTableFactory<T>();
+    factoryFn(factory);
+    return new ɵSciTable(factory, dataOrSource);
+  });
 }
 
-function clamp(min: string | null, preferred: string, max: string | null): string {
+function clamp(min: string, preferred: string, max: string | null): string {
   const maxDef = max === null ? preferred : `min(${preferred}, ${max})`;
-  return `minmax(${min ?? 0}, ${maxDef})`;
+  return `minmax(${min}, ${maxDef})`;
 }
 
 export interface RowSelection<T> {
@@ -51,6 +53,7 @@ export interface RowSelection<T> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[style.--ɵsci-table-columns]': 'columnWidths()',
+    '[style.--ɵsci-table-width]': 'tableWidth()',
   },
   imports: [
     SciScrollableDirective,
@@ -86,11 +89,11 @@ export class SciTableComponent<T> {
 
   private readonly _totalCount = signal<number>(0, {equal: (a, b) => a === b});
 
-  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>); // TODO [eg]: Is there a better way to not expose the private ɵSciTable?
-  protected readonly columns = computed(() => this.sciTable().columns());
+  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
+  protected readonly columns = computed(() => this.sciTable().columns);
   protected readonly sortAndFilter = computed(() => ({sortCriteria: this.sort(), filterCriteria: this.filter()}));
 
-  protected readonly placeholderItems = linkedSignal(() => new Array<SciRow<T>>(this._totalCount()).fill({item: {} as T, cells: []}));
+  protected readonly placeholderItems = linkedSignal(() => new Array<T>(this._totalCount()).fill({} as T));
   // Reset to the cache as soon as either the total count, sort or filter changes
   protected readonly cachedItems = linkedSignal({
     source: () => this.sortAndFilter(),
@@ -99,6 +102,16 @@ export class SciTableComponent<T> {
 
   protected readonly selectedRowIndices = computed(() => this.selectedRows().map(selection => selection.index));
 
+  protected readonly tableWidth = computed(() => {
+    const columns = this.columns();
+    const overrides = this._tableStateService.columnWidths();
+
+    const widths = columns
+      .map(c => overrides.get(c.name) ?? c.minWidth())
+      .join(' + ');
+
+    return `max(100%, calc(${widths}))`;
+  });
   protected readonly columnWidths = computed(() => {
     const columns = this.columns();
     const overrides = this._tableStateService.columnWidths();
@@ -121,23 +134,22 @@ export class SciTableComponent<T> {
       startWith({start: 0, end: 0}),
       combineLatestWith(
         toObservable(this.sciTable),
-        toObservable(this.columns),
         toObservable(this.sortAndFilter),
       ),
-      switchMap(([{start, end}, table, columns, {sortCriteria, filterCriteria}]) => {
+      switchMap(([{start, end}, table, {sortCriteria, filterCriteria}]) => {
         // If all indices are already cached, don't call the backend
         // Never use cache if end === 0 (used for initial call and when no items are found)
         if (end !== 0 && rangeInSet(start, end, new Set(this.cachedItems().keys()))) {
           return EMPTY;
         }
 
-        const response = table.dataSource.getItems({
+        const response = table.getRows({
           start: start,
           end: end,
           limit: end - start,
           sortCriteria,
           filterCriteria,
-        }, columns);
+        });
 
         return response.pipe(map(r => ({response: r, start})));
       }),
@@ -153,12 +165,12 @@ export class SciTableComponent<T> {
     });
   }
 
-  protected trackBy(i: number, row: SciRow<T>): any {
-    return this.sciTable().trackByFn(i, row.item);
+  protected trackBy(i: number, item: T): any {
+    return this.sciTable().trackBy(item, i);
   }
 
   protected onSort(col: SciColumns<T>, event: MouseEvent): void {
-    if (!this.sciTable().isSortable() || !col.sortable()) {
+    if (!this.sciTable().sortable || !col.sortable()) {
       return;
     }
 
@@ -206,7 +218,7 @@ export class SciTableComponent<T> {
     const rowSelection = {row, index};
     this.activeRow.set(rowSelection);
 
-    if (!this.sciTable().isSelectable()) {
+    if (!this.sciTable().selectable) {
       return;
     }
 

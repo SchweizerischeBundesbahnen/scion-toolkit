@@ -1,4 +1,4 @@
-@if (isFilterable() && column().filterable()) {
+@if (column().filterable()) {
   @switch (column().type) {
     @case ('number') {
       <input [formControl]="query" type="number" />

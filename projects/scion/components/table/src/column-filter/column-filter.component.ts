@@ -14,7 +14,6 @@ import {debounceTime} from 'rxjs';
 export class ColumnFilterComponent<T> {
 
   public readonly column = input.required<SciColumns<T>>();
-  public readonly isFilterable = input.required<boolean>();
 
   public readonly filter = output<string | boolean | number | null>();
 
