@@ -12,5 +12,22 @@
   > .wrapper {
     display: inline; // makes sure text-overflow works inside
     width: min-content; // allow to grow to content width, for auto sizing
+
+    > .checkbox {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--sci-color-border);
+      border-radius: var(--sci-corner);
+      height: calc(100% - .25em);
+      aspect-ratio: 1/1;
+      font-size: 16px;
+      margin: .125em;
+      color: var(--sci-color-accent);
+
+      &[data-checked="true"] {
+        border-color: var(--sci-color-accent);
+      }
+    }
   }
 }

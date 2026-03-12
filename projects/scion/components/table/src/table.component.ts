@@ -74,16 +74,16 @@ export class SciTableComponent<T> {
 
   public readonly table = input.required<SciTable<T>>();
 
-  public readonly activateRow = output<RowSelection<T> | undefined>();
-  public readonly selectRows = output<RowSelection<T>[]>();
+  public readonly activateItem = output<T | undefined>();
+  public readonly selectItems = output<T[]>();
 
   protected readonly rows = viewChildren<TableRowComponent<T>>(TableRowComponent);
   private readonly _viewport = viewChild.required(CdkVirtualScrollViewport);
 
   private readonly _tableStateService = inject(TableStateService);
 
-  protected readonly activeRow = signal<RowSelection<T> | undefined>(undefined);
-  protected readonly selectedRows = signal<RowSelection<T>[]>([]);
+  protected readonly activeItem = signal<T | undefined>(undefined);
+  protected readonly selectedItems = signal<T[]>([]);
   protected readonly sort = signal<SciSortCriterion[]>([]);
   protected readonly filter = signal<SciFilterCriterion[]>([]);
 
@@ -91,16 +91,12 @@ export class SciTableComponent<T> {
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly columns = computed(() => this.sciTable().columns);
-  protected readonly sortAndFilter = computed(() => ({sortCriteria: this.sort(), filterCriteria: this.filter()}));
 
   protected readonly placeholderItems = linkedSignal(() => new Array<T>(this._totalCount()).fill({} as T));
-  // Reset to the cache as soon as either the total count, sort or filter changes
   protected readonly cachedItems = linkedSignal({
-    source: () => this.sortAndFilter(),
+    source: () => ({sort: this.sort(), filter: this.filter(), columns: this.columns()}),
     computation: () => new Map<number, SciRow<T>>(),
   });
-
-  protected readonly selectedRowIndices = computed(() => this.selectedRows().map(selection => selection.index));
 
   protected readonly tableWidth = computed(() => {
     const columns = this.columns();
@@ -122,11 +118,11 @@ export class SciTableComponent<T> {
 
   constructor() {
     effect(() => {
-      this.activateRow.emit(this.activeRow());
+      this.activateItem.emit(this.activeItem());
     });
 
     effect(() => {
-      this.selectRows.emit(this.selectedRows());
+      this.selectItems.emit(this.selectedItems());
     });
 
     toObservable(this._viewport).pipe(
@@ -134,9 +130,10 @@ export class SciTableComponent<T> {
       startWith({start: 0, end: 0}),
       combineLatestWith(
         toObservable(this.sciTable),
-        toObservable(this.sortAndFilter),
+        toObservable(this.sort),
+        toObservable(this.filter),
       ),
-      switchMap(([{start, end}, table, {sortCriteria, filterCriteria}]) => {
+      switchMap(([{start, end}, table, sortCriteria, filterCriteria]) => {
         // If all indices are already cached, don't call the backend
         // Never use cache if end === 0 (used for initial call and when no items are found)
         if (end !== 0 && rangeInSet(start, end, new Set(this.cachedItems().keys()))) {
@@ -144,8 +141,8 @@ export class SciTableComponent<T> {
         }
 
         const response = table.getRows({
-          start: start,
-          end: end,
+          start,
+          end,
           limit: end - start,
           sortCriteria,
           filterCriteria,
@@ -195,7 +192,7 @@ export class SciTableComponent<T> {
   protected onFilter(column: SciColumns<T>, text: string | boolean | number | null): void {
     this.filter.update(filter => {
       const other = filter.filter(f => f.columnName !== column.name);
-      if (!text) {
+      if (text === null) {
         return other;
       }
 
@@ -206,34 +203,33 @@ export class SciTableComponent<T> {
     });
   }
 
-  protected onSelectRow(row: T, index: number, {ctrlKey}: {ctrlKey: boolean}): void {
-    this.selectRow(row, index, !ctrlKey);
+  protected onSelectRow(row: T, {ctrlKey}: {ctrlKey: boolean}): void {
+    this.selectRow(row, !ctrlKey);
   }
 
-  protected onActivateRow(row: T, index: number): void {
-    this.selectRow(row, index, true);
+  protected onActivateRow(item: T): void {
+    this.selectRow(item, true);
   }
 
-  private selectRow(row: T, index: number, replace: boolean): void {
-    const rowSelection = {row, index};
-    this.activeRow.set(rowSelection);
+  private selectRow(item: T, replace: boolean): void {
+    this.activeItem.set(item);
 
     if (!this.sciTable().selectable) {
       return;
     }
 
-    this.selectedRows.update(selection => {
-      const existing = selection.find(s => s.index === index);
-      if (existing) {
+    this.selectedItems.update(selection => {
+      const existing = selection.indexOf(item);
+      if (existing >= 0) {
         // Deselect row, if it was already selected.
-        return selection.filter(s => s !== existing);
+        return selection.toSpliced(existing, 1);
       }
 
       if (replace) {
-        return [rowSelection];
+        return [item];
       }
 
-      return [...selection, rowSelection];
+      return [...selection, item];
     });
   }
 

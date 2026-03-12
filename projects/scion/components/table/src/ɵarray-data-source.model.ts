@@ -10,29 +10,39 @@
 
 import {Signal} from '@angular/core';
 import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './data-source.model';
-import {SciBooleanCell, SciColumns, SciNumberCell, SciRow, SciStringCell} from './table.model';
+import {SciColumns} from './table.model';
+import {coerceSignal} from './common';
 
 type MappedCriterion<T, CRIT extends {columnName: string}> = CRIT & {
   column: SciColumns<T>;
   columnIndex: number;
 };
 
-export class ɵSciArrayDataSource<T> implements SciDataSource<SciRow<T>> {
-  constructor(private _data: Signal<SciRow<T>[]>, private _columns: SciColumns<T>[]) {
+interface ItemWithValues<T> {
+  item: T;
+  values: Array<string | number | boolean | undefined>;
+}
+
+export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
+  constructor(private _data: Signal<T[]>, private _columns: SciColumns<T>[]) {
   }
 
-  public getItems(request: SciTableRequest): SciTableResponse<SciRow<T>> {
+  public getItems(request: SciTableRequest): SciTableResponse<T> {
     const data = this._data();
 
     const sortCols = this.mapCriteria(request.sortCriteria, this._columns);
     const filterCols = this.mapCriteria(request.filterCriteria, this._columns);
 
     const items = data
+      .map(item => ({
+        item,
+        values: this._columns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
+      }))
       .filter(item => this.filter(item, filterCols))
       .sort((a, b) => this.sort(a, b, sortCols));
 
     return {
-      items: items.slice(request.start, request.end),
+      items: items.slice(request.start, request.end).map(i => i.item),
       totalCount: items.length,
     };
   }
@@ -49,25 +59,22 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<SciRow<T>> {
     }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.columnIndex >= 0);
   }
 
-  private filter(row: SciRow<T>, filterCriteria: MappedCriterion<T, SciFilterCriterion>[]): boolean {
+  private filter(row: ItemWithValues<T>, filterCriteria: MappedCriterion<T, SciFilterCriterion>[]): boolean {
     if (filterCriteria.length === 0) {
       return true;
     }
 
     for (const criterion of filterCriteria) {
-      const cell = row.cells[criterion.columnIndex];
-      if (!cell) {
-        continue;
-      }
+      const value = row.values[criterion.columnIndex];
 
       const filter = (() => {
         switch (criterion.column.type) {
           case 'string':
-            return criterion.column.filter(criterion.text as string, {item: row.item, value: (cell as SciStringCell).value()});
+            return criterion.column.filter(criterion.text as string, {item: row.item, value: value as string});
           case 'number':
-            return criterion.column.filter(criterion.text as number, {item: row.item, value: (cell as SciNumberCell).value()});
+            return criterion.column.filter(criterion.text as number, {item: row.item, value: value as number});
           case 'boolean':
-            return criterion.column.filter(criterion.text as boolean, {item: row.item, value: (cell as SciBooleanCell).value()});
+            return criterion.column.filter(criterion.text as boolean, {item: row.item, value: value as boolean});
           case 'component':
           case 'template':
             return criterion.column.filter(criterion.text as string, {item: row.item, value: undefined});
@@ -85,27 +92,23 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<SciRow<T>> {
     return true;
   }
 
-  private sort(a: SciRow<T>, b: SciRow<T>, sortCriteria: MappedCriterion<T, SciSortCriterion>[]): number {
+  private sort(a: ItemWithValues<T>, b: ItemWithValues<T>, sortCriteria: MappedCriterion<T, SciSortCriterion>[]): number {
     if (sortCriteria.length === 0) {
       return 0;
     }
 
     for (const criterion of sortCriteria) {
-      const aCell = a.cells[criterion.columnIndex];
-      const bCell = b.cells[criterion.columnIndex];
-
-      if (!aCell || !bCell) {
-        continue;
-      }
+      const aValue = a.values[criterion.columnIndex];
+      const bValue = b.values[criterion.columnIndex];
 
       const sort = (() => {
         switch (criterion.column.type) {
           case 'string':
-            return criterion.column.sort({item: a.item, value: (aCell as SciStringCell).value()}, {item: b.item, value: (bCell as SciStringCell).value()});
+            return criterion.column.sort({item: a.item, value: aValue as string}, {item: b.item, value: bValue as string});
           case 'number':
-            return criterion.column.sort({item: a.item, value: (aCell as SciNumberCell).value()}, {item: b.item, value: (bCell as SciNumberCell).value()});
+            return criterion.column.sort({item: a.item, value: aValue as number}, {item: b.item, value: bValue as number});
           case 'boolean':
-            return criterion.column.sort({item: a.item, value: (aCell as SciBooleanCell).value()}, {item: b.item, value: (bCell as SciBooleanCell).value()});
+            return criterion.column.sort({item: a.item, value: aValue as boolean}, {item: b.item, value: bValue as boolean});
           case 'component':
           case 'template':
             return criterion.column.sort({item: a.item, value: undefined}, {item: b.item, value: undefined});

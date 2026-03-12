@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, Signal} from '@angular/core';
+import {Signal} from '@angular/core';
 import {SciDataSource, SciTableRequest, SciTableResponse} from './data-source.model';
 import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciArrayDataSource} from './ɵarray-data-source.model';
-import {Observable, of} from 'rxjs';
+import {Observable} from 'rxjs';
 import {coerceObservable, coerceSignal} from './common';
 import {map} from 'rxjs/operators';
 
@@ -38,17 +38,11 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.trackBy = factory.trackByFn;
 
     this.dataSource = typeof dataOrSource === 'function' ?
-      new ɵSciArrayDataSource(computed(() => this.mapItemsToRow(dataOrSource())), factory.columns) :
+      new ɵSciArrayDataSource(dataOrSource, factory.columns) :
       dataOrSource;
   }
 
   public getRows(request: SciTableRequest): Observable<SciTableResponse<SciRow<T>>> {
-    if (this.dataSource instanceof ɵSciArrayDataSource) {
-      return of(this.dataSource.getItems(request) as SciTableResponse<SciRow<T>>);
-    }
-
-    // TODO Figure out how to map items before sorting / filtering but still have one datasource type
-
     return coerceObservable(this.dataSource.getItems(request)).pipe(
       map(res => ({totalCount: res.totalCount, items: this.mapItemsToRow(res.items as T[])})),
     );
@@ -66,5 +60,4 @@ export class ɵSciTable<T> implements SciTable<T> {
       } as SciCells)),
     }));
   }
-
 }

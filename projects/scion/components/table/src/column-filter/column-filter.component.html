@@ -4,10 +4,18 @@
       <input [formControl]="query" type="number" />
     }
     @case ('boolean') {
-      <input [formControl]="query" type="checkbox" />
+      <select [formControl]="query">
+        <option [value]="''">All</option>
+        <option [value]="true">True</option>
+        <option [value]="false">False</option>
+      </select>
     }
     @default {
       <input [formControl]="query" />
     }
   }
+
+  <span class="filter-icon material-symbols-outlined">
+    filter_alt
+  </span>
 }

@@ -29,19 +29,19 @@ import {TableCellComponent} from '../table-cell/table-cell.component';
 })
 export class TableRowComponent<T> {
 
-  public readonly row = input<SciRow<T>>();
+  public readonly row = input.required<SciRow<T>>();
   public readonly index = input.required<number>();
 
   // TODO [eg]: Move row selection to service
-  public readonly selectedRows = input.required<number[]>();
-  public readonly activeRow = input<number>();
-  public readonly activateRow = output();
-  public readonly selectRow = output<{ctrlKey: boolean}>();
+  public readonly selectedItems = input.required<T[]>();
+  public readonly activeItem = input<T>();
+  public readonly activateItem = output();
+  public readonly selectItem = output<{ctrlKey: boolean}>();
 
   protected readonly cells = viewChildren(TableCellComponent);
 
-  protected readonly isActive = computed(() => this.index() === this.activeRow());
-  protected readonly isSelected = computed(() => this.selectedRows().includes(this.index()));
+  protected readonly isActive = computed(() => this.index() === this.activeItem());
+  protected readonly isSelected = computed(() => this.selectedItems().includes(this.row().item));
 
   // TODO [eg]: Should we access this differently?
   public getCellWidth(columnId: string): number {
@@ -49,10 +49,10 @@ export class TableRowComponent<T> {
   }
 
   protected onRowEnter(): void {
-    this.activateRow.emit();
+    this.activateItem.emit();
   }
 
   protected onRowClick(event: PointerEvent): void {
-    this.selectRow.emit({ctrlKey: event.ctrlKey || event.metaKey});
+    this.selectItem.emit({ctrlKey: event.ctrlKey || event.metaKey});
   }
 }

@@ -7,6 +7,14 @@
     @case ('component') {
       <ng-container *ngComponentOutlet="_cell.component.component; inputs: _cell.component.inputs" />
     }
+    @case ('boolean') {
+      @let value = _cell.value();
+      <span class="checkbox material-symbols-outlined" [attr.data-checked]="value">
+        @if (value) {
+          check
+        }
+      </span>
+    }
     @default {
       {{_cell.value()}}
     }

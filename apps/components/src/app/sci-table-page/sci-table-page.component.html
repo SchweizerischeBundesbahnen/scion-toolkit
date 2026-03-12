@@ -4,7 +4,7 @@
     <option value="de">DE</option>
     <option value="fr">FR</option>
   </select>
-  <sci-table [table]="table()" (activateRow)="activeRow.set($event)" (selectRows)="onSelectRows($event)" />
+  <sci-table [table]="table()" (activateItem)="activeItem.set($event)" (selectItems)="onSelectRows($event)" />
   <ng-template let-station let-custom="custom" #cell>
     {{station.sloid}} / {{custom}}
   </ng-template>
@@ -12,13 +12,10 @@
 
 <aside class="e2e-settings">
   <dl>
-    <dt>Active Row Index:</dt>
-    <dd>{{activeRow()?.index ?? '-'}}</dd>
-
     <dt>Active Sloid:</dt>
-    <dd>{{ activeRow()?.row?.sloid ?? '-' }}</dd>
+    <dd>{{ activeItem()?.sloid ?? '-' }}</dd>
 
-    <dt>Selected Row Indices:</dt>
+    <dt>Selected Sloids:</dt>
     <dd>{{selectedRows() ?? '-'}}</dd>
   </dl>
 </aside>

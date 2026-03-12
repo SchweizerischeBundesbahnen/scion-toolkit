@@ -1,9 +1,33 @@
 :host {
-  display: grid;
-  padding: .125em .25em;
   border-right: 1px solid var(--sci-color-border);
+  position: relative;
 
-  > input {
+  > input, > select {
+    all: unset;
     width: 100%;
+    height: 100%;
+    border: 1px solid transparent;
+    padding: .25em .25em .25em 1.5em;
+    transition: border-color ease-in-out .15s, color ease-in-out .15s;
+    background-color: var(--sci-color-background-input);
+    color: var(--sci-color-text);
+    appearance: auto;
+    box-sizing: border-box;
+
+    &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
+      border-color: var(--sci-color-accent);
+    }
+  }
+
+  > span.filter-icon {
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    height: 100%;
+    aspect-ratio: 1/1;
+    position: absolute;
+    left: 0;
+    top: 0;
   }
 }

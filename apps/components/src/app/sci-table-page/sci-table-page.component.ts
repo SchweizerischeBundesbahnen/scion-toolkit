@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, input, resource, signal, TemplateRef, viewChild} from '@angular/core';
-import {RowSelection, SciTableComponent, table} from '@scion/components/table';
+import {SciTableComponent, table} from '@scion/components/table';
 import {Station, stations} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 
@@ -51,18 +51,17 @@ class CustomCellComponent {
 })
 export default class SciTablePageComponent {
   protected data = signal(stations);
-  protected activeRow = signal<RowSelection<{sloid: string}> | undefined>(undefined);
+  protected activeItem = signal<Station | undefined>(undefined);
   protected selectedRows = signal<string | undefined>(undefined);
   protected language = signal('de');
-
-  private _additionalData = signal(0);
+  protected additionalData = signal(0);
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
 
   protected table = table(this.data, table => {
-    if (this._additionalData() > 2) {
+    if (this.additionalData() > 2) {
       table.addStringColumn({
-        value: station => computed(() => `${station.sloid} (${this._additionalData()})`),
+        value: station => computed(() => `${station.sloid} (${this.additionalData()})`),
         width: '150px',
         maxWidth: '200px',
         minWidth: '100px',
@@ -90,10 +89,10 @@ export default class SciTablePageComponent {
       })
       .addTemplateColumn({
         header: 'Template',
-        template: () => computed(() => ({template: this.cellTemplate(), context: {custom: 'bla'}})),
+        template: () => computed(() => ({template: this.cellTemplate(), context: {custom: this.additionalData()}})),
       })
-      .addNumberColumn('Number', () => Math.floor(Math.random() * 100))
-      .addBooleanColumn('Boolean', () => Math.random() > 0.5)
+      .addNumberColumn('Number', station => station.designationofficial.length)
+      .addBooleanColumn('Boolean', station => station.designationofficial.length > 15)
       // .addNumberColumn({
       //   label: station => this.getData(station),
       //   width: '150px',
@@ -122,11 +121,11 @@ export default class SciTablePageComponent {
   //   // return httpResource<{sloid: string}>(() => `http://localhost:3000/api?placeRef=${station.sloid}`).value;
   // }
 
-  protected onSelectRows(selection: RowSelection<any>[]): void {
-    this.selectedRows.set(selection.length ? selection.map(s => s.index).join(', ') : undefined);
+  protected onSelectRows(selection: Station[]): void {
+    this.selectedRows.set(selection.length ? selection.map(s => s.sloid).join(', ') : undefined);
   }
 
   protected onUpdateSignal(): void {
-    this._additionalData.update(d => d + 1);
+    this.additionalData.update(d => d + 1);
   }
 }

@@ -14,7 +14,6 @@ import {debounceTime} from 'rxjs';
 export class ColumnFilterComponent<T> {
 
   public readonly column = input.required<SciColumns<T>>();
-
   public readonly filter = output<string | boolean | number | null>();
 
   protected readonly query = inject(FormBuilder).control<string | boolean | number>('');
@@ -25,9 +24,18 @@ export class ColumnFilterComponent<T> {
       debounceTime(200),
     ).subscribe(value => {
       const text = typeof value === 'string' ? value.trim() : value;
-      const hasText = text !== null && text !== '';
-
-      this.filter.emit(hasText ? text : null);
+      switch (this.column().type) {
+        case 'boolean':
+          this.filter.emit(value === '' ? null : value === 'true');
+          break;
+        default:
+          this.filter.emit(text !== null && text !== '' ? text : null);
+          break;
+      }
     });
+  }
+
+  protected reset(): void {
+    this.query.reset('');
   }
 }
