@@ -28,7 +28,6 @@ function defaultFilter<T>(text: string | boolean | number, {value}: SciCellConte
 }
 
 function defaultSort<T>(a: SciCellContext<T, string | boolean | number>, b: SciCellContext<T, string | boolean | number>): number {
-  // TODO: improve default sort for non matching types (maybe pass columntype?)
   if (typeof a !== typeof b) {
     return 0;
   }
@@ -49,10 +48,12 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   public readonly columns: SciColumns<T>[] = [];
   public tableName: string | undefined = undefined;
+  public rowItemSize = 28;
   public isSortable = true;
   public isFilterable = true;
   public isResizable = true;
   public isSelectable = true;
+  public rowPartFn?: (item: T) => string;
   public trackByFn = (_: T, index: number): unknown => index;
 
   public name(name: string): this {
@@ -130,6 +131,16 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this;
   }
 
+  public itemSize(itemSize: number): this {
+    this.rowItemSize = itemSize;
+    return this;
+  }
+
+  public rowPart(cssClassFn: (item: T) => string): this {
+    this.rowPartFn = cssClassFn;
+    return this;
+  }
+
   public trackBy(trackByFn: (row: T, index: number) => unknown): this {
     this.trackByFn = trackByFn;
     return this;
@@ -157,8 +168,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       filterable: signal(filterable),
       resizable: coerceSignal(config.resizable, {defaultValue: true}),
       index: signal(this.columns.length),
-      // TODO: Default should be auto, but that does not work with multiple grids
-      width: coerceSignal(config.width, {defaultValue: '1fr'}),
+      width: coerceSignal(config.width, {defaultValue: 'auto'}),
       minWidth: coerceSignal(config.minWidth, {defaultValue: '100px'}),
       maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),
     } as SciColumns<T>);

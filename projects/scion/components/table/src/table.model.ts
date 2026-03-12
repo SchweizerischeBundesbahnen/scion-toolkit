@@ -20,10 +20,12 @@ export interface SciTable<T> {
   columns: SciColumns<T>[];
   trackBy: (item: T, index: number) => unknown;
   name?: string;
+  itemSize: number;
   filterable: boolean;
   selectable: boolean;
   resizable: boolean;
   sortable: boolean;
+  rowPart?: (item: T) => string;
 }
 
 export interface SciCellContext<T, VALUE> {
@@ -42,7 +44,7 @@ export interface TemplateWithContext {
   context?: {[key: string]: unknown};
 }
 
-export interface SciColumn {
+export interface SciColumn<T> {
   type: ColumnType;
   name: string;
   header: Signal<string | undefined>;
@@ -53,16 +55,17 @@ export interface SciColumn {
   width: Signal<string>;
   minWidth: Signal<string>;
   maxWidth: Signal<string | null>;
+  part: (row: T) => string;
 }
 
-export interface SciStringColumn<T> extends SciColumn {
+export interface SciStringColumn<T> extends SciColumn<T> {
   type: 'string';
   value: (item: T) => MaybeSignal<string>;
   sort: (a: SciCellContext<T, string>, b: SciCellContext<T, string>) => number;
   filter: (text: string, context: SciCellContext<T, string>) => boolean;
 }
 
-export interface SciBooleanColumn<T> extends SciColumn {
+export interface SciBooleanColumn<T> extends SciColumn<T> {
   type: 'boolean';
   value: (item: T) => MaybeSignal<boolean>;
   sortRows: (rows: SciRow<T>[]) => SciRow<T>[];
@@ -70,7 +73,7 @@ export interface SciBooleanColumn<T> extends SciColumn {
   filter: (text: boolean, context: SciCellContext<T, boolean>) => boolean;
 }
 
-export interface SciNumberColumn<T> extends SciColumn {
+export interface SciNumberColumn<T> extends SciColumn<T> {
   type: 'number';
   value: (item: T) => MaybeSignal<number>;
   sortRows: (rows: SciRow<T>[]) => SciRow<T>[];
@@ -78,14 +81,14 @@ export interface SciNumberColumn<T> extends SciColumn {
   filter: (text: number, context: SciCellContext<T, number>) => boolean;
 }
 
-export interface SciComponentColumn<T> extends SciColumn {
+export interface SciComponentColumn<T> extends SciColumn<T> {
   type: 'component';
   component: (item: T) => ComponentWithInputs;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
 }
 
-export interface SciTemplateColumn<T> extends SciColumn {
+export interface SciTemplateColumn<T> extends SciColumn<T> {
   type: 'template';
   template: (item: T) => MaybeSignal<TemplateWithContext>;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;

@@ -18,4 +18,10 @@
   <span class="filter-icon material-symbols-outlined">
     filter_alt
   </span>
+
+  @if (query.value && column().type !== 'boolean') {
+    <button class="clear material-symbols-outlined" (click)="reset()">
+      clear
+    </button>
+  }
 }

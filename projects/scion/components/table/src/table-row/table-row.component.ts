@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, Component, computed, input, output, viewChildren} from '@angular/core';
-import {SciRow} from '../table.model';
+import {SciRow, SciTable} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 
 @Component({
@@ -22,6 +22,7 @@ import {TableCellComponent} from '../table-cell/table-cell.component';
     '[class.selected]': 'isSelected()',
     '(click)': 'onRowClick($event)',
     '(keydown.enter)': 'onRowEnter()',
+    '[part]': 'part()',
   },
   imports: [
     TableCellComponent,
@@ -30,7 +31,7 @@ import {TableCellComponent} from '../table-cell/table-cell.component';
 export class TableRowComponent<T> {
 
   public readonly row = input.required<SciRow<T>>();
-  public readonly index = input.required<number>();
+  public readonly table = input.required<SciTable<T>>();
 
   // TODO [eg]: Move row selection to service
   public readonly selectedItems = input.required<T[]>();
@@ -40,10 +41,10 @@ export class TableRowComponent<T> {
 
   protected readonly cells = viewChildren(TableCellComponent);
 
-  protected readonly isActive = computed(() => this.index() === this.activeItem());
+  protected readonly isActive = computed(() => this.row().item === this.activeItem());
   protected readonly isSelected = computed(() => this.selectedItems().includes(this.row().item));
+  protected readonly part = computed(() => this.table().rowPart?.(this.row().item));
 
-  // TODO [eg]: Should we access this differently?
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;
   }

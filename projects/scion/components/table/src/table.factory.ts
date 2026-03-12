@@ -17,25 +17,29 @@ export interface SciTableFactory<T> {
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
 
-  trackBy(trackByFn: (record: T, index: number) => unknown): this;
+  trackBy(trackByFn: (item: T, index: number) => unknown): this;
   sortable(sortable: boolean): this;
   filterable(filterable: boolean): this;
   resizable(resizable: boolean): this;
   selectable(selectable: boolean): this;
+  itemSize(itemSize: number): this;
+
+  rowPart(rowPartFn: (item: T) => string): this;
 
   name(name: string): this;
 }
 
-interface SciColumnDescriptor {
+interface SciColumnDescriptor<T> {
   name?: string;
   header?: MaybeSignal<string>;
   resizable?: boolean;
   width?: MaybeSignal<string>;
   minWidth?: MaybeSignal<string>;
   maxWidth?: MaybeSignal<string>;
+  part?: (item: T) => string;
 }
 
-export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor<T> {
   component: (item: T) => ComponentWithInputs;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -47,7 +51,7 @@ export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {
   filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
 }
 
-export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor<T> {
   template: (item: T) => MaybeSignal<TemplateWithContext>;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -59,7 +63,7 @@ export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
   filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
 }
 
-export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor<T> {
   value: (item: T) => MaybeSignal<string>;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -71,7 +75,7 @@ export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
   filter?: ((text: string, context: SciCellContext<T, string>) => boolean) | boolean;
 }
 
-export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor<T> {
   value: (item: T) => MaybeSignal<number>;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -83,7 +87,7 @@ export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
   filter?: ((text: number, context: SciCellContext<T, number>) => boolean) | boolean;
 }
 
-export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor<T> {
   value: (item: T) => MaybeSignal<boolean>;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.

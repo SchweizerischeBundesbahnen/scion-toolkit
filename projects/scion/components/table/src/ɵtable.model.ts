@@ -22,11 +22,13 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly columns: SciColumns<T>[];
   public readonly dataSource: SciDataSource<T> | SciDataSource<SciRow<T>>;
   public readonly name?: string;
-  public readonly sortable;
-  public readonly filterable;
-  public readonly resizable;
-  public readonly selectable;
+  public readonly sortable: boolean;
+  public readonly filterable: boolean;
+  public readonly resizable: boolean;
+  public readonly selectable: boolean;
+  public readonly itemSize: number;
   public readonly trackBy: (item: T, index: number) => unknown;
+  public readonly rowPart?: (item: T) => string;
 
   constructor(factory: ɵSciTableFactory<T>, dataOrSource: Signal<T[]> | SciDataSource<T>) {
     this.columns = factory.columns;
@@ -35,7 +37,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.filterable = factory.isFilterable;
     this.resizable = factory.isResizable;
     this.selectable = factory.isSelectable;
+    this.itemSize = factory.rowItemSize;
     this.trackBy = factory.trackByFn;
+    this.rowPart = factory.rowPartFn;
 
     this.dataSource = typeof dataOrSource === 'function' ?
       new ɵSciArrayDataSource(dataOrSource, factory.columns) :

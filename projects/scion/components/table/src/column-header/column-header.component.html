@@ -1,9 +1,12 @@
-<button class="column-sort"
-        [attr.data-sortable]="isSortable() && column().sortable()"
-        [attr.data-sort]="columnSort()"
-        (click)="onSort($event)">
-  {{ column().header() }}
-</button>
+<div class="header">
+  <button class="column-sort"
+          [attr.data-sortable]="isSortable() && column().sortable()"
+          [attr.data-sort]="columnSort()"
+          (click)="onSort($event)">
+    {{ column().header() }}
+  </button>
+  <sci-column-filter [column]="column()" (filter)="filter.emit($event)" />
+</div>
 @if (isResizable() && column().resizable()) {
   <sci-splitter orientation="vertical"
                 (start)="onResizeStart()"

@@ -3,11 +3,13 @@ import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitte
 import {SciColumns} from '@scion/components/table';
 import {TableStateService} from '../table-state.service';
 import {SciSortCriterion} from '../data-source.model';
+import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 
 @Component({
   selector: 'sci-column-header',
   imports: [
     SciSplitterComponent,
+    ColumnFilterComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-header.component.html',
@@ -22,6 +24,7 @@ export class ColumnHeaderComponent<T> {
 
   public readonly autoResize = output();
   public readonly sort = output<MouseEvent>();
+  public readonly filter = output<string | boolean | number | null>();
 
   private readonly _tableStateService = inject(TableStateService);
   private readonly _element = inject(ElementRef);
@@ -29,6 +32,10 @@ export class ColumnHeaderComponent<T> {
   private readonly _resizeContext = signal<{width: number; columnId: string} | undefined>(undefined);
 
   protected readonly columnSort = computed(() => this.sorts().find(s => s.columnName === this.column().name)?.direction);
+
+  public getWidth(): number {
+    return (this._element.nativeElement as HTMLElement).clientWidth;
+  }
 
   protected onResizeStart(): void {
     this._resizeContext.set({width: (this._element.nativeElement as HTMLElement).offsetWidth, columnId: this.column().name});

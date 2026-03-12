@@ -107,7 +107,8 @@ export default class SciTablePageComponent {
         value: station => computed(() => this.language() === 'fr' ? station.districtnameFr : station.districtname),
         width: '1fr',
         header: 'District',
-      });
+      })
+      .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   });
 
   // private getData(station: Station): Signal<number> {

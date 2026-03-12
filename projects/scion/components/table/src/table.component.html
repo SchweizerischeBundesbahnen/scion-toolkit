@@ -1,39 +1,26 @@
 @let table = sciTable();
-<div class="h-scroll" sciScrollable #hViewport>
-  <div class="table-wrapper">
-    <div class="table-header">
-      @for (column of columns(); track $index) {
-        <sci-column-header [column]="column"
-                           [sorts]="sort()"
-                           [isResizable]="table.resizable"
-                           [isSortable]="table.sortable"
-                           (autoResize)="onResizeAuto(column)"
-                           (sort)="onSort(column, $event)" />
-      }
-    </div>
-    <div class="table-filter">
-      @if (table.filterable) {
-        @for (column of columns(); track $index) {
-          <sci-column-filter [column]="column" (filter)="onFilter(column, $event)" />
-        }
-      }
-    </div>
-    <div class="table-body">
-      <cdk-virtual-scroll-viewport itemSize="26" sciScrollable #cdkViewport>
-        <ng-container *cdkVirtualFor="let _ of placeholderItems(); let i = index; trackBy: trackBy.bind(this)" >
-          @if (cachedItems() | sciMapGet:i; as row) {
-            <sci-table-row [row]="row"
-                           [index]="i"
-                           [selectedItems]="selectedItems()"
-                           [activeItem]="activeItem()"
-                           (activateItem)="onActivateRow(row.item)"
-                           (selectItem)="onSelectRow(row.item, $event)" />
-          }
-        </ng-container>
-      </cdk-virtual-scroll-viewport>
-    </div>
-    <sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
+<cdk-virtual-scroll-viewport [itemSize]="table.itemSize" sciScrollable #cdkViewport>
+  <div class="table-header">
+    @for (column of columns(); track $index) {
+      <sci-column-header [column]="column"
+                         [sorts]="sort()"
+                         [isResizable]="table.resizable"
+                         [isSortable]="table.sortable"
+                         (autoResize)="onResizeAuto(column)"
+                         (sort)="onSort(column, $event)"
+                         (filter)="onFilter(column, $event)" />
+    }
   </div>
-  <sci-scrollbar [direction]="'hscroll'" [viewport]="hViewport"/>
-</div>
-
+  <ng-container *cdkVirtualFor="let _ of placeholderItems(); let i = index; trackBy: trackBy.bind(this)" >
+    @if (cachedItems() | sciMapGet:i; as row) {
+      <sci-table-row [row]="row"
+                     [table]="table"
+                     [selectedItems]="selectedItems()"
+                     [activeItem]="activeItem()"
+                     (activateItem)="onActivateRow(row.item)"
+                     (selectItem)="onSelectRow(row.item, $event)" />
+    }
+  </ng-container>
+</cdk-virtual-scroll-viewport>
+<sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
+<sci-scrollbar [direction]="'hscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>

@@ -1,53 +1,37 @@
 @use '@scion/components/scrollbar' as sci-scrollbar;
 
+// TODO: how do we handle icons?
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght@24..48,300..400');
+
 :host {
   display: grid;
   background-color: var(--sci-color-background-primary);
-}
-
-div.h-scroll {
+  overflow: hidden;
   position: relative; // anchor for the scroll bars
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
   > sci-scrollbar {
     @include sci-scrollbar.scrollbar-position();
-  }
-}
 
-div.table-wrapper {
-  height: 100%;
-  width: var(--ɵsci-table-width);
-  display: grid;
-  grid-template-rows: auto auto 1fr;
-  position: relative;
-  @include sci-scrollbar.scrollbar-hide-when-inactive();
-
-  > sci-scrollbar {
-    @include sci-scrollbar.scrollbar-position();
+    &.vertical {
+      top: 60px; // offset header height
+    }
   }
 
-  > div.table-header {
+  .cdk-virtual-scroll-content-wrapper {
     display: grid;
     grid-template-columns: var(--ɵsci-table-columns);
-    height: 30px;
-    background-color: var(--sci-color-background-secondary);
-    border-bottom: 1px solid var(--sci-color-border);
-  }
+    width: var(--ɵsci-table-width);
 
-  > div.table-filter {
-    display: grid;
-    grid-template-columns: var(--ɵsci-table-columns);
-    background-color: var(--sci-color-background-secondary);
-  }
-
-  > div.table-body {
-    flex: 1;
-    overflow: hidden;
-
-    // TODO [eg]: move styling to external stylesheet?
-    &::ng-deep .cdk-virtual-scroll-content-wrapper {
+    > div.table-header {
       display: grid;
-      grid-template-columns: var(--ɵsci-table-columns);
+      grid-auto-flow: column;
+      grid-template-columns: subgrid;
+      grid-column: 1 / -1;
+      background-color: var(--sci-color-background-secondary);
+      border-bottom: 1px solid var(--sci-color-border);
+      position: sticky;
+      top: var(--ɵsci-table-scroll-offset);
     }
   }
 }

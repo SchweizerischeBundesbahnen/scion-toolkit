@@ -1,33 +1,45 @@
 :host {
-  display: flex;
-  font-weight: bold;
+  display: grid;
+  grid-template-columns: 1fr auto;
 
-  > button.column-sort {
-    all: unset;
-    box-sizing: border-box;
-    padding: .25em .5em;
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  > div.header {
+    display: grid;
+    grid-template-rows: 30px 30px;
 
-    &[data-sortable="true"] {
-      cursor: pointer;
-    }
+    > button.column-sort {
+      all: unset;
+      box-sizing: border-box;
+      padding: .25em .5em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 1px solid transparent;
+      border-bottom-color: var(--sci-color-border);
+      font-weight: bold;
 
-    &::after {
-      content: '';
-      height: 100%;
-    }
+      &[data-sortable="true"] {
+        cursor: pointer;
+      }
 
-    &[data-sort="asc"]::after {
-      content: '↑';
-    }
+      &:focus-visible {
+        border-color: var(--sci-color-accent);
+      }
 
-    &[data-sort="desc"]::after {
-      content: '↓';
+      &::after {
+        content: '';
+        height: 100%;
+      }
+
+      &[data-sort="asc"]::after {
+        content: '↑';
+      }
+
+      &[data-sort="desc"]::after {
+        content: '↓';
+      }
     }
   }
+
 
   > div.delimiter {
     width: 1px;

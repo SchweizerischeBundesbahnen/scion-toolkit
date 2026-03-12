@@ -10,7 +10,7 @@
 
 import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input} from '@angular/core';
 import {SciCells} from '../table.model';
-import {NgComponentOutlet, NgTemplateOutlet} from '@angular/common';
+import {NgClass, NgComponentOutlet, NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'sci-table-cell',
@@ -19,11 +19,11 @@ import {NgComponentOutlet, NgTemplateOutlet} from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-type]': 'cell().type',
-    '[attr.part]': 'cell',
   },
   imports: [
     NgComponentOutlet,
     NgTemplateOutlet,
+    NgClass,
   ],
 })
 export class TableCellComponent<T> {
@@ -40,6 +40,8 @@ export class TableCellComponent<T> {
       ...cell.template().context,
     } : null;
   });
+
+  // TODO: add partr for styling
 
   private readonly _element = inject(ElementRef);
 

@@ -2,7 +2,7 @@
   display: grid;
   grid-template-columns: subgrid;
   grid-column: 1 / -1;
-  height: 26px;
+  height: var(--ɵsci-table-item-size);
   border: 1px solid transparent;
   border-top-color: var(--sci-color-border);
 

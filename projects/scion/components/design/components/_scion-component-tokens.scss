@@ -39,10 +39,15 @@ $sci-sashbox: (
   --sci-sashbox-splitter-opacity-hover: var(--sci-splitter-opacity-hover), // opacity of the splitter when hovering it
 );
 
+$sci-table: (
+  --sci-table-cell-padding: .5em,
+);
+
 $tokens: sci-theming.map-merge(
     $sci-scrollbar,
     $sci-viewport,
     $sci-throbber,
     $sci-splitter,
     $sci-sashbox,
+    $sci-table,
 );

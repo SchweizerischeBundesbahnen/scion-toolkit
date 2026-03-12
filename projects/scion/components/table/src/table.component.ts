@@ -8,21 +8,20 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, Signal, signal, viewChild, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, Signal, signal, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {TableRowComponent} from './table-row/table-row.component';
 import {SciDataSource, SciFilterCriterion, SciSortCriterion} from './data-source.model';
-import {toObservable} from '@angular/core/rxjs-interop';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
-import {rangeInSet} from './common';
+import {clamp, rangeInSet} from './common';
 import {EMPTY} from 'rxjs';
 import {MapGetPipe} from './map-get.pipe';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableStateService} from './table-state.service';
-import {ColumnFilterComponent} from './column-filter/column-filter.component';
 import {SciTableFactory} from './table.factory';
 import {ɵSciTable} from './ɵtable.model';
 
@@ -36,24 +35,17 @@ export function table<T>(dataOrSource: Signal<T[]> | SciDataSource<T>, factoryFn
   });
 }
 
-function clamp(min: string, preferred: string, max: string | null): string {
-  const maxDef = max === null ? preferred : `min(${preferred}, ${max})`;
-  return `minmax(${min}, ${maxDef})`;
-}
-
-export interface RowSelection<T> {
-  index: number;
-  row: T;
-}
-
 @Component({
   selector: 'sci-table',
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.ShadowDom,
   host: {
     '[style.--ɵsci-table-columns]': 'columnWidths()',
     '[style.--ɵsci-table-width]': 'tableWidth()',
+    '[style.--ɵsci-table-scroll-offset]': 'scrollOffset()',
+    '[style.--ɵsci-table-item-size]': 'sciTable().itemSize + "px"',
   },
   imports: [
     SciScrollableDirective,
@@ -64,7 +56,6 @@ export interface RowSelection<T> {
     TableRowComponent,
     MapGetPipe,
     ColumnHeaderComponent,
-    ColumnFilterComponent,
   ],
   providers: [
     TableStateService,
@@ -77,7 +68,8 @@ export class SciTableComponent<T> {
   public readonly activateItem = output<T | undefined>();
   public readonly selectItems = output<T[]>();
 
-  protected readonly rows = viewChildren<TableRowComponent<T>>(TableRowComponent);
+  private readonly _rows = viewChildren<TableRowComponent<T>>(TableRowComponent);
+  private readonly _headers = viewChildren<ColumnHeaderComponent<T>>(ColumnHeaderComponent);
   private readonly _viewport = viewChild.required(CdkVirtualScrollViewport);
 
   private readonly _tableStateService = inject(TableStateService);
@@ -86,6 +78,7 @@ export class SciTableComponent<T> {
   protected readonly selectedItems = signal<T[]>([]);
   protected readonly sort = signal<SciSortCriterion[]>([]);
   protected readonly filter = signal<SciFilterCriterion[]>([]);
+  protected readonly offset: Signal<number | undefined>;
 
   private readonly _totalCount = signal<number>(0, {equal: (a, b) => a === b});
 
@@ -98,6 +91,7 @@ export class SciTableComponent<T> {
     computation: () => new Map<number, SciRow<T>>(),
   });
 
+  protected readonly scrollOffset = computed(() => `${(this.offset() ?? 0) * this.table().itemSize * -1}px`);
   protected readonly tableWidth = computed(() => {
     const columns = this.columns();
     const overrides = this._tableStateService.columnWidths();
@@ -111,6 +105,7 @@ export class SciTableComponent<T> {
   protected readonly columnWidths = computed(() => {
     const columns = this.columns();
     const overrides = this._tableStateService.columnWidths();
+
     return columns
       .map(c => clamp(c.minWidth(), overrides.get(c.name) ?? c.width(), c.maxWidth()))
       .join(' ');
@@ -125,9 +120,24 @@ export class SciTableComponent<T> {
       this.selectItems.emit(this.selectedItems());
     });
 
-    toObservable(this._viewport).pipe(
+    effect(() => {
+      const headers = this._headers().map(header => ({
+        column: header.column(),
+        width: header.getWidth(),
+      }));
+      this._tableStateService.initializeColumnSizes(headers);
+    });
+
+    const range$ = toObservable(this._viewport).pipe(
       switchMap(viewport => viewport.renderedRangeStream),
       startWith({start: 0, end: 0}),
+    );
+
+    this.offset = toSignal(range$.pipe(
+      map(({start}) => start),
+    ));
+
+    range$.pipe(
       combineLatestWith(
         toObservable(this.sciTable),
         toObservable(this.sort),
@@ -234,7 +244,7 @@ export class SciTableComponent<T> {
   }
 
   protected onResizeAuto(column: SciColumns<T>): void {
-    const cellWidths = this.rows().map(row => row.getCellWidth(column.name));
+    const cellWidths = this._rows().map(row => row.getCellWidth(column.name));
     const maxWidth = Math.max(...cellWidths, 0) + 20; // TODO [eg]: configurable buffer?
     this._tableStateService.setResizedColumn(column.name, `${maxWidth}px`);
   }

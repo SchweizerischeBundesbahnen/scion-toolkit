@@ -1,5 +1,5 @@
 @let _cell = cell();
-<div class="wrapper">
+<div class="wrapper" [ngClass]="{'checkbox material-symbols-outlined': _cell.type === 'boolean'}" #wrapper>
   @switch (_cell.type) {
     @case ('template') {
       <ng-template *ngTemplateOutlet="_cell.template().template; context: templateContext()" />
@@ -9,11 +9,9 @@
     }
     @case ('boolean') {
       @let value = _cell.value();
-      <span class="checkbox material-symbols-outlined" [attr.data-checked]="value">
-        @if (value) {
-          check
-        }
-      </span>
+      @if (value) {
+        check
+      }
     }
     @default {
       {{_cell.value()}}

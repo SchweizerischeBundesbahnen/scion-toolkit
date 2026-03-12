@@ -40,3 +40,8 @@ export function rangeInSet(start: number, end: number, set: Set<number>): boolea
   }
   return true;
 }
+
+export function clamp(min: string, preferred: string, max: string | null): string {
+  const maxDef = max === null ? preferred : `min(${preferred}, ${max})`;
+  return `minmax(${min}, ${maxDef})`;
+}
