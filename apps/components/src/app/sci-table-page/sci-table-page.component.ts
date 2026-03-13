@@ -111,7 +111,7 @@ export default class SciTablePageComponent {
       })
       // .resizable(false)
       // .sortable(false)
-      .filterable(false)
+      // .filterable(false)
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   });
 

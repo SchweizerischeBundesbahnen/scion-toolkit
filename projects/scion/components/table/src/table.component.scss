@@ -1,6 +1,5 @@
 @use '@scion/components/scrollbar' as sci-scrollbar;
 
-// TODO: how do we handle icons?
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght@24..48,300..400');
 
 :host {
@@ -23,7 +22,7 @@
     grid-template-columns: var(--ɵsci-table-columns);
     width: var(--ɵsci-table-width);
 
-    > div.table-header {
+    > header {
       display: grid;
       grid-auto-flow: column;
       grid-template-columns: subgrid;
@@ -32,7 +31,6 @@
       border-bottom: 1px solid var(--sci-color-border);
       position: sticky;
       top: var(--ɵsci-table-scroll-offset);
-      z-index: 1;
     }
 
     > sci-table-row {

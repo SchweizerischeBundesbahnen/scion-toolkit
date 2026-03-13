@@ -16,9 +16,7 @@ import {TableRowComponent} from './table-row/table-row.component';
 import {SciFilterCriterion, SciSortCriterion} from './table-data-source';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
-import {clamp, rangeInSet} from './common';
-import {EMPTY} from 'rxjs';
-import {MapGetPipe} from './map-get.pipe';
+import {clamp} from './common';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableStateService} from './table-state.service';
 import {ɵSciTable} from './ɵtable.model';
@@ -43,7 +41,6 @@ import {ɵSciTable} from './ɵtable.model';
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
     TableRowComponent,
-    MapGetPipe,
     ColumnHeaderComponent,
   ],
   providers: [
@@ -74,10 +71,9 @@ export class SciTableComponent<T> {
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly columns = computed(() => this.sciTable().columns);
 
-  protected readonly placeholderItems = linkedSignal(() => new Array<T>(this._totalCount()).fill({} as T));
-  protected readonly cachedItems = linkedSignal({
-    source: () => ({sort: this.sort(), filter: this.filter(), columns: this.columns()}),
-    computation: () => new Map<number, SciRow<T>>(),
+  protected readonly rows = linkedSignal({
+    source: () => ({count: this._totalCount()}),
+    computation: ({count}) => new Array<SciRow<T>>(count).fill({} as SciRow<T>),
   });
 
   protected readonly headerSize = computed(() => this.table().filterable() ? '60px' : '30px');
@@ -138,9 +134,10 @@ export class SciTableComponent<T> {
       switchMap(([{start, end}, table, sortCriteria, filterCriteria]) => {
         // If all indices are already cached, don't call the backend
         // Never use cache if end === 0 (used for initial call and when no items are found)
-        if (end !== 0 && rangeInSet(start, end, new Set(this.cachedItems().keys()))) {
-          return EMPTY;
-        }
+        // if (end !== 0 && this.rows().every((row, i) => i < start || i >= end || !!row.item)) {
+        //   console.log('CACHED');
+        //   return EMPTY;
+        // }
 
         const response = table.getRows({
           start,
@@ -154,19 +151,13 @@ export class SciTableComponent<T> {
       }),
     ).subscribe(({response, start}) => {
       this._totalCount.set(response.totalCount);
-      this.cachedItems.update(cache => {
-        const newCache = new Map(cache);
-        for (let i = 0; i < response.items.length; i++) {
-          newCache.set(start + i, response.items[i]!);
-        }
-        return newCache;
-      });
+      this.rows.update(items => items.toSpliced(start, response.items.length, ...response.items));
     });
   }
 
-  protected trackBy(i: number, item: T): any {
-    return this.sciTable().trackBy(item, i);
-  }
+  protected readonly trackBy = (i: number, row: SciRow<T>): unknown => {
+    return this.sciTable().trackBy(row.item, i);
+  };
 
   protected onSort(col: SciColumns<T>, event: MouseEvent): void {
     if (!col.sortable()) {
