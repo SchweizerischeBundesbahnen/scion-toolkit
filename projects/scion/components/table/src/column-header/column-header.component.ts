@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input,
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciColumns} from '@scion/components/table';
 import {TableStateService} from '../table-state.service';
-import {SciSortCriterion} from '../data-source.model';
+import {SciSortCriterion} from '../table-data-source';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 
 @Component({
@@ -19,8 +19,6 @@ export class ColumnHeaderComponent<T> {
 
   public readonly column = input.required<SciColumns<T>>();
   public readonly sorts = input.required<SciSortCriterion[]>();
-  public readonly isResizable = input.required<boolean>();
-  public readonly isSortable = input.required<boolean>();
 
   public readonly autoResize = output();
   public readonly sort = output<MouseEvent>();
@@ -38,7 +36,7 @@ export class ColumnHeaderComponent<T> {
   }
 
   protected onResizeStart(): void {
-    this._resizeContext.set({width: (this._element.nativeElement as HTMLElement).offsetWidth, columnId: this.column().name});
+    this._resizeContext.set({width: this.getWidth(), columnId: this.column().name});
   }
 
   protected onResize(event: SplitterMoveEvent): void {

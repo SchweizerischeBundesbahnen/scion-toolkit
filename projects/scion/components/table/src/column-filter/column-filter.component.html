@@ -1,27 +1,25 @@
-@if (column().filterable()) {
-  @switch (column().type) {
-    @case ('number') {
-      <input [formControl]="query" type="number" />
-    }
-    @case ('boolean') {
-      <select [formControl]="query">
-        <option [value]="''">All</option>
-        <option [value]="true">True</option>
-        <option [value]="false">False</option>
-      </select>
-    }
-    @default {
-      <input [formControl]="query" />
-    }
+@switch (column().type) {
+  @case ('number') {
+    <input [formControl]="query" type="number" />
   }
-
-  <span class="filter-icon material-symbols-outlined">
-    filter_alt
-  </span>
-
-  @if (query.value && column().type !== 'boolean') {
-    <button class="clear material-symbols-outlined" (click)="reset()">
-      clear
-    </button>
+  @case ('boolean') {
+    <select [formControl]="query">
+      <option [value]="''">All</option>
+      <option [value]="true">True</option>
+      <option [value]="false">False</option>
+    </select>
   }
+  @default {
+    <input [formControl]="query" />
+  }
+}
+
+<span class="filter-icon material-symbols-outlined">
+  filter_alt
+</span>
+
+@if (query.value && column().type !== 'boolean') {
+  <button class="clear material-symbols-outlined" (click)="reset()">
+    clear
+  </button>
 }

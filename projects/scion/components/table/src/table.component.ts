@@ -10,11 +10,10 @@
 
 import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, Signal, signal, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciColumns, SciRow, SciTable} from './table.model';
-import {ɵSciTableFactory} from './ɵtable.factory';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {TableRowComponent} from './table-row/table-row.component';
-import {SciDataSource, SciFilterCriterion, SciSortCriterion} from './data-source.model';
+import {SciFilterCriterion, SciSortCriterion} from './table-data-source';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
 import {clamp, rangeInSet} from './common';
@@ -22,18 +21,7 @@ import {EMPTY} from 'rxjs';
 import {MapGetPipe} from './map-get.pipe';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableStateService} from './table-state.service';
-import {SciTableFactory} from './table.factory';
 import {ɵSciTable} from './ɵtable.model';
-
-export function table<T>(dataSource: SciDataSource<T>, factoryFn: (table: SciTableFactory<T>) => void): Signal<SciTable<T>>;
-export function table<T>(data: Signal<T[]>, factoryFn: (table: SciTableFactory<T>) => void): Signal<SciTable<T>>;
-export function table<T>(dataOrSource: Signal<T[]> | SciDataSource<T>, factoryFn: (table: SciTableFactory<T>) => void): Signal<SciTable<T>> {
-  return computed(() => {
-    const factory = new ɵSciTableFactory<T>();
-    factoryFn(factory);
-    return new ɵSciTable(factory, dataOrSource);
-  });
-}
 
 @Component({
   selector: 'sci-table',
@@ -45,7 +33,8 @@ export function table<T>(dataOrSource: Signal<T[]> | SciDataSource<T>, factoryFn
     '[style.--ɵsci-table-columns]': 'columnWidths()',
     '[style.--ɵsci-table-width]': 'tableWidth()',
     '[style.--ɵsci-table-scroll-offset]': 'scrollOffset()',
-    '[style.--ɵsci-table-item-size]': 'sciTable().itemSize + "px"',
+    '[style.--ɵsci-table-item-size]': 'itemSize()',
+    '[style.--ɵsci-table-header-size]': 'headerSize()',
   },
   imports: [
     SciScrollableDirective,
@@ -91,6 +80,8 @@ export class SciTableComponent<T> {
     computation: () => new Map<number, SciRow<T>>(),
   });
 
+  protected readonly headerSize = computed(() => this.table().filterable() ? '60px' : '30px');
+  protected readonly itemSize = computed(() => `${this.table().itemSize}px`);
   protected readonly scrollOffset = computed(() => `${(this.offset() ?? 0) * this.table().itemSize * -1}px`);
   protected readonly tableWidth = computed(() => {
     const columns = this.columns();
@@ -100,6 +91,7 @@ export class SciTableComponent<T> {
       .map(c => overrides.get(c.name) ?? c.minWidth())
       .join(' + ');
 
+    // sum all column widths together, should always be at least 100% of the container width
     return `max(100%, calc(${widths}))`;
   });
   protected readonly columnWidths = computed(() => {
@@ -177,7 +169,7 @@ export class SciTableComponent<T> {
   }
 
   protected onSort(col: SciColumns<T>, event: MouseEvent): void {
-    if (!this.sciTable().sortable || !col.sortable()) {
+    if (!col.sortable()) {
       return;
     }
 
@@ -189,13 +181,13 @@ export class SciTableComponent<T> {
         nextDirection = existing.direction === 'asc' ? 'desc' : undefined;
       }
 
-      const otherSorts = sort.filter(s => s.columnName !== col.name);
+      const other = sort.filter(s => s.columnName !== col.name);
       if (!nextDirection) {
-        return isMulti ? otherSorts : [];
+        return isMulti ? other : [];
       }
 
       const newSort = {columnName: col.name, direction: nextDirection};
-      return isMulti ? [...otherSorts, newSort] : [newSort];
+      return isMulti ? [...other, newSort] : [newSort];
     });
   }
 
@@ -224,7 +216,7 @@ export class SciTableComponent<T> {
   private selectRow(item: T, replace: boolean): void {
     this.activeItem.set(item);
 
-    if (!this.sciTable().selectable) {
+    if (!this.sciTable().selectable()) {
       return;
     }
 

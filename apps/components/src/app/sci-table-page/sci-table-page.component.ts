@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, input, resource, signal, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, input, inputBinding, resource, signal, TemplateRef, viewChild} from '@angular/core';
 import {SciTableComponent, table} from '@scion/components/table';
 import {Station, stations} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
@@ -84,11 +84,12 @@ export default class SciTablePageComponent {
         filter: (text, cell) => cell.item.sloid.includes(text),
         sort: (a, b) => a.item.sloid.localeCompare(b.item.sloid),
         component: station => ({
-          component: CustomCellComponent, inputs: {station},
+          component: CustomCellComponent, bindings: [inputBinding('station', signal(station))],
         }),
       })
       .addTemplateColumn({
         header: 'Template',
+        part: station => station.designationofficial.length < 15 ? 'green-cell' : '',
         template: () => computed(() => ({template: this.cellTemplate(), context: {custom: this.additionalData()}})),
       })
       .addNumberColumn('Number', station => station.designationofficial.length)
@@ -108,6 +109,9 @@ export default class SciTablePageComponent {
         width: '1fr',
         header: 'District',
       })
+      // .resizable(false)
+      // .sortable(false)
+      .filterable(false)
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   });
 

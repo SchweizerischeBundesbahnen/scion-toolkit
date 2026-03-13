@@ -9,7 +9,7 @@
  */
 
 import {Signal} from '@angular/core';
-import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './data-source.model';
+import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciColumns} from './table.model';
 import {coerceSignal} from './common';
 

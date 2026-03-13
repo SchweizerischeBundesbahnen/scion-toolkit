@@ -24,12 +24,14 @@ export class ColumnFilterComponent<T> {
       debounceTime(200),
     ).subscribe(value => {
       const text = typeof value === 'string' ? value.trim() : value;
+      const isEmpty = text === '' || text === null;
+
       switch (this.column().type) {
         case 'boolean':
-          this.filter.emit(value === '' ? null : value === 'true');
+          this.filter.emit(isEmpty ? null : text === 'true');
           break;
         default:
-          this.filter.emit(text !== null && text !== '' ? text : null);
+          this.filter.emit(isEmpty ? null : text);
           break;
       }
     });

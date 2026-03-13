@@ -1,11 +1,11 @@
 @let _cell = cell();
-<div class="wrapper" [ngClass]="{'checkbox material-symbols-outlined': _cell.type === 'boolean'}" #wrapper>
+<div class="cell" [ngClass]="{'checkbox material-symbols-outlined': _cell.type === 'boolean'}" #cellElement>
   @switch (_cell.type) {
     @case ('template') {
       <ng-template *ngTemplateOutlet="_cell.template().template; context: templateContext()" />
     }
     @case ('component') {
-      <ng-container *ngComponentOutlet="_cell.component.component; inputs: _cell.component.inputs" />
+      <ng-container #componentOutlet></ng-container>
     }
     @case ('boolean') {
       @let value = _cell.value();

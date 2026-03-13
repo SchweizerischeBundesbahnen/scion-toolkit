@@ -1,5 +1,5 @@
 import {MaybeSignal} from './common';
-import {ComponentWithInputs, SciCellContext, TemplateWithContext} from './table.model';
+import {ComponentWithBindings, SciCellContext, TemplateWithContext} from './table.model';
 
 export interface SciTableFactory<T> {
   addStringColumn(value: (item: T) => string): this;
@@ -17,15 +17,56 @@ export interface SciTableFactory<T> {
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
 
+  /**
+   * TrackBy function used to optimize rendering. Defaults to tracking by index.
+   */
   trackBy(trackByFn: (item: T, index: number) => unknown): this;
+
+  /**
+   * Allow rows to be filterable. Defaults to true.
+   */
   sortable(sortable: boolean): this;
+
+  /**
+   * Allow rows to be filterable. Defaults to true.
+   */
   filterable(filterable: boolean): this;
+
+  /**
+   * Allow rows to be resizable. Defaults to true.
+   */
   resizable(resizable: boolean): this;
+
+  /**
+   * Allow rows to be selectable. Defaults to true.
+   */
   selectable(selectable: boolean): this;
+
+  /**
+   * Size of row items in px. Defaults to 28px.
+   */
   itemSize(itemSize: number): this;
 
-  rowPart(rowPartFn: (item: T) => string): this;
+  /**
+   * Adds conditional part to row element.
+   * This can be used to conditionally style the row.
+   *
+   * Example usage:
+   * ```ts
+   * table(persons, table => table.rowPart(person => !person.active ? 'inactive' : null));
+   * ```
+   *
+   * ```scss
+   * sci-table ::part(inactive) {
+   *   background-color: rgba(255, 0, 0, 0.2);
+   * }
+   * ```
+   */
+  rowPart(rowPartFn: (item: T) => string | null): this;
 
+  /**
+   * Name of the table, used to save and restore view to localStorage.
+   */
   name(name: string): this;
 }
 
@@ -40,7 +81,7 @@ interface SciColumnDescriptor<T> {
 }
 
 export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor<T> {
-  component: (item: T) => ComponentWithInputs;
+  component: (item: T) => ComponentWithBindings;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */

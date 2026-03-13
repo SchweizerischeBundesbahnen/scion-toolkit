@@ -4,8 +4,6 @@
     @for (column of columns(); track $index) {
       <sci-column-header [column]="column"
                          [sorts]="sort()"
-                         [isResizable]="table.resizable"
-                         [isSortable]="table.sortable"
                          (autoResize)="onResizeAuto(column)"
                          (sort)="onSort(column, $event)"
                          (filter)="onFilter(column, $event)" />

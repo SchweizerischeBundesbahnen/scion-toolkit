@@ -8,5 +8,6 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export {SciTableComponent, table} from './table.component';
+export {table} from './table';
+export {SciTableComponent} from './table.component';
 export type {ColumnType, SciColumns} from './table.model';

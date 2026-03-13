@@ -14,7 +14,7 @@
     @include sci-scrollbar.scrollbar-position();
 
     &.vertical {
-      top: 60px; // offset header height
+      top: var(--ɵsci-table-header-size); // offset header height
     }
   }
 
@@ -32,6 +32,13 @@
       border-bottom: 1px solid var(--sci-color-border);
       position: sticky;
       top: var(--ɵsci-table-scroll-offset);
+      z-index: 1;
+    }
+
+    > sci-table-row {
+      height: var(--ɵsci-table-item-size);
+      border: 1px solid transparent;
+      border-bottom-color: var(--sci-color-border);
     }
   }
 }

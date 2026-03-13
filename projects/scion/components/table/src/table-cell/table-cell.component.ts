@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, untracked, viewChild, ViewContainerRef} from '@angular/core';
 import {SciCells} from '../table.model';
-import {NgClass, NgComponentOutlet, NgTemplateOutlet} from '@angular/common';
+import {NgClass, NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'sci-table-cell',
@@ -19,9 +19,9 @@ import {NgClass, NgComponentOutlet, NgTemplateOutlet} from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-type]': 'cell().type',
+    '[part]': 'cell().part',
   },
   imports: [
-    NgComponentOutlet,
     NgTemplateOutlet,
     NgClass,
   ],
@@ -35,17 +35,41 @@ export class TableCellComponent<T> {
     const cell = this.cell();
     const item = this.item();
 
-    return cell.type === 'template' ? {
+    if (cell.type !== 'template') {
+      return null;
+    }
+
+    return {
       $implicit: item,
       ...cell.template().context,
-    } : null;
+    };
   });
 
-  // TODO: add partr for styling
+  private readonly _cellElement = viewChild.required<ElementRef<HTMLDivElement>>('cellElement');
+  private readonly _componentOutlet = viewChild('componentOutlet', {read: ViewContainerRef});
 
-  private readonly _element = inject(ElementRef);
+  constructor() {
+    effect(onCleanup => {
+      const cell = this.cell();
+      const componentOutlet = this._componentOutlet();
+
+      if (cell.type !== 'component' || !componentOutlet) {
+        return;
+      }
+
+      untracked(() => {
+        const component = componentOutlet.createComponent(cell.component.component, {
+          bindings: cell.component.bindings,
+        });
+
+        onCleanup(() => {
+          component.destroy();
+        });
+      });
+    });
+  }
 
   public getWidth(): number {
-    return ((this._element.nativeElement as HTMLElement).firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;
+    return this._cellElement().nativeElement.offsetWidth;
   }
 }

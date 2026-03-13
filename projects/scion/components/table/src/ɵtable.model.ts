@@ -9,10 +9,10 @@
  */
 
 import {Signal} from '@angular/core';
-import {SciDataSource, SciTableRequest, SciTableResponse} from './data-source.model';
+import {SciDataSource, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
-import {ɵSciArrayDataSource} from './ɵarray-data-source.model';
+import {ɵSciArrayDataSource} from './ɵarray-data-source';
 import {Observable} from 'rxjs';
 import {coerceObservable, coerceSignal} from './common';
 import {map} from 'rxjs/operators';
@@ -22,10 +22,10 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly columns: SciColumns<T>[];
   public readonly dataSource: SciDataSource<T> | SciDataSource<SciRow<T>>;
   public readonly name?: string;
-  public readonly sortable: boolean;
-  public readonly filterable: boolean;
-  public readonly resizable: boolean;
-  public readonly selectable: boolean;
+  public readonly sortable: Signal<boolean>;
+  public readonly filterable: Signal<boolean>;
+  public readonly resizable: Signal<boolean>;
+  public readonly selectable: Signal<boolean>;
   public readonly itemSize: number;
   public readonly trackBy: (item: T, index: number) => unknown;
   public readonly rowPart?: (item: T) => string;
@@ -61,6 +61,7 @@ export class ɵSciTable<T> implements SciTable<T> {
         template: column.type === 'template' ? coerceSignal(column.template(item)) : undefined,
         type: column.type,
         columnName: column.name,
+        part: column.part?.(item),
       } as SciCells)),
     }));
   }

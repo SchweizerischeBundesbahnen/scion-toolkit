@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {signal} from '@angular/core';
+import {computed, signal, untracked} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
 import {coerceSignal} from './common';
 import {SciBooleanColumnDescriptor, SciColumnDescriptors, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableFactory, SciTemplateColumnDescriptor} from './table.factory';
@@ -49,10 +49,10 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   public readonly columns: SciColumns<T>[] = [];
   public tableName: string | undefined = undefined;
   public rowItemSize = 28;
-  public isSortable = true;
-  public isFilterable = true;
-  public isResizable = true;
-  public isSelectable = true;
+  public isSortable = signal(true);
+  public isFilterable = signal(true);
+  public isResizable = signal(true);
+  public isSelectable = signal(true);
   public rowPartFn?: (item: T) => string;
   public trackByFn = (_: T, index: number): unknown => index;
 
@@ -112,22 +112,22 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   }
 
   public filterable(filterable: boolean): this {
-    this.isFilterable = filterable;
+    untracked(() => this.isFilterable.set(filterable));
     return this;
   }
 
   public resizable(resizable: boolean): this {
-    this.isResizable = resizable;
+    untracked(() => this.isResizable.set(resizable));
     return this;
   }
 
   public selectable(selectable: boolean): this {
-    this.isSelectable = selectable;
+    untracked(() => this.isSelectable.set(selectable));
     return this;
   }
 
   public sortable(sortable: boolean): this {
-    this.isSortable = sortable;
+    untracked(() => this.isSortable.set(sortable));
     return this;
   }
 
@@ -164,9 +164,9 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
       sort: typeof config.sort === 'function' ? config.sort : defaultSort,
       header: coerceSignal(config.header, {defaultValue: ''}),
-      sortable: signal(sortable),
-      filterable: signal(filterable),
-      resizable: coerceSignal(config.resizable, {defaultValue: true}),
+      sortable: computed(() => this.isSortable() && sortable),
+      filterable: computed(() => this.isFilterable() && filterable),
+      resizable: computed(() => this.isResizable() && (config.resizable ?? true)),
       index: signal(this.columns.length),
       width: coerceSignal(config.width, {defaultValue: 'auto'}),
       minWidth: coerceSignal(config.minWidth, {defaultValue: '100px'}),

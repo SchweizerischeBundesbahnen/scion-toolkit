@@ -11,7 +11,7 @@
 import {Binding, Signal, TemplateRef} from '@angular/core';
 import {MaybeSignal} from './common';
 import {ComponentType} from '@angular/cdk/portal';
-import {SciDataSource} from './data-source.model';
+import {SciDataSource} from './table-data-source';
 
 export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
 
@@ -21,10 +21,10 @@ export interface SciTable<T> {
   trackBy: (item: T, index: number) => unknown;
   name?: string;
   itemSize: number;
-  filterable: boolean;
-  selectable: boolean;
-  resizable: boolean;
-  sortable: boolean;
+  filterable: Signal<boolean>;
+  selectable: Signal<boolean>;
+  resizable: Signal<boolean>;
+  sortable: Signal<boolean>;
   rowPart?: (item: T) => string;
 }
 
@@ -33,9 +33,8 @@ export interface SciCellContext<T, VALUE> {
   value: VALUE;
 }
 
-export interface ComponentWithInputs {
+export interface ComponentWithBindings {
   component: ComponentType<unknown>;
-  inputs?: Record<string, unknown>;
   bindings?: Binding[];
 }
 
@@ -55,7 +54,7 @@ export interface SciColumn<T> {
   width: Signal<string>;
   minWidth: Signal<string>;
   maxWidth: Signal<string | null>;
-  part: (row: T) => string;
+  part?: (item: T) => string;
 }
 
 export interface SciStringColumn<T> extends SciColumn<T> {
@@ -83,7 +82,7 @@ export interface SciNumberColumn<T> extends SciColumn<T> {
 
 export interface SciComponentColumn<T> extends SciColumn<T> {
   type: 'component';
-  component: (item: T) => ComponentWithInputs;
+  component: (item: T) => ComponentWithBindings;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
 }
@@ -98,7 +97,7 @@ export interface SciTemplateColumn<T> extends SciColumn<T> {
 export type SciColumns<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
 
 /**
- * Internally used Row Model
+ * Mapped row, used as display state.
  */
 export interface SciRow<T> {
   item: T;
@@ -106,11 +105,12 @@ export interface SciRow<T> {
 }
 
 /**
- * Internally used Cell Model
+ * Mapped cell, used as display state.
  */
 export interface SciCell {
   type: ColumnType;
   columnName: string;
+  part: string;
 }
 
 export interface SciStringCell extends SciCell {
@@ -130,7 +130,7 @@ export interface SciBooleanCell extends SciCell {
 
 export interface SciComponentCell extends SciCell {
   type: 'component';
-  component: ComponentWithInputs;
+  component: ComponentWithBindings;
 }
 
 export interface SciTemplateCell extends SciCell {

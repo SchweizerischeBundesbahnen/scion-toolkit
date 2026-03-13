@@ -12,10 +12,10 @@
       height: 600px;
 
       &::part(red-row) {
-        background-color: rgba(255, 0, 0, 0.2);
+        color: indianred;
       }
 
-      &::part(long-cell) {
+      &::part(green-cell) {
         background-color: rgba(0, 255, 0, 0.2);
       }
     }
