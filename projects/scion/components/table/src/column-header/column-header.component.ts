@@ -2,8 +2,8 @@ import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input,
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciColumns} from '@scion/components/table';
 import {TableStateService} from '../table-state.service';
-import {SciSortCriterion} from '../table-data-source';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
+import {SciTable} from '../table.model';
 
 @Component({
   selector: 'sci-column-header',
@@ -18,7 +18,7 @@ import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 export class ColumnHeaderComponent<T> {
 
   public readonly column = input.required<SciColumns<T>>();
-  public readonly sorts = input.required<SciSortCriterion[]>();
+  public readonly table = input.required<SciTable<T>>();
 
   public readonly autoResize = output();
   public readonly sort = output<MouseEvent>();
@@ -29,7 +29,7 @@ export class ColumnHeaderComponent<T> {
 
   private readonly _resizeContext = signal<{width: number; columnName: string} | undefined>(undefined);
 
-  protected readonly columnSort = computed(() => this.sorts().find(s => s.columnName === this.column().name)?.direction);
+  protected readonly columnSort = computed(() => this.table().sortCriteria().find(s => s.columnName === this.column().name)?.direction);
 
   public getWidth(): number {
     return (this._element.nativeElement as HTMLElement).clientWidth;

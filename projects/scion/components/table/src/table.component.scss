@@ -38,8 +38,7 @@
 
     > sci-table-row {
       height: var(--ɵsci-table-item-size);
-      border: 1px solid transparent;
-      border-bottom-color: var(--sci-color-border);
+      border-bottom: var(--sci-table-border-size) solid var(--sci-color-border);
     }
   }
 }

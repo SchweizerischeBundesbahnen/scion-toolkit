@@ -8,7 +8,8 @@
   }
 
   &.active {
-    border-color: var(--sci-color-border-strong);
+    outline: 1px solid var(--sci-color-border-strong);
+    border-bottom-color: transparent;
   }
 
   &.selected {

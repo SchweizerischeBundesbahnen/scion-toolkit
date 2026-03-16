@@ -1,14 +1,16 @@
 @let table = sciTable();
 <cdk-virtual-scroll-viewport [itemSize]="table.itemSize" [minBufferPx]="1000" [maxBufferPx]="1500" sciScrollable #cdkViewport>
-  <header>
-    @for (column of columns(); track $index) {
-      <sci-column-header [column]="column"
-                         [sorts]="sort()"
-                         (autoResize)="onResizeAuto(column)"
-                         (sort)="onSort(column, $event)"
-                         (filter)="onFilter(column, $event)" />
-    }
-  </header>
+  @if (table.headerVisible()) {
+    <header>
+      @for (column of columns(); track $index) {
+        <sci-column-header [column]="column"
+                           [table]="table"
+                           (autoResize)="onResizeAuto(column)"
+                           (sort)="onSort(column, $event)"
+                           (filter)="onFilter(column, $event)" />
+      }
+    </header>
+  }
   <ng-container *cdkVirtualFor="let row of rows(); trackBy: trackBy" >
     <sci-table-row [row]="row"
                    [table]="table"

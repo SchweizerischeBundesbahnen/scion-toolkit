@@ -1,9 +1,22 @@
-<div class="header">
+<div class="header" [class.filterable]="table().filterable()">
   <button class="column-sort"
-          [attr.data-sortable]="column().sortable()"
-          [attr.data-sort]="columnSort()"
+          [tabIndex]="column().sortable() ? 0 : -1"
+          [class.sortable]="column().sortable()"
           (click)="onSort($event)">
-    {{ column().header() }}
+    <span class="text">{{ column().header() }}</span>
+    @if (column().sortable()) {
+      @switch (columnSort()) {
+        @case ('asc') {
+          <span class="material-symbols-outlined">arrow_upward</span>
+        }
+        @case ('desc') {
+          <span class="material-symbols-outlined">arrow_downward</span>
+        }
+        @default {
+          <span class="material-symbols-outlined sort">swap_vert</span>
+        }
+      }
+    }
   </button>
   @if (column().filterable()) {
     <sci-column-filter [column]="column()" (filter)="onFilter($event)" />

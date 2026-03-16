@@ -22,25 +22,11 @@ export interface SciTableFactory<T> {
    */
   trackBy(trackByFn: (item: T, index: number) => unknown): this;
 
-  /**
-   * Allow rows to be filterable. Defaults to true.
-   */
-  sortable(sortable: boolean): this;
-
-  /**
-   * Allow rows to be filterable. Defaults to true.
-   */
-  filterable(filterable: boolean): this;
-
-  /**
-   * Allow rows to be resizable. Defaults to true.
-   */
-  resizable(resizable: boolean): this;
-
-  /**
-   * Allow rows to be selectable. Defaults to true.
-   */
-  selectable(selectable: boolean): this;
+  disableSort(): this;
+  disableFilter(): this;
+  disableResize(): this;
+  disableSelection(): this;
+  hideHeader(): this;
 
   /**
    * Size of row items in px. Defaults to 28px.

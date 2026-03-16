@@ -113,9 +113,6 @@ export default class SciTablePageComponent {
         header: 'District',
       })
       .name('stations')
-      // .resizable(false)
-      .sortable(false)
-      .filterable(false)
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   });
 

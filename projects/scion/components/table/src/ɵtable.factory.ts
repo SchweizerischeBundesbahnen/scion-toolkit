@@ -53,6 +53,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   public isFilterable = signal(true);
   public isResizable = signal(true);
   public isSelectable = signal(true);
+  public isHeaderVisible = signal(true);
   public rowPartFn?: (item: T) => string;
   public trackByFn = (_: T, index: number): unknown => index;
 
@@ -111,23 +112,23 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this.addColumnWithType(config, 'template');
   }
 
-  public filterable(filterable: boolean): this {
-    untracked(() => this.isFilterable.set(filterable));
+  public disableFilter(): this {
+    untracked(() => this.isFilterable.set(false));
     return this;
   }
 
-  public resizable(resizable: boolean): this {
-    untracked(() => this.isResizable.set(resizable));
+  public disableResize(): this {
+    untracked(() => this.isResizable.set(false));
     return this;
   }
 
-  public selectable(selectable: boolean): this {
-    untracked(() => this.isSelectable.set(selectable));
+  public disableSelection(): this {
+    untracked(() => this.isSelectable.set(false));
     return this;
   }
 
-  public sortable(sortable: boolean): this {
-    untracked(() => this.isSortable.set(sortable));
+  public disableSort(): this {
+    untracked(() => this.isSortable.set(false));
     return this;
   }
 
@@ -143,6 +144,11 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   public trackBy(trackByFn: (row: T, index: number) => unknown): this {
     this.trackByFn = trackByFn;
+    return this;
+  }
+
+  public hideHeader(): this {
+    untracked(() => this.isHeaderVisible.set(false));
     return this;
   }
 

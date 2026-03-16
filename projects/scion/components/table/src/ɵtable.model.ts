@@ -27,6 +27,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly filterable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectable: Signal<boolean>;
+  public readonly headerVisible: Signal<boolean>;
 
   public readonly itemSize: number;
   public readonly trackBy: (item: T, index: number) => unknown;
@@ -46,6 +47,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.resizable = factory.isResizable;
     this.selectable = factory.isSelectable;
     this.itemSize = factory.rowItemSize;
+    this.headerVisible = factory.isHeaderVisible;
     this.trackBy = factory.trackByFn;
     this.rowPart = factory.rowPartFn;
 
