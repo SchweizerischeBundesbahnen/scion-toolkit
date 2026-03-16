@@ -11,21 +11,24 @@
 import {Binding, Signal, TemplateRef} from '@angular/core';
 import {MaybeSignal} from './common';
 import {ComponentType} from '@angular/cdk/portal';
-import {SciDataSource} from './table-data-source';
+import {SciFilterCriterion, SciSortCriterion} from './table-data-source';
 
 export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
 
 export interface SciTable<T> {
-  dataSource: SciDataSource<T> | SciDataSource<SciRow<T>>;
   columns: SciColumns<T>[];
-  trackBy: (item: T, index: number) => unknown;
   name?: string;
-  itemSize: number;
   filterable: Signal<boolean>;
   selectable: Signal<boolean>;
   resizable: Signal<boolean>;
   sortable: Signal<boolean>;
-  rowPart?: (item: T) => string;
+  sortCriteria: Signal<SciSortCriterion[]>;
+  filterCriteria: Signal<SciFilterCriterion[]>;
+
+  sort(columnName: string, multi: boolean): void;
+  resetSort(): void;
+  filter(columnName: string, text: string | number | boolean | null): void;
+  resetFilter(): void;
 }
 
 export interface SciCellContext<T, VALUE> {

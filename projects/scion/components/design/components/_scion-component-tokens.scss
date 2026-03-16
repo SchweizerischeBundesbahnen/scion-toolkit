@@ -41,6 +41,7 @@ $sci-sashbox: (
 
 $sci-table: (
   --sci-table-cell-padding: .5em,
+  --sci-table-header-row-size: 30px,
 );
 
 $tokens: sci-theming.map-merge(

@@ -27,7 +27,7 @@ export class ColumnHeaderComponent<T> {
   private readonly _tableStateService = inject(TableStateService);
   private readonly _element = inject(ElementRef);
 
-  private readonly _resizeContext = signal<{width: number; columnId: string} | undefined>(undefined);
+  private readonly _resizeContext = signal<{width: number; columnName: string} | undefined>(undefined);
 
   protected readonly columnSort = computed(() => this.sorts().find(s => s.columnName === this.column().name)?.direction);
 
@@ -36,7 +36,7 @@ export class ColumnHeaderComponent<T> {
   }
 
   protected onResizeStart(): void {
-    this._resizeContext.set({width: this.getWidth(), columnId: this.column().name});
+    this._resizeContext.set({width: this.getWidth(), columnName: this.column().name});
   }
 
   protected onResize(event: SplitterMoveEvent): void {
@@ -47,8 +47,8 @@ export class ColumnHeaderComponent<T> {
 
     const column = this.column();
     const width = Math.max(20, context.width + event.distance);
-    this._resizeContext.set({columnId: column.name, width: width});
-    this._tableStateService.setResizedColumn(column.name, `${width}px`);
+    this._resizeContext.set({columnName: column.name, width});
+    this._tableStateService.setResizedColumn(column.name, width);
   }
 
   protected onResizeEnd(): void {
@@ -59,7 +59,11 @@ export class ColumnHeaderComponent<T> {
     this.autoResize.emit();
   }
 
-  protected onSort($event: PointerEvent): void {
-    this.sort.emit($event);
+  protected onSort(event: PointerEvent): void {
+    this.sort.emit(event);
+  }
+
+  protected onFilter(text: string | number | null | boolean): void {
+    this.filter.emit(text);
   }
 }

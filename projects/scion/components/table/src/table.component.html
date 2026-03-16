@@ -18,6 +18,6 @@
                    (selectItem)="onSelectRow(row.item, $event)" />
   </ng-container>
 </cdk-virtual-scroll-viewport>
-<sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
+<sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement" [class]="table.filterable() ? 'vscroll-filter' : 'vscroll-no-filter'" />
 <sci-scrollbar [direction]="'hscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
 

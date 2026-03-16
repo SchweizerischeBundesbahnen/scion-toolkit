@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Signal} from '@angular/core';
-import {SciDataSource, SciTableRequest, SciTableResponse} from './table-data-source';
+import {signal, Signal} from '@angular/core';
+import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciArrayDataSource} from './ɵarray-data-source';
@@ -22,13 +22,21 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly columns: SciColumns<T>[];
   public readonly dataSource: SciDataSource<T> | SciDataSource<SciRow<T>>;
   public readonly name?: string;
+
   public readonly sortable: Signal<boolean>;
   public readonly filterable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectable: Signal<boolean>;
+
   public readonly itemSize: number;
   public readonly trackBy: (item: T, index: number) => unknown;
   public readonly rowPart?: (item: T) => string;
+
+  private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
+  private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
+
+  public readonly sortCriteria = this._sortCriteria.asReadonly();
+  public readonly filterCriteria = this._filterCriteria.asReadonly();
 
   constructor(factory: ɵSciTableFactory<T>, dataOrSource: Signal<T[]> | SciDataSource<T>) {
     this.columns = factory.columns;
@@ -50,6 +58,54 @@ export class ɵSciTable<T> implements SciTable<T> {
     return coerceObservable(this.dataSource.getItems(request)).pipe(
       map(res => ({totalCount: res.totalCount, items: this.mapItemsToRow(res.items as T[])})),
     );
+  }
+
+  public sort(columnName: string, multi: boolean): void {
+    if (!this.sortable()) {
+      return;
+    }
+
+    this._sortCriteria.update(sort => {
+      const existing = sort.find(s => s.columnName === columnName);
+      let nextDirection = 'asc' as 'asc' | 'desc' | undefined;
+      if (existing) {
+        nextDirection = existing.direction === 'asc' ? 'desc' : undefined;
+      }
+
+      const other = sort.filter(s => s.columnName !== columnName);
+      if (!nextDirection) {
+        return multi ? other : [];
+      }
+
+      const newSort = {columnName, direction: nextDirection};
+      return multi ? [...other, newSort] : [newSort];
+    });
+  }
+
+  public resetSort(): void {
+    this._sortCriteria.set([]);
+  }
+
+  public filter(columnName: string, text: string | number | boolean | null): void {
+    if (!this.filterable()) {
+      return;
+    }
+
+    this._filterCriteria.update(filter => {
+      const other = filter.filter(f => f.columnName !== columnName);
+      if (text === null) {
+        return other;
+      }
+
+      return [
+        ...other,
+        {columnName, text},
+      ];
+    });
+  }
+
+  public resetFilter(): void {
+    this._filterCriteria.set([]);
   }
 
   private mapItemsToRow(items: T[]): SciRow<T>[] {

@@ -92,7 +92,10 @@ export default class SciTablePageComponent {
         part: station => station.designationofficial.length < 15 ? 'green-cell' : '',
         template: () => computed(() => ({template: this.cellTemplate(), context: {custom: this.additionalData()}})),
       })
-      .addNumberColumn('Number', station => station.designationofficial.length)
+      .addNumberColumn({
+        header: 'Number',
+        value: station => station.designationofficial.length,
+      })
       .addBooleanColumn('Boolean', station => station.designationofficial.length > 15)
       // .addNumberColumn({
       //   label: station => this.getData(station),
@@ -109,9 +112,10 @@ export default class SciTablePageComponent {
         width: '1fr',
         header: 'District',
       })
+      .name('stations')
       // .resizable(false)
-      // .sortable(false)
-      // .filterable(false)
+      .sortable(false)
+      .filterable(false)
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   });
 

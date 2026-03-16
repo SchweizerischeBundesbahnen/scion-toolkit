@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, Signal, signal, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, output, signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciColumns, SciRow, SciTable} from './table.model';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
@@ -32,7 +32,6 @@ import {ɵSciTable} from './ɵtable.model';
     '[style.--ɵsci-table-width]': 'tableWidth()',
     '[style.--ɵsci-table-scroll-offset]': 'scrollOffset()',
     '[style.--ɵsci-table-item-size]': 'itemSize()',
-    '[style.--ɵsci-table-header-size]': 'headerSize()',
   },
   imports: [
     SciScrollableDirective,
@@ -58,13 +57,18 @@ export class SciTableComponent<T> {
   private readonly _headers = viewChildren<ColumnHeaderComponent<T>>(ColumnHeaderComponent);
   private readonly _viewport = viewChild.required(CdkVirtualScrollViewport);
 
+  private readonly _range$ = toObservable(this._viewport).pipe(
+    switchMap(viewport => viewport.renderedRangeStream),
+    startWith({start: 0, end: 0}),
+  );
+
   private readonly _tableStateService = inject(TableStateService);
 
   protected readonly activeItem = signal<T | undefined>(undefined);
   protected readonly selectedItems = signal<T[]>([]);
   protected readonly sort = signal<SciSortCriterion[]>([]);
   protected readonly filter = signal<SciFilterCriterion[]>([]);
-  protected readonly offset: Signal<number | undefined>;
+  protected readonly offset = toSignal(this._range$.pipe(map(({start}) => start)));
 
   private readonly _totalCount = signal<number>(0, {equal: (a, b) => a === b});
 
@@ -76,26 +80,27 @@ export class SciTableComponent<T> {
     computation: ({count}) => new Array<SciRow<T>>(count).fill({} as SciRow<T>),
   });
 
-  protected readonly headerSize = computed(() => this.table().filterable() ? '60px' : '30px');
-  protected readonly itemSize = computed(() => `${this.table().itemSize}px`);
-  protected readonly scrollOffset = computed(() => `${(this.offset() ?? 0) * this.table().itemSize * -1}px`);
+  protected readonly itemSize = computed(() => `${this.sciTable().itemSize}px`);
+  protected readonly scrollOffset = computed(() => `${(this.offset() ?? 0) * this.sciTable().itemSize * -1}px`); // scroll offset to position the header correctly
   protected readonly tableWidth = computed(() => {
     const columns = this.columns();
     const overrides = this._tableStateService.columnWidths();
+    const headers = this._headers();
 
-    const widths = columns
-      .map(c => overrides.get(c.name) ?? c.minWidth())
-      .join(' + ');
+    return untracked(() => {
+      const width = columns
+        .reduce((sum, c) => sum + (overrides.get(c.name) ?? headers.find(h => h.column().name === c.name)?.getWidth() ?? 0), 0);
 
-    // sum all column widths together, should always be at least 100% of the container width
-    return `max(100%, calc(${widths}))`;
+      // sum all column widths together, should always be at least 100% of the container width
+      return `max(100%, ${width}px)`;
+    });
   });
   protected readonly columnWidths = computed(() => {
     const columns = this.columns();
     const overrides = this._tableStateService.columnWidths();
 
     return columns
-      .map(c => clamp(c.minWidth(), overrides.get(c.name) ?? c.width(), c.maxWidth()))
+      .map(c => clamp(c.minWidth(), overrides.has(c.name) ? `${overrides.get(c.name)}px` : c.width(), c.maxWidth()))
       .join(' ');
   });
 
@@ -113,42 +118,22 @@ export class SciTableComponent<T> {
         column: header.column(),
         width: header.getWidth(),
       }));
-      this._tableStateService.initializeColumnSizes(headers);
+      this._tableStateService.init(this.table().name, headers);
     });
 
-    const range$ = toObservable(this._viewport).pipe(
-      switchMap(viewport => viewport.renderedRangeStream),
-      startWith({start: 0, end: 0}),
-    );
-
-    this.offset = toSignal(range$.pipe(
-      map(({start}) => start),
-    ));
-
-    range$.pipe(
+    this._range$.pipe(
       combineLatestWith(
         toObservable(this.sciTable),
-        toObservable(this.sort),
-        toObservable(this.filter),
+        toObservable(computed(() => this.sciTable().sortCriteria())),
+        toObservable(computed(() => this.sciTable().filterCriteria())),
       ),
-      switchMap(([{start, end}, table, sortCriteria, filterCriteria]) => {
-        // If all indices are already cached, don't call the backend
-        // Never use cache if end === 0 (used for initial call and when no items are found)
-        // if (end !== 0 && this.rows().every((row, i) => i < start || i >= end || !!row.item)) {
-        //   console.log('CACHED');
-        //   return EMPTY;
-        // }
-
-        const response = table.getRows({
-          start,
-          end,
-          limit: end - start,
-          sortCriteria,
-          filterCriteria,
-        });
-
-        return response.pipe(map(r => ({response: r, start})));
-      }),
+      switchMap(([{start, end}, table, sortCriteria, filterCriteria]) => table.getRows({
+        start,
+        end,
+        limit: end - start,
+        sortCriteria,
+        filterCriteria,
+      }).pipe(map(r => ({response: r, start})))),
     ).subscribe(({response, start}) => {
       this._totalCount.set(response.totalCount);
       this.rows.update(items => items.toSpliced(start, response.items.length, ...response.items));
@@ -159,41 +144,12 @@ export class SciTableComponent<T> {
     return this.sciTable().trackBy(row.item, i);
   };
 
-  protected onSort(col: SciColumns<T>, event: MouseEvent): void {
-    if (!col.sortable()) {
-      return;
-    }
-
-    this.sort.update(sort => {
-      const isMulti = event.ctrlKey || event.metaKey;
-      const existing = sort.find(s => s.columnName === col.name);
-      let nextDirection = 'asc' as 'asc' | 'desc' | undefined;
-      if (existing) {
-        nextDirection = existing.direction === 'asc' ? 'desc' : undefined;
-      }
-
-      const other = sort.filter(s => s.columnName !== col.name);
-      if (!nextDirection) {
-        return isMulti ? other : [];
-      }
-
-      const newSort = {columnName: col.name, direction: nextDirection};
-      return isMulti ? [...other, newSort] : [newSort];
-    });
+  protected onSort(column: SciColumns<T>, event: MouseEvent): void {
+    this.sciTable().sort(column.name, event.ctrlKey || event.metaKey);
   }
 
   protected onFilter(column: SciColumns<T>, text: string | boolean | number | null): void {
-    this.filter.update(filter => {
-      const other = filter.filter(f => f.columnName !== column.name);
-      if (text === null) {
-        return other;
-      }
-
-      return [
-        ...other,
-        {columnName: column.name, text},
-      ];
-    });
+    this.sciTable().filter(column.name, text);
   }
 
   protected onSelectRow(row: T, {ctrlKey}: {ctrlKey: boolean}): void {
@@ -229,6 +185,6 @@ export class SciTableComponent<T> {
   protected onResizeAuto(column: SciColumns<T>): void {
     const cellWidths = this._rows().map(row => row.getCellWidth(column.name));
     const maxWidth = Math.max(...cellWidths, 0) + 20; // TODO [eg]: configurable buffer?
-    this._tableStateService.setResizedColumn(column.name, `${maxWidth}px`);
+    this._tableStateService.setResizedColumn(column.name, maxWidth);
   }
 }

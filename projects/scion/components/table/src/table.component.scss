@@ -12,8 +12,12 @@
   > sci-scrollbar {
     @include sci-scrollbar.scrollbar-position();
 
-    &.vertical {
-      top: var(--ɵsci-table-header-size); // offset header height
+    &.vscroll-no-filter {
+      top: var(--sci-table-header-row-size); // offset header height
+    }
+
+    &.vscroll-filter {
+      top: calc(var(--sci-table-header-row-size) * 2); // double row size for filters.
     }
   }
 
@@ -28,7 +32,6 @@
       grid-template-columns: subgrid;
       grid-column: 1 / -1;
       background-color: var(--sci-color-background-secondary);
-      border-bottom: 1px solid var(--sci-color-border);
       position: sticky;
       top: var(--ɵsci-table-scroll-offset);
     }

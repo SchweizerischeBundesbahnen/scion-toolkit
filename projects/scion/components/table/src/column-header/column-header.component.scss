@@ -1,11 +1,11 @@
 :host {
   display: grid;
   grid-template-columns: 1fr auto;
-  height: var(--ɵsci-table-header-size);
 
   > div.header {
     display: grid;
-    grid-auto-rows: 1fr;
+    grid-auto-rows: var(--sci-table-header-row-size);
+    border-bottom: 1px solid var(--sci-color-border);
 
     > button.column-sort {
       all: unset;
@@ -15,14 +15,9 @@
       overflow: hidden;
       text-overflow: ellipsis;
       border: 1px solid transparent;
+      border-bottom-color: var(--sci-color-border);
       font-weight: bold;
-      display: flex;
-      align-items: start;
       gap: .5em;
-
-      &[data-filterable="true"] {
-        border-bottom-color: var(--sci-color-border);
-      }
 
       &[data-sortable="true"] {
         cursor: pointer;

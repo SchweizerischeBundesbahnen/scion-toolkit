@@ -9,8 +9,9 @@
  */
 
 import {ChangeDetectionStrategy, Component, computed, input, output, viewChildren} from '@angular/core';
-import {SciRow, SciTable} from '../table.model';
+import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
+import {ɵSciTable} from '../ɵtable.model';
 
 @Component({
   selector: 'sci-table-row',
@@ -31,7 +32,7 @@ import {TableCellComponent} from '../table-cell/table-cell.component';
 export class TableRowComponent<T> {
 
   public readonly row = input.required<SciRow<T>>();
-  public readonly table = input.required<SciTable<T>>();
+  public readonly table = input.required<ɵSciTable<T>>();
 
   // TODO [eg]: Move row selection to service
   public readonly selectedItems = input.required<T[]>();

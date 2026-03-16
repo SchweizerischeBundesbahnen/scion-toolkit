@@ -1,13 +1,12 @@
 <div class="header">
   <button class="column-sort"
-          [attr.data-filterable]="column().filterable()"
           [attr.data-sortable]="column().sortable()"
           [attr.data-sort]="columnSort()"
           (click)="onSort($event)">
     {{ column().header() }}
   </button>
   @if (column().filterable()) {
-    <sci-column-filter [column]="column()" (filter)="filter.emit($event)" />
+    <sci-column-filter [column]="column()" (filter)="onFilter($event)" />
   }
 </div>
 @if (column().resizable()) {
