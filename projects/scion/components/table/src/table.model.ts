@@ -49,6 +49,7 @@ export interface TemplateWithContext {
 export interface SciColumn<T> {
   type: ColumnType;
   name: string;
+  named: boolean;
   header: Signal<string | undefined>;
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;

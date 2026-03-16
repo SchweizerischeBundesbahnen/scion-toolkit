@@ -6,6 +6,7 @@
         <sci-column-header [column]="column"
                            [table]="table"
                            (autoResize)="onResizeAuto(column)"
+                           (widthChange)="onResize(column, $event)"
                            (sort)="onSort(column, $event)"
                            (filter)="onFilter(column, $event)" />
       }

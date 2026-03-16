@@ -167,6 +167,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       ...config,
       type,
       name: config.name ?? UUID.randomUUID(),
+      named: !!config.name,
       filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
       sort: typeof config.sort === 'function' ? config.sort : defaultSort,
       header: coerceSignal(config.header, {defaultValue: ''}),
@@ -174,7 +175,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       filterable: computed(() => this.isFilterable() && filterable),
       resizable: computed(() => this.isResizable() && (config.resizable ?? true)),
       index: signal(this.columns.length),
-      width: coerceSignal(config.width, {defaultValue: 'auto'}),
+      width: coerceSignal(config.width, {defaultValue: 'min-content'}),
       minWidth: coerceSignal(config.minWidth, {defaultValue: '100px'}),
       maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),
     } as SciColumns<T>);

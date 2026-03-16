@@ -1,9 +1,8 @@
 import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciColumns} from '@scion/components/table';
-import {TableStateService} from '../table-state.service';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
-import {SciTable} from '../table.model';
+import {ɵSciTable} from '../ɵtable.model';
 
 @Component({
   selector: 'sci-column-header',
@@ -18,13 +17,13 @@ import {SciTable} from '../table.model';
 export class ColumnHeaderComponent<T> {
 
   public readonly column = input.required<SciColumns<T>>();
-  public readonly table = input.required<SciTable<T>>();
+  public readonly table = input.required<ɵSciTable<T>>();
 
   public readonly autoResize = output();
   public readonly sort = output<MouseEvent>();
   public readonly filter = output<string | boolean | number | null>();
+  public readonly widthChange = output<number>();
 
-  private readonly _tableStateService = inject(TableStateService);
   private readonly _element = inject(ElementRef);
 
   private readonly _resizeContext = signal<{width: number; columnName: string} | undefined>(undefined);
@@ -48,7 +47,7 @@ export class ColumnHeaderComponent<T> {
     const column = this.column();
     const width = Math.max(20, context.width + event.distance);
     this._resizeContext.set({columnName: column.name, width});
-    this._tableStateService.setResizedColumn(column.name, width);
+    this.widthChange.emit(width);
   }
 
   protected onResizeEnd(): void {

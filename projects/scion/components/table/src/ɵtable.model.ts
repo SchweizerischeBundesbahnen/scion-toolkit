@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {signal, Signal} from '@angular/core';
+import {signal, Signal, WritableSignal} from '@angular/core';
 import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
@@ -16,6 +16,21 @@ import {ɵSciArrayDataSource} from './ɵarray-data-source';
 import {Observable} from 'rxjs';
 import {coerceObservable, coerceSignal} from './common';
 import {map} from 'rxjs/operators';
+
+function getColumnWidths(name?: string): Map<string, number> {
+  const saved = localStorage.getItem(`sci-table-${name}`);
+  if (!saved) {
+    return new Map();
+  }
+
+  try {
+    const parsed = JSON.parse(saved) as {columnName: string; width: number}[];
+    return parsed.reduce((columns, column) => columns.set(column.columnName, column.width), new Map<string, number>());
+  }
+  catch {
+    return new Map();
+  }
+}
 
 export class ɵSciTable<T> implements SciTable<T> {
 
@@ -35,9 +50,11 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
+  private readonly _columnWidths: WritableSignal<Map<string, number>>;
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
+  public readonly columnWidths: Signal<Map<string, number>>;
 
   constructor(factory: ɵSciTableFactory<T>, dataOrSource: Signal<T[]> | SciDataSource<T>) {
     this.columns = factory.columns;
@@ -54,6 +71,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.dataSource = typeof dataOrSource === 'function' ?
       new ɵSciArrayDataSource(dataOrSource, factory.columns) :
       dataOrSource;
+
+    this._columnWidths = signal(getColumnWidths(this.name));
+    this.columnWidths = this._columnWidths.asReadonly();
   }
 
   public getRows(request: SciTableRequest): Observable<SciTableResponse<SciRow<T>>> {
@@ -108,6 +128,20 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public resetFilter(): void {
     this._filterCriteria.set([]);
+  }
+
+  public setResizedColumn(columnName: string, width: number): void {
+    this._columnWidths.update(columns => new Map(columns).set(columnName, width));
+
+    const columnWidths = [...this.columnWidths().entries()]
+      .filter(([columnName]) => this.columns.find(c => c.name === columnName)?.named)
+      .map(([columnName, width]) => ({width, columnName}));
+
+    if (!this.name || columnWidths.length === 0) {
+      return;
+    }
+
+    localStorage.setItem(`sci-table-${this.name}`, JSON.stringify(columnWidths));
   }
 
   private mapItemsToRow(items: T[]): SciRow<T>[] {
