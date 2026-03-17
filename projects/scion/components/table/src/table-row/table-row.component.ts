@@ -21,6 +21,7 @@ import {ɵSciTable} from '../ɵtable.model';
   host: {
     '[class.active]': 'isActive()',
     '[class.selected]': 'isSelected()',
+    '[class.loading]': 'loading()',
     '(click)': 'onRowClick($event)',
     '(keydown.enter)': 'onRowEnter()',
     '[part]': 'part()',
@@ -44,17 +45,24 @@ export class TableRowComponent<T> {
 
   protected readonly isActive = computed(() => this.row().item === this.activeItem());
   protected readonly isSelected = computed(() => this.selectedItems().includes(this.row().item));
-  protected readonly part = computed(() => this.table().rowPart?.(this.row().item));
+  protected readonly loading = computed(() => !this.row().cells);
+  protected readonly part = computed(() => this.row().item ? this.table().rowPart?.(this.row().item) : undefined);
 
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;
   }
 
   protected onRowEnter(): void {
+    if (this.loading()) {
+      return;
+    }
     this.activateItem.emit();
   }
 
   protected onRowClick(event: PointerEvent): void {
+    if (this.loading()) {
+      return;
+    }
     this.selectItem.emit({ctrlKey: event.ctrlKey || event.metaKey});
   }
 }

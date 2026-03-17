@@ -1,4 +1,10 @@
-@let _row = row();
-@for (cell of _row?.cells; track $index) {
-  <sci-table-cell [cell]="cell" [item]="_row!.item" #cell />
+@if (loading()) {
+  @for (_ of table().columns; track $index) {
+    <div class="skeleton"></div>
+  }
+} @else {
+  @let _row = row();
+  @for (cell of _row.cells; track $index) {
+    <sci-table-cell [cell]="cell" [item]="_row.item" #cell />
+  }
 }

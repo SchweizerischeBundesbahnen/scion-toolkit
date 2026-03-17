@@ -15,4 +15,14 @@
   &.selected {
     background-color: var(--sci-color-background-secondary);
   }
+
+  &.loading {
+    pointer-events: none;
+
+    .skeleton {
+      border-radius: var(--sci-corner);
+      background-color: var(--sci-color-skeleton);
+      margin: .5em;
+    }
+  }
 }

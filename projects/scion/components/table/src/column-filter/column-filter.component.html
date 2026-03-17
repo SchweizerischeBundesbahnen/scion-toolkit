@@ -19,7 +19,7 @@
 </span>
 
 @if (query.value && column().type !== 'boolean') {
-  <button class="clear material-symbols-outlined" (click)="reset()">
-    clear
+  <button class="clear" (click)="reset()">
+    <span class="material-symbols-outlined">clear</span>
   </button>
 }

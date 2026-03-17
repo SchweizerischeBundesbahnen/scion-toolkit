@@ -70,7 +70,7 @@ export class SciTableComponent<T> {
   protected readonly columns = computed(() => this.sciTable().columns);
 
   protected readonly rows = linkedSignal({
-    source: () => ({count: this._totalCount()}),
+    source: () => ({count: this._totalCount(), sort: this.table().sortCriteria(), filter: this.table().filterCriteria()}), // reset rows as soon as count, filter or sort change
     computation: ({count}) => new Array<SciRow<T>>(count).fill({} as SciRow<T>),
   });
 

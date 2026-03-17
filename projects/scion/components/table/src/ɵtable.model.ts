@@ -18,10 +18,14 @@ import {coerceObservable, coerceSignal} from './common';
 import {map} from 'rxjs/operators';
 import {SciTableStorage} from './table-storage';
 
+interface StoredTable {
+  columnWidths: {columnName: string; width: number}[];
+}
+
 export class ɵSciTable<T> implements SciTable<T> {
 
   public readonly columns: SciColumns<T>[];
-  public readonly dataSource: SciDataSource<T> | SciDataSource<SciRow<T>>;
+  public readonly dataSource: SciDataSource<T>;
   public readonly tableStorage: SciTableStorage;
   public readonly name?: string;
 
@@ -69,7 +73,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public getRows(request: SciTableRequest): Observable<SciTableResponse<SciRow<T>>> {
     return coerceObservable(this.dataSource.getItems(request)).pipe(
-      map(res => ({totalCount: res.totalCount, items: this.mapItemsToRow(res.items as T[])})),
+      map(res => ({totalCount: res.totalCount, items: this.mapItemsToRow(res.items)})),
     );
   }
 
@@ -79,18 +83,15 @@ export class ɵSciTable<T> implements SciTable<T> {
     }
 
     this._sortCriteria.update(sort => {
-      const existing = sort.find(s => s.columnName === columnName);
-      let nextDirection = 'asc' as 'asc' | 'desc' | undefined;
-      if (existing) {
-        nextDirection = existing.direction === 'asc' ? 'desc' : undefined;
-      }
+      const existing = sort.find(sc => sc.columnName === columnName);
+      const other = sort.filter(sc => sc !== existing);
 
-      const other = sort.filter(s => s.columnName !== columnName);
-      if (!nextDirection) {
+      const direction = existing ? (existing.direction === 'asc' ? 'desc' : undefined) : 'asc';
+      if (!direction) {
         return multi ? other : [];
       }
 
-      const newSort = {columnName, direction: nextDirection};
+      const newSort = {columnName, direction} satisfies SciSortCriterion;
       return multi ? [...other, newSort] : [newSort];
     });
   }
@@ -132,7 +133,11 @@ export class ɵSciTable<T> implements SciTable<T> {
       return;
     }
 
-    void this.tableStorage.store(`sci-table-${this.name}`, JSON.stringify(columnWidths));
+    void this.tableStorage.store(this.storageKey, JSON.stringify({columnWidths} as StoredTable));
+  }
+
+  private get storageKey(): string {
+    return `sci-table-${this.name}`;
   }
 
   private mapItemsToRow(items: T[]): SciRow<T>[] {
@@ -150,16 +155,18 @@ export class ɵSciTable<T> implements SciTable<T> {
   }
 
   private async initColumnWidths(): Promise<void> {
-    const saved = await this.tableStorage.load(`sci-table-${this.name}`);
+    const saved = await this.tableStorage.load(this.storageKey);
     if (!saved) {
       return;
     }
 
     try {
-      const parsed = JSON.parse(saved) as {columnName: string; width: number}[];
-      const savedColumnWidths = parsed.reduce((columns, column) => columns.set(column.columnName, column.width), new Map<string, number>());
+      const parsed = JSON.parse(saved) as StoredTable;
+      const savedColumnWidths = parsed.columnWidths.reduce((columns, column) => columns.set(column.columnName, column.width), new Map<string, number>());
       this._columnWidths.set(savedColumnWidths);
     }
-    catch {}
+    catch (error) {
+      console.warn(`Failed to parse item from storage.`, error);
+    }
   }
 }
