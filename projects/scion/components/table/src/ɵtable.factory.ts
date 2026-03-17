@@ -13,6 +13,7 @@ import {UUID} from '@scion/toolkit/uuid';
 import {coerceSignal} from './common';
 import {SciBooleanColumnDescriptor, SciColumnDescriptors, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableFactory, SciTemplateColumnDescriptor} from './table.factory';
 import {ColumnType, SciCellContext, SciColumns} from './table.model';
+import {DefaultSciTableStorage, SciTableStorage} from './table-storage';
 
 function defaultFilter<T>(text: string | boolean | number, {value}: SciCellContext<T, string | boolean | number>): boolean {
   if (typeof value !== typeof text) {
@@ -48,6 +49,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   public readonly columns: SciColumns<T>[] = [];
   public tableName: string | undefined = undefined;
+  public tableStorage: SciTableStorage = new DefaultSciTableStorage();
   public rowItemSize = 28;
   public isSortable = signal(true);
   public isFilterable = signal(true);
@@ -149,6 +151,11 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   public hideHeader(): this {
     untracked(() => this.isHeaderVisible.set(false));
+    return this;
+  }
+
+  public setTableStorage(tableStorage: SciTableStorage): this {
+    this.tableStorage = tableStorage;
     return this;
   }
 

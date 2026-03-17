@@ -1,5 +1,6 @@
 import {MaybeSignal} from './common';
 import {ComponentWithBindings, SciCellContext, TemplateWithContext} from './table.model';
+import {SciTableStorage} from './table-storage';
 
 export interface SciTableFactory<T> {
   addStringColumn(value: (item: T) => string): this;
@@ -27,6 +28,8 @@ export interface SciTableFactory<T> {
   disableResize(): this;
   disableSelection(): this;
   hideHeader(): this;
+
+  setTableStorage(tableStorage: SciTableStorage): this;
 
   /**
    * Size of row items in px. Defaults to 28px.
