@@ -73,6 +73,7 @@ export default class SciTablePageComponent {
     filterable: true,
     sortable: true,
     resizable: true,
+    showHeader: true,
     language: 'de',
     slowDataSource: false,
   });
@@ -85,6 +86,10 @@ export default class SciTablePageComponent {
 
   protected createTable(table: SciTableFactory<Station>): SciTableFactory<Station> {
     const settings = this.settings();
+
+    if (!settings.showHeader) {
+      table.hideHeader();
+    }
 
     if (!settings.filterable) {
       table.disableFilter();
@@ -139,6 +144,7 @@ export default class SciTablePageComponent {
         header: 'District',
       })
       .name('stations')
+      .trackBy(item => item.sloid)
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   }
 

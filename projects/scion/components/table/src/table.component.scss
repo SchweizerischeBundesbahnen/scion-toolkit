@@ -36,6 +36,13 @@
       top: var(--ɵsci-table-scroll-offset);
     }
 
+    > div.empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 1em;
+      color: var(--sci-color-text-subtle);
+    }
+
     > sci-table-row {
       height: var(--ɵsci-table-item-size);
       border-bottom: var(--sci-table-border-size) solid var(--sci-color-border);

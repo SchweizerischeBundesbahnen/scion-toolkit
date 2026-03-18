@@ -32,7 +32,7 @@ import {ɵSciTable} from '../ɵtable.model';
 })
 export class TableRowComponent<T> {
 
-  public readonly row = input.required<SciRow<T>>();
+  public readonly row = input.required<Partial<SciRow<T>>>();
   public readonly table = input.required<ɵSciTable<T>>();
 
   // TODO [eg]: Move row selection to service
@@ -43,10 +43,11 @@ export class TableRowComponent<T> {
 
   protected readonly cells = viewChildren(TableCellComponent);
 
-  protected readonly isActive = computed(() => this.row().item === this.activeItem());
-  protected readonly isSelected = computed(() => this.selectedItems().includes(this.row().item));
-  protected readonly loading = computed(() => !this.row().cells);
-  protected readonly part = computed(() => this.row().item ? this.table().rowPart?.(this.row().item) : undefined);
+  protected readonly item = computed(() => this.row().item);
+  protected readonly isActive = computed(() => this.item() === this.activeItem());
+  protected readonly isSelected = computed(() => this.item() && this.selectedItems().includes(this.item()!));
+  protected readonly loading = computed(() => !this.item());
+  protected readonly part = computed(() => this.item() ? this.table().rowPart?.(this.item()!) : undefined);
 
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;

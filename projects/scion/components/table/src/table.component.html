@@ -12,6 +12,9 @@
       }
     </header>
   }
+  @if (!rows().length) {
+    <div class="empty-state">Nothing to show</div>
+  }
   <ng-container *cdkVirtualFor="let row of rows(); trackBy: trackBy" >
     <sci-table-row [row]="row"
                    [table]="table"
@@ -21,6 +24,9 @@
                    (selectItem)="onSelectRow(row.item, $event)" />
   </ng-container>
 </cdk-virtual-scroll-viewport>
-<sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement" [class]="table.filterable() ? 'vscroll-filter' : 'vscroll-no-filter'" />
+<sci-scrollbar [direction]="'vscroll'" 
+               [viewport]="cdkViewport.getElementRef().nativeElement" 
+               [class.vscroll-filter]="table.filterable() && table.headerVisible()" 
+               [class.vscroll-no-filter]="!table.filterable() && table.headerVisible()" />
 <sci-scrollbar [direction]="'hscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
 

@@ -13,7 +13,6 @@ import {SciColumns, SciRow, SciTable} from './table.model';
 import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {TableRowComponent} from './table-row/table-row.component';
-import {SciFilterCriterion, SciSortCriterion} from './table-data-source';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
 import {clamp} from './common';
@@ -57,23 +56,19 @@ export class SciTableComponent<T> {
     switchMap(viewport => viewport.renderedRangeStream),
     startWith({start: 0, end: 0}),
   );
+  private readonly _totalCount = signal<number>(0);
 
   protected readonly activeItem = signal<T | undefined>(undefined);
   protected readonly selectedItems = signal<T[]>([]);
-  protected readonly sort = signal<SciSortCriterion[]>([]);
-  protected readonly filter = signal<SciFilterCriterion[]>([]);
   protected readonly offset = toSignal(this._range$.pipe(map(({start}) => start)));
-
-  private readonly _totalCount = signal<number>(0, {equal: (a, b) => a === b});
-
-  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
-  protected readonly columns = computed(() => this.sciTable().columns);
 
   protected readonly rows = linkedSignal({
     source: () => ({count: this._totalCount(), sort: this.table().sortCriteria(), filter: this.table().filterCriteria()}), // reset rows as soon as count, filter or sort change
     computation: ({count}) => new Array<SciRow<T>>(count).fill({} as SciRow<T>),
   });
 
+  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
+  protected readonly columns = computed(() => this.sciTable().columns);
   protected readonly itemSize = computed(() => `${this.sciTable().itemSize}px`);
   protected readonly scrollOffset = computed(() => `${(this.offset() ?? 0) * this.sciTable().itemSize * -1}px`); // scroll offset to position the header correctly
   protected readonly tableWidth = computed(() => {
@@ -126,7 +121,7 @@ export class SciTableComponent<T> {
     });
   }
 
-  protected readonly trackBy = (i: number, row: SciRow<T>): unknown => this.sciTable().trackBy(row.item, i);
+  protected readonly trackBy = (i: number, row: SciRow<T>): unknown => row.item ? this.sciTable().trackBy(row.item, i) : i;
 
   protected onSort(column: SciColumns<T>, event: MouseEvent): void {
     this.sciTable().sort(column.name, event.ctrlKey || event.metaKey);

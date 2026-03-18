@@ -24,6 +24,7 @@ interface ItemWithValues<T> {
 }
 
 export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
+
   constructor(private _data: Signal<T[]>, private _columns: SciColumns<T>[]) {
   }
 
