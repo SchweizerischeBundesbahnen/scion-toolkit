@@ -22,9 +22,9 @@ import {ɵSciTable} from '../ɵtable.model';
     '[class.active]': 'isActive()',
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
+    '[part]': 'part()',
     '(click)': 'onRowClick($event)',
     '(keydown.enter)': 'onRowEnter()',
-    '[part]': 'part()',
   },
   imports: [
     TableCellComponent,

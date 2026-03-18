@@ -1,10 +1,10 @@
 @if (loading()) {
-  @for (_ of table().columns; track $index) {
+  @for (column of table().columns; track column.name) {
     <div class="skeleton"></div>
   }
 } @else {
   @let _row = row();
-  @for (cell of _row.cells; track $index) {
+  @for (cell of _row.cells; track cell.columnName) {
     <sci-table-cell [cell]="cell" [item]="_row.item" #cell />
   }
 }

@@ -23,12 +23,15 @@
       border-radius: var(--sci-corner);
       height: calc(100% - .75em);
       aspect-ratio: 1/1;
-      font-size: 16px;
       margin: .25em;
       color: var(--sci-color-accent);
 
       &:not(:empty) {
         border-color: var(--sci-color-accent);
+      }
+
+      > span {
+        font-size: 16px;
       }
     }
   }

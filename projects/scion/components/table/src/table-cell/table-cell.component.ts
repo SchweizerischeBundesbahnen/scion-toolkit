@@ -10,7 +10,7 @@
 
 import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, untracked, viewChild, ViewContainerRef} from '@angular/core';
 import {SciCells} from '../table.model';
-import {NgClass, NgTemplateOutlet} from '@angular/common';
+import {NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'sci-table-cell',
@@ -23,7 +23,6 @@ import {NgClass, NgTemplateOutlet} from '@angular/common';
   },
   imports: [
     NgTemplateOutlet,
-    NgClass,
   ],
 })
 export class TableCellComponent<T> {

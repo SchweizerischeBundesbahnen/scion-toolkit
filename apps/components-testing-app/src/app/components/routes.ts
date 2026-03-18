@@ -23,4 +23,8 @@ export default [
     path: 'sci-splitter',
     loadChildren: () => import('./sci-splitter/routes'),
   },
+  {
+    path: 'sci-table',
+    loadChildren: () => import('./sci-table/routes'),
+  },
 ] satisfies Routes;

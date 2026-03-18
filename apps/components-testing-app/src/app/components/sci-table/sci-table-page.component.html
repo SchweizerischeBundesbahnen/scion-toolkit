@@ -1,0 +1,59 @@
+<main>
+  <sci-table [table]="table()" />
+  <ng-template let-station let-custom="custom" #cell>
+    <span class="custom-cell">
+      {{station.sloid}} / {{custom}}
+    </span>
+  </ng-template>
+</main>
+
+<aside class="e2e-settings">
+  <sci-tabbar>
+    <ng-template sciTab label="Settings" [cssClass]="'e2e-settings'">
+      <form>
+        <sci-form-field label="Filterable">
+          <input [field]="settingsForm.filterable" type="checkbox" />
+        </sci-form-field>
+        <sci-form-field label="Sortable">
+          <input [field]="settingsForm.sortable" type="checkbox" />
+        </sci-form-field>
+        <sci-form-field label="Resizable">
+          <input [field]="settingsForm.resizable" type="checkbox" />
+        </sci-form-field>
+        <sci-form-field label="Show Header">
+          <input [field]="settingsForm.showHeader" type="checkbox" />
+        </sci-form-field>
+      </form>
+    </ng-template>
+
+    <ng-template sciTab label="Columns" [cssClass]="'e2e-columns'">
+      <form (submit)="onColumnSubmit()">
+        <sci-form-field label="Name">
+          <input [field]="columnForm.name" class="e2e-column-name">
+        </sci-form-field>
+        <sci-form-field label="Header">
+          <input [field]="columnForm.header" class="e2e-column-header">
+        </sci-form-field>
+        <sci-form-field label="Column Type">
+          <select [field]="columnForm.type">
+            <option value="string">String</option>
+            <option value="number">Number</option>
+            <option value="boolean">Boolean</option>
+            <option value="template">Template</option>
+            <option value="component">Component</option>
+          </select>
+        </sci-form-field>
+        <sci-form-field label="Width">
+          <input [field]="columnForm.width" class="e2e-column-width">
+        </sci-form-field>
+        <sci-form-field label="Min Width">
+          <input [field]="columnForm.minWidth" class="e2e-column-min-width">
+        </sci-form-field>
+        <sci-form-field label="Max Width">
+          <input [field]="columnForm.minWidth" class="e2e-column-max-width">
+        </sci-form-field>
+        <button type="submit">Add</button>
+      </form>
+    </ng-template>
+  </sci-tabbar>
+</aside>

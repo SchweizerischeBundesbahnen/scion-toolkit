@@ -12,7 +12,7 @@
       }
     </header>
   }
-  @if (!rows().length) {
+  @if (!rows().length) {
     <div class="empty-state">Nothing to show</div>
   }
   <ng-container *cdkVirtualFor="let row of rows(); trackBy: trackBy" >
