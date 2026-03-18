@@ -68,50 +68,29 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   public addBooleanColumn(header: string, value: (item: T) => boolean): this;
   public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
   public addBooleanColumn(valueHeaderDescriptor: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): this {
-    switch (typeof valueHeaderDescriptor) {
-      case 'string':
-        return this.addColumnWithType({header: valueHeaderDescriptor, value: value!}, 'boolean');
-      case 'function':
-        return this.addColumnWithType({value: valueHeaderDescriptor}, 'boolean');
-      default:
-        return this.addColumnWithType(valueHeaderDescriptor, 'boolean');
-    }
+    return this.addColumnWithType('boolean', valueHeaderDescriptor, value);
   }
 
   public addStringColumn(value: (item: T) => string): this;
   public addStringColumn(header: string, value: (item: T) => string): this;
   public addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
   public addStringColumn(valueHeaderDescriptor: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): this {
-    switch (typeof valueHeaderDescriptor) {
-      case 'string':
-        return this.addColumnWithType({header: valueHeaderDescriptor, value: value!}, 'string');
-      case 'function':
-        return this.addColumnWithType({value: valueHeaderDescriptor}, 'string');
-      default:
-        return this.addColumnWithType(valueHeaderDescriptor, 'string');
-    }
+    return this.addColumnWithType('string', valueHeaderDescriptor, value);
   }
 
   public addNumberColumn(value: (item: T) => number): this;
   public addNumberColumn(header: string, value: (item: T) => number): this;
   public addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
   public addNumberColumn(valueHeaderDescriptor: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): this {
-    switch (typeof valueHeaderDescriptor) {
-      case 'string':
-        return this.addColumnWithType({header: valueHeaderDescriptor, value: value!}, 'number');
-      case 'function':
-        return this.addColumnWithType({value: valueHeaderDescriptor}, 'number');
-      default:
-        return this.addColumnWithType(valueHeaderDescriptor, 'number');
-    }
+    return this.addColumnWithType('number', valueHeaderDescriptor, value);
   }
 
   public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
-    return this.addColumnWithType(config, 'component');
+    return this.addColumnWithType('component', config);
   }
 
   public addTemplateColumn(config: SciTemplateColumnDescriptor<T>): this {
-    return this.addColumnWithType(config, 'template');
+    return this.addColumnWithType('template', config);
   }
 
   public disableFilter(): this {
@@ -159,7 +138,18 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this;
   }
 
-  private addColumnWithType(config: SciColumnDescriptors<T>, type: ColumnType): this {
+  private addColumnWithType(type: ColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciColumnDescriptors<T>, value?: (item: T) => unknown): this {
+    const config = (() => {
+      switch (typeof valueHeaderDescriptor) {
+        case 'string':
+          return {header: valueHeaderDescriptor, value: value!} as SciColumnDescriptors<T>;
+        case 'function':
+          return {value: valueHeaderDescriptor} as SciColumnDescriptors<T>;
+        default:
+          return valueHeaderDescriptor;
+      }
+    })();
+
     // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
     const sortable = type === 'component' || type === 'template' ?
       !!config.sort :

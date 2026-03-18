@@ -1,5 +1,5 @@
 @let table = sciTable();
-<cdk-virtual-scroll-viewport [itemSize]="table.itemSize" [minBufferPx]="1000" [maxBufferPx]="1500" sciScrollable #cdkViewport>
+<cdk-virtual-scroll-viewport [itemSize]="table.itemSize" sciScrollable #cdkViewport>
   @if (table.headerVisible()) {
     <header>
       @for (column of columns(); track $index) {

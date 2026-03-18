@@ -8,9 +8,22 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, input, inputBinding, resource, signal, TemplateRef, viewChild} from '@angular/core';
-import {SciTableComponent, table} from '@scion/components/table';
+import {SciDataSource, SciTableComponent, SciTableRequest, SciTableResponse, SciTableFactory, table} from '@scion/components/table';
 import {Station, stations} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
+import {Field, form} from '@angular/forms/signals';
+import {Observable, timer, map} from 'rxjs';
+
+class SlowDataSource implements SciDataSource<Station> {
+  public getItems(request: SciTableRequest): Observable<SciTableResponse<Station>> {
+    return timer(1000).pipe(
+      map(() => ({
+        items: stations.slice(request.start, request.end),
+        totalCount: stations.length,
+      })),
+    );
+  }
+}
 
 @Component({
   selector: 'app-custom-cell',
@@ -47,18 +60,44 @@ class CustomCellComponent {
   imports: [
     SciTableComponent,
     FormsModule,
+    Field,
   ],
 })
 export default class SciTablePageComponent {
   protected data = signal(stations);
   protected activeItem = signal<Station | undefined>(undefined);
   protected selectedRows = signal<string | undefined>(undefined);
-  protected language = signal('de');
   protected additionalData = signal(0);
+
+  protected settings = signal({
+    filterable: true,
+    sortable: true,
+    resizable: true,
+    language: 'de',
+    slowDataSource: false,
+  });
+  protected form = form(this.settings);
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
 
-  protected table = table(this.data, table => {
+  protected table = table(this.data, table => this.createTable(table));
+  protected slowTable = table(new SlowDataSource(), table => this.createTable(table));
+
+  protected createTable(table: SciTableFactory<Station>): SciTableFactory<Station> {
+    const settings = this.settings();
+
+    if (!settings.filterable) {
+      table.disableFilter();
+    }
+
+    if (!settings.sortable) {
+      table.disableSort();
+    }
+
+    if (!settings.resizable) {
+      table.disableResize();
+    }
+
     if (this.additionalData() > 2) {
       table.addStringColumn({
         value: station => computed(() => `${station.sloid} (${this.additionalData()})`),
@@ -71,14 +110,6 @@ export default class SciTablePageComponent {
     }
 
     return table
-      // .addStringColumn({
-      //   value: station => computed(() => `${station.sloid} (${this._additionalData()})`),
-      //   width: '150px',
-      //   maxWidth: '200px',
-      //   minWidth: '100px',
-      //   header: 'Sloid',
-      //   resizable: false,
-      // })
       .addComponentColumn({
         header: 'Custom Component',
         filter: (text, cell) => cell.item.sloid.includes(text),
@@ -97,24 +128,19 @@ export default class SciTablePageComponent {
         value: station => station.designationofficial.length,
       })
       .addBooleanColumn('Boolean', station => station.designationofficial.length > 15)
-      // .addNumberColumn({
-      //   label: station => this.getData(station),
-      //   width: '150px',
-      //   header: 'Sloid Nr.',
-      // })
       .addStringColumn({
         value: station => station.designationofficial,
         header: 'Name',
         name: 'name',
       })
       .addStringColumn({
-        value: station => computed(() => this.language() === 'fr' ? station.districtnameFr : station.districtname),
+        value: station => computed(() => settings.language === 'fr' ? station.districtnameFr : station.districtname),
         width: '1fr',
         header: 'District',
       })
       .name('stations')
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
-  });
+  }
 
   // private getData(station: Station): Signal<number> {
   //   const data = signal<number>(0);

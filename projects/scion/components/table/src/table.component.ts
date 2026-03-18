@@ -126,9 +126,7 @@ export class SciTableComponent<T> {
     });
   }
 
-  protected readonly trackBy = (i: number, row: SciRow<T>): unknown => {
-    return this.sciTable().trackBy(row.item, i);
-  };
+  protected readonly trackBy = (i: number, row: SciRow<T>): unknown => this.sciTable().trackBy(row.item, i);
 
   protected onSort(column: SciColumns<T>, event: MouseEvent): void {
     this.sciTable().sort(column.name, event.ctrlKey || event.metaKey);

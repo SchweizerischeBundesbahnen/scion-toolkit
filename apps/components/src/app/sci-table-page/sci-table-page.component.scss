@@ -31,5 +31,15 @@
     background-color: var(--sci-color-background-secondary);
     padding: 1em;
     width: 300px;
+
+    > form {
+      display: grid;
+      grid-auto-flow: row;
+      gap: 0.5em;
+    }
   }
+}
+
+.custom-cell {
+  padding-inline: .5em;
 }

@@ -45,7 +45,7 @@ export class ColumnHeaderComponent<T> {
     }
 
     const column = this.column();
-    const width = Math.max(20, context.width + event.distance);
+    const width = Math.max(0, context.width + event.distance);
     this._resizeContext.set({columnName: column.name, width});
     this.widthChange.emit(width);
   }

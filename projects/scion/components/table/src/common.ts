@@ -30,10 +30,6 @@ export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
   return of(input);
 }
 
-export function isUUID(input: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(input);
-}
-
 export function clamp(min: string, preferred: string, max: string | null): string {
   const maxDef = max === null ? preferred : `min(${preferred}, ${max})`;
   return `minmax(${min}, ${maxDef})`;

@@ -1,16 +1,42 @@
 <main>
-  <button (click)="onUpdateSignal()">Update Signal</button>
-  <select [(ngModel)]="language">
-    <option value="de">DE</option>
-    <option value="fr">FR</option>
-  </select>
-  <sci-table [table]="table()" (activateItem)="activeItem.set($event)" (selectItems)="onSelectRows($event)" />
+  <sci-table [table]="settings().slowDataSource ? slowTable() : table()" (activateItem)="activeItem.set($event)" (selectItems)="onSelectRows($event)" />
   <ng-template let-station let-custom="custom" #cell>
-    {{station.sloid}} / {{custom}}
+    <span class="custom-cell">
+      {{station.sloid}} / {{custom}}
+    </span>
   </ng-template>
 </main>
 
 <aside class="e2e-settings">
+  <form>
+    <label>
+      <input [field]="form.filterable" type="checkbox" />
+      Filterable
+    </label>
+
+    <label>
+      <input [field]="form.sortable" type="checkbox" />
+      Sortable
+    </label>
+
+    <label>
+      <input [field]="form.resizable" type="checkbox" />
+      Resizable
+    </label>
+
+    <select [field]="form.language">
+      <option value="de">DE</option>
+      <option value="fr">FR</option>
+    </select>
+
+    <button (click)="onUpdateSignal()">Update local state</button>
+
+    <label>
+      <input [field]="form.slowDataSource" type="checkbox" />
+      Use Slow DataSource
+    </label>
+  </form>
+
   <dl>
     <dt>Active Sloid:</dt>
     <dd>{{ activeItem()?.sloid ?? '-' }}</dd>

@@ -8,8 +8,7 @@
       <ng-container #componentOutlet></ng-container>
     }
     @case ('boolean') {
-      @let value = _cell.value();
-      @if (value) {
+      @if (_cell.value()) {
         check
       }
     }
