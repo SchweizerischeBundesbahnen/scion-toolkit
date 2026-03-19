@@ -15,23 +15,11 @@
   > .cell {
     display: inline; // makes sure text-overflow works inside
 
-    &.checkbox {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--sci-color-border);
-      border-radius: var(--sci-corner);
-      height: calc(100% - .75em);
-      aspect-ratio: 1/1;
-      margin: .25em;
-      color: var(--sci-color-accent);
+    > .checkbox {
+      color: var(--sci-color-border);
 
-      &:not(:empty) {
-        border-color: var(--sci-color-accent);
-      }
-
-      > span {
-        font-size: 16px;
+      &[data-checked="true"] {
+        color: var(--sci-color-accent);
       }
     }
   }

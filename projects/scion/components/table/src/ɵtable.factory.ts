@@ -39,7 +39,7 @@ function defaultSort<T>(a: SciCellContext<T, string | boolean | number>, b: SciC
     case 'number':
       return a.value - (b.value as number);
     case 'boolean':
-      return a.value === b.value ? 0 : (a.value ? -1 : 1);
+      return a.value === b.value ? 0 : (a.value ? 1 : -1);
     default:
       return 0;
   }

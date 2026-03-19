@@ -10,6 +10,6 @@
 
 export {table} from './table';
 export {SciTableComponent} from './table.component';
-export type {ColumnType, SciColumns} from './table.model';
+export type {ColumnType, SciColumns, SciCellContext} from './table.model';
 export type {SciDataSource, SciTableResponse, SciTableRequest} from './table-data-source';
 export type {SciTableFactory} from './table.factory';

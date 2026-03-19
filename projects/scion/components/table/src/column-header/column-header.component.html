@@ -1,5 +1,5 @@
 <div class="header" [class.filterable]="table().filterable()">
-  <button class="column-sort"
+  <button class="column-sort e2e-column-sort"
           [tabIndex]="column().sortable() ? 0 : -1"
           [class.sortable]="column().sortable()"
           (click)="onSort($event)">

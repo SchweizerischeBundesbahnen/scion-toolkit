@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, input, inputBinding, signal, TemplateRef, viewChild} from '@angular/core';
-import {SciTableComponent, SciTableFactory, table} from '@scion/components/table';
+import {SciTableComponent, SciTableFactory, SciCellContext, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {Field, form, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -28,6 +28,14 @@ function generateData(length: number = 10_000): Product[] {
     price: Math.floor(Math.random() * 1000) + 1,
     inStock: Math.random() > 0.5,
   }));
+}
+
+function customFilter(text: unknown, context: SciCellContext<Product, unknown>): boolean {
+  return context.item.id === 1;
+}
+
+function customSort(a: SciCellContext<Product, unknown>, b: SciCellContext<Product, unknown>): number {
+  return a.item.id - b.item.id;
 }
 
 const createDefaultColumn = () => ({
@@ -73,7 +81,7 @@ export default class SciTablePageComponent {
     required(column.header);
   });
 
-  protected data = signal(generateData(10000));
+  protected data = signal(generateData(30));
   protected columns = signal<ReturnType<typeof this.column>[]>([]);
 
   protected table = table(this.data, table => this.createTable(table));
@@ -102,8 +110,6 @@ export default class SciTablePageComponent {
     table.addNumberColumn({
       header: 'Id',
       value: product => product.id,
-      width: '1fr',
-      minWidth: '50px',
     });
 
     for (const column of this.columns()) {
@@ -114,6 +120,8 @@ export default class SciTablePageComponent {
         minWidth: column.minWidth ? column.minWidth : undefined,
         maxWidth: column.maxWidth ? column.maxWidth : undefined,
         resizable: column.resizable,
+        filter: column.customFilter ? customFilter : undefined,
+        sort: column.customSort ? customSort : undefined,
       };
 
       switch (column.type) {

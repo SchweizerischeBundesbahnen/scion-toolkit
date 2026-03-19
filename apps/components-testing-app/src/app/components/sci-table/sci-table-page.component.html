@@ -39,13 +39,19 @@
           <input [field]="columnForm.header" class="e2e-column-header">
         </sci-form-field>
         <sci-form-field label="Column Type">
-          <select [field]="columnForm.type">
+          <select [field]="columnForm.type" class="e2e-column-type">
             <option value="string">String</option>
             <option value="number">Number</option>
             <option value="boolean">Boolean</option>
             <option value="template">Template</option>
             <option value="component">Component</option>
           </select>
+        </sci-form-field>
+        <sci-form-field label="Custom Sort">
+          <input [field]="columnForm.customSort" type="checkbox" class="e2e-column-custom-sort">
+        </sci-form-field>
+        <sci-form-field label="Custom Filter">
+          <input [field]="columnForm.customFilter" type="checkbox" class="e2e-column-custom-filter">
         </sci-form-field>
         <sci-form-field label="Width">
           <input [field]="columnForm.width" class="e2e-column-width">
@@ -54,7 +60,7 @@
           <input [field]="columnForm.minWidth" class="e2e-column-min-width">
         </sci-form-field>
         <sci-form-field label="Max Width">
-          <input [field]="columnForm.minWidth" class="e2e-column-max-width">
+          <input [field]="columnForm.maxWidth" class="e2e-column-max-width">
         </sci-form-field>
         <button class="e2e-column-add" type="submit">Add</button>
       </form>

@@ -12,6 +12,17 @@ import {Locator, Page} from '@playwright/test';
 
 const PATH = '/#/components/sci-table';
 
+export interface ColumnOptions {
+  name: string;
+  header: string;
+  type: 'string' | 'number' | 'boolean' | 'template' | 'component';
+  customFilter?: boolean;
+  customSort?: boolean;
+  width?: string;
+  minWidth?: string;
+  maxWidth?: string;
+}
+
 export class TablePagePO {
 
   private readonly _locator: Locator;
@@ -33,7 +44,36 @@ export class TablePagePO {
     await this._properties.locator('input.e2e-filterable').setChecked(checked);
   }
 
-  public locateFilters(): Locator {
-    return this._locator.locator('sci-column-filter');
+  public async setSortable(checked: boolean): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('input.e2e-sortable').setChecked(checked);
+  }
+
+  public async setResizable(checked: boolean): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('input.e2e-resizable').setChecked(checked);
+  }
+
+  public async addColumn(options: ColumnOptions): Promise<void> {
+    await this._tabbar.locator('button.e2e-columns').click();
+    await this._properties.locator('form input.e2e-column-name').fill(options.name);
+    await this._properties.locator('form input.e2e-column-header').fill(options.header);
+    await this._properties.locator('form select.e2e-column-type').selectOption(options.type);
+    if (options.customSort) {
+      await this._properties.locator('form input.e2e-column-custom-sort').check();
+    }
+    if (options.customFilter) {
+      await this._properties.locator('form input.e2e-column-custom-filter').check();
+    }
+    if (options.width !== undefined) {
+      await this._properties.locator('form input.e2e-column-width').fill(options.width);
+    }
+    if (options.minWidth !== undefined) {
+      await this._properties.locator('form input.e2e-column-min-width').fill(options.minWidth);
+    }
+    if (options.maxWidth !== undefined) {
+      await this._properties.locator('form input.e2e-column-max-width').fill(options.maxWidth);
+    }
+    await this._properties.locator('form button.e2e-column-add').click();
   }
 }
