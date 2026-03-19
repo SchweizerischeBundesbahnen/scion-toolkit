@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Signal} from '@angular/core';
+import {computed, Signal} from '@angular/core';
 import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciColumns} from './table.model';
 import {coerceSignal} from './common';
@@ -24,27 +24,43 @@ interface ItemWithValues<T> {
 }
 
 export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
+  private _lastRequest: SciTableRequest | undefined;
+  private _lastResponse: ItemWithValues<T>[] | undefined;
+  private _lastData: ItemWithValues<T>[] | undefined;
+
+  private _mappedData = computed(() => this._data()
+    .map(item => ({
+      item,
+      values: this._columns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
+    })));
 
   constructor(private _data: Signal<T[]>, private _columns: SciColumns<T>[]) {
   }
 
   public getItems(request: SciTableRequest): SciTableResponse<T> {
-    const data = this._data();
+    const data = this._mappedData();
 
     const sortCols = this.mapCriteria(request.sortCriteria, this._columns);
     const filterCols = this.mapCriteria(request.filterCriteria, this._columns);
 
+    if (this._lastResponse && data === this._lastData && this.filterCriteriaSame(request.filterCriteria, this._lastRequest?.filterCriteria) && this.sortCriteriaSame(request.sortCriteria, this._lastRequest?.sortCriteria)) {
+      return {
+        totalCount: this._lastResponse.length,
+        items: this._lastResponse.slice(request.start, request.end).map(i => i.item),
+      };
+    }
+
     const items = data
-      .map(item => ({
-        item,
-        values: this._columns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
-      }))
       .filter(item => this.filter(item, filterCols))
       .sort((a, b) => this.sort(a, b, sortCols));
 
+    this._lastResponse = items;
+    this._lastRequest = request;
+    this._lastData = data;
+
     return {
-      items: items.slice(request.start, request.end).map(i => i.item),
       totalCount: items.length,
+      items: items.slice(request.start, request.end).map(i => i.item),
     };
   }
 
@@ -58,6 +74,22 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
         column: columns[columnIndex],
       });
     }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.columnIndex >= 0);
+  }
+
+  private filterCriteriaSame(a: SciFilterCriterion[], b?: SciFilterCriterion[]): boolean {
+    if (a.length !== b?.length) {
+      return false;
+    }
+
+    return a.every((criterion, i) => criterion.columnName === b[i]?.columnName && criterion.text === b[i].text);
+  }
+
+  private sortCriteriaSame(a: SciSortCriterion[], b?: SciSortCriterion[]): boolean {
+    if (a.length !== b?.length) {
+      return false;
+    }
+
+    return a.every((criterion, i) => criterion.columnName === b[i]?.columnName && criterion.direction === b[i].direction);
   }
 
   private filter(row: ItemWithValues<T>, filterCriteria: MappedCriterion<T, SciFilterCriterion>[]): boolean {

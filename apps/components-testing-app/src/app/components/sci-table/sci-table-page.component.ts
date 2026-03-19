@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, input, inputBinding, signal, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, input, inputBinding, signal, TemplateRef, viewChild} from '@angular/core';
 import {SciTableComponent, SciTableFactory, SciCellContext, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {Field, form, required} from '@angular/forms/signals';
@@ -71,6 +71,7 @@ export default class SciTablePageComponent {
     resizable: true,
     showHeader: true,
     slowDataSource: false,
+    rowCount: 100_000,
   });
   protected settingsForm = form(this.settings);
 
@@ -81,7 +82,7 @@ export default class SciTablePageComponent {
     required(column.header);
   });
 
-  protected data = signal(generateData(30));
+  protected data = computed(() => generateData(this.settings().rowCount));
   protected columns = signal<ReturnType<typeof this.column>[]>([]);
 
   protected table = table(this.data, table => this.createTable(table));
@@ -110,6 +111,9 @@ export default class SciTablePageComponent {
     table.addNumberColumn({
       header: 'Id',
       value: product => product.id,
+    }).addStringColumn({
+      header: 'Product',
+      value: product => product.name,
     });
 
     for (const column of this.columns()) {
