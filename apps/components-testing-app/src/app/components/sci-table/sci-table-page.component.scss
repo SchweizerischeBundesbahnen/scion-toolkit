@@ -34,4 +34,12 @@
 
 .custom-cell {
   padding-inline: .5em;
+
+  &.up {
+    color: var(--sci-color-positive);
+  }
+
+  &.down {
+    color: var(--sci-color-negative);
+  }
 }

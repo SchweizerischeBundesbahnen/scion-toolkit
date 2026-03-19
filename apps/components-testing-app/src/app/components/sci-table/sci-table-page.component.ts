@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, signal} from '@angular/core';
+import {Component, input, inputBinding, signal, TemplateRef, viewChild} from '@angular/core';
 import {SciTableComponent, SciTableFactory, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {Field, form, required} from '@angular/forms/signals';
@@ -21,7 +21,7 @@ interface Product {
   inStock: boolean;
 }
 
-function generateData(length: number = 50): Product[] {
+function generateData(length: number = 10_000): Product[] {
   return Array.from({length}, (_, i) => ({
     id: i + 1,
     name: `Product ${i + 1}`,
@@ -73,10 +73,12 @@ export default class SciTablePageComponent {
     required(column.header);
   });
 
-  protected data = signal(generateData(100));
+  protected data = signal(generateData(10000));
   protected columns = signal<ReturnType<typeof this.column>[]>([]);
 
   protected table = table(this.data, table => this.createTable(table));
+
+  private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
 
   protected createTable(table: SciTableFactory<Product>): SciTableFactory<Product> {
     const settings = this.settings();
@@ -101,6 +103,7 @@ export default class SciTablePageComponent {
       header: 'Id',
       value: product => product.id,
       width: '1fr',
+      minWidth: '50px',
     });
 
     for (const column of this.columns()) {
@@ -119,6 +122,32 @@ export default class SciTablePageComponent {
             ...baseColumn,
             value: product => product.name,
           });
+          break;
+        case 'number':
+          table.addNumberColumn({
+            ...baseColumn,
+            value: product => product.price,
+          });
+          break;
+        case 'boolean':
+          table.addBooleanColumn({
+            ...baseColumn,
+            value: product => product.inStock,
+          });
+          break;
+        case 'component':
+          table.addComponentColumn({
+            ...baseColumn,
+            component: product => ({component: CustomCell, bindings: [inputBinding('product', () => product)]}),
+          });
+          break;
+        case 'template':
+          table.addTemplateColumn({
+            ...baseColumn,
+            template: () => ({template: this.cellTemplate()}),
+          });
+          break;
+        case '':
           break;
         default:
           table.addStringColumn(column.name, product => product.name);
@@ -142,4 +171,20 @@ export default class SciTablePageComponent {
     this.column.set(createDefaultColumn());
     this.columnForm().reset();
   }
+}
+
+@Component({
+  selector: 'app-custom-cell',
+  template: `
+    <span class="material-symbols-outlined">
+      @if (product().inStock) {
+        add
+      } @else {
+        close
+      }
+    </span>
+  `,
+})
+class CustomCell {
+  protected readonly product = input.required<Product>();
 }
