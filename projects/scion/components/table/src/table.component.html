@@ -1,32 +1,30 @@
-@let table = sciTable();
-<cdk-virtual-scroll-viewport [itemSize]="table.itemSize" sciScrollable #cdkViewport>
-  @if (table.headerVisible()) {
-    <header>
-      @for (column of columns(); track $index) {
-        <sci-column-header [column]="column"
-                           [table]="table"
-                           (autoResize)="onResizeAuto(column)"
-                           (widthChange)="onResize(column, $event)"
-                           (sort)="onSort(column, $event)"
-                           (filter)="onFilter(column, $event)" />
+<div class="viewport e2e-viewport" #viewport sciScrollable>
+  <div class="grid">
+    @if (sciTable().headerVisible()) {
+      <header #header>
+        @for (column of columns(); track column.name) {
+          <sci-column-header [column]="column"
+                             [table]="sciTable()"
+                             (autoResize)="onResizeAuto(column)"
+                             (widthChange)="onResize(column, $event)" />
+        }
+      </header>
+    }
+    <div class="rows">
+      <!-- Track index to reuse the table row elements -->
+      @for (row of visibleRows(); track $index) {
+        <sci-table-row [row]="row"
+                       [table]="sciTable()"
+                       [activeItem]="activeItem()"
+                       [selectedItems]="selectedItems()"
+                       [style.transform]="`translateY(${scrollStart() + (sciTable().itemSize * $index)}px)`"
+                       (activateItem)="onActivateRow(row.item!)"
+                       (selectItem)="onSelectRow(row.item!, $event)" />
+      } @empty {
+        <div class="empty-state">Nothing to show.</div>
       }
-    </header>
-  }
-  @if (!rows().length) {
-    <div class="empty-state">Nothing to show</div>
-  }
-  <ng-container *cdkVirtualFor="let row of rows(); trackBy: trackBy" >
-    <sci-table-row [row]="row"
-                   [table]="table"
-                   [selectedItems]="selectedItems()"
-                   [activeItem]="activeItem()"
-                   (activateItem)="onActivateRow(row.item)"
-                   (selectItem)="onSelectRow(row.item, $event)" />
-  </ng-container>
-</cdk-virtual-scroll-viewport>
-<sci-scrollbar [direction]="'vscroll'" 
-               [viewport]="cdkViewport.getElementRef().nativeElement" 
-               [class.vscroll-filter]="table.filterable() && table.headerVisible()" 
-               [class.vscroll-no-filter]="!table.filterable() && table.headerVisible()" />
-<sci-scrollbar [direction]="'hscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
-
+    </div>
+  </div>
+</div>
+<sci-scrollbar [direction]="'vscroll'" [viewport]="viewport" class="vscroll" />
+<sci-scrollbar [direction]="'hscroll'" [viewport]="viewport"/>

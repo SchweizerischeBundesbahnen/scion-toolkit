@@ -19,7 +19,7 @@
     }
   </button>
   @if (column().filterable()) {
-    <sci-column-filter [column]="column()" (filter)="onFilter($event)" />
+    <sci-column-filter [table]="table()" [column]="column()" />
   }
 </div>
 @if (column().resizable()) {

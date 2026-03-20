@@ -99,6 +99,25 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'test-column', header: 'Test Column', type: 'component'});
       await expect(table.locateColumnHeader('Test Column')).toBeVisible();
     });
+
+    test('should add a lot of columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      for (let i = 0; i < 20; i++) {
+        await tablePage.addColumn({name: `col-${i}`, header: `Column ${i}`, type: 'string'});
+      }
+
+      await expect(table.locateColumnHeaders()).toHaveCount(21);
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await expect(table.locateColumnHeader('Column 19')).not.toBeInViewport();
+      await table.scrollViewPort('right');
+      await expect(table.locateColumnHeader('Column 19')).toBeInViewport();
+      await table.scrollViewPort({x: 0, y: 0});
+      await expect(table.locateColumnHeader('Column 19')).not.toBeInViewport();
+    });
   });
 
   test.describe('filtering', () => {
@@ -255,6 +274,18 @@ test.describe('sci-table', () => {
       const widthAfter = await table.getColumnHeaderWidth(1);
 
       expect(widthAfter).toBe(100);
+    });
+
+    test('should allow to overflow while resizing', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '200px'});
+
+      await table.dragColumnSplitter(1, page.viewportSize()?.width ?? 0);
+
+      await expectTable(table).toHaveHorizontalOverflow();
     });
   });
 

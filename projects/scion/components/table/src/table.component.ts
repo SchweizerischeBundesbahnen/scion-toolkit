@@ -8,60 +8,59 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, input, linkedSignal, output, signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, linkedSignal, NgZone, output, signal, untracked, viewChild, viewChildren} from '@angular/core';
 import {SciColumns, SciRow, SciTable} from './table.model';
-import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
-import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
-import {TableRowComponent} from './table-row/table-row.component';
-import {toObservable, toSignal} from '@angular/core/rxjs-interop';
-import {combineLatestWith, map, startWith, switchMap} from 'rxjs/operators';
-import {clamp} from './common';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {ɵSciTable} from './ɵtable.model';
+import {fromBoundingClientRect$} from '@scion/toolkit/observable';
+import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {TableRowComponent} from './table-row/table-row.component';
+import {combineLatestWith, filter, fromEvent, switchMap} from 'rxjs';
+import {subscribeIn} from '@scion/toolkit/operators';
+import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
+import {map, startWith} from 'rxjs/operators';
+import {clamp} from './common';
 
 @Component({
   selector: 'sci-table',
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.ShadowDom,
   host: {
+    '[style.--ɵsci-table-virtual-scroll-height]': 'height()',
+    '[style.--ɵsci-table-header-height]': '`${headerHeight()}px`',
     '[style.--ɵsci-table-columns]': 'columnWidths()',
+    '[style.--ɵsci-table-item-size]': '`${sciTable().itemSize}px`',
     '[style.--ɵsci-table-width]': 'tableWidth()',
-    '[style.--ɵsci-table-scroll-offset]': 'scrollOffset()',
-    '[style.--ɵsci-table-item-size]': 'itemSize()',
   },
   imports: [
-    SciScrollableDirective,
-    SciScrollbarComponent,
-    CdkVirtualScrollViewport,
-    CdkFixedSizeVirtualScroll,
-    CdkVirtualForOf,
-    TableRowComponent,
     ColumnHeaderComponent,
+    TableRowComponent,
+    SciScrollbarComponent,
+    SciScrollableDirective,
   ],
 })
 export class SciTableComponent<T> {
 
   public readonly table = input.required<SciTable<T>>();
+  public readonly overscan = input<number>(10);
 
   public readonly activateItem = output<T | undefined>();
   public readonly selectItems = output<T[]>();
 
-  private readonly _rows = viewChildren<TableRowComponent<T>>(TableRowComponent);
-  private readonly _headers = viewChildren<ColumnHeaderComponent<T>>(ColumnHeaderComponent);
-  private readonly _viewport = viewChild.required(CdkVirtualScrollViewport);
+  private readonly _viewport = viewChild<ElementRef<HTMLElement>>('viewport');
+  private readonly _header = viewChild<ElementRef<HTMLElement>>('header');
+  private readonly _rows = viewChildren(TableRowComponent);
+  private readonly _headers = viewChildren(ColumnHeaderComponent);
 
-  private readonly _range$ = toObservable(this._viewport).pipe(
-    switchMap(viewport => viewport.renderedRangeStream),
-    startWith({start: 0, end: 0}),
-  );
-  private readonly _totalCount = signal<number>(0);
+  private readonly _zone = inject(NgZone);
+  private readonly _element = inject(ElementRef);
 
   protected readonly activeItem = signal<T | undefined>(undefined);
   protected readonly selectedItems = signal<T[]>([]);
-  protected readonly offset = toSignal(this._range$.pipe(map(({start}) => start)));
-
+  protected readonly scrollStart = signal(0);
+  private readonly _totalCount = signal(0);
+  private readonly _range = signal<{start: number; end: number}>({start: 0, end: 0});
   protected readonly rows = linkedSignal({
     source: () => ({count: this._totalCount(), sort: this.table().sortCriteria(), filter: this.table().filterCriteria()}), // reset rows as soon as count, filter or sort change
     computation: ({count}) => new Array<SciRow<T>>(count).fill({} as SciRow<T>),
@@ -69,8 +68,42 @@ export class SciTableComponent<T> {
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly columns = computed(() => this.sciTable().columns);
-  protected readonly itemSize = computed(() => `${this.sciTable().itemSize}px`);
-  protected readonly scrollOffset = computed(() => `${(this.offset() ?? 0) * this.sciTable().itemSize * -1}px`); // scroll offset to position the header correctly
+  protected readonly visibleRows = computed(() => {
+    const {start, end} = this._range();
+    return this.rows().slice(start, end);
+  });
+
+  protected readonly headerHeight = toSignal(toObservable(this._header).pipe(
+    filter(element => !!element),
+    switchMap(({nativeElement}) => fromBoundingClientRect$(nativeElement)),
+    map(({height}) => height),
+    takeUntilDestroyed(),
+  ));
+  private readonly _containerHeight = toSignal(fromBoundingClientRect$(this._element.nativeElement as HTMLElement).pipe(
+    map(({height}) => height),
+    takeUntilDestroyed(),
+  ));
+
+  private readonly _count = computed(() => {
+    const height = this._containerHeight();
+    const itemSize = this.sciTable().itemSize;
+    const overscan = this.overscan();
+
+    if (height === undefined) {
+      return 0;
+    }
+
+    return Math.ceil(height / itemSize) + overscan * 2;
+  });
+  protected readonly height = computed(() => `${this._totalCount() * this.sciTable().itemSize}px`);
+  protected readonly columnWidths = computed(() => {
+    const columns = this.columns();
+    const overrides = this.sciTable().columnWidths();
+
+    return columns
+      .map(c => clamp(c.minWidth(), overrides.has(c.name) ? `${overrides.get(c.name)}px` : c.width(), c.maxWidth()))
+      .join(' ');
+  });
   protected readonly tableWidth = computed(() => {
     const columns = this.columns();
     const overrides = this.sciTable().columnWidths();
@@ -84,14 +117,6 @@ export class SciTableComponent<T> {
       return `max(100%, ${Math.floor(width)}px)`;
     });
   });
-  protected readonly columnWidths = computed(() => {
-    const columns = this.columns();
-    const overrides = this.sciTable().columnWidths();
-
-    return columns
-      .map(c => clamp(c.minWidth(), overrides.has(c.name) ? `${overrides.get(c.name)}px` : c.width(), c.maxWidth()))
-      .join(' ');
-  });
 
   constructor() {
     effect(() => {
@@ -102,33 +127,13 @@ export class SciTableComponent<T> {
       this.selectItems.emit(this.selectedItems());
     });
 
-    this._range$.pipe(
-      combineLatestWith(
-        toObservable(this.sciTable),
-        toObservable(computed(() => this.sciTable().sortCriteria())),
-        toObservable(computed(() => this.sciTable().filterCriteria())),
-      ),
-      switchMap(([{start, end}, table, sortCriteria, filterCriteria]) => table.getRows({
-        start,
-        end,
-        limit: end - start,
-        sortCriteria,
-        filterCriteria,
-      }).pipe(map(r => ({response: r, start})))),
-    ).subscribe(({response, start}) => {
-      this._totalCount.set(response.totalCount);
-      this.rows.update(items => items.toSpliced(start, response.items.length, ...response.items));
-    });
+    this.installDataFetcher();
+    this.installScrollListener();
   }
 
-  protected readonly trackBy = (i: number, row: SciRow<T>): unknown => row.item ? this.sciTable().trackBy(row.item, i) : i;
-
-  protected onSort(column: SciColumns<T>, event: MouseEvent): void {
-    this.sciTable().sort(column.name, event.ctrlKey || event.metaKey);
-  }
-
-  protected onFilter(column: SciColumns<T>, text: string | boolean | number | null): void {
-    this.sciTable().filter(column.name, text);
+  public getMaxRowWidth(columnName: string): number {
+    const cellWidths = this._rows().map(row => row.getCellWidth(columnName));
+    return Math.max(...cellWidths, 0);
   }
 
   protected onSelectRow(row: T, {ctrlKey}: {ctrlKey: boolean}): void {
@@ -166,8 +171,62 @@ export class SciTableComponent<T> {
   }
 
   protected onResizeAuto(column: SciColumns<T>): void {
-    const cellWidths = this._rows().map(row => row.getCellWidth(column.name));
-    const maxWidth = Math.max(...cellWidths, 0) + 20; // TODO [eg]: configurable buffer?
+    const maxWidth = this.getMaxRowWidth(column.name);
     this.sciTable().setResizedColumn(column.name, maxWidth);
+  }
+
+  private installDataFetcher(): void {
+    effect(onCleanup => {
+      const table = this.sciTable();
+      const sortCriteria = table.sortCriteria();
+      const filterCriteria = table.filterCriteria();
+      const {start, end} = this._range();
+
+      untracked(() => {
+        const subscription = table.getRows({
+          start,
+          end,
+          limit: end - start,
+          sortCriteria,
+          filterCriteria,
+        }).subscribe(response => {
+          this._totalCount.set(response.totalCount);
+          this.rows.update(items => items.toSpliced(start, response.items.length, ...response.items));
+        });
+
+        onCleanup(() => subscription.unsubscribe());
+      });
+    });
+  }
+
+  private installScrollListener(): void {
+    const overscan$ = toObservable(this.overscan);
+    const count$ = toObservable(this._count);
+    const itemSize$ = toObservable(computed(() => this.sciTable().itemSize));
+
+    effect(onCleanup => {
+      const element = this._viewport()?.nativeElement;
+      const height = this._containerHeight(); // wait for height to be calculated
+
+      if (!element || height === undefined) {
+        return;
+      }
+
+      untracked(() => {
+        const subscription = fromEvent(element, 'scroll', {passive: true}).pipe(
+          startWith(null),
+          combineLatestWith(overscan$, count$, itemSize$),
+          subscribeIn(fn => this._zone.runOutsideAngular(fn)),
+        ).subscribe(([_, overscan, count, itemSize]) => {
+          const firstVisible = Math.floor(element.scrollTop / itemSize);
+          const start = Math.max(0, firstVisible - overscan);
+
+          this.scrollStart.set(start * itemSize);
+          this._range.set({start, end: start + count});
+        });
+
+        onCleanup(() => subscription.unsubscribe());
+      });
+    });
   }
 }

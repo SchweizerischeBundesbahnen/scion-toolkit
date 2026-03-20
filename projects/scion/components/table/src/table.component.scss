@@ -1,51 +1,64 @@
 @use '@scion/components/scrollbar' as sci-scrollbar;
 
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght@24..48,300..400');
-
 :host {
   display: grid;
-  background-color: var(--sci-color-background-primary);
+  height: 100%;
   overflow: hidden;
-  position: relative; // anchor for the scroll bars
+  position: relative;
+  background-color: var(--sci-color-background-primary);
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
   > sci-scrollbar {
     @include sci-scrollbar.scrollbar-position();
 
-    &.vscroll-no-filter {
-      top: var(--sci-table-header-row-size); // offset header height
-    }
-
-    &.vscroll-filter {
-      top: calc(var(--sci-table-header-row-size) * 2); // double row size for filters.
+    &.vscroll {
+      top: var(--ɵsci-table-header-height);
     }
   }
 
-  .cdk-virtual-scroll-content-wrapper {
-    display: grid;
-    grid-template-columns: var(--ɵsci-table-columns);
-    width: var(--ɵsci-table-width);
+  > div.viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
 
-    > header {
+    > div.grid {
       display: grid;
-      grid-auto-flow: column;
-      grid-template-columns: subgrid;
-      grid-column: 1 / -1;
-      background-color: var(--sci-color-background-secondary);
-      position: sticky;
-      top: var(--ɵsci-table-scroll-offset);
-    }
+      grid-template-columns: var(--ɵsci-table-columns);
+      grid-template-rows: auto 1fr;
+      width: var(--ɵsci-table-width);
+      height: max(calc(var(--ɵsci-table-header-height) + var(--ɵsci-table-virtual-scroll-height)), 100%);
 
-    > div.empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 1em;
-      color: var(--sci-color-text-subtle);
-    }
+      > header {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+        background-color: var(--sci-color-background-secondary);
+        z-index: 1;
+        position: sticky;
+        top: 0;
+      }
 
-    > sci-table-row {
-      height: var(--ɵsci-table-item-size);
-      border-bottom: var(--sci-table-border-size) solid var(--sci-color-border);
+      > div.rows {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+
+        > div.empty-state {
+          grid-column: 1 / -1;
+          text-align: center;
+          padding: 1em;
+          color: var(--sci-color-text-subtle);
+        }
+
+        > sci-table-row {
+          height: var(--ɵsci-table-item-size);
+          border-bottom: var(--sci-table-border-size) solid var(--sci-color-border);
+          display: grid;
+          grid-template-columns: subgrid;
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+      }
     }
   }
 }

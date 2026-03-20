@@ -71,7 +71,7 @@ export default class SciTablePageComponent {
     resizable: true,
     showHeader: true,
     slowDataSource: false,
-    rowCount: 100_000,
+    rowCount: 10000,
   });
   protected settingsForm = form(this.settings);
 
@@ -111,9 +111,6 @@ export default class SciTablePageComponent {
     table.addNumberColumn({
       header: 'Id',
       value: product => product.id,
-    }).addStringColumn({
-      header: 'Product',
-      value: product => product.name,
     });
 
     for (const column of this.columns()) {

@@ -1,8 +1,4 @@
 :host {
-  display: grid;
-  grid-template-columns: subgrid;
-  grid-column: 1 / -1;
-
   &:hover {
     background-color: var(--sci-color-background-elevation-hover);
   }

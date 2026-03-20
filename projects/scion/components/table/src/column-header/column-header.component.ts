@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
-import {SciColumns} from '@scion/components/table';
+import {SciColumns} from '../table.model';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 import {ɵSciTable} from '../ɵtable.model';
 
@@ -20,8 +20,6 @@ export class ColumnHeaderComponent<T> {
   public readonly table = input.required<ɵSciTable<T>>();
 
   public readonly autoResize = output();
-  public readonly sort = output<MouseEvent>();
-  public readonly filter = output<string | boolean | number | null>();
   public readonly widthChange = output<number>();
 
   private readonly _element = inject(ElementRef);
@@ -59,10 +57,6 @@ export class ColumnHeaderComponent<T> {
   }
 
   protected onSort(event: PointerEvent): void {
-    this.sort.emit(event);
-  }
-
-  protected onFilter(text: string | number | null | boolean): void {
-    this.filter.emit(text);
+    this.table().sort(this.column().name, event.ctrlKey || event.metaKey);
   }
 }

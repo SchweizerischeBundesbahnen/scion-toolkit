@@ -49,7 +49,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly columnWidths = this._columnWidths.asReadonly();
   public readonly ready = this._ready.asReadonly();
 
-  constructor(factory: ɵSciTableFactory<T>, dataOrSource: Signal<T[]> | SciDataSource<T>) {
+  constructor(factory: ɵSciTableFactory<T>, dataOrSource: T[] | SciDataSource<T>) {
     this.columns = factory.columns;
     this.name = factory.tableName;
     this.tableStorage = factory.tableStorage;
@@ -62,7 +62,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.trackBy = factory.trackByFn;
     this.rowPart = factory.rowPartFn;
 
-    this.dataSource = typeof dataOrSource === 'function' ?
+    this.dataSource = Array.isArray(dataOrSource) ?
       new ɵSciArrayDataSource(dataOrSource, factory.columns) :
       dataOrSource;
 

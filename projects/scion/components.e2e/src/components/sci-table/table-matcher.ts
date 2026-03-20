@@ -12,9 +12,13 @@ export function expectTable(table: TablePo): TableMatcher {
         }
       }).toPass();
     },
+    async toHaveHorizontalOverflow(): Promise<void> {
+      await expect(table.locator.locator('sci-scrollbar.horizontal.overflow')).toBeAttached();
+    },
   };
 }
 
 export interface TableMatcher {
   allCellsToContainText(columnIndex: number, text: string): Promise<void>;
+  toHaveHorizontalOverflow(): Promise<void>;
 }

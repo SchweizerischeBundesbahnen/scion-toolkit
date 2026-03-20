@@ -11,6 +11,11 @@ export function table<T>(dataOrSource: Signal<T[]> | SciDataSource<T>, factoryFn
   return computed(() => {
     const factory = new ɵSciTableFactory<T>();
     factoryFn(factory);
+
+    if (typeof dataOrSource === 'function') {
+      return new ɵSciTable(factory, dataOrSource());
+    }
+
     return new ɵSciTable(factory, dataOrSource);
   });
 }
