@@ -76,4 +76,8 @@ export class TablePagePO {
     }
     await this._properties.locator('form button.e2e-column-add').click();
   }
+
+  public async setRowCount(rowCount: number): Promise<void> {
+    await this._properties.locator('form input.e2e-row-count').fill(rowCount.toString());
+  }
 }

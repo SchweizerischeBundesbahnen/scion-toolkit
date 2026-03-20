@@ -1,4 +1,4 @@
-import {expect, Locator, Page} from '@playwright/test';
+import {Locator, Page} from '@playwright/test';
 import {fromRect} from '../../helper/testing.utils';
 
 export class TablePo {

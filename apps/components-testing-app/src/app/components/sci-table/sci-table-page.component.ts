@@ -38,7 +38,7 @@ function customSort(a: SciCellContext<Product, unknown>, b: SciCellContext<Produ
   return a.item.id - b.item.id;
 }
 
-const createDefaultColumn = () => ({
+const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean} => ({
   name: '',
   type: '',
   header: '',
@@ -77,7 +77,6 @@ export default class SciTablePageComponent {
 
   protected column = signal(createDefaultColumn());
   protected columnForm = form(this.column, column => {
-    required(column.name);
     required(column.type);
     required(column.header);
   });
@@ -155,11 +154,6 @@ export default class SciTablePageComponent {
             ...baseColumn,
             template: () => ({template: this.cellTemplate()}),
           });
-          break;
-        case '':
-          break;
-        default:
-          table.addStringColumn(column.name, product => product.name);
           break;
       }
     }

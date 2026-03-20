@@ -221,6 +221,17 @@ test.describe('sci-table', () => {
       await expect(table.locateColumnCells(1)).toHaveCount(noFilterCount);
     });
 
+    test('should filter large amount of data', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1_000_000);
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
+
+      await table.enterColumnFilter(1, '999999');
+      await expect(table.locateColumnCells(1)).toHaveCount(1);
+    });
   });
 
   test.describe('resizing', () => {
@@ -352,6 +363,20 @@ test.describe('sci-table', () => {
           .sort((a, b) => a - b)
           .map(checked => checked === 0 ? 'check_box' : 'check_box_outline_blank'),
         );
+    });
+
+    test('should sort large amount of data', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1_000_000);
+      await tablePage.addColumn({name: 'price', header: 'Price', type: 'number'});
+
+      await table.clickColumnSort('Price');
+      await expect(table.locateColumnCells(1).first()).toHaveText('1');
+      await table.clickColumnSort('Price');
+      await expect(table.locateColumnCells(1).first()).toHaveText('1000');
     });
   });
 });
