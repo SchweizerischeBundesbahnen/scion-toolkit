@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {signal, Signal} from '@angular/core';
+import {InjectionToken, signal, Signal} from '@angular/core';
 import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
@@ -21,6 +21,8 @@ import {SciTableStorage} from './table-storage';
 interface StoredTable {
   columnWidths: {columnName: string; width: number}[];
 }
+
+export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
 
 export class ɵSciTable<T> implements SciTable<T> {
 
@@ -36,17 +38,23 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly headerVisible: Signal<boolean>;
 
   public readonly itemSize: number;
+  public readonly overscan: number;
   public readonly trackBy: (item: T, index: number) => unknown;
+  public readonly identity?: (item: T) => unknown;
   public readonly rowPart?: (item: T) => string;
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
+  private readonly _activeIndex = signal<number | undefined>(undefined);
+  private readonly _selectedIndices = signal<number[]>([]);
   private readonly _columnWidths = signal(new Map<string, number>());
   private readonly _ready = signal(false);
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
   public readonly columnWidths = this._columnWidths.asReadonly();
+  public readonly activeIndex = this._activeIndex.asReadonly();
+  public readonly selectedIndices = this._selectedIndices.asReadonly();
   public readonly ready = this._ready.asReadonly();
 
   constructor(factory: ɵSciTableFactory<T>, dataOrSource: T[] | SciDataSource<T>) {
@@ -58,8 +66,10 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.resizable = factory.isResizable;
     this.selectable = factory.isSelectable;
     this.itemSize = factory.rowItemSize;
+    this.overscan = factory.overscanAmount;
     this.headerVisible = factory.isHeaderVisible;
     this.trackBy = factory.trackByFn;
+    this.identity = factory.identityFn;
     this.rowPart = factory.rowPartFn;
 
     this.dataSource = Array.isArray(dataOrSource) ?
@@ -134,6 +144,12 @@ export class ɵSciTable<T> implements SciTable<T> {
     }
 
     void this.tableStorage.store(this.storageKey, JSON.stringify({columnWidths} as StoredTable));
+  }
+
+  public isSameItem(a: T | undefined, b: T | undefined): boolean {
+    if (a === b) return true;
+    if (!a || !b) return false;
+    return this.identity ? this.identity(a) === this.identity(b) : false;
   }
 
   private get storageKey(): string {

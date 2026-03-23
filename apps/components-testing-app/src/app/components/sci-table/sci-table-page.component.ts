@@ -31,7 +31,7 @@ function generateData(length: number = 10_000): Product[] {
 }
 
 function customFilter(text: unknown, context: SciCellContext<Product, unknown>): boolean {
-  return context.item.id === 1;
+  return context.item.name.includes(text as string);
 }
 
 function customSort(a: SciCellContext<Product, unknown>, b: SciCellContext<Product, unknown>): number {
@@ -111,6 +111,13 @@ export default class SciTablePageComponent {
       header: 'Id',
       value: product => product.id,
     });
+
+    for (let i = 0; i < 5; i++) {
+      table.addStringColumn({
+        header: `Name${i}`,
+        value: product => product.name,
+      });
+    }
 
     for (const column of this.columns()) {
       const baseColumn = {

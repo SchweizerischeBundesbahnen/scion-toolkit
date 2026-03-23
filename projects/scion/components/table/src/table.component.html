@@ -1,10 +1,10 @@
+@let table = sciTable();
 <div class="viewport e2e-viewport" #viewport sciScrollable>
   <div class="grid">
-    @if (sciTable().headerVisible()) {
+    @if (table.headerVisible()) {
       <header #header>
-        @for (column of columns(); track column.name) {
+        @for (column of table.columns; track column.name) {
           <sci-column-header [column]="column"
-                             [table]="sciTable()"
                              (autoResize)="onResizeAuto(column)"
                              (widthChange)="onResize(column, $event)" />
         }
@@ -14,10 +14,9 @@
       <!-- Track index to reuse the table row elements -->
       @for (row of visibleRows(); track $index) {
         <sci-table-row [row]="row"
-                       [table]="sciTable()"
                        [activeItem]="activeItem()"
                        [selectedItems]="selectedItems()"
-                       [style.transform]="`translateY(${scrollStart() + (sciTable().itemSize * $index)}px)`"
+                       [style.transform]="`translateY(${(range().start * table.itemSize) + (table.itemSize * $index)}px)`"
                        (activateItem)="onActivateRow(row.item!)"
                        (selectItem)="onSelectRow(row.item!, $event)" />
       } @empty {

@@ -23,6 +23,8 @@ export interface SciTableFactory<T> {
    */
   trackBy(trackByFn: (item: T, index: number) => unknown): this;
 
+  identity(identityFn: (item: T) => unknown): this;
+
   disableSort(): this;
   disableFilter(): this;
   disableResize(): this;
@@ -35,6 +37,11 @@ export interface SciTableFactory<T> {
    * Size of row items in px. Defaults to 28px.
    */
   itemSize(itemSize: number): this;
+
+  /**
+   * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
+   */
+  overscan(overscan: number): this;
 
   /**
    * Adds conditional part to row element.

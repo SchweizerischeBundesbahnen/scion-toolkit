@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input,
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciColumns} from '../table.model';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
-import {ɵSciTable} from '../ɵtable.model';
+import {ɵSCI_TABLE} from '../ɵtable.model';
 
 @Component({
   selector: 'sci-column-header',
@@ -17,11 +17,11 @@ import {ɵSciTable} from '../ɵtable.model';
 export class ColumnHeaderComponent<T> {
 
   public readonly column = input.required<SciColumns<T>>();
-  public readonly table = input.required<ɵSciTable<T>>();
 
   public readonly autoResize = output();
   public readonly widthChange = output<number>();
 
+  protected readonly table = inject(ɵSCI_TABLE);
   private readonly _element = inject(ElementRef);
 
   private readonly _resizeContext = signal<{width: number; columnName: string} | undefined>(undefined);

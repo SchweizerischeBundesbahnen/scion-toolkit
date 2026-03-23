@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, linkedSignal, NgZone, output, signal, untracked, viewChild, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, linkedSignal, NgZone, output, signal, untracked, viewChild, viewChildren} from '@angular/core';
 import {SciColumns, SciRow, SciTable} from './table.model';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
-import {ɵSciTable} from './ɵtable.model';
+import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {fromBoundingClientRect$} from '@scion/toolkit/observable';
 import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {TableRowComponent} from './table-row/table-row.component';
@@ -39,11 +39,17 @@ import {clamp} from './common';
     SciScrollbarComponent,
     SciScrollableDirective,
   ],
+  providers: [
+    {
+      provide: ɵSCI_TABLE,
+      useFactory: <T>(component: SciTableComponent<T>) => computed(() => component.table() as ɵSciTable<T>),
+      deps: [forwardRef(() => SciTableComponent)],
+    },
+  ],
 })
 export class SciTableComponent<T> {
 
   public readonly table = input.required<SciTable<T>>();
-  public readonly overscan = input<number>(10);
 
   public readonly activateItem = output<T | undefined>();
   public readonly selectItems = output<T[]>();
@@ -58,18 +64,17 @@ export class SciTableComponent<T> {
 
   protected readonly activeItem = signal<T | undefined>(undefined);
   protected readonly selectedItems = signal<T[]>([]);
-  protected readonly scrollStart = signal(0);
+  protected readonly range = signal<{start: number; end: number}>({start: 0, end: 0});
   private readonly _totalCount = signal(0);
-  private readonly _range = signal<{start: number; end: number}>({start: 0, end: 0});
   protected readonly rows = linkedSignal({
     source: () => ({count: this._totalCount(), sort: this.table().sortCriteria(), filter: this.table().filterCriteria()}), // reset rows as soon as count, filter or sort change
     computation: ({count}) => new Array<SciRow<T>>(count).fill({} as SciRow<T>),
   });
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
-  protected readonly columns = computed(() => this.sciTable().columns);
+
   protected readonly visibleRows = computed(() => {
-    const {start, end} = this._range();
+    const {start, end} = this.range();
     return this.rows().slice(start, end);
   });
 
@@ -85,19 +90,19 @@ export class SciTableComponent<T> {
   ));
 
   private readonly _count = computed(() => {
-    const height = this._containerHeight();
+    const containerHeight = this._containerHeight();
     const itemSize = this.sciTable().itemSize;
-    const overscan = this.overscan();
+    const overscan = this.sciTable().overscan;
 
-    if (height === undefined) {
+    if (containerHeight === undefined) {
       return 0;
     }
 
-    return Math.ceil(height / itemSize) + overscan * 2;
+    return Math.ceil(containerHeight / itemSize) + overscan * 2;
   });
   protected readonly height = computed(() => `${this._totalCount() * this.sciTable().itemSize}px`);
   protected readonly columnWidths = computed(() => {
-    const columns = this.columns();
+    const columns = this.sciTable().columns;
     const overrides = this.sciTable().columnWidths();
 
     return columns
@@ -105,15 +110,21 @@ export class SciTableComponent<T> {
       .join(' ');
   });
   protected readonly tableWidth = computed(() => {
-    const columns = this.columns();
+    const columns = this.sciTable().columns;
     const overrides = this.sciTable().columnWidths();
     const headers = this._headers();
 
     return untracked(() => {
       const width = columns
-        .reduce((sum, c) => sum + (overrides.get(c.name) ?? headers.find(h => h.column().name === c.name)?.getWidth() ?? 0), 0);
+        .reduce((sum, c) => {
+          // Since c.width(), can contain non-px values, if there is no override width defined, get the actual width in px from the header
+          const columnWidth = overrides.has(c.name) ?
+            overrides.get(c.name)! :
+            headers.find(h => h.column().name === c.name)?.getWidth() ?? 0;
 
-      // sum all column widths together, should always be at least 100% of the container width
+          return sum + columnWidth;
+        }, 0);
+
       return `max(100%, ${Math.floor(width)}px)`;
     });
   });
@@ -180,7 +191,7 @@ export class SciTableComponent<T> {
       const table = this.sciTable();
       const sortCriteria = table.sortCriteria();
       const filterCriteria = table.filterCriteria();
-      const {start, end} = this._range();
+      const {start, end} = this.range();
 
       untracked(() => {
         const subscription = table.getRows({
@@ -200,8 +211,8 @@ export class SciTableComponent<T> {
   }
 
   private installScrollListener(): void {
-    const overscan$ = toObservable(this.overscan);
     const count$ = toObservable(this._count);
+    const overscan$ = toObservable(computed(() => this.sciTable().overscan));
     const itemSize$ = toObservable(computed(() => this.sciTable().itemSize));
 
     effect(onCleanup => {
@@ -220,9 +231,7 @@ export class SciTableComponent<T> {
         ).subscribe(([_, overscan, count, itemSize]) => {
           const firstVisible = Math.floor(element.scrollTop / itemSize);
           const start = Math.max(0, firstVisible - overscan);
-
-          this.scrollStart.set(start * itemSize);
-          this._range.set({start, end: start + count});
+          this.range.set({start, end: start + count});
         });
 
         onCleanup(() => subscription.unsubscribe());

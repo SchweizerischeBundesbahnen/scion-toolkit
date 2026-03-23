@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, input, output, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, input, output, viewChildren} from '@angular/core';
 import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
-import {ɵSciTable} from '../ɵtable.model';
+import {ɵSCI_TABLE} from '../ɵtable.model';
 
 @Component({
   selector: 'sci-table-row',
@@ -33,7 +33,6 @@ import {ɵSciTable} from '../ɵtable.model';
 export class TableRowComponent<T> {
 
   public readonly row = input.required<Partial<SciRow<T>>>();
-  public readonly table = input.required<ɵSciTable<T>>();
 
   // TODO [eg]: Move row selection to service
   public readonly selectedItems = input.required<T[]>();
@@ -41,6 +40,7 @@ export class TableRowComponent<T> {
   public readonly activateItem = output();
   public readonly selectItem = output<{ctrlKey: boolean}>();
 
+  protected readonly table = inject(ɵSCI_TABLE);
   protected readonly cells = viewChildren(TableCellComponent);
 
   protected readonly item = computed(() => this.row().item);

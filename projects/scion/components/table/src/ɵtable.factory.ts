@@ -51,12 +51,14 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   public tableName: string | undefined = undefined;
   public tableStorage: SciTableStorage = new DefaultSciTableStorage();
   public rowItemSize = 28;
+  public overscanAmount = 10;
   public isSortable = signal(true);
   public isFilterable = signal(true);
   public isResizable = signal(true);
   public isSelectable = signal(true);
   public isHeaderVisible = signal(true);
   public rowPartFn?: (item: T) => string;
+  public identityFn?: (_: T) => unknown;
   public trackByFn = (_: T, index: number): unknown => index;
 
   public name(name: string): this {
@@ -118,6 +120,11 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this;
   }
 
+  public overscan(overscan: number): this {
+    this.overscanAmount = overscan;
+    return this;
+  }
+
   public rowPart(cssClassFn: (item: T) => string): this {
     this.rowPartFn = cssClassFn;
     return this;
@@ -125,6 +132,11 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   public trackBy(trackByFn: (row: T, index: number) => unknown): this {
     this.trackByFn = trackByFn;
+    return this;
+  }
+
+  public identity(identityFn: (item: T) => unknown): this {
+    this.identityFn = identityFn;
     return this;
   }
 

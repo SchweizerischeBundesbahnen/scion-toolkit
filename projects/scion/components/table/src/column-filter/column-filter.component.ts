@@ -3,7 +3,7 @@ import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciColumns} from '../table.model';
 import {combineLatestWith, debounceTime} from 'rxjs';
-import {ɵSciTable} from '../ɵtable.model';
+import {ɵSCI_TABLE} from '../ɵtable.model';
 
 @Component({
   selector: 'sci-column-filter',
@@ -15,18 +15,18 @@ import {ɵSciTable} from '../ɵtable.model';
 export class ColumnFilterComponent<T> {
 
   public readonly column = input.required<SciColumns<T>>();
-  public readonly table = input.required<ɵSciTable<T>>();
 
   protected readonly query = inject(FormBuilder).control<string | boolean | number>('');
+  private readonly _table = inject(ɵSCI_TABLE);
 
   constructor() {
     effect(() => {
-      const filterCriterion = this.table().filterCriteria().find(fc => fc.columnName === this.column().name);
+      const filterCriterion = this._table().filterCriteria().find(fc => fc.columnName === this.column().name);
       this.query.setValue(filterCriterion?.text ?? '', {emitEvent: false});
     });
 
     this.query.valueChanges.pipe(
-      combineLatestWith(toObservable(this.table), toObservable(this.column)),
+      combineLatestWith(toObservable(this._table), toObservable(this.column)),
       takeUntilDestroyed(),
       debounceTime(200),
     ).subscribe(([value, table, column]) => {
