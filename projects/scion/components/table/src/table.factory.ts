@@ -18,13 +18,6 @@ export interface SciTableFactory<T> {
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
 
-  /**
-   * TrackBy function used to optimize rendering. Defaults to tracking by index.
-   */
-  trackBy(trackByFn: (item: T, index: number) => unknown): this;
-
-  identity(identityFn: (item: T) => unknown): this;
-
   disableSort(): this;
   disableFilter(): this;
   disableResize(): this;

@@ -59,6 +59,10 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
     };
   }
 
+  public identity(item: T): T {
+    return item;
+  }
+
   private mapCriteria<CRIT extends {columnName: string}>(criteria: CRIT[], columns: SciColumns<T>[]): MappedCriterion<T, CRIT>[] {
     return criteria.map(sc => {
       const columnIndex = columns.findIndex(c => sc.columnName === c.name);

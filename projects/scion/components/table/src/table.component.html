@@ -4,21 +4,16 @@
     @if (table.headerVisible()) {
       <header #header>
         @for (column of table.columns; track column.name) {
-          <sci-column-header [column]="column"
-                             (autoResize)="onResizeAuto(column)"
-                             (widthChange)="onResize(column, $event)" />
+          <sci-column-header [column]="column" (autoResize)="onResizeAuto(column)" (widthChange)="onResize(column, $event)" />
         }
       </header>
     }
     <div class="rows">
       <!-- Track index to reuse the table row elements -->
       @for (row of visibleRows(); track $index) {
-        <sci-table-row [row]="row"
-                       [activeItem]="activeItem()"
-                       [selectedItems]="selectedItems()"
-                       [style.transform]="`translateY(${(range().start * table.itemSize) + (table.itemSize * $index)}px)`"
-                       (activateItem)="onActivateRow(row.item!)"
-                       (selectItem)="onSelectRow(row.item!, $event)" />
+        @let index = table.range().start + $index;
+<!--   Translation on wrapper     -->
+        <sci-table-row [row]="row" [index]="index" [style.transform]="`translateY(${index * table.itemSize}px)`" />
       } @empty {
         <div class="empty-state">Nothing to show.</div>
       }

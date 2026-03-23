@@ -23,6 +23,7 @@ export interface SciTableResponse<T> {
   totalCount: number;
 }
 
-export interface SciDataSource<T> {
+export interface SciDataSource<T, ID = T> {
   getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
+  identity(item: T): ID;
 }

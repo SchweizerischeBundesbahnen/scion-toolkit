@@ -8,15 +8,15 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {InjectionToken, signal, Signal} from '@angular/core';
-import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
+import {InjectionToken, linkedSignal, signal, Signal} from '@angular/core';
+import {SciDataSource, SciFilterCriterion, SciSortCriterion} from './table-data-source';
 import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciArrayDataSource} from './ɵarray-data-source';
-import {Observable} from 'rxjs';
 import {coerceObservable, coerceSignal} from './common';
 import {map} from 'rxjs/operators';
 import {SciTableStorage} from './table-storage';
+import {Subscription} from 'rxjs';
 
 interface StoredTable {
   columnWidths: {columnName: string; width: number}[];
@@ -24,10 +24,10 @@ interface StoredTable {
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
 
-export class ɵSciTable<T> implements SciTable<T> {
+export class ɵSciTable<T, ID = T> implements SciTable<T> {
 
   public readonly columns: SciColumns<T>[];
-  public readonly dataSource: SciDataSource<T>;
+  public readonly dataSource: SciDataSource<T, ID>;
   public readonly tableStorage: SciTableStorage;
   public readonly name?: string;
 
@@ -39,25 +39,36 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public readonly itemSize: number;
   public readonly overscan: number;
-  public readonly trackBy: (item: T, index: number) => unknown;
-  public readonly identity?: (item: T) => unknown;
   public readonly rowPart?: (item: T) => string;
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
-  private readonly _activeIndex = signal<number | undefined>(undefined);
-  private readonly _selectedIndices = signal<number[]>([]);
   private readonly _columnWidths = signal(new Map<string, number>());
   private readonly _ready = signal(false);
+  private readonly _range = signal<{start: number; end: number}>({start: 0, end: 0});
+  private readonly _totalCount = signal(0);
+
+  private readonly _selectedItems = signal<Set<ID>>(new Set());
+  private readonly _activeItem = linkedSignal({
+    source: () => ({sort: this.sortCriteria(), filter: this.filterCriteria()}),
+    computation: () => undefined as ID | undefined,
+  });
+  private readonly _rows = linkedSignal({
+    source: () => ({count: this._totalCount(), sort: this.sortCriteria(), filter: this.filterCriteria()}), // reset rows as soon as count, filter or sort change
+    computation: ({count}) => new Array<SciRow<T, ID>>(count).fill({} as SciRow<T, ID>),
+  });
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
   public readonly columnWidths = this._columnWidths.asReadonly();
-  public readonly activeIndex = this._activeIndex.asReadonly();
-  public readonly selectedIndices = this._selectedIndices.asReadonly();
+  public readonly activeItem = this._activeItem.asReadonly();
+  public readonly selectedItems = this._selectedItems.asReadonly();
   public readonly ready = this._ready.asReadonly();
+  public readonly totalCount = this._totalCount.asReadonly();
+  public readonly range = this._range.asReadonly();
+  public readonly rows = this._rows.asReadonly();
 
-  constructor(factory: ɵSciTableFactory<T>, dataOrSource: T[] | SciDataSource<T>) {
+  constructor(factory: ɵSciTableFactory<T>, dataOrSource: T[] | SciDataSource<T, ID>) {
     this.columns = factory.columns;
     this.name = factory.tableName;
     this.tableStorage = factory.tableStorage;
@@ -68,12 +79,10 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.itemSize = factory.rowItemSize;
     this.overscan = factory.overscanAmount;
     this.headerVisible = factory.isHeaderVisible;
-    this.trackBy = factory.trackByFn;
-    this.identity = factory.identityFn;
     this.rowPart = factory.rowPartFn;
 
     this.dataSource = Array.isArray(dataOrSource) ?
-      new ɵSciArrayDataSource(dataOrSource, factory.columns) :
+      new ɵSciArrayDataSource(dataOrSource, factory.columns) as unknown as SciDataSource<T, ID> :
       dataOrSource;
 
     void this.initColumnWidths().then(() => {
@@ -81,10 +90,8 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
-  public getRows(request: SciTableRequest): Observable<SciTableResponse<SciRow<T>>> {
-    return coerceObservable(this.dataSource.getItems(request)).pipe(
-      map(res => ({totalCount: res.totalCount, items: this.mapItemsToRow(res.items)})),
-    );
+  public setRange(start: number, end: number): void {
+    this._range.set({start, end});
   }
 
   public sort(columnName: string, multi: boolean): void {
@@ -146,19 +153,37 @@ export class ɵSciTable<T> implements SciTable<T> {
     void this.tableStorage.store(this.storageKey, JSON.stringify({columnWidths} as StoredTable));
   }
 
-  public isSameItem(a: T | undefined, b: T | undefined): boolean {
-    if (a === b) return true;
-    if (!a || !b) return false;
-    return this.identity ? this.identity(a) === this.identity(b) : false;
+  public setActiveItem(id: ID | undefined): void {
+    this._activeItem.set(id);
+  }
+
+  public updateSelectedItems(updateFn: (ids: Set<ID>) => Set<ID>): void {
+    this._selectedItems.update(updateFn);
+  }
+
+  public fetchData(sortCriteria: SciSortCriterion[], filterCriteria: SciFilterCriterion[], {start, end}: {start: number; end: number}): Subscription {
+    return coerceObservable(this.dataSource.getItems({
+      start,
+      end,
+      limit: end - start,
+      sortCriteria,
+      filterCriteria,
+    })).pipe(
+      map(res => ({totalCount: res.totalCount, items: this.mapItemsToRow(res.items)})),
+    ).subscribe(response => {
+      this._totalCount.set(response.totalCount);
+      this._rows.update(items => items.toSpliced(start, response.items.length, ...response.items));
+    });
   }
 
   private get storageKey(): string {
     return `sci-table-${this.name}`;
   }
 
-  private mapItemsToRow(items: T[]): SciRow<T>[] {
+  private mapItemsToRow(items: T[]): SciRow<T, ID>[] {
     return items.map(item => ({
       item: item,
+      id: this.dataSource.identity(item),
       cells: this.columns.map(column => ({
         value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
         component: column.type === 'component' ? column.component(item) : undefined,

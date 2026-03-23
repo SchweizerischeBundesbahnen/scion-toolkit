@@ -14,7 +14,7 @@ import {FormsModule} from '@angular/forms';
 import {Field, form} from '@angular/forms/signals';
 import {Observable, timer, map} from 'rxjs';
 
-class SlowDataSource implements SciDataSource<Station> {
+class SlowDataSource implements SciDataSource<Station, string> {
   public getItems(request: SciTableRequest): Observable<SciTableResponse<Station>> {
     return timer(1000).pipe(
       map(() => ({
@@ -22,6 +22,10 @@ class SlowDataSource implements SciDataSource<Station> {
         totalCount: stations.length,
       })),
     );
+  }
+
+  public identity(item: Station): string {
+    return item.sloid;
   }
 }
 
@@ -66,7 +70,7 @@ class CustomCellComponent {
 export default class SciTablePageComponent {
   protected data = signal(stations);
   protected activeItem = signal<Station | undefined>(undefined);
-  protected selectedRows = signal<string | undefined>(undefined);
+  protected selectedItems = signal<string | undefined>(undefined);
   protected additionalData = signal(0);
 
   protected settings = signal({
@@ -144,7 +148,6 @@ export default class SciTablePageComponent {
         header: 'District',
       })
       .name('stations')
-      .trackBy(item => item.sloid)
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   }
 
@@ -159,8 +162,9 @@ export default class SciTablePageComponent {
   //   // return httpResource<{sloid: string}>(() => `http://localhost:3000/api?placeRef=${station.sloid}`).value;
   // }
 
-  protected onSelectRows(selection: Station[]): void {
-    this.selectedRows.set(selection.length ? selection.map(s => s.sloid).join(', ') : undefined);
+  protected onSelectRows(selection: Set<Station>): void {
+    const selectionValues = [...selection.values()];
+    this.selectedItems.set(selectionValues.length ? selectionValues.map(s => s.sloid).join(', ') : undefined);
   }
 
   protected onUpdateSignal(): void {

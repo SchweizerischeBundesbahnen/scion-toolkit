@@ -8,10 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, inject, input, output, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, input, viewChildren} from '@angular/core';
 import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
+import {TableSelectionService} from '../table-selection.service';
 
 @Component({
   selector: 'sci-table-row',
@@ -30,22 +31,19 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
     TableCellComponent,
   ],
 })
-export class TableRowComponent<T> {
+export class TableRowComponent<T, ID> {
 
-  public readonly row = input.required<Partial<SciRow<T>>>();
+  public readonly row = input.required<Partial<SciRow<T, ID>>>();
+  public readonly index = input.required<number>();
 
-  // TODO [eg]: Move row selection to service
-  public readonly selectedItems = input.required<T[]>();
-  public readonly activeItem = input<T>();
-  public readonly activateItem = output();
-  public readonly selectItem = output<{ctrlKey: boolean}>();
-
+  private readonly _selectionService = inject(TableSelectionService);
   protected readonly table = inject(ɵSCI_TABLE);
   protected readonly cells = viewChildren(TableCellComponent);
 
   protected readonly item = computed(() => this.row().item);
-  protected readonly isActive = computed(() => this.item() === this.activeItem());
-  protected readonly isSelected = computed(() => this.item() && this.selectedItems().includes(this.item()!));
+  protected readonly id = computed(() => this.table().dataSource.identity(this.item()));
+  protected readonly isActive = computed(() => this.id() === this.table().activeItem());
+  protected readonly isSelected = computed(() => this.table().selectedItems().has(this.id()));
   protected readonly loading = computed(() => !this.item());
   protected readonly part = computed(() => this.item() ? this.table().rowPart?.(this.item()!) : undefined);
 
@@ -57,13 +55,13 @@ export class TableRowComponent<T> {
     if (this.loading()) {
       return;
     }
-    this.activateItem.emit();
+    this._selectionService.onRowClick(this.index(), {ctrlKey: false, metaKey: false, shiftKey: false});
   }
 
   protected onRowClick(event: PointerEvent): void {
     if (this.loading()) {
       return;
     }
-    this.selectItem.emit({ctrlKey: event.ctrlKey || event.metaKey});
+    this._selectionService.onRowClick(this.index(), event);
   }
 }

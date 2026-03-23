@@ -1,4 +1,6 @@
 :host {
+  user-select: none; // has to be disabled because of selection
+
   &:hover {
     background-color: var(--sci-color-background-elevation-hover);
   }

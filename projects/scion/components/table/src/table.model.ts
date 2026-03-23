@@ -103,8 +103,9 @@ export type SciColumns<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBoolean
 /**
  * Mapped row, used as display state.
  */
-export interface SciRow<T> {
+export interface SciRow<T, ID = T> {
   item: T;
+  id: ID;
   cells: SciCells[];
 }
 

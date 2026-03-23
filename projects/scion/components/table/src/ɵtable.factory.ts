@@ -58,8 +58,6 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   public isSelectable = signal(true);
   public isHeaderVisible = signal(true);
   public rowPartFn?: (item: T) => string;
-  public identityFn?: (_: T) => unknown;
-  public trackByFn = (_: T, index: number): unknown => index;
 
   public name(name: string): this {
     this.tableName = name;
@@ -127,16 +125,6 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   public rowPart(cssClassFn: (item: T) => string): this {
     this.rowPartFn = cssClassFn;
-    return this;
-  }
-
-  public trackBy(trackByFn: (row: T, index: number) => unknown): this {
-    this.trackByFn = trackByFn;
-    return this;
-  }
-
-  public identity(identityFn: (item: T) => unknown): this {
-    this.identityFn = identityFn;
     return this;
   }
 
