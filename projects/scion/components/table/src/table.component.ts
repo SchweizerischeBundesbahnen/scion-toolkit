@@ -156,8 +156,7 @@ export class SciTableComponent<T, ID = T> {
 
   private installScrollListener(): void {
     const count$ = toObservable(this._count);
-    const overscan$ = toObservable(computed(() => this.sciTable().overscan));
-    const itemSize$ = toObservable(computed(() => this.sciTable().itemSize));
+    const table$ = toObservable(this.sciTable);
 
     effect(onCleanup => {
       const element = this._viewport()?.nativeElement;
@@ -169,11 +168,11 @@ export class SciTableComponent<T, ID = T> {
       untracked(() => {
         const subscription = fromEvent(element, 'scroll', {passive: true}).pipe(
           startWith(null),
-          combineLatestWith(overscan$, count$, itemSize$),
+          combineLatestWith(table$, count$),
           subscribeIn(fn => this._zone.runOutsideAngular(fn)),
-        ).subscribe(([_, overscan, count, itemSize]) => {
-          const firstVisible = Math.floor(element.scrollTop / itemSize);
-          const start = Math.max(0, firstVisible - overscan);
+        ).subscribe(([_, table, count]) => {
+          const firstVisible = Math.floor(element.scrollTop / table.itemSize);
+          const start = Math.max(0, firstVisible - table.overscan);
           this.sciTable().setRange(start, start + count);
         });
 

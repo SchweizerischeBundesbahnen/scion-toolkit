@@ -69,7 +69,7 @@ class CustomCellComponent {
 })
 export default class SciTablePageComponent {
   protected data = signal(stations);
-  protected activeItem = signal<Station | undefined>(undefined);
+  protected activeItem = signal<string | undefined>(undefined);
   protected selectedItems = signal<string | undefined>(undefined);
   protected additionalData = signal(0);
 
@@ -151,20 +151,13 @@ export default class SciTablePageComponent {
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   }
 
-  // private getData(station: Station): Signal<number> {
-  //   const data = signal<number>(0);
-  //
-  //   void fetch(`http://localhost:3000/api?placeRef=${station.sloid}`)
-  //     .then(res => res.json())
-  //     .then((res: {sloid: string}) => data.set(+res.sloid));
-  //
-  //   return data;
-  //   // return httpResource<{sloid: string}>(() => `http://localhost:3000/api?placeRef=${station.sloid}`).value;
-  // }
+  protected onActivateRow(row: Station | string | undefined): void {
+    this.activeItem.set(typeof row === 'string' ? row : row?.sloid);
+  }
 
-  protected onSelectRows(selection: Set<Station>): void {
+  protected onSelectRows(selection: Set<Station> | Set<string>): void {
     const selectionValues = [...selection.values()];
-    this.selectedItems.set(selectionValues.length ? selectionValues.map(s => s.sloid).join(', ') : undefined);
+    this.selectedItems.set(selectionValues.length ? selectionValues.map(s => typeof s === 'string' ? s : s.sloid).join(', ') : undefined);
   }
 
   protected onUpdateSignal(): void {

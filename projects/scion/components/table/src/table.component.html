@@ -8,15 +8,16 @@
         }
       </header>
     }
-    <div class="rows">
+
+    <div class="body">
       <!-- Track index to reuse the table row elements -->
-      @for (row of visibleRows(); track $index) {
-        @let index = table.range().start + $index;
-<!--   Translation on wrapper     -->
-        <sci-table-row [row]="row" [index]="index" [style.transform]="`translateY(${index * table.itemSize}px)`" />
-      } @empty {
-        <div class="empty-state">Nothing to show.</div>
-      }
+      <div class="rows" [style.transform]="`translateY(${table.range().start * table.itemSize}px)`">
+        @for (row of visibleRows(); track $index) {
+          <sci-table-row [row]="row" [index]="table.range().start + $index" />
+        } @empty {
+          <div class="empty-state">Nothing to show.</div>
+        }
+      </div>
     </div>
   </div>
 </div>
