@@ -13,7 +13,8 @@ export interface SciSortCriterion {
 export interface SciTableRequest {
   start: number;
   end: number;
-  limit: number;
+  pageSize: number;
+  page: number;
   sortCriteria: SciSortCriterion[];
   filterCriteria: SciFilterCriterion[];
 }
@@ -26,4 +27,5 @@ export interface SciTableResponse<T> {
 export interface SciDataSource<T, ID = T> {
   getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
   identity(item: T): ID;
+  pageSize: number;
 }

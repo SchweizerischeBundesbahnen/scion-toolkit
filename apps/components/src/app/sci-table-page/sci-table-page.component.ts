@@ -15,6 +15,8 @@ import {Field, form} from '@angular/forms/signals';
 import {Observable, timer, map} from 'rxjs';
 
 class SlowDataSource implements SciDataSource<Station, string> {
+  public pageSize = 50;
+
   public getItems(request: SciTableRequest): Observable<SciTableResponse<Station>> {
     return timer(1000).pipe(
       map(() => ({
@@ -79,7 +81,7 @@ export default class SciTablePageComponent {
     resizable: true,
     showHeader: true,
     language: 'de',
-    slowDataSource: false,
+    slowDataSource: true,
   });
   protected form = form(this.settings);
 
@@ -107,16 +109,16 @@ export default class SciTablePageComponent {
       table.disableResize();
     }
 
-    if (this.additionalData() > 2) {
-      table.addStringColumn({
-        value: station => computed(() => `${station.sloid} (${this.additionalData()})`),
-        width: '150px',
-        maxWidth: '200px',
-        minWidth: '100px',
-        header: 'Sloid',
-        resizable: false,
-      });
-    }
+    // if (this.additionalData() > 2) {
+    //   table.addStringColumn({
+    //     value: station => computed(() => `${station.sloid} (${this.additionalData()})`),
+    //     width: '150px',
+    //     maxWidth: '200px',
+    //     minWidth: '100px',
+    //     header: 'Sloid',
+    //     resizable: false,
+    //   });
+    // }
 
     return table
       .addComponentColumn({

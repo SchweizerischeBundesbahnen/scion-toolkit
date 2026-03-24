@@ -1,5 +1,7 @@
 <main>
-  <sci-table [table]="table()" />
+  @if (table; as table) {
+    <sci-table [table]="table()" />
+  }
   <ng-template let-product #cell>
     <span class="material-symbols-outlined custom-cell e2e-custom-cell" [class.up]="product.price > 500" [class.down]="product.price <= 500">
       @if (product.price > 500) {

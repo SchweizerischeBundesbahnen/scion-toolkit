@@ -7,12 +7,14 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, input, inputBinding, signal, TemplateRef, viewChild} from '@angular/core';
-import {SciTableComponent, SciTableFactory, SciCellContext, table} from '@scion/components/table';
+import {Component, computed, effect, input, inputBinding, Signal, signal, TemplateRef, viewChild} from '@angular/core';
+import {SciTableComponent, SciTableFactory, SciCellContext, table, SciDataSource, SciTableRequest, SciTableResponse} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {Field, form, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
+import {map, Observable, timer} from 'rxjs';
+import {SciTable} from '../../../../../../projects/scion/components/table/src/table.model';
 
 interface Product {
   id: number;
@@ -36,6 +38,25 @@ function customFilter(text: unknown, context: SciCellContext<Product, unknown>):
 
 function customSort(a: SciCellContext<Product, unknown>, b: SciCellContext<Product, unknown>): number {
   return a.item.id - b.item.id;
+}
+
+class SlowDataSource implements SciDataSource<Product, number> {
+  public pageSize = 50;
+
+  constructor(private readonly _data: Signal<Product[]>) {}
+
+  public getItems(request: SciTableRequest): Observable<SciTableResponse<Product>> {
+    return timer(1000).pipe(
+      map(() => ({
+        items: this._data().slice(request.start, request.end),
+        totalCount: this._data().length,
+      })),
+    );
+  }
+
+  public identity(item: Product): number {
+    return item.id;
+  }
 }
 
 const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean} => ({
@@ -65,6 +86,8 @@ const createDefaultColumn = (): {name: string; type: string; header: string; res
 })
 export default class SciTablePageComponent {
 
+  public type = input<'slow' | undefined>();
+
   protected settings = signal({
     filterable: true,
     sortable: true,
@@ -84,9 +107,20 @@ export default class SciTablePageComponent {
   protected data = computed(() => generateData(this.settings().rowCount));
   protected columns = signal<ReturnType<typeof this.column>[]>([]);
 
-  protected table = table(this.data, table => this.createTable(table));
+  protected table?: Signal<SciTable<Product>>;
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
+
+  constructor() {
+    effect(() => {
+      if (this.type() === 'slow') {
+        this.table = table(new SlowDataSource(this.data), table => this.createTable(table));
+      }
+      else {
+        this.table = table(this.data, table => this.createTable(table));
+      }
+    });
+  }
 
   protected createTable(table: SciTableFactory<Product>): SciTableFactory<Product> {
     const settings = this.settings();
@@ -112,12 +146,12 @@ export default class SciTablePageComponent {
       value: product => product.id,
     });
 
-    for (let i = 0; i < 5; i++) {
-      table.addStringColumn({
-        header: `Name${i}`,
-        value: product => product.name,
-      });
-    }
+    // for (let i = 0; i < 5; i++) {
+    //   table.addStringColumn({
+    //     header: `Name${i}`,
+    //     value: product => product.name,
+    //   });
+    // }
 
     for (const column of this.columns()) {
       const baseColumn = {

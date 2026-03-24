@@ -34,3 +34,11 @@ export function clamp(min: string, preferred: string, max: string | null): strin
   const maxDef = max === null ? preferred : `min(${preferred}, ${max})`;
   return `minmax(${min}, ${maxDef})`;
 }
+
+export function rangeInclusive(start: number, end: number): number[] {
+  const range: number[] = [];
+  for (let i = start; i <= end; i++) {
+    range.push(i);
+  }
+  return range;
+}

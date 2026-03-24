@@ -8,17 +8,17 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, NgZone, output, untracked, viewChild, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, linkedSignal, NgZone, output, untracked, viewChild, viewChildren} from '@angular/core';
 import {SciColumns, SciTable} from './table.model';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
-import {toObservable} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {TableRowComponent} from './table-row/table-row.component';
-import {combineLatestWith, fromEvent} from 'rxjs';
+import {combineLatest, combineLatestWith, fromEvent, mergeMap, of, switchMap} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
-import {startWith} from 'rxjs/operators';
-import {clamp} from './common';
+import {map, startWith} from 'rxjs/operators';
+import {clamp, rangeInclusive} from './common';
 import {TableSelectionService} from './table-selection.service';
 import {dimension} from '@scion/components/dimension';
 
@@ -63,6 +63,11 @@ export class SciTableComponent<T, ID = T> {
 
   private readonly _zone = inject(NgZone);
   private readonly _element = inject(ElementRef);
+
+  private readonly _loadedPages = linkedSignal({
+    source: () => ({sort: this.sciTable().sortCriteria(), filter: this.sciTable().filterCriteria()}),
+    computation: () => new Set<number>(),
+  });
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
   protected readonly visibleRows = computed(() => {
@@ -118,6 +123,14 @@ export class SciTableComponent<T, ID = T> {
       this.selectItems.emit(this.sciTable().selectedItems());
     });
 
+    effect(() => {
+      const viewport = this._viewport();
+      this.sciTable().sortCriteria();
+      this.sciTable().filterCriteria();
+
+      viewport?.nativeElement.scrollTo({top: 0});
+    });
+
     this.installDataFetcher();
     this.installScrollListener();
   }
@@ -137,20 +150,33 @@ export class SciTableComponent<T, ID = T> {
   }
 
   /**
-   * Fetches data from the data source as soon as the sort, filter or scroll changes
-   * This has to be done here, since we can't set up an effect in the TableModel, because it's already created within a reactive context
+   * Fetches data when the visible range or sort/filter criteria change, skipping already loaded pages.
+   * Must be installed here (in an injection context) to support cleanup through {@link takeUntilDestroyed}.
    */
   private installDataFetcher(): void {
-    effect(onCleanup => {
-      const table = this.sciTable();
-      const sortCriteria = table.sortCriteria();
-      const filterCriteria = table.filterCriteria();
-      const range = table.range();
+    const sortCriteria$ = toObservable(computed(() => this.sciTable().sortCriteria()));
+    const filterCriteria$ = toObservable(computed(() => this.sciTable().filterCriteria()));
+    const table$ = toObservable(this.sciTable);
 
-      untracked(() => {
-        const subscription = table.fetchData(sortCriteria, filterCriteria, range);
-        onCleanup(() => subscription.unsubscribe());
-      });
+    const range$ = toObservable(computed(() => this.sciTable().range())).pipe(
+      combineLatestWith(table$, toObservable(this._loadedPages)),
+      map(([{start, end}, table, loadedPages]) => {
+        const pageSize = table.dataSource.pageSize;
+        const startPage = Math.floor(start / pageSize);
+        const endPage = Math.floor(end / pageSize);
+        return rangeInclusive(startPage, endPage).filter(page => !loadedPages.has(page));
+      }),
+    );
+
+    combineLatest([table$, range$, sortCriteria$, filterCriteria$]).pipe(
+      switchMap(([table, range, sortCriteria, filterCriteria]) => of(...range).pipe(
+        mergeMap(page => table.loadPage({page, sortCriteria, filterCriteria})),
+        map(response => ({response, table})),
+      )),
+      takeUntilDestroyed(),
+    ).subscribe(({response, table}) => {
+      this._loadedPages.update(pages => new Set(pages).add(response.page));
+      table.updateRows(response);
     });
   }
 

@@ -1,5 +1,5 @@
 <main>
-  <sci-table [table]="settings().slowDataSource ? table() : slowTable()" (activateItem)="onActivateRow($event)" (selectItems)="onSelectRows($event)" />
+  <sci-table [table]="settings().slowDataSource ? slowTable() : table()" (activateItem)="onActivateRow($event)" (selectItems)="onSelectRows($event)" />
   <ng-template let-station let-custom="custom" #cell>
     <span class="custom-cell">
       {{station.sloid}} / {{custom}}

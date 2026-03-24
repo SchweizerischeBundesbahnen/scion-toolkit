@@ -23,35 +23,28 @@ interface ItemWithValues<T> {
 }
 
 export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
-  private _lastRequest: SciTableRequest | undefined;
-  private _lastResponse: ItemWithValues<T>[] | undefined;
-
   private readonly _data: ItemWithValues<T>[];
+
+  public readonly pageSize: number;
 
   constructor(data: T[], private _columns: SciColumns<T>[]) {
     this._data = data.map(item => ({
       item,
       values: this._columns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
     }));
+
+    // load the full data for array dataSources
+    // there is no benefit in paging local data
+    this.pageSize = Math.min(this._data.length, 10_000);
   }
 
   public getItems(request: SciTableRequest): SciTableResponse<T> {
     const sortCols = this.mapCriteria(request.sortCriteria, this._columns);
     const filterCols = this.mapCriteria(request.filterCriteria, this._columns);
 
-    if (this._lastResponse && this.filterCriteriaSame(request.filterCriteria, this._lastRequest?.filterCriteria) && this.sortCriteriaSame(request.sortCriteria, this._lastRequest?.sortCriteria)) {
-      return {
-        totalCount: this._lastResponse.length,
-        items: this._lastResponse.slice(request.start, request.end).map(i => i.item),
-      };
-    }
-
     const items = this._data
       .filter(item => this.filter(item, filterCols))
       .sort((a, b) => this.sort(a, b, sortCols));
-
-    this._lastResponse = items;
-    this._lastRequest = request;
 
     return {
       totalCount: items.length,
@@ -73,22 +66,6 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
         column: columns[columnIndex],
       });
     }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.columnIndex >= 0);
-  }
-
-  private filterCriteriaSame(a: SciFilterCriterion[], b?: SciFilterCriterion[]): boolean {
-    if (a.length !== b?.length) {
-      return false;
-    }
-
-    return a.every((criterion, i) => criterion.columnName === b[i]?.columnName && criterion.text === b[i].text);
-  }
-
-  private sortCriteriaSame(a: SciSortCriterion[], b?: SciSortCriterion[]): boolean {
-    if (a.length !== b?.length) {
-      return false;
-    }
-
-    return a.every((criterion, i) => criterion.columnName === b[i]?.columnName && criterion.direction === b[i].direction);
   }
 
   private filter(row: ItemWithValues<T>, filterCriteria: MappedCriterion<T, SciFilterCriterion>[]): boolean {

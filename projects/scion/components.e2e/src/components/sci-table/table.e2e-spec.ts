@@ -188,7 +188,7 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'template', header: 'Template', type: 'template', customFilter: true});
       const noFilterCount = await table.locateColumnCells(1).count();
 
-      await table.enterColumnFilter(1, 'test');
+      await table.enterColumnFilter(1, 'Product 9999');
       await expect(table.locateColumnCells(1)).toHaveCount(1);
 
       await table.clearColumnFilter(1);
@@ -214,7 +214,7 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'component', header: 'Component', type: 'component', customFilter: true});
       const noFilterCount = await table.locateColumnCells(1).count();
 
-      await table.enterColumnFilter(1, 'test');
+      await table.enterColumnFilter(1, 'Product 9999');
       await expect(table.locateColumnCells(1)).toHaveCount(1);
 
       await table.clearColumnFilter(1);

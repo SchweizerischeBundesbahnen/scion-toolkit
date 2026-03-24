@@ -9,14 +9,14 @@
  */
 
 import {InjectionToken, linkedSignal, signal, Signal} from '@angular/core';
-import {SciDataSource, SciFilterCriterion, SciSortCriterion} from './table-data-source';
+import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciArrayDataSource} from './ɵarray-data-source';
 import {coerceObservable, coerceSignal} from './common';
-import {map} from 'rxjs/operators';
 import {SciTableStorage} from './table-storage';
-import {Subscription} from 'rxjs';
+import {Observable} from 'rxjs';
+import {map} from 'rxjs/operators';
 
 interface StoredTable {
   columnWidths: {columnName: string; width: number}[];
@@ -53,6 +53,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T> {
     source: () => ({sort: this.sortCriteria(), filter: this.filterCriteria()}),
     computation: () => undefined as ID | undefined,
   });
+
   private readonly _rows = linkedSignal({
     source: () => ({count: this._totalCount(), sort: this.sortCriteria(), filter: this.filterCriteria()}), // reset rows as soon as count, filter or sort change
     computation: ({count}) => new Array<SciRow<T, ID>>(count).fill({} as SciRow<T, ID>),
@@ -92,6 +93,31 @@ export class ɵSciTable<T, ID = T> implements SciTable<T> {
 
   public setRange(start: number, end: number): void {
     this._range.set({start, end});
+  }
+
+  public loadPage({page, sortCriteria, filterCriteria}: Pick<SciTableRequest, 'page' | 'sortCriteria' | 'filterCriteria'>): Observable<SciTableResponse<T> & {page: number}> {
+    return coerceObservable(this.dataSource.getItems({
+      start: page * this.dataSource.pageSize,
+      end: page * this.dataSource.pageSize + this.dataSource.pageSize,
+      pageSize: this.dataSource.pageSize,
+      page,
+      sortCriteria,
+      filterCriteria,
+    })).pipe(
+      map(res => ({
+        totalCount: res.totalCount,
+        items: res.items,
+        page,
+      })),
+    );
+  }
+
+  public updateRows({items, totalCount, page}: SciTableResponse<T> & {page: number}): void {
+    this._totalCount.set(totalCount);
+    this._rows.update(rows => {
+      const start = page * this.dataSource.pageSize;
+      return rows.slice(0, start).concat(this.mapItemsToRow(items), rows.slice(start + this.dataSource.pageSize));
+    });
   }
 
   public sort(columnName: string, multi: boolean): void {
@@ -159,21 +185,6 @@ export class ɵSciTable<T, ID = T> implements SciTable<T> {
 
   public updateSelectedItems(updateFn: (ids: Set<ID>) => Set<ID>): void {
     this._selectedItems.update(updateFn);
-  }
-
-  public fetchData(sortCriteria: SciSortCriterion[], filterCriteria: SciFilterCriterion[], {start, end}: {start: number; end: number}): Subscription {
-    return coerceObservable(this.dataSource.getItems({
-      start,
-      end,
-      limit: end - start,
-      sortCriteria,
-      filterCriteria,
-    })).pipe(
-      map(res => ({totalCount: res.totalCount, items: this.mapItemsToRow(res.items)})),
-    ).subscribe(response => {
-      this._totalCount.set(response.totalCount);
-      this._rows.update(items => items.toSpliced(start, response.items.length, ...response.items));
-    });
   }
 
   private get storageKey(): string {
