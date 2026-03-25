@@ -9,7 +9,7 @@
     flex: auto;
 
     > sci-table {
-      height: 600px;
+      height: var(--table-page-height);
     }
   }
 

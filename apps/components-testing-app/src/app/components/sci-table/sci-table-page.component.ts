@@ -75,6 +75,9 @@ const createDefaultColumn = (): {name: string; type: string; header: string; res
   selector: 'app-table-page',
   templateUrl: './sci-table-page.component.html',
   styleUrls: ['./sci-table-page.component.scss'],
+  host: {
+    '[style.--table-page-height]': '`${settings().height}px`',
+  },
   imports: [
     SciTableComponent,
     FormsModule,
@@ -95,6 +98,8 @@ export default class SciTablePageComponent {
     showHeader: true,
     slowDataSource: false,
     rowCount: 10000,
+    rowSize: 28,
+    height: 600,
   });
   protected settingsForm = form(this.settings);
 
@@ -141,10 +146,12 @@ export default class SciTablePageComponent {
       table.disableResize();
     }
 
-    table.addNumberColumn({
-      header: 'Id',
-      value: product => product.id,
-    });
+    table
+      .itemSize(settings.rowSize)
+      .addNumberColumn({
+        header: 'Id',
+        value: product => product.id,
+      });
 
     // for (let i = 0; i < 5; i++) {
     //   table.addStringColumn({

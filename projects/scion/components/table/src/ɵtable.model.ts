@@ -91,6 +91,11 @@ export class ɵSciTable<T, ID = T> implements SciTable<T> {
     });
   }
 
+  public initCount(number: number): void {
+    // only set the count if it was not previously initialized
+    this._totalCount.update(count => count === 0 ? number : count);
+  }
+
   public setRange(start: number, end: number): void {
     this._range.set({start, end});
   }

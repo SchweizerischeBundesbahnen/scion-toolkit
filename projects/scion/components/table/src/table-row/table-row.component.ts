@@ -42,7 +42,7 @@ export class TableRowComponent<T, ID> {
 
   protected readonly item = computed(() => this.row().item);
   protected readonly id = computed(() => this.item() && this.table().dataSource.identity(this.item()));
-  protected readonly isActive = computed(() => this.id() === this.table().activeItem());
+  protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeItem());
   protected readonly isSelected = computed(() => this.table().selectedItems().has(this.id()));
   protected readonly loading = computed(() => !this.item());
   protected readonly part = computed(() => this.item() ? this.table().rowPart?.(this.item()!) : undefined);

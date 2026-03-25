@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 Swiss Federal Railways
+ * Copyright (c) 2018-2026 Swiss Federal Railways
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -35,8 +35,13 @@ export class TablePagePO {
     this._tabbar = this._properties.locator('sci-tabbar');
   }
 
-  public async navigate(): Promise<void> {
-    await this._page.goto(PATH);
+  public async navigate(type: 'slow-data-source' | 'default' = 'default'): Promise<void> {
+    if (type === 'slow-data-source') {
+      await this._page.goto(`${PATH}/slow`);
+    }
+    else {
+      await this._page.goto(PATH);
+    }
   }
 
   public async setFilterable(checked: boolean): Promise<void> {
@@ -52,6 +57,21 @@ export class TablePagePO {
   public async setResizable(checked: boolean): Promise<void> {
     await this._tabbar.locator('button.e2e-settings').click();
     await this._properties.locator('input.e2e-resizable').setChecked(checked);
+  }
+
+  public async showHeader(show: boolean): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('input.e2e-show-header').setChecked(show);
+  }
+
+  public async setHeight(height: number): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('input.e2e-height').fill(height.toString());
+  }
+
+  public async setRowSize(rowSize: number): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('input.e2e-row-size').fill(rowSize.toString());
   }
 
   public async addColumn(options: ColumnOptions): Promise<void> {

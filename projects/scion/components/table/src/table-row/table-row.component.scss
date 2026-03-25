@@ -1,13 +1,16 @@
 :host {
   user-select: none; // has to be disabled because of selection
+  border: 1px solid transparent;
+  border-bottom: var(--sci-table-border-size) solid var(--sci-color-border);
 
   &:hover {
     background-color: var(--sci-color-background-elevation-hover);
   }
 
   &.active {
-    outline: 1px solid var(--sci-color-border-strong);
     border-bottom-color: transparent;
+    outline: 1px solid var(--sci-color-border-strong);
+    outline-offset: -1px;
   }
 
   &.selected {

@@ -131,6 +131,11 @@ export class SciTableComponent<T, ID = T> {
       viewport?.nativeElement.scrollTo({top: 0});
     });
 
+    effect(() => {
+      // Initialize count to directly show skeletons
+      this.sciTable().initCount(this._count());
+    });
+
     this.installDataFetcher();
     this.installScrollListener();
   }
