@@ -1,4 +1,4 @@
-import {MaybeSignal} from './common';
+import {MaybeAsync, MaybeSignal} from './common';
 import {ComponentWithBindings, SciCellContext, TemplateWithContext} from './table.model';
 import {SciTableStorage} from './table-storage';
 
@@ -79,6 +79,7 @@ export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor<T> 
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
+  filterValues?: MaybeAsync<unknown[]>;
 }
 
 export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor<T> {
@@ -91,6 +92,7 @@ export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor<T> {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
+  filterValues?: MaybeAsync<unknown[]>;
 }
 
 export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor<T> {
@@ -103,6 +105,7 @@ export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor<T> {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: string, context: SciCellContext<T, string>) => boolean) | boolean;
+  filterValues?: MaybeAsync<string[]>;
 }
 
 export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor<T> {
@@ -115,6 +118,7 @@ export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor<T> {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: number, context: SciCellContext<T, number>) => boolean) | boolean;
+  filterValues?: MaybeAsync<number[]>;
 }
 
 export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor<T> {

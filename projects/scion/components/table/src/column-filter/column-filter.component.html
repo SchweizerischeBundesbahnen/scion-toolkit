@@ -1,18 +1,28 @@
-@switch (column().type) {
-  @case ('number') {
-    <input [formControl]="query" type="number" />
-  }
-  @case ('boolean') {
-    <select [formControl]="query">
-      <option [value]="''">All</option>
-      <option [value]="true">True</option>
-      <option [value]="false">False</option>
-    </select>
-  }
-  @default {
-    <input [formControl]="query" />
+@if (filterValues() | async; as values) {
+  <select [formControl]="query">
+    <option [value]="''">All</option>
+    @for (value of values; track value) {
+      <option [value]="value">{{value}}</option>
+    }
+  </select>
+} @else {
+  @switch (column().type) {
+    @case ('number') {
+      <input [formControl]="query" type="number" />
+    }
+    @case ('boolean') {
+      <select [formControl]="query">
+        <option [value]="''">All</option>
+        <option [value]="true">True</option>
+        <option [value]="false">False</option>
+      </select>
+    }
+    @default {
+      <input [formControl]="query" />
+    }
   }
 }
+
 
 <span class="filter-icon material-symbols-outlined">
   filter_alt

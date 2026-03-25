@@ -9,7 +9,7 @@
  */
 
 import {Binding, Signal, TemplateRef} from '@angular/core';
-import {MaybeSignal} from './common';
+import {MaybeAsync, MaybeSignal} from './common';
 import {ComponentType} from '@angular/cdk/portal';
 import {SciFilterCriterion, SciSortCriterion} from './table-data-source';
 
@@ -66,6 +66,7 @@ export interface SciStringColumn<T> extends SciColumn<T> {
   value: (item: T) => MaybeSignal<string>;
   sort: (a: SciCellContext<T, string>, b: SciCellContext<T, string>) => number;
   filter: (text: string, context: SciCellContext<T, string>) => boolean;
+  filterValues?: MaybeAsync<string[]>;
 }
 
 export interface SciBooleanColumn<T> extends SciColumn<T> {
@@ -82,6 +83,7 @@ export interface SciNumberColumn<T> extends SciColumn<T> {
   sortRows: (rows: SciRow<T>[]) => SciRow<T>[];
   sort: (a: SciCellContext<T, number>, b: SciCellContext<T, number>) => number;
   filter: (text: number, context: SciCellContext<T, number>) => boolean;
+  filterValues?: MaybeAsync<number[]>;
 }
 
 export interface SciComponentColumn<T> extends SciColumn<T> {
@@ -89,6 +91,7 @@ export interface SciComponentColumn<T> extends SciColumn<T> {
   component: (item: T) => ComponentWithBindings;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
+  filterValues?: MaybeAsync<unknown[]>;
 }
 
 export interface SciTemplateColumn<T> extends SciColumn<T> {
@@ -96,6 +99,7 @@ export interface SciTemplateColumn<T> extends SciColumn<T> {
   template: (item: T) => MaybeSignal<TemplateWithContext>;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
+  filterValues?: MaybeAsync<unknown[]>;
 }
 
 export type SciColumns<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;

@@ -59,7 +59,7 @@ class SlowDataSource implements SciDataSource<Product, number> {
   }
 }
 
-const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean} => ({
+const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean; filterValues: string} => ({
   name: '',
   type: '',
   header: '',
@@ -69,6 +69,7 @@ const createDefaultColumn = (): {name: string; type: string; header: string; res
   maxWidth: '',
   customSort: false,
   customFilter: false,
+  filterValues: '',
 });
 
 @Component({
@@ -170,6 +171,7 @@ export default class SciTablePageComponent {
         resizable: column.resizable,
         filter: column.customFilter ? customFilter : undefined,
         sort: column.customSort ? customSort : undefined,
+        filterValues: column.filterValues ? column.filterValues.split(',').map(v => v.trim()) : undefined,
       };
 
       switch (column.type) {
@@ -183,6 +185,7 @@ export default class SciTablePageComponent {
           table.addNumberColumn({
             ...baseColumn,
             value: product => product.price,
+            filterValues: baseColumn.filterValues ? baseColumn.filterValues.map(v => +v) : undefined,
           });
           break;
         case 'boolean':

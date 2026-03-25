@@ -172,13 +172,13 @@ test.describe('sci-table', () => {
 
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
-      const noFilterCount = await table.locateColumnCells(1).count();
+      const noFilterCount = await table.rows.count();
 
       await table.enterColumnFilter(1, 'Product 1');
       await expectTable(table).allCellsToContainText(1, 'Product 1');
 
       await table.clearColumnFilter(1);
-      await expect(table.locateColumnCells(1)).toHaveCount(noFilterCount);
+      await expect(table.rows).toHaveCount(noFilterCount);
     });
 
     test('should filter number column', async ({page}) => {
@@ -187,7 +187,7 @@ test.describe('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'price', header: 'Price', type: 'number'});
-      const noFilterCount = await table.locateColumnCells(1).count();
+      const noFilterCount = await table.rows.count();
 
       // read the first visible price value and use it as the filter criterion
       const firstPrice = (await table.locateColumnCells(1).first().textContent())!.trim();
@@ -195,7 +195,7 @@ test.describe('sci-table', () => {
       await expectTable(table).allCellsToContainText(1, firstPrice);
 
       await table.clearColumnFilter(1);
-      await expect(table.locateColumnCells(1)).toHaveCount(noFilterCount);
+      await expect(table.rows).toHaveCount(noFilterCount);
     });
 
     test('should filter boolean column', async ({page}) => {
@@ -204,13 +204,13 @@ test.describe('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'inStock', header: 'In Stock', type: 'boolean'});
-      const noFilterCount = await table.locateColumnCells(1).count();
+      const noFilterCount = await table.rows.count();
 
       await table.enterColumnFilter(1, 'false');
       await expectTable(table).allCellsToContainText(1, 'check_box_outline_blank');
 
       await table.enterColumnFilter(1, '');
-      await expect(table.locateColumnCells(1)).toHaveCount(noFilterCount);
+      await expect(table.rows).toHaveCount(noFilterCount);
     });
 
     test('should not filter template column', async ({page}) => {
@@ -230,13 +230,13 @@ test.describe('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'template', header: 'Template', type: 'template', customFilter: true});
-      const noFilterCount = await table.locateColumnCells(1).count();
+      const noFilterCount = await table.rows.count();
 
       await table.enterColumnFilter(1, 'Product 9999');
-      await expect(table.locateColumnCells(1)).toHaveCount(1);
+      await expect(table.rows).toHaveCount(1);
 
       await table.clearColumnFilter(1);
-      await expect(table.locateColumnCells(1)).toHaveCount(noFilterCount);
+      await expect(table.rows).toHaveCount(noFilterCount);
     });
 
     test('should not filter component column', async ({page}) => {
@@ -256,13 +256,13 @@ test.describe('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'component', header: 'Component', type: 'component', customFilter: true});
-      const noFilterCount = await table.locateColumnCells(1).count();
+      const noFilterCount = await table.rows.count();
 
       await table.enterColumnFilter(1, 'Product 9999');
-      await expect(table.locateColumnCells(1)).toHaveCount(1);
+      await expect(table.rows).toHaveCount(1);
 
       await table.clearColumnFilter(1);
-      await expect(table.locateColumnCells(1)).toHaveCount(noFilterCount);
+      await expect(table.rows).toHaveCount(noFilterCount);
     });
 
     test('should filter large amount of data', async ({page}) => {
@@ -274,7 +274,7 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
       await table.enterColumnFilter(1, '999999');
-      await expect(table.locateColumnCells(1)).toHaveCount(1);
+      await expect(table.rows).toHaveCount(1);
     });
 
     test('should reset scroll position to top when applying filter', async ({page}) => {
@@ -290,6 +290,22 @@ test.describe('sci-table', () => {
 
       await table.enterColumnFilter(1, '999');
       await expect.poll(() => table.viewport.evaluate(el => el.scrollTop)).toBe(0);
+    });
+
+    test('should use select for filter values', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', filterValues: ['Product 1111', 'Product 1112']});
+
+      const noFilterCount = await table.rows.count();
+
+      await table.enterColumnFilter(1, 'Product 1112');
+      await expect(table.rows).toHaveCount(1);
+
+      await table.clearColumnFilter(1);
+      await expect(table.rows).toHaveCount(noFilterCount);
     });
   });
 
