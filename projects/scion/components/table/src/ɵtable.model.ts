@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {InjectionToken, linkedSignal, signal, Signal} from '@angular/core';
+import {computed, InjectionToken, linkedSignal, signal, Signal} from '@angular/core';
 import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
@@ -24,7 +24,7 @@ interface StoredTable {
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
 
-export class ɵSciTable<T, ID = T> implements SciTable<T> {
+export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   public readonly columns: SciColumns<T>[];
   public readonly dataSource: SciDataSource<T, ID>;
@@ -39,24 +39,23 @@ export class ɵSciTable<T, ID = T> implements SciTable<T> {
 
   public readonly itemSize: number;
   public readonly overscan: number;
-  public readonly rowPart?: (item: T) => string;
+  public readonly rowPart?: (item: T) => string | null;
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
   private readonly _columnWidths = signal(new Map<string, number>());
-  private readonly _ready = signal(false);
-  private readonly _range = signal<{start: number; end: number}>({start: 0, end: 0});
+  private readonly _selectedItems = signal<Set<ID>>(new Set());
   private readonly _totalCount = signal(0);
 
-  private readonly _selectedItems = signal<Set<ID>>(new Set());
-  private readonly _activeItem = linkedSignal({
-    source: () => ({sort: this.sortCriteria(), filter: this.filterCriteria()}),
-    computation: () => undefined as ID | undefined,
-  });
+  public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria()}));
 
   private readonly _rows = linkedSignal({
-    source: () => ({count: this._totalCount(), sort: this.sortCriteria(), filter: this.filterCriteria()}), // reset rows as soon as count, filter or sort change
+    source: () => ({...this.criteria(), count: this._totalCount()}),
     computation: ({count}) => new Array<SciRow<T, ID>>(count).fill({} as SciRow<T, ID>),
+  });
+  private readonly _activeItem = linkedSignal({
+    source: this.criteria,
+    computation: () => undefined as ID | undefined,
   });
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
@@ -64,9 +63,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T> {
   public readonly columnWidths = this._columnWidths.asReadonly();
   public readonly activeItem = this._activeItem.asReadonly();
   public readonly selectedItems = this._selectedItems.asReadonly();
-  public readonly ready = this._ready.asReadonly();
   public readonly totalCount = this._totalCount.asReadonly();
-  public readonly range = this._range.asReadonly();
   public readonly rows = this._rows.asReadonly();
 
   constructor(factory: ɵSciTableFactory<T>, dataOrSource: T[] | SciDataSource<T, ID>) {
@@ -86,18 +83,11 @@ export class ɵSciTable<T, ID = T> implements SciTable<T> {
       new ɵSciArrayDataSource(dataOrSource, factory.columns) as unknown as SciDataSource<T, ID> :
       dataOrSource;
 
-    void this.initColumnWidths().then(() => {
-      this._ready.set(true);
-    });
+    void this.initColumnWidths();
   }
 
-  public initCount(number: number): void {
-    // only set the count if it was not previously initialized
-    this._totalCount.update(count => count === 0 ? number : count);
-  }
-
-  public setRange(start: number, end: number): void {
-    this._range.set({start, end});
+  public setTotalCount(totalCount: number): void {
+    this._totalCount.set(totalCount);
   }
 
   public loadPage({page, sortCriteria, filterCriteria}: Pick<SciTableRequest, 'page' | 'sortCriteria' | 'filterCriteria'>): Observable<SciTableResponse<T> & {page: number}> {
@@ -206,7 +196,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T> {
         template: column.type === 'template' ? coerceSignal(column.template(item)) : undefined,
         type: column.type,
         columnName: column.name,
-        part: column.part?.(item),
+        part: column.part?.(item) ?? null,
       } as SciCells)),
     }));
   }

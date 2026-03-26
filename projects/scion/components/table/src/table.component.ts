@@ -8,16 +8,16 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, linkedSignal, NgZone, output, untracked, viewChild, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, linkedSignal, NgZone, output, signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciColumns, SciTable} from './table.model';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {TableRowComponent} from './table-row/table-row.component';
-import {combineLatest, combineLatestWith, fromEvent, mergeMap, of, switchMap} from 'rxjs';
+import {combineLatest, combineLatestWith, filter, fromEvent, mergeMap, of, switchMap} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
-import {map, startWith} from 'rxjs/operators';
+import {distinctUntilChanged, map, startWith} from 'rxjs/operators';
 import {clamp, rangeInclusive} from './common';
 import {TableSelectionService} from './table-selection.service';
 import {dimension} from '@scion/components/dimension';
@@ -27,6 +27,7 @@ import {dimension} from '@scion/components/dimension';
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.ShadowDom,
   host: {
     '[style.--ɵsci-table-virtual-scroll-height]': 'height()',
     '[style.--ɵsci-table-header-height]': '`${headerDimension()?.clientHeight ?? 0}px`',
@@ -51,7 +52,7 @@ import {dimension} from '@scion/components/dimension';
 })
 export class SciTableComponent<T, ID = T> {
 
-  public readonly table = input.required<SciTable<T>>();
+  public readonly table = input.required<SciTable<T, ID>>();
 
   public readonly activateItem = output<ID | undefined>();
   public readonly selectItems = output<Set<ID>>();
@@ -64,14 +65,20 @@ export class SciTableComponent<T, ID = T> {
   private readonly _zone = inject(NgZone);
   private readonly _element = inject(ElementRef);
 
+  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
+
+  protected readonly range = signal<{start: number; end: number}>({start: 0, end: 0});
+  private readonly _state = linkedSignal({
+    source: () => this.sciTable().criteria(),
+    computation: (): 'pending' | 'ready' => 'pending',
+  });
   private readonly _loadedPages = linkedSignal({
-    source: () => ({sort: this.sciTable().sortCriteria(), filter: this.sciTable().filterCriteria()}),
+    source: () => this.sciTable().criteria(),
     computation: () => new Set<number>(),
   });
 
-  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
   protected readonly visibleRows = computed(() => {
-    const {start, end} = this.sciTable().range();
+    const {start, end} = this.range();
     return this.sciTable().rows().slice(start, end);
   });
 
@@ -132,8 +139,16 @@ export class SciTableComponent<T, ID = T> {
     });
 
     effect(() => {
-      // Initialize count to directly show skeletons
-      this.sciTable().initCount(this._count());
+      const count = this._count();
+
+      if (this._state() !== 'pending') {
+        return;
+      }
+
+      untracked(() => {
+        this.sciTable().setTotalCount(count); // display skeletons for the whole height (i.e. when switching from totalCount = 0)
+        this._state.set('ready'); // start loading through the data fetcher
+      });
     });
 
     this.installDataFetcher();
@@ -143,10 +158,6 @@ export class SciTableComponent<T, ID = T> {
   public getMaxRowWidth(columnName: string): number {
     const cellWidths = this._rows().map(row => row.getCellWidth(columnName));
     return Math.max(...cellWidths, 0);
-  }
-
-  protected onResize(column: SciColumns<T>, width: number): void {
-    this.sciTable().setResizedColumn(column.name, width);
   }
 
   protected onResizeAuto(column: SciColumns<T>): void {
@@ -163,14 +174,16 @@ export class SciTableComponent<T, ID = T> {
     const filterCriteria$ = toObservable(computed(() => this.sciTable().filterCriteria()));
     const table$ = toObservable(this.sciTable);
 
-    const range$ = toObservable(computed(() => this.sciTable().range())).pipe(
-      combineLatestWith(table$, toObservable(this._loadedPages)),
+    const range$ = toObservable(this.range).pipe(
+      combineLatestWith(table$, toObservable(this._loadedPages), toObservable(this._state)),
+      filter(([,,,state]) => state === 'ready'),
       map(([{start, end}, table, loadedPages]) => {
         const pageSize = table.dataSource.pageSize;
         const startPage = Math.floor(start / pageSize);
         const endPage = Math.floor(end / pageSize);
         return rangeInclusive(startPage, endPage).filter(page => !loadedPages.has(page));
       }),
+      distinctUntilChanged((prev, curr) => prev.length === curr.length && prev.every(p => curr.includes(p))),
     );
 
     combineLatest([table$, range$, sortCriteria$, filterCriteria$]).pipe(
@@ -204,7 +217,7 @@ export class SciTableComponent<T, ID = T> {
         ).subscribe(([_, table, count]) => {
           const firstVisible = Math.floor(element.scrollTop / table.itemSize);
           const start = Math.max(0, firstVisible - table.overscan);
-          this.sciTable().setRange(start, start + count);
+          this.range.set({start, end: start + count});
         });
 
         onCleanup(() => subscription.unsubscribe());

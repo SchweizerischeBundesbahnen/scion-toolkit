@@ -1,4 +1,5 @@
-@if (filterValues() | async; as values) {
+@let values = filterValues() | async;
+@if (values && values.length >= 0) {
   <select [formControl]="query">
     <option [value]="''">All</option>
     @for (value of values; track value) {

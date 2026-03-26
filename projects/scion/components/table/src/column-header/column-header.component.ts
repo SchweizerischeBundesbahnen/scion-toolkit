@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciColumns} from '../table.model';
@@ -19,12 +29,11 @@ export class ColumnHeaderComponent<T> {
   public readonly column = input.required<SciColumns<T>>();
 
   public readonly autoResize = output();
-  public readonly widthChange = output<number>();
 
   protected readonly table = inject(ɵSCI_TABLE);
   private readonly _element = inject(ElementRef);
 
-  private readonly _resizeContext = signal<{width: number; columnName: string} | undefined>(undefined);
+  private readonly _lastWidth = signal<number | undefined>(undefined);
 
   protected readonly columnSort = computed(() => this.table().sortCriteria().find(s => s.columnName === this.column().name)?.direction);
 
@@ -33,23 +42,22 @@ export class ColumnHeaderComponent<T> {
   }
 
   protected onResizeStart(): void {
-    this._resizeContext.set({width: this.getWidth(), columnName: this.column().name});
+    this._lastWidth.set(this.getWidth());
   }
 
   protected onResize(event: SplitterMoveEvent): void {
-    const context = this._resizeContext();
-    if (!context) {
+    const lastWidth = this._lastWidth();
+    if (!lastWidth) {
       return;
     }
 
-    const column = this.column();
-    const width = Math.max(0, context.width + event.distance);
-    this._resizeContext.set({columnName: column.name, width});
-    this.widthChange.emit(width);
+    const width = Math.max(0, lastWidth + event.distance);
+    this._lastWidth.set(width);
+    this.table().setResizedColumn(this.column().name, width);
   }
 
   protected onResizeEnd(): void {
-    this._resizeContext.set(undefined);
+    this._lastWidth.set(undefined);
   }
 
   protected onResizeAuto(): void {

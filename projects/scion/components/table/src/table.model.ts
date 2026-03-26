@@ -15,15 +15,33 @@ import {SciFilterCriterion, SciSortCriterion} from './table-data-source';
 
 export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
 
-export interface SciTable<T> {
+export interface SciTable<T, ID = T> {
   columns: SciColumns<T>[];
   name?: string;
   filterable: Signal<boolean>;
   selectable: Signal<boolean>;
   resizable: Signal<boolean>;
   sortable: Signal<boolean>;
+
+  /**
+   * Active sort criteria, one criterion per column.
+   */
   sortCriteria: Signal<SciSortCriterion[]>;
+
+  /**
+   * Active filter criteria, one criterion per column.
+   */
   filterCriteria: Signal<SciFilterCriterion[]>;
+
+  /**
+   * Currently active (focused) item id.
+   */
+  activeItem: Signal<ID | undefined>;
+
+  /**
+   * Selected item ids.
+   */
+  selectedItems: Signal<Set<ID>>;
 
   sort(columnName: string, multi: boolean): void;
   resetSort(): void;
@@ -58,7 +76,7 @@ export interface SciColumn<T> {
   width: Signal<string>;
   minWidth: Signal<string>;
   maxWidth: Signal<string | null>;
-  part?: (item: T) => string;
+  part?: (item: T) => string | null;
 }
 
 export interface SciStringColumn<T> extends SciColumn<T> {
@@ -119,7 +137,7 @@ export interface SciRow<T, ID = T> {
 export interface SciCell {
   type: ColumnType;
   columnName: string;
-  part: string;
+  part: string | null;
 }
 
 export interface SciStringCell extends SciCell {

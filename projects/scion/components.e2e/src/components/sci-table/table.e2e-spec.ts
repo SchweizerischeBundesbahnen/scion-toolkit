@@ -377,6 +377,19 @@ test.describe('sci-table', () => {
 
       await expect.poll(() => table.getColumnHeaderWidth(1)).toBeLessThan(200);
     });
+
+    test('should save sizes between reloads', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await table.dragColumnSplitter(0, 100);
+      await expect.poll(() => table.getColumnHeaderWidth(0)).toBe(200);
+
+      await page.reload();
+
+      await expect.poll(() => table.getColumnHeaderWidth(0)).toBe(200);
+    });
   });
 
   test.describe('sorting', () => {

@@ -29,7 +29,7 @@ function defaultFilter<T>(text: string | boolean | number, {value}: SciCellConte
 }
 
 function defaultSort<T>(a: SciCellContext<T, string | boolean | number>, b: SciCellContext<T, string | boolean | number>): number {
-  if (typeof a !== typeof b) {
+  if (typeof a.value !== typeof b.value) {
     return 0;
   }
 
@@ -57,7 +57,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   public isResizable = signal(true);
   public isSelectable = signal(true);
   public isHeaderVisible = signal(true);
-  public rowPartFn?: (item: T) => string;
+  public rowPartFn?: (item: T) => string | null;
 
   public name(name: string): this {
     this.tableName = name;
@@ -123,8 +123,8 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this;
   }
 
-  public rowPart(cssClassFn: (item: T) => string): this {
-    this.rowPartFn = cssClassFn;
+  public rowPart(rowPartFn: (item: T) => string | null): this {
+    this.rowPartFn = rowPartFn;
     return this;
   }
 

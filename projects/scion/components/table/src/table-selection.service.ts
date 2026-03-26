@@ -1,5 +1,16 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
+import {rangeInclusive} from './common';
 
 @Injectable()
 export class TableSelectionService<T, ID = T> {
@@ -32,7 +43,7 @@ export class TableSelectionService<T, ID = T> {
     else if (event.shiftKey && activeIndex >= 0) {
       const start = Math.min(activeIndex, index);
       const end = Math.max(activeIndex, index);
-      const ids = range(start, end).map(i => table.rows()[i]?.id);
+      const ids = rangeInclusive(start, end).map(i => table.rows()[i]?.id);
 
       if (ids.every(id => id !== undefined)) {
         table.updateSelectedItems(() => new Set(ids));
@@ -48,12 +59,4 @@ export class TableSelectionService<T, ID = T> {
       table.updateSelectedItems(() => new Set([id]));
     }
   }
-}
-
-function range(start: number, end: number): number[] {
-  const range: number[] = [];
-  for (let i = start; i <= end; i++) {
-    range.push(i);
-  }
-  return range;
 }

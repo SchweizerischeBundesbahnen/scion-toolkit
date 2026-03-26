@@ -11,6 +11,7 @@
 import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciColumns} from './table.model';
 import {coerceSignal} from './common';
+import {Signal} from '@angular/core';
 
 type MappedCriterion<T, CRIT extends {columnName: string}> = CRIT & {
   column: SciColumns<T>;
@@ -19,7 +20,7 @@ type MappedCriterion<T, CRIT extends {columnName: string}> = CRIT & {
 
 interface ItemWithValues<T> {
   item: T;
-  values: Array<string | number | boolean | undefined>;
+  values: Array<Signal<string | number | boolean> | undefined>;
 }
 
 export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
@@ -30,11 +31,11 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
   constructor(data: T[], private _columns: SciColumns<T>[]) {
     this._data = data.map(item => ({
       item,
-      values: this._columns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
+      values: this._columns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined),
     }));
 
-    // load the full data for array dataSources
-    // there is no benefit in paging local data
+    // load the full data for small array dataSources
+    // there is no benefit in paging local data, except preventing mapping all data (which can get slow for big arrays)
     this.pageSize = Math.min(this._data.length, 10_000);
   }
 
@@ -53,6 +54,7 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
   }
 
   public identity(item: T): T {
+    // we can use reference equality for the array data source, since the items don't change
     return item;
   }
 
@@ -79,11 +81,11 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
       const filter = (() => {
         switch (criterion.column.type) {
           case 'string':
-            return criterion.column.filter(criterion.text as string, {item: row.item, value: value as string});
+            return criterion.column.filter(criterion.text as string, {item: row.item, value: value!() as string});
           case 'number':
-            return criterion.column.filter(criterion.text as number, {item: row.item, value: value as number});
+            return criterion.column.filter(criterion.text as number, {item: row.item, value: value!() as number});
           case 'boolean':
-            return criterion.column.filter(criterion.text as boolean, {item: row.item, value: value as boolean});
+            return criterion.column.filter(criterion.text as boolean, {item: row.item, value: value!() as boolean});
           case 'component':
           case 'template':
             return criterion.column.filter(criterion.text as string, {item: row.item, value: undefined});
@@ -113,11 +115,11 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
       const sort = (() => {
         switch (criterion.column.type) {
           case 'string':
-            return criterion.column.sort({item: a.item, value: aValue as string}, {item: b.item, value: bValue as string});
+            return criterion.column.sort({item: a.item, value: aValue!() as string}, {item: b.item, value: bValue!() as string});
           case 'number':
-            return criterion.column.sort({item: a.item, value: aValue as number}, {item: b.item, value: bValue as number});
+            return criterion.column.sort({item: a.item, value: aValue!() as number}, {item: b.item, value: bValue!() as number});
           case 'boolean':
-            return criterion.column.sort({item: a.item, value: aValue as boolean}, {item: b.item, value: bValue as boolean});
+            return criterion.column.sort({item: a.item, value: aValue!() as boolean}, {item: b.item, value: bValue!() as boolean});
           case 'component':
           case 'template':
             return criterion.column.sort({item: a.item, value: undefined}, {item: b.item, value: undefined});

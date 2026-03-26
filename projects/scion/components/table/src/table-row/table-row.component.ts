@@ -23,7 +23,7 @@ import {TableSelectionService} from '../table-selection.service';
     '[class.active]': 'isActive()',
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
-    '[part]': 'part()',
+    '[attr.part]': 'part()',
     '(click)': 'onRowClick($event)',
     '(keydown.enter)': 'onRowEnter()',
   },
@@ -41,11 +41,11 @@ export class TableRowComponent<T, ID> {
   protected readonly cells = viewChildren(TableCellComponent);
 
   protected readonly item = computed(() => this.row().item);
+  protected readonly loading = computed(() => !this.item());
   protected readonly id = computed(() => this.item() && this.table().dataSource.identity(this.item()));
   protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeItem());
   protected readonly isSelected = computed(() => this.table().selectedItems().has(this.id()));
-  protected readonly loading = computed(() => !this.item());
-  protected readonly part = computed(() => this.item() ? this.table().rowPart?.(this.item()!) : undefined);
+  protected readonly part = computed(() => this.item() ? this.table().rowPart?.(this.item()) : null);
 
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;

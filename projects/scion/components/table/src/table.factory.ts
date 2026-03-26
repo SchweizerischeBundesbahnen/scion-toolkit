@@ -1,18 +1,28 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 import {MaybeAsync, MaybeSignal} from './common';
 import {ComponentWithBindings, SciCellContext, TemplateWithContext} from './table.model';
 import {SciTableStorage} from './table-storage';
 
 export interface SciTableFactory<T> {
   addStringColumn(value: (item: T) => string): this;
-  addStringColumn(header: MaybeSignal<string>, value: (item: T) => string): this;
+  addStringColumn(header: string, value: (item: T) => string): this;
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
   addBooleanColumn(value: (item: T) => boolean): this;
-  addBooleanColumn(header: MaybeSignal<string>, value: (item: T) => boolean): this;
+  addBooleanColumn(header: string, value: (item: T) => boolean): this;
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
   addNumberColumn(value: (item: T) => number): this;
-  addNumberColumn(header: MaybeSignal<string>, value: (item: T) => number): this;
+  addNumberColumn(header: string, value: (item: T) => number): this;
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
@@ -37,7 +47,7 @@ export interface SciTableFactory<T> {
   overscan(overscan: number): this;
 
   /**
-   * Adds conditional part to row element.
+   * Adds part to row element.
    * This can be used to conditionally style the row.
    *
    * Example usage:

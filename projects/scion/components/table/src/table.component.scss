@@ -1,5 +1,8 @@
 @use '@scion/components/scrollbar' as sci-scrollbar;
 
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght@24..48,300..400');
+
+
 :host {
   display: grid;
   height: 100%;
@@ -46,8 +49,8 @@
         > div.rows {
           display: grid;
           grid-template-columns: subgrid;
-          grid-auto-rows: var(--ɵsci-table-item-size);;
           grid-column: 1 / -1;
+          grid-auto-rows: var(--ɵsci-table-item-size);
           height: fit-content;
 
           > div.empty-state {
@@ -58,7 +61,6 @@
           }
 
           > sci-table-row {
-            height: var(--ɵsci-table-item-size);
             display: grid;
             grid-template-columns: subgrid;
             grid-column: 1 / -1;

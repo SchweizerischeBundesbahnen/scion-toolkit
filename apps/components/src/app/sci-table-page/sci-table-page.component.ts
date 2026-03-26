@@ -7,12 +7,13 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, input, inputBinding, resource, signal, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, input, inputBinding, resource, Signal, signal, TemplateRef, viewChild} from '@angular/core';
 import {SciDataSource, SciTableComponent, SciTableRequest, SciTableResponse, SciTableFactory, table} from '@scion/components/table';
 import {Station, stations} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {Field, form} from '@angular/forms/signals';
 import {Observable, timer, map} from 'rxjs';
+import {SciTable} from '../../../../../projects/scion/components/table/src/table.model';
 
 class SlowDataSource implements SciDataSource<Station, string> {
   public pageSize = 50;
@@ -87,8 +88,8 @@ export default class SciTablePageComponent {
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
 
-  protected table = table(this.data, table => this.createTable(table));
-  protected slowTable = table(new SlowDataSource(), table => this.createTable(table));
+  protected table: Signal<SciTable<Station, unknown>> = table(this.data, table => this.createTable(table));
+  protected slowTable: Signal<SciTable<Station, unknown>> = table(new SlowDataSource(), table => this.createTable(table));
 
   protected createTable(table: SciTableFactory<Station>): SciTableFactory<Station> {
     const settings = this.settings();
@@ -153,13 +154,13 @@ export default class SciTablePageComponent {
       .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
   }
 
-  protected onActivateRow(row: Station | string | undefined): void {
-    this.activeItem.set(typeof row === 'string' ? row : row?.sloid);
+  protected onActivateRow(row: unknown): void {
+    this.activeItem.set(typeof row === 'string' ? row : (row as Station | undefined)?.sloid);
   }
 
-  protected onSelectRows(selection: Set<Station> | Set<string>): void {
+  protected onSelectRows(selection: Set<unknown>): void {
     const selectionValues = [...selection.values()];
-    this.selectedItems.set(selectionValues.length ? selectionValues.map(s => typeof s === 'string' ? s : s.sloid).join(', ') : undefined);
+    this.selectedItems.set(selectionValues.length ? selectionValues.map(s => typeof s === 'string' ? s : (s as Station).sloid).join(', ') : undefined);
   }
 
   protected onUpdateSignal(): void {

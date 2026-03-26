@@ -48,8 +48,8 @@ class SlowDataSource implements SciDataSource<Product, number> {
   public getItems(request: SciTableRequest): Observable<SciTableResponse<Product>> {
     return timer(1000).pipe(
       map(() => ({
-        items: this._data().slice(request.start, request.end),
-        totalCount: this._data().length,
+        items: request.filterCriteria.length > 0 ? [] : this._data().slice(request.start, request.end),
+        totalCount: request.filterCriteria.length > 0 ? 0 : this._data().length,
       })),
     );
   }
@@ -59,7 +59,7 @@ class SlowDataSource implements SciDataSource<Product, number> {
   }
 }
 
-const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean; filterValues: string} => ({
+const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean; filterValues: string; conditionallyStyleCell: boolean} => ({
   name: '',
   type: '',
   header: '',
@@ -70,6 +70,7 @@ const createDefaultColumn = (): {name: string; type: string; header: string; res
   customSort: false,
   customFilter: false,
   filterValues: '',
+  conditionallyStyleCell: false,
 });
 
 @Component({
@@ -98,6 +99,7 @@ export default class SciTablePageComponent {
     resizable: true,
     showHeader: true,
     slowDataSource: false,
+    conditionallyStyleRow: false,
     rowCount: 10000,
     rowSize: 28,
     height: 600,
@@ -113,7 +115,7 @@ export default class SciTablePageComponent {
   protected data = computed(() => generateData(this.settings().rowCount));
   protected columns = signal<ReturnType<typeof this.column>[]>([]);
 
-  protected table?: Signal<SciTable<Product>>;
+  protected table?: Signal<SciTable<Product, unknown>>;
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
 
@@ -147,11 +149,17 @@ export default class SciTablePageComponent {
       table.disableResize();
     }
 
+    if (settings.conditionallyStyleRow) {
+      table.rowPart(row => row.id % 3 ? 'red-row' : null);
+    }
+
     table
       .itemSize(settings.rowSize)
+      .name('testing_table')
       .addNumberColumn({
         header: 'Id',
         value: product => product.id,
+        name: 'id',
       });
 
     // for (let i = 0; i < 5; i++) {
