@@ -1,10 +1,11 @@
-<div class="header" [class.filterable]="table().filterable()">
+<div class="header" [class.filterable]="table().filterable">
   <button class="column-sort e2e-column-sort"
-          [tabIndex]="column().sortable() ? 0 : -1"
-          [class.sortable]="column().sortable()"
+          [tabIndex]="column().sortable ? 0 : -1"
+          [attr.data-sort]="columnSort()"
+          [class.sortable]="column().sortable"
           (click)="onSort($event)">
     <span class="text">{{ column().header() }}</span>
-    @if (column().sortable()) {
+    @if (column().sortable) {
       @switch (columnSort()) {
         @case ('asc') {
           <span class="material-symbols-outlined">arrow_upward</span>
@@ -18,11 +19,11 @@
       }
     }
   </button>
-  @if (column().filterable()) {
+  @if (column().filterable) {
     <sci-column-filter [column]="column()" />
   }
 </div>
-@if (column().resizable()) {
+@if (column().resizable) {
   <sci-splitter orientation="vertical"
                 (start)="onResizeStart()"
                 (move)="onResize($event)"

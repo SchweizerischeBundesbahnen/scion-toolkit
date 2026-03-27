@@ -14,10 +14,10 @@ import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {TableRowComponent} from './table-row/table-row.component';
-import {combineLatest, combineLatestWith, filter, fromEvent, mergeMap, of, switchMap} from 'rxjs';
+import {combineLatest, combineLatestWith, fromEvent, mergeMap, of, switchMap} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
-import {distinctUntilChanged, map, startWith} from 'rxjs/operators';
+import {map, startWith} from 'rxjs/operators';
 import {clamp, rangeInclusive} from './common';
 import {TableSelectionService} from './table-selection.service';
 import {dimension} from '@scion/components/dimension';
@@ -65,25 +65,35 @@ export class SciTableComponent<T, ID = T> {
   private readonly _zone = inject(NgZone);
   private readonly _element = inject(ElementRef);
 
+  protected readonly headerDimension = dimension(this._header);
+  private readonly _containerDimension = dimension(this._element.nativeElement as HTMLElement);
+
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
 
   protected readonly range = signal<{start: number; end: number}>({start: 0, end: 0});
-  private readonly _state = linkedSignal({
-    source: () => this.sciTable().criteria(),
-    computation: (): 'pending' | 'ready' => 'pending',
-  });
+
   private readonly _loadedPages = linkedSignal({
     source: () => this.sciTable().criteria(),
     computation: () => new Set<number>(),
   });
 
+  private readonly _pages = computed(() => {
+    const table = this.sciTable();
+    const {start, end} = this.range();
+    const loadedPages = this._loadedPages();
+
+    return untracked(() => {
+      const pageSize = table.dataSource.pageSize;
+      const startPage = Math.floor(start / pageSize);
+      const endPage = Math.floor(end / pageSize);
+      return rangeInclusive(startPage, endPage).filter(page => !loadedPages.has(page));
+    });
+  }, {equal: (prev, curr) => prev.length === curr.length && prev.every(p => curr.includes(p))});
+
   protected readonly visibleRows = computed(() => {
     const {start, end} = this.range();
     return this.sciTable().rows().slice(start, end);
   });
-
-  protected readonly headerDimension = dimension(this._header);
-  private readonly _containerDimension = dimension(this._element.nativeElement as HTMLElement);
 
   private readonly _count = computed(() => {
     const containerDimension = this._containerDimension();
@@ -92,6 +102,7 @@ export class SciTableComponent<T, ID = T> {
 
     return Math.ceil(containerDimension.clientHeight / itemSize) + overscan * 2;
   });
+
   protected readonly height = computed(() => `${this.sciTable().totalCount() * this.sciTable().itemSize}px`);
   protected readonly columnWidths = computed(() => {
     const columns = this.sciTable().columns;
@@ -101,6 +112,8 @@ export class SciTableComponent<T, ID = T> {
       .map(c => clamp(c.minWidth(), overrides.has(c.name) ? `${overrides.get(c.name)}px` : c.width(), c.maxWidth()))
       .join(' ');
   });
+
+  // Width of the whole table. This is needed to allow the table to overflow horizontally.
   protected readonly tableWidth = computed(() => {
     const columns = this.sciTable().columns;
     const overrides = this.sciTable().columnWidths();
@@ -131,24 +144,14 @@ export class SciTableComponent<T, ID = T> {
     });
 
     effect(() => {
+      this.sciTable().criteria();
+
       const viewport = this._viewport();
-      this.sciTable().sortCriteria();
-      this.sciTable().filterCriteria();
-
-      viewport?.nativeElement.scrollTo({top: 0});
-    });
-
-    effect(() => {
       const count = this._count();
 
-      if (this._state() !== 'pending') {
-        return;
-      }
-
-      untracked(() => {
-        this.sciTable().setTotalCount(count); // display skeletons for the whole height (i.e. when switching from totalCount = 0)
-        this._state.set('ready'); // start loading through the data fetcher
-      });
+      // as soon as the table criteria change (and on init), scroll to the top, and set initial count to show skeletons
+      viewport?.nativeElement.scrollTo({top: 0});
+      this.sciTable().setTotalCount(count);
     });
 
     this.installDataFetcher();
@@ -166,27 +169,16 @@ export class SciTableComponent<T, ID = T> {
   }
 
   /**
-   * Fetches data when the visible range or sort/filter criteria change, skipping already loaded pages.
+   * Fetches data when the visible range or sort/filter criteria change
    * Must be installed here (in an injection context) to support cleanup through {@link takeUntilDestroyed}.
    */
   private installDataFetcher(): void {
     const sortCriteria$ = toObservable(computed(() => this.sciTable().sortCriteria()));
     const filterCriteria$ = toObservable(computed(() => this.sciTable().filterCriteria()));
     const table$ = toObservable(this.sciTable);
+    const pages$ = toObservable(this._pages);
 
-    const range$ = toObservable(this.range).pipe(
-      combineLatestWith(table$, toObservable(this._loadedPages), toObservable(this._state)),
-      filter(([,,,state]) => state === 'ready'),
-      map(([{start, end}, table, loadedPages]) => {
-        const pageSize = table.dataSource.pageSize;
-        const startPage = Math.floor(start / pageSize);
-        const endPage = Math.floor(end / pageSize);
-        return rangeInclusive(startPage, endPage).filter(page => !loadedPages.has(page));
-      }),
-      distinctUntilChanged((prev, curr) => prev.length === curr.length && prev.every(p => curr.includes(p))),
-    );
-
-    combineLatest([table$, range$, sortCriteria$, filterCriteria$]).pipe(
+    combineLatest([table$, pages$, sortCriteria$, filterCriteria$]).pipe(
       switchMap(([table, range, sortCriteria, filterCriteria]) => of(...range).pipe(
         mergeMap(page => table.loadPage({page, sortCriteria, filterCriteria})),
         map(response => ({response, table})),

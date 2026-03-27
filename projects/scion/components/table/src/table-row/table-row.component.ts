@@ -33,7 +33,7 @@ import {TableSelectionService} from '../table-selection.service';
 })
 export class TableRowComponent<T, ID> {
 
-  public readonly row = input.required<Partial<SciRow<T, ID>>>();
+  public readonly row = input.required<SciRow<T, ID>>();
   public readonly index = input.required<number>();
 
   private readonly _selectionService = inject(TableSelectionService);
@@ -41,8 +41,8 @@ export class TableRowComponent<T, ID> {
   protected readonly cells = viewChildren(TableCellComponent);
 
   protected readonly item = computed(() => this.row().item);
-  protected readonly loading = computed(() => !this.item());
-  protected readonly id = computed(() => this.item() && this.table().dataSource.identity(this.item()));
+  protected readonly id = computed(() => this.row().id);
+  protected readonly loading = computed(() => !this.item()); // Rows are initialized with an undefined item, before data is loaded
   protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeItem());
   protected readonly isSelected = computed(() => this.table().selectedItems().has(this.id()));
   protected readonly part = computed(() => this.item() ? this.table().rowPart?.(this.item()) : null);

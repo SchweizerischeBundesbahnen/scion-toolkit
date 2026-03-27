@@ -3,13 +3,17 @@
   gap: 1em;
 
   > main {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1em;
-    flex: auto;
+    flex: 1;
 
     > sci-table {
       height: var(--table-page-height);
+
+      &:first-child:last-child {
+        grid-column: 1 / -1;
+      }
     }
   }
 

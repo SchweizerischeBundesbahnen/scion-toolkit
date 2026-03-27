@@ -1,5 +1,5 @@
 <main>
-  @if (table; as table) {
+  @for (table of tables; track $index) {
     <sci-table [table]="table()" />
   }
   <ng-template let-product #cell>
@@ -28,6 +28,9 @@
         </sci-form-field>
         <sci-form-field label="Show Header">
           <input [field]="settingsForm.showHeader" type="checkbox" class="e2e-show-header" />
+        </sci-form-field>
+        <sci-form-field label="Table Count">
+          <input [field]="settingsForm.tableCount" type="number" class="e2e-table-count" />
         </sci-form-field>
         <sci-form-field label="Row Count">
           <input [field]="settingsForm.rowCount" type="number" class="e2e-row-count" />

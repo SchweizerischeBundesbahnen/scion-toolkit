@@ -24,6 +24,7 @@ interface ItemWithValues<T> {
 }
 
 export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
+
   private readonly _data: ItemWithValues<T>[];
 
   public readonly pageSize: number;
@@ -31,7 +32,8 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
   constructor(data: T[], private _columns: SciColumns<T>[]) {
     this._data = data.map(item => ({
       item,
-      values: this._columns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined),
+      values: this._columns
+        .map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined),
     }));
 
     // load the full data for small array dataSources

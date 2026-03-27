@@ -104,4 +104,8 @@ export class TablePagePO {
   public async setRowCount(rowCount: number): Promise<void> {
     await this._properties.locator('form input.e2e-row-count').fill(rowCount.toString());
   }
+
+  public async setTableCount(tableCount: number): Promise<void> {
+    await this._properties.locator('form input.e2e-table-count').fill(tableCount.toString());
+  }
 }

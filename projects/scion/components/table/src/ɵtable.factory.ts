@@ -8,55 +8,22 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, signal, untracked} from '@angular/core';
-import {UUID} from '@scion/toolkit/uuid';
-import {coerceSignal} from './common';
 import {SciBooleanColumnDescriptor, SciColumnDescriptors, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableFactory, SciTemplateColumnDescriptor} from './table.factory';
-import {ColumnType, SciCellContext, SciColumns} from './table.model';
+import {ColumnType} from './table.model';
 import {DefaultSciTableStorage, SciTableStorage} from './table-storage';
-
-function defaultFilter<T>(text: string | boolean | number, {value}: SciCellContext<T, string | boolean | number>): boolean {
-  if (typeof value !== typeof text) {
-    return false;
-  }
-
-  switch (typeof value) {
-    case 'string':
-      return value.toLowerCase().includes((text as string).toLowerCase());
-    default:
-      return text === value;
-  }
-}
-
-function defaultSort<T>(a: SciCellContext<T, string | boolean | number>, b: SciCellContext<T, string | boolean | number>): number {
-  if (typeof a.value !== typeof b.value) {
-    return 0;
-  }
-
-  switch (typeof a.value) {
-    case 'string':
-      return a.value.localeCompare(b.value as string);
-    case 'number':
-      return a.value - (b.value as number);
-    case 'boolean':
-      return a.value === b.value ? 0 : (a.value ? 1 : -1);
-    default:
-      return 0;
-  }
-}
 
 export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
-  public readonly columns: SciColumns<T>[] = [];
+  public readonly columns: (SciColumnDescriptors<T> & {type: ColumnType})[] = [];
   public tableName: string | undefined = undefined;
   public tableStorage: SciTableStorage = new DefaultSciTableStorage();
   public rowItemSize = 28;
   public overscanAmount = 10;
-  public isSortable = signal(true);
-  public isFilterable = signal(true);
-  public isResizable = signal(true);
-  public isSelectable = signal(true);
-  public isHeaderVisible = signal(true);
+  public sortable = true;
+  public filterable = true;
+  public resizable = true;
+  public selectable = true;
+  public headerVisible = true;
   public rowPartFn?: (item: T) => string | null;
 
   public name(name: string): this {
@@ -68,48 +35,48 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   public addBooleanColumn(header: string, value: (item: T) => boolean): this;
   public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
   public addBooleanColumn(valueHeaderDescriptor: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): this {
-    return this.addColumnWithType('boolean', valueHeaderDescriptor, value);
+    return this.addColumn('boolean', valueHeaderDescriptor, value);
   }
 
   public addStringColumn(value: (item: T) => string): this;
   public addStringColumn(header: string, value: (item: T) => string): this;
   public addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
   public addStringColumn(valueHeaderDescriptor: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): this {
-    return this.addColumnWithType('string', valueHeaderDescriptor, value);
+    return this.addColumn('string', valueHeaderDescriptor, value);
   }
 
   public addNumberColumn(value: (item: T) => number): this;
   public addNumberColumn(header: string, value: (item: T) => number): this;
   public addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
   public addNumberColumn(valueHeaderDescriptor: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): this {
-    return this.addColumnWithType('number', valueHeaderDescriptor, value);
+    return this.addColumn('number', valueHeaderDescriptor, value);
   }
 
   public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
-    return this.addColumnWithType('component', config);
+    return this.addColumn('component', config);
   }
 
   public addTemplateColumn(config: SciTemplateColumnDescriptor<T>): this {
-    return this.addColumnWithType('template', config);
+    return this.addColumn('template', config);
   }
 
   public disableFilter(): this {
-    untracked(() => this.isFilterable.set(false));
+    this.filterable = false;
     return this;
   }
 
   public disableResize(): this {
-    untracked(() => this.isResizable.set(false));
+    this.resizable = false;
     return this;
   }
 
   public disableSelection(): this {
-    untracked(() => this.isSelectable.set(false));
+    this.selectable = false;
     return this;
   }
 
   public disableSort(): this {
-    untracked(() => this.isSortable.set(false));
+    this.sortable = false;
     return this;
   }
 
@@ -129,7 +96,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   }
 
   public hideHeader(): this {
-    untracked(() => this.isHeaderVisible.set(false));
+    this.headerVisible = false;
     return this;
   }
 
@@ -138,7 +105,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this;
   }
 
-  private addColumnWithType(type: ColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciColumnDescriptors<T>, value?: (item: T) => unknown): this {
+  private addColumn(type: ColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciColumnDescriptors<T>, value?: (item: T) => unknown): this {
     const config = (() => {
       switch (typeof valueHeaderDescriptor) {
         case 'string':
@@ -150,33 +117,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       }
     })();
 
-    // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
-    const sortable = type === 'component' || type === 'template' ?
-      !!config.sort :
-      config.sort !== false;
-
-    // columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
-    const filterable = type === 'component' || type === 'template' ?
-      !!config.filter :
-      config.filter !== false;
-
-    this.columns.push({
-      ...config,
-      type,
-      name: config.name ?? UUID.randomUUID(),
-      named: !!config.name,
-      filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
-      sort: typeof config.sort === 'function' ? config.sort : defaultSort,
-      header: coerceSignal(config.header, {defaultValue: ''}),
-      sortable: computed(() => this.isSortable() && sortable),
-      filterable: computed(() => this.isFilterable() && filterable),
-      resizable: computed(() => this.isResizable() && (config.resizable ?? true)),
-      index: signal(this.columns.length),
-      width: coerceSignal(config.width, {defaultValue: 'min-content'}),
-      minWidth: coerceSignal(config.minWidth, {defaultValue: '100px'}),
-      maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),
-    } as SciColumns<T>);
+    this.columns.push({...config, type});
     return this;
   }
-
 }

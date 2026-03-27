@@ -16,32 +16,32 @@ import {SciFilterCriterion, SciSortCriterion} from './table-data-source';
 export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
 
 export interface SciTable<T, ID = T> {
-  columns: SciColumns<T>[];
-  name?: string;
-  filterable: Signal<boolean>;
-  selectable: Signal<boolean>;
-  resizable: Signal<boolean>;
-  sortable: Signal<boolean>;
+  readonly columns: SciColumns<T>[];
+  readonly name?: string;
+  readonly filterable: boolean;
+  readonly selectable: boolean;
+  readonly resizable: boolean;
+  readonly sortable: boolean;
 
   /**
    * Active sort criteria, one criterion per column.
    */
-  sortCriteria: Signal<SciSortCriterion[]>;
+  readonly sortCriteria: Signal<SciSortCriterion[]>;
 
   /**
    * Active filter criteria, one criterion per column.
    */
-  filterCriteria: Signal<SciFilterCriterion[]>;
+  readonly filterCriteria: Signal<SciFilterCriterion[]>;
 
   /**
    * Currently active (focused) item id.
    */
-  activeItem: Signal<ID | undefined>;
+  readonly activeItem: Signal<ID | undefined>;
 
   /**
    * Selected item ids.
    */
-  selectedItems: Signal<Set<ID>>;
+  readonly selectedItems: Signal<Set<ID>>;
 
   sort(columnName: string, multi: boolean): void;
   resetSort(): void;
@@ -68,11 +68,11 @@ export interface SciColumn<T> {
   type: ColumnType;
   name: string;
   named: boolean;
+  index: number;
+  sortable: boolean;
+  filterable: boolean;
+  resizable: boolean;
   header: Signal<string | undefined>;
-  sortable: Signal<boolean>;
-  filterable: Signal<boolean>;
-  resizable: Signal<boolean>;
-  index: Signal<number>;
   width: Signal<string>;
   minWidth: Signal<string>;
   maxWidth: Signal<string | null>;
@@ -126,9 +126,9 @@ export type SciColumns<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBoolean
  * Mapped row, used as display state.
  */
 export interface SciRow<T, ID = T> {
-  item: T;
-  id: ID;
-  cells: SciCells[];
+  item?: T;
+  id?: ID;
+  cells?: SciCells[];
 }
 
 /**

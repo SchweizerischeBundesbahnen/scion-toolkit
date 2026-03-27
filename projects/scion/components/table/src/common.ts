@@ -30,6 +30,9 @@ export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
   return of(input);
 }
 
+/**
+ * CSS clamp for use in a CSS grid.
+ */
 export function clamp(min: string, preferred: string, max: string | null): string {
   const maxDef = max === null ? preferred : `min(${preferred}, ${max})`;
   return `minmax(${min}, ${maxDef})`;

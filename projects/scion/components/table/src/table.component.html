@@ -1,7 +1,7 @@
 @let table = sciTable();
 <div class="viewport e2e-viewport" #viewport sciScrollable>
   <div class="grid">
-    @if (table.headerVisible()) {
+    @if (table.headerVisible) {
       <header #header>
         @for (column of table.columns; track column.name) {
           <sci-column-header [column]="column" (autoResize)="onResizeAuto(column)" />

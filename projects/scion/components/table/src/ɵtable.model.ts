@@ -10,13 +10,15 @@
 
 import {computed, InjectionToken, linkedSignal, signal, Signal} from '@angular/core';
 import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
-import {SciCells, SciColumns, SciRow, SciTable} from './table.model';
+import {ColumnType, SciCellContext, SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciArrayDataSource} from './ɵarray-data-source';
 import {coerceObservable, coerceSignal} from './common';
 import {SciTableStorage} from './table-storage';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
+import {SciColumnDescriptors} from './table.factory';
+import {UUID} from '@scion/toolkit/uuid';
 
 interface StoredTable {
   columnWidths: {columnName: string; width: number}[];
@@ -29,16 +31,16 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly columns: SciColumns<T>[];
   public readonly dataSource: SciDataSource<T, ID>;
   public readonly tableStorage: SciTableStorage;
-  public readonly name?: string;
-
-  public readonly sortable: Signal<boolean>;
-  public readonly filterable: Signal<boolean>;
-  public readonly resizable: Signal<boolean>;
-  public readonly selectable: Signal<boolean>;
-  public readonly headerVisible: Signal<boolean>;
-
   public readonly itemSize: number;
   public readonly overscan: number;
+  public readonly name?: string;
+
+  public readonly sortable: boolean;
+  public readonly filterable: boolean;
+  public readonly resizable: boolean;
+  public readonly selectable: boolean;
+  public readonly headerVisible: boolean;
+
   public readonly rowPart?: (item: T) => string | null;
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
@@ -50,8 +52,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria()}));
 
   private readonly _rows = linkedSignal({
-    source: () => ({...this.criteria(), count: this._totalCount()}),
-    computation: ({count}) => new Array<SciRow<T, ID>>(count).fill({} as SciRow<T, ID>),
+    source: () => ({count: this._totalCount()}),
+    computation: ({count}) => new Array<SciRow<T, ID>>(count).fill({}),
   });
   private readonly _activeItem = linkedSignal({
     source: this.criteria,
@@ -67,20 +69,22 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly rows = this._rows.asReadonly();
 
   constructor(factory: ɵSciTableFactory<T>, dataOrSource: T[] | SciDataSource<T, ID>) {
-    this.columns = factory.columns;
     this.name = factory.tableName;
     this.tableStorage = factory.tableStorage;
-    this.sortable = factory.isSortable;
-    this.filterable = factory.isFilterable;
-    this.resizable = factory.isResizable;
-    this.selectable = factory.isSelectable;
+    this.sortable = factory.sortable;
+    this.filterable = factory.filterable;
+    this.resizable = factory.resizable;
+    this.selectable = factory.selectable;
     this.itemSize = factory.rowItemSize;
     this.overscan = factory.overscanAmount;
-    this.headerVisible = factory.isHeaderVisible;
+    this.headerVisible = factory.headerVisible;
     this.rowPart = factory.rowPartFn;
 
+    this.columns = factory.columns
+      .map((column, index) => this.initColumn(column.type, index, column));
+
     this.dataSource = Array.isArray(dataOrSource) ?
-      new ɵSciArrayDataSource(dataOrSource, factory.columns) as unknown as SciDataSource<T, ID> :
+      new ɵSciArrayDataSource(dataOrSource, this.columns) as unknown as SciDataSource<T, ID> :
       dataOrSource;
 
     void this.initColumnWidths();
@@ -91,10 +95,11 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   }
 
   public loadPage({page, sortCriteria, filterCriteria}: Pick<SciTableRequest, 'page' | 'sortCriteria' | 'filterCriteria'>): Observable<SciTableResponse<T> & {page: number}> {
+    const pageSize = this.dataSource.pageSize;
     return coerceObservable(this.dataSource.getItems({
-      start: page * this.dataSource.pageSize,
-      end: page * this.dataSource.pageSize + this.dataSource.pageSize,
-      pageSize: this.dataSource.pageSize,
+      start: page * pageSize,
+      end: page * pageSize + pageSize,
+      pageSize: pageSize,
       page,
       sortCriteria,
       filterCriteria,
@@ -116,7 +121,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   }
 
   public sort(columnName: string, multi: boolean): void {
-    if (!this.sortable()) {
+    if (!this.sortable) {
       return;
     }
 
@@ -139,7 +144,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   }
 
   public filter(columnName: string, text: string | number | boolean | null): void {
-    if (!this.filterable()) {
+    if (!this.filterable) {
       return;
     }
 
@@ -182,6 +187,35 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     this._selectedItems.update(updateFn);
   }
 
+  private initColumn(type: ColumnType, index: number, config: SciColumnDescriptors<T>): SciColumns<T> {
+    // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
+    const sortable = type === 'component' || type === 'template' ?
+      !!config.sort :
+      config.sort !== false;
+
+    // columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
+    const filterable = type === 'component' || type === 'template' ?
+      !!config.filter :
+      config.filter !== false;
+
+    return {
+      ...config,
+      type,
+      index,
+      name: config.name ?? UUID.randomUUID(),
+      named: !!config.name,
+      filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
+      sort: typeof config.sort === 'function' ? config.sort : defaultSort,
+      sortable: sortable && this.sortable,
+      filterable: filterable && this.filterable,
+      resizable: (config.resizable ?? true) && this.resizable,
+      header: coerceSignal(config.header, {defaultValue: ''}),
+      width: coerceSignal(config.width, {defaultValue: 'min-content'}),
+      minWidth: coerceSignal(config.minWidth, {defaultValue: '100px'}),
+      maxWidth: coerceSignal(config.maxWidth, {defaultValue: null}),
+    } as SciColumns<T>;
+  }
+
   private get storageKey(): string {
     return `sci-table-${this.name}`;
   }
@@ -215,5 +249,35 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     catch (error) {
       console.warn(`Failed to parse item from storage.`, error);
     }
+  }
+}
+
+function defaultFilter<T>(text: string | boolean | number, {value}: SciCellContext<T, string | boolean | number>): boolean {
+  if (typeof value !== typeof text) {
+    return false;
+  }
+
+  switch (typeof value) {
+    case 'string':
+      return value.toLowerCase().includes((text as string).toLowerCase());
+    default:
+      return text === value;
+  }
+}
+
+function defaultSort<T>(a: SciCellContext<T, string | boolean | number>, b: SciCellContext<T, string | boolean | number>): number {
+  if (typeof a.value !== typeof b.value) {
+    return 0;
+  }
+
+  switch (typeof a.value) {
+    case 'string':
+      return a.value.localeCompare(b.value as string);
+    case 'number':
+      return a.value - (b.value as number);
+    case 'boolean':
+      return a.value === b.value ? 0 : (a.value ? 1 : -1);
+    default:
+      return 0;
   }
 }

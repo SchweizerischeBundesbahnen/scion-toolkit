@@ -103,6 +103,7 @@ export default class SciTablePageComponent {
     rowCount: 10000,
     rowSize: 28,
     height: 600,
+    tableCount: 1,
   });
   protected settingsForm = form(this.settings);
 
@@ -115,18 +116,23 @@ export default class SciTablePageComponent {
   protected data = computed(() => generateData(this.settings().rowCount));
   protected columns = signal<ReturnType<typeof this.column>[]>([]);
 
-  protected table?: Signal<SciTable<Product, unknown>>;
+  protected tables?: Signal<SciTable<Product, unknown>>[];
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
 
   constructor() {
     effect(() => {
-      if (this.type() === 'slow') {
-        this.table = table(new SlowDataSource(this.data), table => this.createTable(table));
+      const count = this.settings().tableCount;
+      const tables = [];
+
+      for (let i = 0; i < count; i++) {
+        tables.push(this.type() === 'slow' ?
+          table(new SlowDataSource(this.data), table => this.createTable(table)) :
+          table(this.data, table => this.createTable(table)),
+        );
       }
-      else {
-        this.table = table(this.data, table => this.createTable(table));
-      }
+
+      this.tables = tables;
     });
   }
 

@@ -96,6 +96,27 @@ test.describe('sci-table', () => {
       await expect.poll(() => table.rows.first().boundingBox().then(b => b?.height)).toBe(20);
       await expect.poll(() => table.rows.count()).toBeGreaterThan(count);
     });
+
+    test('should render multiple tables', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.setTableCount(4);
+
+      await expect(table.locator).toHaveCount(4);
+
+      // Should not interfere with other tables
+      await table.clickColumnSort(0);
+
+      await expect(table.headers.first().locator('[data-sort="asc"]')).toBeAttached();
+      await expect(table.headers.nth(1)).toBeAttached();
+      await expect(table.headers.nth(1).locator('[data-sort="asc"]')).not.toBeAttached();
+      await expect(table.headers.nth(2)).toBeAttached();
+      await expect(table.headers.nth(2).locator('[data-sort="asc"]')).not.toBeAttached();
+      await expect(table.headers.nth(3)).toBeAttached();
+      await expect(table.headers.nth(3).locator('[data-sort="asc"]')).not.toBeAttached();
+    });
   });
 
   test.describe('columns', () => {
