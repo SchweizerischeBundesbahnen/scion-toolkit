@@ -30,7 +30,7 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
-    await table.clickColumnSort(0);
+    await table.column(0).sort();
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
   });
@@ -44,7 +44,7 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
-    await table.enterColumnFilter(0, '1');
+    await table.column(0).filter('1');
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
   });

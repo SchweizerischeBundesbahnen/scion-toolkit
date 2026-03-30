@@ -9,7 +9,8 @@
  */
 
 import {Locator, Page} from '@playwright/test';
-import {fromRect} from '../../helper/testing.utils';
+import {ColumnPo} from './column.po';
+import {RowPo} from './row.po';
 
 export class TablePo {
 
@@ -31,53 +32,18 @@ export class TablePo {
     this.viewport = this.locator.locator('div.e2e-viewport');
   }
 
-  public locateColumnHeader(header: string): Locator {
-    return this.headers.locator('button.e2e-column-sort', {hasText: header});
-  }
-
-  public locateColumnFilter(columnIndex: number): Locator {
-    return this.headers.nth(columnIndex).locator('sci-column-filter');
-  }
-
   public locateColumnCells(columnIndex: number): Locator {
     return this.rows.locator('sci-table-cell').nth(columnIndex);
   }
 
-  public locateColumnSplitter(columnIndex: number): Locator {
-    return this.headers.nth(columnIndex).locator('sci-splitter');
+  public row(index: number): RowPo {
+    return new RowPo(this.rows.nth(index));
   }
 
-  public async clickColumnSort(columnIndex: number): Promise<void> {
-    await this.headers.nth(columnIndex).locator('button.e2e-column-sort').click();
-  }
-
-  public async clearColumnFilter(columnIndex: number): Promise<void> {
-    await this.locateColumnFilter(columnIndex).locator('button.e2e-clear').click();
-  }
-
-  public async enterColumnFilter(columnIndex: number, value: string): Promise<void> {
-    const filter = this.locateColumnFilter(columnIndex);
-    const input = filter.locator('input');
-    const select = filter.locator('select');
-    if (await input.isVisible()) {
-      await input.fill(value);
-    }
-    else {
-      await select.selectOption(value);
-    }
-  }
-
-  public async getColumnHeaderWidth(columnIndex: number): Promise<number | undefined> {
-    return this.headers.nth(columnIndex).boundingBox().then(b => b?.width);
-  }
-
-  public async dragColumnSplitter(columnIndex: number, distance: number): Promise<void> {
-    const splitterBounds = fromRect(await this.locateColumnSplitter(columnIndex).boundingBox());
-
-    await this._page.mouse.move(splitterBounds.hcenter, splitterBounds.vcenter);
-    await this._page.mouse.down();
-    await this._page.mouse.move(splitterBounds.hcenter + distance, splitterBounds.vcenter, {steps: 10});
-    await this._page.mouse.up();
+  public column(indexOrHeader: number | string): ColumnPo {
+    return typeof indexOrHeader === 'number' ?
+      new ColumnPo(this.headers.nth(indexOrHeader), this) :
+      new ColumnPo(indexOrHeader, this);
   }
 
   public async scrollViewPort(scroll: 'right' | {x: number; y: number}): Promise<void> {
@@ -85,9 +51,5 @@ export class TablePo {
       const {x, y} = scroll === 'right' ? {x: element.clientWidth, y: 0} : scroll;
       element.scrollTo(x, y);
     }, {scroll});
-  }
-
-  public async clickRow(rowIndex: number, modifiers?: Array<'Alt' | 'Control' | 'ControlOrMeta' | 'Meta' | 'Shift'>): Promise<void> {
-    await this.rows.nth(rowIndex).click({modifiers});
   }
 }

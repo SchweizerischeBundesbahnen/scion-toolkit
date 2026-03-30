@@ -10,20 +10,24 @@
 
 import {TablePo} from './table.po';
 import {expect} from '@playwright/test';
+import {RowPo} from './row.po';
 
 export function expectTable(table: TablePo): TableMatcher {
   return {
     async allCellsToContainText(columnIndex: number, text: string): Promise<void> {
       await expect(async () => {
-        for (const cell of await table.locateColumnCells(columnIndex).all()) {
+        for (const row of await table.rows.all()) {
           // Do not use web first assertion since we already opted out with `.all()`
           // This prevents waiting for the 5s timeout in the first try
-          await expect(cell.textContent()).resolves.toContain(text);
+          await expect(new RowPo(row).cells.nth(columnIndex).textContent()).resolves.toContain(text);
         }
       }).toPass();
     },
     async toHaveHorizontalOverflow(): Promise<void> {
       await expect(table.locator.locator('sci-scrollbar.horizontal.overflow')).toBeAttached();
+    },
+    async toHaveColumnCount(count: number): Promise<void> {
+      await expect(table.locator.locator('sci-column-header')).toHaveCount(count);
     },
   };
 }
@@ -31,4 +35,5 @@ export function expectTable(table: TablePo): TableMatcher {
 export interface TableMatcher {
   allCellsToContainText(columnIndex: number, text: string): Promise<void>;
   toHaveHorizontalOverflow(): Promise<void>;
+  toHaveColumnCount(count: number): Promise<void>;
 }

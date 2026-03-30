@@ -22,6 +22,7 @@ export interface ColumnOptions {
   width?: string;
   minWidth?: string;
   maxWidth?: string;
+  conditionallyStyleCell?: boolean;
 }
 
 export class TablePagePO {
@@ -75,6 +76,21 @@ export class TablePagePO {
     await this._properties.locator('input.e2e-row-size').fill(rowSize.toString());
   }
 
+  public async setRowCount(rowCount: number): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('form input.e2e-row-count').fill(rowCount.toString());
+  }
+
+  public async setTableCount(tableCount: number): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('form input.e2e-table-count').fill(tableCount.toString());
+  }
+
+  public async conditionallyStyleRow(): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('form input.e2e-conditional-style').check();
+  }
+
   public async addColumn(options: ColumnOptions): Promise<void> {
     await this._tabbar.locator('button.e2e-columns').click();
     await this._properties.locator('form input.e2e-column-name').fill(options.name);
@@ -85,6 +101,9 @@ export class TablePagePO {
     }
     if (options.customFilter) {
       await this._properties.locator('form input.e2e-column-custom-filter').check();
+    }
+    if (options.conditionallyStyleCell) {
+      await this._properties.locator('form input.e2e-column-conditional-style').check();
     }
     if (options.filterValues !== undefined) {
       await this._properties.locator('form input.e2e-column-filter-values').fill(options.filterValues.join(','));
@@ -99,13 +118,5 @@ export class TablePagePO {
       await this._properties.locator('form input.e2e-column-max-width').fill(options.maxWidth);
     }
     await this._properties.locator('form button.e2e-column-add').click();
-  }
-
-  public async setRowCount(rowCount: number): Promise<void> {
-    await this._properties.locator('form input.e2e-row-count').fill(rowCount.toString());
-  }
-
-  public async setTableCount(tableCount: number): Promise<void> {
-    await this._properties.locator('form input.e2e-table-count').fill(tableCount.toString());
   }
 }

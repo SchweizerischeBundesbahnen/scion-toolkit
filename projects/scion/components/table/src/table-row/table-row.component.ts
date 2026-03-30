@@ -45,7 +45,7 @@ export class TableRowComponent<T, ID> {
   protected readonly loading = computed(() => !this.item()); // Rows are initialized with an undefined item, before data is loaded
   protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeItem());
   protected readonly isSelected = computed(() => this.table().selectedItems().has(this.id()));
-  protected readonly part = computed(() => this.item() ? this.table().rowPart?.(this.item()) : null);
+  protected readonly part = computed(() => this.item() && !this.isSelected() ? this.table().rowPart?.(this.item()) : null); // selection takes precedence over custom styles
 
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;

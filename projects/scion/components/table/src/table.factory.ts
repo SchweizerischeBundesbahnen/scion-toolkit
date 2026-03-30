@@ -76,7 +76,7 @@ interface SciColumnDescriptor<T> {
   width?: MaybeSignal<string>;
   minWidth?: MaybeSignal<string>;
   maxWidth?: MaybeSignal<string>;
-  part?: (item: T) => string;
+  part?: (item: T) => string | null;
 }
 
 export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor<T> {

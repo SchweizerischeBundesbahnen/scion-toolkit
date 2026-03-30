@@ -156,7 +156,7 @@ export default class SciTablePageComponent {
     }
 
     if (settings.conditionallyStyleRow) {
-      table.rowPart(row => row.id % 3 ? 'red-row' : null);
+      table.rowPart(row => row.id % 3 === 0 ? 'red-row' : null);
     }
 
     table
@@ -186,6 +186,7 @@ export default class SciTablePageComponent {
         filter: column.customFilter ? customFilter : undefined,
         sort: column.customSort ? customSort : undefined,
         filterValues: column.filterValues ? column.filterValues.split(',').map(v => v.trim()) : undefined,
+        part: (item: Product) => (column.conditionallyStyleCell && item.id % 3 === 0) ? 'red-cell' : null,
       };
 
       switch (column.type) {

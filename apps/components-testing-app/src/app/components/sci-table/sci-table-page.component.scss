@@ -14,6 +14,11 @@
       &:first-child:last-child {
         grid-column: 1 / -1;
       }
+
+      &::part(red-cell),
+      &::part(red-row) {
+        background-color: rgba(255, 0, 0, 0.2);
+      }
     }
   }
 

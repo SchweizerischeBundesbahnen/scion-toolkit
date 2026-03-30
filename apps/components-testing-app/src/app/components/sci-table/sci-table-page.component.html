@@ -29,6 +29,9 @@
         <sci-form-field label="Show Header">
           <input [field]="settingsForm.showHeader" type="checkbox" class="e2e-show-header" />
         </sci-form-field>
+        <sci-form-field label="Conditional Style Row (Part)">
+          <input [field]="settingsForm.conditionallyStyleRow" type="checkbox" class="e2e-conditional-style">
+        </sci-form-field>
         <sci-form-field label="Table Count">
           <input [field]="settingsForm.tableCount" type="number" class="e2e-table-count" />
         </sci-form-field>
@@ -66,6 +69,9 @@
         </sci-form-field>
         <sci-form-field label="Custom Filter">
           <input [field]="columnForm.customFilter" type="checkbox" class="e2e-column-custom-filter">
+        </sci-form-field>
+        <sci-form-field label="Conditional Style (Part)">
+          <input [field]="columnForm.conditionallyStyleCell" type="checkbox" class="e2e-column-conditional-style">
         </sci-form-field>
         <sci-form-field label="Filter Values (comma separated)">
           <input [field]="columnForm.filterValues" type="text" class="e2e-column-filter-values">
