@@ -7,57 +7,43 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, input, inputBinding, resource, Signal, signal, TemplateRef, viewChild} from '@angular/core';
-import {SciDataSource, SciTableComponent, SciTableRequest, SciTableResponse, SciTableFactory, table} from '@scion/components/table';
-import {Station, stations} from './sci-table-page.data';
+import {Component, input, inputBinding, Signal, signal} from '@angular/core';
+import {SciDataSource, SciTableComponent, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {Field, form} from '@angular/forms/signals';
-import {Observable, timer, map} from 'rxjs';
+import {map, Observable, timer} from 'rxjs';
 import {SciTable} from '../../../../../projects/scion/components/table/src/table.model';
+import {DatePipe} from '@angular/common';
 
-class SlowDataSource implements SciDataSource<Station, string> {
+@Component({
+  selector: 'app-date-cell',
+  imports: [
+    DatePipe,
+  ],
+  template: `
+    {{ date() | date : 'dd.MM.yyyy' }}
+  `,
+})
+class DateCellComponent {
+  protected readonly date = input.required<Date>();
+}
+
+class SlowDataSource implements SciDataSource<Company, number> {
   public pageSize = 50;
 
-  public getItems(request: SciTableRequest): Observable<SciTableResponse<Station>> {
+  public getItems(request: SciTableRequest): Observable<SciTableResponse<Company>> {
     return timer(1000).pipe(
       map(() => ({
-        items: stations.slice(request.start, request.end),
-        totalCount: stations.length,
+        items: companies.slice(request.start, request.end),
+        totalCount: companies.length,
       })),
     );
   }
 
-  public identity(item: Station): string {
-    return item.sloid;
+  public identity(item: Company): number {
+    return item.code;
   }
-}
-
-@Component({
-  selector: 'app-custom-cell',
-  styles: `
-    div.skeleton {
-      background-color: var(--sci-color-skeleton);
-      border-radius: var(--sci-corner-small);
-      height: 1em;
-      max-width: 100px;
-    }
-  `,
-  template: `
-    @if (sloid.isLoading()) {
-      <div class="skeleton">
-        
-      </div>
-    } @else if (sloid.value(); as res) {
-      {{ res }}      
-    }
-  `,
-})
-class CustomCellComponent {
-  public readonly station = input.required<Station>();
-  public readonly sloid = resource({
-    params: () => ({sloid: this.station().sloid}),
-    loader: ({params}) => new Promise(resolve => setTimeout(() => resolve(params.sloid.split(':').at(-1)), Math.floor(Math.random() * 1500) + 500)),
-  });
 }
 
 @Component({
@@ -71,8 +57,8 @@ class CustomCellComponent {
   ],
 })
 export default class SciTablePageComponent {
-  protected data = signal(stations);
-  protected activeItem = signal<string | undefined>(undefined);
+  protected data = signal(companies);
+  protected activeItem = signal<number | undefined>(undefined);
   protected selectedItems = signal<string | undefined>(undefined);
   protected additionalData = signal(0);
 
@@ -82,16 +68,14 @@ export default class SciTablePageComponent {
     resizable: true,
     showHeader: true,
     language: 'de',
-    slowDataSource: true,
+    slowDataSource: false,
   });
   protected form = form(this.settings);
 
-  private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
+  protected table: Signal<SciTable<Company, unknown>> = table(this.data, table => this.createTable(table));
+  protected slowTable: Signal<SciTable<Company, unknown>> = table(new SlowDataSource(), table => this.createTable(table));
 
-  protected table: Signal<SciTable<Station, unknown>> = table(this.data, table => this.createTable(table));
-  protected slowTable: Signal<SciTable<Station, unknown>> = table(new SlowDataSource(), table => this.createTable(table));
-
-  protected createTable(table: SciTableFactory<Station>): SciTableFactory<Station> {
+  protected createTable(table: SciTableFactory<Company>): SciTableFactory<Company> {
     const settings = this.settings();
 
     if (!settings.showHeader) {
@@ -110,57 +94,45 @@ export default class SciTablePageComponent {
       table.disableResize();
     }
 
-    // if (this.additionalData() > 2) {
-    //   table.addStringColumn({
-    //     value: station => computed(() => `${station.sloid} (${this.additionalData()})`),
-    //     width: '150px',
-    //     maxWidth: '200px',
-    //     minWidth: '100px',
-    //     header: 'Sloid',
-    //     resizable: false,
-    //   });
-    // }
-
     return table
+      .addNumberColumn('Code', company => company.code)
+      .addStringColumn({
+        header: 'Abkürzung',
+        value: company => company.abbreviation,
+        width: '1fr',
+      })
+      .addStringColumn({
+        header: 'Name',
+        value: company => company.name,
+        width: '1fr',
+      })
+      .addBooleanColumn('EVU', company => company.railwayUndertaking)
       .addComponentColumn({
-        header: 'Custom Component',
-        filter: (text, cell) => cell.item.sloid.includes(text),
-        sort: (a, b) => a.item.sloid.localeCompare(b.item.sloid),
-        component: station => ({
-          component: CustomCellComponent, bindings: [inputBinding('station', signal(station))],
+        header: 'Gültig ab',
+        sort: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime(),
+        component: item => ({
+          component: DateCellComponent,
+          bindings: [inputBinding('date', () => new Date(item.validFrom))],
         }),
       })
-      .addTemplateColumn({
-        header: 'Template',
-        part: station => station.designationofficial.length < 15 ? 'green-cell' : '',
-        template: () => computed(() => ({template: this.cellTemplate(), context: {custom: this.additionalData()}})),
+      .addComponentColumn({
+        header: 'Gültig bis',
+        sort: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime(),
+        component: item => ({
+          component: DateCellComponent,
+          bindings: [inputBinding('date', () => new Date(item.validTo))],
+        }),
       })
-      .addNumberColumn({
-        header: 'Number',
-        value: station => station.designationofficial.length,
-      })
-      .addBooleanColumn('Boolean', station => station.designationofficial.length > 15)
-      .addStringColumn({
-        value: station => station.designationofficial,
-        header: 'Name',
-        name: 'name',
-      })
-      .addStringColumn({
-        value: station => computed(() => settings.language === 'fr' ? station.districtnameFr : station.districtname),
-        width: '1fr',
-        header: 'District',
-      })
-      .name('stations')
-      .rowPart(item => item.designationofficial.length > 15 ? 'red-row' : '');
+      .name('companies');
   }
 
   protected onActivateRow(row: unknown): void {
-    this.activeItem.set(typeof row === 'string' ? row : (row as Station | undefined)?.sloid);
+    this.activeItem.set(typeof row === 'number' ? row : (row as Company | undefined)?.code);
   }
 
   protected onSelectRows(selection: Set<unknown>): void {
     const selectionValues = [...selection.values()];
-    this.selectedItems.set(selectionValues.length ? selectionValues.map(s => typeof s === 'string' ? s : (s as Station).sloid).join(', ') : undefined);
+    this.selectedItems.set(selectionValues.length ? selectionValues.map(s => typeof s === 'number' ? s : (s as Company).code).join(', ') : undefined);
   }
 
   protected onUpdateSignal(): void {

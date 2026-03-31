@@ -14,7 +14,7 @@ import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {TableRowComponent} from './table-row/table-row.component';
-import {combineLatest, combineLatestWith, fromEvent, mergeMap, of, switchMap} from 'rxjs';
+import {combineLatest, combineLatestWith, from, fromEvent, mergeMap, switchMap} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {map, startWith} from 'rxjs/operators';
@@ -72,6 +72,22 @@ export class SciTableComponent<T, ID = T> {
 
   protected readonly range = signal<{start: number; end: number}>({start: 0, end: 0});
 
+  /**
+   * Count of currently visible rows
+   */
+  private readonly _count = computed(() => {
+    const containerDimension = this._containerDimension();
+    const itemSize = this.sciTable().itemSize;
+    const overscan = this.sciTable().overscan;
+
+    return Math.ceil(containerDimension.clientHeight / itemSize) + overscan * 2;
+  });
+
+  protected readonly visibleRows = computed(() => {
+    const {start, end} = this.range();
+    return this.sciTable().rows().slice(start, end);
+  });
+
   private readonly _loadedPages = linkedSignal({
     source: () => this.sciTable().criteria(),
     computation: () => new Set<number>(),
@@ -90,19 +106,6 @@ export class SciTableComponent<T, ID = T> {
     });
   }, {equal: (prev, curr) => prev.length === curr.length && prev.every(p => curr.includes(p))});
 
-  protected readonly visibleRows = computed(() => {
-    const {start, end} = this.range();
-    return this.sciTable().rows().slice(start, end);
-  });
-
-  private readonly _count = computed(() => {
-    const containerDimension = this._containerDimension();
-    const itemSize = this.sciTable().itemSize;
-    const overscan = this.sciTable().overscan;
-
-    return Math.ceil(containerDimension.clientHeight / itemSize) + overscan * 2;
-  });
-
   protected readonly height = computed(() => `${this.sciTable().totalCount() * this.sciTable().itemSize}px`);
   protected readonly columnWidths = computed(() => {
     const columns = this.sciTable().columns;
@@ -113,7 +116,10 @@ export class SciTableComponent<T, ID = T> {
       .join(' ');
   });
 
-  // Width of the whole table. This is needed to allow the table to overflow horizontally.
+  /**
+   * A grid will never grow beyond its parent unless explicitly set, that is why we need to set the table width.
+   * This allows the grid overflowing when resizing.
+   */
   protected readonly tableWidth = computed(() => {
     const columns = this.sciTable().columns;
     const overrides = this.sciTable().columnWidths();
@@ -130,7 +136,8 @@ export class SciTableComponent<T, ID = T> {
           return sum + columnWidth;
         }, 0);
 
-      return `max(100%, ${Math.floor(width)}px)`;
+      // Somehow we have a horizontal overflow, if we don't subtract some px from the whole width
+      return `calc(max(100%, ${Math.ceil(width)}px) - 8px)`;
     });
   });
 
@@ -144,8 +151,7 @@ export class SciTableComponent<T, ID = T> {
     });
 
     effect(() => {
-      this.sciTable().criteria();
-
+      this.sciTable().criteria(); // track sort criteria
       const viewport = this._viewport();
       const count = this._count();
 
@@ -158,13 +164,9 @@ export class SciTableComponent<T, ID = T> {
     this.installScrollListener();
   }
 
-  public getMaxRowWidth(columnName: string): number {
-    const cellWidths = this._rows().map(row => row.getCellWidth(columnName));
-    return Math.max(...cellWidths, 0);
-  }
-
   protected onResizeAuto(column: SciColumns<T>): void {
-    const maxWidth = this.getMaxRowWidth(column.name);
+    const cellWidths = this._rows().map(row => row.getCellWidth(column.name));
+    const maxWidth = Math.max(...cellWidths, 0);
     this.sciTable().setResizedColumn(column.name, maxWidth);
   }
 
@@ -179,7 +181,7 @@ export class SciTableComponent<T, ID = T> {
     const pages$ = toObservable(this._pages);
 
     combineLatest([table$, pages$, sortCriteria$, filterCriteria$]).pipe(
-      switchMap(([table, range, sortCriteria, filterCriteria]) => of(...range).pipe(
+      switchMap(([table, pages, sortCriteria, filterCriteria]) => from(pages).pipe(
         mergeMap(page => table.loadPage({page, sortCriteria, filterCriteria})),
         map(response => ({response, table})),
       )),
@@ -190,6 +192,9 @@ export class SciTableComponent<T, ID = T> {
     });
   }
 
+  /**
+   * Updates the range of currently visible rows on scroll.
+   */
   private installScrollListener(): void {
     const count$ = toObservable(this._count);
     const table$ = toObservable(this.sciTable);

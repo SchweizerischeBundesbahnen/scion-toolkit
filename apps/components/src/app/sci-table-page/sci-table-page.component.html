@@ -1,10 +1,5 @@
 <main>
   <sci-table [table]="settings().slowDataSource ? slowTable() : table()" (activateItem)="onActivateRow($event)" (selectItems)="onSelectRows($event)" />
-  <ng-template let-station let-custom="custom" #cell>
-    <span class="custom-cell">
-      {{station.sloid}} / {{custom}}
-    </span>
-  </ng-template>
 </main>
 
 <aside class="e2e-settings">
@@ -43,10 +38,10 @@
   </form>
 
   <dl>
-    <dt>Active Sloid:</dt>
-    <dd>{{ activeItem() ?? '-' }}</dd>
+    <dt>Active Code:</dt>
+    <dd>{{activeItem() ?? '-'}}</dd>
 
-    <dt>Selected Sloids:</dt>
+    <dt>Selected Codes:</dt>
     <dd>{{selectedItems() ?? '-'}}</dd>
   </dl>
 </aside>
