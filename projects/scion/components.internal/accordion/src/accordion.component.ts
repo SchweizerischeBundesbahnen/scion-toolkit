@@ -9,7 +9,6 @@
  */
 
 import {ChangeDetectorRef, Component, contentChildren, DestroyRef, ElementRef, HostBinding, inject, input, OnInit, Signal, TrackByFunction, viewChild} from '@angular/core';
-import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciAccordionItemDirective} from './accordion-item.directive';
 import {CdkAccordion, CdkAccordionItem} from '@angular/cdk/accordion';
 import {debounceTime} from 'rxjs/operators';
@@ -54,9 +53,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     CdkAccordion,
     CdkAccordionItem,
     SciMaterialIconDirective,
-  ],
-  animations: [
-    trigger('enter', SciAccordionComponent.provideEnterAnimation()),
   ],
 })
 export class SciAccordionComponent implements OnInit {
@@ -124,15 +120,4 @@ export class SciAccordionComponent implements OnInit {
       });
   }
 
-  /**
-   * Returns animation metadata to expand accordion panel.
-   */
-  private static provideEnterAnimation(): AnimationMetadata[] {
-    return [
-      transition(':enter', [
-        style({opacity: 0, height: 0, overflow: 'hidden'}),
-        animate('125ms ease-out', style({opacity: 1, height: '*'})),
-      ]),
-    ];
-  }
 }

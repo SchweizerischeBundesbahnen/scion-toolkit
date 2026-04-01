@@ -6,5 +6,21 @@
   > div.animated-content {
     background-color: cornflowerblue;
     text-wrap: nowrap;
+
+    &.size-animation {
+      animation: size-animation 1000ms;
+    }
+  }
+}
+
+@keyframes size-animation {
+  0% {
+    width: 100%;
+  }
+  50% {
+    width: 100px;
+  }
+  100% {
+    width: 100%;
   }
 }

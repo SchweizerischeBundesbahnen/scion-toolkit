@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {afterNextRender, Component, contentChildren, effect, ElementRef, HostBinding, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked} from '@angular/core';
+import {afterNextRender, Component, contentChildren, ElementRef, HostBinding, inject, input, NgZone, output, signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
@@ -109,7 +109,7 @@ export class SciSashboxComponent {
   private readonly _contentChildren = contentChildren(SciSashDirective);
 
   /** @internal */
-  public readonly sashes = this.computeSashes(this._contentChildren);
+  public readonly sashes = this._contentChildren;
   /** @internal */
   public afterFirstRender = signal(false);
 
@@ -253,45 +253,14 @@ export class SciSashboxComponent {
    */
   private detectFirstRendering(): void {
     afterNextRender({
-      read: () => this.afterFirstRender.set(true),
+      read: () => {
+        // Delay to the next render cycle
+        // If it's set in the current, the [animate.enter] class on the sash-component is still applied and thus an animation is triggered on initial render (which should be prevented)
+        requestAnimationFrame(() => {
+          this.afterFirstRender.set(true);
+        });
+      },
     });
-  }
-
-  /**
-   * Mirrors the provided signal. If animated sashes are being removed, delays emission until the animation completes,
-   * effectively removing the element after the animation.
-   *
-   * Delayed removal is required for CDK Portals to not remove displayed content immediately.
-   */
-  private computeSashes(contentChildren: Signal<readonly SciSashDirective[]>): Signal<readonly SciSashDirective[]> {
-    const differ = inject(IterableDiffers).find([]).create<SciSashDirective>();
-    const sashes = signal<readonly SciSashDirective[]>([]);
-
-    effect(() => {
-      // Compute removed sashes to be removed with an animation.
-      const removedAnimatedSashes = new Array<SciSashDirective>();
-      differ.diff(contentChildren())?.forEachRemovedItem(({item: sash}) => untracked(() => {
-        if (sash.animate()) {
-          removedAnimatedSashes.push(sash);
-        }
-      }));
-
-      // Emit if no sashes are removed with an animation.
-      if (!removedAnimatedSashes.length) {
-        sashes.set(contentChildren());
-        return;
-      }
-
-      // Delay emission until a leave animation completes.
-      removedAnimatedSashes.forEach(sash => {
-        // Start the leave animation.
-        const done = sash.component().startLeaveAnimation();
-        // Track animation completion, re-running this effect to finally emit the sashes.
-        done();
-      });
-    });
-
-    return sashes;
   }
 }
 

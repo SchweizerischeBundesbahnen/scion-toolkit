@@ -32,9 +32,25 @@ $diamond-height: 8;
     }
 
     > section {
-      display: grid; // public API
-      grid-template-columns: 100%;
-      gap: .5em;
+      display: grid;
+      animation: enter 125ms ease-out;
+      overflow: hidden;
+
+      > .content {
+        display: grid; // public API
+        grid-template-columns: 100%;
+        gap: .5em;
+        min-height: 0; // needs to be set to animate the height.
+      }
+
+      @keyframes enter {
+        from {
+          grid-template-rows: 0fr;
+        }
+        to {
+          grid-template-rows: 1fr;
+        }
+      }
     }
   }
 
