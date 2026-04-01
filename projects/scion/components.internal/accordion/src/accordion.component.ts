@@ -8,8 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, contentChildren, DestroyRef, ElementRef, HostBinding, inject, input, OnInit, Signal, TrackByFunction, viewChild} from '@angular/core';
-import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
+import {ChangeDetectorRef, Component, contentChildren, DestroyRef, ElementRef, HostBinding, inject, input, OnInit, signal, Signal, TrackByFunction, viewChild} from '@angular/core';
 import {SciAccordionItemDirective} from './accordion-item.directive';
 import {CdkAccordion, CdkAccordionItem} from '@angular/cdk/accordion';
 import {debounceTime} from 'rxjs/operators';
@@ -55,9 +54,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     CdkAccordionItem,
     SciMaterialIconDirective,
   ],
-  animations: [
-    trigger('enter', SciAccordionComponent.provideEnterAnimation()),
-  ],
 })
 export class SciAccordionComponent implements OnInit {
 
@@ -76,6 +72,7 @@ export class SciAccordionComponent implements OnInit {
   private readonly _cd = inject(ChangeDetectorRef, {skipSelf: true});
   private readonly _destroyRef = inject(DestroyRef);
   private readonly _cdkAccordion: Signal<ElementRef<HTMLElement>> = viewChild.required(CdkAccordion, {read: ElementRef});
+  protected open = signal(false);
 
   protected readonly items = contentChildren(SciAccordionItemDirective);
 
@@ -124,15 +121,4 @@ export class SciAccordionComponent implements OnInit {
       });
   }
 
-  /**
-   * Returns animation metadata to expand accordion panel.
-   */
-  private static provideEnterAnimation(): AnimationMetadata[] {
-    return [
-      transition(':enter', [
-        style({opacity: 0, height: 0, overflow: 'hidden'}),
-        animate('125ms ease-out', style({opacity: 1, height: '*'})),
-      ]),
-    ];
-  }
 }

@@ -418,7 +418,7 @@ test.describe('sci-sashbox', () => {
       await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'})).toHaveLength(0);
     });
 
-    test('should not disable inner Angular animations', async ({page, consoleLogs}) => {
+    test('should not disable inner animations', async ({page, consoleLogs}) => {
       const sashboxPage = new SashboxAnimationPagePO(page);
       await sashboxPage.navigate({sash4Visible: true, sash4Animated: false});
 
