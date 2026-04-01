@@ -14,8 +14,10 @@
         </button>
       </button>
       @if (cdkAccordionItem.expanded) {
-        <section @enter>
-          <ng-container *ngTemplateOutlet="item.panel()"></ng-container>
+        <section animate.enter="enter">
+          <div class="content">
+            <ng-container *ngTemplateOutlet="item.panel()"></ng-container>
+          </div>
         </section>
       }
     </section>

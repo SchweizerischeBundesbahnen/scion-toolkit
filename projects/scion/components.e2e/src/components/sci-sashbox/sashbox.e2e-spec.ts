@@ -317,6 +317,12 @@ test.describe('sci-sashbox', () => {
 
       await test.step('Removing sash 1', async () => {
         await waitUntilStable(() => consoleLogs.get().length);
+        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual([
+          '[SashContentComponent][sash-1] resize to 200',
+          '[SashContentComponent][sash-2] resize to 200',
+          '[SashContentComponent][sash-3] resize to 200',
+        ]);
+
         consoleLogs.clear();
 
         await sashboxPage.setVisible('sash-1', false);
@@ -418,7 +424,7 @@ test.describe('sci-sashbox', () => {
       await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'})).toHaveLength(0);
     });
 
-    test('should not disable inner Angular animations', async ({page, consoleLogs}) => {
+    test('should not disable inner animations', async ({page, consoleLogs}) => {
       const sashboxPage = new SashboxAnimationPagePO(page);
       await sashboxPage.navigate({sash4Visible: true, sash4Animated: false});
 

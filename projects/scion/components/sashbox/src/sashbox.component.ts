@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {afterNextRender, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked, ChangeDetectionStrategy} from '@angular/core';
+import {afterNextRender, ChangeDetectionStrategy, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
@@ -252,9 +252,17 @@ export class SciSashboxComponent {
    * Detects when rendered this component for the first time.
    */
   private detectFirstRendering(): void {
-    afterNextRender({
-      read: () => this.afterFirstRender.set(true),
-    });
+    // Delay enabling animation to after the first browser paint.
+    //
+    // `afterNextRender` fires after Angular has updated the DOM but before the browser paints.
+    // At that point, Angular's `[animate.enter]` binding has already added the `enter` class to
+    // sash components. Setting `afterFirstRender` to `true` inside the callback would immediately
+    // add the `animate` class, causing `.animate.enter` to match during the first paint and trigger
+    // the enter animation for all initially-rendered sashes, which should be suppressed.
+    //
+    // `requestAnimationFrame` defers until after the first paint, by which time the initial `enter`
+    // class lifecycle has completed, so newly-added sashes animate in correctly on subsequent renders.
+    afterNextRender(() => requestAnimationFrame(() => this.afterFirstRender.set(true)));
   }
 
   /**

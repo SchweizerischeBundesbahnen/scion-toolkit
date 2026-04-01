@@ -8,9 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, computed, effect, ElementRef, inject, input, linkedSignal, Signal, ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, ElementRef, inject, input, Signal, signal} from '@angular/core';
 import {NgTemplateOutlet} from '@angular/common';
-import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciSashBoxAccessor} from '../sashbox-accessor';
 import {SciSashDirective} from '../sash.directive';
 
@@ -24,14 +23,12 @@ import {SciSashDirective} from '../sash.directive';
   imports: [
     NgTemplateOutlet,
   ],
-  animations: [
-    trigger('sash-animation', provideAnimation()),
-  ],
   // Required for backward compatibility for zone-based applications to support child components with eager change detection.
   changeDetection: ChangeDetectionStrategy.Eager, // eslint-disable-line @angular-eslint/prefer-on-push-component-change-detection
   host: {
-    '[@sash-animation]': 'animationState()',
-    '(@sash-animation.done)': 'onAnimationEnd();',
+    '[class.animate]': 'shouldAnimate()',
+    '[class.leave]': 'leave()',
+    'animate.enter': 'enter',
   },
 })
 export class SashComponent {
@@ -45,11 +42,28 @@ export class SashComponent {
   private readonly _cd = inject(ChangeDetectorRef);
   private readonly _sashBoxAccessor = inject(SciSashBoxAccessor);
 
-  protected readonly animationState = linkedSignal<'enter' | 'leave' | null>(() => this.sash().animate() && this._sashBoxAccessor.afterFirstRender() ? 'enter' : null);
+  protected readonly leave = signal(false);
+  protected readonly leaveAnimationDone = signal(false);
+  protected readonly shouldAnimate = computed(() => this.sash().animate() && this.sash().isFixedSize() && this._sashBoxAccessor.afterFirstRender());
 
   constructor() {
     // Associate sash with this component.
     effect(() => this.sash().setComponent(this));
+
+    effect(() => {
+      if (!this.leave()) {
+        return;
+      }
+
+      // Wait an animationFrame for the animation to start.
+      // Else there are no animations on the _host and the Promise resolves immediately.
+      requestAnimationFrame(() => {
+        void Promise.all(this._host.getAnimations().map(animation => animation.finished))
+          .then(() => {
+            this.leaveAnimationDone.set(true);
+          });
+      });
+    });
   }
 
   /**
@@ -58,17 +72,12 @@ export class SashComponent {
   public startLeaveAnimation(): Signal<void> {
     // Detach change detector to prevent updates to the component during the animation.
     this._cd.detach();
-    // Trigger 'leave' animation.
-    this.animationState.set('leave');
-    // Return signal to track animation completion.
-    return computed(() => void this.animationState(), {equal: () => false});
-  }
 
-  /**
-   * Notifies when ending the animation.
-   */
-  protected onAnimationEnd(): void {
-    this.animationState.set(null);
+    // Trigger 'leave' animation.
+    this.leave.set(true);
+
+    // Return signal to track animation completion.
+    return this.leaveAnimationDone;
   }
 
   /**
@@ -78,20 +87,4 @@ export class SashComponent {
     const {width, height} = this._host.getBoundingClientRect();
     return this._sashBoxAccessor.direction() === 'row' ? width : height;
   }
-}
-
-/**
- * Returns animation metadata to slide-in and slide-out a sash.
- */
-function provideAnimation(): AnimationMetadata[] {
-  return [
-    transition('void => enter', [
-      style({'flex-basis': 0}),
-      animate(`125ms ease-out`, style({'flex-basis': '*'})),
-    ]),
-    transition('* => leave', [
-      style({'flex-basis': '*'}),
-      animate(`125ms ease-out`, style({'flex-basis': 0})),
-    ]),
-  ];
 }
