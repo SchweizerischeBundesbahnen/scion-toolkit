@@ -40,7 +40,7 @@ $diamond-height: 8;
         display: grid; // public API
         grid-template-columns: 100%;
         gap: .5em;
-        min-height: 0;
+        min-height: 0; // needs to be set to animate the height.
       }
 
       @keyframes enter {

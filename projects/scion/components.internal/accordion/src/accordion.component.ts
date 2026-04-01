@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, contentChildren, DestroyRef, ElementRef, HostBinding, inject, input, OnInit, signal, Signal, TrackByFunction, viewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, contentChildren, DestroyRef, ElementRef, HostBinding, inject, input, OnInit, Signal, TrackByFunction, viewChild} from '@angular/core';
 import {SciAccordionItemDirective} from './accordion-item.directive';
 import {CdkAccordion, CdkAccordionItem} from '@angular/cdk/accordion';
 import {debounceTime} from 'rxjs/operators';
@@ -72,7 +72,6 @@ export class SciAccordionComponent implements OnInit {
   private readonly _cd = inject(ChangeDetectorRef, {skipSelf: true});
   private readonly _destroyRef = inject(DestroyRef);
   private readonly _cdkAccordion: Signal<ElementRef<HTMLElement>> = viewChild.required(CdkAccordion, {read: ElementRef});
-  protected open = signal(false);
 
   protected readonly items = contentChildren(SciAccordionItemDirective);
 

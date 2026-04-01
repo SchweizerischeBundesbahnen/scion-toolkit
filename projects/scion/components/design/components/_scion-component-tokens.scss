@@ -28,7 +28,7 @@ $sci-splitter: (
 
 $sci-sashbox: (
   --sci-sashbox-gap: 10px, // gaps (gutters) between sashes
-  --sci-sashbox-transition: 125ms ease-out, // transition for sash animations
+  --sci-sashbox-animation-disabled: false,
   --sci-sashbox-splitter-background-color: var(--sci-splitter-background-color), // background color of the splitter
   --sci-sashbox-splitter-background-color-hover: var(--sci-splitter-background-color), // background color of the splitter when hovering it
   --sci-sashbox-splitter-size: var(--sci-splitter-size), // size of the splitter along the main axis (width if direction is row, or height if direction is column)

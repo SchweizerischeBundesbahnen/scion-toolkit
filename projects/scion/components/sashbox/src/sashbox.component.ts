@@ -253,7 +253,13 @@ export class SciSashboxComponent {
    */
   private detectFirstRendering(): void {
     afterNextRender({
-      read: () => this.afterFirstRender.set(true),
+      read: () => {
+        // Delay to the next render cycle
+        // If it's set in the current, the [animate.enter] class on the sash-component is still applied and thus an animation is triggered on initial render (which should be prevented)
+        requestAnimationFrame(() => {
+          this.afterFirstRender.set(true);
+        });
+      },
     });
   }
 }

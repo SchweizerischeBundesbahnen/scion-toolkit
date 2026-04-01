@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, effect, ElementRef, inject, input, Signal, signal} from '@angular/core';
+import {Component, computed, effect, ElementRef, inject, input} from '@angular/core';
 import {NgTemplateOutlet} from '@angular/common';
 import {SciSashBoxAccessor} from '../sashbox-accessor';
 import {SciSashDirective} from '../sash.directive';
@@ -39,24 +39,11 @@ export class SashComponent {
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
   private readonly _sashBoxAccessor = inject(SciSashBoxAccessor);
 
-  protected readonly shouldAnimate = this.computeShouldAnimate();
+  protected readonly shouldAnimate = computed(() => this.sash().animate() && this.sash().isFixedSize() && this._sashBoxAccessor.afterFirstRender());
 
   constructor() {
     // Associate sash with this component.
     effect(() => this.sash().setComponent(this));
-  }
-
-  private computeShouldAnimate(): Signal<boolean> {
-    const ret = signal(false);
-
-    effect(() => {
-      const shouldAnimate = this.sash().animate() && this.sash().isFixedSize() && this._sashBoxAccessor.afterFirstRender();
-      requestAnimationFrame(() => {
-        ret.set(shouldAnimate);
-      });
-    });
-
-    return ret;
   }
 
   /**
