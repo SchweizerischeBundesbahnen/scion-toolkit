@@ -335,6 +335,18 @@ test.describe('sci-table', () => {
       await table.column('Name').clearFilter();
       await expect(table.rows).toHaveCount(noFilterCount);
     });
+
+    test('should show empty state', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
+
+      await table.column('Name').filter('abc');
+      await expect(table.rows).toHaveCount(0);
+      await expect(table.locator).toContainText('Nothing to show');
+    });
   });
 
   test.describe('resizing', () => {

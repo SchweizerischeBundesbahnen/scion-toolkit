@@ -168,13 +168,6 @@ export default class SciTablePageComponent {
         name: 'id',
       });
 
-    // for (let i = 0; i < 5; i++) {
-    //   table.addStringColumn({
-    //     header: `Name${i}`,
-    //     value: product => product.name,
-    //   });
-    // }
-
     for (const column of this.columns()) {
       const baseColumn = {
         header: column.header,

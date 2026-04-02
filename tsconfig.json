@@ -44,6 +44,9 @@
     //      "@scion/components/splitter": [
     //        "./projects/scion/components/splitter/src/public_api"
     //      ],
+    //      "@scion/components/table": [
+    //        "./projects/scion/components/table/src/public_api"
+    //      ],
     //      "@scion/components/throbber": [
     //        "./projects/scion/components/throbber/src/public_api"
     //      ],
