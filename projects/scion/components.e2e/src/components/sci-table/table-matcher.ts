@@ -23,11 +23,20 @@ export function expectTable(table: TablePo): TableMatcher {
         }
       }).toPass();
     },
+    async toHaveVerticalScroll(): Promise<void> {
+      await expect.poll(() => table.viewport.evaluate(v => v.scrollTop)).toBeGreaterThan(0);
+    },
     async toHaveHorizontalOverflow(): Promise<void> {
       await expect(table.locator.locator('sci-scrollbar.horizontal.overflow')).toBeAttached();
     },
     async toHaveColumnCount(count: number): Promise<void> {
       await expect(table.locator.locator('sci-column-header')).toHaveCount(count);
+    },
+
+    not: {
+      async toHaveVerticalScroll(): Promise<void> {
+        await expect.poll(() => table.viewport.evaluate(v => v.scrollTop)).toBe(0);
+      },
     },
   };
 }
@@ -36,4 +45,8 @@ export interface TableMatcher {
   allCellsToContainText(columnIndex: number, text: string): Promise<void>;
   toHaveHorizontalOverflow(): Promise<void>;
   toHaveColumnCount(count: number): Promise<void>;
+  toHaveVerticalScroll(): Promise<void>;
+  not: {
+    toHaveVerticalScroll(): Promise<void>;
+  };
 }

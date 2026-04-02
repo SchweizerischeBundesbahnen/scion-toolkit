@@ -179,6 +179,10 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     void this.tableStorage.store(this.storageKey, JSON.stringify({columnWidths} as StoredTable));
   }
 
+  public updateActiveItem(updateFn: (id: ID | undefined) => ID | undefined): void {
+    this._activeItem.update(updateFn);
+  }
+
   public setActiveItem(id: ID | undefined): void {
     this._activeItem.set(id);
   }

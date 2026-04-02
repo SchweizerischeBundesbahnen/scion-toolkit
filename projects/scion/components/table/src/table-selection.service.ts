@@ -59,4 +59,58 @@ export class TableSelectionService<T, ID = T> {
       table.updateSelectedItems(() => new Set([id]));
     }
   }
+
+  /**
+   * TODO [eg]: handle shift
+   */
+  public onArrowUp(event: Event): void {
+    event.preventDefault();
+    const table = this._table();
+    const rows = table.rows();
+    table.updateActiveItem(id => {
+      const activeIndex = rows.findIndex(r => r.id === id);
+      if (activeIndex < 0) {
+        return undefined;
+      }
+
+      return activeIndex > 0 ? rows[activeIndex - 1]!.id : id;
+    });
+  }
+
+  /**
+   * TODO [eg]: handle shift
+   */
+  public onArrowDown(event: Event): void {
+    event.preventDefault();
+    const table = this._table();
+    const rows = table.rows();
+    table.updateActiveItem(id => {
+      const activeIndex = rows.findIndex(r => r.id === id);
+      if (activeIndex < 0) {
+        return undefined;
+      }
+
+      return activeIndex < rows.length - 1 ? rows[activeIndex + 1]!.id : id;
+    });
+  }
+
+  public onSpace(event: Event): void {
+    event.preventDefault();
+
+    const activeId = this._table().activeItem();
+    if (!activeId) {
+      return;
+    }
+
+    this._table().updateSelectedItems(ids => {
+      const next = new Set(ids);
+      if (next.has(activeId)) {
+        next.delete(activeId);
+      }
+      else {
+        next.add(activeId);
+      }
+      return next;
+    });
+  }
 }
