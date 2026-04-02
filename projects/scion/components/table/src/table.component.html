@@ -9,7 +9,7 @@
       </header>
     }
 
-    <div class="body">
+    <div class="body" sciTableKeyboardNavigator tabindex="0">
       <div class="rows" [style.transform]="`translateY(${range().start * table.itemSize}px)`">
         <!-- Track index to reuse the table row elements -->
         @for (row of visibleRows(); track $index) {

@@ -21,6 +21,7 @@ import {map, startWith} from 'rxjs/operators';
 import {clamp, rangeInclusive} from './common';
 import {TableSelectionService} from './table-selection.service';
 import {dimension} from '@scion/components/dimension';
+import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 
 @Component({
   selector: 'sci-table',
@@ -40,6 +41,7 @@ import {dimension} from '@scion/components/dimension';
     TableRowComponent,
     SciScrollbarComponent,
     SciScrollableDirective,
+    TableKeyboardNavigatorDirective,
   ],
   providers: [
     {
@@ -143,7 +145,16 @@ export class SciTableComponent<T, ID = T> {
 
   constructor() {
     effect(() => {
-      this.activateItem.emit(this.sciTable().activeItem());
+      const activeItem = this.sciTable().activeItem();
+      this.activateItem.emit(activeItem);
+
+      if (!activeItem) {
+        return;
+      }
+
+      untracked(() => {
+        this.scrollActiveRowIntoViewport(activeItem);
+      });
     });
 
     effect(() => {
@@ -220,5 +231,30 @@ export class SciTableComponent<T, ID = T> {
         onCleanup(() => subscription.unsubscribe());
       });
     });
+  }
+
+  private scrollActiveRowIntoViewport(activeItem: ID): void {
+    const table = this.sciTable();
+    const rows = table.rows();
+    const viewport = this._viewport()?.nativeElement;
+    const headerHeight = this.headerDimension()?.clientHeight;
+
+    if (!viewport || headerHeight === undefined) {
+      return;
+    }
+
+    const activeIndex = rows.findIndex(row => row.id === activeItem);
+    const activeRowTop = activeIndex * table.itemSize;
+    const activeRowBottom = activeRowTop + table.itemSize;
+    const viewportHeight = viewport.clientHeight - headerHeight;
+    const viewportTop = viewport.scrollTop;
+    const viewportBottom = viewportTop + viewportHeight;
+
+    if (activeRowTop < viewportTop) {
+      viewport.scrollTop = activeRowTop;
+    }
+    else if (activeRowBottom > viewportBottom) {
+      viewport.scrollTop = activeRowBottom - viewportHeight;
+    }
   }
 }

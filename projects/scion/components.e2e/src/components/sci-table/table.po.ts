@@ -40,6 +40,17 @@ export class TablePo {
     return new RowPo(this.rows.nth(index));
   }
 
+  public async firstVisibleRow(): Promise<RowPo> {
+    const rows = await this.rows.all();
+    for (let i = 0; i < rows.length; i++) {
+      if (await rows[i]!.isVisible()) {
+        return new RowPo(this.rows.nth(i));
+      }
+    }
+
+    throw new Error('No visible row found');
+  }
+
   public column(indexOrHeader: number | string): ColumnPo {
     return typeof indexOrHeader === 'number' ?
       new ColumnPo(this.headers.nth(indexOrHeader), this) :

@@ -629,6 +629,88 @@ test.describe('sci-table', () => {
       await table.column(0).sort();
       await expectRow(table.row(0)).toBeSelected();
     });
+
+    test('should activate element with keyboard', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await table.row(0).click();
+      await expectRow(table.row(0)).toBeActive();
+
+      await page.keyboard.press('ArrowDown');
+      await expectRow(table.row(1)).toBeActive();
+
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      await expectRow(table.row(3)).toBeActive();
+
+      await page.keyboard.press('ArrowUp');
+      await expectRow(table.row(2)).toBeActive();
+    });
+
+    test('should select element with keyboard', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await table.row(0).click();
+      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row(1)).not.toBeSelected();
+      await expectRow(table.row(2)).not.toBeSelected();
+      await expectRow(table.row(3)).not.toBeSelected();
+
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Space');
+      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row(1)).toBeSelected();
+      await expectRow(table.row(2)).not.toBeSelected();
+      await expectRow(table.row(3)).not.toBeSelected();
+
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Space');
+      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row(1)).toBeSelected();
+      await expectRow(table.row(2)).not.toBeSelected();
+      await expectRow(table.row(3)).toBeSelected();
+
+      await page.keyboard.press('ArrowUp');
+      await page.keyboard.press('Space');
+      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row(1)).toBeSelected();
+      await expectRow(table.row(2)).toBeSelected();
+      await expectRow(table.row(3)).toBeSelected();
+
+      await page.keyboard.press('ArrowUp');
+      await page.keyboard.press('Space');
+      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row(1)).not.toBeSelected();
+      await expectRow(table.row(2)).toBeSelected();
+      await expectRow(table.row(3)).toBeSelected();
+    });
+
+    test('should scroll on with active element', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await table.row(0).click();
+      await expectRow(table.row(0)).toBeSelected();
+
+      const count = await table.rows.count();
+
+      await expectTable(table).not.toHaveVerticalScroll();
+      for (let i = 0; i < count; i++) {
+        await page.keyboard.press('ArrowDown');
+      }
+      await expectTable(table).toHaveVerticalScroll();
+
+      for (let i = 0; i < count; i++) {
+        await page.keyboard.press('ArrowUp');
+      }
+      await expectTable(table).not.toHaveVerticalScroll();
+    });
   });
 
   test.describe('styling', () => {
