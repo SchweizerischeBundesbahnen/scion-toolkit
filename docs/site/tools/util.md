@@ -14,6 +14,21 @@ npm install @scion/toolkit
 ```
 
 <details>
+  <summary><strong>prune</strong></summary>
+
+Mutates the passed object by removing properties which are `undefined`.
+
+- If `pruneIfEmpty`, returns `undefined` if the object is empty after pruning.
+- If `recursive`, also removes `undefined` values from objects and collections in the object, recursively.
+- If both `recursive` and `pruneIfEmpty`, removes empty objects and collections at any level.
+
+Defaults to non-recursive, not pruning empty objects or collections.
+
+This function can also be used to prune `undefined` values from `Map`, `Set`, or `Array`.
+
+</details>
+
+<details>
   <summary><strong>Arrays</strong></summary>
    
   The `Arrays` utility provides the following methods.
@@ -36,8 +51,6 @@ npm install @scion/toolkit
   
   - **coerce**\
     Creates a `Dictionary` from the given dictionary-like object. If given a `Dictionary`, it is returned. If given `null` or `undefined`, by default, returns an empty `Dictionary`.
-  - **withoutUndefinedEntries**\
-    Returns a new `Dictionary` with `undefined` values removed.
 
 </details>
 

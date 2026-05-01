@@ -33,6 +33,8 @@ export namespace Dictionaries {
 
   /**
    * Returns a new {@link Dictionary} with `undefined` values removed.
+   *
+   * @deprecated since version 2.2.0; use {@link prune} instead; API will be removed in version 3.0.0.
    */
   export function withoutUndefinedEntries<T = unknown>(object: Dictionary<T | undefined>): Dictionary<T> {
     return Object.entries(object).reduce<Dictionary<T>>((dictionary, [key, value]) => {

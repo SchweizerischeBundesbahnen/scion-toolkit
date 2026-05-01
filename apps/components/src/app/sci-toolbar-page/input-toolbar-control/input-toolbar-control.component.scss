@@ -1,0 +1,54 @@
+:host {
+  display: flex;
+  padding: 2px 5px;
+  height: 100%;
+  background-color: var(--sci-color-background-input);
+
+  > input {
+    all: unset;
+    flex: 1 1 0;
+    appearance: auto;
+
+    // Allow input to shrink below default browser minimal width.
+    //width: 0; // Forces the input to start at 0 and grow
+    //min-width: 0; // removes the default min-content constraint
+
+    &::placeholder {
+      color: var(--sci-color-gray-400);
+    }
+
+    &:placeholder-shown + button.clear {
+      visibility: hidden;
+    }
+  }
+
+  > button.clear {
+    all: unset;
+    flex: none;
+    display: inline-grid;
+    place-content: center;
+    place-items: center;
+    padding: 1px;
+    border-radius: var(--sci-corner);
+    user-select: none;
+    overflow: hidden;
+    cursor: var(--sci-button-cursor);
+    --sci-icon-size: var(--sci-button-icon-size);
+
+    &:hover {
+      background-color: var(--sci-button-background-color-hover);
+    }
+
+    &:active {
+      background-color: var(--sci-button-background-color-active);
+    }
+
+    &:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: var(--sci-button-outline-width) solid var(--sci-color-accent);
+    }
+  }
+}

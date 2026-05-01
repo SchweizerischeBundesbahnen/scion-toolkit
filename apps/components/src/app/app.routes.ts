@@ -11,6 +11,21 @@ import {Routes} from '@angular/router';
 
 export const routes: Routes = [
   {
+    path: 'sci-toolbar',
+    loadComponent: () => import('./sci-toolbar-page/sci-toolbar-page.component'),
+    data: {internal: false},
+  },
+  {
+    path: 'sci-menubar',
+    loadComponent: () => import('./sci-menubar-page/sci-menubar-page.component'),
+    data: {internal: false},
+  },
+  {
+    path: 'sci-menu',
+    loadComponent: () => import('./sci-menu-page/sci-menu-page.component'),
+    data: {internal: false},
+  },
+  {
     path: 'sci-viewport',
     loadComponent: () => import('./sci-viewport-page/sci-viewport-page.component'),
     data: {internal: false},

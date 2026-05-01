@@ -1,0 +1,344 @@
+@use './menu.component.mixin' as mixin;
+
+:host {
+  --sci-icon-size: var(--sci-menu-item-size);
+  --ɵsci-menu-item-padding-inline: calc(.5 * var(--sci-menu-item-size));
+  --ɵsci-menu-item-padding-block: calc(.225 * var(--sci-menu-item-size));
+  --ɵsci-menu-item-min-height: calc(var(--sci-menu-item-size) + 2px); // plus action toolbar item border
+  --ɵsci-menu-item-gap-inline: calc(.75 * var(--sci-menu-item-size));
+  --ɵsci-menu-item-gap-block: calc(.125 * var(--sci-menu-item-size));
+  --ɵsci-menu-padding-inline: .4em;
+  --ɵsci-menu-padding-block: .3em;
+  --ɵsci-menu-glyph-area: true;
+  --ɵsci-menu-action-background-color-hover: color-mix(in srgb, var(--sci-menu-item-background-color-hover) 90%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
+  --ɵsci-menu-action-background-color-active: color-mix(in srgb, var(--sci-menu-item-background-color-active) 90%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
+  --ɵsci-menu-item-chevron-x-offset: calc(var(--sci-menu-item-size) / 4);
+
+  --ɵsci-menu-width: max-content; // required for computing intrinsic initial width without ellipsis
+  --ɵsci-menu-min-width: initial; // declared to prevent the submenu from inheriting the value from the parent menu
+  --ɵsci-menu-max-width: initial; // declared to prevent the submenu from inheriting the value from the parent menu
+  --ɵsci-menu-max-height: initial; // declared to prevent the submenu from inheriting the value from the parent menu
+  --ɵsci-menu-scrolling: false; // declared to prevent the submenu from inheriting the value from the parent menu
+
+  display: grid;
+  gap: var(--ɵsci-menu-item-gap-block) var(--ɵsci-menu-item-gap-inline);
+  align-items: center;
+  font-size: var(--sci-menu-font-size);
+  border: 1px solid var(--sci-color-border);
+  border-radius: var(--sci-menu-border-radius);
+  background-color: var(--sci-color-background-elevation);
+  padding: var(--ɵsci-menu-padding-block) var(--ɵsci-menu-padding-inline);
+  outline: none;
+  box-sizing: border-box; // prevent different interpretation of menu width constraints
+  width: var(--ɵsci-menu-width);
+  min-width: var(--ɵsci-menu-min-width);
+  max-width: var(--ɵsci-menu-max-width);
+  user-select: none;
+  grid-template-columns:
+    // === Menu subgrid ===
+    var(--sci-menu-item-size) // glyph column (icons and check marks)
+    minmax(0, 1fr); // label column - `minmax(0, 1fr)` to display ellipsis on label overflow
+
+  // Change to single column layout if no glyph area.
+  &[data-glyph-area="none"] {
+    --ɵsci-menu-glyph-area: false;
+    grid-template-columns:
+      // === Menu subgrid ===
+      minmax(0, 1fr); // label column
+  }
+
+  // Unset native popover styles.
+  &[popover] {
+    position: fixed;
+    margin: unset;
+    inset: unset;
+
+    // Hide while closing to prevent flickering.
+    &:not(:popover-open) {
+      display: none;
+    }
+  }
+
+  // Style group.
+  &:not([popover]) {
+    grid-column: 1/-1; // span all columns
+    grid-template-columns: subgrid; // inherit grid
+    border: unset;
+    border-radius: unset;
+    color: inherit; // inherit from sci-menu popover
+    padding: unset; // inherit from sci-menu popover
+    background-color: inherit; // inherit from sci-menu popover
+  }
+
+  // Style group header (non-collapsible group).
+  > header.group-header {
+    grid-column: 1/-1; // span all columns
+    display: flex;
+    gap: var(--ɵsci-menu-item-gap-inline);
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--ɵsci-menu-item-padding-block) var(--ɵsci-menu-item-padding-inline);
+    box-sizing: content-box;
+    min-height: var(--ɵsci-menu-item-min-height);
+
+    > sci-menu-group-label {
+      flex: auto;
+      color: var(--sci-menu-group-header-font-color);
+      font-family: var(--sci-menu-group-header-font-family), sans-serif;
+      font-weight: var(--sci-menu-group-header-font-weight);
+      font-size: var(--sci-menu-group-header-font-size);
+      @include mixin.ellipsis-on-overflow();
+    }
+
+    > sci-toolbar-group.actions {
+      flex: none;
+      align-self: center;
+    }
+  }
+
+  // Style group header (collapsible group).
+  > button:is(.group-header, #sci-reset) {
+    @include mixin.button();
+    grid-column: 1/-1; // span all columns
+    display: inline-grid;
+    grid-template-columns: subgrid; // inherit grid
+    align-items: center;
+
+    &:hover {
+      --ɵsci-menu-item-hover: true;
+    }
+
+    > div.content {
+      display: flex;
+      gap: var(--ɵsci-menu-item-gap-inline);
+      justify-content: space-between;
+      align-items: center;
+      // Do not hide overflow to prevent cropping toolbar item outline.
+
+      > sci-menu-group-label {
+        flex: auto;
+        @include mixin.ellipsis-on-overflow();
+      }
+
+      > sci-toolbar-group.actions {
+        flex: none;
+        align-self: center;
+
+        // Override toolbar item hover and active state colors for higher contrast to header button hover state.
+        @container style(--ɵsci-menu-item-hover: true) {
+          --sci-toolbar-item-background-color-hover: var(--ɵsci-menu-action-background-color-hover);
+          --sci-toolbar-item-background-color-active: var(--ɵsci-menu-action-background-color-active);
+        }
+      }
+    }
+  }
+
+  // Style viewport.
+  &:has(> sci-viewport) {
+    padding: var(--ɵsci-menu-padding-block) 0;
+
+    > header.group-header, > button.group-header, > div.filter, > hr {
+      margin: 0 var(--ɵsci-menu-padding-inline);
+    }
+  }
+
+  > sci-viewport {
+    grid-column: 1/-1; // span all columns
+    max-height: var(--ɵsci-menu-max-height);
+    box-sizing: border-box; // prevent different interpretation of height constraint
+
+    &::part(content) {
+      grid-column: 1/-1; // span all columns
+      display: grid;
+      gap: var(--ɵsci-menu-item-gap-block) var(--ɵsci-menu-item-gap-inline);
+      grid-template-columns:
+        // === Menu subgrid ===
+        var(--sci-menu-item-size) // glyph column (icons and check marks)
+        minmax(0, 1fr); // label column - `minmax(0, 1fr)` to display ellipsis on label overflow
+      padding: 2px var(--ɵsci-menu-padding-inline); // 2px to not clip menu item outline
+
+      @container style(--ɵsci-menu-glyph-area: false) {
+        grid-template-columns:
+          // === Menu subgrid ===
+          minmax(0, 1fr); // label column
+      }
+    }
+  }
+
+  // Style filter field.
+  > div.filter {
+    grid-column: 1/-1; // span all columns
+    display: inline-grid;
+    grid-template-columns: subgrid; // inherit grid
+    align-items: center;
+    padding: var(--ɵsci-menu-item-padding-block) var(--ɵsci-menu-item-padding-inline);
+    border-radius: var(--sci-menu-filter-outline-radius); // required for rounded outline
+    box-sizing: content-box;
+    min-height: var(--ɵsci-menu-item-min-height);
+
+    &:focus-within {
+      outline: var(--sci-menu-filter-outline-width) solid var(--sci-color-accent);
+    }
+
+    // Single column layout if no glyph area.
+    @container style(--ɵsci-menu-glyph-area: false) {
+      display: flex;
+      gap: var(--ɵsci-menu-item-gap-inline);
+
+      > sci-icon {
+        flex: none;
+      }
+
+      > sci-menu-filter {
+        flex: auto;
+      }
+    }
+  }
+
+  > hr {
+    all: unset;
+    grid-column: 1/-1; // span all columns
+    height: 1px;
+    background-color: var(--sci-color-border);
+  }
+
+  div.message.no-items {
+    grid-column: 1/-1; // span all columns
+    justify-self: center;
+    color: var(--sci-color-text-subtlest);
+    padding: var(--ɵsci-menu-item-padding-block) var(--ɵsci-menu-item-padding-inline);
+  }
+
+  // Add leading group separator, unless the first group or directly followed by a new group.
+  *:not(hr) + sci-menu-group:not(:has(> sci-menu-group:first-child))::before {
+    content: '';
+    grid-column: 1/-1; // span all columns
+    height: 1px;
+    background-color: var(--sci-color-border);
+  }
+
+  // Add trailing group separator, unless the last group or directly followed by a new group.
+  sci-menu-group:not(:last-child):not(:has(+ sci-menu-group, + sci-menu:last-child))::after { // + sci-menu to exclude opened submenu
+    content: '';
+    grid-column: 1/-1; // span all columns
+    height: 1px;
+    background-color: var(--sci-color-border);
+  }
+
+  // Style menu and submenu items.
+  button:is(.menu-item, .menu, #sci-reset) {
+    @include mixin.button();
+
+    grid-column: 1/-1; // span all columns
+    display: inline-grid;
+    grid-template-columns: subgrid; // inherit grid
+    align-items: center;
+    position: relative; // positioning context for active marker
+
+    &:hover {
+      --ɵsci-menu-item-hover: true;
+    }
+
+    &.checked {
+      --ɵsci-menu-item-checked: true;
+    }
+
+    &.active {
+      --ɵsci-menu-item-active: true;
+    }
+
+    &:has(sci-toolbar-group.actions.menu-open) {
+      --ɵsci-menu-item-actions-menu-open: true;
+    }
+
+    // Indicate if action toolbar is visible.
+    &:not(:disabled):is(:hover, .active, :has(sci-toolbar-group.actions.menu-open)) {
+      --ɵsci-action-toolbar-visible: true;
+    }
+
+    // Render menu item active marker.
+    &.menu-item.active::before {
+      position: absolute;
+      content: '';
+      box-sizing: border-box;
+      height: calc(100% - var(--sci-menu-item-activemark-border-radius));
+      width: var(--sci-menu-item-activemark-width);
+      left: calc(-1 * var(--ɵsci-menu-padding-inline) + 1px); // align to the left of the menu
+      border-radius: var(--sci-menu-item-activemark-border-radius);
+      background-color: var(--sci-menu-item-activemark-background-color);
+    }
+
+    &.menu.open {
+      background-color: var(--sci-menu-item-background-color-hover);
+    }
+
+    &.menu > div.content > sci-icon.chevron {
+      transform: translateX(var(--ɵsci-menu-item-chevron-x-offset)); // shift submenu chevron slightly to the right for better visual alignment
+    }
+
+    // Ensure icon component has the same size as regular icons.
+    > sci-menu-item-icon {
+      display: inline-grid;
+      place-content: center;
+      height: var(--sci-menu-item-size);
+      width: var(--sci-menu-item-size);
+      overflow: hidden;
+    }
+
+    > div.content {
+      display: flex;
+      align-items: center;
+      gap: var(--ɵsci-menu-item-gap-inline);
+      // Do not hide overflow to prevent cropping toolbar item outline.
+
+      // Span remaining columns if rendered as the first child (if group is configured without glyph area).
+      &:first-child {
+        grid-column: 1/-1;
+      }
+
+      > sci-menu-item-label {
+        flex: auto;
+        @include mixin.ellipsis-on-overflow();
+      }
+
+      > span.accelerator {
+        flex: none;
+        color: var(--sci-menu-item-accelerator-text-color);
+        font-size: .9em;
+      }
+
+      // Only show accelerator if the action toolbar is not visible.
+      > span.accelerator:has(+ sci-toolbar-group.actions) {
+        @container style(--ɵsci-action-toolbar-visible: true) {
+          display: none;
+        }
+      }
+
+      > sci-toolbar-group.actions {
+        flex: none;
+        align-self: center;
+
+        // Override toolbar item hover and active state colors for higher contrast to menu item hover state.
+        @container style(--ɵsci-menu-item-hover: true) {
+          --sci-toolbar-item-background-color-hover: var(--ɵsci-menu-action-background-color-hover);
+          --sci-toolbar-item-background-color-active: var(--ɵsci-menu-action-background-color-active);
+        }
+
+        @container not style(--ɵsci-action-toolbar-visible: true) {
+          display: none; // free space for label
+        }
+
+        // Hide action toolbar while scrolling, but only if not active and no menu opened.
+        @container style(--ɵsci-menu-scrolling: true) and (not style(--ɵsci-menu-item-active: true)) and (not style(--ɵsci-menu-item-actions-menu-open: true)) {
+          visibility: hidden; // preserve space to avoid layout shift
+        }
+      }
+    }
+  }
+
+  sci-toolbar-group.actions {
+    transform: translateX(var(--ɵsci-menu-item-chevron-x-offset)); // shift toolbar slightly to the right for better visual alignment
+    --sci-toolbar-item-size: var(--sci-menu-item-size);
+    --ɵsci-toolbar-item-padding-block: 0;
+  }
+}

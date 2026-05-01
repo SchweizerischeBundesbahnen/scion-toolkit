@@ -1,0 +1,8 @@
+:host {
+  display: inline-grid;
+  place-content: center;
+  user-select: none;
+  height: var(--sci-icon-size, 1em);
+  width: var(--sci-icon-size, 1em);
+  overflow: hidden;
+}

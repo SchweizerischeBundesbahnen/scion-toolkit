@@ -7,31 +7,25 @@
   > header {
     flex: none;
     display: flex;
+    justify-content: space-between;
     background-color: var(--sci-color-background-secondary);
     border-bottom: 1px solid var(--sci-color-border);
-    padding: .25em 1em;
-    justify-content: space-between;
-    align-items: center;
+    padding: .125em;
+    position: relative; // positioning context to align title horizontally in the center
 
-    > nav > a {
-      color: var(--sci-color-text);
-
-      &:not(:last-child)::after {
-        content: '|';
-        padding: 0 .5em;
-        color: var(--sci-color-text);
-      }
-
-      &.internal {
-        font-style: italic;
-      }
+    > sci-toolbar {
+      padding: .25em;
     }
 
-    > div.theme-switcher {
-      display: flex;
-      gap: .25em;
-      align-items: center;
-      user-select: none;
+    > span.title {
+      position: absolute;
+      left: 0;
+      right: 0;
+      align-self: center;
+      text-align: center;
+      font-weight: bold;
+      font-size: larger;
+      pointer-events: none;
     }
   }
 
@@ -42,6 +36,12 @@
 
     > router-outlet {
       position: absolute; // out of the document flow
+    }
+
+    > span.welcome-message {
+      text-align: center;
+      font-size: 1.25em;
+      padding: 2em;
     }
   }
 }

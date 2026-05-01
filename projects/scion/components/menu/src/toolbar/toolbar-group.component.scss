@@ -1,0 +1,231 @@
+:host {
+  --sci-icon-size: var(--sci-toolbar-item-size);
+  --ɵsci-toolbar-item-padding-inline: calc(.5 * var(--sci-toolbar-item-size));
+  --ɵsci-toolbar-item-padding-block: calc(.125 * var(--sci-toolbar-item-size));
+
+  display: flex;
+  gap: 2px;
+
+  &[data-orientation="vertical"] {
+    flex-direction: column;
+  }
+
+  // Add leading group separator, unless the first group or directly followed by a new group.
+  > sci-toolbar-group:not(:first-child):not(:has(> sci-toolbar-group:first-child)) {
+    &::before {
+      content: '';
+      background-color: var(--sci-color-border);
+      margin: 2px;
+    }
+
+    &[data-orientation="horizontal"]::before {
+      width: 1px;
+    }
+
+    &[data-orientation="vertical"]::before {
+      height: 1px;
+    }
+  }
+
+  // Add trailing group separator, unless the last group or directly followed by a new group.
+  > sci-toolbar-group:not(:last-child):not(:has(+ sci-toolbar-group)) {
+    &::after {
+      content: '';
+      background-color: var(--sci-color-border);
+      margin: 2px;
+    }
+
+    &[data-orientation="horizontal"]::after {
+      width: 1px;
+    }
+
+    &[data-orientation="vertical"]::after {
+      height: 1px;
+    }
+  }
+
+  > sci-toolbar-split-button {
+    display: flex;
+    --ɵsci-toolbar-split-button: true;
+
+    // Indicate if checked.
+    &:has(> button:first-child.checked) {
+      --ɵsci-toolbar-split-button-checked: true;
+    }
+
+    // Indicate if menu open.
+    &:has(> button:last-child.menu-open) {
+      --sci-toolbar-split-button-menu-open: true;
+    }
+
+    // Indicate if hovered.
+    &:hover {
+      --sci-toolbar-split-button-hover: true;
+    }
+
+    // Indicate if outline visible.
+    &:hover, &:has(> button:last-child.menu-open), &:has(> button:first-child.checked), &:has(> sci-toolbar-control:focus-within) {
+      --sci-toolbar-split-button-outline-visible: true;
+    }
+
+    // Indicate if focus within.
+    &:focus-within {
+      --sci-toolbar-split-button-focus-within: true;
+    }
+
+    // Render border around control.
+    > sci-toolbar-control {
+      border: 1px solid var(--sci-color-border);
+      border-radius: var(--sci-toolbar-item-border-radius);
+      overflow: hidden; // Prevent overflow, forcing clipping child elements, including border-radius.
+
+      // Coalesce borders of the control and split button if the outline is visible.
+      @container style(--sci-toolbar-split-button-outline-visible: true) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+    }
+  }
+
+  // Style push and menu button.
+  button:is(.menu-item, #sci-reset) {
+    all: unset;
+    display: inline-flex;
+    gap: .3em;
+    place-content: center;
+    align-items: center;
+    text-wrap: nowrap;
+    padding: var(--ɵsci-toolbar-item-padding-block) var(--ɵsci-toolbar-item-padding-inline);
+    border-radius: var(--sci-toolbar-item-border-radius);
+    border: 1px solid transparent; // transparent border if not checked
+    background-color: var(--sci-toolbar-item-background-color);
+    color: var(--sci-toolbar-item-text-color);
+    user-select: none;
+    cursor: var(--sci-toolbar-item-cursor);
+
+    // Ensure quadratic icon button.
+    &:where(:not(:has(> sci-toolbar-label))) {
+      --ɵsci-toolbar-item-padding-inline: var(--ɵsci-toolbar-item-padding-block);
+    }
+
+    // Style split button.
+    @container style(--ɵsci-toolbar-split-button: true) {
+      // Style primary action button.
+      &:where(:first-child) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+
+        // Coalesce buttons if opened, checked, or hovered.
+        @container style(--sci-toolbar-split-button-menu-open: true) or (style(--ɵsci-toolbar-split-button-checked: true) and (not style(--sci-toolbar-split-button-hover: true))) {
+          border-right: 0;
+          padding-right: calc(var(--ɵsci-toolbar-item-padding-inline) + 1px); // compensate for missing border to prevent layout shift.
+        }
+      }
+
+      // Style menu button (chevron).
+      &:where(:last-child) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-left: 0;
+        padding: 0 .125em;
+      }
+
+      // Show border if outline is visible.
+      @container style(--sci-toolbar-split-button-outline-visible: true) {
+        border-color: var(--sci-toolbar-item-border-color-checked);
+      }
+
+      // Show border and background if checked.
+      @container style(--ɵsci-toolbar-split-button-checked: true) {
+        border-color: var(--sci-toolbar-item-border-color-checked);
+
+        &:where(:not(:disabled)) {
+          background-color: var(--sci-toolbar-item-background-color-checked);
+        }
+      }
+
+      // Show background if menu opened.
+      @container style(--sci-toolbar-split-button-menu-open: true) {
+        background-color: var(--sci-toolbar-item-background-color-hover);
+      }
+
+      // Ensure rounded outline border in every corner of the button when outline is visible.
+      &:focus-visible {
+        border-radius: var(--sci-toolbar-item-border-radius);
+      }
+    }
+
+    // Ensure icon component has the same size as regular icons.
+    > sci-toolbar-icon {
+      display: inline-grid;
+      height: var(--sci-toolbar-item-size);
+      width: var(--sci-toolbar-item-size);
+      overflow: hidden;
+    }
+
+    // Add margin between label and chevron.
+    &:has(> sci-toolbar-label) > sci-icon.chevron {
+      margin-left: calc(var(--ɵsci-toolbar-item-padding-inline) / 2);
+    }
+
+    // Display visual marker to indicate menu if icon button.
+    &.menu-indicator {
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        box-sizing: border-box;
+        width: var(--sci-toolbar-item-menu-indicator-size);
+        height: var(--sci-toolbar-item-menu-indicator-size);
+        border: var(--sci-toolbar-item-menu-indicator-size) solid transparent;
+        border-right-color: var(--sci-toolbar-item-menu-indicator-color);
+        border-bottom-color: var(--sci-toolbar-item-menu-indicator-color);
+        bottom: calc(var(--sci-corner) / 4);
+        right: calc(var(--sci-corner) / 4);
+      }
+
+      &:disabled::after {
+        border-right-color: var(--sci-toolbar-item-menu-indicator-color-disabled);
+        border-bottom-color: var(--sci-toolbar-item-menu-indicator-color-disabled);
+      }
+    }
+
+    // Show border and background if checked.
+    @container not style(--ɵsci-toolbar-split-button: true) {
+      &.checked {
+        border-color: var(--sci-toolbar-item-border-color-checked);
+
+        &:where(:not(:disabled)) {
+          background-color: var(--sci-toolbar-item-background-color-checked);
+        }
+      }
+    }
+
+    &:disabled {
+      color: var(--sci-toolbar-item-text-color-disabled);
+    }
+
+    &:hover:where(:not(:disabled)) {
+      background-color: var(--sci-toolbar-item-background-color-hover);
+    }
+
+    &:active:where(:not(:disabled)) {
+      background-color: var(--sci-toolbar-item-background-color-active);
+    }
+
+    &:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: var(--sci-toolbar-item-outline-width) solid var(--sci-color-accent);
+    }
+
+    @container not style(--ɵsci-toolbar-split-button: true) {
+      &.menu-open {
+        background-color: var(--sci-toolbar-item-background-color-hover);
+      }
+    }
+  }
+}
