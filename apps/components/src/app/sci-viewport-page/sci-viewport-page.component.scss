@@ -12,11 +12,6 @@
     flex: auto;
     display: flex;
     flex-direction: column;
-    gap: 1em;
-
-    > h1 {
-      flex: none;
-    }
 
     > sci-viewport {
       flex: var(--viewport-flex);

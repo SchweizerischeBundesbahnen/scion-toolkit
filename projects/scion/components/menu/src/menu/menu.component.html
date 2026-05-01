@@ -1,0 +1,166 @@
+<!-- Filter Field -->
+@let filter = this.filter();
+@if (filter) {
+  <div class="filter e2e-filter">
+    <sci-icon>scion.search</sci-icon>
+    @let message = filter.placeholder?.() ?? '%scion.components.menu.type_to_filter.action';
+    <sci-menu-filter (textChange)="onFilterChange($event)" [placeholder]="(message | sciText)()"/>
+  </div>
+  <hr>
+}
+
+<!-- Group Header -->
+@if (group(); as group) {
+  @if (group.collapsible) {
+    <button class="group-header e2e-group-header" (click)="onGroupHeaderButtonClick()" (mouseenter)="onMenuItemMouseEnter(null)">
+      <sci-icon>{{isGroupExpanded() ? 'scion.chevron_down' : 'scion.chevron_right'}}</sci-icon>
+
+      <div class="content">
+        <ng-container *ngTemplateOutlet="group_header_template"/>
+      </div>
+    </button>
+  } @else if (group.label) {
+    <header class="group-header e2e-group-header">
+      <ng-container *ngTemplateOutlet="group_header_template"/>
+    </header>
+  }
+
+  <!-- Template for rendering group header. -->
+  <ng-template #group_header_template>
+    <sci-menu-group-label>{{group.label}}</sci-menu-group-label>
+
+    @if (group.actions.length && !this.disabled()) {
+      <sci-toolbar-group [menuItems]="group.actions"
+                         [orientation]="'horizontal'"
+                         [popoverViewContainerRef]="popoverViewContainerRef()"
+                         (click)="$event.stopPropagation()"
+                         class="actions e2e-actions"/>
+    }
+  </ng-template>
+}
+
+<!-- Menu Items -->
+@if (isGroupExpanded()) {
+  @if (maxHeight()) {
+    <sci-viewport>
+      <ng-container *ngTemplateOutlet="menu_items"/>
+    </sci-viewport>
+  } @else {
+    <ng-container *ngTemplateOutlet="menu_items"/>
+  }
+
+  <!-- Renders menu items. -->
+  <ng-template #menu_items>
+    @for (menuItem of menuItemsFiltered(); track $index) {
+      @let disabled = this.disabled() || menuItem.disabled?.() || false;
+
+      @switch (menuItem.type) {
+        @case ('menu-item') {
+          <!-- Menu Item -->
+          @if (!menuItem.menu) {
+            @let hasActionToolbar = !disabled && menuItem.actions?.length;
+            @let showAcceleratorInTooltip = menuItem.accelerator && hasActionToolbar;
+
+            <button [attr.disabled]="disabled || null"
+                    [attr.title]="showAcceleratorInTooltip ? (menuItem.accelerator | sciFormatAccelerator:menuItem.tooltip?.()) : menuItem.tooltip?.()"
+                    [class.checked]="menuItem.checked?.()"
+                    [class.active]="menuItem.active?.()"
+                    [class]="menuItem.cssClass" class="menu-item e2e-menu-item"
+                    [sciAttributes]="menuItem.attributes"
+                    (mouseenter)="onMenuItemMouseEnter(menuItem)"
+                    (click)="onSelect(menuItem)">
+              <!-- Render icon if glyph area. -->
+              @if (hasGlyphArea() && !group()?.hideGlyphArea) {
+                <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
+              }
+
+              <!-- Render label, accelerator and action toolbar. -->
+              <div class="content">
+                <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
+
+                @if (menuItem.accelerator) {
+                  <span class="accelerator">{{menuItem.accelerator | sciFormatAccelerator}}</span>
+                }
+
+                @if (hasActionToolbar) {
+                  <sci-toolbar-group [menuItems]="menuItem.actions!"
+                                     [orientation]="'horizontal'"
+                                     [popoverViewContainerRef]="popoverViewContainerRef()"
+                                     [class.menu-open]="actions_toolbar.toolbarMenuOpen()"
+                                     class="actions e2e-actions"
+                                     (click)="$event.stopPropagation()"
+                                     #actions_toolbar/>
+                }
+              </div>
+            </button>
+          }
+
+          <!-- Submenu Item -->
+          @if (menuItem.menu) {
+            <button [attr.disabled]="disabled || null"
+                    [attr.title]="menuItem.tooltip?.()"
+                    [class.open]="activeSubmenuItem()?.menuItem === menuItem"
+                    [class]="menuItem.cssClass" class="menu e2e-menu-item"
+                    [sciAttributes]="menuItem.attributes"
+                    (mouseenter)="onSubmenuItemMouseEnter({menuItem, element})"
+                    (click)="onSubmenuItemClick({menuItem, element})"
+                    #element>
+              @if (hasGlyphArea() && !group()?.hideGlyphArea) {
+                <!-- Render icon if glyph area. -->
+                <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
+              }
+
+              <!-- Render label. -->
+              <div class="content">
+                <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
+                <sci-icon class="chevron">scion.chevron_right</sci-icon>
+              </div>
+            </button>
+          }
+        }
+        @case ('group') {
+          <sci-menu-group [group]="menuItem"
+                          [glyphArea]="hasGlyphArea()"
+                          [disabled]="disabled"
+                          [cssClass]="menuItem.cssClass ?? []"/>
+        }
+      }
+    } @empty {
+      <!-- TODO [Angular 23] Replace with optional chaining operator once the Angular compiler no longer logs the NG8107 false-positive warning. -->
+      <!-- @let message = filter?.notFoundMessage?.() ?? '%scion.components.menu.no_items.message'; -->
+      @let message = (filter && filter.notFoundMessage?.()) ?? '%scion.components.menu.no_items.message';
+      <div class="message no-items e2e-no-items">{{(message | sciText)()}}</div>
+    }
+  </ng-template>
+}
+
+<!-- Location where to insert the menu popover. Must not be a child of the menu item button to prevent hovering the menu item when hovering menu items in the popover. -->
+<ng-container #popover_view_container_ref/>
+
+<!-- Renders the icon of the passed menu item. -->
+<ng-template #icon_template let-menuItem>
+  @if (menuItem.checked !== undefined) {
+    <sci-icon>{{menuItem.checked() ? 'scion.checkmark' : undefined}}</sci-icon>
+  } @else if (menuItem.iconLigature) {
+    <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
+  } @else if (menuItem.iconComponent) {
+    <sci-menu-item-icon>
+      <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
+    </sci-menu-item-icon>
+  } @else {
+    <sci-menu-item-icon/>
+  }
+</ng-template>
+
+<!-- Renders the label of the passed menu item. -->
+<ng-template #label_template let-menuItem>
+  @if (menuItem.labelText) {
+    <sci-menu-item-label>
+      {{menuItem.labelText()}}
+    </sci-menu-item-label>
+  } @else if (menuItem.labelComponent) {
+    <sci-menu-item-label>
+      <ng-container *sciComponentOutlet="menuItem.labelComponent"/>
+    </sci-menu-item-label>
+  }
+</ng-template>
