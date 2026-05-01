@@ -1,0 +1,37 @@
+:host {
+  display: block;
+  // Assing default styles to not inherit changed colors.
+  --ɵsci-toolbar-item-background-color: var(--sci-toolbar-item-background-color);
+  --ɵsci-toolbar-item-background-color-hover: var(--sci-toolbar-item-background-color-hover);
+  --ɵsci-toolbar-item-background-color-active: var(--sci-toolbar-item-background-color-active);
+  --ɵsci-toolbar-item-background-color-checked: var(--sci-toolbar-item-background-color-checked);
+  --ɵsci-toolbar-item-text-color: var(--sci-toolbar-item-text-color);
+  --ɵsci-toolbar-item-text-color-disabled: var(--sci-toolbar-item-text-color-disabled);
+  --ɵsci-toolbar-item-border-radius: var(--sci-toolbar-item-border-radius);
+  --ɵsci-toolbar-item-border-width-checked: var(--sci-toolbar-item-border-width-checked);
+  --ɵsci-toolbar-item-outline-width-focus: var(--sci-toolbar-item-outline-width-focus);
+  --ɵsci-toolbar-item-visual-menu-hint-color: var(--sci-toolbar-item-visual-menu-hint-color);
+  --ɵsci-toolbar-item-visual-menu-hint-color-disabled: var(--sci-toolbar-item-visual-menu-hint-color-disabled);
+  --ɵsci-toolbar-item-cursor: var(--sci-toolbar-item-cursor);
+  --ɵsci-toolbar-item-icon-size: var(--sci-toolbar-item-icon-size);
+  --ɵsci-toolbar-item-padding: var(--sci-toolbar-item-padding);
+  --ɵsci-toolbar-min-size: var(--sci-toolbar-min-size);
+  --ɵsci-toolbar-padding: var(--sci-toolbar-padding);
+  --sci-icon-size: var(--ɵsci-toolbar-item-icon-size);
+
+  padding: var(--ɵsci-toolbar-padding);
+  box-sizing: content-box;
+
+  &:has(> sci-toolbar-group[data-orientation="horizontal"]) {
+    min-height: var(--ɵsci-toolbar-min-size);
+  }
+
+  &:has(> sci-toolbar-group[data-orientation="vertical"]) {
+    min-width: var(--ɵsci-toolbar-min-size);
+  }
+
+  > sci-toolbar-group {
+    width: 100%;
+    height: 100%;
+  }
+}

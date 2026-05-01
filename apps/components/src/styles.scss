@@ -3,7 +3,7 @@
 @use '@scion/components.internal/design' as sci-design;
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght@24..48,300..400');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@300..400');
 
 html {
   font-size: 14px; // defines 1rem as 14px
@@ -35,10 +35,6 @@ button[class*="material-icons"], button[class*="material-symbols"] {
 
 button:not([class*="material-icons"]):not([class*="material-symbols"]) {
   @include sci-design.style-button();
-}
-
-h1 {
-  margin-top: 0;
 }
 
 // Install Angular CDK styles
