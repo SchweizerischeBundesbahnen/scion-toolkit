@@ -54,12 +54,19 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: [
-      process.env.HEADLESS ? 'HeadlessChrome' : 'Chrome',
+      process.env.HEADLESS ? 'HeadlessChrome' : 'CustomChrome',
     ],
     customLaunchers: {
       HeadlessChrome: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox'],
+        flags: [
+          '--no-sandbox',
+          '--window-size=1920,1200',
+        ],
+      },
+      CustomChrome: {
+        base: 'Chrome',
+        flags: ['--window-size=1920,1200'],
       },
     },
   });

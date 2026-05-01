@@ -1,0 +1,35 @@
+:host {
+  display: flex;
+
+  > button:is(.menu-item, #sci-reset) {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    text-wrap: nowrap;
+    padding: var(--sci-menubar-item-padding);
+    border-radius: var(--sci-menubar-button-border-radius);
+    user-select: none;
+    overflow: hidden;
+    cursor: var(--sci-menubar-button-cursor);
+
+    &:hover {
+      background-color: var(--sci-menubar-button-background-color-hover);
+    }
+
+    &:active {
+      background-color: var(--sci-menubar-button-background-color-active);
+    }
+
+    &:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: var(--sci-menubar-button-outline-width) solid var(--sci-color-accent);
+    }
+
+    &.open {
+      background-color: var(--sci-menubar-button-background-color-hover);
+    }
+  }
+}

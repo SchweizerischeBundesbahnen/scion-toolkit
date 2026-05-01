@@ -1,20 +1,17 @@
 <header>
-  <nav>
-    @for (tool of tools$ | async; track tool) {
-      <a [routerLink]="tool.routerPath"
-         [queryParamsHandling]="'merge'"
-         [class.internal]="tool.internal">
-        {{tool.name}}
-      </a>
-    }
-  </nav>
-  <div class="theme-switcher">
-    <button (click)="onActivateDarkTheme()" sciMaterialIcon>dark_mode</button>
-    <sci-toggle-button [formControl]="lightThemeFormControl"></sci-toggle-button>
-    <button (click)="onActivateLightTheme()" sciMaterialIcon>light_mode</button>
-  </div>
+  <span class="title">{{activatedFeature()?.name}}</span>
+  <sci-menubar name="menubar:main"/>
+  <sci-toolbar name="toolbar:settings"/>
 </header>
 
 <main>
-  <router-outlet></router-outlet>
+  <router-outlet (activate)="onRouteActivate()"/>
+
+  @if (!activatedFeature()) {
+    <span class="welcome-message">
+      Welcome to SCION Components.
+      <p>
+      Please select a component from the menu.
+    </span>
+  }
 </main>

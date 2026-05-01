@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Swiss Federal Railways
+ * Copyright (c) 2018-2026 Swiss Federal Railways
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -7,87 +7,93 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, inject} from '@angular/core';
-import {ActivatedRoute, Router, RouterLink, RouterOutlet} from '@angular/router';
-import {map} from 'rxjs/operators';
-import {Observable} from 'rxjs';
+import {Component, computed, inject, signal, viewChild} from '@angular/core';
+import {Route, Router, RouterOutlet} from '@angular/router';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
-import {sortArray} from '@scion/toolkit/operators';
-import {AsyncPipe} from '@angular/common';
-import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
-import {SciToggleButtonComponent} from '@scion/components.internal/toggle-button';
-import {FormControl, ReactiveFormsModule} from '@angular/forms';
-import {ThemeSwitcher} from './theme-switcher.service';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {ReactiveFormsModule} from '@angular/forms';
+import {contributeMenu, SciMenubarComponent, SciMenuFactory, SciToolbarComponent} from '@scion/components/menu';
+import {readQueryParamFlag} from './common/query-params.util';
+import {ThemeSwitcherComponent} from './theme/theme-switch-button/theme-switcher.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   imports: [
-    AsyncPipe,
-    RouterLink,
     RouterOutlet,
     ReactiveFormsModule,
-    SciMaterialIconDirective,
-    SciToggleButtonComponent,
+    SciMenubarComponent,
+    SciToolbarComponent,
   ],
 })
 export class AppComponent {
 
-  private readonly _themeSwitcher = inject(ThemeSwitcher);
+  private readonly _routerOutlet = viewChild.required(RouterOutlet);
+  private readonly _features = this.getFeatures();
 
-  protected readonly tools$: Observable<Tool[]>;
-  protected readonly lightThemeFormControl = new FormControl<boolean>(true);
+  protected readonly activatedFeature = signal<Feature | undefined>(undefined);
 
   constructor() {
-    this.tools$ = this.observeTools$();
-    this.installThemeSwitcher();
+    this.contributeMenubar();
+    this.contributeSettingsToolbar();
   }
 
-  protected onActivateLightTheme(): void {
-    this.lightThemeFormControl.setValue(true);
-  }
+  private contributeMenubar(): void {
+    const showInternalFeatures = readQueryParamFlag('internal', {transform: value => coerceBooleanProperty(value)});
+    const activatedFeature = this.activatedFeature;
 
-  protected onActivateDarkTheme(): void {
-    this.lightThemeFormControl.setValue(false);
-  }
-
-  private observeTools$(): Observable<Tool[]> {
-    const router = inject(Router);
-    return inject(ActivatedRoute).queryParamMap
-      .pipe(
-        map(params => coerceBooleanProperty(params.get('internal'))),
-        map(includeInternalTools => router.config
-          .filter(route => includeInternalTools || !route.data?.['internal'])
-          .reduce((tools, route) => {
-            return tools.concat({
-              routerPath: `/${route.path}`,
-              name: route.path!,
-              internal: (route.data?.['internal'] ?? false) as boolean,
-            });
-          }, new Array<Tool>())),
-        sortArray((tool1, tool2) => Number(tool1.internal) - Number(tool2.internal)),
-      );
-  }
-
-  private installThemeSwitcher(): void {
-    this._themeSwitcher.theme$
-      .pipe(takeUntilDestroyed())
-      .subscribe(theme => {
-        this.lightThemeFormControl.setValue(theme === 'scion-light', {emitEvent: false});
+    contributeMenu('menubar:main', menubar => {
+      // Add menu for public features.
+      menubar.addMenu({label: 'Components', menu: {filter: {focus: true}}}, menu => {
+        contributeFeatureMenuItems(menu, this._features.filter(feature => !feature.internal));
       });
 
-    this.lightThemeFormControl.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe(lightTheme => {
-        this._themeSwitcher.switchTheme(lightTheme ? 'scion-light' : 'scion-dark');
+      // Add menu for internal features.
+      if (showInternalFeatures()) {
+        menubar.addMenu({label: 'Internal Components', menu: {filter: {focus: true}}}, menu => {
+          contributeFeatureMenuItems(menu, this._features.filter(feature => feature.internal));
+        });
+      }
+    });
+
+    function contributeFeatureMenuItems(menu: SciMenuFactory, features: Feature[]): void {
+      const router = inject(Router);
+
+      features.forEach(feature => {
+        menu.addMenuItem({
+          label: feature.name,
+          active: computed(() => activatedFeature()?.route === feature.route),
+          onSelect: () => void router.navigate([feature.routerPath], {queryParamsHandling: 'preserve'}),
+        });
       });
+    }
+  }
+
+  private contributeSettingsToolbar(): void {
+    contributeMenu('toolbar:settings', toolbar => toolbar
+      .addToolbarControl({component: ThemeSwitcherComponent})
+      .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu),
+    );
+  }
+
+  private getFeatures(): Feature[] {
+    return inject(Router).config.map(route => ({
+      routerPath: `/${route.path}`,
+      route: route,
+      name: route.path!,
+      internal: (route.data?.['internal'] ?? false) as boolean,
+    }));
+  }
+
+  protected onRouteActivate(): void {
+    const route = this._routerOutlet().activatedRoute;
+    this.activatedFeature.set(this._features.find(feature => feature.route === route.routeConfig));
   }
 }
 
-export interface Tool {
+interface Feature {
   routerPath: string;
+  route: Route;
   name: string;
   internal: boolean;
 }

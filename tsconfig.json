@@ -35,6 +35,12 @@
      * +=====================================+
      */
     //    "paths": {
+    //      "@scion/components/common": [
+    //        "./projects/scion/components/common/src/public_api"
+    //      ],
+    //      "@scion/components/menu": [
+    //        "./projects/scion/components/menu/src/public_api"
+    //      ],
     //      "@scion/components/dimension": [
     //        "./projects/scion/components/dimension/src/public_api"
     //      ],
@@ -49,6 +55,15 @@
     //      ],
     //      "@scion/components/viewport": [
     //        "./projects/scion/components/viewport/src/public_api"
+    //      ],
+    //      "@scion/components/text": [
+    //        "./projects/scion/components/text/src/public_api"
+    //      ],
+    //      "@scion/components/icon": [
+    //        "./projects/scion/components/icon/src/public_api"
+    //      ],
+    //      "@scion/toolkit/types": [
+    //        "./projects/scion/toolkit/types/src/public_api"
     //      ],
     //      "@scion/toolkit/bean-manager": [
     //        "./projects/scion/toolkit/bean-manager/src/public_api"

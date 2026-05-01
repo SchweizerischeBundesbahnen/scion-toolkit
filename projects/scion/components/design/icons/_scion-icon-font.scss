@@ -1,0 +1,52 @@
+/**
+ * Installs icons used in SCION.
+ */
+
+@use 'sass:map';
+
+/**
+ * Current version of the icon font.
+ * This version is appended to the HTTP request as query parameter when fetching the icon font to support cache busting.
+ * Update this version when adding, removing or changing icons.
+ */
+$-version: 1;
+
+// TODO [menu] Documentation inspiration
+// The font path must be root relative or excluded from the application build. Otherwise, the application build will fail
+// because the builder cannot resolve the font files relative to "this" SASS file.
+//
+// Webpack allows to exclude assets from the build by prefixing their path with a leading caret (^). For esbuild, the
+// application can register the excluded assets as `externalDependencies` in angular.json.
+//
+// To keep the workbench configuration minimal for Angular projects deployed in the context root, we reference font files by
+// their root relative path. Consequently, applications deployed in a subdirectory require additional configuration depending
+// on whether the application is built with esbuild or webpack.
+
+$-icon-font-defaults: (
+  directory: 'https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/592/resources/scion-icons',
+  filename: 'scion-icons',
+  version: $-version,
+);
+
+/**
+ * Installs the 'scion-icons' font to render SCION icons.
+ *
+ * SCION icons are rendered in `ScionIconComponent`.
+ */
+@mixin install-icon-font($config) {
+  $config: if(sass($config): $config; else: ());
+  $config: map.merge($-icon-font-defaults, $config);
+  $path: map.get($config, directory) + '/' + map.get($config, filename);
+  $version: map.get($config, version);
+
+  @font-face {
+    font-family: 'scion-icons';
+    src: url($path + '.ttf?' + $version) format('truetype'),
+    url($path + '.woff?' + $version) format('woff'),
+    url($path + '.svg?' + $version + '#scion-icons') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    // Prevent a flash of unstyled text content (FOUC) showing the ligatures until the font loads.
+    font-display: block;
+  }
+}

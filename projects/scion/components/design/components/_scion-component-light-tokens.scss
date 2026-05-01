@@ -1,0 +1,114 @@
+@use '../theming' as sci-theming;
+
+$sci-scrollbar: (
+  --sci-scrollbar-color: var(--sci-color-gray-700),
+);
+
+$sci-viewport: (
+  --sci-viewport-scrollbar-color: var(--sci-scrollbar-color),
+);
+
+$sci-throbber: (
+  --sci-throbber-color: var(--sci-color-gray-300),
+  --sci-throbber-size: 50px,
+  --sci-throbber-duration: 1.25s,
+);
+
+$sci-splitter: (
+  --sci-splitter-background-color: var(--sci-color-border), // background color of the splitter
+  --sci-splitter-background-color-hover: var(--sci-splitter-background-color), // background color of the splitter when hovering it
+  --sci-splitter-size: 1px, // size of the splitter along the main axis (width if direction is row, or height if direction is column)
+  --sci-splitter-size-hover: 8px, // size of the splitter along the main axis when hovering it.
+  --sci-splitter-touch-target-size: 15px, // touch target size to move the splitter (accessibility)
+  --sci-splitter-cross-axis-size: 100%, // handle size along the cross axis
+  --sci-splitter-border-radius: 0, // border radius of the splitter
+  --sci-splitter-opacity-active: 1, //  opacity of the splitter while the user moves the splitter
+  --sci-splitter-opacity-hover: .3, // opacity of the splitter when hovering it
+);
+
+$sci-sashbox: (
+  --sci-sashbox-gap: 10px, // gaps (gutters) between sashes
+  --sci-sashbox-splitter-background-color: var(--sci-splitter-background-color), // background color of the splitter
+  --sci-sashbox-splitter-background-color-hover: var(--sci-splitter-background-color), // background color of the splitter when hovering it
+  --sci-sashbox-splitter-size: var(--sci-splitter-size), // size of the splitter along the main axis (width if direction is row, or height if direction is column)
+  --sci-sashbox-splitter-size-hover: var(--sci-splitter-size-hover), // size of the splitter along the main axis when hovering it.
+  --sci-sashbox-splitter-touch-target-size: var(--sci-splitter-touch-target-size), // touch target size to move the splitter (accessibility)
+  --sci-sashbox-splitter-cross-axis-size: var(--sci-splitter-cross-axis-size), // handle size along the cross axis
+  --sci-sashbox-splitter-border-radius: var(--sci-splitter-border-radius), // border radius of the splitter
+  --sci-sashbox-splitter-opacity-active: var(--sci-splitter-opacity-active), //  opacity of the splitter while the user moves the splitter
+  --sci-sashbox-splitter-opacity-hover: var(--sci-splitter-opacity-hover), // opacity of the splitter when hovering it
+);
+
+$sci-menu: (
+  --sci-menu-item-size: var(--sci-button-icon-size),
+  --sci-menu-item-cursor: var(--sci-button-cursor),
+  --sci-menu-item-text-color: var(--sci-button-text-color),
+  --sci-menu-item-text-color-disabled: var(--sci-button-text-color-disabled),
+  --sci-menu-item-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-menu-item-background-color-active: var(--sci-button-background-color-active),
+  --sci-menu-item-border-radius: var(--sci-button-border-radius),
+  --sci-menu-item-outline-width: var(--sci-button-outline-width),
+  --sci-menu-item-accelerator-text-color: var(--sci-color-text-subtlest),
+  --sci-menu-item-activemark-width: 3px,
+  --sci-menu-item-activemark-background-color: var(--sci-color-accent),
+  --sci-menu-item-activemark-border-radius: var(--sci-corner-small),
+  --sci-menu-group-header-font-family: inherit,
+  --sci-menu-group-header-font-size: .95em,
+  --sci-menu-group-header-font-weight: 500,
+  --sci-menu-group-header-font-color: var(--sci-color-text-subtlest),
+  --sci-menu-filter-outline-width: var(--sci-button-outline-width),
+  --sci-menu-filter-outline-radius: var(--sci-corner-small),
+  --sci-menu-font-size: 13px,
+  --sci-menu-border-radius: var(--sci-corner),
+  --sci-menu-min-width: 15em,
+  --sci-menu-submenu-min-width: 10em,
+);
+
+$sci-toolbar: (
+  --sci-toolbar-item-size: var(--sci-button-icon-size),
+  --sci-toolbar-item-cursor: var(--sci-button-cursor),
+  --sci-toolbar-item-text-color: var(--sci-button-text-color),
+  --sci-toolbar-item-text-color-disabled: var(--sci-button-text-color-disabled),
+  --sci-toolbar-item-background-color: transparent,
+  --sci-toolbar-item-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-toolbar-item-background-color-active: var(--sci-button-background-color-active),
+  --sci-toolbar-item-background-color-checked: color-mix(in srgb, var(--sci-color-gray-200) 65%, var(--sci-static-color-white)),
+  --sci-toolbar-item-border-radius: var(--sci-button-border-radius),
+  --sci-toolbar-item-border-color-checked: var(--sci-color-border),
+  --sci-toolbar-item-outline-width: var(--sci-button-outline-width),
+  --sci-toolbar-item-menu-indicator-color: var(--sci-color-text-subtle),
+  --sci-toolbar-item-menu-indicator-color-disabled: var(--sci-color-gray-500),
+  --sci-toolbar-item-menu-indicator-size: 3px,
+);
+
+$sci-menubar: (
+  --sci-menubar-button-cursor: var(--sci-button-cursor),
+  --sci-menubar-button-border-radius: var(--sci-button-border-radius),
+  --sci-menubar-button-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-menubar-button-background-color-active: var(--sci-button-background-color-active),
+  --sci-menubar-button-outline-width: var(--sci-button-outline-width),
+  --sci-menubar-item-padding: .3em .6em,
+);
+
+$sci-button: (
+  --sci-button-cursor: default,
+  --sci-button-background-color-hover: color-mix(in srgb, var(--sci-color-gray-200) 95%, var(--sci-static-color-white)),
+  --sci-button-background-color-active: var(--sci-color-gray-300),
+  --sci-button-text-color: var(--sci-color-text),
+  --sci-button-text-color-disabled: var(--sci-color-text-subtlest),
+  --sci-button-border-radius: var(--sci-corner),
+  --sci-button-outline-width: 2px,
+  --sci-button-icon-size: 16px,
+);
+
+$tokens: sci-theming.map-merge(
+  $sci-scrollbar,
+  $sci-viewport,
+  $sci-throbber,
+  $sci-splitter,
+  $sci-sashbox,
+  $sci-menu,
+  $sci-menubar,
+  $sci-toolbar,
+  $sci-button,
+);

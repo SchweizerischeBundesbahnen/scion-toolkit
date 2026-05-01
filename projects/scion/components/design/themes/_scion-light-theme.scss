@@ -2,9 +2,9 @@
 @use '../theming' as sci-theming;
 @use '../colors/scion-static-colors';
 @use '../colors/scion-light-colors';
-@use '../components/scion-component-tokens';
+@use '../components/scion-component-light-tokens';
 
-$theme: sci-theming.map-merge(scion-static-colors.$tokens, scion-light-colors.$tokens, scion-component-tokens.$tokens, (
+$theme: sci-theming.map-merge(scion-static-colors.$tokens, scion-light-colors.$tokens, scion-component-light-tokens.$tokens, (
   // Use for highlighting calls to action and emphasizing important information or key messages.
   --sci-color-accent: var(--sci-color-blue-900),
   --sci-color-accent-inverse: var(--sci-static-color-white),

@@ -1,0 +1,6 @@
+<!-- Render no content if empty for the application to hide it using the `:empty` CSS pseudo class. -->
+@if (menuItems().length) {
+  <sci-toolbar-group [menuItems]="menuItems()"
+                     [orientation]="orientation()"
+                     [popoverViewContainerRef]="popoverViewContainerRef()"/>
+}

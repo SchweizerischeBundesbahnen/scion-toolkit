@@ -88,7 +88,10 @@
               "includePaths": [
                 "projects/scion/components"
               ]
-            }
+            },
+            "styles": [
+              "projects/scion/components/_index.scss"
+            ]
           }
         },
         "test-zone": {
@@ -105,6 +108,9 @@
                 "projects/scion/components"
               ]
             },
+            "styles": [
+              "projects/scion/components/_index.scss"
+            ],
             "polyfills": [
               "zone.js",
               "zone.js/testing"
@@ -254,7 +260,7 @@
             "development": {
               "buildTarget": "components-app:build:development",
               "headers": {
-                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/592/; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
               }
             }
           },
@@ -343,7 +349,7 @@
             "development": {
               "buildTarget": "components-testing-app:build:development",
               "headers": {
-                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/592/; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
               }
             }
           },
