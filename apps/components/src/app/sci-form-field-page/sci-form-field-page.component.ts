@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 
 @Component({
@@ -15,6 +15,7 @@ import {SciFormFieldComponent} from '@scion/components.internal/form-field';
   templateUrl: './sci-form-field-page.component.html',
   styleUrls: ['./sci-form-field-page.component.scss'],
   imports: [SciFormFieldComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciFormFieldPageComponent {
 }

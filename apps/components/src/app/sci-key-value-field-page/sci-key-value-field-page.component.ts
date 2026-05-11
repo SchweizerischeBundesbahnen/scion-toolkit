@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, signal} from '@angular/core';
 import {FormGroup, NonNullableFormBuilder} from '@angular/forms';
 import {KeyValueEntry, SciKeyValueFieldComponent} from '@scion/components.internal/key-value-field';
 import {Dictionary} from '@scion/toolkit/util';
@@ -21,14 +21,15 @@ import {JsonPipe} from '@angular/common';
     JsonPipe,
     SciKeyValueFieldComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciKeyValueFieldPageComponent {
 
   protected readonly formArray = inject(NonNullableFormBuilder).array<FormGroup<KeyValueEntry>>([]);
 
-  protected output: Dictionary | null = null;
+  protected readonly output = signal<Dictionary | null>(null);
 
   protected onPrint(): void {
-    this.output = SciKeyValueFieldComponent.toDictionary(this.formArray);
+    this.output.set(SciKeyValueFieldComponent.toDictionary(this.formArray));
   }
 }

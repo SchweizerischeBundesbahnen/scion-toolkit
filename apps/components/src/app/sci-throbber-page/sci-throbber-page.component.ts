@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, inject, OnInit, Signal, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, effect, ElementRef, inject, Signal, untracked, viewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -25,8 +25,9 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciTabDirective,
     SciTabbarComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class SciThrobberPageComponent implements OnInit {
+export default class SciThrobberPageComponent {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
   private readonly _throbberComponent: Signal<ElementRef<HTMLElement>> = viewChild.required(SciThrobberComponent, {read: ElementRef});
@@ -39,10 +40,15 @@ export default class SciThrobberPageComponent implements OnInit {
     duration: this._formBuilder.control(''),
   });
 
-  public ngOnInit(): void {
-    this.form.controls.color.setValue(this.readCssVariableDefault('--sci-throbber-color'));
-    this.form.controls.size.setValue(this.readCssVariableDefault('--sci-throbber-size'));
-    this.form.controls.duration.setValue(this.readCssVariableDefault('--sci-throbber-duration'));
+  constructor() {
+    effect(() => {
+      this._throbberComponent();
+      untracked(() => {
+        this.form.controls.color.setValue(this.readCssVariableDefault('--sci-throbber-color'));
+        this.form.controls.size.setValue(this.readCssVariableDefault('--sci-throbber-size'));
+        this.form.controls.duration.setValue(this.readCssVariableDefault('--sci-throbber-duration'));
+      });
+    });
   }
 
   private readCssVariableDefault(cssVariable: string): string {

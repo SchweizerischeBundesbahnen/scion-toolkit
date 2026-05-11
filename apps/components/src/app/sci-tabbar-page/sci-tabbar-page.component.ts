@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, inject, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, viewChild} from '@angular/core';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SplitPipe} from '../common/split.pipe';
@@ -26,6 +26,7 @@ import loremIpsum from './lorem-ipsum.json';
     SciTabDirective,
     SplitPipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciTabbarPageComponent {
 
