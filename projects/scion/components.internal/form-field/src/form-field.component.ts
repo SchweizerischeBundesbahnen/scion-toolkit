@@ -8,25 +8,23 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, input, OnDestroy} from '@angular/core';
+import {Component, DestroyRef, ElementRef, inject, input} from '@angular/core';
 import {ConfigurableFocusTrap, ConfigurableFocusTrapFactory} from '@angular/cdk/a11y';
 
 @Component({
   selector: 'sci-form-field',
   templateUrl: './form-field.component.html',
   styleUrls: ['./form-field.component.scss'],
+  host: {
+    '[class.column-direction]': `this.direction() === 'column'`,
+  },
 })
-export class SciFormFieldComponent implements OnDestroy {
+export class SciFormFieldComponent {
 
   public readonly label = input.required<string>();
   public readonly direction = input<'row' | 'column'>('row');
 
   private _focusTrap: ConfigurableFocusTrap;
-
-  @HostBinding('class.column-direction')
-  protected get isColumnDirection(): boolean {
-    return this.direction() === 'column';
-  }
 
   constructor() {
     const host = inject(ElementRef).nativeElement as HTMLElement;
@@ -34,15 +32,13 @@ export class SciFormFieldComponent implements OnDestroy {
 
     this._focusTrap = focusTrapFactory.create(host);
     this._focusTrap.enabled = false;
+
+    inject(DestroyRef).onDestroy(() => this._focusTrap.destroy());
   }
 
   public onLabelClick(): void {
     this._focusTrap.enabled = true;
     this._focusTrap.focusFirstTabbableElement();
     this._focusTrap.enabled = false;
-  }
-
-  public ngOnDestroy(): void {
-    this._focusTrap.destroy();
   }
 }

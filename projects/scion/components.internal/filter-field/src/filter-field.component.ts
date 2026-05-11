@@ -8,13 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, ElementRef, forwardRef, HostBinding, HostListener, inject, input, linkedSignal, OnDestroy, output, untracked, viewChild} from '@angular/core';
+import {booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, effect, ElementRef, forwardRef, inject, input, linkedSignal, output, untracked, viewChild} from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {noop} from 'rxjs';
 import {FocusMonitor, FocusOrigin} from '@angular/cdk/a11y';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {map} from 'rxjs/operators';
 
 /**
  * Provides a simple filter control.
@@ -31,8 +32,13 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   providers: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => SciFilterFieldComponent)},
   ],
+  host: {
+    '(focus)': 'focus()',
+    '[attr.tabindex]': '-1', // component is not focusable in sequential keyboard navigation, but tabindex (if any) is installed on input field
+    '[class.empty]': 'empty()',
+  },
 })
-export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy {
+export class SciFilterFieldComponent implements ControlValueAccessor {
 
   /**
    * Sets focus order in sequential keyboard navigation. If not specified, the focus order is according to the position in the document (tabindex=0).
@@ -59,17 +65,10 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
 
   protected readonly id = UUID.randomUUID();
   protected readonly formControl = this._formBuilder.control('', {updateOn: 'change'});
+  protected readonly empty = toSignal(this.formControl.valueChanges.pipe(map(value => !value)), {initialValue: !this.formControl.value});
 
   private _cvaChangeFn: (value: any) => void = noop;
   private _cvaTouchedFn: () => void = noop;
-
-  @HostBinding('attr.tabindex')
-  protected componentTabindex = -1; // component is not focusable in sequential keyboard navigation, but tabindex (if any) is installed on input field
-
-  @HostBinding('class.empty')
-  protected get empty(): boolean {
-    return !this.formControl.value;
-  }
 
   constructor() {
     this.formControl.valueChanges
@@ -92,9 +91,10 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
       // Prevent value emission when changing form control enabled state.
       untracked(() => disabled ? this.formControl.disable({emitEvent: false}) : this.formControl.enable({emitEvent: false}));
     });
+
+    inject(DestroyRef).onDestroy(() => this._focusManager.stopMonitoring(this._host));
   }
 
-  @HostListener('focus')
   public focus(): void {
     this._inputElement().nativeElement.focus();
   }
@@ -157,10 +157,6 @@ export class SciFilterFieldComponent implements ControlValueAccessor, OnDestroy 
   public writeValue(value: string | undefined | null): void {
     this.formControl.setValue(value ?? '', {emitEvent: false});
     this._cd.markForCheck();
-  }
-
-  public ngOnDestroy(): void {
-    this._focusManager.stopMonitoring(this._host);
   }
 }
 

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, HostBinding} from '@angular/core';
+import {Directive} from '@angular/core';
 
 /**
  * Enables the host to render a Material ligature.
@@ -19,15 +19,19 @@ import {Directive, HostBinding} from '@angular/core';
  * - https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp
  * - https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp
  */
-@Directive({selector: '[sciMaterialIcon]'})
+@Directive({
+  selector: '[sciMaterialIcon]',
+  host: {
+    '[class]': `[
+      'material-icons',
+      'material-icons-outlined',
+      'material-icons-round',
+      'material-icons-sharp',
+      'material-symbols-sharp',
+      'material-symbols-outlined',
+      'material-symbols-rounded',
+    ]`,
+  },
+})
 export class SciMaterialIconDirective {
-
-  @HostBinding('class.material-icons')
-  @HostBinding('class.material-icons-outlined')
-  @HostBinding('class.material-icons-round')
-  @HostBinding('class.material-icons-sharp')
-  @HostBinding('class.material-symbols-sharp')
-  @HostBinding('class.material-symbols-outlined')
-  @HostBinding('class.material-symbols-rounded')
-  public materialIcons = true;
 }

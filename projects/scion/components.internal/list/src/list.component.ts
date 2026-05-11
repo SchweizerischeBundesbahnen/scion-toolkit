@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, contentChildren, HostBinding, HostListener, inject, Injector, input, output, TrackByFunction, viewChild, viewChildren} from '@angular/core';
+import {Component, contentChildren, inject, Injector, input, output, signal, TrackByFunction, viewChild, viewChildren} from '@angular/core';
 import {FocusKeyManager} from '@angular/cdk/a11y';
 import {SciListItemDirective} from './list-item.directive';
 import {SciListItemComponent} from './list-item/list-item.component';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
-import {filter, map} from 'rxjs/operators';
+import {filter, map, tap} from 'rxjs/operators';
 import {SciListStyle} from './metadata';
 import {NgClass, NgTemplateOutlet} from '@angular/common';
 import {SciViewportComponent} from '@scion/components/viewport';
@@ -78,6 +78,11 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     NgClass,
     NgTemplateOutlet,
   ],
+  host: {
+    '(focus)': 'focus()',
+    '(keydown)': 'onKeydown($event)',
+    '[attr.tabindex]': '-1', // component itself is not focusable in sequential keyboard navigation, but tabindex (if any) set to filter field
+  },
 })
 export class SciListComponent {
 
@@ -113,14 +118,13 @@ export class SciListComponent {
   private readonly _focusKeyManager: FocusKeyManager<SciListItemComponent>;
 
   protected readonly listItems = contentChildren(SciListItemDirective);
-
-  @HostBinding('attr.tabindex')
-  protected componentTabindex = -1; // component itself is not focusable in sequential keyboard navigation, but tabindex (if any) set to filter field
+  protected readonly activeItem = signal<SciListItemComponent | null>(null);
 
   constructor() {
     this._focusKeyManager = new FocusKeyManager(this._listItemComponents, inject(Injector));
     this._focusKeyManager.change
       .pipe(
+        tap(index => this.activeItem.set(this._listItemComponents()[index] ?? null)),
         map(index => this.listItems()[index]),
         filter(Boolean),
         filter(listItem => !!listItem.key()),
@@ -131,12 +135,10 @@ export class SciListComponent {
       });
   }
 
-  @HostListener('keydown', ['$event'])
   protected onKeydown(event: KeyboardEvent): void {
     this._focusKeyManager.onKeydown(event);
   }
 
-  @HostListener('focus')
   protected focus(): void {
     this._filterField()?.focus();
   }
@@ -152,10 +154,6 @@ export class SciListComponent {
 
   protected onAnyKey(event: KeyboardEvent): void {
     this._filterField()?.focusAndApplyKeyboardEvent(event);
-  }
-
-  protected get activeItem(): SciListItemComponent | null {
-    return this._focusKeyManager.activeItem ?? null;
   }
 
   protected trackByFn: TrackByFunction<SciListItemDirective> = (index: number, item: SciListItemDirective): any => {

@@ -8,7 +8,7 @@
     <sci-list-item #item
                    [listItem]="listItem"
                    [style]="style()"
-                   [active]="activeItem === item"
+                   [active]="activeItem() === item"
                    (click)="onItemClick(item)"/>
   }
 </sci-viewport>

@@ -42,16 +42,18 @@ import {SciViewportComponent} from '@scion/components/viewport';
 })
 export class SciTabbarComponent {
 
-  private readonly _cd = inject(ChangeDetectorRef);
+  private readonly _cd = inject(ChangeDetectorRef, {skipSelf: true});
+  /** Workaround for activating initial tab: https://github.com/angular/angular/issues/22560#issuecomment-473958144 */
   private readonly _vcr = viewChild.required('tabcontent', {read: ViewContainerRef});
 
   protected readonly tabs = contentChildren(SciTabDirective);
 
   constructor() {
-    effect(() => {
-      if (this.tabs().length && !this.getActiveTab()) {
+    const effectRef = effect(() => {
+      if (this.tabs().length && !this._vcr().length && !this.getActiveTab()) {
         untracked(() => this.activateTab(this.tabs().at(0)));
       }
+      effectRef.destroy();
     });
   }
 
@@ -74,7 +76,7 @@ export class SciTabbarComponent {
     if (tab) {
       tab.attachContent(this._vcr());
     }
-    this._cd.markForCheck();
+    this._cd.detectChanges();
   }
 
   protected onTabClick(tab: SciTabDirective | undefined): void {

@@ -149,11 +149,7 @@
                 "projects/scion/components",
                 "projects/scion/components.internal"
               ]
-            },
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
+            }
           }
         },
         "lint": {
