@@ -8,10 +8,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, DestroyRef, ElementRef, inject, OnInit, signal, viewChild} from '@angular/core';
+import {Component, effect, ElementRef, signal, untracked, viewChild} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {fromBoundingClientRect$} from '@scion/toolkit/observable';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-bounding-client-rect-page',
@@ -21,9 +20,8 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     FormsModule,
   ],
 })
-export class BoundingClientRectPageComponent implements OnInit {
+export class BoundingClientRectPageComponent {
 
-  private readonly _destroyRef = inject(DestroyRef);
   private readonly _testee = viewChild.required<ElementRef<HTMLElement>>('testee');
 
   protected readonly properties = {
@@ -40,17 +38,32 @@ export class BoundingClientRectPageComponent implements OnInit {
     height: signal<number | undefined>(undefined),
   };
 
-  public ngOnInit(): void {
-    this.applyProperties();
+  constructor() {
+    // Apply initial properties
+    const effectRef = effect(() => {
+      this.applyProperties();
+      effectRef.destroy();
+    });
 
-    fromBoundingClientRect$(this._testee().nativeElement)
-      .pipe(takeUntilDestroyed(this._destroyRef))
-      .subscribe(domRect => {
-        this.testeeBoundingBox.x.set(domRect.x);
-        this.testeeBoundingBox.y.set(domRect.y);
-        this.testeeBoundingBox.width.set(domRect.width);
-        this.testeeBoundingBox.height.set(domRect.height);
+    this.observeeTesteeBoundingClientRect();
+  }
+
+  private observeeTesteeBoundingClientRect(): void {
+    effect(onCleanup => {
+      const testee = this._testee().nativeElement;
+
+      untracked(() => {
+        const subscription = fromBoundingClientRect$(testee)
+          .subscribe(domRect => {
+            this.testeeBoundingBox.x.set(domRect.x);
+            this.testeeBoundingBox.y.set(domRect.y);
+            this.testeeBoundingBox.width.set(domRect.width);
+            this.testeeBoundingBox.height.set(domRect.height);
+          });
+
+        onCleanup(() => subscription.unsubscribe());
       });
+    });
   }
 
   protected applyProperties(): void {
