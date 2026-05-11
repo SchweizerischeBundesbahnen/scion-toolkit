@@ -26,6 +26,19 @@
           "options": {
             "tsConfig": "projects/scion/toolkit/tsconfig.spec.json",
             "karmaConfig": "projects/scion/toolkit/karma.conf.js",
+            "exclude": [
+              "projects/scion/toolkit/**/*.zone.spec.ts"
+            ]
+          }
+        },
+        "test-zone": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/scion/toolkit/tsconfig.spec.json",
+            "karmaConfig": "projects/scion/toolkit/karma.conf.js",
+            "include": [
+              "projects/scion/toolkit/**/*.zone.spec.ts"
+            ],
             "polyfills": [
               "zone.js",
               "zone.js/testing"

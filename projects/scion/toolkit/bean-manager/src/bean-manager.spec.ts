@@ -9,7 +9,6 @@
  */
 
 import {BeanDecorator, Beans, Initializer, PreDestroy} from './bean-manager';
-import {fakeAsync, tick} from '@angular/core/testing';
 
 describe('BeanManager', () => {
 
@@ -732,7 +731,9 @@ describe('BeanManager', () => {
     expect(destroyed).toBeTrue();
   });
 
-  it('should execute initializers with a lower runlevel before initializers with a higher runlevel', fakeAsync(() => {
+  it('should execute initializers with a lower runlevel before initializers with a higher runlevel', async () => {
+    jasmine.clock().install();
+    jasmine.clock().mockDate();
     const log: string[] = [];
 
     // Register initializers which resolve after 100ms.
@@ -807,20 +808,23 @@ describe('BeanManager', () => {
     void Beans.start();
 
     // after 100ms
-    tick(100);
+    jasmine.clock().tick(100);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
     ]);
 
     // after 200ms
-    tick(100);
+    jasmine.clock().tick(100);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
       'initializer [200ms, runlevel 0]',
     ]);
 
     // after 600ms
-    tick(400);
+    jasmine.clock().tick(400);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
       'initializer [200ms, runlevel 0]',
@@ -828,7 +832,8 @@ describe('BeanManager', () => {
     ]);
 
     // after 700ms
-    tick(100);
+    jasmine.clock().tick(100);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
       'initializer [200ms, runlevel 0]',
@@ -837,7 +842,8 @@ describe('BeanManager', () => {
     ]);
 
     // after 800ms
-    tick(100);
+    jasmine.clock().tick(100);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
       'initializer [200ms, runlevel 0]',
@@ -847,7 +853,8 @@ describe('BeanManager', () => {
     ]);
 
     // after 1200ms
-    tick(400);
+    jasmine.clock().tick(400);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
       'initializer [200ms, runlevel 0]',
@@ -858,7 +865,8 @@ describe('BeanManager', () => {
     ]);
 
     // after 1300ms
-    tick(100);
+    jasmine.clock().tick(100);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
       'initializer [200ms, runlevel 0]',
@@ -870,7 +878,8 @@ describe('BeanManager', () => {
     ]);
 
     // after 1400ms
-    tick(100);
+    jasmine.clock().tick(100);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
       'initializer [200ms, runlevel 0]',
@@ -883,7 +892,8 @@ describe('BeanManager', () => {
     ]);
 
     // after 1800ms
-    tick(400);
+    jasmine.clock().tick(400);
+    await waitUntilIdle();
     expect(log).toEqual([
       'initializer [100ms, runlevel 0]',
       'initializer [200ms, runlevel 0]',
@@ -895,7 +905,8 @@ describe('BeanManager', () => {
       'initializer [200ms, runlevel 2]',
       'initializer [600ms, runlevel 2]',
     ]);
-  }));
+    jasmine.clock().uninstall();
+  });
 
   it('should register initializers in the configured runlevel (only if not specified by the initializer)', async () => {
     const log: string[] = [];
@@ -1436,5 +1447,12 @@ describe('BeanManager', () => {
    */
   function waitFor(millis: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, millis));
+  }
+
+  /**
+   * Waits until all previously scheduled microtasks, for example those from promises, are executed.
+   */
+  async function waitUntilIdle(): Promise<void> {
+    await new Promise<void>(resolve => requestIdleCallback(() => resolve()));
   }
 });
