@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 
@@ -20,6 +20,7 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
     SciTabDirective,
     SciMaterialIconDirective,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciStylesPageComponent {
 }

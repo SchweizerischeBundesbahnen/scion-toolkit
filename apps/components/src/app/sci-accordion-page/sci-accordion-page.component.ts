@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
@@ -27,6 +27,7 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciTabDirective,
     SciTabbarComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciAccordionPageComponent {
 

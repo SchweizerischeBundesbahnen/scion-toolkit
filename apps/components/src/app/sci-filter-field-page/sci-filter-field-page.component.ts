@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, signal} from '@angular/core';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
@@ -25,6 +25,7 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciTabDirective,
     SciTabbarComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciFilterFieldPageComponent {
 
@@ -37,7 +38,7 @@ export default class SciFilterFieldPageComponent {
     }),
   });
 
-  protected filterText: string | null = null;
+  protected readonly filterText = signal<string | null>(null);
 
   constructor() {
     this.installFilterFieldDisabler();
@@ -60,8 +61,6 @@ export default class SciFilterFieldPageComponent {
   private installFilterFieldValuePrinter(): void {
     this.form.controls.filterField.valueChanges
       .pipe(takeUntilDestroyed())
-      .subscribe(filterText => {
-        this.filterText = filterText;
-      });
+      .subscribe(value => this.filterText.set(value));
   }
 }

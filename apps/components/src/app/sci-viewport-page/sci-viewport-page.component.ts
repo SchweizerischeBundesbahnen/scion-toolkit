@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, DOCUMENT, ElementRef, HostBinding, inject, OnDestroy, OnInit, Signal, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, DestroyRef, DOCUMENT, effect, ElementRef, inject, Signal, untracked, viewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {startWith} from 'rxjs/operators';
@@ -17,7 +17,7 @@ import {Arrays} from '@scion/toolkit/util';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SplitPipe} from '../common/split.pipe';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'sci-viewport-page',
@@ -31,8 +31,14 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     SciTabDirective,
     SciTabbarComponent,
   ],
+  host: {
+    '[style.--viewport-minheight]': 'viewportMinHeight()',
+    '[style.--viewport-maxheight]': 'viewportMaxHeight()',
+    '[style.--viewport-flex]': 'viewportFlex()',
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class SciViewportPageComponent implements OnInit, OnDestroy {
+export default class SciViewportPageComponent {
 
   private readonly _formBuilder = inject(NonNullableFormBuilder);
   private readonly _document = inject(DOCUMENT);
@@ -51,28 +57,22 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
 
   private _styleSheet: CSSStyleSheet | null = null;
 
-  @HostBinding('style.--viewport-minheight')
-  protected get viewportMinHeight(): string {
-    return this.form.controls.viewportMinHeight.value;
-  }
-
-  @HostBinding('style.--viewport-maxheight')
-  protected get viewportMaxHeight(): string {
-    return this.form.controls.viewportMaxHeight.value;
-  }
-
-  @HostBinding('style.--viewport-flex')
-  protected get viewportFlex(): string {
-    return this.form.controls.viewportFlex.value;
-  }
+  protected viewportMinHeight = toSignal(this.form.controls.viewportMinHeight.valueChanges, {initialValue: this.form.controls.viewportMinHeight.value});
+  protected viewportMaxHeight = toSignal(this.form.controls.viewportMaxHeight.valueChanges, {initialValue: this.form.controls.viewportMaxHeight.value});
+  protected viewportFlex = toSignal(this.form.controls.viewportFlex.valueChanges, {initialValue: this.form.controls.viewportFlex.value});
 
   constructor() {
     this._styleSheet = this.installStyleSheet();
     this.applyViewportContentStylesOnStyleChange();
-  }
 
-  public ngOnInit(): void {
-    this.form.controls.scrollbarColor.setValue(this.readCssVariableDefault('--sci-viewport-scrollbar-color'));
+    effect(() => {
+      this._viewportElement();
+      untracked(() => {
+        this.form.controls.scrollbarColor.setValue(this.readCssVariableDefault('--sci-viewport-scrollbar-color'));
+      });
+    });
+
+    inject(DestroyRef).onDestroy(() => this.uninstallStyleSheet());
   }
 
   private applyViewportContentStylesOnStyleChange(): void {
@@ -125,9 +125,5 @@ export default class SciViewportPageComponent implements OnInit, OnDestroy {
 
   private supportsConstructableStyleSheets(): boolean {
     return 'adoptedStyleSheets' in this._document;
-  }
-
-  public ngOnDestroy(): void {
-    this.uninstallStyleSheet();
   }
 }

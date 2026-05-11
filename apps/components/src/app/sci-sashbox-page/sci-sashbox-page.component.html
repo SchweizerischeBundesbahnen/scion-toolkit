@@ -101,7 +101,7 @@
   </sci-tabbar>
 </aside>
 
-@if (glasspaneVisible) {
+@if (glasspaneVisible()) {
   <div class="glasspane" tabindex="0">
     <button class="close" (click)="onGlasspaneToggle()" sciMaterialIcon>close</button>
   </div>
