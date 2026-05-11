@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, HostBinding, inject, input, NgZone, untracked, viewChild, DOCUMENT} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, signal, untracked, viewChild} from '@angular/core';
 import {fromEvent, merge, mergeWith, Observable, of, timer} from 'rxjs';
 import {debounceTime, first, map, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
@@ -44,6 +44,11 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   templateUrl: './scrollbar.component.html',
   styleUrl: './scrollbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[class.vertical]': 'vertical()',
+    '[class.horizontal]': 'horizontal()',
+    '[class.class.scrolling]': 'scrolling()',
+  },
 })
 export class SciScrollbarComponent {
 
@@ -73,27 +78,15 @@ export class SciScrollbarComponent {
   private readonly _zone = inject(NgZone);
   private readonly _destroyRef = inject(DestroyRef);
   private readonly _thumbElement = viewChild.required<ElementRef<HTMLDivElement>>('thumb_handle');
-  private readonly _vertical = computed(() => this.direction() === 'vscroll');
+  private readonly _lastDragPosition = signal<number | null>(null);
 
-  private _lastDragPosition: number | null = null;
+  protected readonly vertical = computed(() => this.direction() === 'vscroll');
+  protected readonly horizontal = computed(() => !this.vertical());
+  protected readonly scrolling = computed(() => this._lastDragPosition() !== null);
+
   private _overflow = false;
   private _thumbSizeFr = 0;
   private _thumbPositionFr = 0;
-
-  @HostBinding('class.vertical')
-  protected get vertical(): boolean {
-    return this._vertical();
-  }
-
-  @HostBinding('class.horizontal')
-  protected get horizontal(): boolean {
-    return !this._vertical();
-  }
-
-  @HostBinding('class.scrolling')
-  protected get scrolling(): boolean {
-    return this._lastDragPosition !== null;
-  }
 
   constructor() {
     this.installScrollPositionRenderer();
@@ -125,22 +118,22 @@ export class SciScrollbarComponent {
 
   protected onTouchStart(event: TouchEvent): void {
     event.preventDefault();
-    this._lastDragPosition = this.vertical ? event.touches[0]!.screenY : event.touches[0]!.screenX;
+    this._lastDragPosition.set(this.vertical() ? event.touches[0]!.screenY : event.touches[0]!.screenX);
   }
 
   protected onTouchMove(event: TouchEvent): void {
     event.preventDefault();
 
-    const newDragPositionPx = this.vertical ? event.touches[0]!.screenY : event.touches[0]!.screenX;
-    const scrollbarPanPx = newDragPositionPx - this._lastDragPosition!;
+    const newDragPositionPx = this.vertical() ? event.touches[0]!.screenY : event.touches[0]!.screenX;
+    const scrollbarPanPx = newDragPositionPx - this._lastDragPosition()!;
     const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
-    this._lastDragPosition = newDragPositionPx;
+    this._lastDragPosition.set(newDragPositionPx);
     this.moveViewportClient(viewportPanPx);
   }
 
   protected onTouchEnd(event: TouchEvent): void {
     event.preventDefault();
-    this._lastDragPosition = null;
+    this._lastDragPosition.set(null);
   }
 
   protected onMouseDown(mousedownEvent: MouseEvent): void {
@@ -149,7 +142,7 @@ export class SciScrollbarComponent {
     }
 
     mousedownEvent.preventDefault();
-    this._lastDragPosition = this.vertical ? mousedownEvent.screenY : mousedownEvent.screenX;
+    this._lastDragPosition.set(this.vertical() ? mousedownEvent.screenY : mousedownEvent.screenX);
 
     // Listen for 'mousemove' events
     const mousemoveListener = merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
@@ -160,10 +153,10 @@ export class SciScrollbarComponent {
       .subscribe(mousemoveEvent => {
         NgZone.assertNotInAngularZone();
         mousemoveEvent.preventDefault();
-        const newDragPositionPx = this.vertical ? mousemoveEvent.screenY : mousemoveEvent.screenX;
-        const scrollbarPanPx = newDragPositionPx - this._lastDragPosition!;
+        const newDragPositionPx = this.vertical() ? mousemoveEvent.screenY : mousemoveEvent.screenX;
+        const scrollbarPanPx = newDragPositionPx - this._lastDragPosition()!;
         const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
-        this._lastDragPosition = newDragPositionPx;
+        this._lastDragPosition.set(newDragPositionPx);
         this.moveViewportClient(viewportPanPx);
       });
 
@@ -178,7 +171,7 @@ export class SciScrollbarComponent {
         NgZone.assertNotInAngularZone();
         mouseupEvent.stopPropagation();
         mousemoveListener.unsubscribe();
-        this._lastDragPosition = null;
+        this._lastDragPosition.set(null);
       });
   }
 
@@ -220,7 +213,7 @@ export class SciScrollbarComponent {
    * Moves the viewport client by the specified numbers of pixels.
    */
   private moveViewportClient(viewportPanPx: number): void {
-    if (this.vertical) {
+    if (this.vertical()) {
       this.viewport().scrollTop += viewportPanPx;
     }
     else {
@@ -267,24 +260,24 @@ export class SciScrollbarComponent {
   }
 
   private get viewportSize(): number {
-    return this.vertical ? this.viewport().clientHeight : this.viewport().clientWidth;
+    return this.vertical() ? this.viewport().clientHeight : this.viewport().clientWidth;
   }
 
   private get viewportClientSize(): number {
-    return this.vertical ? this.viewport().scrollHeight : this.viewport().scrollWidth;
+    return this.vertical() ? this.viewport().scrollHeight : this.viewport().scrollWidth;
   }
 
   private get scrollPosition(): number {
-    return this.vertical ? this.viewport().scrollTop : this.viewport().scrollLeft;
+    return this.vertical() ? this.viewport().scrollTop : this.viewport().scrollLeft;
   }
 
   private get thumbSize(): number {
     const thumbElement = this._thumbElement().nativeElement;
-    return this.vertical ? thumbElement.clientHeight : thumbElement.clientWidth;
+    return this.vertical() ? thumbElement.clientHeight : thumbElement.clientWidth;
   }
 
   private get trackSize(): number {
-    return this.vertical ? this._host.clientHeight : this._host.clientWidth;
+    return this.vertical() ? this._host.clientHeight : this._host.clientWidth;
   }
 }
 

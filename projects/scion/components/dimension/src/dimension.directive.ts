@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, ElementRef, inject, input, NgZone, output} from '@angular/core';
+import {Directive, ElementRef, inject, input, NgZone, output, ɵZONELESS_ENABLED} from '@angular/core';
 import {fromResize$} from '@scion/toolkit/observable';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {observeIn, subscribeIn} from '@scion/toolkit/operators';
@@ -42,6 +42,7 @@ export class SciDimensionDirective {
   constructor() {
     const host = inject(ElementRef).nativeElement as HTMLElement;
     const zone = inject(NgZone);
+    const zonelessEnabled = inject(ɵZONELESS_ENABLED);
 
     fromResize$(host)
       .pipe(
@@ -55,8 +56,10 @@ export class SciDimensionDirective {
         takeUntilDestroyed(),
       )
       .subscribe(() => {
-        // Assert Angular zone.
-        this.emitOutsideAngular() ? NgZone.assertNotInAngularZone() : NgZone.assertInAngularZone();
+        if (!zonelessEnabled) {
+          // Assert Angular zone.
+          this.emitOutsideAngular() ? NgZone.assertNotInAngularZone() : NgZone.assertInAngularZone();
+        }
 
         this.dimensionChange.emit({
           clientWidth: host.clientWidth,
