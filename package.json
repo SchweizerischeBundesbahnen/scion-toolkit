@@ -14,8 +14,8 @@
     "build": "run-s **:*:build",
     "start": "run-s components-app:serve",
     "lint": "run-p **:*:lint",
-    "test": "run-p **:*:test",
-    "test:headless": "cross-env HEADLESS=true run-p \"**:*:test -- {@}\" --",
+    "test": "run-p **:*:test*",
+    "test:headless": "cross-env HEADLESS=true run-p \"**:*:test* -- {@}\" --",
     "e2e": "run-s \"**:*:e2e:run -- {@}\" --",
     "e2e:headless": "cross-env HEADLESS=true run-s \"**:*:e2e:run -- {@}\" --",
     "postinstall": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium",
@@ -30,6 +30,7 @@
 
     "components:lint": "ng lint @scion/components",
     "components:test": "ng test @scion/components",
+    "components:test-zone": "ng run @scion/components:test-zone",
     "components:e2e:run": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 playwright test --config projects/scion/components.e2e/playwright.config.ts",
     "components:e2e:debug": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 PWDEBUG=1 playwright test --config projects/scion/components.e2e/playwright.config.ts",
     "components:e2e:lint": "ng lint @scion/components.e2e",

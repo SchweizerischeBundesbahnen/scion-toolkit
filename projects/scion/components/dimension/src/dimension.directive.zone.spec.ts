@@ -17,7 +17,7 @@ import {ObserveCaptor} from '@scion/toolkit/testing';
 
 describe('Dimension Directive', () => {
 
-  it('should detect size change (zoneless)', async () => {
+  it('should detect size change inside Angular zone', async () => {
     TestBed.configureTestingModule({
       providers: [
         {provide: ComponentFixtureAutoDetect, useValue: true},
@@ -28,6 +28,71 @@ describe('Dimension Directive', () => {
       selector: 'spec-component',
       template: `
         <div class="testee" sciDimension (sciDimensionChange)="onDimensionChange($event)" #testee></div>
+      `,
+      styles: `
+        div.testee {
+          width: 300px;
+          height: 150px;
+          box-sizing: content-box;
+          border: 1px solid red;
+          background-color: blue;
+        }
+      `,
+      imports: [
+        SciDimensionDirective,
+      ],
+    })
+    class TestComponent {
+
+      public testee = viewChild.required<ElementRef<HTMLElement>>('testee');
+      public emissions$ = new Subject<SciDimension & {insideAngular: boolean}>();
+
+      protected onDimensionChange(dimension: SciDimension): void {
+        this.emissions$.next({...dimension, insideAngular: NgZone.isInAngularZone()});
+      }
+    }
+
+    const fixture = TestBed.createComponent(TestComponent);
+    const captor = new ObserveCaptor<SciDimension & {insideAngular: boolean}>();
+    fixture.componentInstance.emissions$.subscribe(captor);
+
+    // Expect initial size emission.
+    await captor.waitUntilEmitCount(1);
+    expect(captor.getLastValue()).toEqual({
+      clientWidth: 300,
+      offsetWidth: 302,
+      clientHeight: 150,
+      offsetHeight: 152,
+      element: fixture.componentInstance.testee().nativeElement,
+      insideAngular: true,
+    });
+
+    // Change size.
+    setSize(fixture.componentInstance.testee(), {width: 200, height: 100});
+
+    // Expect emission because size has changed.
+    await captor.waitUntilEmitCount(2);
+    expect(captor.getLastValue()).toEqual({
+      clientWidth: 200,
+      offsetWidth: 202,
+      clientHeight: 100,
+      offsetHeight: 102,
+      element: fixture.componentInstance.testee().nativeElement,
+      insideAngular: true,
+    });
+  });
+
+  it('should detect size change (outside Angular)', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {provide: ComponentFixtureAutoDetect, useValue: true},
+      ],
+    });
+
+    @Component({
+      selector: 'spec-component',
+      template: `
+        <div class="testee" sciDimension (sciDimensionChange)="onDimensionChange($event)" [emitOutsideAngular]="true" #testee></div>
       `,
       styles: `
         div.testee {

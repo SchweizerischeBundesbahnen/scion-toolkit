@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostBinding, inject, input, NgZone, OnInit, output, viewChild, DOCUMENT} from '@angular/core';
-import {audit, fromEvent, merge, Observable} from 'rxjs';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, output, signal, untracked, viewChild} from '@angular/core';
+import {audit, fromEvent, merge, Observable, Subscription} from 'rxjs';
 import {tapFirst} from '@scion/toolkit/operators';
 import {first, takeUntil} from 'rxjs/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -59,9 +59,15 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   selector: 'sci-splitter',
   templateUrl: './splitter.component.html',
   styleUrls: ['./splitter.component.scss'],
+  host: {
+    '[class.moving]': 'moving()',
+    '[class.horizontal]': 'isHorizontal()',
+    '[class.vertical]': 'isVertical()',
+    '[style.cursor]': 'splitterCursor()',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SciSplitterComponent implements OnInit {
+export class SciSplitterComponent {
 
   /**
    * Controls whether to render a vertical or horizontal splitter. By default, if not specified, renders a vertical splitter.
@@ -84,7 +90,7 @@ export class SciSplitterComponent implements OnInit {
   public readonly end = output<void>();
 
   /**
-   * Notifies when resetting the spliter position.
+   * Notifies when resetting the splitter position.
    */
   public readonly reset = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
 
@@ -94,39 +100,24 @@ export class SciSplitterComponent implements OnInit {
   private readonly _destroyRef = inject(DestroyRef);
   private readonly _touchTarget = viewChild.required<ElementRef<HTMLElement>>('touch_target');
 
-  @HostBinding('class.moving')
-  protected moving = false;
+  protected readonly moving = signal(false);
+  protected readonly isHorizontal = computed(() => this.orientation() === 'horizontal');
+  protected readonly isVertical = computed(() => !this.isHorizontal());
+  protected readonly splitterCursor = computed(() => this.isVertical() ? 'ew-resize' : 'ns-resize');
 
-  @HostBinding('class.vertical')
-  protected get isVertical(): boolean {
-    return !this.isHorizontal;
-  }
+  constructor() {
+    effect(onCleanup => {
+      const touchTargetElement = this._touchTarget().nativeElement;
+      const subscription = new Subscription();
 
-  @HostBinding('class.horizontal')
-  protected get isHorizontal(): boolean {
-    return this.orientation() === 'horizontal';
-  }
+      untracked(() => {
+        subscription.add(fromEvent(touchTargetElement, 'dblclick').subscribe(() => this.onReset()));
+        subscription.add(fromEvent<TouchEvent>(touchTargetElement, 'touchstart').subscribe((event: TouchEvent) => this.onTouchStart(event)));
+        subscription.add(fromEvent<MouseEvent>(touchTargetElement, 'mousedown').subscribe((event: MouseEvent) => this.onMouseDown(event)));
+      });
 
-  @HostBinding('style.cursor')
-  protected get splitterCursor(): string {
-    return this.isVertical ? 'ew-resize' : 'ns-resize';
-  }
-
-  /* @docs-private */
-  public ngOnInit(): void {
-    const touchTargetElement = this._touchTarget().nativeElement;
-
-    fromEvent(touchTargetElement, 'dblclick')
-      .pipe(takeUntilDestroyed(this._destroyRef))
-      .subscribe(() => this.onReset());
-
-    fromEvent<TouchEvent>(touchTargetElement, 'touchstart')
-      .pipe(takeUntilDestroyed(this._destroyRef))
-      .subscribe((event: TouchEvent) => this.onTouchStart(event));
-
-    fromEvent<MouseEvent>(touchTargetElement, 'mousedown')
-      .pipe(takeUntilDestroyed(this._destroyRef))
-      .subscribe((event: MouseEvent) => this.onMouseDown(event));
+      onCleanup(() => subscription.unsubscribe());
+    });
   }
 
   private onReset(): void {
@@ -140,7 +131,7 @@ export class SciSplitterComponent implements OnInit {
       endEventNames: ['touchend', 'touchcancel'],
       eventPositionFn: (touchEvent: TouchEvent): EventPosition => {
         const touch: Touch = touchEvent.touches[0]!;
-        if (this.isVertical) {
+        if (this.isVertical()) {
           return {screenPos: touch.screenX, clientPos: touch.clientX, pagePos: touch.pageX};
         }
         else {
@@ -160,7 +151,7 @@ export class SciSplitterComponent implements OnInit {
       moveEventNames: ['mousemove', 'sci-mousemove'],
       endEventNames: ['mouseup', 'sci-mouseup'],
       eventPositionFn: (mouseEvent: MouseEvent): EventPosition => {
-        if (this.isVertical) {
+        if (this.isVertical()) {
           return {screenPos: mouseEvent.screenX, clientPos: mouseEvent.clientX, pagePos: mouseEvent.pageX};
         }
         else {
@@ -183,13 +174,13 @@ export class SciSplitterComponent implements OnInit {
 
       // Apply cursor on document level to prevent flickering while moving the splitter
       const oldDocumentCursor = this._document.body.style.cursor;
-      this._document.body.style.cursor = this.splitterCursor;
+      this._document.body.style.cursor = this.splitterCursor();
 
       // Listen for 'move' events until stop moving the splitter
       moveEvent$
         .pipe(
           tapFirst(() => this._zone.run(() => {
-            this.moving = true;
+            this.moving.set(true);
             this.start.emit();
             this._cd.markForCheck();
           })),
@@ -218,9 +209,9 @@ export class SciSplitterComponent implements OnInit {
         .subscribe((endEvent: EVENT) => {
           endEvent.stopPropagation();
           this._document.body.style.cursor = oldDocumentCursor;
-          this.moving && this._zone.run(() => {
+          this.moving() && this._zone.run(() => {
             this.end.emit();
-            this.moving = false;
+            this.moving.set(false);
             this._cd.markForCheck();
           });
         });

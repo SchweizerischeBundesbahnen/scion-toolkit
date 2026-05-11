@@ -9,19 +9,17 @@
  */
 
 import {Component, computed, ElementRef, viewChild} from '@angular/core';
-import {ComponentFixture, fakeAsync, inject, TestBed, tick} from '@angular/core/testing';
+import {inject, TestBed} from '@angular/core/testing';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 
 describe('SciNativeScrollbarTrackSizeProvider', () => {
 
-  it('computes correct scrollbar track sizes', fakeAsync(inject([SciNativeScrollbarTrackSizeProvider], (testee: SciNativeScrollbarTrackSizeProvider) => {
+  it('computes correct scrollbar track sizes', inject([SciNativeScrollbarTrackSizeProvider], (testee: SciNativeScrollbarTrackSizeProvider) => {
     const fixture = TestBed.createComponent(AppComponent);
-    advance(fixture);
 
     expect(testee.trackSize()!.vScrollbarTrackWidth).withContext('vScrollbarTrackWidth').toEqual(fixture.componentInstance.vScrollbarTrackWidth());
     expect(testee.trackSize()!.hScrollbarTrackHeight).withContext('hScrollbarTrackHeight').toEqual(fixture.componentInstance.hScrollbarTrackHeight());
-    tick();
-  })));
+  }));
 });
 
 @Component({
@@ -39,13 +37,4 @@ class AppComponent {
 
   public vScrollbarTrackWidth = computed(() => this._viewport().nativeElement.offsetWidth - this._viewportClient().nativeElement.offsetWidth);
   public hScrollbarTrackHeight = computed(() => this._viewport().nativeElement.offsetHeight - this._viewportClient().nativeElement.offsetHeight);
-}
-
-/**
- * Simulates the asynchronous passage of time for the timers and detects the fixture for changes.
- */
-export function advance(fixture: ComponentFixture<any>): void {
-  tick();
-  fixture.detectChanges();
-  tick();
 }

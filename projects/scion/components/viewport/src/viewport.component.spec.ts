@@ -9,7 +9,7 @@
  */
 
 import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {Component, DestroyRef, ElementRef, HostBinding, inject, input, NgZone, Renderer2, Signal, viewChild} from '@angular/core';
+import {Component, DestroyRef, ElementRef, inject, input, Renderer2, Signal, viewChild} from '@angular/core';
 import {By} from '@angular/platform-browser';
 import {Dictionary} from '@scion/toolkit/util';
 import {SciViewportComponent} from './viewport.component';
@@ -944,50 +944,6 @@ describe('Viewport', () => {
     expect(component.viewport().scrollHeight).toEqual(600);
   });
 
-  it('should emit scroll events outside the Angular zone', async () => {
-    @Component({
-      selector: 'spec-viewport',
-      template: `
-        <sci-viewport (scroll)="onScroll()">
-          <div class="content">Content</div>
-        </sci-viewport>`,
-      styles: `
-        :host {
-          display: grid;
-          border: 1px solid black;
-          width: 300px;
-          height: 200px;
-
-          > sci-viewport > div.content {
-            height: 1000px;
-            background-color: lightblue;
-          }
-        }`,
-      imports: [SciViewportComponent],
-    })
-    class SpecComponent {
-
-      public viewport = viewChild.required(SciViewportComponent);
-      public scrolledInsideAngular: boolean | undefined = undefined;
-
-      protected onScroll(): void {
-        this.scrolledInsideAngular = NgZone.isInAngularZone();
-      }
-    }
-
-    const fixture = TestBed.createComponent(SpecComponent);
-    fixture.autoDetectChanges();
-    const testee = fixture.componentInstance;
-    const viewport = testee.viewport();
-
-    // Scroll the viewport.
-    viewport.scrollTop = 100;
-    await flushChanges(fixture);
-
-    // Expect scroll event to be received outside Angular.
-    expect(testee.scrolledInsideAngular).toBeFalse();
-  });
-
   describe('computeOffset', () => {
 
     it('should compute offset of element inside viewport', () => {
@@ -1440,31 +1396,6 @@ describe('Viewport', () => {
     const viewportElement = fixture.debugElement.query(By.css(selector)).nativeElement as HTMLElement;
     return viewportElement.getBoundingClientRect();
   }
-
-  /**
-   * Triggers a change detection cycle and waits for the scrollbar to be rendered.
-   */
-  async function flushChanges(fixture: ComponentFixture<any>): Promise<void> {
-    fixture.detectChanges();
-
-    // Wait until the browser reported the dimension change.
-    await awaitRenderCycles(2);
-    // Wait 50ms for the scroll position computation to start. The computation is triggered by a dimension change
-    // of the viewport but is debounced by 50ms.
-    await new Promise(resolve => asyncScheduler.schedule(resolve, SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME));
-    // Wait for the scrollbar to be rendered.
-    await awaitRenderCycles(2);
-  }
-
-  async function awaitRenderCycles(renderCyclesToWait: number = 2): Promise<void> {
-    if (renderCyclesToWait === 0) {
-      return Promise.resolve();
-    }
-
-    return new Promise(resolve => {
-      requestAnimationFrame(() => void awaitRenderCycles(renderCyclesToWait - 1).then(() => resolve()));
-    });
-  }
 });
 
 @Component({
@@ -1663,6 +1594,9 @@ class Testee3Component {
       flex-direction: column;
     }
   `],
+  host: {
+    '[class.column-layout]': 'this.columnLayout()',
+  },
   imports: [SciViewportComponent],
 })
 class ElementDecimalSizeTestComponent {
@@ -1674,11 +1608,6 @@ class ElementDecimalSizeTestComponent {
   public readonly viewportComponent = viewChild.required(SciViewportComponent);
   public readonly element1: Signal<ElementRef<HTMLElement>> = viewChild.required('element1', {read: ElementRef});
   public readonly element2: Signal<ElementRef<HTMLElement>> = viewChild.required('element2', {read: ElementRef});
-
-  @HostBinding('class.column-layout')
-  protected get isColumnLayout(): boolean {
-    return this.columnLayout();
-  }
 
   public setElement1Width(px: number): void {
     this.setStyle(this.element1(), {
@@ -1711,4 +1640,29 @@ class ElementDecimalSizeTestComponent {
   public setStyle(element: ElementRef<HTMLElement>, style: Dictionary): void {
     Object.keys(style).forEach(key => this._renderer.setStyle(element.nativeElement, key, style[key]));
   }
+}
+
+/**
+ * Triggers a change detection cycle and waits for the scrollbar to be rendered.
+ */
+export async function flushChanges(fixture: ComponentFixture<any>): Promise<void> {
+  fixture.detectChanges();
+
+  // Wait until the browser reported the dimension change.
+  await awaitRenderCycles(2);
+  // Wait 50ms for the scroll position computation to start. The computation is triggered by a dimension change
+  // of the viewport but is debounced by 50ms.
+  await new Promise(resolve => asyncScheduler.schedule(resolve, SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME));
+  // Wait for the scrollbar to be rendered.
+  await awaitRenderCycles(2);
+}
+
+async function awaitRenderCycles(renderCyclesToWait: number = 2): Promise<void> {
+  if (renderCyclesToWait === 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    requestAnimationFrame(() => void awaitRenderCycles(renderCyclesToWait - 1).then(() => resolve()));
+  });
 }

@@ -80,6 +80,25 @@
           "options": {
             "tsConfig": "projects/scion/components/tsconfig.spec.json",
             "karmaConfig": "projects/scion/components/karma.conf.js",
+            "exclude": [
+              "projects/scion/components/**/*.zone.spec.ts"
+            ],
+            "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "projects/scion/components"
+              ]
+            }
+          }
+        },
+        "test-zone": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/scion/components/tsconfig.spec.json",
+            "karmaConfig": "projects/scion/components/karma.conf.js",
+            "include": [
+              "projects/scion/components/**/*.zone.spec.ts"
+            ],
             "inlineStyleLanguage": "scss",
             "stylePreprocessorOptions": {
               "includePaths": [

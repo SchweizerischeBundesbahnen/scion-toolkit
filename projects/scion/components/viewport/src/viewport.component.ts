@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, effect, ElementRef, HostListener, inject, input, NgZone, output, untracked, viewChild, ViewEncapsulation} from '@angular/core';
+import {Component, effect, ElementRef, inject, input, NgZone, output, untracked, viewChild, ViewEncapsulation} from '@angular/core';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 import {coerceElement} from '@angular/cdk/coercion';
 import {SciScrollableDirective} from './scrollable.directive';
@@ -94,6 +94,9 @@ import {CdkScrollable} from '@angular/cdk/scrolling';
     SciScrollbarComponent,
     CdkScrollable,
   ],
+  host: {
+    '(focus)': 'focus()',
+  },
 })
 export class SciViewportComponent {
 
@@ -117,7 +120,6 @@ export class SciViewportComponent {
     this.installScrollEmitter();
   }
 
-  @HostListener('focus')
   public focus(): void { // do not rename to expose the same focus method like `HTMLElement.focus()`.
     this.viewportElement.focus();
   }
