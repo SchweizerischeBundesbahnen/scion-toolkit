@@ -287,9 +287,6 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "apps/components-testing-app/src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
             "tsConfig": "apps/components-testing-app/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [

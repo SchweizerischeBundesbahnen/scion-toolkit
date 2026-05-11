@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, effect, ElementRef, input, signal, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, effect, ElementRef, input, signal, viewChild} from '@angular/core';
 import {animate, AnimationMetadata, sequence, style, transition, trigger} from '@angular/animations';
 import {fromResize$} from '@scion/toolkit/observable';
 
@@ -18,6 +18,7 @@ import {fromResize$} from '@scion/toolkit/observable';
   animations: [
     trigger('size', provideSizeAnimation()),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnimationComponent {
 
