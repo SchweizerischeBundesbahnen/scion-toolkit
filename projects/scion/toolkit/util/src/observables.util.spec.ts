@@ -11,7 +11,6 @@
 import {Observables} from './observables.util';
 import {Subject} from 'rxjs';
 import {ObserveCaptor} from '@scion/toolkit/testing';
-import {fakeAsync, flushMicrotasks} from '@angular/core/testing';
 
 describe('Observables', () => {
 
@@ -44,12 +43,12 @@ describe('Observables', () => {
       expect(Observables.coerce(observable)).toBe(observable);
     });
 
-    it('should return an Observable if given a Promise', fakeAsync(() => {
+    it('should return an Observable if given a Promise', async () => {
       const captor = new ObserveCaptor();
       Observables.coerce(Promise.resolve('abc')).subscribe(captor);
-      flushMicrotasks();
+      await captor.waitUntilCompletedOrErrored();
       expect(captor.getValues()).toEqual(['abc']);
       expect(captor.hasCompleted()).toBeTrue();
-    }));
+    });
   });
 });

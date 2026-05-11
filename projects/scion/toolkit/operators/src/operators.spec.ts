@@ -9,8 +9,7 @@
  */
 
 import {BehaviorSubject, concat, EMPTY, NEVER, Observable, of, Subject, throwError} from 'rxjs';
-import {fakeAsync, flushMicrotasks, TestBed} from '@angular/core/testing';
-import {NgZone} from '@angular/core';
+import {TestBed} from '@angular/core/testing';
 import {finalize, tap} from 'rxjs/operators';
 import {bufferUntil, combineArray, distinctArray, filterArray, mapArray, observeIn, subscribeIn} from './operators';
 import {ObserveCaptor} from '@scion/toolkit/testing';
@@ -659,64 +658,6 @@ describe('Operators', () => {
     });
   });
 
-  describe('subscribeIn and observeIn', () => {
-
-    it('should subscribe outside the Angular zone, but observe inside of the Angular zone ', () => {
-      const zone = TestBed.inject(NgZone);
-
-      // GIVEN
-      interface InsideNgZoneCaptor {
-        onConstruct?: boolean;
-        onTeardown?: boolean;
-        onNextBeforeSubscribeIn?: boolean;
-        onNextAfterSubscribeIn?: boolean;
-        onNextAfterObserveIn?: boolean;
-        onNext?: boolean;
-        onComplete?: boolean;
-        onFinalize?: boolean;
-      }
-
-      const insideAngularCaptor: InsideNgZoneCaptor = {};
-
-      const observable$ = new Observable<void>(observer => {
-        insideAngularCaptor.onConstruct = NgZone.isInAngularZone();
-        observer.next();
-        observer.complete();
-        return () => insideAngularCaptor.onTeardown = NgZone.isInAngularZone();
-      })
-        .pipe(
-          tap(() => insideAngularCaptor.onNextBeforeSubscribeIn = NgZone.isInAngularZone()),
-          subscribeIn(continueFn => zone.runOutsideAngular(continueFn)),
-          tap(() => insideAngularCaptor.onNextAfterSubscribeIn = NgZone.isInAngularZone()),
-          observeIn(continueFn => zone.run(continueFn)),
-          tap(() => insideAngularCaptor.onNextAfterObserveIn = NgZone.isInAngularZone()),
-          finalize(() => insideAngularCaptor.onFinalize = NgZone.isInAngularZone()),
-        );
-
-      // WHEN
-      zone.run(() => {
-        const subscription = observable$.subscribe({
-          next: () => insideAngularCaptor.onNext = NgZone.isInAngularZone(),
-          complete: () => insideAngularCaptor.onComplete = NgZone.isInAngularZone(),
-        });
-
-        // THEN
-        expect(NgZone.isInAngularZone()).toBeTrue();
-        expect(insideAngularCaptor.onConstruct).toBeFalse();
-        expect(insideAngularCaptor.onNextBeforeSubscribeIn).toBeFalse();
-        expect(insideAngularCaptor.onNextAfterSubscribeIn).toBeFalse();
-        expect(insideAngularCaptor.onNextAfterObserveIn).toBeTrue();
-        expect(insideAngularCaptor.onNext).toBeTrue();
-        expect(insideAngularCaptor.onComplete).toBeTrue();
-
-        subscription.unsubscribe();
-
-        expect(insideAngularCaptor.onTeardown).toBeFalse();
-        expect(insideAngularCaptor.onFinalize).toBeTrue();
-      });
-    });
-  });
-
   describe('combineArray', () => {
 
     it('should combine the Observables of each source emission', () => {
@@ -987,7 +928,7 @@ describe('Operators', () => {
       expect(observeCaptor3.getValues()).toEqual(['g']);
     });
 
-    it('should buffer emissions until `closingNotifier` resolves', fakeAsync(() => {
+    it('should buffer emissions until `closingNotifier` resolves', async () => {
       const observeCaptor = new ObserveCaptor();
 
       let resolvePromiseFn: () => void;
@@ -998,31 +939,31 @@ describe('Operators', () => {
         .subscribe(observeCaptor);
 
       source$.next('a');
-      flushMicrotasks();
+      await Promise.resolve();
       expect(observeCaptor.getValues()).toEqual([]);
 
       source$.next('b');
-      flushMicrotasks();
+      await Promise.resolve();
       expect(observeCaptor.getValues()).toEqual([]);
 
       source$.next('c');
-      flushMicrotasks();
+      await Promise.resolve();
       expect(observeCaptor.getValues()).toEqual([]);
 
       // close the buffer.
       resolvePromiseFn!();
-      flushMicrotasks();
+      await Promise.resolve();
       expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c']);
 
       // emit after the buffer is closed.
       source$.next('d');
-      flushMicrotasks();
+      await Promise.resolve();
       expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd']);
 
       source$.next('e');
-      flushMicrotasks();
+      await Promise.resolve();
       expect(observeCaptor.getValues()).toEqual(['a', 'b', 'c', 'd', 'e']);
-    }));
+    });
   });
 });
 

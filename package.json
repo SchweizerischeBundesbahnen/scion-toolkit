@@ -22,6 +22,7 @@
 
     "toolkit:lint": "ng lint @scion/toolkit",
     "toolkit:test": "ng test @scion/toolkit",
+    "toolkit:test-zone": "ng run @scion/toolkit:test-zone",
     "toolkit:build": "ng build --configuration production @scion/toolkit",
     "toolkit:changelog": "run-p toolkit:changelog:*",
     "toolkit:changelog:full": "conventional-changelog --commit-path projects/scion/toolkit -k projects/scion/toolkit/package.json -t toolkit- -p angular -i CHANGELOG_TOOLKIT.md -s && markdown-include docs/site/changelog-toolkit/changelog.template.json",
