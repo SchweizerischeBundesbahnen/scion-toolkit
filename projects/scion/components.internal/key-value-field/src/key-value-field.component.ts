@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, ElementRef, inject, input} from '@angular/core';
 import {FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
@@ -21,10 +21,16 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   selector: 'sci-key-value-field',
   templateUrl: './key-value-field.component.html',
   styleUrls: ['./key-value-field.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     SciMaterialIconDirective,
   ],
+  host: {
+    '[attr.tabindex]': '-1',
+    '[class.removable]': 'removable()',
+    '[class.addable]': 'addable()',
+  },
 })
 export class SciKeyValueFieldComponent {
 
@@ -37,19 +43,6 @@ export class SciKeyValueFieldComponent {
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
 
   protected readonly id = UUID.randomUUID();
-
-  @HostBinding('attr.tabindex')
-  protected tabindex = -1;
-
-  @HostBinding('class.removable')
-  protected get isRemovable(): boolean {
-    return this.removable();
-  }
-
-  @HostBinding('class.addable')
-  protected get isAddable(): boolean {
-    return this.addable();
-  }
 
   protected onRemove(index: number): void {
     this.keyValueFormArray().removeAt(index);

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, contentChildren, DestroyRef, ElementRef, HostBinding, inject, input, OnInit, Signal, TrackByFunction, viewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, contentChildren, effect, ElementRef, inject, input, signal, Signal, TrackByFunction, untracked, viewChild} from '@angular/core';
 import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciAccordionItemDirective} from './accordion-item.directive';
 import {CdkAccordion, CdkAccordionItem} from '@angular/cdk/accordion';
@@ -17,7 +17,6 @@ import {combineLatest} from 'rxjs';
 import {NgClass, NgTemplateOutlet} from '@angular/common';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 import {fromResize$} from '@scion/toolkit/observable';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 /**
  * Component that shows items in an accordion.
@@ -58,8 +57,13 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   animations: [
     trigger('enter', SciAccordionComponent.provideEnterAnimation()),
   ],
+  host: {
+    '[class.bubble]': `this.variant() === 'bubble'`,
+    '[class.solid]': `this.variant() === 'solid'`,
+    '[class.filled]': 'filled()',
+  },
 })
-export class SciAccordionComponent implements OnInit {
+export class SciAccordionComponent {
 
   /**
    * Whether the accordion should allow multiple expanded accordion items simultaneously.
@@ -74,25 +78,13 @@ export class SciAccordionComponent implements OnInit {
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
   /** Workaround for setting the filled state on initialization: https://github.com/angular/angular/issues/22560#issuecomment-473958144 */
   private readonly _cd = inject(ChangeDetectorRef, {skipSelf: true});
-  private readonly _destroyRef = inject(DestroyRef);
   private readonly _cdkAccordion: Signal<ElementRef<HTMLElement>> = viewChild.required(CdkAccordion, {read: ElementRef});
 
   protected readonly items = contentChildren(SciAccordionItemDirective);
 
-  @HostBinding('class.bubble')
-  protected get isBubbleVariant(): boolean {
-    return this.variant() === 'bubble';
-  }
+  protected readonly filled = signal(false);
 
-  @HostBinding('class.solid')
-  protected get isSolidVariant(): boolean {
-    return this.variant() === 'solid';
-  }
-
-  @HostBinding('class.filled')
-  protected filled = false;
-
-  public ngOnInit(): void {
+  constructor() {
     this.computeFilledStateOnDimensionChange();
   }
 
@@ -110,18 +102,21 @@ export class SciAccordionComponent implements OnInit {
    * accordingly.
    */
   private computeFilledStateOnDimensionChange(): void {
-    combineLatest([
-      fromResize$(this._host),
-      fromResize$(this._cdkAccordion().nativeElement),
-    ])
-      .pipe(
-        debounceTime(5), // debounce dimension changes because the animation for expanding/collapsing a panel continuously emits resize events.
-        takeUntilDestroyed(this._destroyRef),
-      )
-      .subscribe(() => {
-        this.filled = this._host.clientHeight <= this._cdkAccordion().nativeElement.offsetHeight;
-        this._cd.detectChanges();
+    effect(onCleanup => {
+      const cdkAccordion = this._cdkAccordion().nativeElement;
+
+      untracked(() => {
+        const subscription = combineLatest([
+          fromResize$(this._host),
+          fromResize$(cdkAccordion),
+        ]).pipe(debounceTime(5)) // debounce dimension changes because the animation for expanding/collapsing a panel continuously emits resize events.
+          .subscribe(() => {
+            this.filled.set(this._host.clientHeight <= cdkAccordion.offsetHeight);
+            this._cd.detectChanges();
+          });
+        onCleanup(() => subscription.unsubscribe());
       });
+    });
   }
 
   /**

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, inject, input, OnDestroy, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
+import {DestroyRef, Directive, inject, input, TemplateRef, ViewContainerRef, ViewRef} from '@angular/core';
 
 /**
  * Use this directive to model a tab item for {SciTabbarComponent}.
@@ -28,7 +28,7 @@ import {Directive, inject, input, OnDestroy, TemplateRef, ViewContainerRef, View
  * </sci-tabbar>
  */
 @Directive({selector: 'ng-template[sciTab]'})
-export class SciTabDirective implements OnDestroy {
+export class SciTabDirective {
 
   /**
    * Specifies the title of the tab.
@@ -51,6 +51,14 @@ export class SciTabDirective implements OnDestroy {
 
   private _vcr: ViewContainerRef | undefined;
   private _viewRef: ViewRef | undefined;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      this._viewRef?.destroy();
+      this._viewRef = undefined;
+      this._vcr = undefined;
+    });
+  }
 
   /**
    * Attaches the content of this tab.
@@ -86,11 +94,5 @@ export class SciTabDirective implements OnDestroy {
    */
   public isContentAttached(): boolean {
     return !!this._viewRef && this._vcr?.indexOf(this._viewRef) !== -1;
-  }
-
-  public ngOnDestroy(): void {
-    this._viewRef?.destroy();
-    this._viewRef = undefined;
-    this._vcr = undefined;
   }
 }

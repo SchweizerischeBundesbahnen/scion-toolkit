@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, ElementRef, HostBinding, inject, input} from '@angular/core';
+import {Component, computed, ElementRef, inject, input} from '@angular/core';
 import {FocusableOption, FocusOrigin} from '@angular/cdk/a11y';
 import {SciListItemDirective} from '../list-item.directive';
 import {SciListStyle} from '../metadata';
@@ -23,6 +23,11 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
     NgTemplateOutlet,
     SciMaterialIconDirective,
   ],
+  host: {
+    '[attr.tabindex]': '-1',
+    '[class.active]': 'active()',
+    '[class.option]': 'optionStyle()',
+  },
 })
 export class SciListItemComponent implements FocusableOption {
 
@@ -32,18 +37,7 @@ export class SciListItemComponent implements FocusableOption {
 
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
 
-  @HostBinding('attr.tabindex')
-  protected readonly tabindex = -1;
-
-  @HostBinding('class.active')
-  protected get isActive(): boolean {
-    return this.active();
-  }
-
-  @HostBinding('class.option')
-  protected get optionStyle(): boolean {
-    return this.style() === 'option-item';
-  }
+  protected readonly optionStyle = computed(() => this.style() === 'option-item');
 
   /**
    * @implements FocusableOption
