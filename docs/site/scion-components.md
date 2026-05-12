@@ -7,9 +7,6 @@
 
 Provides Angular-based components and directives with a focus on SCION requirements.
 
-> [!WARNING]
-> `@scion/components` does not support zoneless mode and may not work as expected. Support is planned for 2026.
-
 > [!NOTE]
 > `@scion/components` still requires `@angular/animations`. Removal is planned for 2026.
 
