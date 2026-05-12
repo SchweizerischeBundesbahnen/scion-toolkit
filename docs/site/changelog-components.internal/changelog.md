@@ -5,6 +5,15 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+# [21.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-21.0.1...ɵcomponents-21.1.0) (2026-05-12)
+
+
+### Features
+
+* **ɵcomponents:** provide support for zoneless change detection ([85fc9b8](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/85fc9b8df2aa922648fcdf4a059bd6f551512621))
+
+
+
 ## [21.0.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-21.0.0...ɵcomponents-21.0.1) (2025-12-11)
 
 
