@@ -33,46 +33,46 @@ export interface SciToolbarFactory {
 }
 
 export interface SciToolbarButtonDescriptor {
-  name?: `menuitem:${string}`;
-  label?: MaybeSignal<Translatable> | ComponentType<unknown> | SciComponentDescriptor;
-  icon?: MaybeSignal<string> | ComponentType<unknown> | SciComponentDescriptor;
-  checked?: MaybeSignal<boolean>;
-  tooltip?: MaybeSignal<Translatable>;
-  accelerator?: SciKeyboardAccelerator;
-  disabled?: MaybeSignal<boolean>;
-  cssClass?: string | string[];
-  attributes?: {[name: string]: string};
-  onSelect: () => void | boolean | Promise<void | boolean>;
+  name?: `menuitem:${string}`; // tested with relative position
+  label?: MaybeSignal<Translatable> | ComponentType<unknown> | SciComponentDescriptor; // tested
+  icon?: MaybeSignal<string> | ComponentType<unknown> | SciComponentDescriptor; // tested
+  checked?: MaybeSignal<boolean>; // tested
+  tooltip?: MaybeSignal<Translatable>; // tested
+  accelerator?: SciKeyboardAccelerator; // tested
+  disabled?: MaybeSignal<boolean>; // tested
+  cssClass?: string | string[]; // tested
+  attributes?: {[name: string]: string}; // tested
+  onSelect: () => void | boolean | Promise<void | boolean>; // tested
 }
 
 export interface SciToolbarMenuDescriptor {
-  name?: `menuitem:${string}`;
-  label?: MaybeSignal<Translatable> | ComponentType<unknown> | SciComponentDescriptor;
-  icon?: MaybeSignal<string> | ComponentType<unknown> | SciComponentDescriptor;
-  tooltip?: MaybeSignal<Translatable>;
-  disabled?: MaybeSignal<boolean>;
+  name?: `menuitem:${string}`; // tested with relative position
+  label?: MaybeSignal<Translatable> | ComponentType<unknown> | SciComponentDescriptor; // tested
+  icon?: MaybeSignal<string> | ComponentType<unknown> | SciComponentDescriptor; // tested
+  tooltip?: MaybeSignal<Translatable>; // tested
+  disabled?: MaybeSignal<boolean>; // tested
   /**
    * Controls the display of a visual marker for menu dropdown. Defaults to `true`.
    */
-  visualMenuHint?: boolean;
-  cssClass?: string | string[];
-  attributes?: {[name: string]: string};
-  menu?: SciMenuDescriptor['menu'];
+  visualMenuHint?: boolean; // tested
+  cssClass?: string | string[]; // tested
+  attributes?: {[name: string]: string}; // tested
+  menu?: SciMenuDescriptor['menu']; // tested
 }
 
 export interface SciToolbarControlDescriptor {
   name?: `menuitem:${string}`;
-  component: ComponentType<unknown>;
-  bindings?: Binding[];
-  injector?: Injector;
-  providers?: Provider[];
-  tooltip?: MaybeSignal<Translatable>;
-  cssClass?: string | string[];
-  attributes?: {[name: string]: string};
+  component: ComponentType<unknown>; // tested
+  bindings?: Binding[]; // not going to test
+  injector?: Injector; // not going to test
+  providers?: Provider[]; // not going to test
+  tooltip?: MaybeSignal<Translatable>; // tested
+  cssClass?: string | string[]; // tested
+  attributes?: {[name: string]: string}; // tested
 }
 
 export interface SciToolbarGroupDescriptor {
-  name?: `toolbar:${string}`;
-  disabled?: MaybeSignal<boolean>;
-  cssClass?: string | string[];
+  name?: `toolbar:${string}`; // tested with relative position
+  disabled?: MaybeSignal<boolean>; // tested
+  cssClass?: string | string[]; // tested
 }

@@ -8,17 +8,21 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, DebugElement, DestroyRef, inject, InjectionToken, Injector, input, inputBinding, signal, Type} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {Component, DestroyRef, inject, InjectionToken, Injector, input, inputBinding, signal, Type} from '@angular/core';
+import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {SciIconComponent} from './icon.component';
 import {By} from '@angular/platform-browser';
-import {ComponentType} from '@angular/cdk/portal';
-import {retryOnError} from '@scion/toolkit/testing';
 import {MaterialIconComponent} from './material-icon-provider';
 import {ScionIconComponent} from './scion-icon-provider';
 import {provideIconProvider} from './icon.provider';
+import {toEqualIconCustomMatcher} from './testing/jasmine/matcher/to-equal-icon.matcher';
+import {expectAsync} from './testing/jasmine/matcher/custom-async-matchers.definition';
 
 describe('IconComponent', () => {
+
+  beforeEach(() => {
+    jasmine.addAsyncMatchers(toEqualIconCustomMatcher);
+  });
 
   it('should render icon', async () => {
     TestBed.configureTestingModule({
@@ -49,12 +53,12 @@ describe('IconComponent', () => {
 
     // Render icon-1.
     fixture.componentInstance.icon.set('icon-1');
-    await expectIcon(fixture, {component: SpecIcon1Component, innerText: 'icon 1'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIcon1Component, innerText: 'icon 1'});
 
     // Render icon-2.
     fixture.componentInstance.icon.set('icon-2');
     await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
-    await expectIcon(fixture, {component: SpecIcon2Component, innerText: 'icon 2'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIcon2Component, innerText: 'icon 2'});
   });
 
   it('should render icon with input', async () => {
@@ -77,11 +81,11 @@ describe('IconComponent', () => {
 
     // Render icon-1.
     fixture.componentInstance.icon.set('icon-1');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon-1'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon-1'});
 
     // Render icon-2.
     fixture.componentInstance.icon.set('icon-2');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon-2'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon-2'});
   });
 
   it('should render icon with changed input ', async () => {
@@ -108,15 +112,15 @@ describe('IconComponent', () => {
 
     const fixture = TestBed.createComponent(SpecRootComponent);
     fixture.componentInstance.icon.set('icon');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon - value'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon - value'});
 
     // Render icon.
     inputSignal.set('value 1');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon - value 1'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon - value 1'});
 
     // Change input.
     inputSignal.set('value 2');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon - value 2'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon - value 2'});
   });
 
   it('should render icon with custom injector', async () => {
@@ -141,11 +145,11 @@ describe('IconComponent', () => {
 
     // Render icon-1.
     fixture.componentInstance.icon.set('icon-1');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon-1'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon-1'});
 
     // Render icon-2.
     fixture.componentInstance.icon.set('icon-2');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon-2'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon-2'});
   });
 
   it('should render icon with custom provider', async () => {
@@ -170,11 +174,11 @@ describe('IconComponent', () => {
 
     // Render icon-1.
     fixture.componentInstance.icon.set('icon-1');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon-1'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon-1'});
 
     // Render icon-2.
     fixture.componentInstance.icon.set('icon-2');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon-2'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon-2'});
   });
 
   it('should render empty icon if no ligature', async () => {
@@ -189,7 +193,7 @@ describe('IconComponent', () => {
 
     // Render icon (not provided).
     fixture.componentInstance.icon.set(undefined);
-    await expectIcon(fixture, {innerText: '', component: null});
+    await expectAsync(fixture).toEqualIcon({innerText: '', component: null});
   });
 
   it('should destroy icon when changing ligature', async () => {
@@ -219,13 +223,13 @@ describe('IconComponent', () => {
 
     // Render icon.
     fixture.componentInstance.icon.set('icon-1');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon-1'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon-1'});
     const iconComponent = fixture.debugElement.query(By.directive(SpecIconComponent)).componentInstance as SpecIconComponent;
     expect(iconComponent.destroyed).toBeFalse();
 
     // Change icon.
     fixture.componentInstance.icon.set('icon-2');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon-2'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon-2'});
     expect(iconComponent.destroyed).toBeTrue();
   });
 
@@ -256,13 +260,13 @@ describe('IconComponent', () => {
 
     // Render icon.
     fixture.componentInstance.icon.set('icon');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon'});
     const iconComponent = fixture.debugElement.query(By.directive(SpecIconComponent)).componentInstance as SpecIconComponent;
     expect(iconComponent.destroyed).toBeFalse();
 
     // Remove icon.
     fixture.componentInstance.icon.set(undefined);
-    await expectIcon(fixture, {component: null, innerText: ''});
+    await expectAsync(fixture).toEqualIcon({component: null, innerText: ''});
     expect(iconComponent.destroyed).toBeTrue();
   });
 
@@ -309,15 +313,15 @@ describe('IconComponent', () => {
 
     // Render icon-a (provider 1).
     fixture.componentInstance.icon.set('icon-a');
-    await expectIcon(fixture, {component: SpecIcon1Component, innerText: 'icon 1 [provider=1]'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIcon1Component, innerText: 'icon 1 [provider=1]'});
 
     // Render icon-b (provider 1 and provider 2).
     fixture.componentInstance.icon.set('icon-b');
-    await expectIcon(fixture, {component: SpecIcon2Component, innerText: 'icon 2 [provider=1]'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIcon2Component, innerText: 'icon 2 [provider=1]'});
 
     // Render icon-c (provider 2).
     fixture.componentInstance.icon.set('icon-c');
-    await expectIcon(fixture, {component: SpecIcon4Component, innerText: 'icon 4 [provider=2]'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIcon4Component, innerText: 'icon 4 [provider=2]'});
   });
 
   it('should call icon provider in injection context', async () => {
@@ -337,7 +341,7 @@ describe('IconComponent', () => {
 
     // Render icon.
     fixture.componentInstance.icon.set('icon');
-    await expectIcon(fixture, {component: MaterialIconComponent, innerText: 'icon'});
+    await expectAsync(fixture).toEqualIcon({component: MaterialIconComponent, innerText: 'icon'});
     expect(injector).toBeDefined();
   });
 
@@ -361,7 +365,7 @@ describe('IconComponent', () => {
 
     // Render icon.
     fixture.componentInstance.icon.set('icon');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon'});
 
     // Expect 'no-translate' HTML attribute to be set on the icon.
     const iconComponent = fixture.debugElement.query(By.directive(SpecIconComponent));
@@ -398,7 +402,8 @@ describe('IconComponent', () => {
 
     // Render icon.
     fixture.componentInstance.icon.set('icon');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon'});
+    await fixture.whenStable();
 
     // Expect font size to be var(--sci-icon-size, 1em).
     const iconComponent = fixture.debugElement.query(By.directive(SpecIconComponent)).nativeElement as HTMLElement;
@@ -436,7 +441,7 @@ describe('IconComponent', () => {
 
     // Render icon.
     fixture.componentInstance.icon.set('icon');
-    await expectIcon(fixture, {component: SpecIconComponent, innerText: 'icon'});
+    await expectAsync(fixture).toEqualIcon({component: SpecIconComponent, innerText: 'icon'});
 
     // Expect font size to be var(--sci-icon-size, 1em).
     const iconComponent = fixture.debugElement.query(By.directive(SpecIconComponent)).nativeElement as HTMLElement;
@@ -456,7 +461,7 @@ describe('Built-in Icon Providers', () => {
     const fixture = TestBed.createComponent(SpecRootComponent);
 
     fixture.componentInstance.icon.set('ligature');
-    await expectIcon(fixture, {innerText: 'ligature', component: MaterialIconComponent});
+    await expectAsync(fixture).toEqualIcon({innerText: 'ligature', component: MaterialIconComponent});
   });
 
   it('should render Material icon if not provided by application provider', async () => {
@@ -470,7 +475,7 @@ describe('Built-in Icon Providers', () => {
     const fixture = TestBed.createComponent(SpecRootComponent);
 
     fixture.componentInstance.icon.set('ligature');
-    await expectIcon(fixture, {innerText: 'ligature', component: MaterialIconComponent});
+    await expectAsync(fixture).toEqualIcon({innerText: 'ligature', component: MaterialIconComponent});
   });
 
   it('should render Material icon', async () => {
@@ -485,7 +490,7 @@ describe('Built-in Icon Providers', () => {
     fixture.componentInstance.icon.set('icon');
 
     // Expect Material icon to be rendered.
-    await expectIcon(fixture, {
+    await expectAsync(fixture).toEqualIcon({
       component: MaterialIconComponent, innerText: 'icon',
     });
 
@@ -514,7 +519,7 @@ describe('Built-in Icon Providers', () => {
     fixture.componentInstance.icon.set('scion.close');
 
     // Expect SCION icon to be rendered.
-    await expectIcon(fixture, {component: ScionIconComponent, innerText: 'close'});
+    await expectAsync(fixture).toEqualIcon({component: ScionIconComponent, innerText: 'close'});
 
     // Expect icon to have SCION CSS classes.
     const materialIconComponent = fixture.debugElement.query(By.directive(ScionIconComponent));
@@ -545,47 +550,13 @@ describe('Built-in Icon Providers', () => {
     fixture.componentInstance.icon.set('icon');
 
     // Expect custom icon to be rendered.
-    await expectIcon(fixture, {component: SpecCustomIconComponent, innerText: 'Custom Icon for "icon"'});
+    await expectAsync(fixture).toEqualIcon({component: SpecCustomIconComponent, innerText: 'Custom Icon for "icon"'});
 
     // Expect custom icon to have specified CSS classes.
     const customIconComponent = fixture.debugElement.query(By.directive(SpecCustomIconComponent));
     expect(customIconComponent.classes).toEqual({'custom-icon': true});
   });
 });
-
-/**
- * Expects the specified icon to display.
- */
-async function expectIcon(fixture: ComponentFixture<unknown> | DebugElement, expected: {innerText: string; component?: ComponentType<unknown> | null}): Promise<void> {
-  const debugElement = fixture instanceof ComponentFixture ? fixture.debugElement : fixture;
-
-  // TODO [menu]: Remove fake assertion.
-  expect(true).toBe(true);
-
-  await retryOnError(() => {
-    const actualIconDebugElement = debugElement.query(By.css('sci-icon')) as DebugElement | null;
-
-    // Expect icon to be in the DOM.
-    if (!actualIconDebugElement) {
-      throw Error(`Expected 'sci-icon' element to be in the DOM, but was not.`);
-    }
-
-    // Expect icon ligature.
-    const actualIconHtmlElement = actualIconDebugElement.nativeElement as HTMLElement;
-    if (actualIconHtmlElement.innerText !== expected.innerText) {
-      throw Error(`Expected icon ligature '${actualIconHtmlElement.innerText}' to equal '${expected.innerText}'.`);
-    }
-
-    // Expect icon component.
-    if (expected.component && !(actualIconDebugElement.query(By.directive(expected.component)) as DebugElement | null)) {
-      throw Error(`Expected '${expected.component.name}' element to be in the DOM, but was not.`);
-    }
-
-    if (expected.component === null && actualIconDebugElement.children.length) {
-      throw Error(`Expected 'sci-icon' element to be empty, but was not.`);
-    }
-  });
-}
 
 @Component({
   selector: 'spec-root',

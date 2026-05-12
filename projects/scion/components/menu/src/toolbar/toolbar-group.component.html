@@ -2,7 +2,8 @@
   @let disabled = this.disabled() || menuItem.disabled?.() || false;
   @switch (menuItem.type) {
     @case ('menu-item') {
-      <div class="menu-item" #menu_item_element>
+      @let isSplitButton = menuItem.menu?.children?.length && (!!menuItem.onSelect || menuItem.control);
+      <div class="menu-item e2e-menu-item" [class]="isSplitButton ? 'e2e-split-button' : null" #menu_item_element>
         <!-- Toolbar Button -->
         @if (menuItem.onSelect || menuItem.control) {
           @if (menuItem.control) {
@@ -22,7 +23,6 @@
 
         <!-- Toolbar Menu Button (or Split Button) -->
         @if (menuItem.menu?.children?.length) {
-          @let isSplitButton = !!menuItem.onSelect || menuItem.control;
           @let hasLabel = menuItem.labelText || menuItem.labelComponent;
           @let hasIcon = menuItem.iconLigature || menuItem.iconComponent;
           @let hasVisualMenuHint = menuItem.visualMenuHint ?? true;
@@ -59,7 +59,7 @@
                          [disabled]="disabled"
                          [popoverViewContainerRef]="popoverViewContainerRef()"
                          (menuOpen)="onChildGroupMenuOpen($event)"
-                         [class]="menuItem.cssClass" class="e2e-menu-item e2e-toolbar-group"/>
+                         [class]="menuItem.cssClass" class="e2e-toolbar-group"/>
     }
   }
 }
@@ -67,7 +67,7 @@
 <!-- Renders the icon of the passed menu item. -->
 <ng-template #icon_template let-menuItem>
   @if (menuItem.iconLigature) {
-    <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
+    <sci-icon>{{ menuItem.iconLigature() }}</sci-icon>
   } @else if (menuItem.iconComponent) {
     <span class="icon">
       <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
@@ -78,7 +78,7 @@
 <!-- Renders the label of the passed menu item. -->
 <ng-template #label_template let-menuItem>
   @if (menuItem.labelText) {
-    <span class="label">{{menuItem.labelText()}}</span>
+    <span class="label">{{ menuItem.labelText() }}</span>
   } @else if (menuItem.labelComponent) {
     <span class="label">
       <ng-container *sciComponentOutlet="menuItem.labelComponent"/>

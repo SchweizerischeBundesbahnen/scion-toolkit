@@ -17,7 +17,7 @@
                              [popoverViewContainerRef]="popoverAnchor()"
                              (menuOpen)="onActionToolbarMenuOpen($event)"
                              (click)="$event.stopPropagation()"
-                             class="actions"/>
+                             class="actions e2e-actions"/>
         }
       </div>
     </button>
@@ -30,7 +30,7 @@
                            [orientation]="'horizontal'"
                            [popoverViewContainerRef]="popoverAnchor()"
                            (menuOpen)="onActionToolbarMenuOpen($event)"
-                           class="actions"/>
+                           class="actions e2e-actions"/>
       }
     </header>
   }
@@ -96,7 +96,7 @@
                                      (menuOpen)="onActionToolbarMenuOpen($event)"
                                      (click)="$event.stopPropagation()"
                                      sciToolbarState
-                                     class="actions"/>
+                                     class="actions e2e-actions"/>
                 }
               </div>
             </button>
