@@ -16,12 +16,8 @@ import {RequireOne} from '@scion/toolkit/types';
 import {SciKeyboardAccelerator} from '../menu-accelerators';
 
 export interface SciMenuFactory {
-  // Describe that onSelect can call `inject` to get any required dependencies.
-  addMenuItem(label: MaybeSignal<Translatable>, onSelect: () => boolean | void | Promise<boolean | void>): this;
 
   addMenuItem(descriptor: SciMenuItemDescriptor): this;
-
-  addMenu(label: MaybeSignal<Translatable>, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
   addMenu(descriptor: SciMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
@@ -43,21 +39,24 @@ export interface SciMenuItemDescriptor {
   onFilter?: (filter: string) => boolean;
   cssClass?: string | string[];
   attributes?: {[name: string]: string};
-  onSelect: () => boolean | void | Promise<boolean | void>;
+  onSelect: () => void | boolean | Promise<void | boolean>;
 }
 
 export interface SciMenuDescriptor {
-  name?: `menu:${string}`;
+  name?: `menuitem:${string}`;
   label: MaybeSignal<Translatable> | ComponentType<unknown> | SciComponentDescriptor;
   icon?: MaybeSignal<string> | ComponentType<unknown> | SciComponentDescriptor;
   disabled?: MaybeSignal<boolean>;
-  width?: string;
-  minWidth?: string;
-  maxWidth?: string;
-  maxHeight?: string;
-  filter?: boolean | RequireOne<{placeholder?: MaybeSignal<Translatable>; notFoundText?: MaybeSignal<Translatable>; focus?: boolean}>;
   cssClass?: string | string[];
   attributes?: {[name: string]: string};
+  menu?: {
+    name?: `menu:${string}`;
+    width?: string;
+    minWidth?: string;
+    maxWidth?: string;
+    maxHeight?: string;
+    filter?: boolean | RequireOne<{placeholder?: MaybeSignal<Translatable>; notFoundText?: MaybeSignal<Translatable>; focus?: boolean}>;
+  };
 }
 
 export interface SciMenuGroupDescriptor {

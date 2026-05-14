@@ -1,69 +1,57 @@
 @for (menuItem of menuItems(); track $index) {
   @let disabled = this.disabled() || menuItem.disabled?.() || false;
-
   @switch (menuItem.type) {
     @case ('menu-item') {
-      @if (menuItem.control) {
-        <ng-container *sciComponentOutlet="menuItem.control | sciToolbarControl:menuItem"/>
-      } @else {
-        <button [attr.disabled]="disabled || null"
-                [attr.title]="menuItem.accelerator | sciFormatAccelerator:menuItem.tooltip?.()"
-                [class.checked]="menuItem.checked?.()"
-                [class]="menuItem.cssClass" class="menu-item e2e-menu-item"
-                [sciAttributes]="menuItem.attributes"
-                (click)="onSelect(menuItem)">
-          @if (menuItem.iconLigature) {
-            <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
-          } @else if (menuItem.iconComponent) {
-            <span class="icon">
-              <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
-            </span>
+      <div class="menu-item" #menu_item_element>
+        <!-- Toolbar Button -->
+        @if (menuItem.onSelect || menuItem.control) {
+          @if (menuItem.control) {
+            <ng-container *sciComponentOutlet="menuItem.control | sciToolbarControl:menuItem"/>
+          } @else {
+            <button [attr.disabled]="disabled || null"
+                    [attr.title]="menuItem.accelerator | sciFormatAccelerator:menuItem.tooltip?.()"
+                    [class.checked]="menuItem.checked?.()"
+                    [class]="menuItem.cssClass" class="menu-item e2e-menu-item"
+                    [sciAttributes]="menuItem.attributes"
+                    (click)="onSelect(menuItem)">
+              <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
+              <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
+            </button>
           }
-
-          @if (menuItem.labelText) {
-            <span class="label">{{menuItem.labelText()}}</span>
-          } @else if (menuItem.labelComponent) {
-            <span class="label">
-              <ng-container *sciComponentOutlet="menuItem.labelComponent"/>
-            </span>
-          }
-        </button>
-      }
-    }
-    @case ('menu') {
-      @let hasLabel = menuItem.labelText || menuItem.labelComponent;
-      @let hasIcon = menuItem.iconLigature || menuItem.iconComponent;
-      <button [attr.disabled]="disabled || null"
-              [attr.title]="menuItem.tooltip?.()"
-              [class.open]="activeMenu()?.menu === menuItem"
-              [class.visual-menu-hint]="hasIcon && !hasLabel && menuItem.visualMenuHint"
-              [class]="menuItem.cssClass" class="menu-item menu e2e-menu-item"
-              [sciAttributes]="menuItem.attributes"
-              (click)="onMenuClick(menuItem, element)"
-              (mousedown)="onMenuMouseDown(menuItem)"
-              (mouseleave)="onMenuMouseLeave(menuItem)"
-              #element>
-        @if (menuItem.iconLigature) {
-          <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
-        } @else if (menuItem.iconComponent) {
-          <span class="icon">
-            <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
-          </span>
         }
 
-        @if (menuItem.labelText) {
-          <span class="label">{{menuItem.labelText()}}</span>
-        } @else if (menuItem.labelComponent) {
-          <span class="label">
-            <ng-container *sciComponentOutlet="menuItem.labelComponent"/>
-          </span>
-        }
+        <!-- Toolbar Menu Button (or Split Button) -->
+        @if (menuItem.menu?.children?.length) {
+          @let isSplitButton = !!menuItem.onSelect || menuItem.control;
+          @let hasLabel = menuItem.labelText || menuItem.labelComponent;
+          @let hasIcon = menuItem.iconLigature || menuItem.iconComponent;
+          @let hasVisualMenuHint = menuItem.visualMenuHint ?? true;
+          @let hasVisualIconMenuHint = hasVisualMenuHint && !isSplitButton && hasIcon && !hasLabel;
+          @let hasChevron = hasVisualMenuHint && (isSplitButton || !hasVisualIconMenuHint);
 
-        <!-- Add chevron for label menus -->
-        @if (hasLabel && menuItem.visualMenuHint) {
-          <sci-icon class="visual-menu-hint">scion.menu_down</sci-icon>
+          <button [attr.disabled]="disabled || null"
+                  [attr.title]="menuItem.tooltip?.()"
+                  [class.open]="activeMenuItem()?.menuItem === menuItem"
+                  [class.visual-menu-hint]="hasVisualIconMenuHint"
+                  [class.split-button]="isSplitButton"
+                  [class]="menuItem.cssClass" class="menu-item menu e2e-menu-item"
+                  [sciAttributes]="menuItem.attributes"
+                  (click)="onMenuItemClick(menuItem, menu_item_element)"
+                  (mousedown)="onMenuItemMouseDown(menuItem)"
+                  (mouseleave)="onMenuItemMouseLeave(menuItem)">
+            <!-- Render icon and label -->
+            @if (!isSplitButton) {
+              <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
+              <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
+            }
+
+            <!-- Render chevron for label menus or split buttons -->
+            @if (hasChevron) {
+              <sci-icon class="visual-menu-hint">scion.menu_down</sci-icon>
+            }
+          </button>
         }
-      </button>
+      </div>
     }
     @case ('group') {
       <sci-toolbar-group [menuItems]="menuItem.children"
@@ -75,3 +63,25 @@
     }
   }
 }
+
+<!-- Renders the icon of the passed menu item. -->
+<ng-template #icon_template let-menuItem>
+  @if (menuItem.iconLigature) {
+    <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
+  } @else if (menuItem.iconComponent) {
+    <span class="icon">
+      <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
+    </span>
+  }
+</ng-template>
+
+<!-- Renders the label of the passed menu item. -->
+<ng-template #label_template let-menuItem>
+  @if (menuItem.labelText) {
+    <span class="label">{{menuItem.labelText()}}</span>
+  } @else if (menuItem.labelComponent) {
+    <span class="label">
+      <ng-container *sciComponentOutlet="menuItem.labelComponent"/>
+    </span>
+  }
+</ng-template>

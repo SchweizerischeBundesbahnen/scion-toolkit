@@ -19,17 +19,13 @@ import {SciMenuItem} from '../menu.model';
 export class SciToolbarControlPipe implements PipeTransform {
 
   public transform(componentDescriptor: SciComponentDescriptor, menuItem: SciMenuItem): SciComponentDescriptor {
-    const attributes = computed(() => {
-      return {
-        ...menuItem.attributes,
-        title: menuItem.tooltip?.(),
-      };
-    });
-
     return {
       ...componentDescriptor,
       cssClass: menuItem.cssClass,
-      attributes,
+      attributes: computed(() => ({
+        ...menuItem.attributes,
+        title: menuItem.tooltip?.(),
+      })),
     };
   }
 }

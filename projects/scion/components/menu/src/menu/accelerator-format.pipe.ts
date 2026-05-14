@@ -46,5 +46,17 @@ function formatKey(accelerator: SciKeyboardAccelerator): string {
   if (key === ' ') {
     return 'Space';
   }
+  if (key === 'ArrowDown') {
+    return 'Down';
+  }
+  if (key === 'ArrowUp') {
+    return 'Up';
+  }
+  if (key === 'ArrowLeft') {
+    return 'Left';
+  }
+  if (key === 'ArrowRight') {
+    return 'Right';
+  }
   return accelerator.location === 'numpad' ? `NumPad ${key}` : key;
 }

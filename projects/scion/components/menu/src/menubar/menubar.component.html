@@ -1,12 +1,12 @@
-@for (menu of menus(); track $index) {
-  <button [class.open]="activeMenu()?.menu === menu"
-          [class]="menu.cssClass"
-          [sciAttributes]="menu.attributes"
-          (mousedown)="onMenuMouseDown(menu)"
-          (click)="onMenuClick(menu, element)"
-          (mouseenter)="onMenuMouseEnter(menu, element)"
-          (mouseleave)="onMenuMouseLeave(menu)"
+@for (menuItem of menuItems(); track $index) {
+  <button [class.open]="activeMenuItem()?.menuItem === menuItem"
+          [class]="menuItem.cssClass"
+          [sciAttributes]="menuItem.attributes"
+          (mousedown)="onMenuItemMouseDown(menuItem)"
+          (click)="onMenuItemClick(menuItem, element)"
+          (mouseenter)="onMenuItemMouseEnter(menuItem, element)"
+          (mouseleave)="onMenuItemMouseLeave(menuItem)"
           #element>
-    {{menu.labelText!()}}
+    {{menuItem.labelText!()}}
   </button>
 }

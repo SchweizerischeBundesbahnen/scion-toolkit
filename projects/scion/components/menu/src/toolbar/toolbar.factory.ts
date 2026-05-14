@@ -9,55 +9,49 @@
  */
 
 import {ComponentType} from '@angular/cdk/portal';
-import {SciMenuFactory} from '../menu/menu.factory';
+import {SciMenuDescriptor, SciMenuFactory} from '../menu/menu.factory';
 import {MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
-import {RequireOne} from '@scion/toolkit/types';
 import {SciKeyboardAccelerator} from '../menu-accelerators';
+import {Binding, Injector, Provider} from '@angular/core';
 
 /* eslint-disable @typescript-eslint/unified-signatures */
 
 export interface SciToolbarFactory {
 
-  // Describe that onSelect can call `inject` to get any required dependencies.
-  addToolbarItem(icon: MaybeSignal<string>, onSelect: () => void): this;
+  addToolbarButton(descriptor: SciToolbarButtonDescriptor): this;
 
-  addToolbarItem(descriptor: SciToolbarItemDescriptor): this;
+  // TODO [marc] Should we rename to addToolbarSplitButton?
+  addToolbarButton(descriptor: SciToolbarButtonDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
-  addToolbarItem(descriptor: SciToolbarControlDescriptor): this;
+  // TODO [marc] Should we rename to addToolbarMenuButton?
+  // Also because menu property, which is an object literal in the descriptor
+  addToolbarMenu(descriptor: SciToolbarMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
-  addMenu(icon: MaybeSignal<string>, menuFactoryFn: (menu: SciMenuFactory) => void): this;
+  addToolbarControl(descriptor: SciToolbarControlDescriptor): this;
 
-  addMenu(descriptor: SciToolbarMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this;
+  addToolbarControl(descriptor: SciToolbarControlDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
   addGroup(groupFactoryFn: (group: SciToolbarFactory) => void): this;
 
   addGroup(descriptor: SciToolbarGroupDescriptor, groupFactoryFn?: (group: SciToolbarFactory) => void): this;
 }
 
-export interface SciToolbarItemDescriptor {
+export interface SciToolbarButtonDescriptor {
   name?: `menuitem:${string}`;
   label?: MaybeSignal<Translatable> | ComponentType<unknown> | SciComponentDescriptor;
-  icon: MaybeSignal<string> | ComponentType<unknown> | SciComponentDescriptor;
+  icon?: MaybeSignal<string> | ComponentType<unknown> | SciComponentDescriptor;
   checked?: MaybeSignal<boolean>;
   tooltip?: MaybeSignal<Translatable>;
   accelerator?: SciKeyboardAccelerator;
   disabled?: MaybeSignal<boolean>;
   cssClass?: string | string[];
   attributes?: {[name: string]: string};
-  onSelect: () => boolean | void | Promise<boolean | void>;
-}
-
-export interface SciToolbarControlDescriptor {
-  name?: `menuitem:${string}`;
-  control: ComponentType<unknown> | SciComponentDescriptor;
-  tooltip?: MaybeSignal<Translatable>;
-  cssClass?: string | string[];
-  attributes?: {[name: string]: string};
+  onSelect: () => void | boolean | Promise<void | boolean>;
 }
 
 export interface SciToolbarMenuDescriptor {
-  name?: `menu:${string}`;
+  name?: `menuitem:${string}`;
   label?: MaybeSignal<Translatable> | ComponentType<unknown> | SciComponentDescriptor;
   icon?: MaybeSignal<string> | ComponentType<unknown> | SciComponentDescriptor;
   tooltip?: MaybeSignal<Translatable>;
@@ -66,11 +60,18 @@ export interface SciToolbarMenuDescriptor {
    * Controls the display of a visual marker for menu dropdown. Defaults to `true`.
    */
   visualMenuHint?: boolean;
-  width?: string;
-  minWidth?: string;
-  maxWidth?: string;
-  maxHeight?: string;
-  filter?: boolean | RequireOne<{placeholder?: MaybeSignal<Translatable>; notFoundText?: MaybeSignal<Translatable>; focus?: boolean}>;
+  cssClass?: string | string[];
+  attributes?: {[name: string]: string};
+  menu?: SciMenuDescriptor['menu'];
+}
+
+export interface SciToolbarControlDescriptor {
+  name?: `menuitem:${string}`;
+  component: ComponentType<unknown>;
+  bindings?: Binding[];
+  injector?: Injector;
+  providers?: Provider[];
+  tooltip?: MaybeSignal<Translatable>;
   cssClass?: string | string[];
   attributes?: {[name: string]: string};
 }

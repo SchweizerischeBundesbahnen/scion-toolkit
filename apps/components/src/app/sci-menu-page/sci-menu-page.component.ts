@@ -64,14 +64,14 @@ export default class SciMenuPageComponent {
             .addMenuItem({label: 'Right Top', icon: 'dock_to_right', disabled: computed(() => moveTo() === 'right_top'), onSelect: () => moveTo.set('right_top')}),
           )
           .addMenu({label: 'Resize'}, menu => menu
-            .addMenuItem('Stretch to Left', onSelect)
-            .addMenuItem('Stretch to Right', onSelect)
-            .addMenuItem('Stretch to Top', onSelect)
-            .addMenuItem('Stretch to Bottom', onSelect)
-            .addMenuItem('Maximize Tool Window', onSelect),
+            .addMenuItem({label: 'Stretch to Left', onSelect})
+            .addMenuItem({label: 'Stretch to Right', onSelect})
+            .addMenuItem({label: 'Stretch to Top', onSelect})
+            .addMenuItem({label: 'Stretch to Bottom', onSelect})
+            .addMenuItem({label: 'Maximize Tool Window', onSelect}),
           ),
         )
-        .addMenuItem('Remove from Sidebar', onSelect),
+        .addMenuItem({label: 'Remove from Sidebar', onSelect}),
       ),
     );
 

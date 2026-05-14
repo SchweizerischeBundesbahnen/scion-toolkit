@@ -8,14 +8,14 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, linkedSignal, Signal, untracked, ViewContainerRef} from '@angular/core';
+import {ChangeDetectionStrategy, Component, effect, ElementRef, inject, Injector, input, linkedSignal, Signal, untracked, ViewContainerRef} from '@angular/core';
 import {installMenuAccelerators} from '../menu-accelerators';
 import {ɵSciMenuService} from '../ɵmenu.service';
 import {MaybeSignal, SciAttributesDirective} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
 import {MaybeArray, RequireOne} from '@scion/toolkit/types';
-import {SciMenu} from '../menu.model';
 import {SciMenuEnvironmentProviders} from '../menu-environment-providers';
+import {SciMenuItem} from '../menu.model';
 
 /**
  * TODO [menu]: Explain how to size the menubar. (height can be set)
@@ -39,12 +39,12 @@ export class SciMenubarComponent {
   private readonly _menuService = inject(ɵSciMenuService);
   private readonly _context = inject(SciMenuEnvironmentProviders).provideContext(this.context);
 
-  protected readonly menus = this.computeMenus();
+  protected readonly menuItems = inject(ɵSciMenuService).menuItems(this.name, this._context) as Signal<SciMenuItem[]>;
 
-  protected readonly activeMenu = linkedSignal<SciMenu[], {menu: SciMenu; element: HTMLElement; closing?: true} | null>({
-    source: this.menus, // reset active menu when menus change.
+  protected readonly activeMenuItem = linkedSignal<SciMenuItem[], {menuItem: SciMenuItem; element: HTMLElement; closing?: true} | null>({
+    source: this.menuItems, // reset active menu when menus change.
     computation: () => null,
-    equal: (a, b) => a?.menu === b?.menu,
+    equal: (a, b) => a?.menuItem === b?.menuItem,
   });
 
   constructor() {
@@ -54,11 +54,12 @@ export class SciMenubarComponent {
 
     // Open or close popover.
     effect(onCleanup => {
-      if (!this.activeMenu()) {
+      if (!this.activeMenuItem()) {
         return;
       }
 
-      const {menu, element} = this.activeMenu()!;
+      const {menuItem, element} = this.activeMenuItem()!;
+      const menu = menuItem.menu!;
       // Attach popover to configured view ref. Defaults to this component's view ref.
       // Controls where to add the popup.
       const viewContainerRef = this.viewContainerRef() ?? injector.get(ViewContainerRef);
@@ -74,59 +75,54 @@ export class SciMenubarComponent {
             maxWidth: menu.maxWidth,
             maxHeight: menu.maxHeight,
           },
-          cssClass: menu.cssClass,
-          attributes: menu.attributes,
+          cssClass: menuItem.cssClass,
+          attributes: menuItem.attributes,
           align: 'vertical',
         });
         ref.onClose(() => {
-          const activeMenu = this.activeMenu();
+          const activeMenuItem = this.activeMenuItem();
 
           // Do not clear state if menu button was clicked to close it. Otherwise, the menu would re-open.
-          if (activeMenu?.menu === menu && activeMenu.closing) {
+          if (activeMenuItem?.menuItem === menuItem && activeMenuItem.closing) {
             return;
           }
 
           // Do not clear state if another menu was opened in the meantime.
-          if (activeMenu?.menu !== menu) {
+          if (activeMenuItem?.menuItem !== menuItem) {
             return;
           }
 
-          this.activeMenu.set(null);
+          this.activeMenuItem.set(null);
         });
         onCleanup(() => ref.close());
       });
     });
   }
 
-  protected onMenuMouseDown(menu: SciMenu): void {
-    const activeMenu = this.activeMenu();
+  protected onMenuItemMouseDown(menuItem: SciMenuItem): void {
+    const activeMenuItem = this.activeMenuItem();
 
     // Mark opened menu as closing to prevent re-opening it on subsequent click event.
-    if (activeMenu?.menu === menu) {
-      activeMenu.closing = true;
+    if (activeMenuItem?.menuItem === menuItem) {
+      activeMenuItem.closing = true;
     }
   }
 
-  protected onMenuClick(menu: SciMenu, element: HTMLElement): void {
+  protected onMenuItemClick(menuItem: SciMenuItem, element: HTMLElement): void {
     // Toggle menu state.
-    this.activeMenu.update(activeMenu => activeMenu?.menu === menu ? null : {menu, element});
+    this.activeMenuItem.update(activeMenuItem => activeMenuItem?.menuItem === menuItem ? null : {menuItem, element});
   }
 
-  protected onMenuMouseEnter(menu: SciMenu, element: HTMLElement): void {
-    this.activeMenu.update(activeMenu => activeMenu ? {menu, element} : null);
+  protected onMenuItemMouseEnter(menuItem: SciMenuItem, element: HTMLElement): void {
+    this.activeMenuItem.update(activeMenuItem => activeMenuItem ? {menuItem, element} : null);
   }
 
-  protected onMenuMouseLeave(menu: SciMenu): void {
+  protected onMenuItemMouseLeave(menuItem: SciMenuItem): void {
     // Cleanup "stale" closing state, i.e., moving mouse out of button while pressed.
-    const activeMenu = this.activeMenu();
-    if (activeMenu?.menu === menu && activeMenu.closing) {
-      this.activeMenu.set(null);
+    const activeMenuItem = this.activeMenuItem();
+    if (activeMenuItem?.menuItem === menuItem && activeMenuItem.closing) {
+      this.activeMenuItem.set(null);
     }
-  }
-
-  private computeMenus(): Signal<SciMenu[]> {
-    const menuItems = this._menuService.menuItems(this.name, this._context);
-    return computed(() => menuItems().filter(menuItem => menuItem.type === 'menu'));
   }
 
   private installAccelerators(): void {

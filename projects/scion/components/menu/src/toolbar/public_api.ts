@@ -8,5 +8,5 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-export {type SciToolbarFactory, type SciToolbarItemDescriptor, type SciToolbarControlDescriptor, type SciToolbarMenuDescriptor, type SciToolbarGroupDescriptor} from './toolbar.factory';
+export {type SciToolbarFactory, type SciToolbarButtonDescriptor, type SciToolbarControlDescriptor, type SciToolbarMenuDescriptor, type SciToolbarGroupDescriptor} from './toolbar.factory';
 export {SciToolbarComponent} from './toolbar.component';

@@ -24,50 +24,39 @@ export interface SciMenuItem {
   labelComponent?: SciComponentDescriptor;
   iconLigature?: Signal<string>;
   iconComponent?: SciComponentDescriptor;
-  control?: SciComponentDescriptor; // only in toolbar, not menu
+  control?: SciComponentDescriptor; // only for toolbar items
   tooltip?: Signal<string>;
   accelerator?: SciKeyboardAccelerator;
   disabled?: Signal<boolean>;
   checked?: Signal<boolean>;
-  active?: Signal<boolean>;
-  actions?: SciMenuItemLike[];
+  active?: Signal<boolean>; // only for menu items
+  actions?: SciMenuItemLike[]; // only for menu items
   matchesFilter?: (filter: string) => boolean;
+  position?: SciMenuContributionPositionLike;
+  visualMenuHint?: boolean; // only for toolbar items
   cssClass?: string[];
   attributes?: {[name: string]: string};
-  position?: SciMenuContributionPositionLike;
-  onSelect: () => Promise<boolean>;
-}
-
-export interface SciMenu {
-  type: 'menu';
-  name?: `menu:${string}`;
-  labelText?: Signal<string>;
-  labelComponent?: SciComponentDescriptor;
-  iconLigature?: Signal<string>;
-  iconComponent?: SciComponentDescriptor;
-  tooltip?: Signal<string>;
-  disabled?: Signal<boolean>;
-  visualMenuHint?: boolean;
-  position?: SciMenuContributionPositionLike;
-  width?: string;
-  minWidth?: string;
-  maxWidth?: string;
-  maxHeight?: string;
-  filter?: {placeholder?: Signal<Translatable>; notFoundText?: Signal<Translatable>; focus?: boolean};
-  cssClass?: string[];
-  attributes?: {[name: string]: string};
-  children: SciMenuItemLike[];
+  onSelect?: () => Promise<boolean>; // only set for menu items with a `onSelect` handler
+  menu?: { // only set for menu items with a menu
+    name?: `menu:${string}`;
+    width?: string;
+    minWidth?: string;
+    maxWidth?: string;
+    maxHeight?: string;
+    filter?: {placeholder?: Signal<Translatable>; notFoundText?: Signal<Translatable>; focus?: boolean};
+    children: SciMenuItemLike[];
+  };
 }
 
 export interface SciMenuGroup {
   type: 'group';
   name?: `menu:${string}` | `toolbar:${string}`;
   label?: Signal<string>;
-  collapsible?: {collapsed: boolean};
-  position?: SciMenuContributionPositionLike;
+  collapsible?: {collapsed: boolean}; // only for menu items
   disabled?: Signal<boolean>;
-  actions?: SciMenuItemLike[];
+  position?: SciMenuContributionPositionLike;
+  actions?: SciMenuItemLike[]; // only for menu items
   children: SciMenuItemLike[];
 }
 
-export type SciMenuItemLike = SciMenuItem | SciMenu | SciMenuGroup;
+export type SciMenuItemLike = SciMenuItem | SciMenuGroup;

@@ -12,7 +12,7 @@ import {Component, input} from '@angular/core';
 import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
-  selector: 'sci-custom-toolbar-icon',
+  selector: 'app-custom-toolbar-icon',
   templateUrl: './custom-toolbar-icon.component.html',
   styleUrls: ['./custom-toolbar-icon.component.scss'],
   imports: [

@@ -44,13 +44,13 @@ export class AppComponent {
 
     contributeMenu('menubar:main', menubar => {
       // Add menu for public features.
-      menubar.addMenu({label: 'Components', filter: {focus: true}}, menu => {
+      menubar.addMenu({label: 'Components', menu: {filter: {focus: true}}}, menu => {
         contributeFeatureMenuItems(menu, this._features.filter(feature => !feature.internal));
       });
 
       // Add menu for internal features.
       if (showInternalFeatures()) {
-        menubar.addMenu({label: 'Internal Components', filter: {focus: true}}, menu => {
+        menubar.addMenu({label: 'Internal Components', menu: {filter: {focus: true}}}, menu => {
           contributeFeatureMenuItems(menu, this._features.filter(feature => feature.internal));
         });
       }
@@ -71,8 +71,8 @@ export class AppComponent {
 
   private contributeSettingsToolbar(): void {
     contributeMenu('toolbar:settings', toolbar => toolbar
-      .addToolbarItem({control: ThemeSwitcherComponent})
-      .addMenu({icon: 'more_vert', visualMenuHint: false}, menu => menu),
+      .addToolbarControl({component: ThemeSwitcherComponent})
+      .addToolbarMenu({icon: 'more_vert', visualMenuHint: false}, menu => menu),
     );
   }
 

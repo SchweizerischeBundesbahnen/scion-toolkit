@@ -57,8 +57,8 @@ export type SciMenuContributionPosition = OneOf<{
   position?: 'start' | 'end';
 }>;
 export type SciToolbarContributionPosition = OneOf<{
-  before?: `menuitem:${string}` | `menu:${string}` | `toolbar:${string}`;
-  after?: `menuitem:${string}` | `menu:${string}` | `toolbar:${string}`;
+  before?: `menuitem:${string}` | `toolbar:${string}`;
+  after?: `menuitem:${string}` | `toolbar:${string}`;
   position?: 'start' | 'end';
 }>;
 export type SciMenubarContributionPosition = OneOf<{

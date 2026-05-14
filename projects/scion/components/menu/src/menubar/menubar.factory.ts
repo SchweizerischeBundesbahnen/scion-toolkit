@@ -8,26 +8,19 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciMenuFactory} from '../menu/menu.factory';
+import {SciMenuDescriptor, SciMenuFactory} from '../menu/menu.factory';
 import {MaybeSignal} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
-import {RequireOne} from '@scion/toolkit/types';
 
 export interface SciMenubarFactory {
-
-  addMenu(label: MaybeSignal<Translatable>, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
   addMenu(descriptor: SciMenubarMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 }
 
 export interface SciMenubarMenuDescriptor {
-  name?: `menu:${string}`;
+  name?: `menuitem:${string}`;
   label: MaybeSignal<Translatable>;
-  width?: string;
-  minWidth?: string;
-  maxWidth?: string;
-  maxHeight?: string;
-  filter?: boolean | RequireOne<{placeholder?: MaybeSignal<Translatable>; notFoundText?: MaybeSignal<Translatable>; focus?: boolean}>;
   cssClass?: string | string[];
   attributes?: {[name: string]: string};
+  menu?: SciMenuDescriptor['menu'];
 }

@@ -8,12 +8,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciMenuFactory} from '../menu/menu.factory';
+import {SciMenuDescriptor, SciMenuFactory} from '../menu/menu.factory';
 import {isSignal} from '@angular/core';
-import {Arrays} from '@scion/toolkit/util';
-import {SciToolbarControlDescriptor, SciToolbarFactory, SciToolbarGroupDescriptor, SciToolbarItemDescriptor, SciToolbarMenuDescriptor} from './toolbar.factory';
-import {SciMenu, SciMenuGroup, SciMenuItem, SciMenuItemLike} from '../menu.model';
-import {ɵSciMenuFactory} from '../menu/ɵmenu.factory';
+import {Arrays, prune} from '@scion/toolkit/util';
+import {SciToolbarButtonDescriptor, SciToolbarControlDescriptor, SciToolbarFactory, SciToolbarGroupDescriptor, SciToolbarMenuDescriptor} from './toolbar.factory';
+import {SciMenuGroup, SciMenuItem, SciMenuItemLike} from '../menu.model';
+import {constructMenu} from '../menu/ɵmenu.factory';
 import {translate} from '../menu-translate.util';
 import {validateMenuAccelerator} from '../menu-accelerators';
 import {coerceSignal, MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
@@ -30,57 +30,33 @@ export class ɵSciToolbarFactory implements SciToolbarFactory {
   public readonly menuItems = [] as SciMenuItemLike[];
 
   /** @inheritDoc */
-  public addToolbarItem(icon: MaybeSignal<string>, onSelect: () => void): this;
-  public addToolbarItem(descriptor: SciToolbarItemDescriptor): this;
-  public addToolbarItem(descriptor: SciToolbarControlDescriptor): this;
-  public addToolbarItem(iconOrDescriptor: MaybeSignal<string> | SciToolbarItemDescriptor | SciToolbarControlDescriptor, onSelect?: () => void): this {
-    const descriptor = coerceToolbarItemDescriptor(iconOrDescriptor, onSelect);
-
-    if ('control' in descriptor) {
-      this.menuItems.push({
-        type: 'menu-item',
-        name: descriptor.name,
-        control: coerceControlComponent(descriptor.control),
-        tooltip: translate(descriptor.tooltip),
-        cssClass: Arrays.coerce(descriptor.cssClass),
-        attributes: descriptor.attributes,
-        onSelect: async () => true,
-      } satisfies SciMenuItem);
-    }
-    else {
-      this.menuItems.push({
-        type: 'menu-item',
-        name: descriptor.name,
-        labelText: translate(coerceLabelText(descriptor.label)),
-        labelComponent: coerceLabelComponent(descriptor.label),
-        iconLigature: coerceSignal(coerceIconLigature(descriptor.icon)),
-        iconComponent: coerceIconComponent(descriptor.icon),
-        checked: coerceSignal(descriptor.checked),
-        tooltip: translate(descriptor.tooltip),
-        accelerator: validateMenuAccelerator(descriptor.accelerator),
-        disabled: coerceSignal(descriptor.disabled),
-        cssClass: Arrays.coerce(descriptor.cssClass),
-        attributes: descriptor.attributes,
-        onSelect: async () => await descriptor.onSelect() as boolean | undefined ?? descriptor.checked === undefined, // Close if the callback returns true. Defaults to closing non-checkable menu items.
-      } satisfies SciMenuItem);
-    }
+  public addToolbarButton(descriptor: SciToolbarButtonDescriptor): this;
+  public addToolbarButton(descriptor: SciToolbarButtonDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
+  public addToolbarButton(descriptor: SciToolbarButtonDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn?: (menu: SciMenuFactory) => void): this {
+    this.menuItems.push(prune<SciMenuItem>({
+      type: 'menu-item',
+      name: descriptor.name,
+      labelText: translate(coerceLabelText(descriptor.label)),
+      labelComponent: coerceLabelComponent(descriptor.label),
+      iconLigature: coerceSignal(coerceIconLigature(descriptor.icon)),
+      iconComponent: coerceIconComponent(descriptor.icon),
+      checked: coerceSignal(descriptor.checked),
+      tooltip: translate(descriptor.tooltip),
+      accelerator: validateMenuAccelerator(descriptor.accelerator),
+      disabled: coerceSignal(descriptor.disabled),
+      cssClass: Arrays.coerce(descriptor.cssClass),
+      attributes: descriptor.attributes,
+      menu: constructMenu(menuFactoryFn, descriptor.menu),
+      onSelect: async () => await descriptor.onSelect() as boolean | undefined ?? descriptor.checked === undefined, // Returning `true` will close the popover. Non-checkable items close by default.
+    }));
 
     return this;
   }
 
   /** @inheritDoc */
-  public addMenu(icon: MaybeSignal<string>, menuFactoryFn: (menu: SciMenuFactory) => void): this;
-  public addMenu(descriptor: SciToolbarMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this;
-  public addMenu(iconOrDescriptor: MaybeSignal<string> | SciToolbarMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this {
-    const descriptor = coerceMenuDescriptor(iconOrDescriptor);
-
-    // Construct menu.
-    const menuFactory = new ɵSciMenuFactory();
-    menuFactoryFn(menuFactory);
-
-    // Add menu.
-    this.menuItems.push({
-      type: 'menu',
+  public addToolbarMenu(descriptor: SciToolbarMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this {
+    this.menuItems.push(prune<SciMenuItem>({
+      type: 'menu-item',
       name: descriptor.name,
       labelText: translate(coerceLabelText(descriptor.label)),
       labelComponent: coerceLabelComponent(descriptor.label),
@@ -88,16 +64,33 @@ export class ɵSciToolbarFactory implements SciToolbarFactory {
       iconComponent: coerceIconComponent(descriptor.icon),
       tooltip: translate(descriptor.tooltip),
       disabled: coerceSignal(descriptor.disabled),
-      visualMenuHint: descriptor.visualMenuHint ?? true,
-      width: descriptor.width,
-      minWidth: descriptor.minWidth,
-      maxWidth: descriptor.maxWidth,
-      maxHeight: descriptor.maxHeight,
-      filter: coerceFilterDescriptor(descriptor),
+      visualMenuHint: descriptor.visualMenuHint,
       cssClass: Arrays.coerce(descriptor.cssClass),
       attributes: descriptor.attributes,
-      children: menuFactory.menuItems,
-    } satisfies SciMenu);
+      menu: constructMenu(menuFactoryFn, descriptor.menu),
+    }));
+
+    return this;
+  }
+
+  /** @inheritDoc */
+  public addToolbarControl(descriptor: SciToolbarControlDescriptor): this;
+  public addToolbarControl(descriptor: SciToolbarControlDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
+  public addToolbarControl(descriptor: SciToolbarControlDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn?: (menu: SciMenuFactory) => void): this {
+    this.menuItems.push(prune<SciMenuItem>({
+      type: 'menu-item',
+      name: descriptor.name,
+      control: {
+        component: descriptor.component,
+        bindings: descriptor.bindings,
+        injector: descriptor.injector,
+        providers: descriptor.providers,
+      },
+      tooltip: translate(descriptor.tooltip),
+      cssClass: Arrays.coerce(descriptor.cssClass),
+      attributes: descriptor.attributes,
+      menu: constructMenu(menuFactoryFn, descriptor.menu),
+    }));
 
     return this;
   }
@@ -113,29 +106,15 @@ export class ɵSciToolbarFactory implements SciToolbarFactory {
     groupFactoryFn?.(groupFactory);
 
     // Add group.
-    this.menuItems.push({
+    this.menuItems.push(prune<SciMenuGroup>({
       type: 'group',
       name: descriptor.name,
       disabled: coerceSignal(descriptor.disabled),
       children: groupFactory.menuItems,
-    } satisfies SciMenuGroup);
+    }));
 
     return this;
   }
-}
-
-function coerceToolbarItemDescriptor(iconOrDescriptor: MaybeSignal<string> | SciToolbarItemDescriptor | SciToolbarControlDescriptor, onSelect?: () => void): SciToolbarItemDescriptor | SciToolbarControlDescriptor {
-  if (typeof iconOrDescriptor === 'string' || isSignal(iconOrDescriptor)) {
-    return {icon: iconOrDescriptor, onSelect: onSelect!};
-  }
-  return iconOrDescriptor;
-}
-
-function coerceMenuDescriptor(iconOrDescriptor: MaybeSignal<string> | SciToolbarMenuDescriptor): SciToolbarMenuDescriptor {
-  if (typeof iconOrDescriptor === 'string' || isSignal(iconOrDescriptor)) {
-    return {icon: iconOrDescriptor};
-  }
-  return iconOrDescriptor;
 }
 
 function coerceGroupDescriptor(factoryOrDescriptor: ((group: SciToolbarFactory) => void) | SciToolbarGroupDescriptor, factoryIfDescriptor?: (group: SciToolbarFactory) => void): [SciToolbarGroupDescriptor, ((group: SciToolbarFactory) => void) | undefined] {
@@ -177,24 +156,4 @@ function coerceIconComponent(icon: MaybeSignal<Translatable> | ComponentType<unk
     return icon;
   }
   return undefined;
-}
-
-function coerceControlComponent(control: ComponentType<unknown> | SciComponentDescriptor): SciComponentDescriptor {
-  if (typeof control === 'function') {
-    return {component: control};
-  }
-  return control;
-}
-
-function coerceFilterDescriptor(menuDescriptor: SciToolbarMenuDescriptor): SciMenu['filter'] {
-  const filter = menuDescriptor.filter;
-
-  if (typeof filter === 'object') {
-    return {
-      placeholder: coerceSignal(filter.placeholder),
-      notFoundText: coerceSignal(filter.notFoundText),
-      focus: filter.focus,
-    };
-  }
-  return filter === true ? {} : undefined;
 }

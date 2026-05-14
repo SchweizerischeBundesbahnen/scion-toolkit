@@ -1,6 +1,5 @@
 :host {
   display: flex;
-  align-items: stretch;
   gap: 2px;
 
   &[data-orientation="vertical"] {
@@ -41,95 +40,138 @@
     }
   }
 
-  > button.menu-item {
-    all: unset;
-    display: inline-flex;
-    gap: .3em;
-    place-content: center;
-    align-items: center;
-    text-wrap: nowrap;
-    padding: var(--ɵsci-toolbar-item-padding);
-    border-radius: var(--ɵsci-toolbar-item-border-radius);
-    background-color: var(--ɵsci-toolbar-item-background-color);
-    color: var(--ɵsci-toolbar-item-text-color);
-    user-select: none;
-    overflow: hidden;
-    cursor: var(--ɵsci-toolbar-item-cursor);
+  > div.menu-item {
+    display: flex;
     border: 1px solid transparent; // unset to not flicker when toggling checkable menu item
+    // This div render the border of checked items or split button.
+    // Also render background color on this div to not jump when checking item.
+    border-radius: var(--ɵsci-toolbar-item-border-radius);
+    // Prevent overflow, forcing this div to clip all child elements to its own boundaries, including border-radius.
+    overflow: hidden;
 
-    // Maintain 1:1 aspect ratio if no label
-    &:not(:has(> span.label)) {
-      padding: 1px; // minimal padding
-      aspect-ratio: 1 / 1;
+    &:hover {
+      --sci-toolbar-item-hover: true; // Public API
     }
 
-    // Make icon components to have the same size as icons.
-    > span.icon {
-      display: inline-grid;
-      place-content: center;
-      height: var(--sci-icon-size);
-      width: var(--sci-icon-size);
-    }
+    // Render border on hover if split button
+    &:has(> button.menu-item.menu.split-button:where(:not(:disabled))):hover {
+      border: 1px solid var(--ɵsci-toolbar-item-border-width-checked);
 
-    > sci-icon.visual-menu-hint {
-      --sci-icon-size: auto;
-      margin-left: .25em;
-    }
-
-    // Display visual marker to indicate menu.
-    &.menu.visual-menu-hint {
-      position: relative;
-
-      &::after {
-        $size: 3px;
-        box-sizing: border-box;
-        content: "";
-        position: absolute;
-        width: $size;
-        height: $size;
-        border: $size solid transparent;
-        border-right-color: var(--ɵsci-toolbar-item-visual-menu-hint-color);
-        border-bottom-color: var(--ɵsci-toolbar-item-visual-menu-hint-color);
-        bottom: calc(var(--sci-corner) / 4);
-        right: calc(var(--sci-corner) / 4);
+      > button.menu-item.menu.split-button {
+        border-left: 1px solid var(--ɵsci-toolbar-item-border-width-checked);
       }
     }
 
-    &:disabled.menu.visual-menu-hint::after {
-      border-right-color: var(--ɵsci-toolbar-item-visual-menu-hint-color-disabled);
-      border-bottom-color: var(--ɵsci-toolbar-item-visual-menu-hint-color-disabled);
-    }
-
-    &.checked:where(:not(:disabled)) {
-      background-color: var(--ɵsci-toolbar-item-background-color-checked);
-    }
-
-    &.checked {
+    &:has(> button.menu-item.checked) {
       border: 1px solid var(--ɵsci-toolbar-item-border-width-checked);
     }
 
-    &:hover:where(:not(:disabled)) {
-      background-color: var(--ɵsci-toolbar-item-background-color-hover);
+    &:has(> button.menu-item.checked:where(:not(:disabled))) {
+      background-color: var(--ɵsci-toolbar-item-background-color-checked);
     }
 
-    &:active:where(:not(:disabled)) {
-      background-color: var(--ɵsci-toolbar-item-background-color-active);
+    &:has(> button.menu-item:hover:where(:not(:disabled))) {
+      // Colorize the enitre button if not split button.
+      &:not(:has(> button.menu-item.menu.split-button)) {
+        background-color: var(--ɵsci-toolbar-item-background-color-hover);
+      }
+
+      // If split button, colorize hovered button segment.
+      &:has(> button.menu-item.menu.split-button) > button.menu-item:hover {
+        background-color: var(--ɵsci-toolbar-item-background-color-hover);
+      }
     }
 
-    &:focus:not(:focus-visible) {
-      outline: none;
+    &:has(> button.menu-item:active:where(:not(:disabled))) {
+      // Colorize the enitre button if not split button.
+      &:not(:has(> button.menu-item.menu.split-button)) {
+        background-color: var(--ɵsci-toolbar-item-background-color-active);
+      }
+
+      // If split button, colorize hovered button segment.
+      &:has(> button.menu-item.menu.split-button) > button.menu-item:active {
+        background-color: var(--ɵsci-toolbar-item-background-color-active);
+      }
     }
 
-    &:focus-visible {
+    &:has(> button.menu-item:focus-visible) {
       outline: var(--ɵsci-toolbar-item-outline-width-focus) solid var(--sci-color-accent);
     }
 
-    &:disabled {
-      color: var(--ɵsci-toolbar-item-text-color-disabled);
+    &:has(> button.menu-item.menu.open) {
+      background-color: var(--ɵsci-toolbar-item-background-color-hover);
     }
 
-    &.open {
-      background-color: var(--ɵsci-toolbar-item-background-color-hover);
+    > button.menu-item {
+      all: unset;
+      display: inline-flex;
+      gap: .3em;
+      place-content: center;
+      align-items: center;
+      text-wrap: nowrap;
+      padding: var(--ɵsci-toolbar-item-padding);
+      background-color: var(--ɵsci-toolbar-item-background-color);
+      color: var(--ɵsci-toolbar-item-text-color);
+      user-select: none;
+      cursor: var(--ɵsci-toolbar-item-cursor);
+      outline: none;
+
+      // Icon Button
+      &:not(:has(> span.label)):not(.menu.split-button) {
+        padding: 1px; // minimal padding
+        aspect-ratio: 1 / 1;
+      }
+
+      // Split menu button
+      &.menu.split-button {
+        padding: 0 .125em;
+        border-left: 1px solid transparent; // unset to not flicker when hovering split button
+      }
+
+      // Make icon components to have the same size as icons.
+      > span.icon {
+        display: inline-grid;
+        place-content: center;
+        height: var(--sci-icon-size);
+        width: var(--sci-icon-size);
+      }
+
+      > sci-icon.visual-menu-hint {
+        --sci-icon-size: auto;
+      }
+
+      // Add marign between laben and chevron.
+      &:has(> span.label) > sci-icon.visual-menu-hint {
+        margin-left: .25em;
+      }
+
+      // Display visual marker to indicate menu.
+      &.menu.visual-menu-hint {
+        position: relative;
+
+        &::after {
+          $size: 3px;
+          box-sizing: border-box;
+          content: "";
+          position: absolute;
+          width: $size;
+          height: $size;
+          border: $size solid transparent;
+          border-right-color: var(--ɵsci-toolbar-item-visual-menu-hint-color);
+          border-bottom-color: var(--ɵsci-toolbar-item-visual-menu-hint-color);
+          bottom: calc(var(--sci-corner) / 4);
+          right: calc(var(--sci-corner) / 4);
+        }
+      }
+
+      &:disabled {
+        color: var(--ɵsci-toolbar-item-text-color-disabled);
+      }
+
+      &:disabled.menu.visual-menu-hint::after {
+        border-right-color: var(--ɵsci-toolbar-item-visual-menu-hint-color-disabled);
+        border-bottom-color: var(--ɵsci-toolbar-item-visual-menu-hint-color-disabled);
+      }
     }
   }
 }

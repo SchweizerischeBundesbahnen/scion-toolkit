@@ -63,92 +63,65 @@
 
       @switch (menuItem.type) {
         @case ('menu-item') {
-          @let actions = menuItem.actions;
-          @let hasActionToolbar = !disabled && actions?.length;
-          <!-- Display accelerator only if no actions toolbar. -->
-          @let displayAccelerator = menuItem.accelerator && !hasActionToolbar;
+          <!-- Menu Item -->
+          @if (!menuItem.menu) {
+            @let actions = menuItem.actions;
+            @let hasActionToolbar = !disabled && actions?.length;
+            <!-- Display accelerator only if no actions toolbar. -->
+            @let displayAccelerator = menuItem.accelerator && !hasActionToolbar;
 
+            <button (mouseenter)="onMenuOpen(null)"
+                    [attr.disabled]="disabled || null"
+                    [attr.title]="displayAccelerator ? menuItem.tooltip?.() : menuItem.accelerator | sciFormatAccelerator:menuItem.tooltip?.()"
+                    [class.checked]="menuItem.checked?.()"
+                    [class.active]="menuItem.active?.()"
+                    [class]="menuItem.cssClass" class="menu-item e2e-menu-item"
+                    [sciAttributes]="menuItem.attributes"
+                    (click)="onSelect(menuItem)">
+              @if (hasGlyphArea()) {
+                <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
+              }
 
-          <button (mouseenter)="onMenuOpen(null)"
-                  [attr.disabled]="disabled || null"
-                  [attr.title]="displayAccelerator ? menuItem.tooltip?.() : menuItem.accelerator | sciFormatAccelerator:menuItem.tooltip?.()"
-                  [class.checked]="menuItem.checked?.()"
-                  [class.active]="menuItem.active?.()"
-                  [class]="menuItem.cssClass" class="menu-item e2e-menu-item"
-                  [sciAttributes]="menuItem.attributes"
-                  (click)="onSelect(menuItem)">
-            @if (hasGlyphArea()) {
-              @if (menuItem.checked !== undefined) {
+              <div class="content">
+                <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
+
+                @if (displayAccelerator) {
+                  <span class="accelerator">{{menuItem.accelerator | sciFormatAccelerator}}</span>
+                }
+
+                @if (hasActionToolbar) {
+                  <sci-toolbar-group [menuItems]="actions!"
+                                     [orientation]="'horizontal'"
+                                     [popoverViewContainerRef]="popoverAnchor()"
+                                     (menuOpen)="onActionToolbarMenuOpen($event)"
+                                     (click)="$event.stopPropagation()"
+                                     sciToolbarState
+                                     class="actions"/>
+                }
+              </div>
+            </button>
+          }
+
+          <!-- Submenu Item -->
+          @if (menuItem.menu) {
+            <button [attr.disabled]="disabled || null"
+                    [attr.title]="menuItem.tooltip?.()"
+                    [class.open]="activeSubMenuItem()?.menuItem === menuItem"
+                    [class]="menuItem.cssClass" class="menu e2e-menu-item"
+                    [sciAttributes]="menuItem.attributes"
+                    (mouseenter)="onMenuOpen({menuItem, element})"
+                    (click)="onMenuOpen({menuItem, element})"
+                    #element>
+              @if (hasGlyphArea()) {
+                <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
+              }
+              <div class="content">
+                <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
                 <!-- TODO [menu] use SCION icon -->
-                <sci-icon>{{menuItem.checked() ? 'check' : undefined}}</sci-icon>
-              } @else if (menuItem.iconLigature) {
-                <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
-              } @else if (menuItem.iconComponent) {
-                <span class="icon">
-                  <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
-                </span>
-              } @else {
-                <span class="icon"></span>
-              }
-            }
-
-            <div class="content">
-              @if (menuItem.labelText) {
-                <span class="label">{{menuItem.labelText()}}</span>
-              } @else if (menuItem.labelComponent) {
-                <span class="label">
-                  <ng-container *sciComponentOutlet="menuItem.labelComponent"/>
-                </span>
-              }
-
-              @if (displayAccelerator) {
-                <span class="accelerator">{{menuItem.accelerator | sciFormatAccelerator}}</span>
-              }
-
-              @if (hasActionToolbar) {
-                <sci-toolbar-group [menuItems]="actions!"
-                                   [orientation]="'horizontal'"
-                                   [popoverViewContainerRef]="popoverAnchor()"
-                                   (menuOpen)="onActionToolbarMenuOpen($event)"
-                                   (click)="$event.stopPropagation()"
-                                   sciToolbarState
-                                   class="actions"/>
-              }
-            </div>
-          </button>
-        }
-        @case ('menu') {
-          <button [attr.disabled]="disabled || null"
-                  [attr.title]="menuItem.tooltip?.()"
-                  [class.open]="activeSubMenuItem()?.menu === menuItem"
-                  [class]="menuItem.cssClass" class="menu e2e-menu-item"
-                  [sciAttributes]="menuItem.attributes"
-                  (mouseenter)="onMenuOpen({menu: menuItem, element: element})"
-                  (click)="onMenuOpen({menu: menuItem, element: element})"
-                  #element>
-            @if (hasGlyphArea()) {
-              @if (menuItem.iconLigature) {
-                <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
-              } @else if (menuItem.iconComponent) {
-                <span class="icon">
-                  <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
-                </span>
-              } @else {
-                <span class="icon"></span>
-              }
-            }
-            <div class="content">
-              @if (menuItem.labelText) {
-                <span class="label">{{menuItem.labelText()}}</span>
-              } @else if (menuItem.labelComponent) {
-                <span class="label">
-                  <ng-container *sciComponentOutlet="menuItem.labelComponent"/>
-                </span>
-              }
-              <!-- TODO [menu] use SCION icon -->
-              <sci-icon class="chevron">chevron_right</sci-icon>
-            </div>
-          </button>
+                <sci-icon class="chevron">chevron_right</sci-icon>
+              </div>
+            </button>
+          }
         }
         @case ('group') {
           <sci-menu-group [group]="menuItem"
@@ -169,3 +142,30 @@
 
 <!-- Anchor where to insert popover -->
 <ng-container #popover_anchor/>
+
+<!-- Renders the icon of the passed menu item. -->
+<ng-template #icon_template let-menuItem>
+  @if (menuItem.checked !== undefined) {
+    <!-- TODO [menu] use SCION icon -->
+    <sci-icon>{{menuItem.checked() ? 'check' : undefined}}</sci-icon>
+  } @else if (menuItem.iconLigature) {
+    <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
+  } @else if (menuItem.iconComponent) {
+    <span class="icon">
+      <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
+    </span>
+  } @else {
+    <span class="icon"></span>
+  }
+</ng-template>
+
+<!-- Renders the label of the passed menu item. -->
+<ng-template #label_template let-menuItem>
+  @if (menuItem.labelText) {
+    <span class="label">{{menuItem.labelText()}}</span>
+  } @else if (menuItem.labelComponent) {
+    <span class="label">
+      <ng-container *sciComponentOutlet="menuItem.labelComponent"/>
+    </span>
+  }
+</ng-template>

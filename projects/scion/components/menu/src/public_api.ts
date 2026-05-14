@@ -18,7 +18,7 @@ export {ɵSciMenuService} from './ɵmenu.service';
 export {SciMenuAdapter, type SciMenuAdapterChain} from './menu-adapter.model';
 export {contributeMenu} from './menu-contribution';
 export {type SciMenuContribution, type SciMenuContributionLocation, type SciToolbarContributionLocation, type SciMenubarContributionLocation, type SciMenuContributionLocationLike, type SciMenuContributionPosition, type SciToolbarContributionPosition, type SciMenubarContributionPosition, type SciMenuContributionPositionLike, type SciMenuFactoryFn, type SciToolbarFactoryFn, type SciMenubarFactoryFn, type SciMenuFactoryFnLike, type SciMenuContributionOptions} from './menu-contribution.model';
-export {type SciMenuItem, type SciMenu, type SciMenuGroup, type SciMenuItemLike} from './menu.model';
+export {type SciMenuItem, type SciMenuGroup, type SciMenuItemLike} from './menu.model';
 export {provideMenuService} from './ɵmenu.service';
 export {installMenuAccelerators, type SciMenuAcceleratorOptions, type SciKeyboardAccelerator} from './menu-accelerators';
 export {SciMenuEnvironmentProvider} from './menu-environment-provider';

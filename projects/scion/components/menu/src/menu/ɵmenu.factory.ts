@@ -9,9 +9,9 @@
  */
 
 import {SciMenuDescriptor, SciMenuFactory, SciMenuGroupDescriptor, SciMenuItemDescriptor} from './menu.factory';
-import {isSignal} from '@angular/core';
-import {Arrays} from '@scion/toolkit/util';
-import {SciMenu, SciMenuGroup, SciMenuItem, SciMenuItemLike} from '../menu.model';
+import {isSignal, Signal} from '@angular/core';
+import {Arrays, prune} from '@scion/toolkit/util';
+import {SciMenuGroup, SciMenuItem, SciMenuItemLike} from '../menu.model';
 import {ɵSciToolbarFactory} from '../toolbar/ɵtoolbar.factory';
 import {ComponentType} from '@angular/cdk/portal';
 import {coerceSignal, MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
@@ -27,17 +27,13 @@ export class ɵSciMenuFactory implements SciMenuFactory {
   public readonly menuItems = [] as SciMenuItemLike[];
 
   /** @inheritDoc */
-  public addMenuItem(label: MaybeSignal<Translatable>, onSelect: () => boolean | void | Promise<boolean | void>): this;
-  public addMenuItem(descriptor: SciMenuItemDescriptor): this;
-  public addMenuItem(labelOrDescriptor: MaybeSignal<Translatable> | SciMenuItemDescriptor, onSelect?: () => boolean | void | Promise<boolean | void>): this {
-    const descriptor = coerceMenuItemDescriptor(labelOrDescriptor, onSelect);
-
+  public addMenuItem(descriptor: SciMenuItemDescriptor): this {
     // Construct actions toolbar.
     const actionsFactory = new ɵSciToolbarFactory();
     descriptor.actions?.(actionsFactory);
 
-    // Construct menu item.
-    this.menuItems.push({
+    // Add menu item.
+    this.menuItems.push(prune<SciMenuItem>({
       type: 'menu-item',
       name: descriptor.name,
       labelText: translate(coerceLabelText(descriptor.label)),
@@ -53,41 +49,30 @@ export class ɵSciMenuFactory implements SciMenuFactory {
       matchesFilter: descriptor.onFilter,
       cssClass: Arrays.coerce(descriptor.cssClass),
       attributes: descriptor.attributes,
-      onSelect: async () => await descriptor.onSelect() as boolean | undefined ?? descriptor.checked === undefined, // Close if the callback returns true. Defaults to closing non-checkable menu items.
-    } satisfies SciMenuItem);
+      onSelect: async () => await descriptor.onSelect() as boolean | undefined ?? descriptor.checked === undefined, // Returning `true` will close the popover. Non-checkable items close by default.
+    }));
 
-    // TODO [menu] throw error if icon and checked
+    if (descriptor.checked && descriptor.icon) {
+      throw Error('[MenuDefinitionError] Cannot use `checked` and `icon` together.');
+    }
+
     return this;
   }
 
   /** @inheritDoc */
-  public addMenu(label: MaybeSignal<Translatable>, menuFactoryFn: (menu: SciMenuFactory) => void): this;
-  public addMenu(descriptor: SciMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this;
-  public addMenu(labelOrDescriptor: MaybeSignal<Translatable> | SciMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this {
-    const descriptor = coerceMenuDescriptor(labelOrDescriptor);
-
-    // Construct menu.
-    const menuFactory = new ɵSciMenuFactory();
-    menuFactoryFn(menuFactory);
-
-    // Add menu.
-    this.menuItems.push({
-      type: 'menu',
+  public addMenu(descriptor: SciMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this {
+    this.menuItems.push(prune<SciMenuItem>({
+      type: 'menu-item',
       name: descriptor.name,
       labelText: translate(coerceLabelText(descriptor.label)),
       labelComponent: coerceLabelComponent(descriptor.label),
       iconLigature: coerceSignal(coerceIconLigature(descriptor.icon)),
       iconComponent: coerceIconComponent(descriptor.icon),
       disabled: coerceSignal(descriptor.disabled),
-      width: descriptor.width,
-      minWidth: descriptor.minWidth,
-      maxWidth: descriptor.maxWidth,
-      maxHeight: descriptor.maxHeight,
-      filter: coerceFilterDescriptor(descriptor),
       cssClass: Arrays.coerce(descriptor.cssClass),
       attributes: descriptor.attributes,
-      children: menuFactory.menuItems,
-    } satisfies SciMenu);
+      menu: constructMenu(menuFactoryFn, descriptor.menu),
+    }));
 
     return this;
   }
@@ -107,7 +92,7 @@ export class ɵSciMenuFactory implements SciMenuFactory {
     descriptor.actions?.(actionsFactory);
 
     // Add group.
-    this.menuItems.push({
+    this.menuItems.push(prune<SciMenuGroup>({
       type: 'group',
       name: descriptor.name,
       label: translate(descriptor.label),
@@ -115,24 +100,10 @@ export class ɵSciMenuFactory implements SciMenuFactory {
       disabled: coerceSignal(descriptor.disabled),
       actions: actionsFactory.menuItems,
       children: groupFactory.menuItems,
-    } satisfies SciMenuGroup);
+    }));
 
     return this;
   }
-}
-
-function coerceMenuItemDescriptor(labelOrDescriptor: MaybeSignal<string> | SciMenuItemDescriptor, onSelect?: () => boolean | void | Promise<boolean | void>): SciMenuItemDescriptor {
-  if (typeof labelOrDescriptor === 'string' || isSignal(labelOrDescriptor)) {
-    return {label: labelOrDescriptor, onSelect: onSelect!};
-  }
-  return labelOrDescriptor;
-}
-
-function coerceMenuDescriptor(labelOrDescriptor: MaybeSignal<string> | SciMenuDescriptor): SciMenuDescriptor {
-  if (typeof labelOrDescriptor === 'string' || isSignal(labelOrDescriptor)) {
-    return {label: labelOrDescriptor};
-  }
-  return labelOrDescriptor;
 }
 
 function coerceGroupDescriptor(factoryOrDescriptor: ((group: SciMenuFactory) => void) | SciMenuGroupDescriptor, factoryIfDescriptor?: (group: SciMenuFactory) => void): [SciMenuGroupDescriptor, ((group: SciMenuFactory) => void) | undefined] {
@@ -176,19 +147,6 @@ function coerceIconComponent(icon: MaybeSignal<string> | ComponentType<unknown> 
   return undefined;
 }
 
-function coerceFilterDescriptor(menuDescriptor: SciMenuDescriptor): SciMenu['filter'] {
-  const filter = menuDescriptor.filter;
-
-  if (typeof filter === 'object') {
-    return {
-      placeholder: coerceSignal(filter.placeholder),
-      notFoundText: coerceSignal(filter.notFoundText),
-      focus: filter.focus,
-    };
-  }
-  return filter === true ? {} : undefined;
-}
-
 function coerceCollapsibleDescriptor(groupDescriptor: SciMenuGroupDescriptor): {collapsed: boolean} | undefined {
   const collapsible = groupDescriptor.collapsible;
 
@@ -197,4 +155,36 @@ function coerceCollapsibleDescriptor(groupDescriptor: SciMenuGroupDescriptor): {
   }
 
   return collapsible === true ? {collapsed: false} : undefined;
+}
+
+export function constructMenu(menuFactoryFn?: (menu: SciMenuFactory) => void, menuDescriptor?: SciMenuDescriptor['menu']): SciMenuItem['menu'] {
+  if (!menuFactoryFn) {
+    return undefined;
+  }
+
+  const menuFactory = new ɵSciMenuFactory();
+  menuFactoryFn(menuFactory);
+
+  return prune<SciMenuItem['menu']>({
+    name: menuDescriptor?.name,
+    children: menuFactory.menuItems,
+    width: menuDescriptor?.width,
+    minWidth: menuDescriptor?.minWidth,
+    maxWidth: menuDescriptor?.maxWidth,
+    maxHeight: menuDescriptor?.maxHeight,
+    filter: coerceFilterDescriptor(menuDescriptor),
+  });
+
+  function coerceFilterDescriptor(menuDescriptor?: SciMenuDescriptor['menu']): {placeholder?: Signal<Translatable>; notFoundText?: Signal<Translatable>; focus?: boolean} | undefined {
+    const filter = menuDescriptor?.filter;
+
+    if (typeof filter === 'object') {
+      return {
+        placeholder: coerceSignal(filter.placeholder),
+        notFoundText: coerceSignal(filter.notFoundText),
+        focus: filter.focus,
+      };
+    }
+    return filter === true ? {} : undefined;
+  }
 }

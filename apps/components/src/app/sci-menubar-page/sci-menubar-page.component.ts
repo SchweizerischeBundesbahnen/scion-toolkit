@@ -27,29 +27,29 @@ export default class SciMenubarPageComponent {
 
   private contributeMenubar(): void {
     contributeMenu('menubar:demo', menubar => menubar
-      .addMenu('Menu 1', menu => menu
-        .addMenuItem('Menu 1a', onSelect)
-        .addMenuItem('Menu 1b', onSelect)
-        .addMenuItem('Menu 1c', onSelect),
+      .addMenu({label: 'Menu 1'}, menu => menu
+        .addMenuItem({label: 'Menu 1a', onSelect})
+        .addMenuItem({label: 'Menu 1b', onSelect})
+        .addMenuItem({label: 'Menu 1c', onSelect}),
       )
       .addMenu({label: 'Menu 2'}, menu => menu
-        .addMenuItem('Menu 2a', onSelect)
-        .addMenu('Menu 2b', menu => menu
-          .addMenuItem('Submenu 1', onSelect)
-          .addMenuItem('Submenu 2', onSelect)
-          .addMenuItem('Submenu 3', onSelect),
+        .addMenuItem({label: 'Menu 2a', onSelect})
+        .addMenu({label: 'Menu 2b'}, menu => menu
+          .addMenuItem({label: 'Submenu 1', onSelect})
+          .addMenuItem({label: 'Submenu 2', onSelect})
+          .addMenuItem({label: 'Submenu 3', onSelect}),
         )
-        .addMenuItem('Menu 2c', onSelect),
+        .addMenuItem({label: 'Menu 2c', onSelect}),
       )
-      .addMenu('Menu 3', menu => menu
-        .addMenuItem('Menu 3a', onSelect)
-        .addMenuItem('Menu 3b', onSelect)
-        .addMenuItem('Menu 3c', onSelect),
+      .addMenu({label: 'Menu 3'}, menu => menu
+        .addMenuItem({label: 'Menu 3a', onSelect})
+        .addMenuItem({label: 'Menu 3b', onSelect})
+        .addMenuItem({label: 'Menu 3c', onSelect}),
       ),
     );
 
     contributeMenu({location: 'menubar:demo', position: 'start'}, menu => menu
-      .addMenu({label: 'File', name: 'menu:file', filter: {placeholder: 'Filter files', notFoundText: 'No file found'}}, menu => menu
+      .addMenu({label: 'File', menu: {name: 'menu:file', filter: {placeholder: 'Filter files', notFoundText: 'No file found'}}}, menu => menu
         .addMenuItem({label: 'New', icon: 'article', onSelect})
         .addMenuItem({label: 'Open', icon: 'folder', onSelect})
         .addMenuItem({label: 'Make a Copy', icon: 'file_copy', onSelect}),
@@ -57,7 +57,7 @@ export default class SciMenubarPageComponent {
     );
 
     contributeMenu({location: 'menu:file'}, menu => menu
-      .addMenu({label: 'Share', name: 'menu:share', icon: 'person_add'}, menu => menu
+      .addMenu({label: 'Share', icon: 'person_add', menu: {name: 'menu:share'}}, menu => menu
         .addMenuItem({label: 'Share with others', icon: 'person_add', onSelect}),
       ),
     );

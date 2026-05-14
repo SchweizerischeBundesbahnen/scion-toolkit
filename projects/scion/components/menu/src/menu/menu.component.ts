@@ -15,7 +15,7 @@ import {MenuFilterComponent} from './menu-filter.component';
 import {MenuFilter} from './menu-filter.service';
 import {ToolbarStateDirective} from '../toolbar/toolbar-state.directive';
 import {NgTemplateOutlet} from '@angular/common';
-import {SciMenu, SciMenuGroup, SciMenuItem, SciMenuItemLike} from '../menu.model';
+import {SciMenuGroup, SciMenuItem, SciMenuItemLike} from '../menu.model';
 import {ɵSciMenuService} from '../ɵmenu.service';
 import {SciToolGroupComponent} from '../toolbar/toolbar-group.component';
 import {NULL_MENU_CONTRIBUTIONS} from '../menu-contribution.model';
@@ -70,7 +70,7 @@ import {RequireOne} from '@scion/toolkit/types';
 export class MenuComponent {
 
   // TODO [menu] Can menu items change? Before SciMenuOpener, this was possible. SciMenuOpener, however, always opens a new menu.
-  public readonly menuItems = input.required<Array<SciMenuItem | SciMenu | SciMenuGroup>>();
+  public readonly menuItems = input.required<Array<SciMenuItem | SciMenuGroup>>();
   public readonly disabled = input<boolean>();
   public readonly filter = input<{placeholder?: Signal<Translatable>; notFoundText?: Signal<Translatable>; focus?: boolean}>();
   public readonly group = input<{label?: string; collapsible: boolean; collapsed: boolean; actions: SciMenuItemLike[]}>();
@@ -92,7 +92,7 @@ export class MenuComponent {
   protected readonly menuItemsFiltered = computed(() => this.menuItems().filter(menuItem => this.matchesFilter(menuItem)()));
   protected readonly popoverAnchor = viewChild.required('popover_anchor', {read: ViewContainerRef});
   protected readonly scrolling = this.computeScrolling();
-  protected readonly activeSubMenuItem = linkedSignal<SciMenuItemLike[], {menu: SciMenu; element: HTMLElement} | null>({
+  protected readonly activeSubMenuItem = linkedSignal<SciMenuItemLike[], {menuItem: SciMenuItem; element: HTMLElement} | null>({
     source: this.menuItemsFiltered, // reset active sub menu item when filter changes (otherwise, popopver would loose its anchor and render left-top of the viewport)
     computation: () => null,
   });
@@ -145,17 +145,19 @@ export class MenuComponent {
         if (!activeSubMenuItem) {
           return;
         }
-        const ref = this._menuService.open(activeSubMenuItem.menu.children, {
+        const menuItem = activeSubMenuItem.menuItem;
+        const menu = menuItem.menu!;
+        const ref = this._menuService.open(menu.children, {
           anchor: activeSubMenuItem.element,
           viewContainerRef: this.popoverAnchor(),
-          cssClass: activeSubMenuItem.menu.cssClass,
-          attributes: activeSubMenuItem.menu.attributes,
-          filter: activeSubMenuItem.menu.filter as RequireOne<{placeholder?: Signal<Translatable>; notFoundText?: Signal<Translatable>; focus?: boolean}> | undefined,
+          cssClass: menuItem.cssClass,
+          attributes: menuItem.attributes,
+          filter: menu.filter as RequireOne<{placeholder?: Signal<Translatable>; notFoundText?: Signal<Translatable>; focus?: boolean}> | undefined,
           size: {
-            width: activeSubMenuItem.menu.width,
-            minWidth: activeSubMenuItem.menu.minWidth,
-            maxWidth: activeSubMenuItem.menu.maxWidth,
-            maxHeight: activeSubMenuItem.menu.maxHeight,
+            width: menu.width,
+            minWidth: menu.minWidth,
+            maxWidth: menu.maxWidth,
+            maxHeight: menu.maxHeight,
           },
           submenu: true,
           align: 'horizontal',
@@ -174,7 +176,8 @@ export class MenuComponent {
 
   protected async onSelect(menuItem: SciMenuItem): Promise<void> {
     // TODO [menu] Disable during action until promise resolved.
-    if (await menuItem.onSelect()) {
+    // TODO [menu] toggle menu
+    if (await menuItem.onSelect!()) {
       this.close();
     }
   }
@@ -183,8 +186,8 @@ export class MenuComponent {
     this.isGroupExpanded.update(expanded => !expanded);
   }
 
-  protected onMenuOpen(menuItem: {menu: SciMenu; element: HTMLElement} | null): void {
-    const disabled = this.disabled() || menuItem?.menu.disabled?.(); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+  protected onMenuOpen(menuItem: {menuItem: SciMenuItem; element: HTMLElement} | null): void {
+    const disabled = this.disabled() || menuItem?.menuItem.disabled?.(); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
     this.activeSubMenuItem.set(disabled ? null : menuItem);
 
     // Create and display "fake" popover to close popover when hovering menu items of other groups.
@@ -244,16 +247,14 @@ export class MenuComponent {
       ), {initialValue: false});
   }
 
-  private matchesFilter(menuItem: SciMenuItem | SciMenu | SciMenuGroup): Signal<boolean> {
+  private matchesFilter(menuItem: SciMenuItem | SciMenuGroup): Signal<boolean> {
     return computed(() => {
       if (!this._menuFilter.active()) {
         return true;
       }
       switch (menuItem.type) {
         case 'menu-item':
-          return this._menuFilter.matches(menuItem)();
-        case 'menu':
-          return menuItem.children.some(menuItem => this.matchesFilter(menuItem)());
+          return menuItem.menu ? menuItem.menu.children.some(menuItem => this.matchesFilter(menuItem)()) : this._menuFilter.matches(menuItem)();
         case 'group':
           return menuItem.children.some(menuItem => this.matchesFilter(menuItem)());
       }
@@ -279,8 +280,6 @@ function requiresGlyphArea(menuItems: SciMenuItemLike[]): boolean {
     switch (menuItem.type) {
       case 'menu-item':
         return !!menuItem.iconLigature || !!menuItem.iconComponent || !!menuItem.checked;
-      case 'menu':
-        return !!menuItem.iconLigature || !!menuItem.iconComponent;
       case 'group':
         return !!menuItem.collapsible || requiresGlyphArea(menuItem.children);
     }

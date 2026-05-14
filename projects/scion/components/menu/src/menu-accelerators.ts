@@ -31,6 +31,8 @@ import {createDestroyableInjector} from '@scion/components/common';
  * An accelerator key can be a single key, such as F1 - F12 and Esc, or a combination of keys (Ctrl + Shift + B, or Ctrl C) that invoke a command. They differ from access keys (mnemonics), which are typically modified with the Alt key and simply activate a command or control.
  *
  * Unsubscribes from keyboard events when the injection context is destroyed.
+ *
+ * TODO [menu] consider renaming to registerAccelerator (like in electron)
  */
 export function installMenuAccelerators(location: `menu:${string}` | `toolbar:${string}` | `menubar:${string}`, options?: SciMenuAcceleratorOptions): Disposable {
   const injector = createDestroyableInjector({parent: options?.injector ?? inject(Injector)});
@@ -82,7 +84,7 @@ export function installMenuAccelerators(location: `menu:${string}` | `toolbar:${
             event.stopPropagation();
 
             // Execute action.
-            zone.run(() => matchingMenuItems.forEach(menuItem => void menuItem.onSelect()));
+            zone.run(() => matchingMenuItems.forEach(menuItem => void menuItem.onSelect!()));
           });
 
         onCleanup(() => subscription.unsubscribe());
@@ -113,12 +115,15 @@ export function collectAccelerators(menuItemLikes: SciMenuItemLike[]): SciMenuIt
   return menuItemLikes.reduce((menuItems, menuItemLike) => {
     switch (menuItemLike.type) {
       case 'menu-item': {
-        return menuItems.concat(collectAccelerators(menuItemLike.actions ?? [])).concat(menuItemLike.accelerator ? menuItemLike : []);
+        return menuItems
+          .concat(menuItemLike.accelerator ? menuItemLike : [])
+          .concat(collectAccelerators(menuItemLike.actions ?? []))
+          .concat(collectAccelerators(menuItemLike.menu?.children ?? []));
       }
-      case 'menu':
-        return menuItems.concat(collectAccelerators(menuItemLike.children));
       case 'group': {
-        return menuItems.concat(collectAccelerators(menuItemLike.children)).concat(collectAccelerators(menuItemLike.actions ?? []));
+        return menuItems
+          .concat(collectAccelerators(menuItemLike.children))
+          .concat(collectAccelerators(menuItemLike.actions ?? []));
       }
     }
   }, new Array<SciMenuItem>());

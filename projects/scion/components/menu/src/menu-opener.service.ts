@@ -9,7 +9,7 @@
  */
 
 import {ApplicationRef, Binding, ComponentRef, computed, createComponent, DestroyRef, DOCUMENT, effect, ElementRef, EnvironmentInjector, inject, Injectable, Injector, inputBinding, runInInjectionContext, signal, Signal, ViewContainerRef} from '@angular/core';
-import {SciMenu, SciMenuItemLike} from './menu.model';
+import {SciMenuItemLike} from './menu.model';
 import {SciMenuOptions, SciMenuOrigin, SciMenuRef} from './menu.service';
 import {coerceElement} from '@angular/cdk/coercion';
 import {MenuComponent, provideMenuType} from './menu/menu.component';
@@ -19,6 +19,7 @@ import {NULL_MENU_CONTRIBUTIONS} from './menu-contribution.model';
 import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
 import {ɵSciMenuService} from './ɵmenu.service';
 import {Arrays} from '@scion/toolkit/util';
+import {Translatable} from '@scion/components/text';
 
 @Injectable({providedIn: 'root'})
 export class SciMenuOpener {
@@ -243,7 +244,7 @@ function setStyles(element: HTMLElement, styles: {[style: string]: string | null
   });
 }
 
-function coerceFilterDescriptor(filter: SciMenuOptions['filter'] | undefined): SciMenu['filter'] {
+function coerceFilterDescriptor(filter: SciMenuOptions['filter'] | undefined): {placeholder?: Signal<Translatable>; notFoundText?: Signal<Translatable>; focus?: boolean} | undefined {
   if (typeof filter === 'object') {
     return {
       placeholder: coerceSignal(filter.placeholder),

@@ -126,7 +126,7 @@ export class ɵSciMenuRegistry implements SciMenuRegistry, SciMenuAdapter {
         // Construct menu items for each contribution in this context.
         .flatMap(menuContribution => untracked(() => computeMenuItems(menuContribution, callingContext))())
         // Federate menu items, recursively for each submenu and group.
-        .map(menuItem => untracked(() => federateMenu(menuItem, callingContext, {injector: callingContextInjector, metadata: options.metadata}))())
+        .map(menuItem => federateMenuItems(menuItem, callingContext, {injector: callingContextInjector, metadata: options.metadata}))
         // Filter empty submenus and groups.
         .flatMap(filterEmpty);
 
@@ -173,27 +173,38 @@ export class ɵSciMenuRegistry implements SciMenuRegistry, SciMenuAdapter {
     /**
      * Federates passed menu or group with contributions based on its name. Federation is recursive.
      */
-    function federateMenu(menuItem: SciMenuItemLike, context: Map<string, unknown>, options?: {injector?: Injector; metadata?: {[key: string]: unknown}}): Signal<SciMenuItemLike> {
-      assertNotInReactiveContext(federateMenu, 'Call federateMenu() in a non-reactive (non-tracking) context, such as within the untracked() function.');
+    function federateMenuItems(menuItem: SciMenuItemLike, context: Map<string, unknown>, options?: {injector?: Injector; metadata?: {[key: string]: unknown}}): SciMenuItemLike {
+      const federatedItem = {...menuItem};
 
-      const contributions = menuItem.name && menuItem.type !== 'menu-item' ? menuService.menuItems(menuItem.name, context, options) : signal([]);
+      // Federate actions of the menu item.
+      if (federatedItem.actions?.length) {
+        federatedItem.actions = sortMenuItems(federatedItem.actions.map(action => federateMenuItems(action, context, options)).flatMap(filterEmpty));
+      }
 
-      return computed((): SciMenuItemLike => {
-        const federatedItem = {...menuItem};
+      // Federate menu items of group.
+      if (federatedItem.type === 'group') {
+        const contributions = federatedItem.name ? untracked(() => menuService.menuItems(federatedItem.name!, context, {injector: options?.injector, metadata: options?.metadata}))() : [];
 
-        if ('children' in federatedItem) {
-          federatedItem.children = sortMenuItems([
-            ...federatedItem.children.map(child => untracked(() => federateMenu(child, context, options))()),
-            ...contributions(),
-          ]);
-        }
+        federatedItem.children = sortMenuItems([
+          ...federatedItem.children.map(child => federateMenuItems(child, context, options)),
+          ...contributions,
+        ]);
+      }
 
-        if ('actions' in federatedItem && federatedItem.actions) {
-          federatedItem.actions = federatedItem.actions.map(action => untracked(() => federateMenu(action, context, options))()).flatMap(filterEmpty);
-        }
+      // Federate menu items of menu.
+      if (federatedItem.type === 'menu-item' && federatedItem.menu) {
+        const contributions = federatedItem.menu.name ? untracked(() => menuService.menuItems(federatedItem.menu!.name!, context, {injector: options?.injector, metadata: options?.metadata}))() : [];
 
-        return federatedItem;
-      });
+        federatedItem.menu = {
+          ...federatedItem.menu,
+          children: sortMenuItems([
+            ...federatedItem.menu.children.map(child => federateMenuItems(child, context, options)),
+            ...contributions,
+          ]),
+        };
+      }
+
+      return federatedItem;
     }
   }
 
@@ -220,15 +231,24 @@ export class ɵSciMenuRegistry implements SciMenuRegistry, SciMenuAdapter {
 function filterEmpty(menuItem: SciMenuItemLike): [SciMenuItemLike] | [] {
   switch (menuItem.type) {
     case 'menu-item': {
-      return [menuItem];
+      if (!menuItem.menu) {
+        return [menuItem];
+      }
+
+      const children = menuItem.menu.children.flatMap(filterEmpty);
+      if (children.length) {
+        return [{...menuItem, menu: {...menuItem.menu, children}}];
+      }
+
+      // Never filter controls or push buttons.
+      if (menuItem.control || menuItem.onSelect) {
+        return [menuItem];
+      }
+      return [];
     }
-    case 'menu':
     case 'group': {
       const children = menuItem.children.flatMap(filterEmpty);
-      if (!children.length) {
-        return [];
-      }
-      return [{...menuItem, children}];
+      return children.length ? [{...menuItem, children}] : [];
     }
   }
 }
