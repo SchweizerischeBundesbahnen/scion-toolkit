@@ -15,22 +15,17 @@ import {Translatable} from '@scion/components/text';
 import {SciKeyboardAccelerator} from '../menu-accelerators';
 import {Binding, Injector, Provider} from '@angular/core';
 
-/* eslint-disable @typescript-eslint/unified-signatures */
-
 export interface SciToolbarFactory {
 
   addToolbarButton(descriptor: SciToolbarButtonDescriptor): this;
 
-  // TODO [marc] Should we rename to addToolbarSplitButton?
-  addToolbarButton(descriptor: SciToolbarButtonDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
+  addToolbarSplitButton(descriptor: SciToolbarButtonDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
-  // TODO [marc] Should we rename to addToolbarMenuButton?
-  // Also because menu property, which is an object literal in the descriptor
   addToolbarMenu(descriptor: SciToolbarMenuDescriptor, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
   addToolbarControl(descriptor: SciToolbarControlDescriptor): this;
 
-  addToolbarControl(descriptor: SciToolbarControlDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
+  addToolbarSplitControl(descriptor: SciToolbarControlDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
 
   addGroup(groupFactoryFn: (group: SciToolbarFactory) => void): this;
 

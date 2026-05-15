@@ -20,8 +20,6 @@ import {coerceSignal, MaybeSignal, SciComponentDescriptor} from '@scion/componen
 import {Translatable} from '@scion/components/text';
 import {ComponentType} from '@angular/cdk/portal';
 
-/* eslint-disable @typescript-eslint/unified-signatures */
-
 /**
  * Translation note: Texts are translated when added (not lazily when rendered) to simplify filtering.
  */
@@ -30,9 +28,28 @@ export class ɵSciToolbarFactory implements SciToolbarFactory {
   public readonly menuItems = [] as SciMenuItemLike[];
 
   /** @inheritDoc */
-  public addToolbarButton(descriptor: SciToolbarButtonDescriptor): this;
-  public addToolbarButton(descriptor: SciToolbarButtonDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
-  public addToolbarButton(descriptor: SciToolbarButtonDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn?: (menu: SciMenuFactory) => void): this {
+  public addToolbarButton(descriptor: SciToolbarButtonDescriptor): this {
+    this.menuItems.push(prune<SciMenuItem>({
+      type: 'menu-item',
+      name: descriptor.name,
+      labelText: translate(coerceLabelText(descriptor.label)),
+      labelComponent: coerceLabelComponent(descriptor.label),
+      iconLigature: coerceSignal(coerceIconLigature(descriptor.icon)),
+      iconComponent: coerceIconComponent(descriptor.icon),
+      checked: coerceSignal(descriptor.checked),
+      tooltip: translate(descriptor.tooltip),
+      accelerator: validateMenuAccelerator(descriptor.accelerator),
+      disabled: coerceSignal(descriptor.disabled),
+      cssClass: Arrays.coerce(descriptor.cssClass),
+      attributes: descriptor.attributes,
+      onSelect: async () => await descriptor.onSelect() as boolean | undefined ?? descriptor.checked === undefined, // Returning `true` will close the popover. Non-checkable items close by default.
+    }));
+
+    return this;
+  }
+
+  /** @inheritDoc */
+  public addToolbarSplitButton(descriptor: SciToolbarButtonDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this {
     this.menuItems.push(prune<SciMenuItem>({
       type: 'menu-item',
       name: descriptor.name,
@@ -74,9 +91,26 @@ export class ɵSciToolbarFactory implements SciToolbarFactory {
   }
 
   /** @inheritDoc */
-  public addToolbarControl(descriptor: SciToolbarControlDescriptor): this;
-  public addToolbarControl(descriptor: SciToolbarControlDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this;
-  public addToolbarControl(descriptor: SciToolbarControlDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn?: (menu: SciMenuFactory) => void): this {
+  public addToolbarControl(descriptor: SciToolbarControlDescriptor): this {
+    this.menuItems.push(prune<SciMenuItem>({
+      type: 'menu-item',
+      name: descriptor.name,
+      control: {
+        component: descriptor.component,
+        bindings: descriptor.bindings,
+        injector: descriptor.injector,
+        providers: descriptor.providers,
+      },
+      tooltip: translate(descriptor.tooltip),
+      cssClass: Arrays.coerce(descriptor.cssClass),
+      attributes: descriptor.attributes,
+    }));
+
+    return this;
+  }
+
+  /** @inheritDoc */
+  public addToolbarSplitControl(descriptor: SciToolbarControlDescriptor & {menu?: SciMenuDescriptor['menu']}, menuFactoryFn: (menu: SciMenuFactory) => void): this {
     this.menuItems.push(prune<SciMenuItem>({
       type: 'menu-item',
       name: descriptor.name,

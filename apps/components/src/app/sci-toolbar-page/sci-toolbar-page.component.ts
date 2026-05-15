@@ -68,7 +68,7 @@ export default class SciToolbarPageComponent {
         .addMenuItem({label: 'Make a Copy', icon: 'file_copy', onSelect}),
       )
       // TODO [menu]: Find better example for split button
-      .addToolbarButton({
+      .addToolbarSplitButton({
         icon: computed(() => gitIcons.get(gitAction())!),
         label: computed(() => gitLabels.get(gitAction())!),
         tooltip: computed(() => gitLabels.get(gitAction())!),
@@ -91,7 +91,7 @@ export default class SciToolbarPageComponent {
           .addMenuItem({checked: computed(() => gitAction() === 'fetch_and_prune'), label: gitLabels.get('fetch_and_prune')!, onSelect: () => setDefaultGitAction('fetch_and_prune')}),
         ))
       // TODO [menu]: Find better example for checkable split button
-      .addToolbarButton({
+      .addToolbarSplitButton({
         icon: computed(() => listStyleIcons.get(selectedListStyle())!),
         tooltip: computed(() => listStyleLabels.get(selectedListStyle())!),
         checked: listStyleActive,
@@ -100,7 +100,7 @@ export default class SciToolbarPageComponent {
         .addMenuItem({icon: listStyleIcons.get('number_list'), label: listStyleLabels.get('number_list')!, onSelect: () => selectedListStyle.set('number_list')})
         .addMenuItem({icon: listStyleIcons.get('bullet_list'), label: listStyleLabels.get('bullet_list')!, onSelect: () => selectedListStyle.set('bullet_list')}))
       // TODO [menu]: Find better example for custom control
-      .addToolbarControl({component: InputToolbarControlComponent, bindings: [inputBinding('placeholder', signal('Enter to filter'))]}, menu => menu
+      .addToolbarSplitControl({component: InputToolbarControlComponent, bindings: [inputBinding('placeholder', signal('Enter to filter'))]}, menu => menu
         .addMenuItem({label: 'Bold', onSelect: () => bold.update(bold => !bold)})
         .addMenuItem({label: 'Italic', onSelect: () => italic.update(italic => !italic)})
         .addMenuItem({label: 'Underline', onSelect: () => underlined.update(underlined => !underlined)})
