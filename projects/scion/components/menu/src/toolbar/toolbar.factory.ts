@@ -79,4 +79,5 @@ export interface SciToolbarControlDescriptor {
 export interface SciToolbarGroupDescriptor {
   name?: `toolbar:${string}`;
   disabled?: MaybeSignal<boolean>;
+  cssClass?: string | string[];
 }

@@ -111,6 +111,7 @@ export class ɵSciToolbarFactory implements SciToolbarFactory {
       name: descriptor.name,
       disabled: coerceSignal(descriptor.disabled),
       children: groupFactory.menuItems,
+      cssClass: Arrays.coerce(descriptor.cssClass),
     }));
 
     return this;

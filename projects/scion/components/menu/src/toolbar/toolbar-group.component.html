@@ -59,7 +59,7 @@
                          [disabled]="disabled"
                          [popoverViewContainerRef]="popoverViewContainerRef()"
                          (menuOpen)="onChildGroupMenuOpen($event)"
-                         class="e2e-menu-item e2e-toolbar-group"/>
+                         [class]="menuItem.cssClass" class="e2e-menu-item e2e-toolbar-group"/>
     }
   }
 }

@@ -65,4 +65,5 @@ export interface SciMenuGroupDescriptor {
   collapsible?: boolean | {collapsed: boolean};
   disabled?: MaybeSignal<boolean>;
   actions?: (actions: SciToolbarFactory) => void;
+  cssClass?: string | string[];
 }

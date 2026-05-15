@@ -127,7 +127,7 @@
           <sci-menu-group [group]="menuItem"
                           [glyphArea]="hasGlyphArea()"
                           [disabled]="disabled"
-                          class="e2e-menu-group"/>
+                          [class]="menuItem.cssClass" class="e2e-menu-group"/>
         }
       }
     } @empty {

@@ -57,6 +57,7 @@ export interface SciMenuGroup {
   position?: SciMenuContributionPositionLike;
   actions?: SciMenuItemLike[]; // only for menu items
   children: SciMenuItemLike[];
+  cssClass?: string[];
 }
 
 export type SciMenuItemLike = SciMenuItem | SciMenuGroup;

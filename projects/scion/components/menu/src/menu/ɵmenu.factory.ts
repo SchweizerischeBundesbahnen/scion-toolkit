@@ -100,6 +100,7 @@ export class ɵSciMenuFactory implements SciMenuFactory {
       disabled: coerceSignal(descriptor.disabled),
       actions: actionsFactory.menuItems,
       children: groupFactory.menuItems,
+      cssClass: Arrays.coerce(descriptor.cssClass),
     }));
 
     return this;
