@@ -8,10 +8,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {inject, Injectable, InjectionToken, Injector, isSignal, runInInjectionContext, Signal, signal} from '@angular/core';
+import {assertNotInReactiveContext, computed, inject, Injectable, InjectionToken, Injector, isSignal, runInInjectionContext, Signal, signal} from '@angular/core';
 import {SciTextProviderFn, Translatable} from './text-provider.model';
 import {scionComponentsTextProvider} from './scion-components-text-provider';
-import {Maps} from '@scion/toolkit/util';
+import {Maps, runSafe} from '@scion/toolkit/util';
 
 /**
  * Provides texts based on registered text providers.
@@ -35,6 +35,8 @@ export class TextProviders {
    * that are released only when the injector is destroyed. Destroy the injector when the text is no longer needed.
    */
   public provide(translatable: Translatable | undefined | null, options: {params?: Record<string, unknown> | Map<string, unknown>; injector?: Injector}): Signal<string | undefined | null> {
+    assertNotInReactiveContext(this.provide, 'Call TextProviders.provide() in a non-reactive (non-tracking) context.');
+
     if (!translatable?.startsWith('%') || translatable === '%' || !this._textProviders.length) {
       return signal(translatable);
     }
@@ -46,10 +48,18 @@ export class TextProviders {
     Maps.coerce(options.params).forEach((value, name) => params.set(name, `${value}`));
 
     const injector = options.injector ?? inject(Injector);
+    const errorHandler = (error: unknown): string => {
+      // Prefix the key with an additional `%` character to escape the leading `%` character. See console formatting rules: https://developer.mozilla.org/en-US/docs/Web/API/console
+      console.error(`[TextProviderError] Failed to get text for '%${translatable}'. Caused by:`, error);
+      return translatable;
+    };
+
     for (const textProvider of this._textProviders) {
-      const text = runInInjectionContext(injector, () => textProvider(key, Object.fromEntries(params)));
+      // If `textProvider` throws an error, `runSafe` catches it and delegates execution to the error handler, logging the error and returning the translatable.
+      const text = runInInjectionContext(injector, () => runSafe(() => textProvider(key, Object.fromEntries(params)), errorHandler));
       if (text !== undefined) {
-        return isSignal(text) ? text : signal(text);
+        // If signal, wrap it in `computed` to handle errors.
+        return isSignal(text) ? computed(() => runSafe(() => text(), errorHandler)) : signal(text);
       }
     }
     return signal(translatable);
