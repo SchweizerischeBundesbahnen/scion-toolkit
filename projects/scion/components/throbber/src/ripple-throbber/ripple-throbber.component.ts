@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {Component} from '@angular/core';
 
 /**
  * Represents a throbber with a rippled, centric wave effect, similar to throwing a stone into water.
@@ -19,7 +19,6 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
   selector: 'sci-ripple-throbber',
   templateUrl: './ripple-throbber.component.html',
   styleUrls: ['./ripple-throbber.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SciRippleThrobberComponent {
 }

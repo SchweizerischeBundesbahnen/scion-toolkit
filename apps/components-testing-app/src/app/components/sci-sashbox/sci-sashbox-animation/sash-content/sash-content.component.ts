@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, InjectionToken, input} from '@angular/core';
+import {Component, DestroyRef, ElementRef, inject, InjectionToken, input} from '@angular/core';
 import {fromResize$} from '@scion/toolkit/observable';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
@@ -9,7 +9,6 @@ export const LABEL = new InjectionToken<string>('LABEL');
   selector: 'app-sash-content',
   templateUrl: './sash-content.component.html',
   styleUrl: './sash-content.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SashContentComponent {
 

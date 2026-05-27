@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, output, signal, untracked, viewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, output, signal, untracked, viewChild} from '@angular/core';
 import {audit, fromEvent, merge, Observable, Subscription} from 'rxjs';
 import {tapFirst} from '@scion/toolkit/operators';
 import {first, takeUntil} from 'rxjs/operators';
@@ -65,7 +65,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     '[class.vertical]': 'isVertical()',
     '[style.cursor]': 'splitterCursor()',
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SciSplitterComponent {
 

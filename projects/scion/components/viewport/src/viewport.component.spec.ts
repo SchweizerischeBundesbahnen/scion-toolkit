@@ -9,7 +9,7 @@
  */
 
 import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {Component, DestroyRef, ElementRef, inject, input, Renderer2, Signal, viewChild} from '@angular/core';
+import {Component, DestroyRef, ElementRef, inject, input, Renderer2, signal, Signal, viewChild} from '@angular/core';
 import {By} from '@angular/platform-browser';
 import {Dictionary} from '@scion/toolkit/util';
 import {SciViewportComponent} from './viewport.component';
@@ -1403,7 +1403,7 @@ describe('Viewport', () => {
   template: `
     <sci-viewport>
       <div class="container" [class.row]="direction() === 'row'" [class.column]="direction() === 'column'">
-        @for (element of elements; track $index) {
+        @for (element of elements(); track $index) {
           <button (click)="onRemove()">Remove element</button>
         }
       </div>
@@ -1443,14 +1443,14 @@ class Testee1Component {
 
   public readonly direction = input.required<'row' | 'column'>();
 
-  protected elements: null[] = [];
+  protected elements = signal<null[]>([]);
 
   public onRemove(): void {
-    this.elements = this.elements.slice(0, -1);
+    this.elements.update(elements => elements.slice(0, -1));
   }
 
   public onAdd(): void {
-    this.elements = [...this.elements, null];
+    this.elements.update(elements => [...elements, null]);
   }
 }
 

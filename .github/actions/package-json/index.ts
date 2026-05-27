@@ -1,26 +1,26 @@
-const core = require('@actions/core');
-const {readFileSync, existsSync} = require('fs');
+import {existsSync, readFileSync} from 'fs';
+import {getInput, setOutput, info, setFailed} from '@actions/core';
 
-(async (): Promise<void> => {
+void (async (): Promise<void> => {
   try {
-    const packageJsonPath = core.getInput('path', {required: true});
+    const packageJsonPath = getInput('path', {required: true});
     const {name, version} = readPackageJson(packageJsonPath);
 
-    core.info(`Reading '${packageJsonPath}': { name=${name}, version=${version} }`);
-    core.setOutput('name', name);
-    core.setOutput('version', version);
-    core.setOutput('version-dasherized', dasherizedVersion(version));
+    info(`Reading '${packageJsonPath}': { name=${name}, version=${version} }`);
+    setOutput('name', name);
+    setOutput('version', version);
+    setOutput('version-dasherized', dasherizedVersion(version));
   }
-  catch (error) {
-    core.setFailed(error.message);
+  catch (error: unknown) {
+    setFailed((error as Error).message);
   }
 })();
 
-function readPackageJson(path: string): any {
+function readPackageJson(path: string): {name: string; version: string} {
   if (!existsSync(path)) {
     throw Error(`Package.json not found: ${path}`);
   }
-  return JSON.parse(readFileSync(path, 'utf8'));
+  return JSON.parse(readFileSync(path, 'utf8')) as {name: string; version: string};
 }
 
 function dasherizedVersion(version: string): string {

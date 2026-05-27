@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, forwardRef, inject, input, linkedSignal, untracked} from '@angular/core';
+import {booleanAttribute, ChangeDetectorRef, Component, effect, forwardRef, inject, input, linkedSignal, untracked} from '@angular/core';
 import {UUID} from '@scion/toolkit/uuid';
 import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
@@ -19,7 +19,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   selector: 'sci-toggle-button',
   templateUrl: './toggle-button.component.html',
   styleUrls: ['./toggle-button.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
   ],

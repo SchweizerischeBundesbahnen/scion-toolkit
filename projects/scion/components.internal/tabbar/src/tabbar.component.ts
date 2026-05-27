@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, contentChildren, effect, inject, untracked, viewChild, ViewContainerRef} from '@angular/core';
+import {ChangeDetectorRef, Component, contentChildren, effect, inject, untracked, viewChild, ViewContainerRef} from '@angular/core';
 import {SciTabDirective} from './tab.directive';
 import {NgClass} from '@angular/common';
 import {SciViewportComponent} from '@scion/components/viewport';
@@ -34,7 +34,6 @@ import {SciViewportComponent} from '@scion/components/viewport';
   selector: 'sci-tabbar',
   templateUrl: './tabbar.component.html',
   styleUrls: ['./tabbar.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     NgClass,
     SciViewportComponent,

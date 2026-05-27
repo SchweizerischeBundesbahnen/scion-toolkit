@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, contentChildren, effect, ElementRef, inject, input, signal, Signal, TrackByFunction, untracked, viewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, contentChildren, effect, ElementRef, inject, input, signal, Signal, TrackByFunction, untracked, viewChild, ChangeDetectionStrategy} from '@angular/core';
 import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciAccordionItemDirective} from './accordion-item.directive';
 import {CdkAccordion, CdkAccordionItem} from '@angular/cdk/accordion';
@@ -57,6 +57,8 @@ import {fromResize$} from '@scion/toolkit/observable';
   animations: [
     trigger('enter', SciAccordionComponent.provideEnterAnimation()),
   ],
+  // Required for backward compatibility for zone-based applications to support child components with eager change detection.
+  changeDetection: ChangeDetectionStrategy.Eager, // eslint-disable-line @angular-eslint/prefer-on-push-component-change-detection
   host: {
     '[class.bubble]': `this.variant() === 'bubble'`,
     '[class.solid]': `this.variant() === 'solid'`,

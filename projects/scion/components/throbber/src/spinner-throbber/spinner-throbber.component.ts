@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {Component} from '@angular/core';
 
 /**
  * Represents a classic spinner throbber with strokes arranged radially. The strokes light up one after the other in clockwise direction
@@ -20,7 +20,6 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
   selector: 'sci-spinner-throbber',
   templateUrl: './spinner-throbber.component.html',
   styleUrls: ['./spinner-throbber.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SciSpinnerThrobberComponent {
 }

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {Component, input} from '@angular/core';
 import {SciEllipsisThrobberComponent} from './ellipsis-throbber/ellipsis-throbber.component';
 import {SciRippleThrobberComponent} from './ripple-throbber/ripple-throbber.component';
 import {SciRollerThrobberComponent} from './roller-throbber/roller-throbber.component';
@@ -44,7 +44,6 @@ import {SciSpinnerThrobberComponent} from './spinner-throbber/spinner-throbber.c
   selector: 'sci-throbber',
   templateUrl: './throbber.component.html',
   styleUrls: ['./throbber.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     SciEllipsisThrobberComponent,
     SciRippleThrobberComponent,

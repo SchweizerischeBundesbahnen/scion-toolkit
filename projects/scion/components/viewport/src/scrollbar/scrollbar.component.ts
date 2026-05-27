@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, signal, untracked, viewChild} from '@angular/core';
+import {Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, signal, untracked, viewChild} from '@angular/core';
 import {fromEvent, merge, mergeWith, Observable, of, timer} from 'rxjs';
 import {debounceTime, first, map, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
@@ -43,7 +43,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   selector: 'sci-scrollbar',
   templateUrl: './scrollbar.component.html',
   styleUrl: './scrollbar.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.vertical]': 'vertical()',
     '[class.horizontal]': 'horizontal()',

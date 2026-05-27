@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {ChangeDetectionStrategy, Component, inject, signal} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import {FormGroup, NonNullableFormBuilder} from '@angular/forms';
 import {KeyValueEntry, SciKeyValueFieldComponent} from '@scion/components.internal/key-value-field';
 import {Dictionary} from '@scion/toolkit/util';
@@ -21,7 +21,6 @@ import {JsonPipe} from '@angular/common';
     JsonPipe,
     SciKeyValueFieldComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciKeyValueFieldPageComponent {
 

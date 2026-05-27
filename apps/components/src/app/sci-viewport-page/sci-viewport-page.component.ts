@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, DestroyRef, DOCUMENT, effect, ElementRef, inject, Signal, untracked, viewChild} from '@angular/core';
+import {Component, DestroyRef, DOCUMENT, effect, ElementRef, inject, Signal, untracked, viewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {startWith} from 'rxjs/operators';
@@ -36,7 +36,6 @@ import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
     '[style.--viewport-maxheight]': 'viewportMaxHeight()',
     '[style.--viewport-flex]': 'viewportFlex()',
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciViewportPageComponent {
 

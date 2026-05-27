@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, effect, ElementRef, inject, input, NgZone, output, untracked, viewChild, ViewEncapsulation} from '@angular/core';
+import {Component, effect, ElementRef, inject, input, NgZone, output, untracked, viewChild, ViewEncapsulation, ChangeDetectionStrategy} from '@angular/core';
 import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
 import {coerceElement} from '@angular/cdk/coercion';
 import {SciScrollableDirective} from './scrollable.directive';
@@ -94,6 +94,8 @@ import {CdkScrollable} from '@angular/cdk/scrolling';
     SciScrollbarComponent,
     CdkScrollable,
   ],
+  // Required for backward compatibility for zone-based applications to support child components with eager change detection.
+  changeDetection: ChangeDetectionStrategy.Eager, // eslint-disable-line @angular-eslint/prefer-on-push-component-change-detection
   host: {
     '(focus)': 'focus()',
   },

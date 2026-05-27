@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {booleanAttribute, ChangeDetectionStrategy, Component, inject, Injector, signal} from '@angular/core';
+import {booleanAttribute, Component, inject, Injector, signal} from '@angular/core';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {NgComponentOutlet} from '@angular/common';
 import {CONTENT, LABEL, SashContentComponent} from './sash-content/sash-content.component';
@@ -29,7 +29,6 @@ import {AnimationComponent} from './animation/animation.component';
     FormsModule,
     AnimationComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciSashboxAnimationPageComponent {
 
