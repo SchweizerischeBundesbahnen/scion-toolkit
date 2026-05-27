@@ -92,7 +92,7 @@ describe('fromBoundingClientRect$', () => {
 
     await waitUntilIdle();
     testee.style.transform = 'translate(0, 0px)';
-    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y}));
   });
 
@@ -177,7 +177,7 @@ describe('fromBoundingClientRect$', () => {
 
     await waitUntilIdle();
     testee.style.transform = 'translate(0, 0px)';
-    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y}));
   });
 
@@ -257,7 +257,7 @@ describe('fromBoundingClientRect$', () => {
 
     await waitUntilIdle();
     testee.style.transform = 'translate(0, 0px)';
-    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x, y: y}));
   });
 
@@ -304,7 +304,7 @@ describe('fromBoundingClientRect$', () => {
     // Change width of 'div#left' from 50px to 75px.
     await waitUntilIdle();
     left.style.width = '75px';
-    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 25, y: y + 25}));
   });
 
@@ -347,7 +347,7 @@ describe('fromBoundingClientRect$', () => {
     // Move element to the bottom.
     await waitUntilIdle();
     testee.style.marginTop = '25px';
-    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 25, y: y + 25}));
   });
 
@@ -388,7 +388,7 @@ describe('fromBoundingClientRect$', () => {
     // Move element to the bottom.
     await waitUntilIdle();
     testee.style.marginTop = '25px';
-    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 25, y: y + 25}));
     await new Promise<void>(resolve => setTimeout(() => resolve()));
   });
@@ -435,7 +435,7 @@ describe('fromBoundingClientRect$', () => {
 
     await waitUntilIdle();
     testee.style.height = '100px';
-    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y, width: 100, height: 100}));
   });
 
@@ -533,7 +533,7 @@ describe('fromBoundingClientRect$', () => {
     // Expect emission when moving element to the top.
     await waitUntilIdle();
     testee.style.transform = 'translateY(-20px)';
-    await emitCaptor.waitUntilEmitCount(++emissionCount);
+    await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
     expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x2, y: y2 - 20, width: 100, height: 100}));
   });
 
@@ -816,7 +816,7 @@ describe('fromBoundingClientRect$', () => {
 
       await waitUntilIdle();
       testee.style.left = '94px';
-      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
       expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 94, y}));
     });
 
@@ -932,7 +932,7 @@ describe('fromBoundingClientRect$', () => {
 
       await waitUntilIdle();
       testee.style.left = '2px';
-      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
       expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x: x + 2, y}));
     });
 
@@ -1038,7 +1038,7 @@ describe('fromBoundingClientRect$', () => {
 
       await waitUntilIdle();
       testee.style.top = '94px';
-      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
       expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 94}));
     });
 
@@ -1154,7 +1154,7 @@ describe('fromBoundingClientRect$', () => {
 
       await waitUntilIdle();
       testee.style.top = '2px';
-      await emitCaptor.waitUntilEmitCount(++emissionCount);
+      await emitCaptor.waitUntilEmitCount(++emissionCount); // eslint-disable-line no-useless-assignment
       expect(emitCaptor.getLastValue()).toEqual(jasmine.objectContaining({x, y: y + 2}));
     });
   });

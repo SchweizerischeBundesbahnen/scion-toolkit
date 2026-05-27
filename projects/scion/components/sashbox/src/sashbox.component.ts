@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {afterNextRender, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked} from '@angular/core';
+import {afterNextRender, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked, ChangeDetectionStrategy} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
@@ -82,6 +82,8 @@ import {SashComponent} from './sash/sash.component';
     provide: SciSashBoxAccessor,
     useFactory: provideSashBoxAccessor,
   }],
+  // Required for backward compatibility for zone-based applications to support child components with eager change detection.
+  changeDetection: ChangeDetectionStrategy.Eager, // eslint-disable-line @angular-eslint/prefer-on-push-component-change-detection
   host: {
     '[attr.data-direction]': 'direction()',
     '[class.sashing]': 'sashing()',

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, forwardRef, inject, input, linkedSignal, untracked} from '@angular/core';
+import {booleanAttribute, ChangeDetectorRef, Component, effect, forwardRef, inject, input, linkedSignal, untracked} from '@angular/core';
 import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
 import {noop} from 'rxjs';
 import {coerceBooleanProperty} from '@angular/cdk/coercion';
@@ -20,7 +20,6 @@ import {UUID} from '@scion/toolkit/uuid';
   selector: 'sci-checkbox',
   templateUrl: './checkbox.component.html',
   styleUrls: ['./checkbox.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     SciMaterialIconDirective,

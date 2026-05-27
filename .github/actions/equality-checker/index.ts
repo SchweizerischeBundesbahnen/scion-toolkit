@@ -1,8 +1,8 @@
-const core = require('@actions/core');
+import {getInput, info, setFailed} from '@actions/core';
 
-(async (): Promise<void> => {
+void (async (): Promise<void> => {
   try {
-    const input = core.getInput('values') || [];
+    const input = getInput('values') || '';
     if (!input.length) {
       return;
     }
@@ -10,12 +10,12 @@ const core = require('@actions/core');
     const values = input.split(',').map(value => value.trim());
     const distinctSet = new Set<string>(values);
     if (distinctSet.size > 1) {
-      core.setFailed(`Expecting all values to be equal, but they were different: ${Array.from(distinctSet).join(', ')}`);
+      setFailed(`Expecting all values to be equal, but they were different: ${Array.from(distinctSet).join(', ')}`);
       return;
     }
-    core.info(`Equality check passed. All values are equal to ${Array.from(distinctSet)[0]}.`);
+    info(`Equality check passed. All values are equal to ${Array.from(distinctSet)[0]}.`);
   }
-  catch (error) {
-    core.setFailed(error.message);
+  catch (error: unknown) {
+    setFailed((error as Error).message);
   }
 })();

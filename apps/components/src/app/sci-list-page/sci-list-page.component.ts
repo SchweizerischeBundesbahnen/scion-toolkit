@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {Component} from '@angular/core';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {map, switchMap} from 'rxjs/operators';
 import {SciListComponent, SciListItemDirective} from '@scion/components.internal/list';
@@ -24,7 +24,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
     SciListItemDirective,
     SciMaterialIconDirective,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciListPageComponent {
 

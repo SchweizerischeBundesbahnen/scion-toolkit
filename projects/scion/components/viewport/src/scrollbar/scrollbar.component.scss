@@ -60,12 +60,12 @@ $thumb-hover-size: 100%;
 }
 
 // hide the scrollbar if there is no content overflow
-:host-context:not(.overflow) {
+:host-context(:not(.overflow)) {
   display: none;
 }
 
 // enlarge the thumb on hover or while scrolling (e.g. when dragging the thumb outside of the scrolltrack)
-:host-context:hover, :host-context(.scrolling) {
+:host-context(:hover), :host-context(.scrolling) {
   > div.thumb-handle > div.thumb {
     background-color: var(--sci-scrollbar-color);
     opacity: .75;

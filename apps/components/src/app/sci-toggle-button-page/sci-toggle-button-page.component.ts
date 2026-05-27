@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciToggleButtonComponent} from '@scion/components.internal/toggle-button';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
@@ -26,7 +26,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciTabDirective,
     SciTabbarComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciToggleButtonPageComponent {
 

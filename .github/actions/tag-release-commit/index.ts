@@ -1,32 +1,32 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const {exec} = require('@actions/exec');
+import {exec} from '@actions/exec';
+import {getInput, info, setFailed, setOutput} from '@actions/core';
+import {context} from '@actions/github';
 
-(async (): Promise<void> => {
+void (async (): Promise<void> => {
   try {
-    const {head_commit: {message}} = github.context.payload;
+    const {head_commit: {message}} = context.payload;
 
-    const releaseCommitMessagePattern = core.getInput('release-commit-message-pattern');
-    const releaseCommitMessagePatternMatch = message.match(new RegExp(`^${releaseCommitMessagePattern}$`, 'm'));
+    const releaseCommitMessagePattern = getInput('release-commit-message-pattern');
+    const releaseCommitMessagePatternMatch = new RegExp(`^${releaseCommitMessagePattern}$`, 'm').exec((message as string));
     const isReleaseCommit = releaseCommitMessagePatternMatch != null;
 
     if (!isReleaseCommit) {
-      core.setOutput('is-release-commit', false);
-      core.info(`Skip release tag. The commit message does not match the release commit pattern: '${message}'`);
+      setOutput('is-release-commit', false);
+      info(`Skip release tag. The commit message does not match the release commit pattern: '${message}'`);
       return;
     }
 
     const releaseVersion = releaseCommitMessagePatternMatch[1];
 
-    const expectedVersion = core.getInput('expected-version', {required: false});
+    const expectedVersion = getInput('expected-version', {required: false});
     if (expectedVersion && expectedVersion !== releaseVersion) {
-      core.setFailed(`Version mismatch. Expected version in commit message to be '${expectedVersion}', but was '${releaseVersion}'.`);
+      setFailed(`Version mismatch. Expected version in commit message to be '${expectedVersion}', but was '${releaseVersion}'.`);
       return;
     }
 
-    const gitTag = core.getInput('git-tag') ? core.getInput('git-tag').replace(new RegExp('%v', 'g'), releaseVersion) : releaseVersion;
+    const gitTag = getInput('git-tag') ? getInput('git-tag').replace(new RegExp('%v', 'g'), releaseVersion) : releaseVersion;
 
-    core.info(`The commit message maches the release commit pattern. Pushing release tag: ${gitTag}.`);
+    info(`The commit message maches the release commit pattern. Pushing release tag: ${gitTag}.`);
 
     // Delete the release tag, if present.
     await exec('git', ['push', 'origin', `:refs/tags/${gitTag}`]);
@@ -37,11 +37,11 @@ const {exec} = require('@actions/exec');
     // Push the release tag.
     await exec('git', ['push', 'origin', 'tag', gitTag]);
 
-    core.setOutput('is-release-commit', true);
-    core.setOutput('version', releaseVersion);
-    core.setOutput('tag', gitTag);
+    setOutput('is-release-commit', true);
+    setOutput('version', releaseVersion);
+    setOutput('tag', gitTag);
   }
-  catch (error) {
-    core.setFailed(error.message);
+  catch (error: unknown) {
+    setFailed((error as Error).message);
   }
 })();

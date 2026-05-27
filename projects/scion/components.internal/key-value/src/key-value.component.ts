@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, input, untracked} from '@angular/core';
+import {Component, computed, input, untracked} from '@angular/core';
 import {KeyValue, KeyValuePipe} from '@angular/common';
 
 /**
@@ -18,7 +18,6 @@ import {KeyValue, KeyValuePipe} from '@angular/common';
   selector: 'sci-key-value',
   templateUrl: './key-value.component.html',
   styleUrls: ['./key-value.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     KeyValuePipe,
   ],

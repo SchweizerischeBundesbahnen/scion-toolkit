@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, effect, ElementRef, inject, Signal, untracked, viewChild} from '@angular/core';
+import {Component, effect, ElementRef, inject, Signal, untracked, viewChild} from '@angular/core';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -25,7 +25,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciTabDirective,
     SciTabbarComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciThrobberPageComponent {
 

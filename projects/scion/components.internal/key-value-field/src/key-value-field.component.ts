@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, ElementRef, inject, input} from '@angular/core';
+import {Component, ElementRef, inject, input} from '@angular/core';
 import {FormArray, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {Dictionary, Maps} from '@scion/toolkit/util';
 import {UUID} from '@scion/toolkit/uuid';
@@ -21,7 +21,6 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
   selector: 'sci-key-value-field',
   templateUrl: './key-value-field.component.html',
   styleUrls: ['./key-value-field.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     SciMaterialIconDirective,

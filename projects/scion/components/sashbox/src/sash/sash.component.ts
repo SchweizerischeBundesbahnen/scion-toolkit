@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, computed, effect, ElementRef, inject, input, linkedSignal, Signal} from '@angular/core';
+import {ChangeDetectorRef, Component, computed, effect, ElementRef, inject, input, linkedSignal, Signal, ChangeDetectionStrategy} from '@angular/core';
 import {NgTemplateOutlet} from '@angular/common';
 import {animate, AnimationMetadata, style, transition, trigger} from '@angular/animations';
 import {SciSashBoxAccessor} from '../sashbox-accessor';
@@ -27,6 +27,8 @@ import {SciSashDirective} from '../sash.directive';
   animations: [
     trigger('sash-animation', provideAnimation()),
   ],
+  // Required for backward compatibility for zone-based applications to support child components with eager change detection.
+  changeDetection: ChangeDetectionStrategy.Eager, // eslint-disable-line @angular-eslint/prefer-on-push-component-change-detection
   host: {
     '[@sash-animation]': 'animationState()',
     '(@sash-animation.done)': 'onAnimationEnd();',

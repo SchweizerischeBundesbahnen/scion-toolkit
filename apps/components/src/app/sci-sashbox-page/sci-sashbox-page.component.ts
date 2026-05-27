@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, Signal, untracked, viewChild} from '@angular/core';
+import {Component, effect, ElementRef, inject, signal, Signal, untracked, viewChild} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -33,7 +33,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   host: {
     '(keydown.escape)': 'onGlasspaneToggle()',
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciSashboxPageComponent {
 

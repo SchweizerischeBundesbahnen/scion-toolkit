@@ -8,13 +8,15 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, DestroyRef, ElementRef, inject, input} from '@angular/core';
+import {Component, DestroyRef, ElementRef, inject, input, ChangeDetectionStrategy} from '@angular/core';
 import {ConfigurableFocusTrap, ConfigurableFocusTrapFactory} from '@angular/cdk/a11y';
 
 @Component({
   selector: 'sci-form-field',
   templateUrl: './form-field.component.html',
   styleUrls: ['./form-field.component.scss'],
+  // Required for backward compatibility for zone-based applications to support child components with eager change detection.
+  changeDetection: ChangeDetectionStrategy.Eager, // eslint-disable-line @angular-eslint/prefer-on-push-component-change-detection
   host: {
     '[class.column-direction]': `this.direction() === 'column'`,
   },

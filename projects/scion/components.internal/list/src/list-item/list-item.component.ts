@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, ElementRef, inject, input} from '@angular/core';
+import {Component, computed, ElementRef, inject, input, ChangeDetectionStrategy} from '@angular/core';
 import {FocusableOption, FocusOrigin} from '@angular/cdk/a11y';
 import {SciListItemDirective} from '../list-item.directive';
 import {SciListStyle} from '../metadata';
@@ -23,6 +23,8 @@ import {SciMaterialIconDirective} from '@scion/components.internal/material-icon
     NgTemplateOutlet,
     SciMaterialIconDirective,
   ],
+  // Required for backward compatibility for zone-based applications to support child components with eager change detection.
+  changeDetection: ChangeDetectionStrategy.Eager, // eslint-disable-line @angular-eslint/prefer-on-push-component-change-detection
   host: {
     '[attr.tabindex]': '-1',
     '[class.active]': 'active()',

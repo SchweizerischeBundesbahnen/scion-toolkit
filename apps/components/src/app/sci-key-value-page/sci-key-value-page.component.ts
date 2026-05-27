@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {Component} from '@angular/core';
 import {SciKeyValueComponent} from '@scion/components.internal/key-value';
 
 @Component({
@@ -15,7 +15,6 @@ import {SciKeyValueComponent} from '@scion/components.internal/key-value';
   templateUrl: './sci-key-value-page.component.html',
   styleUrls: ['./sci-key-value-page.component.scss'],
   imports: [SciKeyValueComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciKeyValuePageComponent {
 

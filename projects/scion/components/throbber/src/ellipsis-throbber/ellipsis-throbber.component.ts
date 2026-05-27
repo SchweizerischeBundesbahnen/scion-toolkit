@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {Component} from '@angular/core';
 
 /**
  * Represents a throbber as an ellipsis consisting of three horizontally arranged points that appear one after the other.
@@ -19,7 +19,6 @@ import {ChangeDetectionStrategy, Component} from '@angular/core';
   selector: 'sci-ellipsis-throbber',
   templateUrl: './ellipsis-throbber.component.html',
   styleUrls: ['./ellipsis-throbber.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SciEllipsisThrobberComponent {
 }

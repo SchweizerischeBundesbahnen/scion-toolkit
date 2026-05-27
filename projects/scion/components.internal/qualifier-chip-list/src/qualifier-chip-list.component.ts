@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {Component, input} from '@angular/core';
 import {KeyValue, KeyValuePipe} from '@angular/common';
 
 /**
@@ -32,7 +32,6 @@ import {KeyValue, KeyValuePipe} from '@angular/common';
   selector: 'sci-qualifier-chip-list',
   templateUrl: './qualifier-chip-list.component.html',
   styleUrls: ['./qualifier-chip-list.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     KeyValuePipe,
   ],

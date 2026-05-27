@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {ChangeDetectionStrategy, Component, inject, signal} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
@@ -25,7 +25,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciTabDirective,
     SciTabbarComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciFilterFieldPageComponent {
 

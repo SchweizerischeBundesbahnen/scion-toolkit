@@ -1,11 +1,11 @@
-const core = require('@actions/core');
-const {exec} = require('@actions/exec');
-const {writeFileSync} = require('fs');
+import {exec} from '@actions/exec';
+import {writeFileSync} from 'fs';
+import {exportVariable, getBooleanInput, getInput, info, setFailed, setSecret} from '@actions/core';
 
-(async (): Promise<void> => {
+void (async (): Promise<void> => {
   try {
-    const distFolder = core.getInput('dist-folder', {required: true});
-    const aliases = parseAliases(core.getInput('aliases'), core.getInput('version'));
+    const distFolder = getInput('dist-folder', {required: true});
+    const aliases = parseAliases(getInput('aliases'), getInput('version'));
 
     // Write vercel.json
     writeFileSync(`${(process.env.GITHUB_WORKSPACE)}/${distFolder}/vercel.json`, JSON.stringify({
@@ -17,30 +17,30 @@ const {writeFileSync} = require('fs');
     }));
 
     // Link to the project
-    const orgId = core.getInput('org-id', {required: true});
-    core.exportVariable('VERCEL_ORG_ID', orgId);
-    core.setSecret(orgId);
+    const orgId = getInput('org-id', {required: true});
+    exportVariable('VERCEL_ORG_ID', orgId);
+    setSecret(orgId);
 
-    const projectId = core.getInput('project-id', {required: true});
-    core.exportVariable('VERCEL_PROJECT_ID', projectId);
-    core.setSecret(projectId);
+    const projectId = getInput('project-id', {required: true});
+    exportVariable('VERCEL_PROJECT_ID', projectId);
+    setSecret(projectId);
 
     // Deploy to Vercel
-    const command: string[] = []
+    const command: string[] = new Array<string>()
       .concat('vercel')
       .concat('--token')
-      .concat(core.getInput('vercel-token', {required: true}))
+      .concat(getInput('vercel-token', {required: true}))
       .concat('--yes')
-      .concat(...(core.getBooleanInput('prod') ? ['--prod'] : []));
+      .concat(...(getBooleanInput('prod') ? ['--prod'] : []));
 
-    core.info(`Deploying ${distFolder} to Vercel: ${command.join(' ')} [aliases=${aliases.join(',')}]`);
+    info(`Deploying ${distFolder} to Vercel: ${command.join(' ')} [aliases=${aliases.join(',')}]`);
     await exec(
       'npx', command,
       {cwd: `${process.env.GITHUB_WORKSPACE}/${distFolder}`},
     );
   }
-  catch (error) {
-    core.setFailed(error.message);
+  catch (error: unknown) {
+    setFailed((error as Error).message);
   }
 })();
 

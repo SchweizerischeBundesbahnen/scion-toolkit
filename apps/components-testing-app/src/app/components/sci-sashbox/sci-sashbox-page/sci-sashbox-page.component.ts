@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -26,7 +26,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciTabDirective,
     SciTabbarComponent,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciSashboxPageComponent {
 

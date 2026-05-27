@@ -388,7 +388,7 @@ export class BeanManager {
         await Promise.all(initializersGroupedByRunlevel.get(runlevel)!.map(initializerFn => initializerFn()));
       }
       catch (error) {
-        throw Error(`[InitializerError] Initializer rejected with an error: ${error} [runlevel=${runlevel}]`);
+        throw Error(`[InitializerError] Initializer rejected with an error: ${error} [runlevel=${runlevel}]`, {cause: error});
       }
     }
   }

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, contentChildren, inject, Injector, input, output, signal, TrackByFunction, viewChild, viewChildren} from '@angular/core';
+import {Component, contentChildren, inject, Injector, input, output, signal, TrackByFunction, viewChild, viewChildren, ChangeDetectionStrategy} from '@angular/core';
 import {FocusKeyManager} from '@angular/cdk/a11y';
 import {SciListItemDirective} from './list-item.directive';
 import {SciListItemComponent} from './list-item/list-item.component';
@@ -78,6 +78,8 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     NgClass,
     NgTemplateOutlet,
   ],
+  // Required for backward compatibility for zone-based applications to support child components with eager change detection.
+  changeDetection: ChangeDetectionStrategy.Eager, // eslint-disable-line @angular-eslint/prefer-on-push-component-change-detection
   host: {
     '(focus)': 'focus()',
     '(keydown)': 'onKeydown($event)',

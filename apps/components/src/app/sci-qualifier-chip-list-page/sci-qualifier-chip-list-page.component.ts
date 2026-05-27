@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {ChangeDetectionStrategy, Component} from '@angular/core';
+import {Component} from '@angular/core';
 import {SciQualifierChipListComponent} from '@scion/components.internal/qualifier-chip-list';
 
 @Component({
@@ -15,7 +15,6 @@ import {SciQualifierChipListComponent} from '@scion/components.internal/qualifie
   templateUrl: './sci-qualifier-chip-list-page.component.html',
   styleUrls: ['./sci-qualifier-chip-list-page.component.scss'],
   imports: [SciQualifierChipListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class SciQualifierChipListPageComponent {
 }
