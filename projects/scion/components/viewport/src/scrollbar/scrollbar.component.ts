@@ -47,7 +47,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   host: {
     '[class.vertical]': 'vertical()',
     '[class.horizontal]': 'horizontal()',
-    '[class.class.scrolling]': 'scrolling()',
+    '[class.scrolling]': 'scrolling()',
   },
 })
 export class SciScrollbarComponent {
