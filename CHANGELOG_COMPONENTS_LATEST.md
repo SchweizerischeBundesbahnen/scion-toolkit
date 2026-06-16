@@ -1,9 +1,14 @@
-## [21.1.1](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-21.1.0...components-21.1.1) (2026-06-08)
+# [22.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-21.1.1...components-22.0.0) (2026-06-16)
 
 
-### Bug Fixes
+### Features
 
-* **components/viewport:** enlarge scrollbar thumb while scrolling and dragging the thumb outside of the scrolltrack ([2828511](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/28285119e0d6b30ba63da4dcfeda19e343512774))
+* **components:** add support for Angular 22 ([9b72175](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/9b72175409b6d681b82f395db4905cffa4835ef4))
 
 
+### BREAKING CHANGES
 
+* **components:** SCION Components requires Angular 22.
+
+  Note that:
+    - SCION Components still requires `@angular/animations`. Removal is planned for 2026.
