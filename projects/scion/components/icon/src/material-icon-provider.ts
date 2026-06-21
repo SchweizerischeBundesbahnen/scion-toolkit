@@ -35,5 +35,8 @@ export const materialIconProvider: SciIconProviderFn = (ligature: string): SciCo
       inputBinding('fontFamily', () => `'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Symbols Sharp', 'Material Icons', 'Material Icons Outlined', 'Material Icons Round', 'Material Icons Sharp'`),
       inputBinding('ligature', () => ligature),
     ],
+    attributes: {
+      part: 'material-icon', // Public API to change the font characteristics of Material icons.
+    },
   };
 };

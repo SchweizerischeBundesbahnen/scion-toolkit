@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, Directive, inject, ResourceRef, Signal, TemplateRef, untracked, viewChild} from '@angular/core';
+import {Component, computed, Directive, ElementRef, inject, Signal, untracked, ViewEncapsulation} from '@angular/core';
 import {coerceSignal, SciComponentDescriptor, SciComponentOutletDirective} from '@scion/components/common';
 import {IconProviders} from './icon-providers';
 import {fromMutation$} from '@scion/toolkit/observable';
-import {concatWith, map, Observable, of} from 'rxjs';
-import {rxResource} from '@angular/core/rxjs-interop';
+import {animationFrameScheduler, concatWith, defer, map, of, subscribeOn} from 'rxjs';
+import {toSignal} from '@angular/core/rxjs-interop';
 
 /**
  * Renders an icon based on registered icon providers.
@@ -49,6 +49,18 @@ import {rxResource} from '@angular/core/rxjs-interop';
  * }
  * ```
  *
+ * The icon can be styled using the `::part()` pseudo-element selector, for example, to change font characteristics. Supported part names:
+ * - `::part(icon)`: styles any icon
+ * - `::part(material-icon)`: styles Material icons
+ * - `::part(scion-icon)`: styles SCION icons
+ *
+ * Example:
+ * ```scss
+ * sci-icon::part(material-icon) {
+ *   font-variation-settings: 'opsz' 20, 'FILL' 0
+ * }
+ * ```
+ *
  * @see provideIconProvider
  *
  * TODO [Angular 23] Consider changing encapsulation to `IsolatedShadowDom` when stable. See branch: issue/icon-shadow-dom.
@@ -57,11 +69,13 @@ import {rxResource} from '@angular/core/rxjs-interop';
   selector: 'sci-icon',
   templateUrl: './icon.component.html',
   styleUrl: './icon.component.scss',
+  encapsulation: ViewEncapsulation.ExperimentalIsolatedShadowDom,
   imports: [
     SciComponentOutletDirective,
   ],
   host: {
-    '[attr.icon]': 'slottedContent.value()', // Public API: Enables selecting the icon by name in CSS
+    '[attr.icon]': 'slottedContent()', // Public API: Enables selecting the icon by name in CSS
+    '[attr.translate]': '`no`',
   },
 })
 export class SciIconComponent {
@@ -69,24 +83,38 @@ export class SciIconComponent {
   protected readonly slottedContent = this.computeSlottedContent();
   protected readonly iconDescriptor = this.computeIconDescriptor();
 
-  private readonly _slotTemplate = viewChild.required<TemplateRef<void>>('slot_template');
-
   private computeIconDescriptor(): Signal<SciComponentDescriptor | undefined> {
     const iconProviders = inject(IconProviders);
 
     return computed(() => {
-      const slottedContent = this.slottedContent.value();
+      const slottedContent = this.slottedContent();
 
       return untracked(() => {
         const iconDescriptor = iconProviders.provide(slottedContent);
+        if (!iconDescriptor) {
+          return undefined;
+        }
+
+        const attributes = coerceSignal(iconDescriptor.attributes);
+        const partAttribute = computed(() => attributes?.()['part']?.split(/\s+/) ?? []);
 
         // Augment icon descriptor.
         return iconDescriptor && {
           ...iconDescriptor,
           attributes: computed(() => ({
-            ...coerceSignal(iconDescriptor.attributes)?.(),
+            ...attributes?.(),
             // Prevent user agent translating the icon.
             translate: 'no',
+            // Add `::part(icon)` pseudo-element to allow custom styling of the icon inside the shadow tree, for example, to change font characteristics of icons of an icon provider.
+            // ```scss
+            // sci-icon::part(icon) {
+            //   font-variation-settings: 'opsz' 20, 'FILL' 0
+            // }
+            // ```
+            part: [
+              ...partAttribute(),
+              'icon',
+            ].join(' '),
           })),
           directives: [
             ...iconDescriptor.directives ?? [],
@@ -102,40 +130,16 @@ export class SciIconComponent {
   /**
    * Reads the icon from slotted content.
    */
-  private computeSlottedContent(): ResourceRef<string | undefined> {
-    return rxResource({
-      params: () => this._slotTemplate(),
-      stream: ({params: slotTemplate}) => new Observable<string | undefined>(observer => {
-        // Instantiate template to read slotted content.
-        const view = slotTemplate.createEmbeddedView(undefined);
+  private computeSlottedContent(): Signal<string | undefined> {
+    const host = inject(ElementRef).nativeElement as HTMLElement;
 
-        // Return if empty, i.e., no icon to render.
-        if (!view.rootNodes.length) {
-          observer.next(undefined);
-          return;
-        }
-
-        // Ensure only text is provided as slotted content.
-        if (view.rootNodes.length > 1 || (view.rootNodes[0] as Element).nodeType !== Node.TEXT_NODE) {
-          observer.error(Error('[InvalidInputError] Only text (ligature) is allowed in slotted content of <sci-icon>.'));
-          return;
-        }
-
-        // Observe slotted content.
-        const textNode = view.rootNodes[0] as Text;
-        const subscription = of(textNode.textContent)
-          .pipe(
-            concatWith(fromMutation$(textNode, {characterData: true}).pipe(map(() => textNode.textContent))),
-            map(slottedContent => slottedContent.trim() || undefined),
-          )
-          .subscribe(observer);
-
-        return () => {
-          subscription.unsubscribe();
-          view.destroy();
-        };
-      }),
-    });
+    return toSignal(defer(() => of(host.textContent))
+      .pipe(
+        subscribeOn(animationFrameScheduler),
+        concatWith(fromMutation$(host, {characterData: true, subtree: true}).pipe(map(() => host.textContent))),
+        map(slottedContent => slottedContent.trim() || undefined),
+      ),
+    );
   }
 }
 

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, input} from '@angular/core';
+import {Component, input, ViewEncapsulation} from '@angular/core';
 
 /**
  * Renders an icon of an icon font based on its ligature.
@@ -20,6 +20,7 @@ import {Component, input} from '@angular/core';
     '[attr.data-ligature]': 'ligature()',
     '[style.font-family]': 'fontFamily()',
   },
+  encapsulation: ViewEncapsulation.ExperimentalIsolatedShadowDom, // TODO [Angular 23] Remove if PR #63131 is merged
   styles: `
     :host {
       font-style: normal;
