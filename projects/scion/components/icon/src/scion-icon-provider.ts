@@ -34,6 +34,9 @@ export const scionIconProvider: SciIconProviderFn = (icon: string): SciComponent
         inputBinding('fontFamily', () => 'scion-icons'),
         inputBinding('ligature', () => ligature),
       ],
+      attributes: {
+        part: 'scion-icon', // Public API to change the font characteristics of SCION icons.
+      },
     };
   }
   return undefined;
