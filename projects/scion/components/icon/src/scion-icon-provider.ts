@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, input, inputBinding, signal} from '@angular/core';
+import {Component, input, inputBinding, signal, ViewEncapsulation} from '@angular/core';
 import {SciIconProviderFn} from './icon.provider';
 import {SciComponentDescriptor} from '@scion/components/common';
 
@@ -20,7 +20,13 @@ import {SciComponentDescriptor} from '@scion/components/common';
 export const scionIconProvider: SciIconProviderFn = (icon: string): SciComponentDescriptor | undefined => {
   const ligature = scionIcons[icon];
   if (ligature) {
-    return {component: ScionIconComponent, bindings: [inputBinding('ligature', signal(ligature))]};
+    return {
+      component: ScionIconComponent,
+      bindings: [inputBinding('ligature', signal(ligature))],
+      attributes: {
+        part: 'scion-icon', // Public API to change the font characteristics of SCION icons.
+      },
+    };
   }
   return undefined;
 };
@@ -59,6 +65,7 @@ const scionIcons: {[icon: string]: string} = {
 @Component({
   selector: 'sci-scion-icon',
   template: '{{ligature()}}',
+  encapsulation: ViewEncapsulation.ExperimentalIsolatedShadowDom, // TODO [Angular 23] Remove if PR #63131 is merged
   styles: `
     :host {
       font-family: 'scion-icons';

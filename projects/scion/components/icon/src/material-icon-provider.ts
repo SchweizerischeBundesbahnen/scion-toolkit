@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, input, inputBinding, signal} from '@angular/core';
+import {Component, input, inputBinding, signal, ViewEncapsulation} from '@angular/core';
 import {SciIconProviderFn} from './icon.provider';
 import {SciComponentDescriptor} from '@scion/components/common';
 
@@ -20,7 +20,13 @@ export const materialIconProvider: SciIconProviderFn = (ligature: string): SciCo
     return undefined; // delegate to next provider
   }
 
-  return {component: MaterialIconComponent, bindings: [inputBinding('ligature', signal(ligature))]};
+  return {
+    component: MaterialIconComponent,
+    bindings: [inputBinding('ligature', signal(ligature))],
+    attributes: {
+      part: 'material-icon', // Public API to change the font characteristics of Material icons.
+    },
+  };
 };
 
 /**
@@ -37,6 +43,7 @@ export const materialIconProvider: SciIconProviderFn = (ligature: string): SciCo
 @Component({
   selector: 'sci-material-icon',
   template: '{{ligature()}}',
+  encapsulation: ViewEncapsulation.ExperimentalIsolatedShadowDom, // TODO [Angular 23] Remove if PR #63131 is merged
   styles: `
     :host {
       font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Symbols Sharp', 'Material Icons', 'Material Icons Outlined', 'Material Icons Round', 'Material Icons Sharp';
