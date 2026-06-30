@@ -13,12 +13,14 @@ import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitte
 import {SciColumns} from '../table.model';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
+import {SciIconComponent} from '../../../icon/src/icon.component';
 
 @Component({
   selector: 'sci-column-header',
   imports: [
     SciSplitterComponent,
     ColumnFilterComponent,
+    SciIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-header.component.html',

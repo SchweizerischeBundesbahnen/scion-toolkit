@@ -33,11 +33,17 @@
           
           > span.sort {
             visibility: visible;
-          }
-        }
+            display: flex;
+            flex-direction: column;
 
-        > span.material-symbols-outlined {
-          font-size: 16px;
+            sci-icon:first-child {
+              transform: translateY(2px);
+            }
+
+            sci-icon:last-child {
+              transform: translateY(-2px);
+            }
+          }
         }
 
         > span.sort {

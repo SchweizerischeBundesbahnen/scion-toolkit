@@ -11,6 +11,7 @@
 import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, untracked, viewChild, ViewContainerRef} from '@angular/core';
 import {SciCells} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
+import {SciIconComponent} from '../../../icon/src/icon.component';
 
 @Component({
   selector: 'sci-table-cell',
@@ -23,6 +24,7 @@ import {NgTemplateOutlet} from '@angular/common';
   },
   imports: [
     NgTemplateOutlet,
+    SciIconComponent,
   ],
 })
 export class TableCellComponent<T> {

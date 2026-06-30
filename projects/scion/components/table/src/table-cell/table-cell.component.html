@@ -9,13 +9,11 @@
     }
     @case ('boolean') {
       @let value = _cell.value();
-      <span class="checkbox material-symbols-outlined" [attr.data-checked]="value">
-        @if (value) {
-          check_box
-        } @else {
-          check_box_outline_blank
-        }
-      </span>
+      @if (value) {
+        <sci-icon class="checkbox" data-checked="true">scion.checkmark</sci-icon>
+      } @else {
+        <sci-icon class="checkbox">scion.clear</sci-icon>
+      }
     }
     @default {
       {{_cell.value()}}

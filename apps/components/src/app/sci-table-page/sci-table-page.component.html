@@ -5,26 +5,26 @@
 <aside class="e2e-settings">
   <form>
     <label>
-      <input [field]="form.filterable" type="checkbox" />
+      <input [formField]="form.filterable" type="checkbox" />
       Filterable
     </label>
 
     <label>
-      <input [field]="form.sortable" type="checkbox" />
+      <input [formField]="form.sortable" type="checkbox" />
       Sortable
     </label>
 
     <label>
-      <input [field]="form.resizable" type="checkbox" />
+      <input [formField]="form.resizable" type="checkbox" />
       Resizable
     </label>
 
     <label>
-      <input [field]="form.showHeader" type="checkbox" />
+      <input [formField]="form.showHeader" type="checkbox" />
       Show Header
     </label>
 
-    <select [field]="form.language">
+    <select [formField]="form.language">
       <option value="de">DE</option>
       <option value="fr">FR</option>
     </select>
@@ -32,7 +32,7 @@
     <button (click)="onUpdateSignal()">Update local state</button>
 
     <label>
-      <input [field]="form.slowDataSource" type="checkbox" />
+      <input [formField]="form.slowDataSource" type="checkbox" />
       Use Slow DataSource
     </label>
   </form>

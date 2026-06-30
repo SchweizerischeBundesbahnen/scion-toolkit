@@ -16,10 +16,11 @@ import {combineLatestWith, debounceTime, of} from 'rxjs';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {coerceObservable} from '../common';
 import {AsyncPipe} from '@angular/common';
+import {SciIconComponent} from '../../../icon/src/icon.component';
 
 @Component({
   selector: 'sci-column-filter',
-  imports: [ReactiveFormsModule, AsyncPipe],
+  imports: [ReactiveFormsModule, AsyncPipe, SciIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-filter.component.html',
   styleUrl: './column-filter.component.scss',

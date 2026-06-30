@@ -8,12 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, input, inputBinding, Signal, signal} from '@angular/core';
-import {SciDataSource, SciTableComponent, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {SciDataSource, SciTableComponent, SciTableFactory, SciTableRequest, SciTableResponse, SciTable, table} from '@scion/components/table';
 import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
-import {Field, form} from '@angular/forms/signals';
+import {FormField, form} from '@angular/forms/signals';
 import {map, Observable, timer} from 'rxjs';
-import {SciTable} from '../../../../../projects/scion/components/table/src/table.model';
 import {DatePipe} from '@angular/common';
 
 @Component({
@@ -53,7 +52,7 @@ class SlowDataSource implements SciDataSource<Company, number> {
   imports: [
     SciTableComponent,
     FormsModule,
-    Field,
+    FormField,
   ],
 })
 export default class SciTablePageComponent {

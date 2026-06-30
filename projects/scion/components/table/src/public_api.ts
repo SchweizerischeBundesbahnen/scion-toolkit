@@ -10,7 +10,7 @@
 
 export {table} from './table';
 export {SciTableComponent} from './table.component';
-export type {ColumnType, SciColumns, SciCellContext} from './table.model';
+export type {ColumnType, SciColumns, SciCellContext, SciTable} from './table.model';
 export type {SciDataSource, SciTableResponse, SciTableRequest} from './table-data-source';
 export type {SciTableFactory} from './table.factory';
 export type {SciTableStorage} from './table-storage';

@@ -8,13 +8,16 @@
     @if (column().sortable) {
       @switch (columnSort()) {
         @case ('asc') {
-          <span class="material-symbols-outlined">arrow_upward</span>
+          <sci-icon>scion.chevron_up</sci-icon>
         }
         @case ('desc') {
-          <span class="material-symbols-outlined">arrow_downward</span>
+          <sci-icon>scion.chevron_down</sci-icon>
         }
         @default {
-          <span class="material-symbols-outlined sort">swap_vert</span>
+          <span class="sort">
+            <sci-icon>scion.chevron_up</sci-icon>
+            <sci-icon>scion.chevron_down</sci-icon>
+          </span>
         }
       }
     }

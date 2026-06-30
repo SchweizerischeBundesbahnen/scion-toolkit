@@ -24,13 +24,10 @@
   }
 }
 
-
-<span class="filter-icon material-symbols-outlined">
-  filter_alt
-</span>
+<sci-icon class="filter-icon">scion.filter"</sci-icon>
 
 @if (query.value && column().type !== 'boolean') {
   <button class="clear e2e-clear" (click)="reset()">
-    <span class="material-symbols-outlined">clear</span>
+    <sci-icon class="filter-icon">scion.clear""</sci-icon>
   </button>
 }
