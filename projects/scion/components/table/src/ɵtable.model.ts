@@ -13,10 +13,8 @@ import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, Sc
 import {ColumnType, SciCellContext, SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciArrayDataSource} from './ɵarray-data-source';
-import {coerceObservable, coerceSignal} from './common';
+import {coercePromise, coerceSignal} from './common';
 import {SciTableStorage} from './table-storage';
-import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
 import {SciColumnDescriptors} from './table.factory';
 import {UUID} from '@scion/toolkit/uuid';
 
@@ -94,22 +92,16 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     this._totalCount.set(totalCount);
   }
 
-  public loadPage({page, sortCriteria, filterCriteria}: Pick<SciTableRequest, 'page' | 'sortCriteria' | 'filterCriteria'>): Observable<SciTableResponse<T> & {page: number}> {
+  public async loadPage({page, sortCriteria, filterCriteria}: Pick<SciTableRequest, 'page' | 'sortCriteria' | 'filterCriteria'>): Promise<SciTableResponse<T>> {
     const pageSize = this.dataSource.pageSize;
-    return coerceObservable(this.dataSource.getItems({
+    return coercePromise(this.dataSource.loader({
       start: page * pageSize,
       end: page * pageSize + pageSize,
       pageSize: pageSize,
       page,
       sortCriteria,
       filterCriteria,
-    })).pipe(
-      map(res => ({
-        totalCount: res.totalCount,
-        items: res.items,
-        page,
-      })),
-    );
+    }));
   }
 
   public updateRows({items, totalCount, page}: SciTableResponse<T> & {page: number}): void {
@@ -176,7 +168,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
       return;
     }
 
-    void this.tableStorage.store(this.storageKey, JSON.stringify({columnWidths} as StoredTable));
+    void this.tableStorage.store(this.storageKey, JSON.stringify({columnWidths}));
   }
 
   public updateActiveItem(updateFn: (id: ID | undefined) => ID | undefined): void {

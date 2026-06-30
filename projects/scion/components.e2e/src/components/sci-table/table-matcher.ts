@@ -14,6 +14,21 @@ import {RowPo} from './row.po';
 
 export function expectTable(table: TablePo): TableMatcher {
   return {
+    async toHaveColumnSorted(columnIndex: number, dir: 'desc' | 'asc' = 'asc'): Promise<void> {
+      await expect(async () => {
+        const cells = await table.locateColumnCells(columnIndex).allTextContents()
+          // Map boolean cells
+          .then(contents => contents.map(v => v === 'checkmark' ? 1 : v === 'clear' ? 0 : v))
+          .then(contents => contents.map(v => isNaN(+v) ? v : +v));
+
+        if (dir === 'asc') {
+          expect(cells.every((v, i) => i === 0 || cells.at(i - 1)! <= v)).toBe(true);
+        }
+        else {
+          expect(cells.every((v, i) => i === 0 || cells.at(i - 1)! >= v)).toBe(true);
+        }
+      }).toPass();
+    },
     async allCellsToContainText(columnIndex: number, text: string): Promise<void> {
       await expect(async () => {
         for (const row of await table.rows.all()) {
@@ -42,6 +57,7 @@ export function expectTable(table: TablePo): TableMatcher {
 }
 
 export interface TableMatcher {
+  toHaveColumnSorted(columnIndex: number, dir?: 'desc' | 'asc'): Promise<void>;
   allCellsToContainText(columnIndex: number, text: string): Promise<void>;
   toHaveHorizontalOverflow(): Promise<void>;
   toHaveColumnCount(count: number): Promise<void>;

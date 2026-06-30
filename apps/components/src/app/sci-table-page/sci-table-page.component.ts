@@ -31,7 +31,7 @@ class DateCellComponent {
 class SlowDataSource implements SciDataSource<Company, number> {
   public pageSize = 50;
 
-  public getItems(request: SciTableRequest): Observable<SciTableResponse<Company>> {
+  public loader(request: SciTableRequest): Observable<SciTableResponse<Company>> {
     return timer(1000).pipe(
       map(() => ({
         items: companies.slice(request.start, request.end),

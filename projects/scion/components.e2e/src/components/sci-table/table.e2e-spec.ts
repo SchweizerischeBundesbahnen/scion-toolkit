@@ -443,14 +443,11 @@ test.describe('sci-table', () => {
 
       // sort ascending
       await table.column('Name').sort();
-
-      const ascTexts = await table.locateColumnCells(1).allTextContents();
-      await expect(table.locateColumnCells(1)).toHaveText([...ascTexts].sort((a, b) => a.localeCompare(b)));
+      await expectTable(table).toHaveColumnSorted(1);
 
       // sort descending
       await table.column('Name').sort();
-      const descTexts = await table.locateColumnCells(1).allTextContents();
-      await expect(table.locateColumnCells(1)).toHaveText([...descTexts].sort((a, b) => b.localeCompare(a)));
+      await expectTable(table).toHaveColumnSorted(1, 'desc');
     });
 
     test('should sort number column ascending and descending', async ({page}) => {
@@ -462,13 +459,11 @@ test.describe('sci-table', () => {
 
       // sort ascending
       await table.column('Price').sort();
-      const ascTexts = await table.locateColumnCells(1).allTextContents();
-      await expect(table.locateColumnCells(1)).toHaveText([...ascTexts.map(Number)].sort((a, b) => a - b).map(String));
+      await expectTable(table).toHaveColumnSorted(1);
 
       // sort descending
       await table.column('Price').sort();
-      const descTexts = await table.locateColumnCells(1).allTextContents();
-      await expect(table.locateColumnCells(1)).toHaveText([...descTexts.map(Number)].sort((a, b) => b - a).map(String));
+      await expectTable(table).toHaveColumnSorted(1, 'desc');
     });
 
     test('should sort boolean column ascending and descending', async ({page}) => {
@@ -480,23 +475,11 @@ test.describe('sci-table', () => {
 
       // sort ascending: false values first
       await table.column('In Stock').sort();
-
-      const ascTexts = await table.locateColumnCells(1).allTextContents();
-      await expect(table.locateColumnCells(1))
-        .toHaveText([...ascTexts.map(t => t.trim() === 'checkmark' ? 0 : 1)]
-          .sort((a, b) => b - a)
-          .map(checked => checked === 0 ? 'checkmark' : 'clear'),
-        );
+      await expectTable(table).toHaveColumnSorted(1);
 
       // sort descending: true values first
       await table.column('In Stock').sort();
-
-      const descTexts = await table.locateColumnCells(1).allTextContents();
-      await expect(table.locateColumnCells(1))
-        .toHaveText([...descTexts.map(t => t.trim() === 'checkmark' ? 0 : 1)]
-          .sort((a, b) => a - b)
-          .map(checked => checked === 0 ? 'checkmark' : 'clear'),
-        );
+      await expectTable(table).toHaveColumnSorted(1, 'desc');
     });
 
     test('should sort large amount of data', async ({page}) => {

@@ -41,7 +41,7 @@ export class ɵSciArrayDataSource<T> implements SciDataSource<T> {
     this.pageSize = Math.min(this._data.length, 10_000);
   }
 
-  public getItems(request: SciTableRequest): SciTableResponse<T> {
+  public loader(request: SciTableRequest): SciTableResponse<T> {
     const sortCols = this.mapCriteria(request.sortCriteria, this._columns);
     const filterCols = this.mapCriteria(request.filterCriteria, this._columns);
 

@@ -8,16 +8,16 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, linkedSignal, NgZone, output, signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, linkedSignal, NgZone, output, resource, signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciColumns, SciTable} from './table.model';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
-import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {toObservable} from '@angular/core/rxjs-interop';
 import {TableRowComponent} from './table-row/table-row.component';
-import {combineLatest, combineLatestWith, from, fromEvent, mergeMap, switchMap} from 'rxjs';
+import {combineLatestWith, fromEvent} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
-import {map, startWith} from 'rxjs/operators';
+import {startWith} from 'rxjs/operators';
 import {clamp, rangeInclusive} from './common';
 import {TableSelectionService} from './table-selection.service';
 import {dimension} from '@scion/components/dimension';
@@ -108,6 +108,20 @@ export class SciTableComponent<T, ID = T> {
     });
   }, {equal: (prev, curr) => prev.length === curr.length && prev.every(p => curr.includes(p))});
 
+  protected readonly dataResource = resource({
+    params: () => ({
+      sortCriteria: this.sciTable().sortCriteria(),
+      filterCriteria: this.sciTable().filterCriteria(),
+      table: this.sciTable(),
+      pages: this._pages(),
+    }),
+    loader: ({params}) => Promise.all(
+      params.pages.map(page => params.table.loadPage({page, sortCriteria: params.sortCriteria, filterCriteria: params.filterCriteria})
+        .then(response => ({...response, page})),
+      ),
+    ),
+  });
+
   protected readonly height = computed(() => `${this.sciTable().totalCount() * this.sciTable().itemSize}px`);
   protected readonly columnWidths = computed(() => {
     const columns = this.sciTable().columns;
@@ -162,16 +176,33 @@ export class SciTableComponent<T, ID = T> {
     });
 
     effect(() => {
-      this.sciTable().criteria(); // track sort criteria
+      const table = this.sciTable();
       const viewport = this._viewport();
       const count = this._count();
 
+      table.criteria(); // track sort criteria
+
       // as soon as the table criteria change (and on init), scroll to the top, and set initial count to show skeletons
       viewport?.nativeElement.scrollTo({top: 0});
-      this.sciTable().setTotalCount(count);
+      table.setTotalCount(count);
     });
 
-    this.installDataFetcher();
+    effect(() => {
+      const table = this.sciTable();
+
+      if (this.dataResource.status() !== 'resolved' && !this.dataResource.hasValue()) {
+        return;
+      }
+
+      const responses = this.dataResource.value()!;
+
+      // Update rows when page loading is finished
+      for (const response of responses) {
+        this._loadedPages.update(pages => new Set(pages).add(response.page));
+        table.updateRows(response);
+      }
+    });
+
     this.installScrollListener();
   }
 
@@ -179,28 +210,6 @@ export class SciTableComponent<T, ID = T> {
     const cellWidths = this._rows().map(row => row.getCellWidth(column.name));
     const maxWidth = Math.max(...cellWidths, 0);
     this.sciTable().setResizedColumn(column.name, maxWidth);
-  }
-
-  /**
-   * Fetches data when the visible range or sort/filter criteria change
-   * Must be installed here (in an injection context) to support cleanup through {@link takeUntilDestroyed}.
-   */
-  private installDataFetcher(): void {
-    const sortCriteria$ = toObservable(computed(() => this.sciTable().sortCriteria()));
-    const filterCriteria$ = toObservable(computed(() => this.sciTable().filterCriteria()));
-    const table$ = toObservable(this.sciTable);
-    const pages$ = toObservable(this._pages);
-
-    combineLatest([table$, pages$, sortCriteria$, filterCriteria$]).pipe(
-      switchMap(([table, pages, sortCriteria, filterCriteria]) => from(pages).pipe(
-        mergeMap(page => table.loadPage({page, sortCriteria, filterCriteria})),
-        map(response => ({response, table})),
-      )),
-      takeUntilDestroyed(),
-    ).subscribe(({response, table}) => {
-      this._loadedPages.update(pages => new Set(pages).add(response.page));
-      table.updateRows(response);
-    });
   }
 
   /**

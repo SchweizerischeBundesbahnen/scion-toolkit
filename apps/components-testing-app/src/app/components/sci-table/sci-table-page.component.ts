@@ -8,13 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, input, inputBinding, Signal, signal, TemplateRef, viewChild} from '@angular/core';
-import {SciCellContext, SciDataSource, SciTableComponent, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {SciCellContext, SciDataSource, SciTableComponent, SciTableFactory, SciTableRequest, SciTableResponse, SciTable, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {form, FormField, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {map, Observable, timer} from 'rxjs';
-import {SciTable} from '../../../../../../projects/scion/components/table/src/table.model';
 
 interface Product {
   id: number;
@@ -45,7 +44,7 @@ class SlowDataSource implements SciDataSource<Product, number> {
 
   constructor(private readonly _data: Signal<Product[]>) {}
 
-  public getItems(request: SciTableRequest): Observable<SciTableResponse<Product>> {
+  public loader(request: SciTableRequest): Observable<SciTableResponse<Product>> {
     return timer(1000).pipe(
       map(() => ({
         items: request.filterCriteria.length > 0 ? [] : this._data().slice(request.start, request.end),

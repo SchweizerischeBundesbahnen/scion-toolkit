@@ -45,7 +45,7 @@ export interface SciDataSource<T, ID = T> {
   /**
    * Load a slice of data from the data source.
    */
-  getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
+  loader(request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
 
   /**
    * Get the identity of a single item, used for equality checks.

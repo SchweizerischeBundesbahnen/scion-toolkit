@@ -33,7 +33,7 @@ export class TablePo {
   }
 
   public locateColumnCells(columnIndex: number): Locator {
-    return this.rows.locator('sci-table-cell').nth(columnIndex);
+    return this.rows.locator(`sci-table-cell:nth-child(${columnIndex + 1})`);
   }
 
   public row(index: number): RowPo {
