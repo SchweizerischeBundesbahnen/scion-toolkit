@@ -232,7 +232,7 @@ test.describe('sci-table', () => {
       const noFilterCount = await table.rows.count();
 
       await table.column('In Stock').filter('false');
-      await expectTable(table).allCellsToContainText(1, 'check_box_outline_blank');
+      await expectTable(table).allCellsToContainText(1, 'clear');
 
       await table.column('In Stock').filter('');
       await expect(table.rows).toHaveCount(noFilterCount);
@@ -483,9 +483,9 @@ test.describe('sci-table', () => {
 
       const ascTexts = await table.locateColumnCells(1).allTextContents();
       await expect(table.locateColumnCells(1))
-        .toHaveText([...ascTexts.map(t => t.trim() === 'check_box' ? 0 : 1)]
+        .toHaveText([...ascTexts.map(t => t.trim() === 'checkmark' ? 0 : 1)]
           .sort((a, b) => b - a)
-          .map(checked => checked === 0 ? 'check_box' : 'check_box_outline_blank'),
+          .map(checked => checked === 0 ? 'checkmark' : 'clear'),
         );
 
       // sort descending: true values first
@@ -493,9 +493,9 @@ test.describe('sci-table', () => {
 
       const descTexts = await table.locateColumnCells(1).allTextContents();
       await expect(table.locateColumnCells(1))
-        .toHaveText([...descTexts.map(t => t.trim() === 'check_box' ? 0 : 1)]
+        .toHaveText([...descTexts.map(t => t.trim() === 'checkmark' ? 0 : 1)]
           .sort((a, b) => a - b)
-          .map(checked => checked === 0 ? 'check_box' : 'check_box_outline_blank'),
+          .map(checked => checked === 0 ? 'checkmark' : 'clear'),
         );
     });
 

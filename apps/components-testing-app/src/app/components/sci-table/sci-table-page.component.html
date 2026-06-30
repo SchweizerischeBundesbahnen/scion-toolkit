@@ -18,31 +18,31 @@
     <ng-template sciTab label="Settings" [cssClass]="'e2e-settings'">
       <form>
         <sci-form-field label="Filterable">
-          <input [field]="settingsForm.filterable" type="checkbox" class="e2e-filterable" />
+          <input [formField]="settingsForm.filterable" type="checkbox" class="e2e-filterable" />
         </sci-form-field>
         <sci-form-field label="Sortable">
-          <input [field]="settingsForm.sortable" type="checkbox" class="e2e-sortable" />
+          <input [formField]="settingsForm.sortable" type="checkbox" class="e2e-sortable" />
         </sci-form-field>
         <sci-form-field label="Resizable">
-          <input [field]="settingsForm.resizable" type="checkbox" class="e2e-resizable" />
+          <input [formField]="settingsForm.resizable" type="checkbox" class="e2e-resizable" />
         </sci-form-field>
         <sci-form-field label="Show Header">
-          <input [field]="settingsForm.showHeader" type="checkbox" class="e2e-show-header" />
+          <input [formField]="settingsForm.showHeader" type="checkbox" class="e2e-show-header" />
         </sci-form-field>
         <sci-form-field label="Conditional Style Row (Part)">
-          <input [field]="settingsForm.conditionallyStyleRow" type="checkbox" class="e2e-conditional-style">
+          <input [formField]="settingsForm.conditionallyStyleRow" type="checkbox" class="e2e-conditional-style">
         </sci-form-field>
         <sci-form-field label="Table Count">
-          <input [field]="settingsForm.tableCount" type="number" class="e2e-table-count" />
+          <input [formField]="settingsForm.tableCount" type="number" class="e2e-table-count" />
         </sci-form-field>
         <sci-form-field label="Row Count">
-          <input [field]="settingsForm.rowCount" type="number" class="e2e-row-count" />
+          <input [formField]="settingsForm.rowCount" type="number" class="e2e-row-count" />
         </sci-form-field>
         <sci-form-field label="Row Size">
-          <input [field]="settingsForm.rowSize" type="number" class="e2e-row-size" />
+          <input [formField]="settingsForm.rowSize" type="number" class="e2e-row-size" />
         </sci-form-field>
         <sci-form-field label="Table Height">
-          <input [field]="settingsForm.height" type="number" class="e2e-height" />
+          <input [formField]="settingsForm.height" type="number" class="e2e-height" />
         </sci-form-field>
       </form>
     </ng-template>
@@ -50,13 +50,13 @@
     <ng-template sciTab label="Columns" [cssClass]="'e2e-columns'">
       <form (submit)="onColumnSubmit()">
         <sci-form-field label="Name">
-          <input [field]="columnForm.name" class="e2e-column-name">
+          <input [formField]="columnForm.name" class="e2e-column-name">
         </sci-form-field>
         <sci-form-field label="Header">
-          <input [field]="columnForm.header" class="e2e-column-header">
+          <input [formField]="columnForm.header" class="e2e-column-header">
         </sci-form-field>
         <sci-form-field label="Column Type">
-          <select [field]="columnForm.type" class="e2e-column-type">
+          <select [formField]="columnForm.type" class="e2e-column-type">
             <option value="string">String</option>
             <option value="number">Number</option>
             <option value="boolean">Boolean</option>
@@ -65,25 +65,25 @@
           </select>
         </sci-form-field>
         <sci-form-field label="Custom Sort">
-          <input [field]="columnForm.customSort" type="checkbox" class="e2e-column-custom-sort">
+          <input [formField]="columnForm.customSort" type="checkbox" class="e2e-column-custom-sort">
         </sci-form-field>
         <sci-form-field label="Custom Filter">
-          <input [field]="columnForm.customFilter" type="checkbox" class="e2e-column-custom-filter">
+          <input [formField]="columnForm.customFilter" type="checkbox" class="e2e-column-custom-filter">
         </sci-form-field>
         <sci-form-field label="Conditional Style (Part)">
-          <input [field]="columnForm.conditionallyStyleCell" type="checkbox" class="e2e-column-conditional-style">
+          <input [formField]="columnForm.conditionallyStyleCell" type="checkbox" class="e2e-column-conditional-style">
         </sci-form-field>
         <sci-form-field label="Filter Values (comma separated)">
-          <input [field]="columnForm.filterValues" type="text" class="e2e-column-filter-values">
+          <input [formField]="columnForm.filterValues" type="text" class="e2e-column-filter-values">
         </sci-form-field>
         <sci-form-field label="Width">
-          <input [field]="columnForm.width" class="e2e-column-width">
+          <input [formField]="columnForm.width" class="e2e-column-width">
         </sci-form-field>
         <sci-form-field label="Min Width">
-          <input [field]="columnForm.minWidth" class="e2e-column-min-width">
+          <input [formField]="columnForm.minWidth" class="e2e-column-min-width">
         </sci-form-field>
         <sci-form-field label="Max Width">
-          <input [field]="columnForm.maxWidth" class="e2e-column-max-width">
+          <input [formField]="columnForm.maxWidth" class="e2e-column-max-width">
         </sci-form-field>
         <button class="e2e-column-add" type="submit">Add</button>
       </form>

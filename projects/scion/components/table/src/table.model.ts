@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Binding, Signal, TemplateRef} from '@angular/core';
+import {Signal, TemplateRef} from '@angular/core';
 import {MaybeAsync, MaybeSignal} from './common';
-import {ComponentType} from '@angular/cdk/portal';
 import {SciFilterCriterion, SciSortCriterion} from './table-data-source';
+import {SciComponentDescriptor} from '@scion/components/common';
 
 export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
 
@@ -52,11 +52,6 @@ export interface SciTable<T, ID = T> {
 export interface SciCellContext<T, VALUE> {
   item: T;
   value: VALUE;
-}
-
-export interface ComponentWithBindings {
-  component: ComponentType<unknown>;
-  bindings?: Binding[];
 }
 
 export interface TemplateWithContext {
@@ -106,7 +101,7 @@ export interface SciNumberColumn<T> extends SciColumn<T> {
 
 export interface SciComponentColumn<T> extends SciColumn<T> {
   type: 'component';
-  component: (item: T) => ComponentWithBindings;
+  component: (item: T) => SciComponentDescriptor;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
   filterValues?: MaybeAsync<unknown[]>;
@@ -157,7 +152,7 @@ export interface SciBooleanCell extends SciCell {
 
 export interface SciComponentCell extends SciCell {
   type: 'component';
-  component: ComponentWithBindings;
+  component: SciComponentDescriptor;
 }
 
 export interface SciTemplateCell extends SciCell {

@@ -5,7 +5,7 @@
       <ng-template *ngTemplateOutlet="_cell.template().template; context: templateContext()" />
     }
     @case ('component') {
-      <ng-container #componentOutlet></ng-container>
+      <ng-container *sciComponentOutlet="_cell.component"/>
     }
     @case ('boolean') {
       @let value = _cell.value();

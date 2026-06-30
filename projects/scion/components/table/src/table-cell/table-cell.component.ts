@@ -8,10 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, untracked, viewChild, ViewContainerRef} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, ElementRef, input, viewChild} from '@angular/core';
 import {SciCells} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {SciIconComponent} from '../../../icon/src/icon.component';
+import {SciComponentOutletDirective} from '@scion/components/common';
 
 @Component({
   selector: 'sci-table-cell',
@@ -25,6 +26,7 @@ import {SciIconComponent} from '../../../icon/src/icon.component';
   imports: [
     NgTemplateOutlet,
     SciIconComponent,
+    SciComponentOutletDirective,
   ],
 })
 export class TableCellComponent<T> {
@@ -47,28 +49,6 @@ export class TableCellComponent<T> {
   });
 
   private readonly _cellElement = viewChild.required<ElementRef<HTMLDivElement>>('cellElement');
-  private readonly _componentOutlet = viewChild('componentOutlet', {read: ViewContainerRef});
-
-  constructor() {
-    effect(onCleanup => {
-      const cell = this.cell();
-      const componentOutlet = this._componentOutlet();
-
-      if (cell.type !== 'component' || !componentOutlet) {
-        return;
-      }
-
-      untracked(() => {
-        const component = componentOutlet.createComponent(cell.component.component, {
-          bindings: cell.component.bindings,
-        });
-
-        onCleanup(() => {
-          component.destroy();
-        });
-      });
-    });
-  }
 
   public getWidth(): number {
     return this._cellElement().nativeElement.offsetWidth;

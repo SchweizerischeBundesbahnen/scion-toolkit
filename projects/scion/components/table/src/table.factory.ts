@@ -9,8 +9,9 @@
  */
 
 import {MaybeAsync, MaybeSignal} from './common';
-import {ComponentWithBindings, SciCellContext, TemplateWithContext} from './table.model';
+import {SciCellContext, TemplateWithContext} from './table.model';
 import {SciTableStorage} from './table-storage';
+import {SciComponentDescriptor} from '@scion/components/common';
 
 export interface SciTableFactory<T> {
   addStringColumn(value: (item: T) => string): this;
@@ -80,7 +81,7 @@ interface SciColumnDescriptor<T> {
 }
 
 export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor<T> {
-  component: (item: T) => ComponentWithBindings;
+  component: (item: T) => SciComponentDescriptor;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */

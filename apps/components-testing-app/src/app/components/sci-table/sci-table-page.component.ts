@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, input, inputBinding, Signal, signal, TemplateRef, viewChild} from '@angular/core';
-import {SciTableComponent, SciTableFactory, SciCellContext, table, SciDataSource, SciTableRequest, SciTableResponse} from '@scion/components/table';
+import {SciCellContext, SciDataSource, SciTableComponent, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
-import {Field, form, required} from '@angular/forms/signals';
+import {form, FormField, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {map, Observable, timer} from 'rxjs';
@@ -83,7 +83,7 @@ const createDefaultColumn = (): {name: string; type: string; header: string; res
   imports: [
     SciTableComponent,
     FormsModule,
-    Field,
+    FormField,
     SciFormFieldComponent,
     SciTabDirective,
     SciTabbarComponent,

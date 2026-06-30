@@ -24,6 +24,9 @@ export class ColumnPo {
   public async filter(value: string): Promise<void> {
     const input = this.filterLocator.locator('input');
     const select = this.filterLocator.locator('select');
+
+    await Promise.race([input.waitFor({state: 'visible'}), select.waitFor({state: 'visible'})]);
+
     if (await input.isVisible()) {
       await input.fill(value);
     }
