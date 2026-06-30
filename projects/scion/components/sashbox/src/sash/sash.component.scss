@@ -3,4 +3,38 @@
   grid-auto-rows: 100%;
   grid-auto-columns: 100%;
   overflow: hidden;
+
+  &.animate.enter {
+    animation: enter 0s ease-out;
+  }
+
+  &.animate.leave {
+    animation: leave 0s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &.animate.enter, &.animate.enter {
+      animation: none;
+    }
+  }
+
+  // https://github.com/angular/angular/issues/49378
+  @container style(--sci-sashbox-animation-disabled: false) {
+    &.animate.enter,
+    &.animate.leave {
+      animation-duration: 125ms;
+    }
+  }
+
+  @keyframes leave {
+    to {
+      flex-basis: 0;
+    }
+  }
+
+  @keyframes enter {
+    from {
+      flex-basis: 0;
+    }
+  }
 }
