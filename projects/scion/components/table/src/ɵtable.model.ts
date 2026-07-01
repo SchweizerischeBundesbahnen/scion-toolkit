@@ -9,7 +9,7 @@
  */
 
 import {computed, InjectionToken, linkedSignal, signal, Signal} from '@angular/core';
-import {SciDataSource, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
+import {SciDataSource, SciFilterCriterion, SciSortCriterion} from './table-data-source';
 import {ColumnType, SciCellContext, SciCells, SciColumns, SciRow, SciTable} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciArrayDataSource} from './ɵarray-data-source';
@@ -45,17 +45,41 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
   private readonly _columnWidths = signal(new Map<string, number>());
   private readonly _selectedItems = signal<Set<ID>>(new Set());
-  private readonly _totalCount = signal(0);
+  private readonly _visibleRowCount = signal<number>(0);
+  private readonly _totalCount = signal<number>(0);
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria()}));
 
-  private readonly _rows = linkedSignal({
-    source: () => ({count: this._totalCount()}),
-    computation: ({count}) => new Array<SciRow<T, ID>>(count).fill({}),
-  });
   private readonly _activeItem = linkedSignal({
     source: this.criteria,
     computation: () => undefined as ID | undefined,
+  });
+
+  protected readonly pageResources = linkedSignal({
+    source: () => this.criteria(),
+    computation: () => new Map<number, Signal<SciRow<T, ID>[] | undefined>>(),
+  });
+
+  public readonly rows = computed(() => {
+    const count = this._visibleRowCount();
+    const totalCount = this._totalCount();
+    const pages = [...this.pageResources().entries()]
+      .filter(([_, resource]) => !!resource())
+      .map(([page, resource]) => ({
+        page,
+        value: resource(),
+      }));
+
+    if (pages.length <= 0) {
+      return new Array<SciRow<T, ID>>(count).fill({});
+    }
+
+    const rows = new Array<SciRow<T, ID>>(totalCount).fill({});
+    for (const page of pages) {
+      const start = page.page * this.dataSource.pageSize;
+      rows.splice(start, this.dataSource.pageSize, ...page.value!);
+    }
+    return rows;
   });
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
@@ -63,8 +87,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly columnWidths = this._columnWidths.asReadonly();
   public readonly activeItem = this._activeItem.asReadonly();
   public readonly selectedItems = this._selectedItems.asReadonly();
-  public readonly totalCount = this._totalCount.asReadonly();
-  public readonly rows = this._rows.asReadonly();
+  public readonly visibleRowCount = this._visibleRowCount.asReadonly();
 
   constructor(factory: ɵSciTableFactory<T>, dataOrSource: T[] | SciDataSource<T, ID>) {
     this.name = factory.tableName;
@@ -88,27 +111,53 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     void this.initColumnWidths();
   }
 
-  public setTotalCount(totalCount: number): void {
-    this._totalCount.set(totalCount);
+  public setVisibleRowCount(count: number): void {
+    this._visibleRowCount.set(count);
   }
 
-  public async loadPage({page, sortCriteria, filterCriteria}: Pick<SciTableRequest, 'page' | 'sortCriteria' | 'filterCriteria'>): Promise<SciTableResponse<T>> {
-    const pageSize = this.dataSource.pageSize;
-    return coercePromise(this.dataSource.loader({
-      start: page * pageSize,
-      end: page * pageSize + pageSize,
-      pageSize: pageSize,
-      page,
-      sortCriteria,
-      filterCriteria,
-    }));
+  public addPageResources(pages: number[], sortCriteria: SciSortCriterion[], filterCriteria: SciFilterCriterion[], abortController: AbortController): void {
+    this.pageResources.update(resources => {
+      const newResources = new Map(resources);
+
+      for (const page of pages) {
+        if (resources.has(page)) {
+          continue;
+        }
+
+        const pageSignal = signal<SciRow<T, ID>[] | undefined>(undefined);
+        const pageSize = this.dataSource.pageSize;
+
+        void coercePromise(this.dataSource.loader({
+          start: page * pageSize,
+          end: page * pageSize + pageSize,
+          pageSize: pageSize,
+          page,
+          sortCriteria,
+          filterCriteria,
+          abortSignal: abortController.signal,
+        })).then(result => {
+          this._totalCount.set(result.totalCount);
+          pageSignal.set(this.mapItemsToRow(result.items));
+        });
+
+        newResources.set(page, pageSignal);
+      }
+
+      return newResources;
+    });
   }
 
-  public updateRows({items, totalCount, page}: SciTableResponse<T> & {page: number}): void {
-    this._totalCount.set(totalCount);
-    this._rows.update(rows => {
-      const start = page * this.dataSource.pageSize;
-      return rows.slice(0, start).concat(this.mapItemsToRow(items), rows.slice(start + this.dataSource.pageSize));
+  public removeLoadingResources(): void {
+    this.pageResources.update(resources => {
+      const newResources = new Map(resources);
+      resources.forEach((resource, page) => {
+        if (resource()) { // don't destroy resources, which are already resolved
+          return;
+        }
+
+        newResources.delete(page);
+      });
+      return newResources;
     });
   }
 
@@ -216,7 +265,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     return `sci-table-${this.name}`;
   }
 
-  private mapItemsToRow(items: T[]): SciRow<T, ID>[] {
+  public mapItemsToRow(items: T[]): SciRow<T, ID>[] {
     return items.map(item => ({
       item: item,
       id: this.dataSource.identity(item),

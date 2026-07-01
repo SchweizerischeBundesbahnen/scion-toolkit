@@ -27,6 +27,7 @@ export interface SciTableRequest {
   page: number;
   sortCriteria: SciSortCriterion[];
   filterCriteria: SciFilterCriterion[];
+  abortSignal: AbortSignal;
 }
 
 export interface SciTableResponse<T> {

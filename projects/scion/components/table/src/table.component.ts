@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, linkedSignal, NgZone, output, resource, signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, input, NgZone, output, signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciColumns, SciTable} from './table.model';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
@@ -19,8 +19,8 @@ import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {startWith} from 'rxjs/operators';
 import {clamp, rangeInclusive} from './common';
-import {TableSelectionService} from './table-selection.service';
 import {dimension} from '@scion/components/dimension';
+import {TableSelectionService} from './table-selection.service';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 
 @Component({
@@ -30,7 +30,7 @@ import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
-    '[style.--ɵsci-table-virtual-scroll-height]': 'height()',
+    '[style.--ɵsci-table-virtual-scroll-height]': 'virtualScrollHeight()',
     '[style.--ɵsci-table-header-height]': '`${headerDimension()?.clientHeight ?? 0}px`',
     '[style.--ɵsci-table-columns]': 'columnWidths()',
     '[style.--ɵsci-table-item-size]': '`${sciTable().itemSize}px`',
@@ -74,55 +74,24 @@ export class SciTableComponent<T, ID = T> {
 
   protected readonly range = signal<{start: number; end: number}>({start: 0, end: 0});
 
-  /**
-   * Count of currently visible rows
-   */
-  private readonly _count = computed(() => {
-    const containerDimension = this._containerDimension();
-    const itemSize = this.sciTable().itemSize;
-    const overscan = this.sciTable().overscan;
+  private readonly _pages = computed(() => {
+    const table = this.sciTable();
+    const {start, end} = this.range();
 
-    return Math.ceil(containerDimension.clientHeight / itemSize) + overscan * 2;
-  });
+    return untracked(() => {
+      const pageSize = table.dataSource.pageSize;
+      const startPage = Math.floor(start / pageSize);
+      const endPage = Math.floor(end / pageSize);
+      return rangeInclusive(startPage, endPage);
+    });
+  }, {equal: (prev, curr) => prev.length === curr.length && prev.every(p => curr.includes(p))});
 
   protected readonly visibleRows = computed(() => {
     const {start, end} = this.range();
     return this.sciTable().rows().slice(start, end);
   });
 
-  private readonly _loadedPages = linkedSignal({
-    source: () => this.sciTable().criteria(),
-    computation: () => new Set<number>(),
-  });
-
-  private readonly _pages = computed(() => {
-    const table = this.sciTable();
-    const {start, end} = this.range();
-    const loadedPages = this._loadedPages();
-
-    return untracked(() => {
-      const pageSize = table.dataSource.pageSize;
-      const startPage = Math.floor(start / pageSize);
-      const endPage = Math.floor(end / pageSize);
-      return rangeInclusive(startPage, endPage).filter(page => !loadedPages.has(page));
-    });
-  }, {equal: (prev, curr) => prev.length === curr.length && prev.every(p => curr.includes(p))});
-
-  protected readonly dataResource = resource({
-    params: () => ({
-      sortCriteria: this.sciTable().sortCriteria(),
-      filterCriteria: this.sciTable().filterCriteria(),
-      table: this.sciTable(),
-      pages: this._pages(),
-    }),
-    loader: ({params}) => Promise.all(
-      params.pages.map(page => params.table.loadPage({page, sortCriteria: params.sortCriteria, filterCriteria: params.filterCriteria})
-        .then(response => ({...response, page})),
-      ),
-    ),
-  });
-
-  protected readonly height = computed(() => `${this.sciTable().totalCount() * this.sciTable().itemSize}px`);
+  protected readonly virtualScrollHeight = computed(() => `${this.sciTable().rows().length * this.sciTable().itemSize}px`);
   protected readonly columnWidths = computed(() => {
     const columns = this.sciTable().columns;
     const overrides = this.sciTable().columnWidths();
@@ -175,34 +144,9 @@ export class SciTableComponent<T, ID = T> {
       this.selectItems.emit(this.sciTable().selectedItems());
     });
 
-    effect(() => {
-      const table = this.sciTable();
-      const viewport = this._viewport();
-      const count = this._count();
-
-      table.criteria(); // track sort criteria
-
-      // as soon as the table criteria change (and on init), scroll to the top, and set initial count to show skeletons
-      viewport?.nativeElement.scrollTo({top: 0});
-      table.setTotalCount(count);
-    });
-
-    effect(() => {
-      const table = this.sciTable();
-
-      if (this.dataResource.status() !== 'resolved' && !this.dataResource.hasValue()) {
-        return;
-      }
-
-      const responses = this.dataResource.value()!;
-
-      // Update rows when page loading is finished
-      for (const response of responses) {
-        this._loadedPages.update(pages => new Set(pages).add(response.page));
-        table.updateRows(response);
-      }
-    });
-
+    this.setVisibleRowCount();
+    this.loadPages();
+    this.scrollTopOnCriteriaChange();
     this.installScrollListener();
   }
 
@@ -213,10 +157,60 @@ export class SciTableComponent<T, ID = T> {
   }
 
   /**
+   * Scrolls viewport to the top, as soon as either filter or sort criteria change
+   */
+  private scrollTopOnCriteriaChange(): void {
+    effect(() => {
+      const table = this.sciTable();
+      const viewport = this._viewport();
+
+      table.criteria(); // track sort criteria
+
+      // as soon as the table criteria change (and on init), scroll to the top, and set initial count to show skeletons
+      viewport?.nativeElement.scrollTo({top: 0});
+    });
+  }
+
+  /**
+   * Sets the visible row count based on the {@link ɵSciTable}.
+   * The count is calculated based on container and item size.
+   */
+  private setVisibleRowCount(): void {
+    effect(() => {
+      const containerDimension = this._containerDimension();
+      const itemSize = this.sciTable().itemSize;
+      const overscan = this.sciTable().overscan;
+
+      const count = Math.ceil(containerDimension.clientHeight / itemSize) + overscan * 2;
+      this.sciTable().setVisibleRowCount(count);
+    });
+  }
+
+  /**
+   * Instructs {@link ɵSciTable} to load a set of pages.
+   */
+  private loadPages(): void {
+    effect(onCleanup => {
+      const pages = this._pages();
+      const table = this.sciTable();
+      const sortCriteria = table.sortCriteria();
+      const filterCriteria = table.filterCriteria();
+      const abortController = new AbortController();
+
+      untracked(() => table.addPageResources(pages, sortCriteria, filterCriteria, abortController));
+
+      onCleanup(() => {
+        abortController.abort();
+        table.removeLoadingResources();
+      });
+    });
+  }
+
+  /**
    * Updates the range of currently visible rows on scroll.
    */
   private installScrollListener(): void {
-    const count$ = toObservable(this._count);
+    const count$ = toObservable(computed(() => this.sciTable().visibleRowCount()));
     const table$ = toObservable(this.sciTable);
 
     effect(onCleanup => {
