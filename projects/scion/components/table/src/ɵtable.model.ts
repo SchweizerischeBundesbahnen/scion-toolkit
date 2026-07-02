@@ -55,7 +55,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     computation: () => undefined as ID | undefined,
   });
 
-  protected readonly pageResources = linkedSignal({
+  // TODO [eg]: Add logic to evict pages from cache to prevent it from getting too large
+  protected readonly pagesCache = linkedSignal({
     source: () => this.criteria(),
     computation: () => new Map<number, Signal<SciRow<T, ID>[] | undefined>>(),
   });
@@ -63,21 +64,23 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly rows = computed(() => {
     const count = this._visibleRowCount();
     const totalCount = this._totalCount();
-    const pages = [...this.pageResources().entries()]
-      .filter(([_, resource]) => !!resource())
-      .map(([page, resource]) => ({
+    const pages = [...this.pagesCache().entries()]
+      .filter(([_, rows]) => !!rows())
+      .map(([page, rows]) => ({
         page,
-        value: resource(),
+        rows: rows(),
       }));
 
     if (pages.length <= 0) {
       return new Array<SciRow<T, ID>>(count).fill({});
     }
 
+    // Create shallow row for each possible row item.
+    // Then populate the rows which are resolved.
     const rows = new Array<SciRow<T, ID>>(totalCount).fill({});
     for (const page of pages) {
       const start = page.page * this.dataSource.pageSize;
-      rows.splice(start, this.dataSource.pageSize, ...page.value!);
+      rows.splice(start, this.dataSource.pageSize, ...page.rows!);
     }
     return rows;
   });
@@ -115,12 +118,12 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     this._visibleRowCount.set(count);
   }
 
-  public addPageResources(pages: number[], sortCriteria: SciSortCriterion[], filterCriteria: SciFilterCriterion[], abortController: AbortController): void {
-    this.pageResources.update(resources => {
-      const newResources = new Map(resources);
+  public loadPages(pages: number[], sortCriteria: SciSortCriterion[], filterCriteria: SciFilterCriterion[], abortController: AbortController): void {
+    this.pagesCache.update(cache => {
+      const newCache = new Map(cache);
 
       for (const page of pages) {
-        if (resources.has(page)) {
+        if (cache.has(page)) {
           continue;
         }
 
@@ -140,24 +143,22 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
           pageSignal.set(this.mapItemsToRow(result.items));
         });
 
-        newResources.set(page, pageSignal);
+        newCache.set(page, pageSignal);
       }
 
-      return newResources;
+      return newCache;
     });
   }
 
-  public removeLoadingResources(): void {
-    this.pageResources.update(resources => {
-      const newResources = new Map(resources);
-      resources.forEach((resource, page) => {
-        if (resource()) { // don't destroy resources, which are already resolved
-          return;
+  public cancelLoadingPages(): void {
+    this.pagesCache.update(cache => {
+      const newCache = new Map(cache);
+      cache.forEach((rows, page) => {
+        if (!rows()) { // only destroy pages, which are not already resolved.
+          newCache.delete(page);
         }
-
-        newResources.delete(page);
       });
-      return newResources;
+      return newCache;
     });
   }
 

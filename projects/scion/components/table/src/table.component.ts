@@ -81,7 +81,7 @@ export class SciTableComponent<T, ID = T> {
     return untracked(() => {
       const pageSize = table.dataSource.pageSize;
       const startPage = Math.floor(start / pageSize);
-      const endPage = Math.floor(end / pageSize);
+      const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
       return rangeInclusive(startPage, endPage);
     });
   }, {equal: (prev, curr) => prev.length === curr.length && prev.every(p => curr.includes(p))});
@@ -135,9 +135,7 @@ export class SciTableComponent<T, ID = T> {
         return;
       }
 
-      untracked(() => {
-        this.scrollActiveRowIntoViewport(activeItem);
-      });
+      untracked(() => this.scrollActiveRowIntoViewport(activeItem));
     });
 
     effect(() => {
@@ -197,11 +195,11 @@ export class SciTableComponent<T, ID = T> {
       const filterCriteria = table.filterCriteria();
       const abortController = new AbortController();
 
-      untracked(() => table.addPageResources(pages, sortCriteria, filterCriteria, abortController));
+      untracked(() => table.loadPages(pages, sortCriteria, filterCriteria, abortController));
 
       onCleanup(() => {
         abortController.abort();
-        table.removeLoadingResources();
+        table.cancelLoadingPages();
       });
     });
   }
