@@ -1,6 +1,6 @@
 @for (menuItem of menuItems(); track $index) {
   <button [class.open]="activeMenuItem()?.menuItem === menuItem"
-          [class]="menuItem.cssClass" class="menu-item"
+          [class]="menuItem.cssClass" class="menu-item e2e-menu-item"
           [sciAttributes]="menuItem.attributes"
           (mousedown)="onMenuItemMouseDown(menuItem)"
           (click)="onMenuItemClick(menuItem, element)"
