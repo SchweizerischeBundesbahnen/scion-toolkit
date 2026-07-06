@@ -16,74 +16,74 @@ describe('Arrays', () => {
 
     it('should be equal for same array references', () => {
       const array = ['a', 'b', 'c'];
-      expect(Arrays.isEqual(array, array)).toBeTrue();
+      expect(Arrays.isEqual(array, array)).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should be equal for same elements (same order)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'b', 'c'];
-      expect(Arrays.isEqual(array1, array2)).toBeTrue();
-      expect(Arrays.isEqual(array2, array1)).toBeTrue();
+      expect(Arrays.isEqual(array1, array2)).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(array2, array1)).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should be equal for same elements (unordered)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
-      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTrue();
-      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeTrue();
+      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should not be equal for duplicate elements (same order)', () => {
       const array1 = ['a', 'a', 'a'];
       const array2 = ['a', 'b', 'c'];
-      expect(Arrays.isEqual(array1, array2)).toBeFalse();
-      expect(Arrays.isEqual(array2, array1)).toBeFalse();
+      expect(Arrays.isEqual(array1, array2)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(array2, array1)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should not be equal for duplicate elements (unordered)', () => {
       const array1 = ['a', 'a', 'a'];
       const array2 = ['a', 'c', 'b'];
-      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeFalse();
-      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeFalse();
+      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should not be equal for different elements (1)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'b', 'c', 'e'];
-      expect(Arrays.isEqual(array1, array2)).toBeFalse();
-      expect(Arrays.isEqual(array2, array1)).toBeFalse();
+      expect(Arrays.isEqual(array1, array2)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(array2, array1)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should not be equal for different elements (2)', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'B', 'c'];
-      expect(Arrays.isEqual(array1, array2)).toBeFalse();
-      expect(Arrays.isEqual(array2, array1)).toBeFalse();
+      expect(Arrays.isEqual(array1, array2)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(array2, array1)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should not be equal if ordered differently', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
-      expect(Arrays.isEqual(array1, array2)).toBeFalse();
-      expect(Arrays.isEqual(array2, array1)).toBeFalse();
+      expect(Arrays.isEqual(array1, array2)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(array2, array1)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should be equal if ordered differently', () => {
       const array1 = ['a', 'b', 'c'];
       const array2 = ['a', 'c', 'b'];
-      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTrue();
-      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeTrue();
+      expect(Arrays.isEqual(array1, array2, {exactOrder: false})).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(array2, array1, {exactOrder: false})).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should compare \'null\' and \'undefined\' arrays', () => {
-      expect(Arrays.isEqual(null, ['a', 'b', 'c'])).toBeFalse();
-      expect(Arrays.isEqual(undefined, ['a', 'b', 'c'])).toBeFalse();
-      expect(Arrays.isEqual(['a', 'b', 'c'], null)).toBeFalse();
-      expect(Arrays.isEqual(['a', 'b', 'c'], undefined)).toBeFalse();
-      expect(Arrays.isEqual(null, null)).toBeTrue();
-      expect(Arrays.isEqual(undefined, undefined)).toBeTrue();
-      expect(Arrays.isEqual(null, undefined)).toBeFalse();
-      expect(Arrays.isEqual(undefined, null)).toBeFalse();
+      expect(Arrays.isEqual(null, ['a', 'b', 'c'])).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(undefined, ['a', 'b', 'c'])).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(['a', 'b', 'c'], null)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(['a', 'b', 'c'], undefined)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(null, null)).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(undefined, undefined)).toBeTrue(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(null, undefined)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(Arrays.isEqual(undefined, null)).toBeFalse(); // eslint-disable-line @typescript-eslint/no-deprecated
     });
   });
 

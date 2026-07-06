@@ -8,11 +8,6 @@
     flex: auto;
     display: flex;
     flex-direction: column;
-    gap: 1em;
-
-    > h1 {
-      flex: none;
-    }
 
     > sci-tabbar {
       flex: 1 1 0;

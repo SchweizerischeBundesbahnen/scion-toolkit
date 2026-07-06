@@ -1,0 +1,6 @@
+@use '@scion/components' with (
+  $icon-font: (
+    directory: 'scion-icons'
+  )
+);
+@use './styles';

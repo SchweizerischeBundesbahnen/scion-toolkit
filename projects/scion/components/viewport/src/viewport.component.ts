@@ -8,13 +8,14 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, effect, ElementRef, inject, input, NgZone, output, untracked, viewChild, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, ElementRef, inject, input, NgZone, output, Signal, viewChild, ViewEncapsulation} from '@angular/core';
 import {coerceElement} from '@angular/cdk/coercion';
 import {SciScrollableDirective} from './scrollable.directive';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
-import {fromEvent} from 'rxjs';
-import {subscribeIn} from '@scion/toolkit/operators';
+import {concat, fromEvent, map, of, switchMap, tap, timer} from 'rxjs';
 import {CdkScrollable} from '@angular/cdk/scrolling';
+import {subscribeIn} from '@scion/toolkit/operators';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 
 /**
  * Represents a viewport with slotted content (`<ng-content>`) used as scrollable content. By default, content is added to a CSS grid layout.
@@ -115,9 +116,10 @@ export class SciViewportComponent {
   private readonly _viewport = viewChild.required<ElementRef<HTMLDivElement>>('viewport');
   private readonly _viewportClient = viewChild.required<ElementRef<HTMLDivElement>>('viewport_client');
 
-  constructor() {
-    this.installScrollEmitter();
-  }
+  /**
+   * Indicates whether currently scrolling the viewport.
+   */
+  public readonly scrolling = this.computeScrolling(this._viewport);
 
   public focus(): void { // do not rename to expose the same focus method like `HTMLElement.focus()`.
     this.viewportElement.focus();
@@ -282,19 +284,17 @@ export class SciViewportComponent {
   }
 
   /**
-   * Emits when the scroll position changes.
+   * Computes whether currently scrolling the viewport.
    */
-  private installScrollEmitter(): void {
+  private computeScrolling(viewport: Signal<ElementRef<HTMLElement>>): Signal<boolean> {
     const zone = inject(NgZone);
-    effect(onCleanup => {
-      const viewport = this._viewport();
-      untracked(() => {
-        const subscription = fromEvent(viewport.nativeElement, 'scroll')
-          .pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))
-          .subscribe(event => this.scroll.emit(event));
-        onCleanup(() => subscription.unsubscribe());
-      });
-    });
+
+    return toSignal(toObservable(viewport)
+      .pipe(
+        switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll').pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))),
+        tap(event => this.scroll.emit(event)),
+        switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
+      ), {initialValue: false});
   }
 }
 

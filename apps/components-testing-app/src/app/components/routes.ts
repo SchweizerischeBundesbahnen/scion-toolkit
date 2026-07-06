@@ -27,4 +27,8 @@ export default [
     path: 'sci-splitter',
     loadChildren: () => import('./sci-splitter/routes'),
   },
+  {
+    path: 'sci-icon',
+    loadChildren: () => import('./sci-icon/routes'),
+  },
 ] satisfies Routes;

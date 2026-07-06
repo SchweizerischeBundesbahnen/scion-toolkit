@@ -101,7 +101,7 @@ Tokens for a particular usage.
 
 Tokens for a particular component.
 
-[Component-specific Tokens](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-tokens.scss)
+[Component-specific Tokens (light theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-light-tokens.scss), [Component-specific Tokens (dark theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-dark-tokens.scss)
 
 </details>
 

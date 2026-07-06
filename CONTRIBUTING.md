@@ -320,13 +320,15 @@ Instructions for releasing the `@scion/components` module.
 3. Commit the changed files using the following commit message: `release(components): vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
 4. Push the commit to the branch `release/components-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] does the following.
-  - Creates a Git release tag
-  - Publishes `@scion/components` package to NPM (https://www.npmjs.com/package/@scion/components)
-  - Creates a release on GitHub (https://github.com/SchweizerischeBundesbahnen/scion-toolkit/releases)
-  - Deploys following apps to Vercel:
-     - https://components.scion.vercel.app
-     - https://components-vX-X-X.scion.vercel.app
-
+   - Creates a Git release tag
+   - Publishes `@scion/components` package to NPM (https://www.npmjs.com/package/@scion/components)
+   - Creates a release on GitHub (https://github.com/SchweizerischeBundesbahnen/scion-toolkit/releases)
+   - Deploys following apps to Vercel:
+      - https://components.scion.vercel.app
+      - https://components-vX-X-X.scion.vercel.app
+6. Purge jsDelivr CDN cache if changed the SCION Icon font:
+    - Go to https://www.jsdelivr.com/tools/purge
+    - Enter the URL: https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons
 </details>
 
 <details>
@@ -340,8 +342,8 @@ Instructions for releasing the `@scion/components.internal` module.
 4. Push the commit to the branch `release/ɵcomponents-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
 5. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] creates a Git release tag, publishes the package to NPM, and deploys related applications.
 6. Verify that:
-  - `@scion/components.internal` is published to: https://www.npmjs.com/package/@scion/components.internal.
-  - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
+   - `@scion/components.internal` is published to: https://www.npmjs.com/package/@scion/components.internal.
+   - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
 
 </details>
 

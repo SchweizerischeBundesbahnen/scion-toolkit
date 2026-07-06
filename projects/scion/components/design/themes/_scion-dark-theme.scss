@@ -2,9 +2,9 @@
 @use '../theming' as sci-theming;
 @use '../colors/scion-static-colors';
 @use '../colors/scion-dark-colors';
-@use '../components/scion-component-tokens';
+@use '../components/scion-component-dark-tokens';
 
-$theme: sci-theming.map-merge(scion-static-colors.$tokens, scion-dark-colors.$tokens, scion-component-tokens.$tokens, (
+$theme: sci-theming.map-merge(scion-static-colors.$tokens, scion-dark-colors.$tokens, scion-component-dark-tokens.$tokens, (
   // Use for highlighting calls to action and emphasizing important information or key messages.
   --sci-color-accent: var(--sci-color-blue-500),
   --sci-color-accent-inverse: var(--sci-static-color-white),
@@ -21,11 +21,6 @@ $theme: sci-theming.map-merge(scion-static-colors.$tokens, scion-dark-colors.$to
   --sci-color-notice: var(--sci-color-orange-700),
   --sci-color-notice-inverse: var(--sci-static-color-white),
   --sci-color-background-notice: var(--sci-color-orange-1200),
-  // Use for skeleton loading progress indicators.
-  --sci-color-skeleton-subtle: var(--sci-color-gray-200),
-  --sci-color-skeleton: var(--sci-color-gray-300),
-  --sci-color-skeleton-hover: var(--sci-color-gray-400),
-  --sci-color-skeleton-active: var(--sci-color-gray-400),
   // Use as the primary background for the UI.
   --sci-color-background-primary: var(--sci-color-gray-50),
   // Use as the background for navbars, menubars, toolbars, tabbars, sidebars and panels

@@ -212,6 +212,11 @@
                 "input": "apps/components/public"
               },
               {
+                "glob": "scion-icons.*",
+                "input": "resources/scion-icons",
+                "output": "/scion-icons"
+              },
+              {
                 "glob": "favicon.ico",
                 "input": "resources/branding",
                 "output": "/"
@@ -260,7 +265,7 @@
             "development": {
               "buildTarget": "components-app:build:development",
               "headers": {
-                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/592/; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
               }
             }
           },
@@ -301,6 +306,11 @@
                 "input": "apps/components-testing-app/public"
               },
               {
+                "glob": "scion-icons.*",
+                "input": "resources/scion-icons",
+                "output": "/scion-icons"
+              },
+              {
                 "glob": "favicon.ico",
                 "input": "resources/branding",
                 "output": "/"
@@ -332,13 +342,85 @@
               ],
               "outputHashing": "all"
             },
+            "production-icon-basehref": {
+              "outputHashing": "all",
+              "outputPath": "dist/components-testing-app-icon-basehref/subdir",
+              "baseHref": "/subdir/browser/",
+              "styles": [
+                "apps/components-testing-app/src/styles-base-href-esbuild.scss"
+              ],
+              "externalDependencies": [
+                "scion-icons/scion-icons.*"
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "development-icon-basehref": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "baseHref": "/subdir/browser/",
+              "styles": [
+                "apps/components-testing-app/src/styles-base-href-esbuild.scss"
+              ],
+              "externalDependencies": [
+                "scion-icons/scion-icons.*"
+              ]
             }
           },
           "defaultConfiguration": "production"
+        },
+        "build-icon-basehref-webpack": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/components-testing-app-icon-basehref-webpack/subdir",
+            "baseHref": "/subdir/",
+            "index": "apps/components-testing-app/src/index.html",
+            "main": "apps/components-testing-app/src/main.ts",
+            "tsConfig": "apps/components-testing-app/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "apps/components-testing-app/public"
+              },
+              {
+                "glob": "scion-icons.*",
+                "input": "resources/scion-icons",
+                "output": "/scion-icons"
+              },
+              {
+                "glob": "favicon.ico",
+                "input": "resources/branding",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "apps/components-testing-app/src/styles-base-href-webpack.scss"
+            ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "projects/scion/components"
+              ]
+            }
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "all"
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
+            }
+          },
+          "defaultConfiguration": "development"
         },
         "serve": {
           "builder": "@angular/build:dev-server",
@@ -349,11 +431,20 @@
             "development": {
               "buildTarget": "components-testing-app:build:development",
               "headers": {
-                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/592/; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
               }
+            },
+            "development-icon-basehref": {
+              "buildTarget": "components-testing-app:build:development-icon-basehref"
             }
           },
           "defaultConfiguration": "development"
+        },
+        "serve-icon-basehref-webpack": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "buildTarget": "components-testing-app:build-icon-basehref-webpack:development"
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",

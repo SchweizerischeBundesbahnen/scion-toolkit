@@ -86,6 +86,10 @@ jobs:
             cmd: npm run components-app:build
           - name: components-testing-app
             cmd: npm run components-testing-app:build
+          - name: components-testing-app-icon-basehref
+            cmd: npm run components-testing-app:icon-basehref:build
+          - name: components-testing-app-icon-basehref-webpack
+            cmd: npm run components-testing-app:icon-basehref-webpack:build
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -200,6 +204,16 @@ jobs:
         with:
           name: components-testing-app
           path: dist/components-testing-app
+      - name: 'Downloading dist/components-testing-app-icon-basehref'
+        uses: actions/download-artifact@v7
+        with:
+          name: components-testing-app-icon-basehref
+          path: dist/components-testing-app-icon-basehref
+      - name: 'Downloading app: components-testing-app-icon-basehref-webpack'
+        uses: actions/download-artifact@v7
+        with:
+          name: components-testing-app-icon-basehref-webpack
+          path: dist/components-testing-app-icon-basehref-webpack
       - name: Run shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         run: npm run e2e:headless -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
       - name: Upload Playwright results

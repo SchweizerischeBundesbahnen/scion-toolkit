@@ -16,11 +16,23 @@ const runHeadless = !!process.env.HEADLESS;
 export default defineConfig({
   forbidOnly: runInCI,
   fullyParallel: true,
-  webServer: {
-    command: runInCI ? 'npm run components-testing-app:dist-serve' : 'npm run components-testing-app:serve',
-    port: 4200,
-    reuseExistingServer: !runInCI,
-  },
+  webServer: [
+    {
+      command: runInCI ? 'npm run components-testing-app:dist-serve' : 'npm run components-testing-app:serve',
+      port: 4200,
+      reuseExistingServer: !runInCI,
+    },
+    {
+      command: runInCI ? 'npm run components-testing-app:icon-basehref:dist-serve' : 'npm run components-testing-app:icon-basehref:serve',
+      port: 4300,
+      reuseExistingServer: !runInCI,
+    },
+    {
+      command: runInCI ? 'npm run components-testing-app:icon-basehref-webpack:dist-serve' : 'npm run components-testing-app:icon-basehref-webpack:serve',
+      port: 4400,
+      reuseExistingServer: !runInCI,
+    },
+  ],
   use: {
     browserName: 'chromium',
     headless: runHeadless,

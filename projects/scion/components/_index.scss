@@ -60,7 +60,7 @@
  * ```
  *
  * ## SCION Design Tokens
- * SCION supports the following design tokens:
+ * SCION uses the following design tokens:
  *
  * ### Static Color Tokens
  * Colors that have a fixed color value across all themes.
@@ -82,14 +82,79 @@
  * ### Component-specific Tokens
  * Tokens for a particular component.
  *
- * [Component-specific Tokens](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-tokens.scss)
+ * [Component-specific Tokens (light theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-light-tokens.scss)
+ * [Component-specific Tokens (dark theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-dark-tokens.scss)
+ *
+ * ## SCION Icon Font
+ * This module provides the standard icon font used by SCION components.
+ *
+ * By default, SCION icons are loaded from the CDN: https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons.
+ *
+ * ### Content Security Policy (CSP)
+ * Applications enforcing a Content Security Policy must whitelist the CDN using the `font-src` directive.
+ *
+ * ```
+ * Content-Security-Policy: font-src 'self' https://cdn.jsdelivr.net/npm/@scion/components/;
+ * ```
+ *
+ * ### Self-Hosting the SCION Icon Font
+ * Instead of loading SCION icons from the CDN, SCION icons can be self-hosted.
+ *
+ * To host the icon font locally:
+ * 1. Download the icon font from `https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.zip`.
+ * 2. Extract the font files into the application's public assets folder (e.g., `/public/scion-icons`).
+ * 3. Configure the path in `@scion/components` SCSS module:
+ *    ```scss
+ *    @use '@scion/components' with (
+ *      $icon-font: (
+ *        directory: '/scion-icons' // must start with a leading slash
+ *      )
+ *    );
+ *    ```
+ *
+ * ### Loading Self-Hosted Icon Font Relative to Document Base
+ * Applications deployed in a subdirectory must configure the `@scion/components` SCSS module to load the self-hosted icon font relative to the document base URL (defined by the `<base>` HTML tag)
+ * and exclude the font files from the application build.
+ *
+ * Different steps are required depending on whether building the application with esbuild or Webpack.
+ *
+ * **Using `@angular/build:application` (esbuild, default since Angular 20)**
+ *
+ * 1. Remove the leading slash from the directory configuration:
+ *    ```scss
+ *    @use '@scion/components' with (
+ *      $icon-font: (
+ *        directory: 'scion-icons' // relative to document base URL
+ *      )
+ *    );
+ *    ```
+ * 2. Exclude the font files from the application build via `externalDependencies` in `angular.json`:
+ *    ```json
+ *    "externalDependencies": [
+ *      "scion-icons/scion-icons.*"
+ *    ]
+ *    ```
+ *
+ * **Using `@angular-devkit/build-angular:browser` (Webpack)**
+ *
+ * Configure the directory path with a leading caret (`^`), instructing Webpack to exclude the font files from the application build:
+ *
+ * ```scss
+ * @use '@scion/components' with (
+ *   $icon-font: (
+ *     directory: '^scion-icons' // leading caret excludes the font files from Webpack build
+ *   )
+ * );
+ * ```
  */
 
 @use './design/theming' as sci-theming;
 @use './design/themes/scion-light-theme';
 @use './design/themes/scion-dark-theme';
+@use './design/icons/scion-icon-font' as sci-icon-font;
 @use 'sass:map';
 
+// Install theme
 $-built-in-themes: (
   scion-light: map.set(scion-light-theme.$theme, color-scheme, light),
   scion-dark: map.set(scion-dark-theme.$theme, color-scheme, dark),
@@ -97,3 +162,7 @@ $-built-in-themes: (
 $themes: $-built-in-themes !default;
 $themes: sci-theming.augment($themes, $-built-in-themes);
 @include sci-theming.install($themes);
+
+// Install icon font
+$icon-font: null !default;
+@include sci-icon-font.install-icon-font($icon-font);
