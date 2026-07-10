@@ -17,7 +17,7 @@ import {concatWith, map, MonoTypeOperatorFunction, of} from 'rxjs';
 /**
  * Renders an icon based on registered icon providers.
  *
- * Set the icon name as slotted content of the `<sci-icon>` component.
+ * Set the icon name as the slotted content of the `<sci-icon>` component.
  *
  * Example:
  * ```html

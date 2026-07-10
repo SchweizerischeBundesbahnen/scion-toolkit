@@ -15,7 +15,7 @@ import {text} from './text';
 /**
  * Gets the text for given {@link Translatable} from registered text providers.
  *
- * A {@link Translatable} is a string that, if starting with the percent symbol (`%`), is passed to registered text providers for translation, with the percent symbol omitted.
+ * A {@link Translatable} is a string that, if it starts with the percent symbol (`%`), is passed to registered text providers for translation, with the percent symbol omitted.
  * Otherwise, the text is returned as is.
  *
  * A translation key may include parameters in matrix notation for text interpolation. Escape semicolons with two backslashes (`\\;`).
@@ -24,7 +24,7 @@ import {text} from './text';
  * - `%key`: translation key
  * - `%key;param=value`: translation key with a single interpolation parameter
  * - `%key;param1=value1;param2=value2`: translation key with multiple interpolation parameters
- * - `text`: no translation key, text is returned as is
+ * - `text`: no translation key; text is returned as is
  */
 @Pipe({name: 'sciText'})
 export class SciTextPipe implements PipeTransform {

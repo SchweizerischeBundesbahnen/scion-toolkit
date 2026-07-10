@@ -22,7 +22,7 @@ import {injectMenuContext} from './menu-environment/menu-environment-providers';
  * A toolbar is a horizontal or vertical container that provides quick access to context-related tools. It can contain buttons, toggles, menus, and other controls,
  * with related items grouped together.
  *
- * The toolbar calls the passed factory function with a {@link SciToolbarFactory}. The factory provides methods to add tools, groups, and menus to the toolbar.
+ * The toolbar calls the passed factory function with a {@link SciToolbarFactory}. The factory provides methods for populating the toolbar.
  * The factory function runs in a reactive context, running again when tracked signals change. It can call `inject` to get required dependencies.
  *
  * ```ts
@@ -50,7 +50,7 @@ import {injectMenuContext} from './menu-environment/menu-environment-providers';
  * Multiple contributions to the same toolbar can populate it from different places in the application. Passing a {@link SciToolbarContributionLocation}
  * gives exact control over contribution placement within the toolbar. By default, toolbar items are added in contribution order.
  *
- * Menus and groups can have a name, enabling extension from other contributions.
+ * Menus and groups can be named to allow extension from other contributions.
  *
  * This function must be called within an injection context, or an explicit {@link Injector} passed. The contribution is disposed when the injection context or the passed injector is destroyed.
  *
@@ -66,7 +66,7 @@ export function contributeMenu(location: `toolbar:${string}` | SciToolbarContrib
  *
  * A menubar displays a horizontal row of menus, typically placed at the top of the application.
  *
- * The menubar calls the passed factory function with a {@link SciMenubarFactory}. The factory provides methods to add menus to the menubar.
+ * The menubar calls the passed factory function with a {@link SciMenubarFactory}. The factory provides methods for populating the menubar.
  * The factory function runs in a reactive context, running again when tracked signals change. It can call `inject` to get required dependencies.
  *
  * TODO [menu] Add example
@@ -77,7 +77,7 @@ export function contributeMenu(location: `toolbar:${string}` | SciToolbarContrib
  * Multiple contributions to the same menubar can populate it from different places in the application. Passing a {@link SciMenubarContributionLocation}
  * gives exact control over contribution placement within the menubar. By default, menus are added in contribution order.
  *
- * Menus and groups can have a name, enabling extension from other contributions.
+ * Menus and groups can be named to allow extension from other contributions.
  *
  * This function must be called within an injection context, or an explicit {@link Injector} passed. The contribution is disposed when the injection context or the passed injector is destroyed.
  *
@@ -91,10 +91,10 @@ export function contributeMenu(location: `menubar:${string}` | SciMenubarContrib
 /**
  * Contributes menu items to a menu with the given name.
  *
- * A menu displays a list of related menu items in a popover, organized into groups and submenus. It closes when a menu item is selected or on an outside click.
- * Menu items can define a keyboard accelerator for quick access without opening the menu.
+ * A menu displays a list of related items in a popover, organized into groups and submenus.
+ * It closes when a menu item is selected or on an outside click. Menu items can define a keyboard accelerator for quick access.
  *
- * The menu calls the passed factory function with a {@link SciMenuFactory}. The factory provides methods to add menu items, groups, and submenus to the menu.
+ * The menu calls the passed factory function with a {@link SciMenuFactory}. The factory provides methods for populating the menu.
  * The factory function runs in a reactive context, running again when tracked signals change. It can call `inject` to get required dependencies.
  *
  * TODO [menu] Add example
@@ -105,7 +105,7 @@ export function contributeMenu(location: `menubar:${string}` | SciMenubarContrib
  * Multiple contributions to the same menu can populate it from different places in the application. Passing a {@link SciMenuContributionLocation}
  * gives exact control over contribution placement within the menu. By default, menu items are added in contribution order.
  *
- * Menus and groups can have a name, enabling extension from other contributions.
+ * Menus and groups can be named to allow extension from other contributions.
  *
  * This function must be called within an injection context, or an explicit {@link Injector} passed. The contribution is disposed when the injection context or the passed injector is destroyed.
  *

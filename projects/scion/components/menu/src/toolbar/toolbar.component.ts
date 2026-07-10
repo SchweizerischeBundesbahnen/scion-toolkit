@@ -16,18 +16,24 @@ import {MaybeArray} from '@scion/toolkit/types';
 import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environment/menu-environment-providers';
 
 /**
- * Represents a toolbar, a horizontal or vertical container that provides quick access to context-related tools.
- * A toolbar can contain buttons, toggles, menus, and other controls, with related items grouped together.
+ * Displays items contributed via the {@link contributeMenu} function matching the toolbar's name.
  *
- * To use the toolbar, assign it a name and contribute tools by calling the {@link contributeMenu} function, passing the toolbar name and a factory function.
- * The toolbar name must start with the `toolbar:` prefix. The toolbar calls the passed factory function with a {@link SciToolbarFactory} that provides methods
- * for adding tools, groups, and menus.
+ * A toolbar is a horizontal or vertical container providing quick access to context-related tools.
+ * It contains buttons, toggles, menus, and other controls, with related items grouped together.
+ *
+ * The toolbar must be assigned a name, used as the location when contributing to the toolbar.
+ * The name must start with the `toolbar:` prefix.
  *
  * ```html
  * <sci-toolbar name="toolbar:main"/>
  * ```
  *
+ * Use the {@link contributeMenu} function to contribute to the toolbar by passing the toolbar name and a factory function.
+ * The toolbar calls the factory function with a {@link SciToolbarFactory}, providing methods for populating the toolbar.
+ *
  * ```ts
+ * import {contributeMenu} from '@scion/components/menu';
+ *
  * contributeMenu('toolbar:main', toolbar => toolbar
  *   .addToolbarButton({icon: 'undo', accelerator: {ctrl: true, key: 'Z'}, tooltip: 'Undo', onSelect: () => console.log('Undo')})
  *   .addToolbarButton({icon: 'redo', accelerator: {ctrl: true, key: 'Y'}, tooltip: 'Redo', onSelect: () => console.log('Redo')})
@@ -49,7 +55,7 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environme
  * Multiple contributions to the same toolbar can populate it from different places in the application. Passing a {@link SciToolbarContributionLocation}
  * gives exact control over contribution placement within the toolbar. By default, toolbar items are added in contribution order.
  *
- * Toolbar groups and menus can have a name, enabling extension from other contributions.
+ * Menus and groups can be named to allow extension from other contributions.
  *
  * ## Context
  * A toolbar can have a context, a key/value map that describes its environment. Contributions can declare a minimal required context and read the toolbar context.
@@ -60,17 +66,8 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environme
  * <sci-toolbar name="toolbar:main" [context]="..."/>
  * ```
  *
- * A context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level.
- * Toolbars within the scope of the injector inherit the context but can override or extend it.
- *
- * ```ts
- * providers: [
- *   provideMenuContextProvider(() => new Map().set('key', 'value')),
- * ];
- * ```
- *
  * ## Accelerator Target
- * Tools and menu items can have an accelerator for quick access using a keyboard shortcut. By default, the toolbar uses the {@link Document} as the accelerator target.
+ * Tools can have an accelerator for quick access using a keyboard shortcut. By default, the toolbar uses the {@link Document} as the accelerator target.
  *
  * The accelerator target can be changed via the `acceleratorTarget` input:
  *
@@ -78,11 +75,10 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environme
  * <sci-toolbar name="toolbar:main" [acceleratorTarget]="..."/>
  * ```
  *
- * Alternatively, accelerator targets can be provided at the injector level using {@link provideMenuAcceleratorTargetProvider}, for example, at the component, route, or application level.
- * Toolbars within the scope of the injector inherit the accelerator targets. Setting an accelerator target on the toolbar overrides inherited targets.
- *
  * ## Toolbar Size
- * Toolbar icons have a default size of `16px`. The size can be changed via the `--sci-toolbar-item-size` CSS variable, either globally in the `:root` or on a specific toolbar component.
+ * The toolbar size is based on the `--sci-toolbar-item-size` CSS variable and defaults to 16px. It determines the icon size and is used to compute the font size and padding.
+ *
+ * A custom size can be defined globally via the `:root` selector or scoped to a specific toolbar.
  *
  * ```css
  * sci-toolbar {
@@ -90,7 +86,13 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environme
  * }
  * ```
  *
- * TODO [menu] Mention font size
+ * Instead of computing the font size based on `--sci-toolbar-item-size`, an explicit font size can be defined using the `--sci-toolbar-font-size` CSS variable, either globally or at the toolbar level.
+ *
+ * ```css
+ * sci-toolbar {
+ *   --sci-toolbar-font-size: 14px;
+ * }
+ * ```
  *
  * ## Hiding an Empty Toolbar
  * If the toolbar has no tools, it can be hidden using the CSS `:empty` pseudo-class:
@@ -101,13 +103,11 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environme
  * }
  * ```
  *
- * TODO [menu] Update Styling
- *
  * ## Custom Styling
- * The appearance of the toolbar can be customized using CSS variables, either globally in the `:root` or on a specific toolbar component.
+ * The appearance of the toolbar can be customized using the following CSS variables, either globally in the `:root` or on the toolbar level.
  *
- * Supported CSS variables:
- * - `--sci-toolbar-item-size`: Size of toolbar items.
+ * - `--sci-toolbar-font-size`: Font size of toolbar items.
+ * - `--sci-toolbar-item-size`: Size of toolbar items; used as the toolbar item icon size and to compute font size and padding.
  * - `--sci-toolbar-item-cursor`: Cursor style when hovering over a toolbar item.
  * - `--sci-toolbar-item-text-color`: Text and icon color of toolbar items.
  * - `--sci-toolbar-item-text-color-disabled`: Text and icon color of disabled toolbar items.
@@ -115,11 +115,12 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environme
  * - `--sci-toolbar-item-background-color-active`: Background color of a toolbar item when pressed.
  * - `--sci-toolbar-item-background-color-checked`: Background color of toggled toolbar items.
  * - `--sci-toolbar-item-border-radius`: Border radius of toolbar items.
+ * - `--sci-toolbar-item-border-color-hover`: Border color of toolbar items when hovered.
  * - `--sci-toolbar-item-border-color-checked`: Border color of toggled toolbar items.
  * - `--sci-toolbar-item-outline-width`: Outline width of toolbar items when focused.
- * - `--sci-toolbar-item-menu-indicator-color`: Color of the toolbar icon menu indicator.
- * - `--sci-toolbar-item-menu-indicator-color-disabled`: Color of the toolbar icon menu indicator if disabled.
- * - `--sci-toolbar-item-menu-indicator-size`: Size of the toolbar icon menu indicator.
+ * - `--sci-toolbar-item-menu-indicator-color`: Color of the menu indicator for toolbar items without a label.
+ * - `--sci-toolbar-item-menu-indicator-color-disabled`: Color of the menu indicator if disabled.
+ * - `--sci-toolbar-item-menu-indicator-size`: Size of the menu indicator.
  */
 @Component({
   selector: 'sci-toolbar',
@@ -154,6 +155,14 @@ export class SciToolbarComponent {
    * A context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level.
    * Toolbars within the scope of the injector inherit the context but can override or extend it.
    *
+   * ```ts
+   * import {provideMenuContextProvider} from '@scion/components/menu';
+   *
+   * providers: [
+   *   provideMenuContextProvider(() => new Map().set('key', 'value')),
+   * ];
+   * ```
+   *
    * @see provideMenuContextProvider
    */
   public readonly context = input<Map<string, unknown>>();
@@ -163,6 +172,15 @@ export class SciToolbarComponent {
    *
    * Alternatively, accelerator targets can be provided at the injector level using {@link provideMenuAcceleratorTargetProvider}, for example, at the component, route, or application level.
    * Toolbars within the scope of the injector inherit the accelerator targets. Setting an accelerator target on the toolbar overrides inherited targets.
+   *
+   * ```ts
+   * import {provideMenuAcceleratorTargetProvider} from '@scion/components/menu';
+   * import {ElementRef, inject} from '@angular/core';
+   *
+   * providers: [
+   *   provideMenuAcceleratorTargetProvider(() => inject(ElementRef)),
+   * ];
+   * ```
    */
   public readonly acceleratorTarget = input<MaybeArray<Element | ElementRef<Element>>>();
 

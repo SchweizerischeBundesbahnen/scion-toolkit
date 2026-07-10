@@ -13,7 +13,7 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {coerceSignal, type MaybeSignal} from './signal.util';
+export {coerceSignal, type MaybeSignal, toLazyObservable} from './signal.util';
 export {createDestroyableInjector, assertInInjectionContext} from './injector.util';
 export {type SciComponentDescriptor, SciComponentOutletDirective} from './component-outlet.directive';
 export {SciAttributesDirective} from './attributes.directive';

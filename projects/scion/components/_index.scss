@@ -62,13 +62,19 @@
  * ## SCION Design Tokens
  * SCION uses the following design tokens:
  *
+ * ### Component Design Tokens
+ * Tokens specific to SCION Components.
+ *
+ * [Component Design Tokens (light theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-light-tokens.scss)
+ * [Component Design Tokens (dark theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-dark-tokens.scss)
+ *
  * ### Static Color Tokens
  * Colors that have a fixed color value across all themes.
  *
  * [Static Color Tokens](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/colors/_scion-static-colors.scss)
  *
  * ### Named Color Tokens
- * Predefined set of named colors as palette of tints and shades.
+ * Predefined set of named colors as a palette of tints and shades.
  *
  * [Named Color Tokens (light theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/colors/_scion-light-colors.scss)
  * [Named Color Tokens (dark theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/colors/_scion-dark-colors.scss)
@@ -79,11 +85,6 @@
  * [Semantic Tokens (light theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/themes/_scion-light-theme.scss)
  * [Semantic Tokens (dark theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/themes/_scion-dark-theme.scss)
  *
- * ### Component-specific Tokens
- * Tokens for a particular component.
- *
- * [Component-specific Tokens (light theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-light-tokens.scss)
- * [Component-specific Tokens (dark theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/components/_scion-component-dark-tokens.scss)
  *
  * ## SCION Icon Font
  * This module provides the standard icon font used by SCION components.
@@ -98,12 +99,12 @@
  * ```
  *
  * ### Self-Hosting the SCION Icon Font
- * Instead of loading SCION icons from the CDN, SCION icons can be self-hosted.
+ * As an alternative to loading SCION icons from the CDN, the application can host the SCION icon font.
  *
  * To host the icon font locally:
  * 1. Download the icon font from `https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.zip`.
  * 2. Extract the font files into the application's public assets folder (e.g., `/public/scion-icons`).
- * 3. Configure the path in `@scion/components` SCSS module:
+ * 3. Configure the path in the `@scion/components` SCSS module:
  *    ```scss
  *    @use '@scion/components' with (
  *      $icon-font: (

@@ -130,17 +130,13 @@ export class SciMenuOpener {
       'anchor-name': `--${popoverId}`,
     });
 
-    // Mark the anchor as open to support opening the menu from a toolbar button, not a toolbar menu button, e.g., to support opening a menu via accelerator.
-    if (anchorElement.classList.contains('toolbar-button')) {
-      anchorElement.classList.add('menu-open');
-    }
-
     // Connect popover to anchor.
     setAttributes(popoverElement, {
       'id': popoverId,
       'popover': 'auto',
     });
 
+    // Position popover relative to anchor.
     if (align === 'horizontal') {
       setStyles(popoverElement, {
         'position-anchor': `--${popoverId}`,
@@ -156,6 +152,11 @@ export class SciMenuOpener {
         'top': 'calc(anchor(bottom) + 1px)',
         'left': 'min(anchor(left), calc(100% - var(--ɵsci-menu-width)))', // `calc(100% - var(--ɵsci-menu-width))` prevents pushing the popover out of the page viewport on the right
       });
+    }
+
+    // Mark the anchor as open to support opening the menu from a toolbar button, not a toolbar menu button, e.g., to support opening a menu via accelerator.
+    if (anchorElement.classList.contains('toolbar-button')) {
+      anchorElement.classList.add('menu-open');
     }
 
     // Remove attributes and styles from the anchor element when the popover is closed, but only if not displaying another popover in the meantime.

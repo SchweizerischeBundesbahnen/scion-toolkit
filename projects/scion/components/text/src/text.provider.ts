@@ -24,7 +24,7 @@ import {MaybeSignal} from '@scion/components/common';
  *
  * The function:
  * - Can call `inject` to get any required dependencies.
- * - Can call `toSignal` to convert an Observable to a Signal.
+ * - Can use `toSignal` to convert an {@link Observable} to a {@link Signal}.
  *
  * @see SciTextProviderFn
  * @see text
@@ -42,13 +42,13 @@ export function provideTextProvider(textProviderFn: SciTextProviderFn | undefine
 /**
  * Signature of a function to provide texts.
  *
- * Texts starting with the percent symbol (`%`) are passed to text providers for translation, with the percent symbol omitted.
+ * Texts starting with the percent symbol (`%`) are passed to registered text providers for translation, with the percent symbol omitted.
  *
  * A text provider can be registered via {@link provideTextProvider} function.
  *
  * The function:
  * - Can call `inject` to get any required dependencies.
- * - Can call `toSignal` to convert an Observable to a Signal.
+ * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
  *
  * @param key - Translation key of the text.
  * @param params - Parameters used for text interpolation.
@@ -71,7 +71,7 @@ export type SciTextProviderFn = (key: string, params: {[name: string]: string}) 
  * - `%key`: translation key
  * - `%key;param=value`: translation key with a single interpolation parameter
  * - `%key;param1=value1;param2=value2`: translation key with multiple interpolation parameters
- * - `text`: no translation key, text is returned as is
+ * - `text`: no translation key; text is returned as is
  *
  * @see provideTextProvider
  */

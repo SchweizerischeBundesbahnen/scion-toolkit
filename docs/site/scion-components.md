@@ -25,6 +25,12 @@ Provides Angular-based components and directives with a focus on SCION requireme
 
 - [**Dimension**][link-tool-dimension]\
   Provides a set of tools for observing the size and position of an element.
+
+- [**Icons**][link-scion-icons]\
+  Learn how to provide application-specific icons to SCION components.
+ 
+- [**Localization**][link-scion-localization]\
+  Learn how to localize texts in SCION components.
  
 - [**SCION Design Tokens**][link-scion-design-tokens]\
   SCION provides a set of design tokens to enable consistent design and theming of SCION components.
@@ -41,3 +47,5 @@ Provides Angular-based components and directives with a focus on SCION requireme
 [link-tool-throbber]: /docs/site/tools/throbber.md
 [link-tool-dimension]: /docs/site/tools/dimension.md
 [link-scion-design-tokens]: /docs/site/scion-design-tokens.md
+[link-scion-icons]: /docs/site/scion-icons.md
+[link-scion-localization]: /docs/site/scion-localization.md
