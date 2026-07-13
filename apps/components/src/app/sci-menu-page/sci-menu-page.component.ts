@@ -37,7 +37,47 @@ export default class SciMenuPageComponent {
 
     const moveTo = signal<string | undefined>(undefined);
 
-    contributeMenu(`menu:contextmenu`, menu => menu
+contributeMenu('menu:contextmenu', menu => menu
+  .addMenuItem({icon: 'content_copy', label: 'Copy', onSelect: () => console.log('Copy')})
+  .addMenuItem({icon: 'content_paste', label: 'Paste', onSelect: () => console.log('Paste')}),
+);
+
+    contributeMenu('menu:contextmenu', menu => menu
+      .addGroup(group => group
+        .addMenuItem({
+          icon: 'content_cut',
+          label: 'Cut',
+          accelerator: {ctrl: true, key: 'X'},
+          onSelect: () => console.log('Cut'),
+        })
+        .addMenuItem({
+          icon: 'content_copy',
+          label: 'Copy',
+          accelerator: {ctrl: true, key: 'C'},
+          onSelect: () => console.log('Copy'),
+        })
+        .addMenuItem({
+          icon: 'content_paste',
+          label: 'Paste',
+          accelerator: {ctrl: true, key: 'V'},
+          onSelect: () => console.log('Paste'),
+        }),
+      )
+      .addMenu({icon: 'share', label: 'Share'}, submenu => submenu
+        .addMenuItem({
+          icon: 'email',
+          label: 'Email Link',
+          onSelect: () => console.log('Share via Email'),
+        })
+        .addMenuItem({
+          icon: 'forum',
+          label: 'Send to Chat',
+          onSelect: () => console.log('Share via Chat'),
+        }),
+      ),
+    );
+
+    contributeMenu(`menu:contextmenu1`, menu => menu
       .addMenuItem({icon: 'scion.expand_all', label: 'Expand All', accelerator: {ctrl: true, key: '+', location: 'numpad'}, onSelect: () => console.log('>>> Expand All')})
       .addMenuItem({icon: 'scion.collapse_all', label: 'Collapse All', accelerator: {ctrl: true, key: '-', location: 'numpad'}, onSelect: () => console.log('>>> Collapse All')})
       .addGroup(group => group

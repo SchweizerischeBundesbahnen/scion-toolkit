@@ -52,7 +52,7 @@ import {TextProviders} from './text-providers';
  *
  * @see provideTextProvider
  */
-export function text<T extends Translatable | null | undefined>(translatable: MaybeSignal<T>, options?: {injector?: Injector; params?: Record<string, unknown> | Map<string, unknown>}): Signal<T>;
+export function text<T extends Translatable | null | undefined>(translatable: MaybeSignal<T>, options?: {injector?: Injector; params?: Record<string, unknown> | Map<string, unknown>}): Signal<T extends null | undefined ? T : string>;
 export function text(translatable: MaybeSignal<Translatable | undefined | null>, options?: {injector?: Injector; params?: Record<string, unknown> | Map<string, unknown>}): Signal<Translatable | undefined | null> {
   assertNotInReactiveContext(text, 'Call text() in a non-reactive (non-tracking) context, such as within the untracked() function.');
   if (!options?.injector) {
