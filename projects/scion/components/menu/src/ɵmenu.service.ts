@@ -53,26 +53,30 @@ export class ɵSciMenuService implements SciMenuService {
    * - Must be called within an injection context, or an explicit {@link Injector} passed.
    * - Must be called in a non-reactive (non-tracking) context.
    *
-   * @docs-private Not public API. For internal use only.
+   * @docs-private Not public API. Used by frameworks integrating the SCION Menu API. Applications should not use this method.
    */
   public menuItems(location: MaybeSignal<`menu:${string}` | `toolbar:${string}` | `menubar:${string}`>, context: MaybeSignal<Map<string, unknown>>, options?: {injector?: Injector; metadata?: {[key: string]: unknown}}): Signal<SciMenuItemLike[]> {
     return this._menuRegistry.menuItems(coerceSignal(location), coerceSignal(context), options ?? {});
   }
 
-  /** @docs-private Not public API. For internal use only. */
+  /** @docs-private Not public API. Used by frameworks integrating the SCION Menu API. Applications should not use this method. */
   public menuContributions(location: MaybeSignal<`menu:${string}` | `toolbar:${string}` | `menubar:${string}`>, context: MaybeSignal<Map<string, unknown>>, options?: {injector?: Injector; metadata?: {[key: string]: unknown}}): Signal<SciMenuContribution[]> {
     return this._menuRegistry.menuContributions(coerceSignal(location), coerceSignal(context), options ?? {});
   }
 
-  /** @docs-private Not public API. For internal use only. */
+  /** @docs-private Not public API. Used by frameworks integrating the SCION Menu API. Applications should not use this method. */
   public contributeMenu(location: SciMenuContributionLocationLike, factoryFn: SciMenuFactoryFnLike, options?: SciMenuContributionOptions): Disposable {
     return this._menuRegistry.contributeMenu(location, factoryFn, options ?? {});
   }
 
   /**
-   * Gets keyboard accelerators for menu items installed in the application that match the given context.
+   * Gets installed keyboard accelerators for menu items that match the given context.
    *
-   * A positive match does not require an identical context, but any common context keys must map to identical context values.
+   * A match does not require an identical context. All common context keys must have identical context values.
+   *
+   * Inherits the context from the current injector hierarchy, but can be overridden via `context` options. See {@link provideMenuContextProvider}.
+   *
+   * @docs-private Not public API. Used by frameworks integrating the SCION Menu API. Applications should not use this method.
    */
   public accelerators(options?: {context?: MaybeSignal<Map<string, unknown>>}): Signal<SciKeyboardAccelerator[]> {
     const context = computed(() => new Map([...this._environmentContext(), ...coerceSignal(options?.context)?.() ?? new Map()]));
@@ -80,6 +84,7 @@ export class ɵSciMenuService implements SciMenuService {
     return this._menuRegistry.accelerators(context);
   }
 }
+
 
 /**
  * Intercepts calls to the menu registry by chaining registered menu adapters.
@@ -101,13 +106,7 @@ function interceptMenuRegistry(menuRegistry: SciMenuRegistry): SciMenuRegistry {
 }
 
 /**
- * TODO [menu] Documentation
- *
  * Provides {@link SciMenuService} for dependency injection.
- *
- * See usage in workbench; is registered in injector anyway.
- *
- * @docs-private Not public API. Used by frameworks integrating the SCION Menu API. Applications should not use this function.
  */
 export function provideMenuService(): Provider[] {
   return [

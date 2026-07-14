@@ -30,7 +30,7 @@ import {MaybeSignal} from '@scion/components/common';
 
 provideTextProvider((key: string, params: Record<string, string>): MaybeSignal<string> | undefined => {
   if (key.startsWith('scion.')) {
-    return undefined; // <--- return `undefined` to not translate built-in texts
+    return undefined; // <--- Return `undefined` to not translate built-in texts
   }
   return inject(TranslateService).translate(key, params); // The `TranslateService` is illustrative.
 });
@@ -52,7 +52,7 @@ Otherwise, the text is used as is. A translation key may include parameters in m
 Example of a translatable property:
 ```ts
 interface SciToolbarButtonDescriptor {
-  tooltip?: Translatable; // <--- translatable property
+  tooltip?: Translatable; // <--- This is a translatable property
   // ... other properties skipped
 }
 ```

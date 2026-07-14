@@ -49,9 +49,8 @@ export interface SciMenuContributionOptions {
    *   .set('activeProjectId', '*')
    * ```
    *
-   * A required context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level.
-   * Calling {@link contributeMenu} within the scope of the injector uses the provided context as the required context. The contribution can still augment, override, or unset
-   * inherited context values (by setting a value to `undefined`).
+   * A required context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level,
+   * and is available to menus contributed in the scope of this injector. The inherited context can be overridden or extended. Setting a context entry to `undefined` clears it.
    */
   requiredContext?: Map<string, unknown>;
 

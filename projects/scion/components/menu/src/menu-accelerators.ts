@@ -26,10 +26,12 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from './menu-environmen
  * An accelerator maps a physical key combination (key combined with modifiers such as `Ctrl`, `Shift`, or `Alt`) to an application action,
  * enabling users to trigger an action without using a pointer device.
  *
+ * Context and accelerator targets are inherited from the current injector hierarchy, but can be overridden via {@link SciMenuAcceleratorOptions.context} and {@link SciMenuAcceleratorOptions.target} options.
+ *
  * This function must be called within an injection context, or an explicit {@link Injector} passed. Destroying the injection context uninstalls the accelerators.
  *
  * @param location - Specifies the menu, toolbar, or menubar for which to install accelerators.
- * @param options - Controls installation of accelerators.
+ * @param options - Controls the installation of accelerators.
  * @returns Handle to uninstall the accelerators.
  */
 export function installMenuAccelerators(location: `menu:${string}` | `toolbar:${string}` | `menubar:${string}`, options?: SciMenuAcceleratorOptions): Disposable {
@@ -195,35 +197,41 @@ function matchesAccelerator(event: KeyboardEvent, accelerator: SciKeyboardAccele
 }
 
 /**
- * Controls installation of accelerators.
+ * Controls the installation of accelerators.
  */
 export interface SciMenuAcceleratorOptions {
   /**
-   * Specifies DOM elements on which to install menu accelerators. Defaults to {@link SciMenuEnvironmentProvider.provideAcceleratorTargets} or {@link Document}.
+   * Specifies DOM elements on which to install menu accelerators. Defaults to {@link Document}.
+   *
+   * Alternatively, accelerator targets can be provided at the injector level using {@link provideMenuAcceleratorTargetProvider}, for example, at the component, route, or application level,
+   * and are available to accelerators installed in the scope of this injector. Inherited targets can be overridden.
    */
   target?: MaybeArray<Element | ElementRef<Element>>;
   /**
    * Controls in which context to install menu accelerators.
    *
-   * Menu contributions may declare a required context. Only accelerators of contributions matching this context are installed.
+   * Menu contributions may declare a required context. Only accelerators of contributions matching the context are installed.
+   *
+   * A context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level,
+   * and is available to accelerators installed in the scope of this injector. The inherited context can be overridden or extended. Setting a context entry to `undefined` clears it.
    */
   context?: Map<string, unknown>;
+  /**
+   * Specifies the injector used to install accelerators. Defaults to the current injection context.
+   *
+   * Accelerators are uninstalled when the injector is destroyed.
+   */
+  injector?: Injector;
   /**
    * Specifies metadata available to the operation.
    *
    * @docs-private Not public API. Used by frameworks integrating the SCION Menu API. Applications should not use this property.
    */
   metadata?: {[key: string]: unknown};
-  /**
-   * Specifies the injector used to install accelerators. Defaults to the current injection context.
-   *
-   * Accelerators are uninstalled when the passed injector is destroyed.
-   */
-  injector?: Injector;
 }
 
 /**
- * Controls installation of accelerators.
+ * Controls the installation of accelerators.
  *
  * Accelerators are installed on the specified {@link targets}. If not set or empty, falls back to {@link environmentTargets}, defaulting to the {@link Document} if both are empty.
  */

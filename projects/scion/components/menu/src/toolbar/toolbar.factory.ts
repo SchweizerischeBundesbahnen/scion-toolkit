@@ -58,7 +58,7 @@ export interface SciToolbarFactory {
    * ```ts
    * contributeMenu('toolbar:main', toolbar => toolbar
    *   .addToolbarButton({
-   *     name: 'menuitem:undo', // <--- Give button a name
+   *     name: 'menuitem:undo', // <--- Gives the button a name
    *     icon: 'undo',
    *     onSelect: () => console.log('Undo'),
    *   }),
@@ -113,7 +113,7 @@ export interface SciToolbarFactory {
    *     tooltip: 'Paste',
    *     accelerator: {ctrl: true, key: 'V'},
    *     onSelect: () => console.log('Paste'),
-   *     menu: {name: 'menu:paste-options'}, // <--- Give menu a name
+   *     menu: {name: 'menu:paste-options'}, // <--- Gives the menu a name
    *   }),
    * );
    * ```
@@ -138,7 +138,7 @@ export interface SciToolbarFactory {
    * contributeMenu('toolbar:main', toolbar => toolbar
    *   .addToolbarSplitButton({
    *       icon: 'format_underlined',
-   *       checked: computed(() => underlined() !== false), // <--- Add checked state
+   *       checked: computed(() => underlined() !== false), // <--- Sets the button's checked state
    *       tooltip: 'Underlined',
    *       accelerator: {ctrl: true, shift: true, key: 'U'},
    *       onSelect: () => underlined.update(underlined => underlined ? false : 'solid'),
@@ -157,7 +157,7 @@ export interface SciToolbarFactory {
    * ```ts
    * contributeMenu('toolbar:main', toolbar => toolbar
    *   .addToolbarSplitButton({
-   *     name: 'menuitem:paste', // <--- Give split button a name
+   *     name: 'menuitem:paste', // <--- Gives the split button a name
    *     icon: 'content_paste',
    *     onSelect: () => console.log('Paste'),
    *   }),
@@ -208,7 +208,7 @@ export interface SciToolbarFactory {
    *   .addToolbarMenu({
    *     icon: 'folder',
    *     tooltip: 'File',
-   *     menu: {name: 'menu:file'}, // <--- Give menu a name
+   *     menu: {name: 'menu:file'}, // <--- Gives the menu a name
    *   }),
    * );
    * ```
@@ -233,7 +233,7 @@ export interface SciToolbarFactory {
    * ```ts
    * contributeMenu('toolbar:main', toolbar => toolbar
    *   .addToolbarMenu({
-   *     name: 'menuitem:file', // <--- Give menu button a name
+   *     name: 'menuitem:file', // <--- Gives the menu button a name
    *     icon: 'folder',
    *     tooltip: 'File',
    *   }),
@@ -276,7 +276,7 @@ export interface SciToolbarFactory {
    * ```ts
    * contributeMenu('toolbar:main', toolbar => toolbar
    *   .addToolbarControl({
-   *     name: 'menuitem:filter', // <--- Give toolbar control a name
+   *     name: 'menuitem:filter', // <--- Gives the toolbar control a name
    *     component: FilterFieldComponent,
    *   }),
    * );
@@ -328,7 +328,7 @@ export interface SciToolbarFactory {
    *   .addToolbarSplitControl({
    *       component: FilterFieldComponent,
    *       bindings: [inputBinding('placeholder', signal('Filter items...'))],
-   *       menu: {name: 'menu:filter-options'}, // <--- Give menu a name
+   *       menu: {name: 'menu:filter-options'}, // <--- Gives the menu a name
    *     },
    *   ),
    * );
@@ -350,7 +350,7 @@ export interface SciToolbarFactory {
    * ```ts
    * contributeMenu('toolbar:main', toolbar => toolbar
    *   .addToolbarSplitControl({
-   *       name: 'menuitem:filter', // <--- Give control a name
+   *       name: 'menuitem:filter', // <--- Gives the control a name
    *       component: FilterFieldComponent,
    *     },
    *   ),
@@ -411,7 +411,7 @@ export interface SciToolbarFactory {
    *
    * ```ts
    * contributeMenu('toolbar:main', toolbar => toolbar
-   *   .addGroup({name: 'toolbar:edit'}), // <--- Give group a name
+   *   .addGroup({name: 'toolbar:edit'}), // <--- Gives the group a name
    * );
    * ```
    *
@@ -431,7 +431,7 @@ export interface SciToolbarFactory {
    * ```ts
    * contributeMenu('toolbar:main', toolbar => toolbar
    *   .addGroup({
-   *       name: 'toolbar:edit', // <--- Give group a name
+   *       name: 'toolbar:edit', // <--- Gives the group a name
    *     }, group => group
    *       .addToolbarButton({icon: 'undo', onSelect: () => console.log('Undo')})
    *       .addToolbarButton({icon: 'redo', onSelect: () => console.log('Redo')}),

@@ -31,7 +31,7 @@ import {ComponentType} from '@angular/cdk/portal';
 
 provideIconProvider((icon: string): ComponentType<unknown> | undefined => {
   if (icon.startsWith('scion.')) {
-    return undefined; // <--- return `undefined` to not replace built-in icons
+    return undefined; // <--- Return `undefined` to not replace built-in icons
   }
   if (icon === 'your-icon') {
     return YourIconComponent; // `YourIconComponent` is illustrative

@@ -22,7 +22,7 @@ import {SciMenuFilterConfig} from './menu/menu.factory';
  * ## Menu Item Size
  * The menu item size is based on the `--sci-menu-item-size` CSS variable and defaults to `16px`. It determines the icon size and is used to compute the font size and padding.
  *
- * A custom size can be defined globally via the `:root` selector:
+ * A custom size can be defined globally using the `:root` selector:
  *
  * ```css
  * sci-menu {
@@ -76,8 +76,8 @@ export abstract class SciMenuService {
    * import {inject} from '@angular/core';
    * import {SciMenuService} from '@scion/components/menu';
    *
-   * inject(SciMenuService).open('menu:contextmenu', { // <--- Specifies the name of the menu
-   *   anchor: {x: 500, y: 600}, // <--- Specifies the anchor
+   * inject(SciMenuService).open('menu:contextmenu', { // <--- Sets the name of the menu
+   *   anchor: {x: 500, y: 600}, // <--- Sets the anchor position
    * });
    * ```
    *
@@ -109,7 +109,7 @@ export abstract class SciMenuService {
    *
    * inject(SciMenuService).open('menu:contextmenu', {
    *   anchor: {x: 500, y: 600},
-   *   viewContainerRef: inject(ViewContainerRef), // <--- Specifies a custom DOM location
+   *   viewContainerRef: inject(ViewContainerRef), // <--- Sets the location in the DOM
    * });
    * ```
    *
@@ -135,8 +135,8 @@ export abstract class SciMenuService {
    *
    * inject(SciMenuService).open('menu:contextmenu', {
    *   anchor: {x: 500, y: 600},
-   *   width: '500px', // <--- Specifies a fixed menu width
-   *   maxHeight: '800px', // <--- Specifies a maximum menu height
+   *   width: '500px', // <--- Sets a fixed menu width
+   *   maxHeight: '800px', // <--- Sets a maximum menu height
    * });
    * ```
    *
@@ -151,20 +151,20 @@ export abstract class SciMenuService {
    *
    * inject(SciMenuService).open('menu:contextmenu', {
    *   anchor: {x: 500, y: 600},
-   *   context: new Map().set('key', 'value'), // <--- Specifies the context
+   *   context: new Map().set('key', 'value'), // <--- Sets the menu context
    * });
    * ```
    *
    * ## Accelerators
    * Menu items can have an accelerator for quick access using a keyboard shortcut.
    *
-   * Menu accelerators must be installed using the {@link installMenuAccelerators} function, passing the name of the menu.
+   * Menu accelerators must be installed using the {@link installMenuAccelerators} function, passing the name (and context, if any) of the menu.
    *
    * ```ts
    * import {installMenuAccelerators} from '@scion/components/menu';
    *
    * installMenuAccelerators('menu:contextmenu', {
-   *   context: new Map().set('key', 'value'), // <--- Specifies the menu context, if any
+   *   context: new Map().set('key', 'value'), // <--- Sets the menu context
    * });
    * ```
    *
@@ -175,12 +175,12 @@ export abstract class SciMenuService {
    * import {ElementRef, inject} from '@angular/core';
    *
    * installMenuAccelerators('menu:contextmenu', {
-   *   target: inject(ElementRef), // <--- Specifies a different accelerator target
+   *   target: inject(ElementRef), // <--- Sets a different accelerator target
    * });
    * ```
    *
-   * Alternatively, accelerator targets can be provided at the injector level using {@link provideMenuAcceleratorTargetProvider}, for example, at the component, route, or application level.
-   * Accelerators installed within the scope of the injector inherit the accelerator targets. Setting an accelerator target on the menu overrides inherited targets.
+   * Alternatively, accelerator targets can be provided at the injector level using {@link provideMenuAcceleratorTargetProvider}, for example, at the component, route, or application level,
+   * and are available to accelerators installed in the scope of this injector. Inherited targets can be overridden via {@link SciMenuAcceleratorOptions.target} option.
    *
    * @param name - Specifies the name of the menu. Used to look up menu items contributed via the {@link contributeMenu} function.
    * @param options - Controls the appearance and placement of the menu. At minimum, the menu anchor must be configured to determine where to open the menu.
@@ -205,12 +205,12 @@ export interface SciMenuOptions {
    */
   anchor: HTMLElement | ElementRef<HTMLElement> | SciMenuOrigin | MouseEvent;
   /**
-   * Specifies the context of the menu to describe its environment.
+   * Specifies a context to describe the environment of the menu.
    *
-   * Contributions can declare a minimal required context and read the menu context.
+   * Menu contributions may declare a required context. Only contributions matching this context are used.
    *
-   * A context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level.
-   * Menus opened within the scope of the injector inherit the context but can override or extend it.
+   * A context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level,
+   * and is available to menus opened in the scope of this injector. The inherited context can be overridden or extended. Setting a context entry to `undefined` clears it.
    *
    * ```ts
    * import {provideMenuContextProvider} from '@scion/components/menu';

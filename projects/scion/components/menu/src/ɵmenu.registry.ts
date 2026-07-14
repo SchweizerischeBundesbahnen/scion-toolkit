@@ -407,9 +407,9 @@ class MenuItemsCache {
   }
 
   /**
-   * Gets keyboard accelerators for menu items installed in the application that match the given context.
+   * Gets installed keyboard accelerators for menu items that match the given context.
    *
-   * A positive match does not require an identical context, but any common context keys must map to identical context values.
+   * A match does not require an identical context. All common context keys must have identical context values.
    */
   public accelerators(context: Signal<Map<string, unknown>>): Signal<SciKeyboardAccelerator[]> {
     return computed(() => {

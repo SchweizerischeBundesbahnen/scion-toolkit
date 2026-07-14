@@ -78,7 +78,7 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environme
  * ## Toolbar Size
  * The toolbar size is based on the `--sci-toolbar-item-size` CSS variable and defaults to 16px. It determines the icon size and is used to compute the font size and padding.
  *
- * A custom size can be defined globally via the `:root` selector or scoped to a specific toolbar.
+ * A custom size can be defined globally using the `:root` selector or scoped to a specific toolbar.
  *
  * ```css
  * sci-toolbar {
@@ -148,12 +148,12 @@ export class SciToolbarComponent {
   public readonly orientation = input<'horizontal' | 'vertical'>('horizontal');
 
   /**
-   * Specifies the context of the toolbar to describe its environment.
+   * Specifies a context to describe the environment of the toolbar.
    *
-   * Contributions can declare a minimal required context and read the toolbar context.
+   * Toolbar contributions may declare a required context. Only contributions matching this context are used.
    *
-   * A context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level.
-   * Toolbars within the scope of the injector inherit the context but can override or extend it.
+   * A context can also be provided at the injector level using {@link provideMenuContextProvider}, for example, at the component, route, or application level,
+   * and is available to toolbars used in the scope of this injector. The inherited context can be overridden or extended. Setting a context entry to `undefined` clears it.
    *
    * ```ts
    * import {provideMenuContextProvider} from '@scion/components/menu';
@@ -170,8 +170,8 @@ export class SciToolbarComponent {
   /**
    * Specifies the accelerator targets for the toolbar. Defaults to {@link Document}.
    *
-   * Alternatively, accelerator targets can be provided at the injector level using {@link provideMenuAcceleratorTargetProvider}, for example, at the component, route, or application level.
-   * Toolbars within the scope of the injector inherit the accelerator targets. Setting an accelerator target on the toolbar overrides inherited targets.
+   * Alternatively, accelerator targets can be provided at the injector level using {@link provideMenuAcceleratorTargetProvider}, for example, at the component, route, or application level,
+   * and are available to toolbars used in the scope of this injector. Inherited targets can be overridden.
    *
    * ```ts
    * import {provideMenuAcceleratorTargetProvider} from '@scion/components/menu';
