@@ -83,7 +83,7 @@ export class SciTableComponent<T, ID = T> {
   protected readonly activeIndex = computed(() => this.sciTable().rows().findIndex(r => r.id === this.sciTable().activeItem()));
   protected readonly activeRow = computed(() => this.sciTable().rows()[this.activeIndex()]);
   protected readonly headerHeight = computed(() => this.headerDimension()?.clientHeight ?? 0);
-  protected readonly virtualScrollHeight = computed(() => `${this.sciTable().rows().length * this.sciTable().itemSize()}px`);
+  protected readonly virtualScrollHeight = computed(() => `${this.sciTable().totalCount() * this.sciTable().itemSize()}px`);
 
   protected readonly toolbarId = computed(() => `toolbar:${this.sciTable().id}` as const);
   protected readonly toolbarOffset = computed(() => {
@@ -91,21 +91,12 @@ export class SciTableComponent<T, ID = T> {
     return offset + this.headerHeight() - this.scrollTop();
   });
 
-  protected readonly range = this.computeRange(this.sciTable, this.scrollTop);
   protected readonly scrolling = this.computeScrolling(this._viewport);
   protected readonly columnWidths = this.computeColumnWidths(this.sciTable);
 
-  private readonly _pages = computed(() => {
-    const {start, end} = this.range();
-    const pageSize = end - start;
-    const startPage = Math.floor(start / pageSize);
-    const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
-    return rangeInclusive(startPage, endPage);
-  }, {equal: (a, b) => Objects.isEqual(a, b)});
-
   public readonly headerDimension = dimension(this._header);
   protected readonly visibleRows = computed(() => {
-    const {start, end} = this.range();
+    const {start, end} = this.sciTable().range(); // TODO: find start from
     return this.sciTable().rows().slice(start, end);
   });
 
@@ -234,8 +225,8 @@ export class SciTableComponent<T, ID = T> {
    */
   private installPageLoader(): void {
     effect(onCleanup => {
-      const pages = this._pages();
       const table = this.sciTable();
+      const pages = table.pages();
       const pageSize = table.visibleRowCount();
       const sortCriteria = table.sortCriteria();
       const filterCriteria = table.filterCriteria();
@@ -262,7 +253,7 @@ export class SciTableComponent<T, ID = T> {
           startWith(null),
           subscribeIn(fn => this._zone.runOutsideAngular(fn)),
         ).subscribe(() => {
-          this.scrollTop.set(element.scrollTop);
+          this.sciTable().setScrollTop(element.scrollTop);
         });
 
         onCleanup(() => subscription.unsubscribe());
@@ -328,14 +319,5 @@ export class SciTableComponent<T, ID = T> {
     else if (focusedRowBottom > viewportBottom) {
       viewport.scrollTop = focusedRowBottom - viewportHeight;
     }
-  }
-
-  private computeRange(table: Signal<ɵSciTable<T, ID>>, scrollTop: Signal<number>): Signal<{start: number; end: number}> {
-    return computed(() => {
-      const firstVisible = Math.floor(scrollTop() / table().itemSize());
-      const start = Math.max(0, firstVisible - table().overscan());
-      // this.sciTable().setRange({start, end: start + table().visibleRowCount()});
-      return {start, end: start + table().visibleRowCount()};
-    });
   }
 }

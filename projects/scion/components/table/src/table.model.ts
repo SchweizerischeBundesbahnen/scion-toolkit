@@ -116,6 +116,7 @@ export interface SciTable<T, ID = T> {
   resetSort(): void;
   filter(columnName: string, text: string | number | boolean | null): void;
   resetFilter(): void;
+  dispose(): void;
 }
 
 export interface SciCellContext<T, VALUE> {

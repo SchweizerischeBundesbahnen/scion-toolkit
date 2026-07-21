@@ -7,14 +7,15 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, inject, Injector, input, inputBinding, runInInjectionContext, signal, untracked} from '@angular/core';
-import {SciDataLoaderFn, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, SelectionType, table} from '@scion/components/table';
+import {Component, computed, inject, Injector, input, inputBinding, linkedSignal, runInInjectionContext, Signal, signal, untracked} from '@angular/core';
+import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, SelectionType, table} from '@scion/components/table';
 import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
 import {combineLatestWith, map, Observable, timer} from 'rxjs';
 import {DatePipe} from '@angular/common';
 import {toObservable} from '@angular/core/rxjs-interop';
+import {UUID} from '@scion/toolkit/uuid';
 
 @Component({
   selector: 'app-date-cell',
@@ -29,7 +30,10 @@ class DateCellComponent {
   protected readonly date = input.required<Date>();
 }
 
-const data = signal(companies);
+const data = signal(new Array(100_000).fill(0).map((_, i) => ({
+  ...companies[i % companies.length]!,
+  dataId: UUID.randomUUID(),
+})));
 
 function slowDataSource(): SciDataLoaderFn<Company> {
   const _data$ = toObservable(data);
@@ -70,14 +74,14 @@ export default class SciTablePageComponent {
   private _useSlowDataSource = computed(() => this.settings().slowDataSource);
   private _slowDataSource = slowDataSource();
 
-  protected tableConfig: Omit<SciTableDescriptor<Company, number>, 'data'> = {
+  protected tableConfig: Omit<SciTableDescriptor<Company, string>, 'data'> = {
     name: 'companies',
     showHeader: computed(() => this.settings().showHeader),
     sortable: computed(() => this.settings().sortable),
     filterable: computed(() => this.settings().filterable),
     resizable: computed(() => this.settings().resizable),
     selectionType: computed(() => this.settings().selectionType as SelectionType),
-    identity: company => company.code,
+    identity: company => company.dataId,
     rowActions: (company, toolbar) => {
       toolbar.addToolbarButton({
         icon: 'scion.delete',
@@ -114,11 +118,14 @@ export default class SciTablePageComponent {
     },
   };
 
-  protected table = computed(() => {
-    const dataSource = this._useSlowDataSource() ? this._slowDataSource : data;
-    return untracked(() => runInInjectionContext(this.injector,
-      () => table<Company, number>({...this.tableConfig, data: dataSource}, table => this.createTable(table)),
-    ));
+  protected table = linkedSignal<Signal<Company[]> | SciDataLoaderFn<Company>, SciTable<Company, string>>({
+    source: () => this._useSlowDataSource() ? this._slowDataSource : data,
+    computation: (dataSource, previous) => {
+      untracked(() => previous?.value.dispose());
+      return untracked(() => runInInjectionContext(this.injector,
+        () => table<Company, string>({...this.tableConfig, data: dataSource}, table => this.createTable(table)),
+      ));
+    },
   });
 
   protected activeItem = computed(() => this.table().focusedItem());

@@ -8,28 +8,27 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked} from '@angular/core';
+import {computed, effect, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked} from '@angular/core';
 import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion, SciTableRequest} from './table-data-source';
 import {ColumnType, RowActionFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
-import {coerceObservable} from './common';
+import {coerceObservable, rangeInclusive} from './common';
 import {DefaultSciTableStorage, SciTableStorage} from './table-storage';
 import {SciColumnDescriptors} from './table.factory';
 import {UUID} from '@scion/toolkit/uuid';
 import {coerceSignal} from '@scion/components/common';
-import {Arrays} from '@scion/toolkit/util';
+import {Arrays, Objects} from '@scion/toolkit/util';
 import {arrayDataSource} from './ɵarray-data-source';
+import {TableCacheEntry, TableCache} from './table.cache';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {skip} from 'rxjs';
+import {dimension} from '@scion/components/dimension';
 
 interface StoredTable {
   columnWidths: {columnName: string; width: number}[];
 }
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
-
-interface PageCacheEntry<T, ID> {
-  items: Signal<SciRow<T, ID>[] | undefined>;
-  dispose: () => void;
-}
 
 export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
@@ -56,8 +55,18 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   private readonly _selectedItems = signal<Set<ID>>(new Set());
   private readonly _visibleRowCount = signal<number>(0);
   private readonly _totalCount = signal<number>(0);
+  private readonly _scrollTop = signal<number>(0);
 
   public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria()}));
+  public readonly range = this.computeRange();
+
+  public readonly pages = computed(() => {
+    const {start, end} = this.range();
+    const pageSize = end - start;
+    const startPage = Math.floor(start / pageSize);
+    const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
+    return rangeInclusive(startPage, endPage);
+  }, {equal: (a, b) => Objects.isEqual(a, b)});
 
   private readonly _focusedItem = linkedSignal({
     source: () => this.criteria(),
@@ -79,36 +88,26 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     computation: () => false,
   });
 
-  // TODO [table]: Add logic to evict pages from cache to prevent it from getting too large
-  private readonly _pagesCache = linkedSignal<unknown, Map<number, PageCacheEntry<T, ID>>>({
-    source: () => ({criteria: this.criteria(), visibleRowCount: this.visibleRowCount()}),
-    computation: (_, value) => {
-      for (const cacheEntry of value?.value.values() ?? []) {
-        cacheEntry.dispose();
-      }
-      return new Map();
-    },
-  });
+  private readonly _cache = new TableCache<T, ID>();
 
   public readonly rows = computed(() => {
-    const count = this._visibleRowCount();
-    const totalCount = this._totalCount();
-    const pages = [...this._pagesCache().entries()]
-      .filter(([_, entry]) => !!entry.items())
-      .map(([start, entry]) => ({
-        start,
-        rows: entry.items(),
-      }));
-
-    if (pages.length <= 0) {
-      return new Array<SciRow<T, ID>>(count).fill({});
-    }
+    const pageSize = this._visibleRowCount();
+    const visiblePages = this.pages();
 
     // Create shallow row for each possible row item.
     // Then populate the rows which are resolved.
-    const rows = new Array<SciRow<T, ID>>(totalCount).fill({});
-    for (const page of pages) {
-      rows.splice(page.start, page.rows!.length, ...page.rows!);
+    const rows = new Array<SciRow<T, ID>>(visiblePages.length * pageSize).fill({});
+    for (let i = 0; i < visiblePages.length; i++) {
+      const pageNumber = visiblePages[i]!;
+      const start = pageNumber * pageSize;
+      const page = untracked(() => this._cache.get(`${start}-${start + pageSize}`))();
+      const items = page?.items();
+
+      if (!items) {
+        continue;
+      }
+
+      rows.splice(i * pageSize, pageSize, ...items);
     }
     return rows;
   });
@@ -143,6 +142,13 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
     this.dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 
+    toObservable(this.criteria).pipe(
+      skip(1), // skip first emission to avoid race condition with loader on initialization.
+      takeUntilDestroyed(),
+    ).subscribe(() => {
+      this._cache.clear(); // clear cache as soon as criteria change.
+    });
+
     void this.initColumnWidths();
   }
 
@@ -151,6 +157,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   }
 
   private loadPage(request: SciTableRequest, onCleanup: EffectCleanupRegisterFn): void {
+    const cacheKey = `${request.start}-${request.end}` as const;
+
     const items = signal<T[] | undefined>(undefined);
     const subscription = coerceObservable(this.dataLoaderFn(request)).subscribe(result => {
       this._totalCount.set(result.totalCount);
@@ -158,40 +166,34 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     });
 
     onCleanup(() => {
-      // Only remove page from cache if it has not loaded any data yet.
-      const empty = !this._pagesCache().get(request.start)?.items();
-      if (empty && this._pagesCache().has(request.start)) {
-        subscription.unsubscribe();
-        this._pagesCache.update(cache => {
-          const newCache = new Map(cache);
-          newCache.delete(request.start);
-          return newCache;
-        });
-      }
+      this._cache.deleteIfEmpty(cacheKey);
     });
 
-    const cacheEntry: PageCacheEntry<T, ID> = {
+    const cacheEntry: TableCacheEntry<T, ID> = {
       items: computed(() => {
         const resolved = items();
         const columns = this.columns();
         return untracked(() => resolved ? this.mapItemsToRow(resolved, columns) : undefined);
       }),
       dispose: () => subscription.unsubscribe(),
+      start: request.start,
+      end: request.end,
     };
 
-    this._pagesCache.update(cache => new Map(cache).set(request.start, cacheEntry));
+    this._cache.set(cacheKey, cacheEntry);
   }
 
   public loadPages({pages, pageSize, sortCriteria, filterCriteria, onCleanup}: {pages: number[]; pageSize: number; sortCriteria: SciSortCriterion[]; filterCriteria: SciFilterCriterion[]; onCleanup: EffectCleanupRegisterFn}): void {
     for (const page of pages) {
       const pageStart = page * pageSize;
-      if (this._pagesCache().has(pageStart)) {
+      const pageEnd = pageStart + pageSize;
+      if (this._cache.has(`${pageStart}-${pageEnd}`)()) {
         continue;
       }
 
       this.loadPage({
         start: pageStart,
-        end: pageStart + pageSize,
+        end: pageEnd,
         pageSize,
         page,
         sortCriteria,
@@ -332,6 +334,18 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     });
   }
 
+  public dispose(): void {
+    this._cache.clear();
+  }
+
+  private computeRange(): Signal<{start: number; end: number}> {
+    return computed(() => {
+      const firstVisible = Math.floor(this._scrollTop() / this.itemSize());
+      const start = Math.max(0, firstVisible - this.overscan());
+      return {start, end: start + this.visibleRowCount()};
+    });
+  }
+
   private async initColumnWidths(): Promise<void> {
     const saved = await this.tableStorage.load(this.storageKey);
     if (!saved) {
@@ -346,6 +360,10 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     catch (error) {
       console.warn(`Failed to parse item from storage.`, error);
     }
+  }
+
+  public setScrollTop(scrollTop: number): void {
+    this._scrollTop.set(scrollTop);
   }
 }
 
