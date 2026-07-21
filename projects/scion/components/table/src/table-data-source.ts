@@ -42,6 +42,3 @@ export interface SciTableResponse<T> {
 }
 
 export type SciDataLoaderFn<T> = (request: SciTableRequest) => MaybeAsync<SciTableResponse<T>>;
-export interface SciDataSourceDescriptor<T> {
-  loader: SciDataLoaderFn<T>;
-}

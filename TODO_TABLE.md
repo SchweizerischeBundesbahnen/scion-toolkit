@@ -1,9 +1,6 @@
 # TODO
 
-- Während resizing sollten zuerst die "fraction" columns kleiner werden und erst danach geschoben
 - Braucht es für die row actions eine eigene Abstraktion? (für responsive menus)
-- Filter icon indicator wenn gefiltert ist
-- Header translatable machen
 
 ## 2. Prio
 - Native Scrollbar overlaps mit header auf MacOS
@@ -17,3 +14,5 @@
 - Global table actions?
 - True-False values icons?
 - Muss die header Höhe via config anpassbar sein? (filter / header labels)
+- Sollten zuerst die "fraction" columns kleiner werden und erst danach geschoben während dem Resizing?
+- Filter icon indicator wenn gefiltert ist?

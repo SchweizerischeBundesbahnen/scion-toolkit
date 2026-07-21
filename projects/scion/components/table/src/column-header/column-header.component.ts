@@ -14,12 +14,14 @@ import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciIconComponent} from '../../../icon/src/icon.component';
 import {boundingClientRect} from '@scion/components/dimension';
+import {SciTextPipe} from '@scion/components/text';
 
 @Component({
   selector: 'sci-column-header',
   imports: [
     ColumnFilterComponent,
     SciIconComponent,
+    SciTextPipe,
   ],
   host: {
     '[class.resizing]': 'resizing()',

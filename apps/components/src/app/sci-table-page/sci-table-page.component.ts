@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, inject, Injector, input, inputBinding, runInInjectionContext, signal, untracked} from '@angular/core';
-import {SciDataSourceDescriptor, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, SelectionType, table} from '@scion/components/table';
+import {SciDataLoaderFn, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, SelectionType, table} from '@scion/components/table';
 import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
@@ -29,19 +29,20 @@ class DateCellComponent {
   protected readonly date = input.required<Date>();
 }
 
-class SlowDataSource implements SciDataSourceDescriptor<Company> {
-  public data = signal(companies);
-  private _data$ = toObservable(this.data);
+const data = signal(companies);
 
-  public loader(request: SciTableRequest): Observable<SciTableResponse<Company>> {
+function slowDataSource(): SciDataLoaderFn<Company> {
+  const _data$ = toObservable(data);
+
+  return (request: SciTableRequest): Observable<SciTableResponse<Company>> => {
     return timer(1000).pipe(
-      combineLatestWith(this._data$),
+      combineLatestWith(_data$),
       map(([_, companies]) => ({
         items: companies.slice(request.start, request.end),
         totalCount: companies.length,
       })),
     );
-  }
+  };
 }
 
 @Component({
@@ -55,8 +56,6 @@ class SlowDataSource implements SciDataSourceDescriptor<Company> {
   ],
 })
 export default class SciTablePageComponent {
-  protected data = signal(companies);
-
   protected injector = inject(Injector);
 
   protected settings = signal({
@@ -69,7 +68,7 @@ export default class SciTablePageComponent {
   });
   protected form = form(this.settings);
   private _useSlowDataSource = computed(() => this.settings().slowDataSource);
-  private _slowDataSource = new SlowDataSource();
+  private _slowDataSource = slowDataSource();
 
   protected tableConfig: Omit<SciTableDescriptor<Company, number>, 'data'> = {
     name: 'companies',
@@ -83,7 +82,7 @@ export default class SciTablePageComponent {
       toolbar.addToolbarButton({
         icon: 'scion.delete',
         onSelect: () => {
-          this._slowDataSource.data.update(companies => companies.filter(c => c.dataId !== company.dataId));
+          data.update(companies => companies.filter(c => c.dataId !== company.dataId));
         },
       });
       toolbar.addToolbarMenu({
@@ -116,9 +115,9 @@ export default class SciTablePageComponent {
   };
 
   protected table = computed(() => {
-    const data = this._useSlowDataSource() ? this._slowDataSource : this.data;
+    const dataSource = this._useSlowDataSource() ? this._slowDataSource : data;
     return untracked(() => runInInjectionContext(this.injector,
-      () => table<Company, number>({...this.tableConfig, data}, table => this.createTable(table)),
+      () => table<Company, number>({...this.tableConfig, data: dataSource}, table => this.createTable(table)),
     ));
   });
 
@@ -129,7 +128,7 @@ export default class SciTablePageComponent {
     return table
       .addNumberColumn('Code', company => company.code)
       .addStringColumn({
-        header: 'Abkürzung',
+        header: '%scion.components.clear.tooltip',
         value: company => company.abbreviation,
         width: '1fr',
         maxWidth: 400,

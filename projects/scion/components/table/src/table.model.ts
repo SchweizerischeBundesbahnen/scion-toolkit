@@ -10,7 +10,7 @@
 
 import {Signal, TemplateRef} from '@angular/core';
 import {MaybeAsync} from './common';
-import {SciDataLoaderFn, SciDataSourceDescriptor, SciFilterCriterion, SciSortCriterion} from './table-data-source';
+import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion} from './table-data-source';
 import {MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableStorage} from './table-storage';
@@ -20,7 +20,7 @@ export type SelectionType = 'single' | 'multi' | 'disabled';
 export type RowActionFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
 export interface SciTableDescriptor<T, ID> {
-  data: Signal<T[]> | SciDataLoaderFn<T> | SciDataSourceDescriptor<T>;
+  data: Signal<T[]> | SciDataLoaderFn<T>;
   /**
    * Size of row items in px. Defaults to 30px.
    */

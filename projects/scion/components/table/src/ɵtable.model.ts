@@ -8,17 +8,17 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal} from '@angular/core';
-import {SciDataSourceDescriptor, SciFilterCriterion, SciSortCriterion, SciTableRequest} from './table-data-source';
+import {computed, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked} from '@angular/core';
+import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion, SciTableRequest} from './table-data-source';
 import {ColumnType, RowActionFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
-import {ɵSciArrayDataSource} from './ɵarray-data-source';
 import {coerceObservable} from './common';
 import {DefaultSciTableStorage, SciTableStorage} from './table-storage';
 import {SciColumnDescriptors} from './table.factory';
 import {UUID} from '@scion/toolkit/uuid';
 import {coerceSignal} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
+import {arrayDataSource} from './ɵarray-data-source';
 
 interface StoredTable {
   columnWidths: {columnName: string; width: number}[];
@@ -34,7 +34,7 @@ interface PageCacheEntry<T, ID> {
 export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   public readonly columns: Signal<SciColumnLike<T>[]>;
-  public readonly dataSource: SciDataSourceDescriptor<T>;
+  public readonly dataLoaderFn: SciDataLoaderFn<T>;
   public readonly tableStorage: SciTableStorage;
   public readonly identity?: (item: T) => ID;
   public readonly rowActions?: RowActionFn<T>;
@@ -141,9 +141,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
     this.columns = computed(() => factory.columns().map(column => this.initColumn(column.type, column)));
 
-    this.dataSource = isSignal(descriptor.data) ?
-      new ɵSciArrayDataSource(descriptor.data, this.columns) :
-      typeof descriptor.data === 'function' ? {loader: descriptor.data} : descriptor.data;
+    this.dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 
     void this.initColumnWidths();
   }
@@ -154,7 +152,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   private loadPage(request: SciTableRequest, onCleanup: EffectCleanupRegisterFn): void {
     const items = signal<T[] | undefined>(undefined);
-    const subscription = coerceObservable(this.dataSource.loader(request)).subscribe(result => {
+    const subscription = coerceObservable(this.dataLoaderFn(request)).subscribe(result => {
       this._totalCount.set(result.totalCount);
       items.set(result.items);
     });
@@ -173,7 +171,11 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     });
 
     const cacheEntry: PageCacheEntry<T, ID> = {
-      items: computed(() => items() ? this.mapItemsToRow(items()!) : undefined),
+      items: computed(() => {
+        const resolved = items();
+        const columns = this.columns();
+        return untracked(() => resolved ? this.mapItemsToRow(resolved, columns) : undefined);
+      }),
       dispose: () => subscription.unsubscribe(),
     };
 
@@ -312,13 +314,13 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     return `sci-table-${this.name()}`;
   }
 
-  public mapItemsToRow(items: T[]): SciRow<T, ID>[] {
+  public mapItemsToRow(items: T[], columns: SciColumnLike<T>[]): SciRow<T, ID>[] {
     return items.map(item => {
       const rowName = Arrays.coerce(this.rowName?.(item));
       return ({
         item: item,
         id: this.identity?.(item) ?? item as unknown as ID,
-        cells: this.columns().map(column => ({
+        cells: columns.map(column => ({
           value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,
           template: column.type === 'template' ? coerceSignal(column.template(item)) : undefined,

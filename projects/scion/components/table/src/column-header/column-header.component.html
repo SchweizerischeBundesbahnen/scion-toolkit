@@ -3,9 +3,9 @@
           [tabIndex]="column().sortable ? 0 : -1"
           [attr.data-sort]="columnSort()"
           [class.sortable]="column().sortable"
-          [title]="column().header()"
+          [title]="(column().header() | sciText)()"
           (click)="onSort($event)">
-    <span class="text">{{ column().header() }}</span>
+    <span class="text">{{ (column().header() | sciText)() }}</span>
     @if (column().sortable) {
       @switch (columnSort()) {
         @case ('asc') {
