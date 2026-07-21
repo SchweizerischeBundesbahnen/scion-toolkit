@@ -1,3 +1,5 @@
+<sci-icon class="filter-icon">scion.filter</sci-icon>
+
 @let values = filterValues() | async;
 @if (values && values.length >= 0) {
   <select [formControl]="query">
@@ -23,9 +25,6 @@
     }
   }
 }
-
-<sci-icon class="filter-icon">scion.filter</sci-icon>
-
 @if (query.value && column().type !== 'boolean') {
   <button class="clear e2e-clear" (click)="reset()">
     <sci-icon class="filter-icon">scion.clear</sci-icon>

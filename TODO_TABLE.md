@@ -2,7 +2,6 @@
 
 - Während resizing sollten zuerst die "fraction" columns kleiner werden und erst danach geschoben
 - Braucht es für die row actions eine eigene Abstraktion? (für responsive menus)
-- common SCSS mixin für buttons brauchen
 - Filter icon indicator wenn gefiltert ist
 - Header translatable machen
 
@@ -17,3 +16,4 @@
 - Sortier-Icons werden noch gebraucht.
 - Global table actions?
 - True-False values icons?
+- Muss die header Höhe via config anpassbar sein? (filter / header labels)

@@ -4,10 +4,11 @@
 
   > div.header {
     display: grid;
-    grid-auto-rows: var(--sci-table-header-row-size);
+    grid-template-rows: var(--sci-table-header-height);
 
     &.filterable {
       border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
+      grid-template-rows: var(--sci-table-header-height) 28px
     }
 
     > button.column-sort {
