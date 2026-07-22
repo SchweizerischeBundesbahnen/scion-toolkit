@@ -1,10 +1,20 @@
 # TODO
 
 - Braucht es für die row actions eine eigene Abstraktion? (für responsive menus)
+- Primary Action Event
+- Table Model Interface aufräumen und nur die sachen exposen, die es auch wirklich braucht
+- Mouseleave auf Rows
+- Row actions sind kaputt
+- Scroll auf resize und row actions
+- Sortierung / Filter für demo page slow data source
+- Table width geht auf 0 wenn show header mit resized columns getoggled wird
 
 ## 2. Prio
 - Native Scrollbar overlaps mit header auf MacOS
 - Table Selection refactor (unterschiedliche selection types)
+
+# Dev Fragen
+- Selection mit shift über mehrere Pages
 
 # UX Fragen
 - Table selection mit shift
