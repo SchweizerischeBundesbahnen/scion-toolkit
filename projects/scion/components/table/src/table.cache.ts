@@ -63,7 +63,7 @@ export class TableCache<T, ID> {
       const cacheCopy = new Map(cache);
 
       const existing = cacheCopy.get(key);
-      if (existing?.items() !== undefined) {
+      if (existing && existing.items() === undefined) {
         cacheCopy.delete(key);
         existing.dispose();
       }

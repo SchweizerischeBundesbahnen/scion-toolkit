@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, effect, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked} from '@angular/core';
+import {computed, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked} from '@angular/core';
 import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion, SciTableRequest} from './table-data-source';
 import {ColumnType, RowActionFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
@@ -22,7 +22,6 @@ import {arrayDataSource} from './ɵarray-data-source';
 import {TableCacheEntry, TableCache} from './table.cache';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {skip} from 'rxjs';
-import {dimension} from '@scion/components/dimension';
 
 interface StoredTable {
   columnWidths: {columnName: string; width: number}[];
@@ -91,14 +90,14 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   private readonly _cache = new TableCache<T, ID>();
 
   public readonly rows = computed(() => {
-    const pageSize = this._visibleRowCount();
+    const pageSize = this.visibleRowCount();
+    const totalCount = this.totalCount();
     const visiblePages = this.pages();
 
     // Create shallow row for each possible row item.
     // Then populate the rows which are resolved.
-    const rows = new Array<SciRow<T, ID>>(visiblePages.length * pageSize).fill({});
-    for (let i = 0; i < visiblePages.length; i++) {
-      const pageNumber = visiblePages[i]!;
+    const rows = new Array<SciRow<T, ID>>(totalCount === 0 ? pageSize : totalCount).fill({});
+    for (const pageNumber of visiblePages) {
       const start = pageNumber * pageSize;
       const page = untracked(() => this._cache.get(`${start}-${start + pageSize}`))();
       const items = page?.items();
@@ -107,9 +106,14 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
         continue;
       }
 
-      rows.splice(i * pageSize, pageSize, ...items);
+      rows.splice(start, pageSize, ...items);
     }
     return rows;
+  });
+
+  public readonly visibleRows = computed(() => {
+    const {start, end} = this.range();
+    return this.rows().slice(start, end);
   });
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();

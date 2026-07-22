@@ -16,12 +16,11 @@ import {concat, EMPTY, fromEvent, map, of, switchMap, timer} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
 import {startWith} from 'rxjs/operators';
-import {minmax, rangeInclusive} from './common';
+import {minmax} from './common';
 import {dimension} from '@scion/components/dimension';
 import {TableSelectionService} from './table-selection.service';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {SciNativeScrollbarTrackSizeProvider} from '../../viewport/src/native-scrollbar-track-size-provider.service';
-import {Objects} from '@scion/toolkit/util';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
@@ -94,11 +93,7 @@ export class SciTableComponent<T, ID = T> {
   protected readonly scrolling = this.computeScrolling(this._viewport);
   protected readonly columnWidths = this.computeColumnWidths(this.sciTable);
 
-  public readonly headerDimension = dimension(this._header);
-  protected readonly visibleRows = computed(() => {
-    const {start, end} = this.sciTable().range(); // TODO: find start from
-    return this.sciTable().rows().slice(start, end);
-  });
+  protected readonly headerDimension = dimension(this._header);
 
   protected readonly absoluteColumnWidths = computed(() => {
     const columns = this.sciTable().columns();
