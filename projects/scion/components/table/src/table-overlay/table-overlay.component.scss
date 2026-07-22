@@ -18,12 +18,4 @@
       --sci-splitter-background-color: var(--sci-table-active-color);
     }
   }
-
-  > div.delimiter {
-    position: absolute;
-    top: 0;
-    width: var(--sci-table-border-size);
-    height: 100%;
-    background-color: var(--sci-table-border-color);
-  }
 }
