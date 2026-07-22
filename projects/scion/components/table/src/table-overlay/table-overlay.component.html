@@ -1,10 +1,10 @@
 @for (column of columnWithWidths(); track column.column.name) {
-  @if (column.column.resizable) {
+  @if (column.column.resizable()) {
     <sci-splitter [class.resizing]="resizingColumn()?.name === column.column.name" [style.left]="column.left" orientation="vertical"
                   (start)="onResizeStart(column.column)"
                   (move)="onResize($event)"
                   (end)="onResizeEnd()"
-                  (reset)="onResizeAuto(column.column)" />
+                  (reset)="onResizeAuto(column.column)"/>
   } @else {
     <div class="delimiter" [style.left]="column.left"></div>
   }

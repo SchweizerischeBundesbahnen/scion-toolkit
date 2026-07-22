@@ -133,9 +133,9 @@ export interface SciColumn {
   type: ColumnType;
   name: string;
   named: boolean;
-  sortable: boolean;
-  filterable: boolean;
-  resizable: boolean;
+  sortable: Signal<boolean>;
+  filterable: Signal<boolean>;
+  resizable: Signal<boolean>;
   header: Signal<string>;
   width: Signal<string>;
   minWidth: Signal<number>;
