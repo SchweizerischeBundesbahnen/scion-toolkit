@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, Injector, input, NgZone, Signal, signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, Injector, input, NgZone, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciColumnLike, SciTable} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
@@ -76,18 +76,16 @@ export class SciTableComponent<T, ID = T> {
   protected readonly nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   protected readonly containerDimension = dimension(this._element.nativeElement as HTMLElement);
-  protected readonly scrollTop = signal(0);
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
-  protected readonly activeIndex = computed(() => this.sciTable().rows().findIndex(r => r.id === this.sciTable().activeItem()));
-  protected readonly activeRow = computed(() => this.sciTable().rows()[this.activeIndex()]);
+  protected readonly activeRow = computed(() => this.sciTable().rowsByIndex().get(this.sciTable().activeIndex()));
   protected readonly headerHeight = computed(() => this.headerDimension()?.clientHeight ?? 0);
   protected readonly virtualScrollHeight = computed(() => `${this.sciTable().totalCount() * this.sciTable().itemSize()}px`);
 
   protected readonly toolbarId = computed(() => `toolbar:${this.sciTable().id}` as const);
   protected readonly toolbarOffset = computed(() => {
-    const offset = this.activeIndex() * this.sciTable().itemSize();
-    return offset + this.headerHeight() - this.scrollTop();
+    const offset = this.sciTable().activeIndex() * this.sciTable().itemSize();
+    return offset + this.headerHeight() - this.sciTable().scrollTop();
   });
 
   protected readonly scrolling = this.computeScrolling(this._viewport);
@@ -258,13 +256,13 @@ export class SciTableComponent<T, ID = T> {
 
   private installFocusedItemWatcher(): void {
     effect(() => {
-      const focusedItem = this.sciTable().focusedItem();
+      const focusedIndex = this.sciTable().focusedIndex();
 
-      if (!focusedItem) {
+      if (focusedIndex < 0) {
         return;
       }
 
-      untracked(() => this.scrollFocusedRowIntoViewport(focusedItem));
+      untracked(() => this.scrollFocusedRowIntoViewport(focusedIndex));
     });
   }
 
@@ -295,16 +293,13 @@ export class SciTableComponent<T, ID = T> {
     });
   }
 
-  private scrollFocusedRowIntoViewport(activeItem: ID): void {
+  private scrollFocusedRowIntoViewport(focusedIndex: number): void {
     const table = this.sciTable();
-    const rows = table.rows();
     const viewport = this._viewport().nativeElement;
-    const headerHeight = this.headerHeight();
 
-    const activeIndex = rows.findIndex(row => row.id === activeItem);
-    const focusedRowTop = activeIndex * table.itemSize();
+    const focusedRowTop = focusedIndex * table.itemSize();
     const focusedRowBottom = focusedRowTop + table.itemSize();
-    const viewportHeight = viewport.clientHeight - headerHeight;
+    const viewportHeight = viewport.clientHeight;
     const viewportTop = viewport.scrollTop;
     const viewportBottom = viewportTop + viewportHeight;
 

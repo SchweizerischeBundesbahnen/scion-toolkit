@@ -2,7 +2,7 @@
   <div class="horizontal-content">
     @if (sciTable().headerVisible()) {
       <header #header>
-        @for (column of table().columns(); track column.name) {
+        @for (column of sciTable().columns(); track column.name) {
           <sci-column-header [column]="column" />
         }
       </header>

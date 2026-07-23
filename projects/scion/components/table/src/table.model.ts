@@ -77,16 +77,6 @@ export interface SciTableDescriptor<T, ID> {
 }
 
 export interface SciTable<T, ID = T> {
-  readonly columns: Signal<SciColumnLike<T>[]>;
-  readonly name: Signal<string | undefined>;
-  readonly sortable: Signal<boolean>;
-  readonly filterable: Signal<boolean>;
-  readonly resizable: Signal<boolean>;
-  readonly selectionType: Signal<SelectionType>;
-  readonly identity?: (item: T) => ID;
-
-  readonly rowActions?: RowActionFn<T>;
-
   /**
    * Active sort criteria, one criterion per column.
    */

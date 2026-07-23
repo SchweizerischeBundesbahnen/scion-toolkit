@@ -89,6 +89,21 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   private readonly _cache = new TableCache<T, ID>();
 
+  public readonly rowsByIndex = computed(() => {
+    const rows = new Map<number, SciRow<T, ID>>();
+
+    for (const page of this._cache.values()) {
+      const items = page.items();
+      if (!items) {
+        continue;
+      }
+
+      items.forEach((item, index) => rows.set(page.start + index, item));
+    }
+
+    return rows;
+  });
+
   public readonly rows = computed(() => {
     const pageSize = this.visibleRowCount();
     const totalCount = this.totalCount();
@@ -99,9 +114,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     const rows = new Array<SciRow<T, ID>>(totalCount === 0 ? pageSize : totalCount).fill({});
     for (const pageNumber of visiblePages) {
       const start = pageNumber * pageSize;
-      const page = untracked(() => this._cache.get(`${start}-${start + pageSize}`))();
+      const page = this._cache.get(`${start}-${start + pageSize}`);
       const items = page?.items();
-
       if (!items) {
         continue;
       }
@@ -116,15 +130,18 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     return this.rows().slice(start, end);
   });
 
+  public focusedIndex = computed(() => this.indexById(this._focusedItem(), this.rowsByIndex()));
+  public activeIndex = computed(() => this.indexById(this._activeItem(), this.rowsByIndex()));
+
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
   public readonly columnWidths = this._columnWidths.asReadonly();
   public readonly focusedItem = this._focusedItem.asReadonly();
-  public readonly activeItem = this._activeItem.asReadonly();
   public readonly selectedItems = this._selectedItems.asReadonly();
   public readonly allSelected = this._allSelected.asReadonly();
   public readonly visibleRowCount = this._visibleRowCount.asReadonly();
   public readonly totalCount = this._totalCount.asReadonly();
+  public readonly scrollTop = this._scrollTop.asReadonly();
 
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T, ID>) {
     this.itemSize = coerceSignal(descriptor.itemSize ?? 30);
@@ -191,7 +208,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     for (const page of pages) {
       const pageStart = page * pageSize;
       const pageEnd = pageStart + pageSize;
-      if (this._cache.has(`${pageStart}-${pageEnd}`)()) {
+      if (this._cache.has(`${pageStart}-${pageEnd}`)) {
         continue;
       }
 
@@ -318,6 +335,19 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   private get storageKey(): string {
     return `sci-table-${this.name()}`;
+  }
+
+  private indexById(id: ID | undefined, rowsByIndex: Map<number, SciRow<T, ID>>): number {
+    if (id === undefined) {
+      return -1;
+    }
+
+    for (const [index, row] of rowsByIndex) {
+      if (row.id === id) {
+        return index;
+      }
+    }
+    return -1;
   }
 
   public mapItemsToRow(items: T[], columns: SciColumnLike<T>[]): SciRow<T, ID>[] {

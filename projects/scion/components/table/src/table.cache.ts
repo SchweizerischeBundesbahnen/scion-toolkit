@@ -13,30 +13,16 @@ type TableCacheKey = `${number}-${number}`;
 export class TableCache<T, ID> {
   private readonly _cache = signal(new Map<TableCacheKey, TableCacheEntry<T, ID>>());
 
-  constructor(private readonly _maxSize: number = 100) {
+  public get cache(): Signal<Map<TableCacheKey, TableCacheEntry<T, ID>>> {
+    return this._cache.asReadonly();
   }
 
-  public get size(): Signal<number> {
-    return computed(() => this._cache().size);
+  public has(key: TableCacheKey): boolean {
+    return this._cache().has(key);
   }
 
-  public has(key: TableCacheKey): Signal<boolean> {
-    return computed(() => this._cache().has(key));
-  }
-
-  public get(key: TableCacheKey): Signal<TableCacheEntry<T, ID> | undefined> {
-    // Readd the item, to mark it as accessed.
-    this._cache.update(cache => {
-      const cacheCopy = new Map(cache);
-      const entry = cacheCopy.get(key);
-      if (entry) {
-        cacheCopy.delete(key);
-        cacheCopy.set(key, entry);
-      }
-      return cacheCopy;
-    });
-
-    return computed(() => this._cache().get(key));
+  public get(key: TableCacheKey): TableCacheEntry<T, ID> | undefined {
+    return this._cache().get(key);
   }
 
   public set(key: TableCacheKey, entry: TableCacheEntry<T, ID>): void {
@@ -51,8 +37,6 @@ export class TableCache<T, ID> {
       cacheCopy.set(key, entry);
       return cacheCopy;
     });
-
-    this.evictUntilWithinLimit();
   }
 
   /**
@@ -83,22 +67,5 @@ export class TableCache<T, ID> {
 
   public get values(): Signal<Array<TableCacheEntry<T, ID>>> {
     return computed(() => [...this._cache().values()]);
-  }
-
-  private evictUntilWithinLimit(): void {
-    this._cache.update(cache => {
-      const cacheCopy = new Map(cache);
-      while (cacheCopy.size > this._maxSize) {
-        const oldestKey = cacheCopy.keys().next().value;
-        if (!oldestKey) {
-          break;
-        }
-
-        const oldestEntry = cacheCopy.get(oldestKey);
-        cacheCopy.delete(oldestKey);
-        oldestEntry?.dispose();
-      }
-      return cacheCopy;
-    });
   }
 }

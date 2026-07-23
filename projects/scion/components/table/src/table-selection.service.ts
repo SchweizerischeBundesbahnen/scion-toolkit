@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, inject, Injectable, Signal} from '@angular/core';
+import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
 
@@ -17,13 +17,11 @@ export class TableSelectionService<T, ID = T> {
 
   private _table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T, ID>>;
 
-  private _activeIndex = computed(() => this._table().rows().findIndex(r => r.id === this._table().focusedItem()));
-
   public onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): void {
     const table = this._table();
-    const rows = table.rows();
-    const id = rows[index]?.id;
-    const previousActiveIndex = this._activeIndex();
+    const rowsByIndex = table.rowsByIndex();
+    const id = rowsByIndex.get(index)?.id;
+    const previousFocusedIndex = table.focusedIndex();
 
     table.setFocusedItem(id);
 
@@ -36,10 +34,10 @@ export class TableSelectionService<T, ID = T> {
       return;
     }
 
-    if (event.shiftKey && previousActiveIndex >= 0) {
-      const start = Math.min(previousActiveIndex, index);
-      const end = Math.max(previousActiveIndex, index);
-      const ids = rangeInclusive(start, end).map(i => rows[i]?.id);
+    if (event.shiftKey && previousFocusedIndex >= 0) {
+      const start = Math.min(previousFocusedIndex, index);
+      const end = Math.max(previousFocusedIndex, index);
+      const ids = rangeInclusive(start, end).map(i => rowsByIndex.get(i)?.id);
 
       if (ids.every(id => id !== undefined)) {
         // Only add shift click selection if all items are loaded.
@@ -62,25 +60,26 @@ export class TableSelectionService<T, ID = T> {
   public onArrowUp(event: Event): void {
     event.preventDefault();
 
-    const activeIndex = this._activeIndex();
-    if (activeIndex <= 0) {
+    const focusedIndex = this._table().focusedIndex();
+    if (focusedIndex <= 0) {
       return;
     }
 
-    this.addItemToSelection(this._table().rows()[activeIndex - 1]!.id, event as KeyboardEvent);
+    this.addItemToSelection(this._table().rowsByIndex().get(focusedIndex - 1)?.id, event as KeyboardEvent);
   }
 
   public onArrowDown(event: Event): void {
     event.preventDefault();
 
-    const activeIndex = this._activeIndex();
-    const rows = this._table().rows();
-    if (activeIndex >= rows.length - 1) {
+    const focusedIndex = this._table().focusedIndex();
+    const table = this._table();
+    const lastIndex = this.rowCount(table) - 1;
+    if (focusedIndex >= lastIndex) {
       return;
     }
 
-    // If the activeIndex was not found (-1) select the first item (0).
-    this.addItemToSelection(rows[activeIndex + 1]!.id, event as KeyboardEvent);
+    // If the focusedIndex was not found (-1) select the first item (0).
+    this.addItemToSelection(table.rowsByIndex().get(focusedIndex + 1)?.id, event as KeyboardEvent);
   }
 
   public onSpace(event: Event): void {
@@ -105,15 +104,20 @@ export class TableSelectionService<T, ID = T> {
       return;
     }
 
-    const ids = table.rows().map(row => row.id);
+    const rowsByIndex = table.rowsByIndex();
+    const ids = [...rowsByIndex.values()].map(row => row.id).filter((id): id is ID => !!id);
 
     // If all rows are loaded, add all to selection, else toggle all selected flag.
-    if (ids.every(id => id !== undefined)) {
+    if (rowsByIndex.size === this.rowCount(table)) {
       table.updateSelectedItems(() => new Set(ids));
     }
     else {
       table.selectAll();
     }
+  }
+
+  private rowCount(table: ɵSciTable<T, ID>): number {
+    return table.totalCount() === 0 ? table.visibleRowCount() : table.totalCount();
   }
 
   private addItemToSelection(item: ID | undefined, event: KeyboardEvent): void {
