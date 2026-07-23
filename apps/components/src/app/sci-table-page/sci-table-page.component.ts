@@ -129,7 +129,7 @@ export default class SciTablePageComponent {
   });
 
   protected activeItem = computed(() => this.table().focusedItem());
-  protected selectedItems = computed(() => [...this.table().selectedItems()].join(', '));
+  protected selectedItems = computed(() => this.table().selectedItems());
 
   protected createTable(table: SciTableFactory<Company>): SciTableFactory<Company> {
     return table
