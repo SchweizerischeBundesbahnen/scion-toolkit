@@ -64,7 +64,7 @@ export class SciTableComponent<T, ID = T> {
 
   public readonly table = input.required<SciTable<T, ID>>();
 
-  private readonly _viewport = viewChild.required<ElementRef<HTMLElement>>('verticalViewport');
+  private readonly _verticalViewport = viewChild.required<ElementRef<HTMLElement>>('verticalViewport');
   private readonly _header = viewChild<ElementRef<HTMLElement>>('header');
   private readonly _headers = viewChildren(ColumnHeaderComponent);
   private readonly _rows = viewChildren(TableRowComponent);
@@ -76,6 +76,7 @@ export class SciTableComponent<T, ID = T> {
   protected readonly nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   protected readonly containerDimension = dimension(this._element.nativeElement as HTMLElement);
+  protected readonly verticalViewPortDimension = dimension(this._verticalViewport);
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
   protected readonly activeRow = computed(() => this.sciTable().rowsByIndex().get(this.sciTable().activeIndex()));
@@ -88,30 +89,22 @@ export class SciTableComponent<T, ID = T> {
     return offset + this.headerHeight() - this.sciTable().scrollTop();
   });
 
-  protected readonly scrolling = this.computeScrolling(this._viewport);
+  protected readonly scrolling = this.computeScrolling(this._verticalViewport);
   protected readonly columnWidths = this.computeColumnWidths(this.sciTable);
 
   protected readonly headerDimension = dimension(this._header);
+  protected readonly headerWidths = computed(() => this._headers().map(h => h.boundingClientRect().width));
 
   protected readonly absoluteColumnWidths = computed(() => {
     const columns = this.sciTable().columns();
     const overrides = this.sciTable().columnWidths();
-    const headers = this._headers();
+    const headers = this.headerWidths();
 
-    // Since c.width(), can contain non-px values, if there is no override width defined, get the actual width in px from the header
-    return columns.map(c => overrides.has(c.name) ?
-      overrides.get(c.name)! :
-      headers.find(h => h.column().name === c.name)?.boundingClientRect().width ?? 0);
-  });
-
-  protected readonly columnWithWidths = computed(() => {
-    const widths = this.absoluteColumnWidths();
-    let left = 0;
-
-    return this.sciTable().columns().map((column, i) => {
-      left += widths[i] ?? 0;
-      return {column, left: `${left}px`};
-    });
+    // The width definition of columns can contain non-px values.
+    // Prefer using the overwritten column width over the calculated header width from the DOM, because the DOM width can lag behind.
+    return columns.map((column, i) => overrides.has(column.name) ?
+      overrides.get(column.name)! :
+      headers[i]!);
   });
 
   /**
@@ -120,8 +113,8 @@ export class SciTableComponent<T, ID = T> {
    */
   protected readonly tableWidth = computed(() => {
     const clientWidth = this.containerDimension().clientWidth;
+    const tableWidth = this.verticalViewPortDimension().clientWidth;
     const fixedSize = this.sciTable().columnWidths().size > 0;
-    const tableWidth = this.absoluteColumnWidths().reduce((sum, c) => sum + c, 0);
 
     // Allow table to grow and shrink with container.
     // When the minimal table width is larger than the container, or the column widths were manually adjusted fix the table width.
@@ -149,6 +142,9 @@ export class SciTableComponent<T, ID = T> {
   protected onResizeStart(): void {
     const table = this.sciTable();
     const overrides = table.columnWidths();
+    if (overrides.size > 0) {
+      return;
+    }
 
     const absoluteColumnWidths = this.absoluteColumnWidths();
     table.columns()
@@ -165,6 +161,7 @@ export class SciTableComponent<T, ID = T> {
   }
 
   protected onResize({column, width}: {column: SciColumnLike<T>; width: number}): void {
+
     this.sciTable().setResizedColumn(column.name, width);
   }
 
@@ -176,7 +173,7 @@ export class SciTableComponent<T, ID = T> {
       this.sciTable().criteria(); // track criteria
 
       // as soon as the table criteria change (and on init), scroll to the top, and set initial count to show skeletons
-      this._viewport().nativeElement.scrollTo({top: 0});
+      this._verticalViewport().nativeElement.scrollTo({top: 0});
     });
   }
 
@@ -239,7 +236,7 @@ export class SciTableComponent<T, ID = T> {
    */
   private installScrollListener(): void {
     effect(onCleanup => {
-      const element = this._viewport().nativeElement;
+      const element = this._verticalViewport().nativeElement;
 
       untracked(() => {
         const subscription = fromEvent(element, 'scroll', {passive: true}).pipe(
@@ -295,7 +292,7 @@ export class SciTableComponent<T, ID = T> {
 
   private scrollFocusedRowIntoViewport(focusedIndex: number): void {
     const table = this.sciTable();
-    const viewport = this._viewport().nativeElement;
+    const viewport = this._verticalViewport().nativeElement;
 
     const focusedRowTop = focusedIndex * table.itemSize();
     const focusedRowBottom = focusedRowTop + table.itemSize();

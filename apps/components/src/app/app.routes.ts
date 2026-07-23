@@ -100,4 +100,9 @@ export const routes: Routes = [
     loadComponent: () => import('./sci-table-page/sci-table-page.component'),
     data: {internal: false},
   },
+  {
+    path: 'sci-table-alt',
+    loadComponent: () => import('./sci-table-page-alt/sci-table-page-alt.component'),
+    data: {internal: false},
+  },
 ];

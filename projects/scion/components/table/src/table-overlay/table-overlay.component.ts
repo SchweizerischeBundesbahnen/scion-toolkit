@@ -19,19 +19,9 @@ export class TableOverlayComponent<T> {
   public readonly resize = output<{width: number; column: SciColumnLike<T>}>();
   public readonly autoResize = output<SciColumnLike<T>>();
 
-  private _table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
+  protected table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
 
   protected readonly resizing = computed(() => this.resizingColumn() !== undefined);
-  protected readonly columnWithWidths = computed(() => {
-    const widths = this.columnWidths();
-    let left = 0;
-
-    return this._table().columns().map((column, i) => {
-      const width = widths[i] ?? 0;
-      left += width;
-      return {column, left: `calc(${left}px - var(--sci-table-border-size))`, width};
-    });
-  });
   protected readonly resizingColumn = signal<SciColumnLike<T> | undefined>(undefined);
 
   protected onResizeStart(column: SciColumnLike<T>): void {
@@ -41,14 +31,14 @@ export class TableOverlayComponent<T> {
 
   protected onResize(event: SplitterMoveEvent): void {
     const resizingColumn = this.resizingColumn();
-    const column = this.columnWithWidths().find(c => c.column.name === resizingColumn?.name);
-    if (column === undefined) {
+    const columnIndex = this.table().columns().findIndex(c => c.name === resizingColumn?.name);
+    if (columnIndex < 0 || !resizingColumn) {
       return;
     }
 
     // The min width is always set on columns and will be handled during grid creation.
-    const width = column.width + event.distance;
-    this.resize.emit({width, column: column.column});
+    const width = this.columnWidths()[columnIndex]! + event.distance;
+    this.resize.emit({width, column: resizingColumn});
   }
 
   protected onResizeEnd(): void {
@@ -58,5 +48,4 @@ export class TableOverlayComponent<T> {
   protected onResizeAuto(column: SciColumnLike<T>): void {
     this.autoResize.emit(column);
   }
-
 }

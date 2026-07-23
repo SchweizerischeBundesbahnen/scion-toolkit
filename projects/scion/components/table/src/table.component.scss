@@ -23,16 +23,26 @@
       overflow: hidden;
       flex: none;
 
+      &:has(header.hidden) {
+        grid-template-rows: 0 1fr;
+      }
+
       > header {
         display: grid;
         grid-template-columns: subgrid;
         grid-column: 1 / -1;
+        grid-row: 1; // The sci-table-overlay positioning requires all grid items to be positioned.
+
+        &.hidden {
+          visibility: hidden;
+        }
       }
 
       > div.vertical-viewport {
           display: grid;
           grid-template-columns: subgrid;
           grid-column: 1 / -1;
+          grid-row: 2; // The sci-table-overlay positioning requires all grid items to be positioned.
           position: relative;
 
           > div.body {
@@ -67,6 +77,10 @@
             }
           }
         }
+
+      > sci-table-overlay {
+        grid-area: 1 / 1 / -1 / -1; // Overlay should fill the whole table grid.
+      }
     }
 
     > .row-actions {

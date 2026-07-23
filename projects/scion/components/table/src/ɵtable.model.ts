@@ -327,7 +327,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
       filterable: computed(() => filterable && this.filterable()),
       resizable: computed(() => (config.resizable ?? true) && this.resizable()),
       header: coerceSignal(config.header ?? ''),
-      width: coerceSignal(config.width ?? 'min-content'),
+      width: coerceSignal(config.width ?? '1fr'),
       minWidth: coerceSignal(config.minWidth ?? 100),
       maxWidth: coerceSignal(config.maxWidth, {coerceUndefined: true}),
     } as SciColumnLike<T>;
