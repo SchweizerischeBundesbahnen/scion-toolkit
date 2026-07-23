@@ -10,7 +10,7 @@
 
 import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciColumnLike} from './table.model';
-import {computed, Signal, untracked} from '@angular/core';
+import {computed, Signal} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map, Observable} from 'rxjs';
@@ -22,7 +22,7 @@ type MappedCriterion<T, CRIT extends {columnName: string}> = CRIT & {
 
 interface ItemWithValues<T> {
   item: T;
-  values: Array<Signal<string | number | boolean> | undefined>;
+  values: Array<string | number | boolean | undefined>;
 }
 
 function mapCriteria<T, CRIT extends {columnName: string}>(criteria: CRIT[], columns: SciColumnLike<T>[]): MappedCriterion<T, CRIT>[] {
@@ -48,11 +48,11 @@ function filter<T>(row: ItemWithValues<T>, filterCriteria: MappedCriterion<T, Sc
     const filter = (() => {
       switch (criterion.column.type) {
         case 'string':
-          return criterion.column.filter(criterion.text as string, {item: row.item, value: value!() as string});
+          return criterion.column.filter(criterion.text as string, {item: row.item, value: value as string});
         case 'number':
-          return criterion.column.filter(criterion.text as number, {item: row.item, value: value!() as number});
+          return criterion.column.filter(criterion.text as number, {item: row.item, value: value as number});
         case 'boolean':
-          return criterion.column.filter(criterion.text as boolean, {item: row.item, value: value!() as boolean});
+          return criterion.column.filter(criterion.text as boolean, {item: row.item, value: value as boolean});
         case 'component':
         case 'template':
           return criterion.column.filter(criterion.text as string, {item: row.item, value: undefined});
@@ -82,11 +82,11 @@ function sort<T>(a: ItemWithValues<T>, b: ItemWithValues<T>, sortCriteria: Mappe
     const sort = (() => {
       switch (criterion.column.type) {
         case 'string':
-          return criterion.column.sort({item: a.item, value: aValue!() as string}, {item: b.item, value: bValue!() as string});
+          return criterion.column.sort({item: a.item, value: aValue as string}, {item: b.item, value: bValue as string});
         case 'number':
-          return criterion.column.sort({item: a.item, value: aValue!() as number}, {item: b.item, value: bValue!() as number});
+          return criterion.column.sort({item: a.item, value: aValue as number}, {item: b.item, value: bValue as number});
         case 'boolean':
-          return criterion.column.sort({item: a.item, value: aValue!() as boolean}, {item: b.item, value: bValue!() as boolean});
+          return criterion.column.sort({item: a.item, value: aValue as boolean}, {item: b.item, value: bValue as boolean});
         case 'component':
         case 'template':
           return criterion.column.sort({item: a.item, value: undefined}, {item: b.item, value: undefined});
@@ -108,10 +108,10 @@ export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnL
   const items$ = toObservable(computed(() => {
     const resolveColumns = columns();
     const items = data();
-    return untracked(() => items.map(item => ({
+    return items.map(item => ({
       item,
-      values: resolveColumns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined),
-    })));
+      values: resolveColumns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
+    }));
   }));
 
   return (request: SciTableRequest): Observable<SciTableResponse<T>> => {
