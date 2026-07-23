@@ -6,8 +6,6 @@
 - Mouseleave auf Rows
 - Scroll auf resize und row actions
 - Sortierung / Filter für demo page slow data source
-- Table width geht auf 0 wenn show header mit resized columns getoggled wird
-- Funktioniert table filter automatisches updated wenn value signal ändert?
 
 ## 2. Prio
 - Native Scrollbar overlaps mit header auf MacOS

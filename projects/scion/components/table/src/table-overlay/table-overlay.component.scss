@@ -3,26 +3,14 @@
   grid-template-columns: subgrid;
   pointer-events: none;
 
-  > div.splitters {
-    display: grid;
-    grid-area: 1 / 1 / -1 / -1;
-    grid-template-columns: subgrid;
+  > sci-splitter {
+    --sci-splitter-background-color: transparent;
+    --sci-splitter-background-color-hover: transparent;
+    --sci-splitter-size: var(--sci-table-border-size);
+    justify-self: end;
 
-    > sci-splitter {
-      --sci-splitter-background-color: transparent;
-      --sci-splitter-background-color-hover: transparent;
-      --sci-splitter-size: var(--sci-table-border-size);
-      justify-self: end;
-
-      &.resizing {
-        --sci-splitter-background-color: var(--sci-table-active-color);
-      }
+    &.resizing {
+      --sci-splitter-background-color: var(--sci-table-active-color);
     }
-  }
-
-  > div.actions {
-    display: grid;
-    grid-area: 1 / 1 / -1 / -1;
-    grid-template-columns: subgrid;
   }
 }

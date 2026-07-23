@@ -1,12 +1,9 @@
-<div class="splitters">
-  @for (column of table().columns(); track column.name) {
-    @if (column.resizable()) {
-      <sci-splitter [class.resizing]="resizingColumn()?.name === column.name" orientation="vertical"
-                    (start)="onResizeStart(column)"
-                    (move)="onResize($event)"
-                    (end)="onResizeEnd()"
-                    (reset)="onResizeAuto(column)"/>
-    }
+@for (column of table().columns(); track column.name) {
+  @if (column.resizable()) {
+    <sci-splitter [class.resizing]="resizingColumn()?.name === column.name" orientation="vertical"
+                  (start)="onResizeStart(column)"
+                  (move)="onResize($event)"
+                  (end)="onResizeEnd()"
+                  (reset)="onResizeAuto(column)"/>
   }
-</div>
-<div class="actions"></div>
+}

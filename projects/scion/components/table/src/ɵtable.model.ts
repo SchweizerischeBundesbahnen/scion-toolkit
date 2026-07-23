@@ -58,6 +58,11 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria()}));
   public readonly range = this.computeRange();
+  public readonly pageSize = linkedSignal<number, number>({
+    source: () => this.visibleRowCount(),
+    // PageSize should never be smaller than the minimal size (30).
+    computation: (visibleRowCount, previous) => Math.max(visibleRowCount, previous?.value ?? 30),
+  });
 
   public readonly pages = computed(() => {
     const {start, end} = this.range();
@@ -105,8 +110,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   });
 
   public readonly rows = computed(() => {
-    const pageSize = this.visibleRowCount();
-    const totalCount = this.totalCount();
+    const pageSize = this.pageSize();
+    const totalCount = this._totalCount();
     const visiblePages = this.pages();
 
     // Create shallow row for each possible row item.
@@ -376,7 +381,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     return computed(() => {
       const firstVisible = Math.floor(this._scrollTop() / this.itemSize());
       const start = Math.max(0, firstVisible - this.overscan());
-      return {start, end: start + this.visibleRowCount()};
+      return {start, end: start + this._visibleRowCount()};
     });
   }
 

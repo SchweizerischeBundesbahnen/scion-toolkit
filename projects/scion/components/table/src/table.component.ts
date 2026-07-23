@@ -25,6 +25,7 @@ import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 import {TableOverlayComponent} from './table-overlay/table-overlay.component';
+import {SciTextPipe} from '@scion/components/text';
 
 @Component({
   selector: 'sci-table',
@@ -33,7 +34,7 @@ import {TableOverlayComponent} from './table-overlay/table-overlay.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
-    '[style.--ɵsci-table-height]': '`${containerDimension().clientHeight ?? 0}px`',
+    '[style.--ɵsci-table-height]': '`${containerDimension()?.clientHeight ?? 0}px`',
     '[style.--ɵsci-table-virtual-scroll-height]': 'virtualScrollHeight()',
     '[style.--ɵsci-table-header-height]': '`${headerHeight()}px`',
     '[style.--ɵsci-table-columns]': 'columnWidths()',
@@ -50,6 +51,7 @@ import {TableOverlayComponent} from './table-overlay/table-overlay.component';
     TableKeyboardNavigatorDirective,
     TableRowComponent,
     TableOverlayComponent,
+    SciTextPipe,
   ],
   providers: [
     {
@@ -217,7 +219,7 @@ export class SciTableComponent<T, ID = T> {
     effect(onCleanup => {
       const table = this.sciTable();
       const pages = table.pages();
-      const pageSize = table.visibleRowCount();
+      const pageSize = table.pageSize();
       const sortCriteria = table.sortCriteria();
       const filterCriteria = table.filterCriteria();
 

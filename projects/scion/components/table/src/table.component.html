@@ -12,7 +12,7 @@
           @for (row of sciTable().visibleRows(); track $index) {
             <sci-table-row [row]="row" [index]="sciTable().range().start + $index" (mouseenter)="onRowHover(row.id)" />
           } @empty {
-            <div class="empty-state">Nothing to show.</div>
+            <div class="empty-state">{{ ('%scion.components.no_items.message' | sciText)() }}</div>
           }
         </div>
       </div>
