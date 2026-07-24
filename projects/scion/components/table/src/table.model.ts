@@ -88,9 +88,9 @@ export interface SciTable<T, ID = T> {
   readonly filterCriteria: Signal<SciFilterCriterion[]>;
 
   /**
-   * Currently active (focused) item id.
+   * Currently active item id.
    */
-  readonly focusedItem: Signal<ID | undefined>;
+  readonly activeItem: Signal<ID | undefined>;
 
   /**
    * Selected item ids.
@@ -122,14 +122,14 @@ export interface TemplateWithContext {
 export interface SciColumn {
   type: ColumnType;
   name: string;
-  named: boolean;
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;
   resizable: Signal<boolean>;
   header: Signal<string>;
-  width: Signal<string>;
-  minWidth: Signal<number>;
-  maxWidth: Signal<number | undefined>;
+  width: string;
+  absoluteWidth: number | undefined;
+  minWidth: number;
+  maxWidth: number | undefined;
 }
 
 export interface SciStringColumn<T> extends SciColumn {

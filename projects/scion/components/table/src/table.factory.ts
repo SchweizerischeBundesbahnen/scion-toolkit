@@ -39,15 +39,15 @@ export interface SciColumnDescriptor {
    * Value which can be used inside `grid-template-columns` definition.
    * Examples: `1fr`, `max-content`, `100px`
    */
-  width?: MaybeSignal<string>; // TODO [eg]: do we need a signal here, maybe plain value is enough
+  width?: string;
   /**
    * Min column width in px. Defaults to 100.
    */
-  minWidth?: MaybeSignal<number>; // TODO [eg]: do we need a signal here, maybe plain value is enough
+  minWidth?: number;
   /**
    * Max column width in px.
    */
-  maxWidth?: MaybeSignal<number>; // TODO [eg]: do we need a signal here, maybe plain value is enough
+  maxWidth?: number;
 }
 
 export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {

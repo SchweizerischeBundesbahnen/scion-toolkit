@@ -361,7 +361,7 @@ describe('Table', () => {
         selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
         selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
       });
 
@@ -395,7 +395,7 @@ describe('Table', () => {
         selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
         selectionService.onRowClick(4, {ctrlKey: false, metaKey: false, shiftKey: true});
 
-        expect(model.focusedItem()).toEqual({id: 5});
+        expect(model.activeItem()).toEqual({id: 5});
         expect(model.selectedItems()).toEqual(new Set([{id: 2}, {id: 3}, {id: 4}, {id: 5}]));
       });
 
@@ -413,16 +413,16 @@ describe('Table', () => {
 
         selectionService.onArrowDown(arrowDownEvent);
         expect(arrowDownEvent.preventDefault).toHaveBeenCalled();
-        expect(model.focusedItem()).toEqual({id: 1});
+        expect(model.activeItem()).toEqual({id: 1});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown(arrowDownEvent);
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
 
         selectionService.onArrowUp(arrowUpEvent);
         expect(arrowUpEvent.preventDefault).toHaveBeenCalled();
-        expect(model.focusedItem()).toEqual({id: 1});
+        expect(model.activeItem()).toEqual({id: 1});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
       });
 
@@ -439,15 +439,15 @@ describe('Table', () => {
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: true, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
 
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}, {id: 2}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: true, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 3});
+        expect(model.activeItem()).toEqual({id: 3});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}, {id: 2}]));
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: true} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}, {id: 2}]));
       });
 
@@ -462,12 +462,12 @@ describe('Table', () => {
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number, number>);
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toBeUndefined();
+        expect(model.activeItem()).toBeUndefined();
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
       });
 
@@ -525,7 +525,7 @@ describe('Table', () => {
         selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
         selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
       });
 
@@ -543,16 +543,16 @@ describe('Table', () => {
 
         selectionService.onArrowDown(arrowDownEvent);
         expect(arrowDownEvent.preventDefault).toHaveBeenCalled();
-        expect(model.focusedItem()).toEqual({id: 1});
+        expect(model.activeItem()).toEqual({id: 1});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown(arrowDownEvent);
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
 
         selectionService.onArrowUp(arrowUpEvent);
         expect(arrowUpEvent.preventDefault).toHaveBeenCalled();
-        expect(model.focusedItem()).toEqual({id: 1});
+        expect(model.activeItem()).toEqual({id: 1});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
       });
 
@@ -568,23 +568,23 @@ describe('Table', () => {
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
 
-        expect(model.focusedItem()).toEqual({id: 1});
+        expect(model.activeItem()).toEqual({id: 1});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: true, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: true} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 3});
+        expect(model.activeItem()).toEqual({id: 3});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: true} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: true, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 1});
+        expect(model.activeItem()).toEqual({id: 1});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
       });
 
@@ -600,19 +600,19 @@ describe('Table', () => {
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
 
-        expect(model.focusedItem()).toEqual({id: 1});
+        expect(model.activeItem()).toEqual({id: 1});
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: true, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: true, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 3});
+        expect(model.activeItem()).toEqual({id: 3});
         expect(model.selectedItems()).toEqual(new Set([{id: 3}]));
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: true, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.focusedItem()).toEqual({id: 2});
+        expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
       });
 
@@ -927,7 +927,7 @@ describe('Table', () => {
 
       selectionService.onRowClick(40, {ctrlKey: false, metaKey: false, shiftKey: true});
 
-      expect(model.focusedItem()).toBe(40);
+      expect(model.activeItem()).toBe(40);
       expect(model.selectedItems()).toEqual(new Set([40]));
     });
 

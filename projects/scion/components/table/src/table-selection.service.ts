@@ -21,9 +21,9 @@ export class TableSelectionService<T, ID = T> {
     const table = this._table();
     const rowsByIndex = table.rowsByIndex();
     const id = rowsByIndex.get(index)?.id;
-    const previousFocusedIndex = table.focusedIndex();
+    const previousFocusedIndex = table.activeIndex();
 
-    table.setFocusedItem(id);
+    table.setActiveItem(id);
 
     if (id === undefined || table.selectionType() === 'disabled') {
       return;
@@ -60,7 +60,7 @@ export class TableSelectionService<T, ID = T> {
   public onArrowUp(event: Event): void {
     event.preventDefault();
 
-    const focusedIndex = this._table().focusedIndex();
+    const focusedIndex = this._table().activeIndex();
     if (focusedIndex <= 0) {
       return;
     }
@@ -71,7 +71,7 @@ export class TableSelectionService<T, ID = T> {
   public onArrowDown(event: Event): void {
     event.preventDefault();
 
-    const focusedIndex = this._table().focusedIndex();
+    const focusedIndex = this._table().activeIndex();
     const table = this._table();
     const lastIndex = this.rowCount(table) - 1;
     if (focusedIndex >= lastIndex) {
@@ -88,7 +88,7 @@ export class TableSelectionService<T, ID = T> {
       return;
     }
 
-    const activeId = this._table().focusedItem();
+    const activeId = this._table().activeItem();
     if (activeId === undefined) {
       return;
     }
@@ -124,7 +124,7 @@ export class TableSelectionService<T, ID = T> {
     const table = this._table();
 
     if (item !== undefined) {
-      table.setFocusedItem(item);
+      table.setActiveItem(item);
     }
 
     if (table.selectionType() === 'disabled' || item === undefined) {

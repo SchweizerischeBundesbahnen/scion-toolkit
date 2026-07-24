@@ -81,13 +81,13 @@ export class SciTableComponent<T, ID = T> {
   protected readonly verticalViewPortDimension = dimension(this._verticalViewport);
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
-  protected readonly activeRow = computed(() => this.sciTable().rowsByIndex().get(this.sciTable().activeIndex()));
+  protected readonly hoveredRow = computed(() => this.sciTable().rowsByIndex().get(this.sciTable().hoveredIndex()));
   protected readonly headerHeight = computed(() => this.headerDimension()?.clientHeight ?? 0);
   protected readonly virtualScrollHeight = computed(() => `${this.sciTable().totalCount() * this.sciTable().itemSize()}px`);
 
   protected readonly toolbarId = computed(() => `toolbar:${this.sciTable().id}` as const);
   protected readonly toolbarOffset = computed(() => {
-    const offset = this.sciTable().activeIndex() * this.sciTable().itemSize();
+    const offset = this.sciTable().hoveredIndex() * this.sciTable().itemSize();
     return offset + this.headerHeight() - this.sciTable().scrollTop();
   });
 
@@ -99,14 +99,11 @@ export class SciTableComponent<T, ID = T> {
 
   protected readonly absoluteColumnWidths = computed(() => {
     const columns = this.sciTable().columns();
-    const overrides = this.sciTable().columnWidths();
     const headers = this.headerWidths();
 
     // The width definition of columns can contain non-px values.
     // Prefer using the overwritten column width over the calculated header width from the DOM, because the DOM width can lag behind.
-    return columns.map((column, i) => overrides.has(column.name) ?
-      overrides.get(column.name)! :
-      headers[i]!);
+    return columns.map((column, i) => column.absoluteWidth ?? headers[i]!);
   });
 
   /**
@@ -116,7 +113,7 @@ export class SciTableComponent<T, ID = T> {
   protected readonly tableWidth = computed(() => {
     const clientWidth = this.containerDimension().clientWidth;
     const tableWidth = this.verticalViewPortDimension().clientWidth;
-    const fixedSize = this.sciTable().columnWidths().size > 0;
+    const fixedSize = this.sciTable().columns().some(column => column.absoluteWidth !== undefined);
 
     // Allow table to grow and shrink with container.
     // When the minimal table width is larger than the container, or the column widths were manually adjusted fix the table width.
@@ -125,7 +122,7 @@ export class SciTableComponent<T, ID = T> {
 
   constructor() {
     this.setupToolbar();
-    this.installFocusedItemWatcher();
+    this.installActiveItemWatcher();
     this.installDimensionWatcher();
     this.installPageLoader();
     this.installCriteriaListener();
@@ -134,7 +131,7 @@ export class SciTableComponent<T, ID = T> {
 
   protected onRowHover(id: ID | undefined): void {
     // TODO [table]: figure out how to do mouseleave. (if the mouse leaves for the toolbar it should not reset the active item)
-    this.sciTable().setActiveItem(id);
+    this.sciTable().setHoveredItem(id);
   }
 
   /**
@@ -143,14 +140,13 @@ export class SciTableComponent<T, ID = T> {
    */
   protected onResizeStart(): void {
     const table = this.sciTable();
-    const overrides = table.columnWidths();
-    if (overrides.size > 0) {
+    if (this.sciTable().columns().some(column => column.absoluteWidth !== undefined)) {
       return;
     }
 
     const absoluteColumnWidths = this.absoluteColumnWidths();
     table.columns()
-      .filter(c => !overrides.has(c.name))
+      .filter(c => c.absoluteWidth === undefined)
       .forEach((column, index) => {
         table.setResizedColumn(column.name, absoluteColumnWidths[index] ?? 0);
       });
@@ -186,7 +182,7 @@ export class SciTableComponent<T, ID = T> {
     effect(onCleanup => {
       const id = this.toolbarId();
       const menu = untracked(() => contributeMenu(id, toolbar => {
-        const row = this.activeRow();
+        const row = this.hoveredRow();
         if (row?.item) {
           this.sciTable().rowActions?.(row.item, toolbar);
         }
@@ -252,15 +248,15 @@ export class SciTableComponent<T, ID = T> {
     });
   }
 
-  private installFocusedItemWatcher(): void {
+  private installActiveItemWatcher(): void {
     effect(() => {
-      const focusedIndex = this.sciTable().focusedIndex();
+      const activeIndex = this.sciTable().activeIndex();
 
-      if (focusedIndex < 0) {
+      if (activeIndex < 0) {
         return;
       }
 
-      untracked(() => this.scrollFocusedRowIntoViewport(focusedIndex));
+      untracked(() => this.scrollFocusedRowIntoViewport(activeIndex));
     });
   }
 
@@ -280,12 +276,11 @@ export class SciTableComponent<T, ID = T> {
   private computeColumnWidths(table: Signal<ɵSciTable<T, ID>>): Signal<string> {
     return computed(() => {
       const columns = table().columns();
-      const overrides = table().columnWidths();
 
       return columns
-        .map(column => overrides.has(column.name) ?
-          `${overrides.get(column.name)}px` :
-          minmax(column.minWidth(), column.width(), column.maxWidth()),
+        .map(column => column.absoluteWidth ?
+          `${column.absoluteWidth}px` :
+          minmax(column.minWidth, column.width, column.maxWidth),
         )
         .join(' ');
     });

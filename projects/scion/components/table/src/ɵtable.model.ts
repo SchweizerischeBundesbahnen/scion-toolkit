@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked} from '@angular/core';
+import {computed, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion, SciTableRequest} from './table-data-source';
 import {ColumnType, RowActionFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
@@ -19,19 +19,19 @@ import {UUID} from '@scion/toolkit/uuid';
 import {coerceSignal} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {arrayDataSource} from './ɵarray-data-source';
-import {TableCacheEntry, TableCache} from './table.cache';
+import {TableCache, TableCacheEntry} from './table.cache';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {skip} from 'rxjs';
+import {filter, skip} from 'rxjs';
 
 interface StoredTable {
-  columnWidths: {columnName: string; width: number}[];
+  columns: {name: string; width: number | undefined}[];
 }
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
 
 export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
-  public readonly columns: Signal<SciColumnLike<T>[]>;
+  public readonly columns: WritableSignal<SciColumnLike<T>[]>;
   public readonly dataLoaderFn: SciDataLoaderFn<T>;
   public readonly tableStorage: SciTableStorage;
   public readonly identity?: (item: T) => ID;
@@ -50,11 +50,11 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
-  private readonly _columnWidths = signal(new Map<string, number>());
   private readonly _selectedItems = signal<Set<ID>>(new Set());
   private readonly _visibleRowCount = signal<number>(0);
   private readonly _totalCount = signal<number>(0);
   private readonly _scrollTop = signal<number>(0);
+  private readonly _storedTable = signal<StoredTable | undefined>(undefined);
 
   public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria()}));
   public readonly range = this.computeRange();
@@ -72,15 +72,15 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     return rangeInclusive(startPage, endPage);
   }, {equal: (a, b) => Objects.isEqual(a, b)});
 
-  private readonly _focusedItem = linkedSignal({
+  private readonly _activeItem = linkedSignal({
     source: () => this.criteria(),
     computation: () => undefined as ID | undefined,
   });
 
   /**
-   * Like _focusedItem but also changes on row hover.
+   * Like _activeItem but also changes on row hover.
    */
-  private readonly _activeItem = linkedSignal(() => this._focusedItem());
+  private readonly _hoveredItem = linkedSignal(() => this._activeItem());
 
   /**
    * True, if all rows are selected.
@@ -131,13 +131,12 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     return rows.slice(start - firstPageStart, end - firstPageStart);
   });
 
-  public focusedIndex = computed(() => this.indexById(this._focusedItem(), this.rowsByIndex()));
   public activeIndex = computed(() => this.indexById(this._activeItem(), this.rowsByIndex()));
+  public hoveredIndex = computed(() => this.indexById(this._hoveredItem(), this.rowsByIndex()));
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
-  public readonly columnWidths = this._columnWidths.asReadonly();
-  public readonly focusedItem = this._focusedItem.asReadonly();
+  public readonly activeItem = this._activeItem.asReadonly();
   public readonly selectedItems = this._selectedItems.asReadonly();
   public readonly allSelected = this._allSelected.asReadonly();
   public readonly visibleRowCount = this._visibleRowCount.asReadonly();
@@ -160,7 +159,14 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     this.rowName = descriptor.rowName;
     this.identity = descriptor.identity;
 
-    this.columns = computed(() => factory.columns().map(column => this.initColumn(column.type, column)));
+    this.columns = linkedSignal(() => {
+      const storedTable = this._storedTable();
+      // Wait for storedTable to be available before initializing columns.
+      if (storedTable === undefined) {
+        return [];
+      }
+      return factory.columns().map((column, index) => this.initColumn(column.type, column, index, storedTable));
+    });
 
     this.dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 
@@ -171,7 +177,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
       this._cache.clear(); // clear cache as soon as criteria change.
     });
 
-    void this.initColumnWidths();
+    void this.readTableStorage();
+    this.installTablePersister();
   }
 
   public setVisibleRowCount(count: number): void {
@@ -270,31 +277,18 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   }
 
   public setResizedColumn(columnName: string, width: number): void {
-    const column = this.columns().find(c => c.name === columnName);
-    if (!column) {
-      return;
-    }
-
-    this._columnWidths.update(columns => new Map(columns).set(columnName, Math.max(column.minWidth(), Math.min(column.maxWidth() ?? width, width))));
-
-    // Save all named columns to the storage, so they will be available on page reload.
-    const columnWidths = [...this.columnWidths().entries()]
-      .filter(([columnName]) => this.columns().find(c => c.name === columnName)?.named)
-      .map(([columnName, width]) => ({width, columnName}));
-
-    if (!this.name() || columnWidths.length === 0) {
-      return;
-    }
-
-    void this.tableStorage.store(this.storageKey, JSON.stringify({columnWidths}));
-  }
-
-  public setFocusedItem(id: ID | undefined): void {
-    this._focusedItem.set(id);
+    this.columns.update(columns => columns.map(column => column.name === columnName ? {
+      ...column,
+      absoluteWidth: Math.max(column.minWidth, Math.min(column.maxWidth ?? width, width)),
+    } : column));
   }
 
   public setActiveItem(id: ID | undefined): void {
     this._activeItem.set(id);
+  }
+
+  public setHoveredItem(id: ID | undefined): void {
+    this._hoveredItem.set(id);
   }
 
   public updateSelectedItems(updateFn: (ids: Set<ID>) => Set<ID>): void {
@@ -306,7 +300,20 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     this._allSelected.set(true);
   }
 
-  private initColumn(type: ColumnType, config: SciColumnDescriptors<T>): SciColumnLike<T> {
+  private installTablePersister(): void {
+    toObservable(this.columns).pipe(
+      filter(columns => columns.length > 0), // don't persist when columns are not yet loaded
+      skip(1),
+    ).subscribe(columns => {
+      const storedTable = {
+        columns: columns.map(col => ({name: col.name, width: col.absoluteWidth})),
+      } satisfies StoredTable;
+
+      void untracked(() => this.tableStorage.store(this.storageKey, JSON.stringify(storedTable)));
+    });
+  }
+
+  private initColumn(type: ColumnType, config: SciColumnDescriptors<T>, index: number, storedTable: StoredTable | undefined): SciColumnLike<T> {
     // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
     const sortable = type === 'component' || type === 'template' ?
       !!config.sort :
@@ -317,20 +324,23 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
       !!config.filter :
       config.filter !== false;
 
+    const name = config.name ?? index.toString();
+    const storedColumn = storedTable?.columns.find(column => column.name === name);
+
     return {
       ...config,
       type,
-      name: config.name ?? UUID.randomUUID(),
-      named: !!config.name,
+      name,
       filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
       sort: typeof config.sort === 'function' ? config.sort : defaultSort,
       sortable: computed(() => sortable && this.sortable()),
       filterable: computed(() => filterable && this.filterable()),
       resizable: computed(() => (config.resizable ?? true) && this.resizable()),
       header: coerceSignal(config.header ?? ''),
-      width: coerceSignal(config.width ?? '1fr'),
-      minWidth: coerceSignal(config.minWidth ?? 100),
-      maxWidth: coerceSignal(config.maxWidth, {coerceUndefined: true}),
+      absoluteWidth: storedColumn?.width,
+      width: config.width ?? '1fr',
+      minWidth: config.minWidth ?? 100,
+      maxWidth: config.maxWidth,
     } as SciColumnLike<T>;
   }
 
@@ -381,19 +391,19 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     });
   }
 
-  private async initColumnWidths(): Promise<void> {
+  private async readTableStorage(): Promise<void> {
     const saved = await this.tableStorage.load(this.storageKey);
     if (!saved) {
+      this._storedTable.set({columns: []});
       return;
     }
 
     try {
-      const parsed = JSON.parse(saved) as StoredTable;
-      const savedColumnWidths = parsed.columnWidths.reduce((columns, column) => columns.set(column.columnName, column.width), new Map<string, number>());
-      this._columnWidths.set(savedColumnWidths);
+      this._storedTable.set(JSON.parse(saved) as StoredTable);
     }
     catch (error) {
       console.warn(`Failed to parse item from storage.`, error);
+      this._storedTable.set({columns: []});
     }
   }
 
