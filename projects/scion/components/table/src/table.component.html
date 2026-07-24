@@ -9,7 +9,7 @@
       <div class="body" sciTableKeyboardNavigator tabindex="0">
         <div class="rows" [style.transform]="`translateY(${sciTable().range().start * sciTable().itemSize()}px)`">
           <!-- Track index to reuse the table row elements -->
-          @for (row of sciTable().visibleRows(); track $index) {
+          @for (row of sciTable().rows(); track $index) {
             <sci-table-row [row]="row" [index]="sciTable().range().start + $index" (mouseenter)="onRowHover(row.id)" />
           } @empty {
             <div class="empty-state">{{ ('%scion.components.no_items.message' | sciText)() }}</div>

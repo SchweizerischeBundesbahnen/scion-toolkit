@@ -12,10 +12,11 @@ import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTab
 import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
-import {combineLatestWith, map, Observable, timer} from 'rxjs';
+import {combineLatestWith, map, Observable, scan, Subject, timer} from 'rxjs';
 import {DatePipe} from '@angular/common';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {UUID} from '@scion/toolkit/uuid';
+import {startWith} from 'rxjs/operators';
 
 @Component({
   selector: 'app-date-cell',
@@ -35,13 +36,35 @@ const data = signal(new Array(100_000).fill(0).map((_, i) => ({
   dataId: UUID.randomUUID(),
 })));
 
+const updates$ = new Subject<Company>();
+const create$ = new Subject<{index: number; company: Company}>();
+
 function slowDataSource(): SciDataLoaderFn<Company> {
-  const _data$ = toObservable(data);
+  const _data$ = toObservable(data).pipe(
+    combineLatestWith(create$.pipe(startWith(null))),
+    scan((companies, [data, create]) => {
+      const newCompanies = companies.length === 0 ? data : companies;
+      if (create == null) {
+        return newCompanies;
+      }
+      newCompanies.splice(create.index, 0, create.company);
+      return newCompanies;
+    }, [] as Company[]),
+  );
 
   return (request: SciTableRequest): Observable<SciTableResponse<Company>> => {
     return timer(1000).pipe(
-      combineLatestWith(_data$),
-      map(([_, companies]) => ({
+      combineLatestWith(_data$, updates$.pipe(startWith(null))),
+      scan((companies, [_, data, update]) => {
+        const newCompanies = companies.length === 0 ? data : companies;
+        if (update === null) {
+          return newCompanies;
+        }
+        const index = newCompanies.findIndex(company => company.dataId == update.dataId);
+        newCompanies.splice(index, 1, update);
+        return newCompanies;
+      }, [] as Company[]),
+      map(companies => ({
         items: companies.slice(request.start, request.end),
         totalCount: companies.length,
       })),
@@ -67,10 +90,16 @@ export default class SciTablePageComponent {
     sortable: true,
     resizable: true,
     showHeader: true,
-    slowDataSource: false,
+    slowDataSource: true,
     selectionType: 'multi',
   });
   protected form = form(this.settings);
+
+  protected update = signal({
+    companyJSON: '',
+  });
+  protected updateForm = form(this.update);
+
   private _useSlowDataSource = computed(() => this.settings().slowDataSource);
   private _slowDataSource = slowDataSource();
 
@@ -87,6 +116,15 @@ export default class SciTablePageComponent {
         icon: 'scion.delete',
         onSelect: () => {
           data.update(companies => companies.filter(c => c.dataId !== company.dataId));
+        },
+      });
+      toolbar.addToolbarButton({
+        icon: 'content_copy',
+        onSelect: () => {
+          const index = data().findIndex(c => c.dataId === company.dataId);
+          if (index >= 0) {
+            create$.next({index, company: {...company, dataId: UUID.randomUUID()}});
+          }
         },
       });
       toolbar.addToolbarMenu({
@@ -133,12 +171,12 @@ export default class SciTablePageComponent {
 
   protected createTable(table: SciTableFactory<Company>): SciTableFactory<Company> {
     return table
+      .addStringColumn('ID', company => company.dataId)
       .addNumberColumn('Code', company => company.code)
       .addStringColumn({
         header: '%scion.components.clear.tooltip',
         value: company => company.abbreviation,
         width: '1fr',
-        maxWidth: 400,
       })
       .addStringColumn({
         header: 'Name',
@@ -164,5 +202,10 @@ export default class SciTablePageComponent {
           bindings: [inputBinding('date', () => new Date(item.validTo))],
         }),
       });
+  }
+
+  protected onUpdate(): void {
+    const company = JSON.parse(this.update().companyJSON) as Company;
+    updates$.next(company);
   }
 }

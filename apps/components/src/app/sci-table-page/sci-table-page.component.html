@@ -39,6 +39,14 @@
     </label>
   </form>
 
+  <form>
+    <label>
+      Company JSON
+      <textarea [formField]="updateForm.companyJSON"></textarea>
+    </label>
+    <button (click)="onUpdate()">Update Company</button>
+  </form>
+
   <dl>
     <dt>Active Code:</dt>
     <dd>{{activeItem() ?? '-'}}</dd>

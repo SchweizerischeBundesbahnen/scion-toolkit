@@ -163,7 +163,6 @@ export class SciTableComponent<T, ID = T> {
   }
 
   protected onResize({column, width}: {column: SciColumnLike<T>; width: number}): void {
-
     this.sciTable().setResizedColumn(column.name, width);
   }
 
@@ -174,7 +173,7 @@ export class SciTableComponent<T, ID = T> {
     effect(() => {
       this.sciTable().criteria(); // track criteria
 
-      // as soon as the table criteria change (and on init), scroll to the top, and set initial count to show skeletons
+      // as soon as the table criteria change (and on init), scroll to the top.
       this._verticalViewport().nativeElement.scrollTo({top: 0});
     });
   }

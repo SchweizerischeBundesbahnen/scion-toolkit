@@ -60,13 +60,13 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly range = this.computeRange();
   public readonly pageSize = linkedSignal<number, number>({
     source: () => this.visibleRowCount(),
-    // PageSize should never be smaller than the minimal size (30).
-    computation: (visibleRowCount, previous) => Math.max(visibleRowCount, previous?.value ?? 30),
+    // PageSize should never be smaller than the minimum size (30).
+    computation: (visibleRowCount, previous) => Math.max(visibleRowCount, previous?.value ?? 5),
   });
 
   public readonly pages = computed(() => {
     const {start, end} = this.range();
-    const pageSize = end - start;
+    const pageSize = this.pageSize();
     const startPage = Math.floor(start / pageSize);
     const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
     return rangeInclusive(startPage, endPage);
@@ -111,28 +111,24 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   public readonly rows = computed(() => {
     const pageSize = this.pageSize();
-    const totalCount = this._totalCount();
     const visiblePages = this.pages();
-
-    // Create shallow row for each possible row item.
-    // Then populate the rows which are resolved.
-    const rows = new Array<SciRow<T, ID>>(totalCount === 0 ? pageSize : totalCount).fill({});
-    for (const pageNumber of visiblePages) {
-      const start = pageNumber * pageSize;
-      const page = this._cache.get(`${start}-${start + pageSize}`);
-      const items = page?.items();
-      if (!items) {
-        continue;
-      }
-
-      rows.splice(start, pageSize, ...items);
-    }
-    return rows;
-  });
-
-  public readonly visibleRows = computed(() => {
+    const rowsByIndex = this.rowsByIndex();
     const {start, end} = this.range();
-    return this.rows().slice(start, end);
+
+    if (visiblePages.length <= 0) {
+      return [];
+    }
+
+    const firstPageStart = visiblePages[0]! * pageSize;
+    const lastPageEnd = (visiblePages.at(-1)! + 1) * pageSize;
+
+    // Populate rows with cached rows in the loaded page window, fallback to row shell to show skeleton.
+    const rows = Array.from({length: lastPageEnd - firstPageStart}, (_, i) => {
+      return rowsByIndex.get(firstPageStart + i) ?? {};
+    });
+
+    // Only return the rows which are actually in the viewport.
+    return rows.slice(start - firstPageStart, end - firstPageStart);
   });
 
   public focusedIndex = computed(() => this.indexById(this._focusedItem(), this.rowsByIndex()));

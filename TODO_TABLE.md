@@ -11,6 +11,10 @@
 - Native Scrollbar overlaps mit header auf MacOS
 - Table Selection refactor (unterschiedliche selection types)
 
+## Tests
+- Viewport vergrössern / verkleinern
+  - Beim vergrössern sollte die PageSize grösser werden, verkleinern sollte nichts machen
+
 # Dev Fragen
 - Selection mit shift über mehrere Pages
 
