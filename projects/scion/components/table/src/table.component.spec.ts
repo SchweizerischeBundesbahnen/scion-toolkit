@@ -244,7 +244,7 @@ describe('Table', () => {
 
         const po = new TablePO(fixture);
 
-        model.filter('id', 3);
+        model.filterColumn('id', 3);
         await fixture.whenStable();
         expect(po.columnEntries('ID')).toEqual(['3']);
 
@@ -268,7 +268,7 @@ describe('Table', () => {
 
         const po = new TablePO(fixture);
 
-        model.filter('name', 'c');
+        model.filterColumn('name', 'c');
         await fixture.whenStable();
         expect(po.columnEntries('Name')).toEqual(['c']);
 
@@ -292,7 +292,7 @@ describe('Table', () => {
 
         const po = new TablePO(fixture);
 
-        model.filter('active', true);
+        model.filterColumn('active', true);
         await fixture.whenStable();
         expect(po.columnEntries('Active')).toEqual(['checkmark', 'checkmark']);
 
@@ -317,7 +317,7 @@ describe('Table', () => {
 
         const po = new TablePO(fixture);
 
-        model.filter('name', 'abcd');
+        model.filterColumn('name', 'abcd');
         await fixture.whenStable();
         expect(po.columnEntries('Name')).toEqual(['beta']);
 
@@ -805,7 +805,7 @@ describe('Table', () => {
       const po = new TablePO(fixture);
       expect(po.rows[0]?.cells[0]?.value).toEqual('0');
 
-      model.filter('id', '5');
+      model.filterColumn('id', '5');
       await fixture.whenStable();
       expect(po.columnEntries('ID')).toEqual(['5']);
     });

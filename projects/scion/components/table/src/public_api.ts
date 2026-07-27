@@ -11,6 +11,6 @@
 export {table} from './table';
 export {SciTableComponent} from './table.component';
 export type {ColumnType, SciColumnLike, SciCellContext, SciTable, SelectionType, SciTableDescriptor} from './table.model';
-export type {SciDataLoaderFn, SciTableResponse, SciTableRequest, SciFilterCriterion, SciSortCriterion} from './table-data-source';
+export type {SciDataLoaderFn, SciTableResponse, SciTableRequest, SciColumnFilter, SciSortCriterion} from './table-data-source';
 export type {SciTableFactory} from './table.factory';
 export type {SciTableStorage} from './table-storage';

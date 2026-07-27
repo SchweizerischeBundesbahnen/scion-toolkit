@@ -9,7 +9,7 @@
  */
 
 import {computed, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
-import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion, SciTableRequest} from './table-data-source';
+import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion, SciTableRequest} from './table-data-source';
 import {ColumnType, RowActionFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {coerceObservable, rangeInclusive} from './common';
@@ -49,14 +49,15 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly id = UUID.randomUUID();
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
-  private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
+  private readonly _filterCriteria = signal<SciColumnFilter[]>([]);
+  private readonly _globalFilter = signal<string | undefined>(undefined);
   private readonly _selectedItems = signal<Set<ID>>(new Set());
   private readonly _visibleRowCount = signal<number>(0);
   private readonly _totalCount = signal<number | undefined>(undefined);
   private readonly _scrollTop = signal<number>(0);
   private readonly _storedTable = signal<StoredTable | undefined>(undefined);
 
-  public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria()}));
+  public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria(), globalFilter: this._globalFilter()}));
   public readonly range = this.computeRange();
   public readonly pageSize = linkedSignal<number, number>({
     source: () => this.visibleRowCount(),
@@ -137,6 +138,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
+  public readonly globalFilter = this._globalFilter.asReadonly();
   public readonly activeItem = this._activeItem.asReadonly();
   public readonly hoveredItem = this._hoveredItem.asReadonly();
   public readonly selectedItems = this._selectedItems.asReadonly();
@@ -192,7 +194,6 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
     const items = signal<T[] | undefined>(undefined);
     const subscription = coerceObservable(this.dataLoaderFn(request)).subscribe(result => {
-      console.log(result);
       this._totalCount.set(result.totalCount);
       items.set(result.items);
     });
@@ -215,7 +216,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     this._cache.set(cacheKey, cacheEntry);
   }
 
-  public loadPages({pages, pageSize, sortCriteria, filterCriteria, onCleanup}: {pages: number[]; pageSize: number; sortCriteria: SciSortCriterion[]; filterCriteria: SciFilterCriterion[]; onCleanup: EffectCleanupRegisterFn}): void {
+  public loadPages({pages, pageSize, sortCriteria, columnFilters, globalFilter, onCleanup}: {pages: number[]; pageSize: number; sortCriteria: SciSortCriterion[]; columnFilters: SciColumnFilter[]; globalFilter?: string; onCleanup: EffectCleanupRegisterFn}): void {
     for (const page of pages) {
       const pageStart = page * pageSize;
       const pageEnd = pageStart + pageSize;
@@ -229,7 +230,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
         pageSize,
         page,
         sortCriteria,
-        filterCriteria,
+        globalFilter,
+        columnFilters: columnFilters,
       }, onCleanup);
     }
   }
@@ -257,26 +259,34 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     this._sortCriteria.set([]);
   }
 
-  public filter(columnName: string, text: string | number | boolean | null): void {
-    if (!this.showColumnFilters()) {
-      return;
-    }
-
-    this._filterCriteria.update(filter => {
-      const other = filter.filter(f => f.columnName !== columnName);
-      if (text === null) {
-        return other;
+  public filter(text: string): void;
+  public filter(text: string | number | boolean | null, options: {columnName: string}): void;
+  public filter(text: string | number | boolean | null, options?: {columnName: string}): void {
+    if (options) {
+      if (!this.showColumnFilters()) {
+        return;
       }
 
-      return [
-        ...other,
-        {columnName, text},
-      ];
-    });
+      this._filterCriteria.update(filter => {
+        const other = filter.filter(f => f.columnName !== options.columnName);
+        if (text === null) {
+          return other;
+        }
+
+        return [
+          ...other,
+          {columnName: options.columnName, text},
+        ];
+      });
+    }
+    else {
+      this._globalFilter.set(text as string);
+    }
   }
 
   public resetFilter(): void {
     this._filterCriteria.set([]);
+    this._globalFilter.set(undefined);
   }
 
   public setResizedColumn(columnName: string, width: number): void {

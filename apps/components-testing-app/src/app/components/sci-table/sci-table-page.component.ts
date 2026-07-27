@@ -47,8 +47,8 @@ class SlowDataSource implements SciDataSourceDescriptor<Product> {
   public loader(request: SciTableRequest): Observable<SciTableResponse<Product>> {
     return timer(1000).pipe(
       map(() => ({
-        items: request.filterCriteria.length > 0 ? [] : this._data().slice(request.start, request.end),
-        totalCount: request.filterCriteria.length > 0 ? 0 : this._data().length,
+        items: request.columnFilters.length > 0 ? [] : this._data().slice(request.start, request.end),
+        totalCount: request.columnFilters.length > 0 ? 0 : this._data().length,
       })),
     );
   }

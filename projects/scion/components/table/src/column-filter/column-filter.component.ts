@@ -52,23 +52,23 @@ export class ColumnFilterComponent<T> {
       combineLatestWith(toObservable(this._table), toObservable(computed(() => this.column().name)), toObservable(computed(() => this.column().type))),
       takeUntilDestroyed(),
       debounceTime(200),
-    ).subscribe(([value, table, name, type]) => {
+    ).subscribe(([value, table, columnName, type]) => {
       const text = typeof value === 'string' ? value.trim() : value;
 
       if (text === '' || text === null) {
-        table.filter(name, null);
+        table.filter(null, {columnName});
         return;
       }
 
       switch (type) {
         case 'boolean':
-          table.filter(name, text === 'true');
+          table.filter(text === 'true', {columnName});
           break;
         case 'number':
-          table.filter(name, +text);
+          table.filter(+text, {columnName});
           break;
         default:
-          table.filter(name, text);
+          table.filter(text, {columnName});
           break;
       }
     });

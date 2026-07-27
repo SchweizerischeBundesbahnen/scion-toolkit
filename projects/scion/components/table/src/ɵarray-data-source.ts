@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
+import {SciDataLoaderFn, SciColumnFilter, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciColumnLike} from './table.model';
 import {computed, Signal} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
@@ -37,7 +37,34 @@ function mapCriteria<T, CRIT extends {columnName: string}>(criteria: CRIT[], col
   }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.columnIndex >= 0);
 }
 
-function filter<T>(row: ItemWithValues<T>, filterCriteria: MappedCriterion<T, SciFilterCriterion>[]): boolean {
+function globalFilter<T>(row: ItemWithValues<T>, filter?: string): boolean {
+  if (!filter?.trim()) {
+    return true;
+  }
+
+  for (const value of row.values) {
+    const result = (() => {
+      switch (typeof value) {
+        case 'string':
+          return value.trim().toLocaleLowerCase().includes(filter.toLocaleLowerCase());
+        case 'boolean':
+        case 'number':
+          return value.toString().includes(filter.toLocaleLowerCase());
+        default:
+          return false;
+      }
+    })();
+
+    // If any value includes the filter, it matches the filter.
+    if (result) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function columnFilter<T>(row: ItemWithValues<T>, filterCriteria: MappedCriterion<T, SciColumnFilter>[]): boolean {
   if (filterCriteria.length === 0) {
     return true;
   }
@@ -116,11 +143,11 @@ export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnL
 
   return (request: SciTableRequest): Observable<SciTableResponse<T>> => {
     const sortCols = mapCriteria(request.sortCriteria, columns());
-    const filterCols = mapCriteria(request.filterCriteria, columns());
+    const filterCols = mapCriteria(request.columnFilters, columns());
 
     return items$.pipe(
       map(items => items
-        .filter(item => filter(item, filterCols))
+        .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.globalFilter))
         .sort((a, b) => sort(a, b, sortCols))),
       map(items => ({
         totalCount: items.length,

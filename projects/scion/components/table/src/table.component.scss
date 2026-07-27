@@ -9,6 +9,11 @@
 
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
+  > sci-table-header {
+    width: min(100%, var(--ɵsci-table-width));
+    padding-block: 0.25em;
+  }
+
   > div.horizontal-viewport {
     flex: var(--sci-table-flex);
     display: flex;
@@ -43,13 +48,14 @@
       }
 
       > div.vertical-viewport {
-          display: grid;
-          grid-template-columns: subgrid;
-          grid-column: 1 / -1;
-          grid-row: 2; // The sci-table-overlay positioning requires all grid items to be positioned.
-          position: relative;
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+        grid-row: 2; // The sci-table-overlay positioning requires all grid items to be positioned.
+        position: relative;
+        anchor-name: --vertical-viewport;
 
-          > div.body {
+        > div.body {
             display: grid;
             grid-template-columns: subgrid;
             grid-column: 1 / -1;
@@ -80,7 +86,7 @@
               }
             }
           }
-        }
+      }
 
       > sci-table-overlay {
         grid-area: 1 / 1 / -1 / -1; // Overlay should fill the whole table grid.
@@ -113,7 +119,8 @@
     @include sci-scrollbar.scrollbar-position();
 
     &.vscroll {
-      top: var(--ɵsci-table-header-height);
+      position-anchor: --vertical-viewport;
+      top: anchor(top);
       right: max(calc(100% - var(--ɵsci-table-width)), 0px);
     }
   }

@@ -10,7 +10,7 @@
 
 import {MaybeAsync} from './common';
 
-export interface SciFilterCriterion {
+export interface SciColumnFilter {
   columnName: string;
   text: string | boolean | number;
 }
@@ -26,7 +26,8 @@ export interface SciTableRequest {
   pageSize: number;
   page: number;
   sortCriteria: SciSortCriterion[];
-  filterCriteria: SciFilterCriterion[];
+  columnFilters: SciColumnFilter[];
+  globalFilter?: string;
 }
 
 export interface SciTableResponse<T> {

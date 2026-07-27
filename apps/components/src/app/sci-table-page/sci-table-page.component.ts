@@ -65,7 +65,7 @@ function slowDataSource(): SciDataLoaderFn<Company> {
         return newCompanies;
       }, [] as Company[]),
       map(companies => {
-        const filtered = sort(filter(companies, request.filterCriteria), request.sortCriteria);
+        const filtered = sort(filter(companies, request.columnFilters), request.sortCriteria);
         return ({
           items: filtered.slice(request.start, request.end),
           totalCount: filtered.length,

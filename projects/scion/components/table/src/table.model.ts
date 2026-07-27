@@ -10,7 +10,7 @@
 
 import {Signal, TemplateRef} from '@angular/core';
 import {MaybeAsync} from './common';
-import {SciDataLoaderFn, SciFilterCriterion, SciSortCriterion} from './table-data-source';
+import {SciDataLoaderFn, SciColumnFilter, SciSortCriterion} from './table-data-source';
 import {MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableStorage} from './table-storage';
@@ -86,7 +86,7 @@ export interface SciTable<T, ID = T> {
   /**
    * Active filter criteria, one criterion per column.
    */
-  readonly filterCriteria: Signal<SciFilterCriterion[]>;
+  readonly filterCriteria: Signal<SciColumnFilter[]>;
 
   /**
    * Currently active item id.
@@ -103,9 +103,11 @@ export interface SciTable<T, ID = T> {
    */
   readonly allSelected: Signal<boolean>;
 
+  // TODO [table]: add optional asc, desc option
   sort(columnName: string, multi: boolean): void;
   resetSort(): void;
-  filter(columnName: string, text: string | number | boolean | null): void;
+  filter(text: string): void;
+  filter(text: string | number | boolean | null, options?: {columnName: string}): void;
   resetFilter(): void;
   dispose(): void;
 }

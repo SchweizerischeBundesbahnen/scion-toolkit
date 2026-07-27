@@ -1,4 +1,4 @@
-import {SciFilterCriterion, SciSortCriterion} from '@scion/components/table';
+import {SciColumnFilter, SciSortCriterion} from '@scion/components/table';
 
 export interface Company {
   dataId: string;
@@ -43,7 +43,7 @@ export function sort(companies: Company[], sortCriteria: SciSortCriterion[]): Co
   });
 }
 
-export function filter(companies: Company[], filterCriteria: SciFilterCriterion[]): Company[] {
+export function filter(companies: Company[], filterCriteria: SciColumnFilter[]): Company[] {
   let newCompanies = companies;
   for (const filterCriterion of filterCriteria) {
     const query = filterCriterion.text.toString().toLocaleLowerCase();
