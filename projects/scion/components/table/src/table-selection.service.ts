@@ -117,7 +117,7 @@ export class TableSelectionService<T, ID = T> {
   }
 
   private rowCount(table: ɵSciTable<T, ID>): number {
-    return table.totalCount() === 0 ? table.visibleRowCount() : table.totalCount();
+    return table.totalCount() === undefined ? table.visibleRowCount() : table.totalCount()!;
   }
 
   private addItemToSelection(item: ID | undefined, event: KeyboardEvent): void {

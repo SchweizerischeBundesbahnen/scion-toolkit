@@ -52,7 +52,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   private readonly _filterCriteria = signal<SciFilterCriterion[]>([]);
   private readonly _selectedItems = signal<Set<ID>>(new Set());
   private readonly _visibleRowCount = signal<number>(0);
-  private readonly _totalCount = signal<number>(0);
+  private readonly _totalCount = signal<number | undefined>(undefined);
   private readonly _scrollTop = signal<number>(0);
   private readonly _storedTable = signal<StoredTable | undefined>(undefined);
 
@@ -114,6 +114,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     const visiblePages = this.pages();
     const rowsByIndex = this.rowsByIndex();
     const {start, end} = this.range();
+    const totalCount = this._totalCount();
 
     if (visiblePages.length <= 0) {
       return [];
@@ -123,7 +124,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     const lastPageEnd = (visiblePages.at(-1)! + 1) * pageSize;
 
     // Populate rows with cached rows in the loaded page window, fallback to row shell to show skeleton.
-    const rows = Array.from({length: lastPageEnd - firstPageStart}, (_, i) => {
+    const rows = Array.from({length: Math.min(lastPageEnd - firstPageStart, totalCount ?? pageSize)}, (_, i) => {
       return rowsByIndex.get(firstPageStart + i) ?? {};
     });
 
@@ -131,8 +132,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     return rows.slice(start - firstPageStart, end - firstPageStart);
   });
 
-  public activeIndex = computed(() => this.indexById(this._activeItem(), this.rowsByIndex()));
-  public hoveredIndex = computed(() => this.indexById(this._hoveredItem(), this.rowsByIndex()));
+  public readonly activeIndex = computed(() => this.indexById(this._activeItem(), this.rowsByIndex()));
+  public readonly hoveredIndex = computed(() => this.indexById(this._hoveredItem(), this.rowsByIndex()));
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
@@ -190,6 +191,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
     const items = signal<T[] | undefined>(undefined);
     const subscription = coerceObservable(this.dataLoaderFn(request)).subscribe(result => {
+      console.log(result);
       this._totalCount.set(result.totalCount);
       items.set(result.items);
     });

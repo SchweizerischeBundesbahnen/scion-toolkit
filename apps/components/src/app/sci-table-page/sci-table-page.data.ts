@@ -1,3 +1,5 @@
+import {SciFilterCriterion, SciSortCriterion} from '@scion/components/table';
+
 export interface Company {
   dataId: string;
   code: number;
@@ -6,6 +8,78 @@ export interface Company {
   railwayUndertaking: boolean;
   validFrom: string;
   validTo: string;
+}
+
+export function sort(companies: Company[], sortCriteria: SciSortCriterion[]): Company[] {
+  return [...companies].sort((a, b) => {
+    for (const sortCriterion of sortCriteria) {
+      const ascendingComparison = (() => {
+        switch (sortCriterion.columnName) {
+          case 'id':
+            return a.dataId.localeCompare(b.dataId);
+          case 'code':
+            return a.code - b.code;
+          case 'abbreviation':
+            return a.abbreviation.localeCompare(b.abbreviation);
+          case 'name':
+            return a.name.localeCompare(b.name);
+          case 'railwayUndertaking':
+            return Number(a.railwayUndertaking) - Number(b.railwayUndertaking);
+          case 'validFrom':
+            return a.validFrom.localeCompare(b.validFrom);
+          case 'validTo':
+            return a.validTo.localeCompare(b.validTo);
+          default:
+            return 0;
+        }
+      })();
+
+      if (ascendingComparison !== 0) {
+        return sortCriterion.direction === 'desc' ? -ascendingComparison : ascendingComparison;
+      }
+    }
+
+    return 0;
+  });
+}
+
+export function filter(companies: Company[], filterCriteria: SciFilterCriterion[]): Company[] {
+  let newCompanies = companies;
+  for (const filterCriterion of filterCriteria) {
+    const query = filterCriterion.text.toString().toLocaleLowerCase();
+    newCompanies = newCompanies.filter(company => {
+      switch (filterCriterion.columnName) {
+        case 'id':
+          return company.dataId.toLocaleLowerCase().includes(query);
+        case 'code':
+          return company.code.toString().includes(query);
+        case 'abbreviation':
+          return company.abbreviation.toLocaleLowerCase().includes(query);
+        case 'name':
+          return company.name.toLocaleLowerCase().includes(query);
+        case 'railwayUndertaking': {
+          const normalized = query.trim();
+          if (normalized === '') {
+            return true;
+          }
+          if (normalized === 'true') {
+            return company.railwayUndertaking;
+          }
+          if (normalized === 'false') {
+            return !company.railwayUndertaking;
+          }
+          return String(company.railwayUndertaking).includes(normalized);
+        }
+        case 'validFrom':
+          return company.validFrom.toLocaleLowerCase().includes(query);
+        case 'validTo':
+          return company.validTo.toLocaleLowerCase().includes(query);
+        default:
+          return true;
+      }
+    });
+  }
+  return newCompanies;
 }
 
 export const companies: Company[] = [

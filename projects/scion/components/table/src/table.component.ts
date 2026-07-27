@@ -83,7 +83,7 @@ export class SciTableComponent<T, ID = T> {
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
   protected readonly hoveredRow = computed(() => this.sciTable().rowsByIndex().get(this.sciTable().hoveredIndex()));
   protected readonly headerHeight = computed(() => this.headerDimension()?.clientHeight ?? 0);
-  protected readonly virtualScrollHeight = computed(() => `${this.sciTable().totalCount() * this.sciTable().itemSize()}px`);
+  protected readonly virtualScrollHeight = computed(() => `${(this.sciTable().totalCount() ?? 0) * this.sciTable().itemSize()}px`);
 
   protected readonly toolbarId = computed(() => `toolbar:${this.sciTable().id}` as const);
   protected readonly toolbarOffset = computed(() => {

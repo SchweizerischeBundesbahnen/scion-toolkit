@@ -9,7 +9,7 @@
  */
 import {Component, computed, inject, Injector, input, inputBinding, linkedSignal, runInInjectionContext, Signal, signal, untracked} from '@angular/core';
 import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, SelectionType, table} from '@scion/components/table';
-import {companies, Company} from './sci-table-page.data';
+import {companies, Company, filter, sort} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
 import {combineLatestWith, map, Observable, scan, Subject, timer} from 'rxjs';
@@ -64,10 +64,13 @@ function slowDataSource(): SciDataLoaderFn<Company> {
         newCompanies.splice(index, 1, update);
         return newCompanies;
       }, [] as Company[]),
-      map(companies => ({
-        items: companies.slice(request.start, request.end),
-        totalCount: companies.length,
-      })),
+      map(companies => {
+        const filtered = sort(filter(companies, request.filterCriteria), request.sortCriteria);
+        return ({
+          items: filtered.slice(request.start, request.end),
+          totalCount: filtered.length,
+        });
+      }),
     );
   };
 }
@@ -171,23 +174,38 @@ export default class SciTablePageComponent {
 
   protected createTable(table: SciTableFactory<Company>): SciTableFactory<Company> {
     return table
-      .addStringColumn('ID', company => company.dataId)
-      .addNumberColumn('Code', company => company.code)
+      .addStringColumn({
+        header: 'ID',
+        value: company => company.dataId,
+        name: 'id',
+      })
+      .addNumberColumn({
+        header: 'Code',
+        value: company => company.code,
+        name: 'code',
+      })
       .addStringColumn({
         header: '%scion.components.clear.tooltip',
         value: company => company.abbreviation,
         width: '1fr',
+        name: 'abbreviation',
       })
       .addStringColumn({
         header: 'Name',
         value: company => company.name,
         width: '1fr',
+        name: 'name',
       })
-      .addBooleanColumn('EVU', company => company.railwayUndertaking)
+      .addBooleanColumn({
+        header: 'EVU',
+        value: company => company.railwayUndertaking,
+        name: 'railwayUndertaking',
+      })
       .addComponentColumn({
         header: 'Gültig ab',
+        name: 'validFrom',
         sort: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime(),
-        filter: (query, item) => item.item.validFrom.toString().includes(query),
+        filter: (query, item) => item.item.validFrom.includes(query),
         component: item => ({
           component: DateCellComponent,
           bindings: [inputBinding('date', () => new Date(item.validFrom))],
@@ -195,7 +213,8 @@ export default class SciTablePageComponent {
       })
       .addComponentColumn({
         header: 'Gültig bis',
-        filter: (query, item) => item.item.validFrom.toString().includes(query),
+        name: 'validTo',
+        filter: (query, item) => item.item.validTo.includes(query),
         sort: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime(),
         component: item => ({
           component: DateCellComponent,
