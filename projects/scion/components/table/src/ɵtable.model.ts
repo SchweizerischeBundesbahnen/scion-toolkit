@@ -138,6 +138,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
   public readonly activeItem = this._activeItem.asReadonly();
+  public readonly hoveredItem = this._hoveredItem.asReadonly();
   public readonly selectedItems = this._selectedItems.asReadonly();
   public readonly allSelected = this._allSelected.asReadonly();
   public readonly visibleRowCount = this._visibleRowCount.asReadonly();

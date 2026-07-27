@@ -701,7 +701,7 @@ describe('Table', () => {
         await fixture.whenStable();
 
         const po = new TablePO(fixture);
-        await po.rows[1]!.clickActionAfterHover('testee');
+        await po.rows[1]!.clickActionAfterHoverAndRowMouseLeave('testee');
 
         expect(onSelect).toHaveBeenCalledOnceWith({id: 2});
       });

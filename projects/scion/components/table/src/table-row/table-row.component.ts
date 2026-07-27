@@ -13,6 +13,7 @@ import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {TableSelectionService} from '../table-selection.service';
+import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/table-overlay.component';
 
 @Component({
   selector: 'sci-table-row',
@@ -26,6 +27,8 @@ import {TableSelectionService} from '../table-selection.service';
     '[attr.part]': 'part()',
     '(click)': 'onRowClick($event)',
     '(keydown.enter)': 'onRowEnter($event)',
+    '(mouseenter)': 'onMouseEnter()',
+    '(mouseleave)': 'onMouseLeave($event)',
   },
   imports: [
     TableCellComponent,
@@ -43,7 +46,7 @@ export class TableRowComponent<T, ID> {
   protected readonly item = computed(() => this.row().item);
   protected readonly id = computed(() => this.row().id);
   protected readonly loading = computed(() => this.item() === undefined); // Rows are initialized with an undefined item, before data is loaded
-  protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().focusedItem());
+  protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeItem());
   protected readonly isSelected = computed(() => this.table().allSelected() || this.table().selectedItems().has(this.id()));
   protected readonly part = computed(() => this.item() && !this.isSelected() ? this.table().rowName?.(this.item()) : null); // selection takes precedence over custom styles
 
@@ -63,5 +66,18 @@ export class TableRowComponent<T, ID> {
       return;
     }
     this._selectionService.onRowClick(this.index(), event);
+  }
+
+  protected onMouseEnter(): void {
+    this.table().setHoveredItem(this.id());
+  }
+
+  protected onMouseLeave(event: MouseEvent): void {
+    const next = event.relatedTarget;
+    if (next instanceof Element && next.closest(`${TABLE_OVERLAY_SELECTOR}, sci-toolbar`)) {
+      return;
+    }
+    // Only hide row actions when leaving the row and not hovering the actions itself or a column resize splitter (overlay).
+    this.table().setHoveredItem(undefined);
   }
 }

@@ -123,6 +123,17 @@ export class RowPo {
     ((this._fixture.nativeElement as HTMLElement).querySelector(`button.${cssClass}`) as HTMLElement | undefined)?.click();
   }
 
+  public async clickActionAfterHoverAndRowMouseLeave(cssClass: string): Promise<void> {
+    this.hover();
+    await this._fixture.whenStable();
+
+    const actionButton = (this._fixture.nativeElement as HTMLElement).querySelector(`button.${cssClass}`) as HTMLElement | undefined;
+    this.nativeElement.dispatchEvent(new MouseEvent('mouseleave', {relatedTarget: actionButton ?? null}));
+    await this._fixture.whenStable();
+
+    actionButton?.click();
+  }
+
   public hover(): void {
     this.nativeElement.dispatchEvent(new MouseEvent('mouseenter'));
   }

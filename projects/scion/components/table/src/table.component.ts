@@ -24,7 +24,7 @@ import {SciNativeScrollbarTrackSizeProvider} from '../../viewport/src/native-scr
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
-import {TableOverlayComponent} from './table-overlay/table-overlay.component';
+import {TABLE_OVERLAY_SELECTOR, TableOverlayComponent} from './table-overlay/table-overlay.component';
 import {SciTextPipe} from '@scion/components/text';
 
 @Component({
@@ -108,7 +108,7 @@ export class SciTableComponent<T, ID = T> {
 
   /**
    * A grid will never grow beyond its parent unless explicitly set, that is why we need to set the table width.
-   * This allows the grid overflowing when resizing.
+   * This allows the grid to overflow when resizing.
    */
   protected readonly tableWidth = computed(() => {
     const clientWidth = this.containerDimension().clientWidth;
@@ -129,9 +129,13 @@ export class SciTableComponent<T, ID = T> {
     this.installScrollListener();
   }
 
-  protected onRowHover(id: ID | undefined): void {
-    // TODO [table]: figure out how to do mouseleave. (if the mouse leaves for the toolbar it should not reset the active item)
-    this.sciTable().setHoveredItem(id);
+  protected onRowActionsMouseLeave(event: MouseEvent): void {
+    const next = event.relatedTarget;
+    if (next instanceof Element && next.closest(TABLE_OVERLAY_SELECTOR)) {
+      return;
+    }
+    // Only hide row actions when leaving the row actions and not hovering a column resize splitter (overlay).
+    this.sciTable().setHoveredItem(undefined);
   }
 
   /**
@@ -176,7 +180,7 @@ export class SciTableComponent<T, ID = T> {
 
   /**
    * The row id is taken from the table model and used to create the row-actions toolbar.
-   * The toolbar creation needs to be in an effect because the model is passed as an input.
+   * The toolbar creation needs to be in an effect because the {@link SciTable} model is passed as an input to this component.
    */
   private setupToolbar(): void {
     effect(onCleanup => {
@@ -268,7 +272,7 @@ export class SciTableComponent<T, ID = T> {
 
     return toSignal(toObservable(viewport)
       .pipe(
-        switchMap(viewport => viewport ? fromEvent(viewport.nativeElement, 'scroll').pipe(subscribeIn(fn => zone.runOutsideAngular(fn))) : EMPTY),
+        switchMap(viewport => viewport ? fromEvent(viewport.nativeElement, 'scroll', {passive: true}).pipe(subscribeIn(fn => zone.runOutsideAngular(fn))) : EMPTY),
         switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
       ), {initialValue: false});
   }

@@ -3,8 +3,10 @@ import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitte
 import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
 import {SciColumnLike} from '../table.model';
 
+export const TABLE_OVERLAY_SELECTOR = 'sci-table-overlay';
+
 @Component({
-  selector: 'sci-table-overlay',
+  selector: TABLE_OVERLAY_SELECTOR,
   imports: [
     SciSplitterComponent,
   ],
@@ -47,5 +49,11 @@ export class TableOverlayComponent<T> {
 
   protected onResizeAuto(column: SciColumnLike<T>): void {
     this.autoResize.emit(column);
+  }
+
+  protected onMouseLeave(): void {
+    // Reset hovered item on mouse leave, because hovering a splitter prevents the reset.
+    // This makes sure the row actions disappear when leaving a splitter for another element than a row (i.e. the header)
+    this.table().setHoveredItem(undefined);
   }
 }
