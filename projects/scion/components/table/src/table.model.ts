@@ -34,10 +34,11 @@ export interface SciTableDescriptor<T, ID> {
    */
   name?: MaybeSignal<string>;
   sortable?: MaybeSignal<boolean>;
-  filterable?: MaybeSignal<boolean>;
   resizable?: MaybeSignal<boolean>;
-  showHeader?: MaybeSignal<boolean>;
-  selectionType?: MaybeSignal<'single' | 'multi' | 'disabled'>;
+  showColumnFilters?: MaybeSignal<boolean>;
+  showColumnHeaders?: MaybeSignal<boolean>;
+  filter?: ((row: T, text: string) => boolean) | boolean; // quickFilter, speedSearch
+  selectionMode?: MaybeSignal<'single' | 'multi' | 'disabled'>;
   /**
    * Row actions shown at the end of a row.
    *

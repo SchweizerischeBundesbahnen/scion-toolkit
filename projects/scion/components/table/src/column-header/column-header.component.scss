@@ -4,11 +4,14 @@
 
   > div.header {
     display: grid;
-    grid-template-rows: var(--sci-table-header-height);
+    grid-auto-rows: var(--sci-table-header-height);
+
+    &:has(> *) {
+      border-top: var(--sci-table-border-size) solid var(--sci-table-border-color);
+    }
 
     &.filterable {
       border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
-      grid-template-rows: var(--sci-table-header-height) 28px
     }
 
     > button.column-sort {
@@ -16,7 +19,6 @@
       box-sizing: border-box;
       padding-inline: .5em;
       border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
-      border-right: var(--sci-table-border-size) solid var(--sci-table-border-color);
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;

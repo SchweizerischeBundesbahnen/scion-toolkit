@@ -112,5 +112,8 @@ export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: boolean, context: SciCellContext<T, boolean>) => boolean) | boolean;
+
+  // TODO: Label Provider umsetzen
+  labelProvider?: (value: boolean) => Translatable;
 }
 export type SciColumnDescriptors<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;

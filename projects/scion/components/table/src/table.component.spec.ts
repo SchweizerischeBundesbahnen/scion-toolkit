@@ -515,7 +515,7 @@ describe('Table', () => {
 
       it('should set active item and replace selection on row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table({data, selectionType: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table({data, selectionMode: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -531,7 +531,7 @@ describe('Table', () => {
 
       it('should navigate with arrow up and down', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table({data, selectionType: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table({data, selectionMode: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -558,7 +558,7 @@ describe('Table', () => {
 
       it('should keep selection on control/meta arrow', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table({data, selectionType: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table({data, selectionMode: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -590,7 +590,7 @@ describe('Table', () => {
 
       it('should not extend selection on shift arrow', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table({data, selectionType: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table({data, selectionMode: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -621,8 +621,8 @@ describe('Table', () => {
         const model = table({
           data,
           itemSize: 20,
-          showHeader: false,
-          selectionType: 'single',
+          showColumnHeaders: false,
+          selectionMode: 'single',
         }, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],

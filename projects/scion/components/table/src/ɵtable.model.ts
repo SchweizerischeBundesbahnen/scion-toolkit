@@ -41,11 +41,11 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly itemSize: Signal<number>;
   public readonly overscan: Signal<number>;
   public readonly name: Signal<string | undefined>;
+  public readonly showColumnFilters: Signal<boolean>;
+  public readonly showColumnHeaders: Signal<boolean>;
   public readonly sortable: Signal<boolean>;
-  public readonly filterable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectionType: Signal<'single' | 'multi' | 'disabled'>;
-  public readonly headerVisible: Signal<boolean>;
   public readonly id = UUID.randomUUID();
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
@@ -150,10 +150,10 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     this.overscan = coerceSignal(descriptor.overscan ?? 3);
     this.name = coerceSignal(descriptor.name, {coerceUndefined: true});
     this.sortable = coerceSignal(descriptor.sortable ?? true);
-    this.filterable = coerceSignal(descriptor.filterable ?? true);
-    this.headerVisible = coerceSignal(descriptor.showHeader ?? true);
+    this.showColumnFilters = coerceSignal(descriptor.showColumnFilters ?? true);
+    this.showColumnHeaders = coerceSignal(descriptor.showColumnHeaders ?? true);
     this.resizable = coerceSignal(descriptor.resizable ?? true);
-    this.selectionType = coerceSignal(descriptor.selectionType ?? 'multi');
+    this.selectionType = coerceSignal(descriptor.selectionMode ?? 'multi');
 
     this.tableStorage = descriptor.tableStorage ?? new DefaultSciTableStorage();
 
@@ -258,7 +258,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   }
 
   public filter(columnName: string, text: string | number | boolean | null): void {
-    if (!this.filterable()) {
+    if (!this.showColumnFilters()) {
       return;
     }
 
@@ -337,7 +337,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
       filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
       sort: typeof config.sort === 'function' ? config.sort : defaultSort,
       sortable: computed(() => sortable && this.sortable()),
-      filterable: computed(() => filterable && this.filterable()),
+      filterable: computed(() => filterable && this.showColumnFilters()),
       resizable: computed(() => (config.resizable ?? true) && this.resizable()),
       header: coerceSignal(config.header ?? ''),
       absoluteWidth: storedColumn?.width,

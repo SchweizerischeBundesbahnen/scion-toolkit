@@ -1,6 +1,6 @@
 <div class="horizontal-viewport e2e-horizontal-viewport" #horizontalViewport sciScrollable>
   <div class="horizontal-content">
-    <header #header [class.hidden]="!sciTable().headerVisible()">
+    <header #header>
       @for (column of sciTable().columns(); track column.name) {
         <sci-column-header [column]="column" />
       }

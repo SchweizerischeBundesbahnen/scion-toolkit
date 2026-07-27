@@ -33,8 +33,12 @@
         grid-column: 1 / -1;
         grid-row: 1; // The sci-table-overlay positioning requires all grid items to be positioned.
 
-        &.hidden {
-          visibility: hidden;
+        > sci-column-header {
+          border-left: var(--sci-table-border-size) solid var(--sci-table-border-color);
+
+          &:last-child {
+            border-right: var(--sci-table-border-size) solid var(--sci-table-border-color);
+          }
         }
       }
 

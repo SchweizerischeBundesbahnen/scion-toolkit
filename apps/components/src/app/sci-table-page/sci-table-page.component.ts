@@ -108,11 +108,11 @@ export default class SciTablePageComponent {
 
   protected tableConfig: Omit<SciTableDescriptor<Company, string>, 'data'> = {
     name: 'companies',
-    showHeader: computed(() => this.settings().showHeader),
+    showColumnHeaders: computed(() => this.settings().showHeader),
     sortable: computed(() => this.settings().sortable),
-    filterable: computed(() => this.settings().filterable),
+    showColumnFilters: computed(() => this.settings().filterable),
     resizable: computed(() => this.settings().resizable),
-    selectionType: computed(() => this.settings().selectionType as SelectionType),
+    selectionMode: computed(() => this.settings().selectionType as SelectionType),
     identity: company => company.dataId,
     rowActions: (company, toolbar) => {
       toolbar.addToolbarButton({
@@ -178,6 +178,7 @@ export default class SciTablePageComponent {
         header: 'ID',
         value: company => company.dataId,
         name: 'id',
+        filter: false,
       })
       .addNumberColumn({
         header: 'Code',

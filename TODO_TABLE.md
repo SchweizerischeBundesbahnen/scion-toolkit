@@ -30,6 +30,7 @@
   - Sollen die row actions nur on hover kommen oder auch beim active item?
     - Variante: Wie Intellij (Commit View) beide, hover und active item.
 - Global table actions?
+  - Kommt noch, aber nicht basis funktionalität
 - Boolean Column
   - Boolean filter so ok?
   - True-False values icons ok?
@@ -37,7 +38,23 @@
   - Sortier-Icons werden noch gebraucht.
   - Filter icon indicator wenn gefiltert ist?
   - Muss die header Höhe via config anpassbar sein, oder sollte die immer gleich sein? (filter / header labels)
+    - Evtl. zwei Ausprägungen (compact / normal). Nicht x verschiedene Varianten
 - Resizing
   - Sollten zuerst die "fraction" columns kleiner werden und erst danach geschoben während dem Resizing?
   - Kann auch in der Tabelle gedragged werden?
   - Ist resizing auf einer row = eine Interaction mit der row, d.h sollte sie selektiert werden beim resizing?
+
+
+## Entscheidungen
+
+- selection über mehrere pages bei slow data source - ok
+- toolbar api so beibehalten - kein extra api
+- checkboxes bei select machen je nach Fall schon Sinn. evtl. mit Tree angehen
+  - Für den Moment so lassen wies ist.
+- row actions nur bei hover
+- true false All okay, icons in tabelle
+  - Übersetzung via labelprovider auf boolean column
+- beim verschieben von spalten soll alles kleiner werden bis min-width erreicht ist
+- vertikale linie bei hover anzeigen
+- Nur Spaltenbreite wird gespeichert im Moment.
+- Globaler Filter wäre cool, Marc und Etienne schauen, ob das noch möglich wäre, für den initial Release.
