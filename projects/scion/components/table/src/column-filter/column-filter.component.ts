@@ -49,26 +49,26 @@ export class ColumnFilterComponent<T> {
     });
 
     this.query.valueChanges.pipe(
-      combineLatestWith(toObservable(this._table), toObservable(this.column)),
+      combineLatestWith(toObservable(this._table), toObservable(computed(() => this.column().name)), toObservable(computed(() => this.column().type))),
       takeUntilDestroyed(),
       debounceTime(200),
-    ).subscribe(([value, table, column]) => {
+    ).subscribe(([value, table, name, type]) => {
       const text = typeof value === 'string' ? value.trim() : value;
 
       if (text === '' || text === null) {
-        table.filter(column.name, null);
+        table.filter(name, null);
         return;
       }
 
-      switch (column.type) {
+      switch (type) {
         case 'boolean':
-          table.filter(column.name, text === 'true');
+          table.filter(name, text === 'true');
           break;
         case 'number':
-          table.filter(column.name, +text);
+          table.filter(name, +text);
           break;
         default:
-          table.filter(column.name, text);
+          table.filter(name, text);
           break;
       }
     });
