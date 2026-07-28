@@ -43,7 +43,7 @@ export function sort(companies: Company[], sortCriteria: SciSortCriterion[]): Co
   });
 }
 
-export function filter(companies: Company[], filterCriteria: SciColumnFilter[]): Company[] {
+export function filter(companies: Company[], filterCriteria: SciColumnFilter[], globalFilter?: string): Company[] {
   let newCompanies = companies;
   for (const filterCriterion of filterCriteria) {
     const query = filterCriterion.text.toString().toLocaleLowerCase();
@@ -79,6 +79,13 @@ export function filter(companies: Company[], filterCriteria: SciColumnFilter[]):
       }
     });
   }
+
+  if (globalFilter) {
+    newCompanies = newCompanies.filter(company => {
+      return Object.values(company).some(value => (value as object | null)?.toString().toLocaleLowerCase().includes(globalFilter.toLocaleLowerCase()));
+    });
+  }
+
   return newCompanies;
 }
 

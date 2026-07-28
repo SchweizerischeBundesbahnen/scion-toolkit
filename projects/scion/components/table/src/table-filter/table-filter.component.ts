@@ -1,7 +1,7 @@
-import {Component, effect, inject, signal} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {SciIconComponent} from '@scion/components/icon';
-import {form} from '@angular/forms/signals';
 import {FormsModule} from '@angular/forms';
+import {UUID} from '@scion/toolkit/uuid';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 
 @Component({
@@ -14,17 +14,15 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
   styleUrl: './table-filter.component.scss',
 })
 export class TableFilterComponent {
-  private readonly _table = inject(ɵSCI_TABLE);
+  protected readonly table = inject(ɵSCI_TABLE);
 
-  protected readonly filter = signal<string>('');
-
-  constructor() {
-    effect(() => {
-      this._table().filter(this.filter());
-    });
-  }
+  protected readonly id = `table-filter-${UUID.randomUUID().substring(0, 8)}`;
 
   protected reset(): void {
-    this.filter.set('');
+    this.table().filter('');
+  }
+
+  protected onChange(filter: string): void {
+    this.table().filter(filter);
   }
 }
