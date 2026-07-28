@@ -78,10 +78,10 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     computation: () => undefined as ID | undefined,
   });
 
-  /**
-   * Like _activeItem but also changes on row hover.
-   */
-  private readonly _hoveredItem = linkedSignal(() => this._activeItem());
+  private readonly _hoveredItem = linkedSignal({
+    source: () => this.criteria(),
+    computation: () => undefined as ID | undefined,
+  });
 
   /**
    * True, if all rows are selected.
@@ -140,7 +140,6 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly filterCriteria = this._filterCriteria.asReadonly();
   public readonly globalFilter = this._globalFilter.asReadonly();
   public readonly activeItem = this._activeItem.asReadonly();
-  public readonly hoveredItem = this._hoveredItem.asReadonly();
   public readonly selectedItems = this._selectedItems.asReadonly();
   public readonly allSelected = this._allSelected.asReadonly();
   public readonly visibleRowCount = this._visibleRowCount.asReadonly();

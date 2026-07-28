@@ -39,10 +39,10 @@
         grid-row: 1; // The sci-table-overlay positioning requires all grid items to be positioned.
 
         > sci-column-header {
-          border-left: var(--sci-table-border-size) solid var(--sci-table-border-color);
+          border-right: var(--sci-table-border-size) solid var(--sci-table-border-color);
 
-          &:last-child {
-            border-right: var(--sci-table-border-size) solid var(--sci-table-border-color);
+          &:first-child {
+            border-left: var(--sci-table-border-size) solid var(--sci-table-border-color);
           }
         }
       }
@@ -124,5 +124,4 @@
       right: max(calc(100% - var(--ɵsci-table-width)), 0px);
     }
   }
-
 }
