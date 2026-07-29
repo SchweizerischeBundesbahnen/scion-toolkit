@@ -14,9 +14,11 @@ import {SciTableFactory} from './table.factory';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciTable} from './ɵtable.model';
 
-export function table<T>(data: Signal<T[]>, factoryFn: (table: SciTableFactory<T>) => void, options?: {injector?: Injector}): SciTable<T>;
-export function table<T, ID = T>(descriptor: SciTableDescriptor<T, ID>, factoryFn: (table: SciTableFactory<T>) => void, options?: {injector?: Injector}): SciTable<T, ID>;
-export function table<T, ID = T>(dataOrDescriptor: Signal<T[]> | SciTableDescriptor<T, ID>, factoryFn: (table: SciTableFactory<T>) => void, options?: {injector?: Injector}): SciTable<T, ID> {
+type TableFactoryFn<T> = (table: SciTableFactory<T>) => void;
+
+export function table<T>(name: `table:${string}`, data: Signal<T[]>, factoryFn: TableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T>;
+export function table<T, ID = T>(descriptor: SciTableDescriptor<T, ID>, factoryFn: TableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T, ID>;
+export function table<T, ID = T>(arg1: `table:${string}` | SciTableDescriptor<T, ID>, arg2: Signal<T[]> | TableFactoryFn<T>, arg3?: TableFactoryFn<T> | {injector?: Injector}, options?: {injector?: Injector}): SciTable<T, ID> {
   assertNotInReactiveContext(table, 'Call table in a non-reactive (non-tracking) context, such as within the untracked() function.');
   if (!options?.injector) {
     assertInInjectionContext(table);
@@ -24,15 +26,16 @@ export function table<T, ID = T>(dataOrDescriptor: Signal<T[]> | SciTableDescrip
 
   const injector = options?.injector ?? inject(Injector);
   const factory = new ɵSciTableFactory<T>();
+  const factoryFn = isSignal(arg2) ? arg3 as TableFactoryFn<T> : arg2;
 
   effect(() => {
     factory.columns.set([]);
     factoryFn(factory);
   }, {injector});
 
-  if (isSignal(dataOrDescriptor)) {
-    return new ɵSciTable(factory, {data: dataOrDescriptor});
+  if (typeof arg1 === 'object') {
+    return new ɵSciTable(factory, arg1);
   }
 
-  return new ɵSciTable(factory, dataOrDescriptor);
+  return new ɵSciTable(factory, {name: arg1, data: arg2 as Signal<T[]>});
 }

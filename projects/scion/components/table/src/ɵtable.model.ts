@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, EffectCleanupRegisterFn, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, EffectCleanupRegisterFn, inject, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion, SciTableRequest} from './table-data-source';
 import {ColumnType, RowActionFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {coerceObservable, rangeInclusive} from './common';
-import {DefaultSciTableStorage, SciTableStorage} from './table-storage';
+import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciColumnDescriptors} from './table.factory';
 import {UUID} from '@scion/toolkit/uuid';
 import {coerceSignal} from '@scion/components/common';
@@ -31,22 +31,23 @@ export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSc
 
 export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
+  public readonly tableStorage = inject(SCI_TABLE_STORAGE);
+
+  public readonly instanceId = UUID.randomUUID();
+  public readonly name: `table:${string}`;
   public readonly columns: WritableSignal<SciColumnLike<T>[]>;
   public readonly dataLoaderFn: SciDataLoaderFn<T>;
-  public readonly tableStorage: SciTableStorage;
   public readonly identity?: (item: T) => ID;
   public readonly rowActions?: RowActionFn<T>;
   public readonly rowName?: (item: T) => string | string[] | undefined;
 
   public readonly itemSize: Signal<number>;
   public readonly overscan: Signal<number>;
-  public readonly name: Signal<string | undefined>;
   public readonly showColumnFilters: Signal<boolean>;
   public readonly showColumnHeaders: Signal<boolean>;
   public readonly sortable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectionType: Signal<'single' | 'multi' | 'disabled'>;
-  public readonly id = UUID.randomUUID();
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciColumnFilter[]>([]);
@@ -147,16 +148,14 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly scrollTop = this._scrollTop.asReadonly();
 
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T, ID>) {
+    this.name = descriptor.name;
     this.itemSize = coerceSignal(descriptor.itemSize ?? 30);
     this.overscan = coerceSignal(descriptor.overscan ?? 3);
-    this.name = coerceSignal(descriptor.name, {coerceUndefined: true});
     this.sortable = coerceSignal(descriptor.sortable ?? true);
     this.showColumnFilters = coerceSignal(descriptor.showColumnFilters ?? true);
     this.showColumnHeaders = coerceSignal(descriptor.showColumnHeaders ?? true);
     this.resizable = coerceSignal(descriptor.resizable ?? true);
     this.selectionType = coerceSignal(descriptor.selectionMode ?? 'multi');
-
-    this.tableStorage = descriptor.tableStorage ?? new DefaultSciTableStorage();
 
     this.rowActions = descriptor.rowActions;
     this.rowName = descriptor.rowName;
@@ -321,7 +320,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
         columns: columns.map(col => ({name: col.name, width: col.absoluteWidth})),
       } satisfies StoredTable;
 
-      void untracked(() => this.tableStorage.store(this.storageKey, JSON.stringify(storedTable)));
+      void untracked(() => this.tableStorage.store(this.name, JSON.stringify(storedTable)));
     });
   }
 
@@ -354,10 +353,6 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
       minWidth: config.minWidth ?? 100,
       maxWidth: config.maxWidth,
     } as SciColumnLike<T>;
-  }
-
-  private get storageKey(): string {
-    return `sci-table-${this.name()}`;
   }
 
   private indexById(id: ID | undefined, rowsByIndex: Map<number, SciRow<T, ID>>): number {
@@ -404,7 +399,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   }
 
   private async readTableStorage(): Promise<void> {
-    const saved = await this.tableStorage.load(this.storageKey);
+    const saved = await this.tableStorage.load(this.name);
     if (!saved) {
       this._storedTable.set({columns: []});
       return;

@@ -9,7 +9,7 @@
     text-align: right;
   }
 
-  &:not([data-type="template"], [data-type="component"]) > .cell {
+  &:not([data-type="template"], [data-type="component"]) {
     padding-inline: var(--sci-table-cell-horizontal-padding);
   }
 

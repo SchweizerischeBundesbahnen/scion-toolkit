@@ -107,7 +107,7 @@ export default class SciTablePageComponent {
   private _slowDataSource = slowDataSource();
 
   protected tableConfig: Omit<SciTableDescriptor<Company, string>, 'data'> = {
-    name: 'companies',
+    name: 'table:companies',
     showColumnHeaders: computed(() => this.settings().showHeader),
     sortable: computed(() => this.settings().sortable),
     showColumnFilters: computed(() => this.settings().filterable),

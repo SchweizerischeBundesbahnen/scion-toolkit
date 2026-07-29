@@ -26,7 +26,6 @@ import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 import {TABLE_OVERLAY_SELECTOR, TableOverlayComponent} from './table-overlay/table-overlay.component';
 import {SciTextPipe} from '@scion/components/text';
-import {TableHeaderComponent} from './table-header/table-header.component';
 
 @Component({
   selector: 'sci-table',
@@ -40,7 +39,7 @@ import {TableHeaderComponent} from './table-header/table-header.component';
     '[style.--ɵsci-table-columns]': 'columnWidths()',
     '[style.--ɵsci-table-item-size]': '`${sciTable().itemSize()}px`',
     '[style.--ɵsci-table-scrolling]': 'scrolling() ? `true` : null',
-    '[style.--ɵsci-table-toolbar-offset]': '`${toolbarOffset()}px`',
+    '[style.--ɵsci-table-toolbar-offset]': '`${rowActionToolbarOffset()}px`',
     '[style.--ɵsci-table-width]': 'tableWidth()',
   },
   imports: [
@@ -52,7 +51,6 @@ import {TableHeaderComponent} from './table-header/table-header.component';
     TableRowComponent,
     TableOverlayComponent,
     SciTextPipe,
-    TableHeaderComponent,
   ],
   providers: [
     {
@@ -86,8 +84,8 @@ export class SciTableComponent<T, ID = T> {
   protected readonly headerHeight = computed(() => this.headerDimension()?.clientHeight ?? 0);
   protected readonly virtualScrollHeight = computed(() => `${(this.sciTable().totalCount() ?? 0) * this.sciTable().itemSize()}px`);
 
-  protected readonly toolbarId = computed(() => `toolbar:${this.sciTable().id}` as const);
-  protected readonly toolbarOffset = computed(() => {
+  protected readonly rowActionToolbarName = computed(() => `toolbar:${this.sciTable().instanceId}` as const);
+  protected readonly rowActionToolbarOffset = computed(() => {
     const offset = this.sciTable().hoveredIndex() * this.sciTable().itemSize();
     return offset + this.headerHeight() - this.sciTable().scrollTop();
   });
@@ -139,6 +137,11 @@ export class SciTableComponent<T, ID = T> {
     this.sciTable().setHoveredItem(undefined);
   }
 
+  protected onRowActionsMouseWheel(event: WheelEvent): void {
+    event.preventDefault();
+    this.onOverlayScrollBy(event.deltaY);
+  }
+
   /**
    * Freeze columns on first resize.
    * This prevents other column widths being changed while dragging.
@@ -185,7 +188,7 @@ export class SciTableComponent<T, ID = T> {
    */
   private setupToolbar(): void {
     effect(onCleanup => {
-      const id = this.toolbarId();
+      const id = this.rowActionToolbarName();
       const menu = untracked(() => contributeMenu(id, toolbar => {
         const row = this.hoveredRow();
         if (row?.item) {
@@ -248,6 +251,7 @@ export class SciTableComponent<T, ID = T> {
           subscribeIn(fn => this._zone.runOutsideAngular(fn)),
         ).subscribe(() => {
           this.sciTable().setScrollTop(element.scrollTop);
+          this.sciTable().setHoveredItem(undefined);
         });
 
         onCleanup(() => subscription.unsubscribe());
@@ -309,5 +313,9 @@ export class SciTableComponent<T, ID = T> {
     else if (focusedRowBottom > viewportBottom) {
       viewport.scrollTop = focusedRowBottom - viewportHeight;
     }
+  }
+
+  protected onOverlayScrollBy(deltaY: number): void {
+    this._verticalViewport().nativeElement.scrollBy({top: deltaY});
   }
 }

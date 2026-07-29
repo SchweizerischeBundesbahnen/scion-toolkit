@@ -13,6 +13,7 @@ import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
 import {UUID} from '@scion/toolkit/uuid';
+import {SciFilterFieldComponent} from '../../../../../projects/scion/components.internal/filter-field/src/filter-field.component';
 
 const data = signal(new Array(100_000).fill(0).map((_, i) => ({
   ...companies[i % companies.length]!,
@@ -27,6 +28,7 @@ const data = signal(new Array(100_000).fill(0).map((_, i) => ({
     SciTableComponent,
     FormsModule,
     FormField,
+    SciFilterFieldComponent,
   ],
 })
 export default class SciTablePageComponent {
@@ -42,7 +44,7 @@ export default class SciTablePageComponent {
   protected form = form(this.settings);
 
   protected tableConfig: Omit<SciTableDescriptor<Company, string>, 'data'> = {
-    name: 'companies',
+    name: 'table:companies-alt',
     showColumnHeaders: computed(() => this.settings().showHeader),
     sortable: computed(() => this.settings().sortable),
     showColumnFilters: computed(() => this.settings().filterable),

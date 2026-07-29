@@ -10,6 +10,9 @@ export const TABLE_OVERLAY_SELECTOR = 'sci-table-overlay';
   imports: [
     SciSplitterComponent,
   ],
+  host: {
+    '(wheel)': 'onMouseWheel($event)',
+  },
   templateUrl: './table-overlay.component.html',
   styleUrl: './table-overlay.component.scss',
 })
@@ -20,6 +23,7 @@ export class TableOverlayComponent<T> {
   public readonly resizeStart = output<SciColumnLike<T>>();
   public readonly resize = output<{width: number; column: SciColumnLike<T>}>();
   public readonly autoResize = output<SciColumnLike<T>>();
+  public readonly scrollBy = output<number>();
 
   protected table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
 
@@ -55,5 +59,10 @@ export class TableOverlayComponent<T> {
     // Reset hovered item on mouse leave, because hovering a splitter prevents the reset.
     // This makes sure the row actions disappear when leaving a splitter for another element than a row (i.e. the header)
     this.table().setHoveredItem(undefined);
+  }
+
+  protected onMouseWheel(event: WheelEvent): void {
+    event.preventDefault();
+    this.scrollBy.emit(event.deltaY);
   }
 }

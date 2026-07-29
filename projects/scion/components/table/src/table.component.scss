@@ -24,7 +24,6 @@
       display: grid;
       grid-template-columns: var(--ɵsci-table-columns);
       grid-template-rows: auto 1fr;
-      position: relative; // positioning context for sci-column-resize.
       overflow: hidden;
       flex: none;
 
@@ -96,24 +95,19 @@
     > .row-actions {
       position: sticky; // actions should always stick to the right of the viewport.
       top: var(--ɵsci-table-toolbar-offset);
-      right: var(--sci-table-cell-horizontal-padding);
       height: var(--ɵsci-table-item-size); // match the height of row elements.
       width: 0; // should not take up space next to the table.
       display: flex; // vertically position actions in the middle of the row.
       align-items: center;
       justify-content: flex-end;
 
-      // Hide toolbar while scrolling.
-      @container style(--ɵsci-table-scrolling: true) {
-        visibility: hidden; // preserve space to avoid layout shift.
-      }
-
       > sci-toolbar {
+        margin-right: var(--sci-table-cell-horizontal-padding);
         background-color: var(--sci-table-background-color);
         border-radius: var(--sci-corner);
       }
     }
-    }
+  }
 
   > sci-scrollbar {
     @include sci-scrollbar.scrollbar-position();

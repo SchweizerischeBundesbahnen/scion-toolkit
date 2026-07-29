@@ -1,4 +1,3 @@
-<sci-table-header />
 <div class="horizontal-viewport e2e-horizontal-viewport" #horizontalViewport sciScrollable>
   <div class="horizontal-content">
     <header #header>
@@ -18,11 +17,17 @@
         </div>
       </div>
     </div>
-    <sci-table-overlay [columnWidths]="absoluteColumnWidths()" (resizeStart)="onResizeStart()" (autoResize)="onResizeAuto($event)" (resize)="onResize($event)" />
+    <sci-table-overlay [columnWidths]="absoluteColumnWidths()"
+                       (resizeStart)="onResizeStart()"
+                       (autoResize)="onResizeAuto($event)"
+                       (resize)="onResize($event)"
+                       (scrollBy)="onOverlayScrollBy($event)" />
   </div>
-  <div class="row-actions" (mouseleave)="onRowActionsMouseLeave($event)">
-    <sci-toolbar [name]="toolbarId()" />
-  </div>
+  @if (sciTable().rowActions) {
+    <div class="row-actions" (mouseleave)="onRowActionsMouseLeave($event)" (wheel)="onRowActionsMouseWheel($event)">
+      <sci-toolbar [name]="rowActionToolbarName()" />
+    </div>
+  }
 </div>
 
 @if (nativeScrollbarTrackSizeProvider.trackSize() !== null) {

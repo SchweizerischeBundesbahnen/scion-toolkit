@@ -10,10 +10,9 @@
 
 import {Signal, TemplateRef} from '@angular/core';
 import {MaybeAsync} from './common';
-import {SciDataLoaderFn, SciColumnFilter, SciSortCriterion} from './table-data-source';
+import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
-import {SciTableStorage} from './table-storage';
 
 export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
 export type SelectionType = 'single' | 'multi' | 'disabled';
@@ -22,6 +21,10 @@ export type RowActionFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 export interface SciTableDescriptor<T, ID> {
   data: Signal<T[]> | SciDataLoaderFn<T>;
   /**
+   * Name of the table, used to save and restore view to localStorage.
+   */
+  name: `table:${string}`;
+  /**
    * Size of row items in px. Defaults to 30px.
    */
   itemSize?: MaybeSignal<number>;
@@ -29,15 +32,10 @@ export interface SciTableDescriptor<T, ID> {
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
   overscan?: MaybeSignal<number>;
-  /**
-   * Name of the table, used to save and restore view to localStorage.
-   */
-  name?: MaybeSignal<string>;
   sortable?: MaybeSignal<boolean>;
   resizable?: MaybeSignal<boolean>;
   showColumnFilters?: MaybeSignal<boolean>;
   showColumnHeaders?: MaybeSignal<boolean>;
-  filter?: ((row: T, text: string) => boolean) | boolean; // quickFilter, speedSearch
   selectionMode?: MaybeSignal<'single' | 'multi' | 'disabled'>;
   /**
    * Row actions shown at the end of a row.
@@ -57,7 +55,6 @@ export interface SciTableDescriptor<T, ID> {
    *
    */
   rowActions?: RowActionFn<T>;
-  tableStorage?: SciTableStorage;
   identity?: (item: T) => ID;
   /**
    * Adds name as part attribute to cell element.
@@ -88,6 +85,8 @@ export interface SciTable<T, ID = T> {
    */
   readonly filterCriteria: Signal<SciColumnFilter[]>;
 
+  readonly globalFilter: Signal<string | undefined>;
+
   /**
    * Currently active item id.
    */
@@ -107,7 +106,7 @@ export interface SciTable<T, ID = T> {
   sort(columnName: string, multi: boolean): void;
   resetSort(): void;
   filter(text: string): void;
-  filter(text: string | number | boolean | null, options?: {columnName: string}): void;
+  filter(text: string | number | boolean | null, options: {columnName: string}): void;
   resetFilter(): void;
   dispose(): void;
 }

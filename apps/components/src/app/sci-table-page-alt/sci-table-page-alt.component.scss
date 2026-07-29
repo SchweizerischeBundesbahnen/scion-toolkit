@@ -6,7 +6,12 @@
   > main {
     display: flex;
     flex-direction: column;
-    gap: 1em;
+    gap: 0.5em;
+
+    > div.table-header {
+      display: flex;
+      justify-content: flex-end;
+    }
 
     > sci-table {
       flex: 1;

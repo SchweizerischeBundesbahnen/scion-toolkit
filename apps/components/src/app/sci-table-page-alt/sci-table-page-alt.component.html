@@ -1,4 +1,7 @@
 <main>
+  <div class="table-header">
+    <sci-filter-field [ngModel]="table.globalFilter()" (ngModelChange)="table.filter($event)"></sci-filter-field>
+  </div>
   <sci-table [table]="table" />
 </main>
 
