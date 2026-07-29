@@ -65,7 +65,9 @@ export class TableSelectionService<T, ID = T> {
       return;
     }
 
-    this.addItemToSelection(this._table().rowsByIndex().get(focusedIndex - 1)?.id, event as KeyboardEvent);
+    // Also add the current focused item on shift+arrowUp.
+    this.addItemsToSelection(this._table().rowsByIndex().get(focusedIndex)?.id, event as KeyboardEvent);
+    this.addItemsToSelection(this._table().rowsByIndex().get(focusedIndex - 1)?.id, event as KeyboardEvent);
   }
 
   public onArrowDown(event: Event): void {
@@ -78,11 +80,13 @@ export class TableSelectionService<T, ID = T> {
       return;
     }
 
+    // Also add the current focused item on shift+arrowDown.
+    this.addItemsToSelection(table.rowsByIndex().get(focusedIndex)?.id, event as KeyboardEvent);
     // If the focusedIndex was not found (-1) select the first item (0).
-    this.addItemToSelection(table.rowsByIndex().get(focusedIndex + 1)?.id, event as KeyboardEvent);
+    this.addItemsToSelection(table.rowsByIndex().get(focusedIndex + 1)?.id, event as KeyboardEvent);
   }
 
-  public onSpace(event: Event): void {
+  public onControlSpace(event: Event): void {
     event.preventDefault();
     if (this._table().selectionType() === 'disabled') {
       return;
@@ -120,7 +124,7 @@ export class TableSelectionService<T, ID = T> {
     return table.totalCount() === undefined ? table.visibleRowCount() : table.totalCount()!;
   }
 
-  private addItemToSelection(item: ID | undefined, event: KeyboardEvent): void {
+  private addItemsToSelection(item: ID | undefined, event: KeyboardEvent): void {
     const table = this._table();
 
     if (item !== undefined) {

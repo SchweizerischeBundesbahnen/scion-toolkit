@@ -481,14 +481,14 @@ describe('Table', () => {
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number, number>);
 
-        selectionService.onSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
+        selectionService.onControlSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
         expect(model.selectedItems()).toEqual(new Set());
 
         selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
-        selectionService.onSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
+        selectionService.onControlSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
         expect(model.selectedItems()).toEqual(new Set());
 
-        selectionService.onSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
+        selectionService.onControlSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
         expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
       });
 

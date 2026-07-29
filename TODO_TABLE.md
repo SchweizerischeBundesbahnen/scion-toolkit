@@ -3,9 +3,6 @@
 - Table Model Interface aufräumen und nur die sachen exposen, die es auch wirklich braucht
 - Column Names / Table Name. Was brauchen wir?
 - Autoresize anschauen
-- Selektion
-  - Shift+Arrow sollte active row auch selektieren
-  - Ctrl+Space für toggle
 
 ## 2. Prio
 - Native Scrollbar overlaps mit header auf MacOS
