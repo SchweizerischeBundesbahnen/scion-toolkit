@@ -11,12 +11,12 @@
 import {MaybeAsync} from './common';
 
 export interface SciColumnFilter {
-  columnName: string;
+  columnName: `column:${string}`;
   text: string | boolean | number;
 }
 
 export interface SciSortCriterion {
-  columnName: string;
+  columnName: `column:${string}`;
   direction: 'asc' | 'desc';
 }
 

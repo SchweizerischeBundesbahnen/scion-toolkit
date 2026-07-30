@@ -12,15 +12,13 @@ import {ChangeDetectionStrategy, Component, computed, effect, inject, input} fro
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciColumnLike} from '../table.model';
-import {combineLatestWith, debounceTime, of} from 'rxjs';
+import {combineLatestWith, debounceTime} from 'rxjs';
 import {ɵSCI_TABLE} from '../ɵtable.model';
-import {coerceObservable} from '../common';
-import {AsyncPipe} from '@angular/common';
 import {SciIconComponent} from '../../../icon/src/icon.component';
 
 @Component({
   selector: 'sci-column-filter',
-  imports: [ReactiveFormsModule, AsyncPipe, SciIconComponent],
+  imports: [ReactiveFormsModule, SciIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-filter.component.html',
   styleUrl: './column-filter.component.scss',
@@ -31,16 +29,6 @@ export class ColumnFilterComponent<T> {
 
   protected readonly query = inject(FormBuilder).control<string | boolean | number>('');
   private readonly _table = inject(ɵSCI_TABLE);
-
-  protected readonly filterValues = computed(() => {
-    const column = this.column();
-
-    if (column.type === 'boolean' || !column.filterValues) {
-      return of(undefined);
-    }
-
-    return coerceObservable(column.filterValues);
-  });
 
   constructor() {
     effect(() => {

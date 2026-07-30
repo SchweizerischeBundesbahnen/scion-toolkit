@@ -25,11 +25,11 @@ export class TableSelectionService<T, ID = T> {
 
     table.setActiveItem(id);
 
-    if (id === undefined || table.selectionType() === 'disabled') {
+    if (id === undefined || !table.selectable()) {
       return;
     }
 
-    if (table.selectionType() === 'single') {
+    if (table.selectable() === 'single') {
       this.toggleSelectedItem(id);
       return;
     }
@@ -88,7 +88,7 @@ export class TableSelectionService<T, ID = T> {
 
   public onControlSpace(event: Event): void {
     event.preventDefault();
-    if (this._table().selectionType() === 'disabled') {
+    if (!this._table().selectable()) {
       return;
     }
 
@@ -104,7 +104,7 @@ export class TableSelectionService<T, ID = T> {
     event.preventDefault();
 
     const table = this._table();
-    if (table.selectionType() === 'single') {
+    if (table.selectable() === 'single') {
       return;
     }
 
@@ -131,11 +131,11 @@ export class TableSelectionService<T, ID = T> {
       table.setActiveItem(item);
     }
 
-    if (table.selectionType() === 'disabled' || item === undefined) {
+    if (!table.selectable() || item === undefined) {
       return;
     }
 
-    if (event.shiftKey && table.selectionType() === 'multi') {
+    if (event.shiftKey && table.selectable() === 'multi') {
       table.updateSelectedItems(ids => new Set(ids).add(item));
     }
     else if (!event.ctrlKey && !event.metaKey) { // Don't update selected items at all when control is pressed.
@@ -150,7 +150,7 @@ export class TableSelectionService<T, ID = T> {
         next.delete(id);
       }
       else {
-        if (this._table().selectionType() === 'single') {
+        if (this._table().selectable() === 'single') {
           next.clear();
         }
         next.add(id);

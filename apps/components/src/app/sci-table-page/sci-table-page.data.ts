@@ -15,19 +15,19 @@ export function sort(companies: Company[], sortCriteria: SciSortCriterion[]): Co
     for (const sortCriterion of sortCriteria) {
       const ascendingComparison = (() => {
         switch (sortCriterion.columnName) {
-          case 'id':
+          case 'column:id':
             return a.dataId.localeCompare(b.dataId);
-          case 'code':
+          case 'column:code':
             return a.code - b.code;
-          case 'abbreviation':
+          case 'column:abbreviation':
             return a.abbreviation.localeCompare(b.abbreviation);
-          case 'name':
+          case 'column:name':
             return a.name.localeCompare(b.name);
-          case 'railwayUndertaking':
+          case 'column:railwayUndertaking':
             return Number(a.railwayUndertaking) - Number(b.railwayUndertaking);
-          case 'validFrom':
+          case 'column:validFrom':
             return a.validFrom.localeCompare(b.validFrom);
-          case 'validTo':
+          case 'column:validTo':
             return a.validTo.localeCompare(b.validTo);
           default:
             return 0;
@@ -49,15 +49,15 @@ export function filter(companies: Company[], filterCriteria: SciColumnFilter[], 
     const query = filterCriterion.text.toString().toLocaleLowerCase();
     newCompanies = newCompanies.filter(company => {
       switch (filterCriterion.columnName) {
-        case 'id':
+        case 'column:id':
           return company.dataId.toLocaleLowerCase().includes(query);
-        case 'code':
+        case 'column:code':
           return company.code.toString().includes(query);
-        case 'abbreviation':
+        case 'column:abbreviation':
           return company.abbreviation.toLocaleLowerCase().includes(query);
-        case 'name':
+        case 'column:name':
           return company.name.toLocaleLowerCase().includes(query);
-        case 'railwayUndertaking': {
+        case 'column:railwayUndertaking': {
           const normalized = query.trim();
           if (normalized === '') {
             return true;
@@ -70,9 +70,9 @@ export function filter(companies: Company[], filterCriteria: SciColumnFilter[], 
           }
           return String(company.railwayUndertaking).includes(normalized);
         }
-        case 'validFrom':
+        case 'column:validFrom':
           return company.validFrom.toLocaleLowerCase().includes(query);
-        case 'validTo':
+        case 'column:validTo':
           return company.validTo.toLocaleLowerCase().includes(query);
         default:
           return true;

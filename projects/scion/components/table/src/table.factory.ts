@@ -8,22 +8,21 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {MaybeAsync} from './common';
 import {SciCellContext, TemplateWithContext} from './table.model';
 import {MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
 
 export interface SciTableFactory<T> {
   addStringColumn(value: (item: T) => string): this;
-  addStringColumn(header: string, value: (item: T) => string): this;
+  addStringColumn(header: Translatable, value: (item: T) => string): this;
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
   addBooleanColumn(value: (item: T) => boolean): this;
-  addBooleanColumn(header: string, value: (item: T) => boolean): this;
+  addBooleanColumn(header: Translatable, value: (item: T) => boolean): this;
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
   addNumberColumn(value: (item: T) => number): this;
-  addNumberColumn(header: string, value: (item: T) => number): this;
+  addNumberColumn(header: Translatable, value: (item: T) => number): this;
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
@@ -31,13 +30,13 @@ export interface SciTableFactory<T> {
 }
 
 export interface SciColumnDescriptor {
-  name?: string;
-  header?: MaybeSignal<Translatable>;
+  name?: `column:${string}`;
+  header?: Translatable;
   resizable?: boolean;
   /**
    * Preferred column size.
-   * Value which can be used inside `grid-template-columns` definition.
-   * Examples: `1fr`, `max-content`, `100px`
+   * Value which can be used inside `grid-template-columns` definition. Defaults to 1fr.
+   * Examples: `1fr`, `max-content`, `100px`.
    */
   width?: string;
   /**
@@ -60,7 +59,6 @@ export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
-  filterValues?: MaybeAsync<unknown[]>;
 }
 
 export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
@@ -73,7 +71,6 @@ export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
-  filterValues?: MaybeAsync<unknown[]>;
 }
 
 export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
@@ -86,7 +83,6 @@ export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: string, context: SciCellContext<T, string>) => boolean) | boolean;
-  filterValues?: MaybeAsync<string[]>;
 }
 
 export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
@@ -99,7 +95,6 @@ export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filter?: ((text: number, context: SciCellContext<T, number>) => boolean) | boolean;
-  filterValues?: MaybeAsync<number[]>;
 }
 
 export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {

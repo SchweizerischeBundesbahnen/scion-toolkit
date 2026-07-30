@@ -1,6 +1,6 @@
 <main>
   <div class="table-header">
-    <sci-filter-field [ngModel]="table.globalFilter()" (ngModelChange)="table.filter($event)"></sci-filter-field>
+    <sci-filter-field [(ngModel)]="filter" (ngModelChange)="table.filter($event)"></sci-filter-field>
   </div>
   <sci-table [table]="table" />
 </main>
@@ -29,7 +29,7 @@
 
     <label>
       Selection
-      <select [formField]="form.selectionType">
+      <select [formField]="form.selectable">
         <option value="multi">Multi</option>
         <option value="single">Single</option>
         <option value="disabled">Disabled</option>

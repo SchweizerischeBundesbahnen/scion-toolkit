@@ -10,14 +10,6 @@
 
     > sci-table {
       flex: 1;
-
-      &::part(red-row) {
-        color: indianred;
-      }
-
-      &::part(green-cell) {
-        background-color: rgba(0, 255, 0, 0.2);
-      }
     }
   }
 

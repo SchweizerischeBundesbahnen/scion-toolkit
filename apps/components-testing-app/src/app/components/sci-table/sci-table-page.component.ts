@@ -54,7 +54,7 @@ class SlowDataSource implements SciDataSourceDescriptor<Product> {
   }
 }
 
-const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean; filterValues: string; conditionallyStyleCell: boolean} => ({
+const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean; conditionallyStyleCell: boolean} => ({
   name: '',
   type: '',
   header: '',
@@ -64,7 +64,6 @@ const createDefaultColumn = (): {name: string; type: string; header: string; res
   maxWidth: '',
   customSort: false,
   customFilter: false,
-  filterValues: '',
   conditionallyStyleCell: false,
 });
 
@@ -124,16 +123,16 @@ export default class SciTablePageComponent {
 
       for (let i = 0; i < count; i++) {
         tables.push(table<Product>({
-          name: `test_table_${i}`,
+          name: `table:${i}`,
           showHeader: computed(() => this.settings().showHeader),
           sortable: computed(() => this.settings().sortable),
           filterable: computed(() => this.settings().filterable),
           resizable: computed(() => this.settings().resizable),
           itemSize: computed(() => this.settings().rowSize),
           data: this.type() === 'slow' ? new SlowDataSource(this.data) : this.data,
-          rowName: computed(() => this.settings().conditionallyStyleRow)() ?
-            (row: Product) => row.id % 3 === 0 ? 'red-row' : undefined :
-            undefined,
+          rowState: computed(() => this.settings().conditionallyStyleRow)() ?
+            (row: Product) => row.id % 3 === 0 ? 'row:red' : [] :
+            [],
         }, table => this.createTable(table)));
       }
 
@@ -145,20 +144,19 @@ export default class SciTablePageComponent {
     table.addNumberColumn({
       header: 'Id',
       value: product => product.id,
-      name: 'id',
+      name: 'column:id',
     });
 
     for (const column of this.columns()) {
       const baseColumn = {
         header: column.header,
-        name: column.name,
+        name: column.name as `column:${string}`,
         width: column.width ? column.width : undefined,
         minWidth: column.minWidth ? +column.minWidth : undefined,
         maxWidth: column.maxWidth ? +column.maxWidth : undefined,
         resizable: column.resizable,
         filter: column.customFilter ? customFilter : undefined,
         sort: column.customSort ? customSort : undefined,
-        filterValues: column.filterValues ? column.filterValues.split(',').map(v => v.trim()) : undefined,
         part: (item: Product) => (column.conditionallyStyleCell && item.id % 3 === 0) ? 'red-cell' : null,
       };
 
@@ -173,7 +171,6 @@ export default class SciTablePageComponent {
           table.addNumberColumn({
             ...baseColumn,
             value: product => product.price,
-            filterValues: baseColumn.filterValues ? baseColumn.filterValues.map(v => +v) : undefined,
           });
           break;
         case 'boolean':

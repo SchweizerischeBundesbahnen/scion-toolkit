@@ -10,7 +10,7 @@
 
 import {computed, EffectCleanupRegisterFn, inject, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion, SciTableRequest} from './table-data-source';
-import {ColumnType, RowActionFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
+import {ColumnType, SciRowActionFactoryFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {coerceObservable, rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
@@ -38,7 +38,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly columns: WritableSignal<SciColumnLike<T>[]>;
   public readonly dataLoaderFn: SciDataLoaderFn<T>;
   public readonly identity?: (item: T) => ID;
-  public readonly rowActions?: RowActionFn<T>;
+  public readonly rowActions?: SciRowActionFactoryFn<T>;
   public readonly rowName?: (item: T) => string | string[] | undefined;
 
   public readonly itemSize: Signal<number>;
@@ -47,7 +47,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly showColumnHeaders: Signal<boolean>;
   public readonly sortable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
-  public readonly selectionType: Signal<'single' | 'multi' | 'disabled'>;
+  public readonly selectable: Signal<'single' | 'multi' | false>;
 
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciColumnFilter[]>([]);
@@ -150,16 +150,16 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T, ID>) {
     this.name = descriptor.name;
     this.itemSize = coerceSignal(descriptor.itemSize ?? 30);
-    this.overscan = coerceSignal(descriptor.overscan ?? 3);
+    this.overscan = coerceSignal(descriptor.bufferSize ?? 3);
     this.sortable = coerceSignal(descriptor.sortable ?? true);
-    this.showColumnFilters = coerceSignal(descriptor.showColumnFilters ?? true);
-    this.showColumnHeaders = coerceSignal(descriptor.showColumnHeaders ?? true);
+    this.showColumnFilters = coerceSignal(descriptor.filterable ?? true);
+    this.showColumnHeaders = coerceSignal(descriptor.headerVisible ?? true);
     this.resizable = coerceSignal(descriptor.resizable ?? true);
-    this.selectionType = coerceSignal(descriptor.selectionMode ?? 'multi');
+    this.selectable = coerceSignal(descriptor.selectable ?? 'multi');
 
     this.rowActions = descriptor.rowActions;
-    this.rowName = descriptor.rowName;
-    this.identity = descriptor.identity;
+    this.rowName = descriptor.rowState;
+    this.identity = descriptor.trackBy;
 
     this.columns = linkedSignal(() => {
       const storedTable = this._storedTable();
@@ -234,7 +234,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     }
   }
 
-  public sort(columnName: string, multi: boolean): void {
+  public sort(columnName: `column:${string}`, multi: boolean): void {
     if (!this.sortable()) {
       return;
     }
@@ -258,8 +258,8 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   }
 
   public filter(text: string): void;
-  public filter(text: string | number | boolean | null, options: {columnName: string}): void;
-  public filter(text: string | number | boolean | null, options?: {columnName: string}): void {
+  public filter(text: string | number | boolean | null, options: {columnName: `column:${string}`}): void;
+  public filter(text: string | number | boolean | null, options?: {columnName: `column:${string}`}): void {
     if (options) {
       if (!this.showColumnFilters()) {
         return;

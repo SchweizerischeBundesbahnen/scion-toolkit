@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, inject, Injector, signal} from '@angular/core';
-import {SciTableComponent, SciTableDescriptor, SelectionType, table} from '@scion/components/table';
+import {SciTableComponent, SciTableDescriptor, table} from '@scion/components/table';
 import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
@@ -39,18 +39,20 @@ export default class SciTablePageComponent {
     sortable: true,
     resizable: true,
     showHeader: true,
-    selectionType: 'multi',
+    selectable: 'multi',
   });
   protected form = form(this.settings);
 
+  protected filter = signal<string | undefined>(undefined);
+
   protected tableConfig: Omit<SciTableDescriptor<Company, string>, 'data'> = {
     name: 'table:companies-alt',
-    showColumnHeaders: computed(() => this.settings().showHeader),
+    headerVisible: computed(() => this.settings().showHeader),
     sortable: computed(() => this.settings().sortable),
-    showColumnFilters: computed(() => this.settings().filterable),
+    filterable: computed(() => this.settings().filterable),
     resizable: computed(() => this.settings().resizable),
-    selectionMode: computed(() => this.settings().selectionType as SelectionType),
-    identity: company => company.dataId,
+    selectable: computed(() => this.settings().selectable === 'disabled' ? false : this.settings().selectable as 'single' | 'multi'),
+    trackBy: company => company.dataId,
     rowActions: (company, toolbar) => {
       toolbar.addToolbarButton({
         icon: 'scion.delete',
@@ -93,6 +95,8 @@ export default class SciTablePageComponent {
   }, table => {
     table
       .addStringColumn(company => company.dataId)
-      .addStringColumn(company => company.name);
+      .addStringColumn({
+        value: company => company.name,
+      });
   });
 }

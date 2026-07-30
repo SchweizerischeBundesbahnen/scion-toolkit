@@ -37,6 +37,7 @@ export class TableCellComponent<T> {
   public readonly isSelected = input<boolean>();
 
   protected readonly table = inject(ɵSCI_TABLE);
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
 
   protected readonly name = computed(() => this.cell().name.join(' '));
   protected readonly templateContext = computed(() => {
@@ -56,6 +57,10 @@ export class TableCellComponent<T> {
   private readonly _cellElement = viewChild.required<ElementRef<HTMLDivElement>>('cellElement');
 
   public getWidth(): number {
-    return this._cellElement().nativeElement.offsetWidth;
+    const paddingStr = getComputedStyle(this._host).paddingRight;
+    // The actual column width has to include the cell padding, so the content gets enough space.
+    const padding = +paddingStr.substring(0, paddingStr.length - 2);
+    const width = Math.ceil(this._cellElement().nativeElement.offsetWidth);
+    return isNaN(padding) ? width : padding * 2 + width;
   }
 }

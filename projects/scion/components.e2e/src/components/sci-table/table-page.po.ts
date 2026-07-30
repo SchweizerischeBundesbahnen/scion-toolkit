@@ -17,7 +17,6 @@ export interface ColumnOptions {
   header: string;
   type: 'string' | 'number' | 'boolean' | 'template' | 'component';
   customFilter?: boolean;
-  filterValues?: string[];
   customSort?: boolean;
   width?: string;
   minWidth?: number;
@@ -104,9 +103,6 @@ export class TablePagePO {
     }
     if (options.conditionallyStyleCell) {
       await this._properties.locator('form input.e2e-column-conditional-style').check();
-    }
-    if (options.filterValues !== undefined) {
-      await this._properties.locator('form input.e2e-column-filter-values').fill(options.filterValues.join(','));
     }
     if (options.width !== undefined) {
       await this._properties.locator('form input.e2e-column-width').fill(options.width);

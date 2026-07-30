@@ -320,22 +320,6 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.viewport.evaluate(el => el.scrollTop)).toBe(0);
     });
 
-    test('should use select for filter values', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePo(page);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', filterValues: ['Product 1111', 'Product 1112']});
-
-      const noFilterCount = await table.rows.count();
-
-      await table.column('Name').filter('Product 1112');
-      await expect(table.rows).toHaveCount(1);
-
-      await table.column('Name').clearFilter();
-      await expect(table.rows).toHaveCount(noFilterCount);
-    });
-
     test('should show empty state', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);

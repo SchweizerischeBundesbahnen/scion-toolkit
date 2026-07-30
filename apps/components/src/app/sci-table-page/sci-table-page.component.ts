@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, inject, Injector, input, inputBinding, linkedSignal, runInInjectionContext, Signal, signal, untracked} from '@angular/core';
-import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, SelectionType, table} from '@scion/components/table';
+import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {companies, Company, filter, sort} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
@@ -94,7 +94,7 @@ export default class SciTablePageComponent {
     resizable: true,
     showHeader: true,
     slowDataSource: true,
-    selectionType: 'multi',
+    selectable: 'multi',
   });
   protected form = form(this.settings);
 
@@ -108,12 +108,12 @@ export default class SciTablePageComponent {
 
   protected tableConfig: Omit<SciTableDescriptor<Company, string>, 'data'> = {
     name: 'table:companies',
-    showColumnHeaders: computed(() => this.settings().showHeader),
+    headerVisible: computed(() => this.settings().showHeader),
     sortable: computed(() => this.settings().sortable),
-    showColumnFilters: computed(() => this.settings().filterable),
+    filterable: computed(() => this.settings().filterable),
     resizable: computed(() => this.settings().resizable),
-    selectionMode: computed(() => this.settings().selectionType as SelectionType),
-    identity: company => company.dataId,
+    selectable: computed(() => this.settings().selectable === 'disabled' ? false : this.settings().selectable as 'single' | 'multi'),
+    trackBy: company => company.dataId,
     rowActions: (company, toolbar) => {
       toolbar.addToolbarButton({
         icon: 'scion.delete',
@@ -177,34 +177,34 @@ export default class SciTablePageComponent {
       .addStringColumn({
         header: 'ID',
         value: company => company.dataId,
-        name: 'id',
+        name: 'column:id',
         filter: false,
       })
       .addNumberColumn({
         header: 'Code',
         value: company => company.code,
-        name: 'code',
+        name: 'column:code',
       })
       .addStringColumn({
         header: '%scion.components.clear.tooltip',
         value: company => company.abbreviation,
         width: '1fr',
-        name: 'abbreviation',
+        name: 'column:abbreviation',
       })
       .addStringColumn({
         header: 'Name',
         value: company => company.name,
         width: '1fr',
-        name: 'name',
+        name: 'column:name',
       })
       .addBooleanColumn({
         header: 'EVU',
         value: company => company.railwayUndertaking,
-        name: 'railwayUndertaking',
+        name: 'column:railwayUndertaking',
       })
       .addComponentColumn({
         header: 'Gültig ab',
-        name: 'validFrom',
+        name: 'column:validFrom',
         sort: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime(),
         filter: (query, item) => item.item.validFrom.includes(query),
         component: item => ({
@@ -214,7 +214,7 @@ export default class SciTablePageComponent {
       })
       .addComponentColumn({
         header: 'Gültig bis',
-        name: 'validTo',
+        name: 'column:validTo',
         filter: (query, item) => item.item.validTo.includes(query),
         sort: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime(),
         component: item => ({

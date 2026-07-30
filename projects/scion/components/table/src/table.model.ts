@@ -9,14 +9,13 @@
  */
 
 import {Signal, TemplateRef} from '@angular/core';
-import {MaybeAsync} from './common';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
+import {MaybeArray} from '@scion/toolkit/types';
 
 export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
-export type SelectionType = 'single' | 'multi' | 'disabled';
-export type RowActionFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
+export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
 export interface SciTableDescriptor<T, ID> {
   data: Signal<T[]> | SciDataLoaderFn<T>;
@@ -27,16 +26,14 @@ export interface SciTableDescriptor<T, ID> {
   /**
    * Size of row items in px. Defaults to 30px.
    */
+  // TODO: via design token setzen, mit dimension signal höhe holen
   itemSize?: MaybeSignal<number>;
-  /**
-   * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
-   */
-  overscan?: MaybeSignal<number>;
   sortable?: MaybeSignal<boolean>;
   resizable?: MaybeSignal<boolean>;
-  showColumnFilters?: MaybeSignal<boolean>;
-  showColumnHeaders?: MaybeSignal<boolean>;
-  selectionMode?: MaybeSignal<'single' | 'multi' | 'disabled'>;
+  filterable?: MaybeSignal<boolean>;
+  selectable?: MaybeSignal<false | 'single' | 'multi'>;
+  headerVisible?: MaybeSignal<boolean>;
+  sortBy?: Array<`column:${string}` | SciSortCriterion>;
   /**
    * Row actions shown at the end of a row.
    *
@@ -54,24 +51,28 @@ export interface SciTableDescriptor<T, ID> {
    * ```
    *
    */
-  rowActions?: RowActionFn<T>;
-  identity?: (item: T) => ID;
+  rowActions?: SciRowActionFactoryFn<T>;
   /**
    * Adds name as part attribute to cell element.
    * This can be used to conditionally style the row.
    *
    * Example usage:
    * ```ts
-   * table({ data: persons, rowName: person => !person.active ? 'inactive' : null }, table => ...);
+   * table({ data: persons, rowName: person => !person.active ? 'inactive' : [] }, table => ...);
    * ```
    *
    * ```scss
-   * sci-table ::part(inactive) {
+   * sci-table ::part(row\:inactive) {
    *   background-color: rgba(255, 0, 0, 0.2);
    * }
    * ```
    */
-  rowName?: (item: T) => string | string[] | undefined;
+  rowState?: (item: T) => MaybeArray<`row:${string}`>;
+  /**
+   * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
+   */
+  bufferSize?: MaybeSignal<number>;
+  trackBy?: (item: T) => ID;
 }
 
 export interface SciTable<T, ID = T> {
@@ -84,8 +85,6 @@ export interface SciTable<T, ID = T> {
    * Active filter criteria, one criterion per column.
    */
   readonly filterCriteria: Signal<SciColumnFilter[]>;
-
-  readonly globalFilter: Signal<string | undefined>;
 
   /**
    * Currently active item id.
@@ -105,7 +104,7 @@ export interface SciTable<T, ID = T> {
   // TODO [table]: add optional asc, desc option
   sort(columnName: string, multi: boolean): void;
   resetSort(): void;
-  filter(text: string): void;
+  filter(text: string | undefined): void;
   filter(text: string | number | boolean | null, options: {columnName: string}): void;
   resetFilter(): void;
   dispose(): void;
@@ -123,7 +122,7 @@ export interface TemplateWithContext {
 
 export interface SciColumn {
   type: ColumnType;
-  name: string;
+  name: `column:${string}`;
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;
   resizable: Signal<boolean>;
@@ -139,7 +138,6 @@ export interface SciStringColumn<T> extends SciColumn {
   value: (item: T) => MaybeSignal<string>;
   sort: (a: SciCellContext<T, string>, b: SciCellContext<T, string>) => number;
   filter: (text: string, context: SciCellContext<T, string>) => boolean;
-  filterValues?: MaybeAsync<string[]>;
 }
 
 export interface SciBooleanColumn<T> extends SciColumn {
@@ -154,8 +152,6 @@ export interface SciNumberColumn<T> extends SciColumn {
   value: (item: T) => MaybeSignal<number>;
   sort: (a: SciCellContext<T, number>, b: SciCellContext<T, number>) => number;
   filter: (text: number, context: SciCellContext<T, number>) => boolean;
-  // TODO [eg]: remove filter values for now
-  filterValues?: MaybeAsync<number[]>;
 }
 
 export interface SciComponentColumn<T> extends SciColumn {
@@ -163,7 +159,6 @@ export interface SciComponentColumn<T> extends SciColumn {
   component: (item: T) => SciComponentDescriptor;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
-  filterValues?: MaybeAsync<unknown[]>;
 }
 
 export interface SciTemplateColumn<T> extends SciColumn {
@@ -171,7 +166,6 @@ export interface SciTemplateColumn<T> extends SciColumn {
   template: (item: T) => MaybeSignal<TemplateWithContext>;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
-  filterValues?: MaybeAsync<unknown[]>;
 }
 
 export type SciColumnLike<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
