@@ -45,7 +45,7 @@ export default class SciTablePageComponent {
 
   protected filter = signal<string | undefined>(undefined);
 
-  protected tableConfig: Omit<SciTableDescriptor<Company, string>, 'data'> = {
+  protected tableConfig: Omit<SciTableDescriptor<Company>, 'data'> = {
     name: 'table:companies-alt',
     headerVisible: computed(() => this.settings().showHeader),
     sortable: computed(() => this.settings().sortable),

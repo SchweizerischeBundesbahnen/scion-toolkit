@@ -1,8 +1,8 @@
 import {computed, signal, Signal} from '@angular/core';
 import {SciRow} from './table.model';
 
-export interface TableCacheEntry<T, ID> {
-  items: Signal<SciRow<T, ID>[] | undefined>;
+export interface TableCacheEntry<T> {
+  items: Signal<SciRow<T>[] | undefined>;
   start: number;
   end: number;
   dispose: () => void;
@@ -10,10 +10,10 @@ export interface TableCacheEntry<T, ID> {
 
 type TableCacheKey = `${number}-${number}`;
 
-export class TableCache<T, ID> {
-  private readonly _cache = signal(new Map<TableCacheKey, TableCacheEntry<T, ID>>());
+export class TableCache<T> {
+  private readonly _cache = signal(new Map<TableCacheKey, TableCacheEntry<T>>());
 
-  public get cache(): Signal<Map<TableCacheKey, TableCacheEntry<T, ID>>> {
+  public get cache(): Signal<Map<TableCacheKey, TableCacheEntry<T>>> {
     return this._cache.asReadonly();
   }
 
@@ -21,11 +21,11 @@ export class TableCache<T, ID> {
     return this._cache().has(key);
   }
 
-  public get(key: TableCacheKey): TableCacheEntry<T, ID> | undefined {
+  public get(key: TableCacheKey): TableCacheEntry<T> | undefined {
     return this._cache().get(key);
   }
 
-  public set(key: TableCacheKey, entry: TableCacheEntry<T, ID>): void {
+  public set(key: TableCacheKey, entry: TableCacheEntry<T>): void {
     this._cache.update(cache => {
       const cacheCopy = new Map(cache);
       const existing = cacheCopy.get(key);
@@ -65,7 +65,7 @@ export class TableCache<T, ID> {
     });
   }
 
-  public get values(): Signal<Array<TableCacheEntry<T, ID>>> {
+  public get values(): Signal<Array<TableCacheEntry<T>>> {
     return computed(() => [...this._cache().values()]);
   }
 }

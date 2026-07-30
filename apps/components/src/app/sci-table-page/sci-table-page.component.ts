@@ -106,7 +106,7 @@ export default class SciTablePageComponent {
   private _useSlowDataSource = computed(() => this.settings().slowDataSource);
   private _slowDataSource = slowDataSource();
 
-  protected tableConfig: Omit<SciTableDescriptor<Company, string>, 'data'> = {
+  protected tableConfig: Omit<SciTableDescriptor<Company>, 'data'> = {
     name: 'table:companies',
     headerVisible: computed(() => this.settings().showHeader),
     sortable: computed(() => this.settings().sortable),
@@ -159,12 +159,12 @@ export default class SciTablePageComponent {
     },
   };
 
-  protected table = linkedSignal<Signal<Company[]> | SciDataLoaderFn<Company>, SciTable<Company, string>>({
+  protected table = linkedSignal<Signal<Company[]> | SciDataLoaderFn<Company>, SciTable<Company>>({
     source: () => this._useSlowDataSource() ? this._slowDataSource : data,
     computation: (dataSource, previous) => {
       untracked(() => previous?.value.dispose());
       return untracked(() => runInInjectionContext(this.injector,
-        () => table<Company, string>({...this.tableConfig, data: dataSource}, table => this.createTable(table)),
+        () => table<Company>({...this.tableConfig, data: dataSource}, table => this.createTable(table)),
       ));
     },
   });

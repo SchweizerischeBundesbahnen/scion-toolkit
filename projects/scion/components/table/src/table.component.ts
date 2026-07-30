@@ -55,15 +55,15 @@ import {SciTextPipe} from '@scion/components/text';
   providers: [
     {
       provide: ɵSCI_TABLE,
-      useFactory: <T, ID>(component: SciTableComponent<T, ID>) => computed(() => component.table() as ɵSciTable<T, ID>),
+      useFactory: <T>(component: SciTableComponent<T>) => computed(() => component.table() as ɵSciTable<T>),
       deps: [forwardRef(() => SciTableComponent)],
     },
     TableSelectionService,
   ],
 })
-export class SciTableComponent<T, ID = T> {
+export class SciTableComponent<T> {
 
-  public readonly table = input.required<SciTable<T, ID>>();
+  public readonly table = input.required<SciTable<T>>();
 
   private readonly _verticalViewport = viewChild.required<ElementRef<HTMLElement>>('verticalViewport');
   private readonly _header = viewChild<ElementRef<HTMLElement>>('header');
@@ -79,7 +79,7 @@ export class SciTableComponent<T, ID = T> {
   protected readonly containerDimension = dimension(this._element.nativeElement as HTMLElement);
   protected readonly verticalViewPortDimension = dimension(this._verticalViewport);
 
-  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T, ID>);
+  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly hoveredRow = computed(() => this.sciTable().rowsByIndex().get(this.sciTable().hoveredIndex()));
   protected readonly headerHeight = computed(() => this.headerDimension()?.clientHeight ?? 0);
   protected readonly virtualScrollHeight = computed(() => `${(this.sciTable().totalCount() ?? 0) * this.sciTable().itemSize()}px`);
@@ -284,7 +284,7 @@ export class SciTableComponent<T, ID = T> {
       ), {initialValue: false});
   }
 
-  private computeColumnWidths(table: Signal<ɵSciTable<T, ID>>): Signal<string> {
+  private computeColumnWidths(table: Signal<ɵSciTable<T>>): Signal<string> {
     return computed(() => {
       const columns = table().columns();
 

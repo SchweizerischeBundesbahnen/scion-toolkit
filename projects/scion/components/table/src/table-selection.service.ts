@@ -13,9 +13,9 @@ import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
 
 @Injectable()
-export class TableSelectionService<T, ID = T> {
+export class TableSelectionService<T> {
 
-  private _table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T, ID>>;
+  private _table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
 
   public onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): void {
     const table = this._table();
@@ -41,7 +41,7 @@ export class TableSelectionService<T, ID = T> {
 
       if (ids.every(id => id !== undefined)) {
         // Only add shift click selection if all items are loaded.
-        table.updateSelectedItems(existing => new Set([...existing, ...(ids as Array<ID>)]));
+        table.updateSelectedItems(existing => new Set([...existing, ...ids]));
       }
       else {
         // If not all id's could be found (big range is selected) treat the selection as normal click.
@@ -109,7 +109,7 @@ export class TableSelectionService<T, ID = T> {
     }
 
     const rowsByIndex = table.rowsByIndex();
-    const ids = [...rowsByIndex.values()].map(row => row.id).filter((id): id is ID => !!id);
+    const ids = [...rowsByIndex.values()].map(row => row.id).filter(id => !!id);
 
     // If all rows are loaded, add all to selection, else toggle all selected flag.
     if (rowsByIndex.size === this.rowCount(table)) {
@@ -120,11 +120,11 @@ export class TableSelectionService<T, ID = T> {
     }
   }
 
-  private rowCount(table: ɵSciTable<T, ID>): number {
+  private rowCount(table: ɵSciTable<T>): number {
     return table.totalCount() === undefined ? table.visibleRowCount() : table.totalCount()!;
   }
 
-  private addItemsToSelection(item: ID | undefined, event: KeyboardEvent): void {
+  private addItemsToSelection(item: unknown, event: KeyboardEvent): void {
     const table = this._table();
 
     if (item !== undefined) {
@@ -143,7 +143,7 @@ export class TableSelectionService<T, ID = T> {
     }
   }
 
-  private toggleSelectedItem(id: ID): void {
+  private toggleSelectedItem(id: unknown): void {
     this._table().updateSelectedItems(selection => {
       const next = new Set(selection);
       if (next.has(id)) {

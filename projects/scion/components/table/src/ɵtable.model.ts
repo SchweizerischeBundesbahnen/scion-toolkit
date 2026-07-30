@@ -29,7 +29,7 @@ interface StoredTable {
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
 
-export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
+export class ɵSciTable<T> implements SciTable<T> {
 
   public readonly tableStorage = inject(SCI_TABLE_STORAGE);
 
@@ -37,7 +37,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly name: `table:${string}`;
   public readonly columns: WritableSignal<SciColumnLike<T>[]>;
   public readonly dataLoaderFn: SciDataLoaderFn<T>;
-  public readonly identity?: (item: T) => ID;
+  public readonly trackBy?: (item: T) => unknown;
   public readonly rowActions?: SciRowActionFactoryFn<T>;
   public readonly rowName?: (item: T) => string | string[] | undefined;
 
@@ -52,7 +52,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciColumnFilter[]>([]);
   private readonly _globalFilter = signal<string | undefined>(undefined);
-  private readonly _selectedItems = signal<Set<ID>>(new Set());
+  private readonly _selectedItems = signal<Set<unknown>>(new Set());
   private readonly _visibleRowCount = signal<number>(0);
   private readonly _totalCount = signal<number | undefined>(undefined);
   private readonly _scrollTop = signal<number>(0);
@@ -76,12 +76,12 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
   private readonly _activeItem = linkedSignal({
     source: () => this.criteria(),
-    computation: () => undefined as ID | undefined,
+    computation: () => undefined as unknown,
   });
 
   private readonly _hoveredItem = linkedSignal({
     source: () => this.criteria(),
-    computation: () => undefined as ID | undefined,
+    computation: () => undefined as unknown,
   });
 
   /**
@@ -94,10 +94,10 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     computation: () => false,
   });
 
-  private readonly _cache = new TableCache<T, ID>();
+  private readonly _cache = new TableCache<T>();
 
   public readonly rowsByIndex = computed(() => {
-    const rows = new Map<number, SciRow<T, ID>>();
+    const rows = new Map<number, SciRow<T>>();
 
     for (const page of this._cache.values()) {
       const items = page.items();
@@ -147,7 +147,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
   public readonly totalCount = this._totalCount.asReadonly();
   public readonly scrollTop = this._scrollTop.asReadonly();
 
-  constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T, ID>) {
+  constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T>) {
     this.name = descriptor.name;
     this.itemSize = coerceSignal(descriptor.itemSize ?? 30);
     this.overscan = coerceSignal(descriptor.bufferSize ?? 3);
@@ -159,7 +159,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
 
     this.rowActions = descriptor.rowActions;
     this.rowName = descriptor.rowState;
-    this.identity = descriptor.trackBy;
+    this.trackBy = descriptor.trackBy;
 
     this.columns = linkedSignal(() => {
       const storedTable = this._storedTable();
@@ -200,7 +200,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
       this._cache.deleteIfEmpty(cacheKey);
     });
 
-    const cacheEntry: TableCacheEntry<T, ID> = {
+    const cacheEntry: TableCacheEntry<T> = {
       items: computed(() => {
         const resolved = items();
         const columns = this.columns();
@@ -294,15 +294,15 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     } : column));
   }
 
-  public setActiveItem(id: ID | undefined): void {
+  public setActiveItem(id: unknown | undefined): void {
     this._activeItem.set(id);
   }
 
-  public setHoveredItem(id: ID | undefined): void {
+  public setHoveredItem(id: unknown | undefined): void {
     this._hoveredItem.set(id);
   }
 
-  public updateSelectedItems(updateFn: (ids: Set<ID>) => Set<ID>): void {
+  public updateSelectedItems(updateFn: (ids: Set<unknown>) => Set<unknown>): void {
     this._selectedItems.update(updateFn);
   }
 
@@ -355,7 +355,7 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     } as SciColumnLike<T>;
   }
 
-  private indexById(id: ID | undefined, rowsByIndex: Map<number, SciRow<T, ID>>): number {
+  private indexById(id: unknown | undefined, rowsByIndex: Map<number, SciRow<T>>): number {
     if (id === undefined) {
       return -1;
     }
@@ -368,12 +368,12 @@ export class ɵSciTable<T, ID = T> implements SciTable<T, ID> {
     return -1;
   }
 
-  public mapItemsToRow(items: T[], columns: SciColumnLike<T>[]): SciRow<T, ID>[] {
+  public mapItemsToRow(items: T[], columns: SciColumnLike<T>[]): SciRow<T>[] {
     return items.map(item => {
       const rowName = Arrays.coerce(this.rowName?.(item));
       return ({
         item: item,
-        id: this.identity?.(item) ?? item as unknown as ID,
+        id: this.trackBy?.(item) ?? item,
         cells: columns.map(column => ({
           value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,

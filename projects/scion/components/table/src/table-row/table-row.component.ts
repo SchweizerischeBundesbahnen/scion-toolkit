@@ -34,9 +34,9 @@ import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/table-overlay.component';
     TableCellComponent,
   ],
 })
-export class TableRowComponent<T, ID> {
+export class TableRowComponent<T> {
 
-  public readonly row = input.required<SciRow<T, ID>>();
+  public readonly row = input.required<SciRow<T>>();
   public readonly index = input.required<number>();
 
   private readonly _selectionService = inject(TableSelectionService);

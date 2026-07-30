@@ -17,7 +17,7 @@ import {MaybeArray} from '@scion/toolkit/types';
 export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
-export interface SciTableDescriptor<T, ID> {
+export interface SciTableDescriptor<T> {
   data: Signal<T[]> | SciDataLoaderFn<T>;
   /**
    * Name of the table, used to save and restore view to localStorage.
@@ -72,10 +72,10 @@ export interface SciTableDescriptor<T, ID> {
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
   bufferSize?: MaybeSignal<number>;
-  trackBy?: (item: T) => ID;
+  trackBy?: (item: T) => unknown;
 }
 
-export interface SciTable<T, ID = T> {
+export interface SciTable<T> {
   /**
    * Active sort criteria, one criterion per column.
    */
@@ -89,12 +89,12 @@ export interface SciTable<T, ID = T> {
   /**
    * Currently active item id.
    */
-  readonly activeItem: Signal<ID | undefined>;
+  readonly activeItem: Signal<unknown | undefined>;
 
   /**
    * Selected item ids.
    */
-  readonly selectedItems: Signal<Set<ID>>;
+  readonly selectedItems: Signal<Set<unknown>>;
 
   /**
    * True if all items are selected.
@@ -173,9 +173,9 @@ export type SciColumnLike<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBool
 /**
  * Mapped row, used as display state.
  */
-export interface SciRow<T, ID = T> {
+export interface SciRow<T> {
   item?: T;
-  id?: ID;
+  id?: unknown;
   cells?: SciCellLike[];
 }
 
