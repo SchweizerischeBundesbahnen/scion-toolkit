@@ -16,9 +16,9 @@ import {ɵSciTable} from './ɵtable.model';
 
 type TableFactoryFn<T> = (table: SciTableFactory<T>) => void;
 
-export function table<T>(name: `table:${string}`, data: Signal<T[]>, factoryFn: TableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T>;
-export function table<T>(descriptor: SciTableDescriptor<T>, factoryFn: TableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T>;
-export function table<T>(arg1: `table:${string}` | SciTableDescriptor<T>, arg2: Signal<T[]> | TableFactoryFn<T>, arg3?: TableFactoryFn<T> | {injector?: Injector}, options?: {injector?: Injector}): SciTable<T> {
+export function table<T>(name: `table:${string}`, data: Signal<T[]>, factoryFn: TableFactoryFn<T>, options?: {injector?: Injector}): SciTable;
+export function table<T>(descriptor: SciTableDescriptor<T>, factoryFn: TableFactoryFn<T>, options?: {injector?: Injector}): SciTable;
+export function table<T>(arg1: `table:${string}` | SciTableDescriptor<T>, arg2: Signal<T[]> | TableFactoryFn<T>, arg3?: TableFactoryFn<T> | {injector?: Injector}, options?: {injector?: Injector}): SciTable {
   assertNotInReactiveContext(table, 'Call table in a non-reactive (non-tracking) context, such as within the untracked() function.');
   if (!options?.injector) {
     assertInInjectionContext(table);

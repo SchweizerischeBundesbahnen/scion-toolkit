@@ -159,7 +159,7 @@ export default class SciTablePageComponent {
     },
   };
 
-  protected table = linkedSignal<Signal<Company[]> | SciDataLoaderFn<Company>, SciTable<Company>>({
+  protected table = linkedSignal<Signal<Company[]> | SciDataLoaderFn<Company>, SciTable>({
     source: () => this._useSlowDataSource() ? this._slowDataSource : data,
     computation: (dataSource, previous) => {
       untracked(() => previous?.value.dispose());
@@ -178,7 +178,7 @@ export default class SciTablePageComponent {
         header: 'ID',
         value: company => company.dataId,
         name: 'column:id',
-        filter: false,
+        filterable: false,
       })
       .addNumberColumn({
         header: 'Code',
@@ -205,8 +205,8 @@ export default class SciTablePageComponent {
       .addComponentColumn({
         header: 'Gültig ab',
         name: 'column:validFrom',
-        sort: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime(),
-        filter: (query, item) => item.item.validFrom.includes(query),
+        sortable: {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
+        filterable: {matcher: (query, item) => item.item.validFrom.includes(query)},
         component: item => ({
           component: DateCellComponent,
           bindings: [inputBinding('date', () => new Date(item.validFrom))],
@@ -215,8 +215,8 @@ export default class SciTablePageComponent {
       .addComponentColumn({
         header: 'Gültig bis',
         name: 'column:validTo',
-        filter: (query, item) => item.item.validTo.includes(query),
-        sort: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime(),
+        filterable: {matcher: (query, item) => item.item.validTo.includes(query)},
+        sortable: {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
         component: item => ({
           component: DateCellComponent,
           bindings: [inputBinding('date', () => new Date(item.validTo))],

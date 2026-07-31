@@ -29,7 +29,7 @@ interface StoredTable {
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
 
-export class ɵSciTable<T> implements SciTable<T> {
+export class ɵSciTable<T> implements SciTable {
 
   public readonly tableStorage = inject(SCI_TABLE_STORAGE);
 
@@ -333,13 +333,13 @@ export class ɵSciTable<T> implements SciTable<T> {
   private initColumn(type: ColumnType, config: SciColumnDescriptors<T>, index: number, storedTable: StoredTable | undefined): SciColumnLike<T> {
     // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
     const sortable = type === 'component' || type === 'template' ?
-      !!config.sort :
-      config.sort !== false;
+      !!config.sortable :
+      config.sortable !== false;
 
     // columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
     const filterable = type === 'component' || type === 'template' ?
-      !!config.filter :
-      config.filter !== false;
+      !!config.filterable :
+      config.filterable !== false;
 
     const name = config.name ?? index.toString();
     const storedColumn = storedTable?.columns.find(column => column.name === name);
@@ -349,8 +349,8 @@ export class ɵSciTable<T> implements SciTable<T> {
       ...config,
       type,
       name,
-      filter: typeof config.filter === 'function' ? config.filter : defaultFilter,
-      sort: typeof config.sort === 'function' ? config.sort : defaultSort,
+      filter: typeof config.filterable === 'object' ? config.filterable.matcher : defaultFilter,
+      sort: typeof config.sortable === 'object' ? config.sortable.comparator : defaultSort,
       sortable: computed(() => sortable && this.sortable()),
       filterable: computed(() => filterable && this.showColumnFilters()),
       resizable: computed(() => (config.resizable ?? true) && this.resizable()),

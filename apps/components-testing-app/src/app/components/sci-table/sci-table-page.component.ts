@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, input, inputBinding, Signal, signal, TemplateRef, viewChild} from '@angular/core';
-import {SciCellContext, SciDataSourceDescriptor, SciTable, SciTableComponent, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {SciCellContext, SciTable, SciTableComponent, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {form, FormField, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -39,19 +39,15 @@ function customSort(a: SciCellContext<Product, unknown>, b: SciCellContext<Produ
   return a.item.id - b.item.id;
 }
 
-class SlowDataSource implements SciDataSourceDescriptor<Product> {
-  public pageSize = 50;
-
-  constructor(private readonly _data: Signal<Product[]>) {}
-
-  public loader(request: SciTableRequest): Observable<SciTableResponse<Product>> {
+function slowDataLoader(data: Signal<Product[]>) {
+  return (request: SciTableRequest): Observable<SciTableResponse<Product>> => {
     return timer(1000).pipe(
       map(() => ({
-        items: request.columnFilters.length > 0 ? [] : this._data().slice(request.start, request.end),
-        totalCount: request.columnFilters.length > 0 ? 0 : this._data().length,
+        items: request.columnFilters.length > 0 ? [] : data().slice(request.start, request.end),
+        totalCount: request.columnFilters.length > 0 ? 0 : data().length,
       })),
     );
-  }
+  };
 }
 
 const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean; conditionallyStyleCell: boolean} => ({
@@ -111,8 +107,7 @@ export default class SciTablePageComponent {
 
   protected data = computed(() => generateData(this.rowCount()));
   protected columns = signal<ReturnType<typeof this.column>[]>([]);
-
-  protected tables?: Signal<SciTable<Product, unknown>>[];
+  protected tables = signal<SciTable[]>([]);
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
 
@@ -124,19 +119,19 @@ export default class SciTablePageComponent {
       for (let i = 0; i < count; i++) {
         tables.push(table<Product>({
           name: `table:${i}`,
-          showHeader: computed(() => this.settings().showHeader),
+          headerVisible: computed(() => this.settings().showHeader),
           sortable: computed(() => this.settings().sortable),
           filterable: computed(() => this.settings().filterable),
           resizable: computed(() => this.settings().resizable),
           itemSize: computed(() => this.settings().rowSize),
-          data: this.type() === 'slow' ? new SlowDataSource(this.data) : this.data,
+          data: this.type() === 'slow' ? slowDataLoader(this.data) : this.data,
           rowState: computed(() => this.settings().conditionallyStyleRow)() ?
             (row: Product) => row.id % 3 === 0 ? 'row:red' : [] :
-            [],
+            undefined,
         }, table => this.createTable(table)));
       }
 
-      this.tables = tables;
+      this.tables.set(tables);
     });
   }
 
@@ -188,7 +183,7 @@ export default class SciTablePageComponent {
         case 'template':
           table.addTemplateColumn({
             ...baseColumn,
-            template: () => ({template: this.cellTemplate()}),
+            template: item => ({template: this.cellTemplate, context: {$implicit: item}}),
           });
           break;
       }

@@ -2,7 +2,7 @@
 <div class="cell" [class.selected]="isSelected()" #cellElement>
   @switch (_cell.type) {
     @case ('template') {
-      <ng-template *ngTemplateOutlet="_cell.template().template; context: templateContext()" />
+      <ng-template *ngTemplateOutlet="template(); context: templateContext()" />
     }
     @case ('component') {
       <ng-container *sciComponentOutlet="_cell.component"/>

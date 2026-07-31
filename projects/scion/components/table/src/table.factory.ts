@@ -8,8 +8,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciCellContext, TemplateWithContext} from './table.model';
-import {MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
+import {SciCellContext} from './table.model';
+import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
 
 export interface SciTableFactory<T> {
@@ -54,23 +54,23 @@ export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sort?: ((a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number) | boolean;
+  sortable?: boolean | {comparator: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number};
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
+  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, void>) => boolean};
 }
 
 export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
-  template: (item: T) => MaybeSignal<TemplateWithContext>;
+  template: (item: T) => SciTemplateDescriptor;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sort?: ((a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number) | boolean;
+  sortable?: boolean | {comparator: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number};
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: ((text: string, context: SciCellContext<T, void>) => boolean) | boolean;
+  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, void>) => boolean};
 }
 
 export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
@@ -78,11 +78,11 @@ export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sort?: ((a: SciCellContext<T, string>, b: SciCellContext<T, string>) => number) | boolean;
+  sortable?: boolean | {comparator: (a: SciCellContext<T, string>, b: SciCellContext<T, string>) => number};
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: ((text: string, context: SciCellContext<T, string>) => boolean) | boolean;
+  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, string>) => boolean};
 }
 
 export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
@@ -90,11 +90,11 @@ export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sort?: ((a: SciCellContext<T, number>, b: SciCellContext<T, number>) => number) | boolean;
+  sortable?: boolean | {comparator: (a: SciCellContext<T, number>, b: SciCellContext<T, number>) => number};
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: ((text: number, context: SciCellContext<T, number>) => boolean) | boolean;
+  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, number>) => boolean};
 }
 
 export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
@@ -102,11 +102,11 @@ export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sort?: ((a: SciCellContext<T, boolean>, b: SciCellContext<T, boolean>) => number) | boolean;
+  sortable?: boolean | {comparator: (a: SciCellContext<T, boolean>, b: SciCellContext<T, boolean>) => number};
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filter?: ((text: boolean, context: SciCellContext<T, boolean>) => boolean) | boolean;
+  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, boolean>) => boolean};
 
   // TODO: Label Provider umsetzen
   labelProvider?: (value: boolean) => Translatable;

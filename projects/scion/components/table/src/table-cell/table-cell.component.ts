@@ -12,7 +12,7 @@ import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input,
 import {SciCellLike} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {SciIconComponent} from '../../../icon/src/icon.component';
-import {SciComponentOutletDirective} from '@scion/components/common';
+import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 
 @Component({
@@ -40,6 +40,17 @@ export class TableCellComponent<T> {
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
 
   protected readonly name = computed(() => this.cell().name.join(' '));
+
+  protected readonly template = computed(() => {
+    const cell = this.cell();
+
+    if (cell.type !== 'template') {
+      return null;
+    }
+
+    return coerceSignal(cell.template.template)();
+  });
+
   protected readonly templateContext = computed(() => {
     const cell = this.cell();
     const item = this.item();
@@ -50,7 +61,7 @@ export class TableCellComponent<T> {
 
     return {
       $implicit: item,
-      ...cell.template().context,
+      ...Object.entries(cell.template.context ?? {}).reduce((obj, [key, value]) => ({...obj, [key]: coerceSignal(value)()}), {}),
     };
   });
 

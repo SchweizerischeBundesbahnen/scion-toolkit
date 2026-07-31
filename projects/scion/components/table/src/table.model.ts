@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Signal, TemplateRef} from '@angular/core';
+import {Signal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
-import {MaybeSignal, SciComponentDescriptor} from '@scion/components/common';
+import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {MaybeArray} from '@scion/toolkit/types';
 
@@ -75,7 +75,7 @@ export interface SciTableDescriptor<T> {
   trackBy?: (item: T) => unknown;
 }
 
-export interface SciTable<T> {
+export interface SciTable {
   /**
    * Active sort criteria, one criterion per column.
    */
@@ -113,11 +113,6 @@ export interface SciTable<T> {
 export interface SciCellContext<T, VALUE> {
   item: T;
   value: VALUE;
-}
-
-export interface TemplateWithContext {
-  template: TemplateRef<unknown>;
-  context?: {[key: string]: unknown};
 }
 
 export interface SciColumn {
@@ -164,7 +159,7 @@ export interface SciComponentColumn<T> extends SciColumn {
 
 export interface SciTemplateColumn<T> extends SciColumn {
   type: 'template';
-  template: (item: T) => MaybeSignal<TemplateWithContext>;
+  template: (item: T) => SciTemplateDescriptor;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
 }
@@ -211,7 +206,7 @@ export interface SciComponentCell extends SciCell {
 
 export interface SciTemplateCell extends SciCell {
   type: 'template';
-  template: Signal<TemplateWithContext>;
+  template: SciTemplateDescriptor;
 }
 
 export type SciCellLike = SciStringCell | SciNumberCell | SciBooleanCell | SciComponentCell | SciTemplateCell;

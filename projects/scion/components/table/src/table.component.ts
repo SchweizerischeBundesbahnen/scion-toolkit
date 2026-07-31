@@ -63,7 +63,7 @@ import {SciTextPipe} from '@scion/components/text';
 })
 export class SciTableComponent<T> {
 
-  public readonly table = input.required<SciTable<T>>();
+  public readonly table = input.required<SciTable>();
 
   private readonly _verticalViewport = viewChild.required<ElementRef<HTMLElement>>('verticalViewport');
   private readonly _header = viewChild<ElementRef<HTMLElement>>('header');

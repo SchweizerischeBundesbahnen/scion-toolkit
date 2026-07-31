@@ -17,3 +17,4 @@ export {coerceSignal, type MaybeSignal, toLazyObservable} from './signal.util';
 export {createDestroyableInjector, assertInInjectionContext} from './injector.util';
 export {type SciComponentDescriptor, SciComponentOutletDirective} from './component-outlet.directive';
 export {SciAttributesDirective} from './attributes.directive';
+export {type SciTemplateDescriptor} from './template-descriptor';
