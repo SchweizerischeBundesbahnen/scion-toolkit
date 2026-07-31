@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, Injector, input, NgZone, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, Injector, input, NgZone, signal, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciColumnLike, SciTable} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
@@ -91,33 +91,33 @@ export class SciTableComponent<T> {
   });
 
   protected readonly scrolling = this.computeScrolling(this._verticalViewport);
-  protected readonly columnWidths = this.computeColumnWidths(this.sciTable);
-
+  protected readonly columnWidths = this.computeColumnWidths();
   protected readonly headerDimension = dimension(this._header);
-  protected readonly headerWidths = computed(() => this._headers().map(h => h.boundingClientRect().width));
 
   protected readonly absoluteColumnWidths = computed(() => {
+    const headers = this._headers();
     const columns = this.sciTable().columns();
-    const headers = this.headerWidths();
 
-    // The width definition of columns can contain non-px values.
-    // Prefer using the overwritten column width over the calculated header width from the DOM, because the DOM width can lag behind.
-    return columns.map((column, i) => column.absoluteWidth ?? headers[i]!);
+    return headers.reduce((map, header, i) => {
+      const column = columns[i];
+      if (column) {
+        map.set(column.name, header.boundingClientRect().width);
+      }
+      return map;
+    }, new Map<`column:${string}`, number>());
+  });
+
+  protected readonly hasOverflow = computed(() => {
+    const clientWidth = this.containerDimension().clientWidth;
+    const tableWidth = this.verticalViewPortDimension().clientWidth;
+    return tableWidth > clientWidth;
   });
 
   /**
    * A grid will never grow beyond its parent unless explicitly set, that is why we need to set the table width.
    * This allows the grid to overflow when resizing.
    */
-  protected readonly tableWidth = computed(() => {
-    const clientWidth = this.containerDimension().clientWidth;
-    const tableWidth = this.verticalViewPortDimension().clientWidth;
-    const fixedSize = this.sciTable().columns().some(column => column.absoluteWidth !== undefined);
-
-    // Allow table to grow and shrink with container.
-    // When the minimal table width is larger than the container, or the column widths were manually adjusted fix the table width.
-    return tableWidth > clientWidth || fixedSize ? `${tableWidth}px` : '100%';
-  });
+  protected readonly tableWidth = signal('100%');
 
   constructor() {
     this.setupToolbar();
@@ -142,32 +142,10 @@ export class SciTableComponent<T> {
     this.onOverlayScrollBy(event.deltaY);
   }
 
-  /**
-   * Freeze columns on first resize.
-   * This prevents other column widths being changed while dragging.
-   */
-  protected onResizeStart(): void {
-    const table = this.sciTable();
-    if (this.sciTable().columns().some(column => column.absoluteWidth !== undefined)) {
-      return;
-    }
-
-    const absoluteColumnWidths = this.absoluteColumnWidths();
-    table.columns()
-      .filter(c => c.absoluteWidth === undefined)
-      .forEach((column, index) => {
-        table.setResizedColumn(column.name, absoluteColumnWidths[index] ?? 0);
-      });
-  }
-
   protected onResizeAuto(column: SciColumnLike<T>): void {
     const cellWidths = this._rows().map(row => row.getCellWidth(column.name));
     const maxWidth = Math.max(...cellWidths, 0);
     this.sciTable().setResizedColumn(column.name, maxWidth);
-  }
-
-  protected onResize({column, width}: {column: SciColumnLike<T>; width: number}): void {
-    this.sciTable().setResizedColumn(column.name, width);
   }
 
   /**
@@ -284,15 +262,27 @@ export class SciTableComponent<T> {
       ), {initialValue: false});
   }
 
-  private computeColumnWidths(table: Signal<ɵSciTable<T>>): Signal<string> {
+  private computeColumnWidths(): Signal<string> {
     return computed(() => {
-      const columns = table().columns();
+      const columns = this.sciTable().columns();
+      const resizingState = this.sciTable().resizingState();
+      const hasOverflow = this.hasOverflow();
+      const hasResizedColumns = columns.some(column => column.absoluteWidth);
 
+      if (!resizingState) {
+        return columns
+          .map(column => column.absoluteWidth ?? (hasResizedColumns ? column.width : minmax(column.minWidth, column.width, column.maxWidth)))
+          .join(' ');
+      }
+
+      const {temporaryColumnWidths} = resizingState;
       return columns
-        .map(column => column.absoluteWidth ?
-          `${column.absoluteWidth}px` :
-          minmax(column.minWidth, column.width, column.maxWidth),
-        )
+        .map(column => {
+          if (temporaryColumnWidths.get(column.name)!.endsWith('fr')) {
+            return hasOverflow ? `${column.minWidth}px` : minmax(column.minWidth, temporaryColumnWidths.get(column.name)!, column.maxWidth);
+          }
+          return temporaryColumnWidths.get(column.name)!;
+        })
         .join(' ');
     });
   }
@@ -317,5 +307,12 @@ export class SciTableComponent<T> {
 
   protected onOverlayScrollBy(deltaY: number): void {
     this._verticalViewport().nativeElement.scrollBy({top: deltaY});
+  }
+
+  protected onTableWidthChange(): void {
+    const containerWidth = this.containerDimension().clientWidth;
+    const columnWidths = [...this.absoluteColumnWidths().values()].reduce((sum, width) => sum + width, 0);
+
+    this.tableWidth.set(columnWidths > containerWidth ? `${columnWidths}px` : '100%');
   }
 }

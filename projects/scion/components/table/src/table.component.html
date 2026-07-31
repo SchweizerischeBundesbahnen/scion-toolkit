@@ -18,9 +18,8 @@
       </div>
     </div>
     <sci-table-overlay [columnWidths]="absoluteColumnWidths()"
-                       (resizeStart)="onResizeStart()"
+                       (widthChange)="onTableWidthChange()"
                        (autoResize)="onResizeAuto($event)"
-                       (resize)="onResize($event)"
                        (scrollBy)="onOverlayScrollBy($event)" />
   </div>
   @if (sciTable().rowActions) {

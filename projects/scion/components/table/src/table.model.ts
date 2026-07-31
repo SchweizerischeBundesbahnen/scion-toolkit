@@ -128,7 +128,8 @@ export interface SciColumn {
   resizable: Signal<boolean>;
   header: Signal<string>;
   width: string;
-  absoluteWidth: number | undefined;
+  isFraction: boolean;
+  absoluteWidth: string | undefined;
   minWidth: number;
   maxWidth: number | undefined;
 }

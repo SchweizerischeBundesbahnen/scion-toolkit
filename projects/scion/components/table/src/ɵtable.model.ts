@@ -24,7 +24,7 @@ import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {filter, skip} from 'rxjs';
 
 interface StoredTable {
-  columns: {name: string; width: number | undefined}[];
+  columns: {name: string; width: string | undefined}[];
 }
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
@@ -57,6 +57,12 @@ export class ɵSciTable<T> implements SciTable<T> {
   private readonly _totalCount = signal<number | undefined>(undefined);
   private readonly _scrollTop = signal<number>(0);
   private readonly _storedTable = signal<StoredTable | undefined>(undefined);
+
+  public readonly resizingState = signal<{
+    column: SciColumnLike<T>;
+    initialFractionColumns: Set<`column:${string}`>;
+    temporaryColumnWidths: Map<`column:${string}`, string>;
+  } | undefined>(undefined);
 
   public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria(), globalFilter: this._globalFilter()}));
   public readonly range = this.computeRange();
@@ -131,7 +137,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
 
     // Only return the rows which are actually in the viewport.
-    return rows.slice(start - firstPageStart, end - firstPageStart);
+    return rows.slice(start - firstPageStart, Math.min(end, totalCount ?? Infinity) - firstPageStart);
   });
 
   public readonly activeIndex = computed(() => this.indexById(this._activeItem(), this.rowsByIndex()));
@@ -290,7 +296,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public setResizedColumn(columnName: string, width: number): void {
     this.columns.update(columns => columns.map(column => column.name === columnName ? {
       ...column,
-      absoluteWidth: Math.max(column.minWidth, Math.min(column.maxWidth ?? width, width)),
+      absoluteWidth: `${Math.max(column.minWidth, Math.min(column.maxWidth ?? width, width))}px`,
     } : column));
   }
 
@@ -337,6 +343,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
     const name = config.name ?? index.toString();
     const storedColumn = storedTable?.columns.find(column => column.name === name);
+    const width = config.width ?? '1fr';
 
     return {
       ...config,
@@ -349,7 +356,8 @@ export class ɵSciTable<T> implements SciTable<T> {
       resizable: computed(() => (config.resizable ?? true) && this.resizable()),
       header: coerceSignal(config.header ?? ''),
       absoluteWidth: storedColumn?.width,
-      width: config.width ?? '1fr',
+      isFraction: width.endsWith('fr') || width.endsWith('%'),
+      width,
       minWidth: config.minWidth ?? 100,
       maxWidth: config.maxWidth,
     } as SciColumnLike<T>;
