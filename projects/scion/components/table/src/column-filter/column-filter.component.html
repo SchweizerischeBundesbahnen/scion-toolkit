@@ -12,7 +12,7 @@
     </select>
   }
   @default {
-    <input [formControl]="query" />
+    <input [formControl]="query" type="text" />
   }
 }
 @if (query.value && column().type !== 'boolean') {

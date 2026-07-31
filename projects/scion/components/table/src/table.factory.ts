@@ -90,11 +90,11 @@ export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sortable?: boolean | {comparator: (a: SciCellContext<T, number>, b: SciCellContext<T, number>) => number};
+  sortable?: boolean;
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, number>) => boolean};
+  filterable?: boolean;
 }
 
 export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
@@ -102,13 +102,10 @@ export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sortable?: boolean | {comparator: (a: SciCellContext<T, boolean>, b: SciCellContext<T, boolean>) => number};
+  sortable?: boolean;
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
-  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, boolean>) => boolean};
-
-  // TODO: Label Provider umsetzen
-  labelProvider?: (value: boolean) => Translatable;
+  filterable?: boolean;
 }
 export type SciColumnDescriptors<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;

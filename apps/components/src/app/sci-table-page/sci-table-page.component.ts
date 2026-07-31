@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, inject, Injector, input, inputBinding, linkedSignal, runInInjectionContext, Signal, signal, untracked} from '@angular/core';
+import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, signal, untracked} from '@angular/core';
 import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {companies, Company, filter, sort} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
@@ -17,6 +17,8 @@ import {DatePipe} from '@angular/common';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {UUID} from '@scion/toolkit/uuid';
 import {startWith} from 'rxjs/operators';
+import {text} from '@scion/components/text';
+import {createDestroyableInjector} from '@scion/components/common';
 
 @Component({
   selector: 'app-date-cell',
@@ -159,18 +161,22 @@ export default class SciTablePageComponent {
     },
   };
 
-  protected table = linkedSignal<Signal<Company[]> | SciDataLoaderFn<Company>, SciTable>({
-    source: () => this._useSlowDataSource() ? this._slowDataSource : data,
-    computation: (dataSource, previous) => {
-      untracked(() => previous?.value.dispose());
-      return untracked(() => runInInjectionContext(this.injector,
-        () => table<Company>({...this.tableConfig, data: dataSource}, table => this.createTable(table)),
-      ));
-    },
-  });
-
+  protected table = signal<SciTable>(table<Company>({...this.tableConfig, data}, table => this.createTable(table)));
   protected activeItem = computed(() => this.table().activeItem());
   protected selectedItems = computed(() => this.table().selectedItems());
+
+  constructor() {
+    effect(onCleanup => {
+      const dataSource = this._useSlowDataSource() ? this._slowDataSource : data;
+      untracked(() => {
+        const injector = createDestroyableInjector({parent: this.injector});
+        onCleanup(() => injector.destroy());
+        this.table.set(runInInjectionContext(injector,
+          () => table<Company>({...this.tableConfig, data: dataSource}, table => this.createTable(table)),
+        ));
+      });
+    });
+  }
 
   protected createTable(table: SciTableFactory<Company>): SciTableFactory<Company> {
     return table
@@ -187,7 +193,7 @@ export default class SciTablePageComponent {
       })
       .addStringColumn({
         header: '%scion.components.clear.tooltip',
-        value: company => company.abbreviation,
+        value: company => text(`%${company.abbreviation}`, {injector: this.injector}),
         width: '1fr',
         name: 'column:abbreviation',
       })
@@ -200,6 +206,7 @@ export default class SciTablePageComponent {
       .addBooleanColumn({
         header: 'EVU',
         value: company => company.railwayUndertaking,
+        width: '20%',
         name: 'column:railwayUndertaking',
       })
       .addComponentColumn({

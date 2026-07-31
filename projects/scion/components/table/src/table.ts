@@ -28,6 +28,10 @@ export function table<T>(arg1: `table:${string}` | SciTableDescriptor<T>, arg2: 
   const factory = new ɵSciTableFactory<T>();
   const factoryFn = isSignal(arg2) ? arg3 as TableFactoryFn<T> : arg2;
 
+  // TODO: Error if array datasource and filterable / sortable auf component column = true
+  // TODO: Error if remote datasource and matcher / comparator auf irgendeiner column. SEE menu.factory.tsL57
+  // TODO: on injector destroy, dispose
+
   effect(() => {
     factory.columns.set([]);
     factoryFn(factory);
