@@ -14,6 +14,7 @@ import {signal} from '@angular/core';
 
 export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
+  // Columns have to be a signal, because are observed inside the table model.
   public readonly columns = signal<(SciColumnDescriptors<T> & {type: ColumnType})[]>([]);
 
   public addBooleanColumn(value: (item: T) => boolean): this;

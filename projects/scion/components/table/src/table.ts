@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {assertInInjectionContext, assertNotInReactiveContext, effect, inject, Injector, isSignal, Signal} from '@angular/core';
+import {assertInInjectionContext, assertNotInReactiveContext, DestroyRef, effect, inject, Injector, isSignal, Signal} from '@angular/core';
 import {SciTable, SciTableDescriptor} from './table.model';
 import {SciTableFactory} from './table.factory';
 import {ɵSciTableFactory} from './ɵtable.factory';
@@ -27,19 +27,23 @@ export function table<T>(arg1: `table:${string}` | SciTableDescriptor<T>, arg2: 
   const injector = options?.injector ?? inject(Injector);
   const factory = new ɵSciTableFactory<T>();
   const factoryFn = isSignal(arg2) ? arg3 as TableFactoryFn<T> : arg2;
-
-  // TODO: Error if array datasource and filterable / sortable auf component column = true
-  // TODO: Error if remote datasource and matcher / comparator auf irgendeiner column. SEE menu.factory.tsL57
-  // TODO: on injector destroy, dispose
+  const descriptor = typeof arg1 === 'object' ? arg1 : {name: arg1, data: arg2 as Signal<T[]>};
 
   effect(() => {
     factory.columns.set([]);
     factoryFn(factory);
+
+    const columns = factory.columns();
+    if (!isSignal(descriptor.data) && columns.some(column => typeof column.sortable === 'object' || typeof column.filterable === 'object')) {
+      throw Error('[TableDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
+    }
+
+    if (isSignal(descriptor.data) && columns.some(column => ['component', 'template'].includes(column.type) && (column.filterable === true || column.sortable === true))) {
+      throw Error('[TableDefinitionError] Component and template columns cannot have a auto filter or auto sort.');
+    }
   }, {injector});
 
-  if (typeof arg1 === 'object') {
-    return new ɵSciTable(factory, arg1);
-  }
-
-  return new ɵSciTable(factory, {name: arg1, data: arg2 as Signal<T[]>});
+  const model = new ɵSciTable(factory, descriptor);
+  injector.get(DestroyRef).onDestroy(() => model.dispose());
+  return model;
 }

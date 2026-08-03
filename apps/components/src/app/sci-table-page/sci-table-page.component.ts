@@ -161,24 +161,25 @@ export default class SciTablePageComponent {
     },
   };
 
-  protected table = signal<SciTable>(table<Company>({...this.tableConfig, data}, table => this.createTable(table)));
+  protected table = signal<SciTable>(table<Company>({...this.tableConfig, data}, table => this.createTable(false, table)));
   protected activeItem = computed(() => this.table().activeItem());
   protected selectedItems = computed(() => this.table().selectedItems());
 
   constructor() {
     effect(onCleanup => {
-      const dataSource = this._useSlowDataSource() ? this._slowDataSource : data;
+      const slowDataSource = this._useSlowDataSource();
+      const dataSource = slowDataSource ? this._slowDataSource : data;
       untracked(() => {
         const injector = createDestroyableInjector({parent: this.injector});
         onCleanup(() => injector.destroy());
         this.table.set(runInInjectionContext(injector,
-          () => table<Company>({...this.tableConfig, data: dataSource}, table => this.createTable(table)),
+          () => table<Company>({...this.tableConfig, data: dataSource}, table => this.createTable(slowDataSource, table)),
         ));
       });
     });
   }
 
-  protected createTable(table: SciTableFactory<Company>): SciTableFactory<Company> {
+  protected createTable(slowDataSource: boolean, table: SciTableFactory<Company>): SciTableFactory<Company> {
     return table
       .addStringColumn({
         header: 'ID',
@@ -212,8 +213,8 @@ export default class SciTablePageComponent {
       .addComponentColumn({
         header: 'Gültig ab',
         name: 'column:validFrom',
-        sortable: {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
-        filterable: {matcher: (query, item) => item.item.validFrom.includes(query)},
+        sortable: slowDataSource ? true : {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
+        filterable: slowDataSource ? true : {matcher: (query, item) => item.item.validFrom.includes(query)},
         component: item => ({
           component: DateCellComponent,
           bindings: [inputBinding('date', () => new Date(item.validFrom))],
@@ -222,8 +223,8 @@ export default class SciTablePageComponent {
       .addComponentColumn({
         header: 'Gültig bis',
         name: 'column:validTo',
-        filterable: {matcher: (query, item) => item.item.validTo.includes(query)},
-        sortable: {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
+        filterable: slowDataSource ? true : {matcher: (query, item) => item.item.validTo.includes(query)},
+        sortable: slowDataSource ? true : {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
         component: item => ({
           component: DateCellComponent,
           bindings: [inputBinding('date', () => new Date(item.validTo))],
