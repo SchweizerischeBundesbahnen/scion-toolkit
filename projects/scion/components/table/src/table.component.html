@@ -1,3 +1,5 @@
+<div class="item-size" #itemSizeElement></div>
+
 <div class="horizontal-viewport e2e-horizontal-viewport" #horizontalViewport sciScrollable>
   <div class="horizontal-content">
     <header #header>
@@ -5,16 +7,18 @@
         <sci-column-header [column]="column" />
       }
     </header>
-    <div class="vertical-viewport" #verticalViewport sciScrollable>
-      <div class="body" sciTableKeyboardNavigator tabindex="0">
-        <div class="rows" [style.transform]="`translateY(${sciTable().range().start * sciTable().itemSize()}px)`">
-          <!-- Track index to reuse the table row elements -->
-          @for (row of sciTable().rows(); track $index) {
-            <sci-table-row [row]="row" [index]="sciTable().range().start + $index" />
-          } @empty {
-            <div class="empty-state">{{ ('%scion.components.no_items.message' | sciText)() }}</div>
-          }
-        </div>
+    <div class="vertical-viewport e2e-vertical-viewport" #verticalViewport sciScrollable>
+      <div class="vertical-content" sciTableKeyboardNavigator tabindex="0">
+        @if (sciTable().range(); as range) {
+          <div class="rows" [style.transform]="`translateY(${range.start * (itemSize() ?? 0)}px)`">
+            <!-- Track index to reuse the table row elements -->
+            @for (row of sciTable().rows(); track $index) {
+              <sci-table-row [row]="row" [index]="range.start + $index" />
+            } @empty {
+              <div class="empty-state">{{ ('%scion.components.no_items.message' | sciText)() }}</div>
+            }
+          </div>
+        }
       </div>
     </div>
     <sci-table-overlay [columnWidths]="absoluteColumnWidths()"

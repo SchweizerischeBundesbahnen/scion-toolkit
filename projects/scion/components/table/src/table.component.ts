@@ -37,7 +37,6 @@ import {SciTextPipe} from '@scion/components/text';
     '[style.--ɵsci-table-height]': '`${containerDimension()?.clientHeight ?? 0}px`',
     '[style.--ɵsci-table-virtual-scroll-height]': 'virtualScrollHeight()',
     '[style.--ɵsci-table-columns]': 'columnWidths()',
-    '[style.--ɵsci-table-item-size]': '`${sciTable().itemSize()}px`',
     '[style.--ɵsci-table-scrolling]': 'scrolling() ? `true` : null',
     '[style.--ɵsci-table-toolbar-offset]': '`${rowActionToolbarOffset()}px`',
     '[style.--ɵsci-table-width]': 'tableWidth()',
@@ -69,6 +68,7 @@ export class SciTableComponent<T> {
   private readonly _header = viewChild<ElementRef<HTMLElement>>('header');
   private readonly _headers = viewChildren(ColumnHeaderComponent);
   private readonly _rows = viewChildren(TableRowComponent);
+  private readonly _itemSizeElement = viewChild<ElementRef<HTMLElement>>('itemSizeElement');
 
   private readonly _zone = inject(NgZone);
   private readonly _element = inject(ElementRef);
@@ -77,17 +77,19 @@ export class SciTableComponent<T> {
   protected readonly nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   protected readonly containerDimension = dimension(this._element.nativeElement as HTMLElement);
-  protected readonly verticalViewPortDimension = dimension(this._verticalViewport);
+  protected readonly verticalViewportDimension = dimension(this._verticalViewport);
+  protected readonly itemSizeDimension = dimension(this._itemSizeElement);
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly hoveredRow = computed(() => this.sciTable().rowsByIndex().get(this.sciTable().hoveredIndex()));
   protected readonly headerHeight = computed(() => this.headerDimension()?.clientHeight ?? 0);
-  protected readonly virtualScrollHeight = computed(() => `${(this.sciTable().totalCount() ?? 0) * this.sciTable().itemSize()}px`);
+  protected readonly virtualScrollHeight = computed(() => `${(this.sciTable().totalCount() ?? 0) * (this.itemSize() ?? 0)}px`);
+  protected readonly itemSize = computed(() => this.itemSizeDimension()?.clientHeight);
 
   protected readonly rowActionToolbarName = computed(() => `toolbar:${this.sciTable().instanceId}` as const);
   protected readonly rowActionToolbarOffset = computed(() => {
-    const offset = this.sciTable().hoveredIndex() * this.sciTable().itemSize();
-    return offset + this.headerHeight() - this.sciTable().scrollTop();
+    const offset = this.sciTable().hoveredIndex() * (this.itemSize() ?? 0);
+    return offset + this.headerHeight() - this._scrollTop();
   });
 
   protected readonly scrolling = this.computeScrolling(this._verticalViewport);
@@ -109,7 +111,7 @@ export class SciTableComponent<T> {
 
   protected readonly hasOverflow = computed(() => {
     const clientWidth = this.containerDimension().clientWidth;
-    const tableWidth = this.verticalViewPortDimension().clientWidth;
+    const tableWidth = this.verticalViewportDimension().clientWidth;
     return tableWidth > clientWidth;
   });
 
@@ -118,6 +120,8 @@ export class SciTableComponent<T> {
    * This allows the grid to overflow when resizing.
    */
   protected readonly tableWidth = signal('100%');
+
+  private readonly _scrollTop = signal(0);
 
   constructor() {
     this.setupToolbar();
@@ -184,12 +188,23 @@ export class SciTableComponent<T> {
    */
   private installDimensionWatcher(): void {
     effect(() => {
-      const containerDimension = this.containerDimension();
-      const itemSize = this.sciTable().itemSize();
+      const viewportDimension = this.verticalViewportDimension();
+      const itemSize = this.itemSizeDimension()?.clientHeight;
       const overscan = this.sciTable().overscan();
-
-      const count = Math.ceil(containerDimension.clientHeight / itemSize) + overscan * 2;
-      this.sciTable().setVisibleRowCount(count);
+      const scrollTop = this._scrollTop();
+      if (itemSize) {
+        const visibleRowCount = Math.ceil(viewportDimension.clientHeight / itemSize) + overscan * 2;
+        const firstVisible = Math.floor(scrollTop / itemSize);
+        const start = Math.max(0, firstVisible - overscan);
+        const end = start + visibleRowCount;
+        this.sciTable().range.update(range => {
+          // Only update range signal if there is an actual change.
+          if (start === range?.start && end === range.end) {
+            return range;
+          }
+          return {start, end};
+        });
+      }
     });
   }
 
@@ -228,7 +243,7 @@ export class SciTableComponent<T> {
           startWith(null),
           subscribeIn(fn => this._zone.runOutsideAngular(fn)),
         ).subscribe(() => {
-          this.sciTable().setScrollTop(element.scrollTop);
+          this._scrollTop.set(element.scrollTop);
           this.sciTable().setHoveredItem(undefined);
         });
 
@@ -288,11 +303,14 @@ export class SciTableComponent<T> {
   }
 
   private scrollFocusedRowIntoViewport(focusedIndex: number): void {
-    const table = this.sciTable();
     const viewport = this._verticalViewport().nativeElement;
+    const itemSize = this.itemSizeDimension()?.clientHeight;
+    if (!itemSize) {
+      return;
+    }
 
-    const focusedRowTop = focusedIndex * table.itemSize();
-    const focusedRowBottom = focusedRowTop + table.itemSize();
+    const focusedRowTop = focusedIndex * itemSize;
+    const focusedRowBottom = focusedRowTop + itemSize;
     const viewportHeight = viewport.clientHeight;
     const viewportTop = viewport.scrollTop;
     const viewportBottom = viewportTop + viewportHeight;

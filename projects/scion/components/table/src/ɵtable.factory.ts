@@ -9,13 +9,16 @@
  */
 
 import {SciBooleanColumnDescriptor, SciColumnDescriptors, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableFactory, SciTemplateColumnDescriptor} from './table.factory';
-import {ColumnType} from './table.model';
-import {signal} from '@angular/core';
+import {ColumnType, SciTableDescriptor} from './table.model';
+import {isSignal, signal} from '@angular/core';
 
 export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   // Columns have to be a signal, because are observed inside the table model.
   public readonly columns = signal<(SciColumnDescriptors<T> & {type: ColumnType})[]>([]);
+
+  constructor(private readonly _descriptor: SciTableDescriptor<T>) {
+  }
 
   public addBooleanColumn(value: (item: T) => boolean): this;
   public addBooleanColumn(header: string, value: (item: T) => boolean): this;
@@ -39,10 +42,16 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   }
 
   public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
+    if (isSignal(this._descriptor.data) && (config.filterable === true || config.sortable === true)) {
+      throw Error('[ColumnDefinitionError] Component columns cannot have a auto filter or auto sort.');
+    }
     return this.addColumn('component', config);
   }
 
   public addTemplateColumn(config: SciTemplateColumnDescriptor<T>): this {
+    if (isSignal(this._descriptor.data) && (config.filterable === true || config.sortable === true)) {
+      throw Error('[ColumnDefinitionError] Template columns cannot have a auto filter or auto sort.');
+    }
     return this.addColumn('template', config);
   }
 
@@ -57,6 +66,10 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
           return valueHeaderDescriptor;
       }
     })();
+
+    if (!isSignal(this._descriptor.data) && (typeof config.sortable === 'object' || typeof config.filterable === 'object')) {
+      throw Error('[ColumnDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
+    }
 
     this.columns.update(c => [...c, {...config, type}]);
     return this;

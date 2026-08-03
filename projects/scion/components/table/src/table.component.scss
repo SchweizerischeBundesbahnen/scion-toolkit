@@ -9,9 +9,11 @@
 
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
-  > sci-table-header {
-    width: min(100%, var(--ɵsci-table-width));
-    padding-block: 0.25em;
+  > div.item-size { // div to read row item size via sciDimension.
+    height: var(--sci-table-row-height);
+    position: absolute;
+    pointer-events: none;
+    visibility: hidden;
   }
 
   > div.horizontal-viewport {
@@ -54,7 +56,7 @@
         position: relative;
         anchor-name: --vertical-viewport;
 
-        > div.body {
+        > div.vertical-content {
             display: grid;
             grid-template-columns: subgrid;
             grid-column: 1 / -1;
@@ -68,7 +70,7 @@
               display: grid;
               grid-template-columns: subgrid;
               grid-column: 1 / -1;
-              grid-auto-rows: var(--ɵsci-table-item-size);
+              grid-auto-rows: var(--sci-table-row-height);
               height: fit-content;
 
               > div.empty-state {
@@ -95,7 +97,7 @@
     > .row-actions {
       position: sticky; // actions should always stick to the right of the viewport.
       top: var(--ɵsci-table-toolbar-offset);
-      height: var(--ɵsci-table-item-size); // match the height of row elements.
+      height: var(--sci-table-row-height); // match the height of row elements.
       width: 0; // should not take up space next to the table.
       display: flex; // vertically position actions in the middle of the row.
       align-items: center;

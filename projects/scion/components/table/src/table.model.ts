@@ -23,11 +23,6 @@ export interface SciTableDescriptor<T> {
    * Name of the table, used to save and restore view to localStorage.
    */
   name: `table:${string}`;
-  /**
-   * Size of row items in px. Defaults to 30px.
-   */
-  // TODO: via design token setzen, mit dimension signal höhe holen
-  itemSize?: MaybeSignal<number>;
   sortable?: MaybeSignal<boolean>;
   resizable?: MaybeSignal<boolean>;
   filterable?: MaybeSignal<boolean>;

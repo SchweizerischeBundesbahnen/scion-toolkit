@@ -41,7 +41,6 @@ export class ɵSciTable<T> implements SciTable {
   public readonly rowActions?: SciRowActionFactoryFn<T>;
   public readonly rowName?: (item: T) => string | string[] | undefined;
 
-  public readonly itemSize: Signal<number>;
   public readonly overscan: Signal<number>;
   public readonly showColumnFilters: Signal<boolean>;
   public readonly showColumnHeaders: Signal<boolean>;
@@ -53,11 +52,10 @@ export class ɵSciTable<T> implements SciTable {
   private readonly _filterCriteria = signal<SciColumnFilter[]>([]);
   private readonly _globalFilter = signal<string | undefined>(undefined);
   private readonly _selectedItems = signal<Set<unknown>>(new Set());
-  private readonly _visibleRowCount = signal<number>(0);
   private readonly _totalCount = signal<number | undefined>(undefined);
-  private readonly _scrollTop = signal<number>(0);
   private readonly _storedTable = signal<StoredTable | undefined>(undefined);
 
+  public readonly range = signal<{start: number; end: number} | undefined>(undefined);
   public readonly resizingState = signal<{
     column: SciColumnLike<T>;
     initialFractionColumns: Set<`column:${string}`>;
@@ -65,18 +63,24 @@ export class ɵSciTable<T> implements SciTable {
   } | undefined>(undefined);
 
   public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria(), globalFilter: this._globalFilter()}));
-  public readonly range = this.computeRange();
-  public readonly pageSize = linkedSignal<number, number>({
-    source: () => this.visibleRowCount(),
-    // PageSize should never be smaller than the minimum size (30).
-    computation: (visibleRowCount, previous) => Math.max(visibleRowCount, previous?.value ?? 5),
+  public readonly pageSize = linkedSignal<{start: number; end: number} | undefined, number>({
+    source: () => this.range(),
+    computation: (range, previous) => {
+      const visibleRowCount = (range?.end ?? 0) - (range?.start ?? 0);
+      // PageSize should never be smaller than the minimum size (5).
+      return Math.max(visibleRowCount, previous?.value ?? 5);
+    },
   });
 
   public readonly pages = computed(() => {
-    const {start, end} = this.range();
+    const range = this.range();
     const pageSize = this.pageSize();
-    const startPage = Math.floor(start / pageSize);
-    const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
+    if (!range) {
+      return [];
+    }
+
+    const startPage = Math.floor(range.start / pageSize);
+    const endPage = Math.floor((range.end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
     return rangeInclusive(startPage, endPage);
   }, {equal: (a, b) => Objects.isEqual(a, b)});
 
@@ -121,10 +125,10 @@ export class ɵSciTable<T> implements SciTable {
     const pageSize = this.pageSize();
     const visiblePages = this.pages();
     const rowsByIndex = this.rowsByIndex();
-    const {start, end} = this.range();
+    const range = this.range();
     const totalCount = this._totalCount();
 
-    if (visiblePages.length <= 0) {
+    if (!range || visiblePages.length <= 0) {
       return [];
     }
 
@@ -137,7 +141,7 @@ export class ɵSciTable<T> implements SciTable {
     });
 
     // Only return the rows which are actually in the viewport.
-    return rows.slice(start - firstPageStart, Math.min(end, totalCount ?? Infinity) - firstPageStart);
+    return rows.slice(range.start - firstPageStart, Math.min(range.end, totalCount ?? Infinity) - firstPageStart);
   });
 
   public readonly activeIndex = computed(() => this.indexById(this._activeItem(), this.rowsByIndex()));
@@ -149,13 +153,10 @@ export class ɵSciTable<T> implements SciTable {
   public readonly activeItem = this._activeItem.asReadonly();
   public readonly selectedItems = this._selectedItems.asReadonly();
   public readonly allSelected = this._allSelected.asReadonly();
-  public readonly visibleRowCount = this._visibleRowCount.asReadonly();
   public readonly totalCount = this._totalCount.asReadonly();
-  public readonly scrollTop = this._scrollTop.asReadonly();
 
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T>) {
     this.name = descriptor.name;
-    this.itemSize = coerceSignal(descriptor.itemSize ?? 30);
     this.overscan = coerceSignal(descriptor.bufferSize ?? 3);
     this.sortable = coerceSignal(descriptor.sortable ?? true);
     this.showColumnFilters = coerceSignal(descriptor.filterable ?? true);
@@ -187,10 +188,6 @@ export class ɵSciTable<T> implements SciTable {
 
     void this.readTableStorage();
     this.installTablePersister();
-  }
-
-  public setVisibleRowCount(count: number): void {
-    this._visibleRowCount.set(count);
   }
 
   private loadPage(request: SciTableRequest, onCleanup: EffectCleanupRegisterFn): void {
@@ -257,10 +254,6 @@ export class ɵSciTable<T> implements SciTable {
       const newSort = {columnName, direction} satisfies SciSortCriterion;
       return multi ? [...other, newSort] : [newSort];
     });
-  }
-
-  public resetSort(): void {
-    this._sortCriteria.set([]);
   }
 
   public filter(text: string): void;
@@ -385,7 +378,7 @@ export class ɵSciTable<T> implements SciTable {
         cells: columns.map(column => ({
           value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,
-          template: column.type === 'template' ? coerceSignal(column.template(item)) : undefined,
+          template: column.type === 'template' ? column.template(item) : undefined,
           type: column.type,
           columnName: column.name,
           name: [column.name, ...rowName],
@@ -396,14 +389,6 @@ export class ɵSciTable<T> implements SciTable {
 
   public dispose(): void {
     this._cache.clear();
-  }
-
-  private computeRange(): Signal<{start: number; end: number}> {
-    return computed(() => {
-      const firstVisible = Math.floor(this._scrollTop() / this.itemSize());
-      const start = Math.max(0, firstVisible - this.overscan());
-      return {start, end: start + this._visibleRowCount()};
-    });
   }
 
   private async readTableStorage(): Promise<void> {
@@ -420,10 +405,6 @@ export class ɵSciTable<T> implements SciTable {
       console.warn(`Failed to parse item from storage.`, error);
       this._storedTable.set({columns: []});
     }
-  }
-
-  public setScrollTop(scrollTop: number): void {
-    this._scrollTop.set(scrollTop);
   }
 }
 

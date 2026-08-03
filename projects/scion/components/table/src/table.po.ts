@@ -11,12 +11,8 @@ export class TablePO {
     return this._fixture.debugElement;
   }
 
-  public get nativeElement(): HTMLElement {
-    return this.debugElement.nativeElement as HTMLElement;
-  }
-
   public get viewport(): HTMLElement {
-    return this.debugElement.query(By.css('.e2e-horizontal-viewport')).nativeElement as HTMLElement;
+    return this.debugElement.query(By.css('.e2e-vertical-viewport')).nativeElement as HTMLElement;
   }
 
   public get rows(): Array<RowPo> {
@@ -38,6 +34,10 @@ export class TablePO {
   public columnEntries(columnName: string): Array<string> {
     const index = this.getColumnIndexByName(columnName);
     return this.rows.map(row => row.cells[index]!.value);
+  }
+
+  public clickRowAction(cssClass: string): void {
+    (this.debugElement.query(By.css(`button.${cssClass}`)).nativeElement as HTMLElement).click();
   }
 
   public async scrollY(offset: number): Promise<void> {
@@ -109,29 +109,6 @@ export class RowPo {
 
   public get cells(): Array<CellPo> {
     return this.debugElement.queryAll(By.css('sci-table-cell')).map(element => new CellPo(element));
-  }
-
-  public async clickAction(cssClass: string): Promise<void> {
-    this.select();
-    await this._fixture.whenStable();
-    ((this._fixture.nativeElement as HTMLElement).querySelector(`button.${cssClass}`) as HTMLElement | undefined)?.click();
-  }
-
-  public async clickActionAfterHover(cssClass: string): Promise<void> {
-    this.hover();
-    await this._fixture.whenStable();
-    ((this._fixture.nativeElement as HTMLElement).querySelector(`button.${cssClass}`) as HTMLElement | undefined)?.click();
-  }
-
-  public async clickActionAfterHoverAndRowMouseLeave(cssClass: string): Promise<void> {
-    this.hover();
-    await this._fixture.whenStable();
-
-    const actionButton = (this._fixture.nativeElement as HTMLElement).querySelector(`button.${cssClass}`) as HTMLElement | undefined;
-    this.nativeElement.dispatchEvent(new MouseEvent('mouseleave', {relatedTarget: actionButton ?? null}));
-    await this._fixture.whenStable();
-
-    actionButton?.click();
   }
 
   public hover(): void {
