@@ -16,8 +16,7 @@ import {combineLatestWith, map, Observable, scan, Subject, timer} from 'rxjs';
 import {DatePipe} from '@angular/common';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {UUID} from '@scion/toolkit/uuid';
-import {startWith} from 'rxjs/operators';
-import {text} from '@scion/components/text';
+import {startWith, switchMap} from 'rxjs/operators';
 import {createDestroyableInjector} from '@scion/components/common';
 
 @Component({
@@ -43,29 +42,34 @@ const create$ = new Subject<{index: number; company: Company}>();
 
 function slowDataSource(): SciDataLoaderFn<Company> {
   const _data$ = toObservable(data).pipe(
-    combineLatestWith(create$.pipe(startWith(null))),
-    scan((companies, [data, create]) => {
-      const newCompanies = companies.length === 0 ? data : companies;
-      if (create == null) {
+    switchMap(data => create$.pipe(
+      startWith(null),
+      scan((companies, create) => {
+        const newCompanies = companies.length === 0 ? data : companies;
+        if (create == null) {
+          return newCompanies;
+        }
+        newCompanies.splice(create.index, 0, create.company);
         return newCompanies;
-      }
-      newCompanies.splice(create.index, 0, create.company);
-      return newCompanies;
-    }, [] as Company[]),
+      }, [] as Company[]),
+    )),
   );
 
   return (request: SciTableRequest): Observable<SciTableResponse<Company>> => {
     return timer(1000).pipe(
-      combineLatestWith(_data$, updates$.pipe(startWith(null))),
-      scan((companies, [_, data, update]) => {
-        const newCompanies = companies.length === 0 ? data : companies;
-        if (update === null) {
+      combineLatestWith(_data$),
+      switchMap(([_, data]) => updates$.pipe(
+        startWith(null),
+        scan((companies, update) => {
+          const newCompanies = companies.length === 0 ? data : companies;
+          if (update === null) {
+            return newCompanies;
+          }
+          const index = newCompanies.findIndex(company => company.dataId == update.dataId);
+          newCompanies.splice(index, 1, update);
           return newCompanies;
-        }
-        const index = newCompanies.findIndex(company => company.dataId == update.dataId);
-        newCompanies.splice(index, 1, update);
-        return newCompanies;
-      }, [] as Company[]),
+        }, [] as Company[]),
+      )),
       map(companies => {
         const filtered = sort(filter(companies, request.columnFilters, request.globalFilter), request.sortCriteria);
         return ({
@@ -194,7 +198,7 @@ export default class SciTablePageComponent {
       })
       .addStringColumn({
         header: '%scion.components.clear.tooltip',
-        value: company => text(`%${company.abbreviation}`, {injector: this.injector}),
+        value: company => company.abbreviation,
         width: '1fr',
         name: 'column:abbreviation',
       })

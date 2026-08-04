@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input} from '@angular/core';
 import {SciColumnLike} from '../table.model';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';

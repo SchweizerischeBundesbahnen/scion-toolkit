@@ -9,7 +9,7 @@
  */
 
 import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, Injector, input, NgZone, signal, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
-import {SciColumnLike, SciTable} from './table.model';
+import {SciTable} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {concat, EMPTY, fromEvent, map, of, switchMap, timer} from 'rxjs';
