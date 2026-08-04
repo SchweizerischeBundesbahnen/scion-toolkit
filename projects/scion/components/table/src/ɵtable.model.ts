@@ -8,9 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, EffectCleanupRegisterFn, inject, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion, SciTableRequest} from './table-data-source';
-import {ColumnType, SciRowActionFactoryFn, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciTable, SciTableDescriptor} from './table.model';
+import {ColumnType, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {coerceObservable, rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
@@ -74,7 +74,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     },
   });
 
-  public readonly pages = computed(() => {
+  private readonly _pages = computed(() => {
     const range = this.range();
     const pageSize = this.pageSize();
     if (!range) {
@@ -125,7 +125,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public readonly rows = computed(() => {
     const pageSize = this.pageSize();
-    const visiblePages = this.pages();
+    const visiblePages = this._pages();
     const rowsByIndex = this.rowsByIndex();
     const range = this.range();
     const totalCount = this._totalCount();
@@ -148,6 +148,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public readonly activeIndex = computed(() => this.indexById(this._activeId(), this.rowsByIndex()));
   public readonly hoveredIndex = computed(() => this.indexById(this._hoveredId(), this.rowsByIndex()));
+  public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly activeItem = computed(() => this.rowsByIndex().get(this.activeIndex())?.item);
   public readonly selectedItems = computed(() => {
     const rows = this.rowsByIndex();
@@ -166,7 +167,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T>) {
     this.name = descriptor.name;
-    this.overscan = coerceSignal(descriptor.bufferSize ?? 3);
+    this.overscan = coerceSignal(descriptor.bufferSize ?? 10);
     this.sortable = coerceSignal(descriptor.sortable ?? true);
     this.showColumnFilters = coerceSignal(descriptor.filterable ?? true);
     this.showColumnHeaders = coerceSignal(descriptor.headerVisible ?? true);
@@ -197,6 +198,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
     void this.readTableStorage();
     this.installTablePersister();
+    this.installPageLoader();
   }
 
   private loadPage(request: SciTableRequest, onCleanup: EffectCleanupRegisterFn): void {
@@ -206,10 +208,6 @@ export class ɵSciTable<T> implements SciTable<T> {
     const subscription = coerceObservable(this.dataLoaderFn(request)).subscribe(result => {
       this._totalCount.set(result.totalCount);
       items.set(result.items);
-    });
-
-    onCleanup(() => {
-      this._cache.deleteIfEmpty(cacheKey);
     });
 
     const cacheEntry: TableCacheEntry<T> = {
@@ -224,26 +222,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     };
 
     this._cache.set(cacheKey, cacheEntry);
-  }
-
-  public loadPages({pages, pageSize, sortCriteria, columnFilters, globalFilter, onCleanup}: {pages: number[]; pageSize: number; sortCriteria: SciSortCriterion[]; columnFilters: SciColumnFilter[]; globalFilter?: string; onCleanup: EffectCleanupRegisterFn}): void {
-    for (const page of pages) {
-      const pageStart = page * pageSize;
-      const pageEnd = pageStart + pageSize;
-      if (this._cache.has(`${pageStart}-${pageEnd}`)) {
-        continue;
-      }
-
-      this.loadPage({
-        start: pageStart,
-        end: pageEnd,
-        pageSize,
-        page,
-        sortCriteria,
-        globalFilter,
-        columnFilters: columnFilters,
-      }, onCleanup);
-    }
+    onCleanup(() => {
+      this._cache.deleteIfEmpty(cacheKey);
+    });
   }
 
   public sort(columnName: `column:${string}`, multi: boolean): void {
@@ -325,6 +306,37 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
+  /**
+   * Instructs the internal table model to load a set of pages.
+   */
+  private installPageLoader(): void {
+    effect(onCleanup => {
+      const pages = this._pages();
+      const pageSize = this.pageSize();
+      const sortCriteria = this.sortCriteria();
+      const filterCriteria = this.filterCriteria();
+      const globalFilter = this.globalFilter();
+
+      untracked(() => pages.forEach(page => {
+        const pageStart = page * pageSize;
+        const pageEnd = pageStart + pageSize;
+        if (this._cache.has(`${pageStart}-${pageEnd}`)) {
+          return;
+        }
+
+        this.loadPage({
+          start: pageStart,
+          end: pageEnd,
+          pageSize,
+          page,
+          sortCriteria,
+          globalFilter,
+          columnFilters: filterCriteria,
+        }, onCleanup);
+      }));
+    });
+  }
+
   private initColumn(type: ColumnType, config: SciColumnDescriptors<T>, index: number, storedTable: StoredTable | undefined): SciColumnLike<T> {
     // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
     const sortable = type === 'component' || type === 'template' ?
@@ -371,7 +383,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     return -1;
   }
 
-  public mapItemsToRow(items: T[], columns: SciColumnLike<T>[]): SciRow<T>[] {
+  private mapItemsToRow(items: T[], columns: SciColumnLike<T>[]): SciRow<T>[] {
     return items.map(item => {
       const rowName = Arrays.coerce(this.rowName?.(item));
       return ({

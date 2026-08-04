@@ -82,7 +82,6 @@ export class SciTableComponent<T> {
   protected readonly itemSizeDimension = dimension(this._itemSizeElement);
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
-  protected readonly hoveredRow = computed(() => this.sciTable().rowsByIndex().get(this.sciTable().hoveredIndex()));
   protected readonly headerHeight = computed(() => this.headerDimension()?.clientHeight ?? 0);
   protected readonly virtualScrollHeight = computed(() => `${(this.sciTable().totalCount() ?? 0) * (this.itemSize() ?? 0)}px`);
   protected readonly itemSize = computed(() => this.itemSizeDimension()?.clientHeight);
@@ -134,7 +133,6 @@ export class SciTableComponent<T> {
     this.setupToolbar();
     this.installActiveItemWatcher();
     this.installDimensionWatcher();
-    this.installPageLoader();
     this.installCriteriaListener();
     this.installScrollListener();
   }
@@ -173,7 +171,7 @@ export class SciTableComponent<T> {
     effect(onCleanup => {
       const id = this.rowActionToolbarName();
       const menu = untracked(() => contributeMenu(id, toolbar => {
-        const row = this.hoveredRow();
+        const row = this.sciTable().hoveredRow();
         if (row?.item) {
           this.sciTable().rowActions?.(row.item, toolbar);
         }
@@ -206,29 +204,6 @@ export class SciTableComponent<T> {
           return {start, end};
         });
       }
-    });
-  }
-
-  /**
-   * Instructs the internal table model to load a set of pages.
-   */
-  private installPageLoader(): void {
-    effect(onCleanup => {
-      const table = this.sciTable();
-      const pages = table.pages();
-      const pageSize = table.pageSize();
-      const sortCriteria = table.sortCriteria();
-      const filterCriteria = table.filterCriteria();
-      const globalFilter = table.globalFilter();
-
-      untracked(() => table.loadPages({
-        pages,
-        pageSize,
-        sortCriteria,
-        columnFilters: filterCriteria,
-        globalFilter,
-        onCleanup,
-      }));
     });
   }
 
