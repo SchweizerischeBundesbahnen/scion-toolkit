@@ -23,7 +23,7 @@ export class TableSelectionService<T> {
     const id = rowsByIndex.get(index)?.id;
     const previousFocusedIndex = table.activeIndex();
 
-    table.setActiveItem(id);
+    table.setActiveId(id);
 
     if (id === undefined || !table.selectable()) {
       return;
@@ -41,11 +41,11 @@ export class TableSelectionService<T> {
 
       if (ids.every(id => id !== undefined)) {
         // Only add shift click selection if all items are loaded.
-        table.updateSelectedItems(existing => new Set([...existing, ...ids]));
+        table.updateSelectedIds(existing => new Set([...existing, ...ids]));
       }
       else {
         // If not all id's could be found (big range is selected) treat the selection as normal click.
-        table.updateSelectedItems(() => new Set([id]));
+        table.updateSelectedIds(() => new Set([id]));
       }
     }
     else if (event.ctrlKey || event.metaKey) {
@@ -53,7 +53,7 @@ export class TableSelectionService<T> {
     }
     else {
       // If no modifier is pressed set the selection to the clicked row.
-      table.updateSelectedItems(() => new Set([id]));
+      table.updateSelectedIds(() => new Set([id]));
     }
   }
 
@@ -92,7 +92,7 @@ export class TableSelectionService<T> {
       return;
     }
 
-    const activeId = this._table().activeItem();
+    const activeId = this._table().activeId();
     if (activeId === undefined) {
       return;
     }
@@ -113,7 +113,7 @@ export class TableSelectionService<T> {
 
     // If all rows are loaded, add all to selection, else toggle all selected flag.
     if (rowsByIndex.size === this.rowCount(table)) {
-      table.updateSelectedItems(() => new Set(ids));
+      table.updateSelectedIds(() => new Set(ids));
     }
     else {
       table.selectAll();
@@ -128,7 +128,7 @@ export class TableSelectionService<T> {
     const table = this._table();
 
     if (item !== undefined) {
-      table.setActiveItem(item);
+      table.setActiveId(item);
     }
 
     if (!table.selectable() || item === undefined) {
@@ -136,15 +136,15 @@ export class TableSelectionService<T> {
     }
 
     if (event.shiftKey && table.selectable() === 'multi') {
-      table.updateSelectedItems(ids => new Set(ids).add(item));
+      table.updateSelectedIds(ids => new Set(ids).add(item));
     }
     else if (!event.ctrlKey && !event.metaKey) { // Don't update selected items at all when control is pressed.
-      table.updateSelectedItems(() => new Set([item]));
+      table.updateSelectedIds(() => new Set([item]));
     }
   }
 
   private toggleSelectedItem(id: unknown): void {
-    this._table().updateSelectedItems(selection => {
+    this._table().updateSelectedIds(selection => {
       const next = new Set(selection);
       if (next.has(id)) {
         next.delete(id);

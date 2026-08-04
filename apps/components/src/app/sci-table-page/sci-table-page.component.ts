@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, signal, untracked} from '@angular/core';
-import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {SciDataLoaderFn, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {companies, Company, filter, sort} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
@@ -161,7 +161,7 @@ export default class SciTablePageComponent {
     },
   };
 
-  protected table = signal<SciTable>(table<Company>({...this.tableConfig, data}, table => this.createTable(false, table)));
+  protected table = signal(table<Company>({...this.tableConfig, data}, table => this.createTable(false, table)));
   protected activeItem = computed(() => this.table().activeItem());
   protected selectedItems = computed(() => this.table().selectedItems());
 

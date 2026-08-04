@@ -2,7 +2,6 @@
 
 - Table Model Interface aufräumen und nur die sachen exposen, die es auch wirklich braucht
 - Autoresize anschauen
-- Selection mit fetten Objekten nicht mit Ids
 
 ## 2. Prio
 - Native Scrollbar overlaps mit header auf MacOS

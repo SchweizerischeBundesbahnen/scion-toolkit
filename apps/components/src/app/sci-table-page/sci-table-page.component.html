@@ -49,9 +49,9 @@
 
   <dl>
     <dt>Active Code:</dt>
-    <dd>{{activeItem() ?? '-'}}</dd>
+    <dd>{{activeItem()?.code ?? '-'}}</dd>
 
     <dt>Selected Code Count:</dt>
-    <dd>{{selectedItems().size}}</dd>
+    <dd>{{selectedItems().length}}</dd>
   </dl>
 </aside>

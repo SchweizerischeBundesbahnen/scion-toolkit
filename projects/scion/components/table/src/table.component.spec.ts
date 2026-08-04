@@ -147,7 +147,7 @@ describe('Table', () => {
           name: 'column:active',
           header: 'Active',
           value: item => item.active,
-        }), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
+        }), {injector: TestBed.inject(Injector)}) as ɵSciTable<{active: boolean}>;
 
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
@@ -209,7 +209,7 @@ describe('Table', () => {
           name: 'column:name',
           header: 'Name',
           value: item => item.name,
-        }), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
+        }), {injector: TestBed.inject(Injector)}) as ɵSciTable<{name: string}>;
 
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
@@ -349,7 +349,7 @@ describe('Table', () => {
 
       it('should set active item and replace selection on row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -359,13 +359,13 @@ describe('Table', () => {
         selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
         selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 2}]));
       });
 
       it('should toggle selection on control/meta row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -374,15 +374,15 @@ describe('Table', () => {
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
 
         selectionService.onRowClick(0, {ctrlKey: true, metaKey: false, shiftKey: false});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
 
         selectionService.onRowClick(0, {ctrlKey: false, metaKey: true, shiftKey: false});
-        expect(model.selectedItems()).toEqual(new Set());
+        expect(model.selectedIds()).toEqual(new Set());
       });
 
       it('should select range on shift row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]);
-        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -393,13 +393,13 @@ describe('Table', () => {
         selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
         selectionService.onRowClick(4, {ctrlKey: false, metaKey: false, shiftKey: true});
 
-        expect(model.activeItem()).toEqual({id: 5});
-        expect(model.selectedItems()).toEqual(new Set([{id: 2}, {id: 3}, {id: 4}, {id: 5}]));
+        expect(model.activeId()).toEqual({id: 5});
+        expect(model.selectedIds()).toEqual(new Set([{id: 2}, {id: 3}, {id: 4}, {id: 5}]));
       });
 
       it('should navigate with arrow up and down', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -411,22 +411,22 @@ describe('Table', () => {
 
         selectionService.onArrowDown(arrowDownEvent);
         expect(arrowDownEvent.preventDefault).toHaveBeenCalled();
-        expect(model.activeItem()).toEqual({id: 1});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 1});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown(arrowDownEvent);
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 2}]));
 
         selectionService.onArrowUp(arrowUpEvent);
         expect(arrowUpEvent.preventDefault).toHaveBeenCalled();
-        expect(model.activeItem()).toEqual({id: 1});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 1});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
       });
 
       it('should extend selection on shift arrow and keep selection on control/meta arrow', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -437,21 +437,21 @@ describe('Table', () => {
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: true, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
 
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}, {id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}, {id: 2}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: true, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 3});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}, {id: 2}]));
+        expect(model.activeId()).toEqual({id: 3});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}, {id: 2}]));
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: true} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}, {id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}, {id: 2}]));
       });
 
       it('should ignore arrow up/down at table boundaries', async () => {
         const data = signal([{id: 1}, {id: 2}]);
-        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -460,18 +460,18 @@ describe('Table', () => {
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toBeUndefined();
+        expect(model.activeId()).toBeUndefined();
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 2}]));
       });
 
       it('should toggle active row selection on space and ignore when no active row', async () => {
         const data = signal([{id: 1}, {id: 2}]);
-        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -480,19 +480,19 @@ describe('Table', () => {
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
 
         selectionService.onControlSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
-        expect(model.selectedItems()).toEqual(new Set());
+        expect(model.selectedIds()).toEqual(new Set());
 
         selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
         selectionService.onControlSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
-        expect(model.selectedItems()).toEqual(new Set());
+        expect(model.selectedIds()).toEqual(new Set());
 
         selectionService.onControlSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
       });
 
       it('should select all loaded rows on control/meta+a', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table('table:test', data, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -505,7 +505,7 @@ describe('Table', () => {
 
         expect(event.preventDefault).toHaveBeenCalled();
         expect(model.allSelected()).toBeFalse();
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}, {id: 2}, {id: 3}]));
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}, {id: 2}, {id: 3}]));
       });
     });
 
@@ -513,7 +513,7 @@ describe('Table', () => {
 
       it('should set active item and replace selection on row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -523,13 +523,13 @@ describe('Table', () => {
         selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
         selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 2}]));
       });
 
       it('should navigate with arrow up and down', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -541,22 +541,22 @@ describe('Table', () => {
 
         selectionService.onArrowDown(arrowDownEvent);
         expect(arrowDownEvent.preventDefault).toHaveBeenCalled();
-        expect(model.activeItem()).toEqual({id: 1});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 1});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown(arrowDownEvent);
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 2}]));
 
         selectionService.onArrowUp(arrowUpEvent);
         expect(arrowUpEvent.preventDefault).toHaveBeenCalled();
-        expect(model.activeItem()).toEqual({id: 1});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 1});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
       });
 
       it('should keep selection on control/meta arrow', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -566,29 +566,29 @@ describe('Table', () => {
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
 
-        expect(model.activeItem()).toEqual({id: 1});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 1});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: true, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: true} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 3});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 3});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: true} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: true, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 1});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 1});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
       });
 
       it('should not extend selection on shift arrow', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = table({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)});
+        const model = table({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(i => i.id), {injector: TestBed.inject(Injector)}) as ɵSciTable<{id: number}>;
         const fixture = TestBed.createComponent(SciTableComponent, {
           bindings: [inputBinding('table', () => model)],
         });
@@ -598,20 +598,20 @@ describe('Table', () => {
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
 
-        expect(model.activeItem()).toEqual({id: 1});
-        expect(model.selectedItems()).toEqual(new Set([{id: 1}]));
+        expect(model.activeId()).toEqual({id: 1});
+        expect(model.selectedIds()).toEqual(new Set([{id: 1}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: true, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 2}]));
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: true, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 3});
-        expect(model.selectedItems()).toEqual(new Set([{id: 3}]));
+        expect(model.activeId()).toEqual({id: 3});
+        expect(model.selectedIds()).toEqual(new Set([{id: 3}]));
 
         selectionService.onArrowUp({preventDefault: jasmine.createSpy(), shiftKey: true, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
-        expect(model.activeItem()).toEqual({id: 2});
-        expect(model.selectedItems()).toEqual(new Set([{id: 2}]));
+        expect(model.activeId()).toEqual({id: 2});
+        expect(model.selectedIds()).toEqual(new Set([{id: 2}]));
       });
 
       it('should scroll active row into viewport', async () => {

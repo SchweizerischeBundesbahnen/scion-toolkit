@@ -46,8 +46,8 @@ export class TableRowComponent<T> {
   protected readonly item = computed(() => this.row().item);
   protected readonly id = computed(() => this.row().id);
   protected readonly loading = computed(() => this.item() === undefined); // Rows are initialized with an undefined item, before data is loaded
-  protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeItem());
-  protected readonly isSelected = computed(() => this.table().allSelected() || this.table().selectedItems().has(this.id()));
+  protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeId());
+  protected readonly isSelected = computed(() => this.table().allSelected() || this.table().selectedIds().has(this.id()));
   protected readonly part = computed(() => this.item() && !this.isSelected() ? this.table().rowName?.(this.item()) : null); // selection takes precedence over custom styles
 
   public getCellWidth(columnId: string): number {
@@ -69,7 +69,7 @@ export class TableRowComponent<T> {
   }
 
   protected onMouseEnter(): void {
-    this.table().setHoveredItem(this.id());
+    this.table().setHoveredId(this.id());
   }
 
   protected onMouseLeave(event: MouseEvent): void {
@@ -78,6 +78,6 @@ export class TableRowComponent<T> {
       return;
     }
     // Only hide row actions when leaving the row and not hovering the actions itself or a column resize splitter (overlay).
-    this.table().setHoveredItem(undefined);
+    this.table().setHoveredId(undefined);
   }
 }

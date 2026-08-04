@@ -107,7 +107,7 @@ describe('Table Factory', () => {
       }
 
       table.addStringColumn(() => 'test2');
-    }, {injector: TestBed.inject(Injector)}) as ɵSciTable<unknown>;
+    }, {injector: TestBed.inject(Injector)}) as ɵSciTable<never>;
 
     const fixture = TestBed.createComponent(SciTableComponent, {bindings: [inputBinding('table', () => model)]});
 

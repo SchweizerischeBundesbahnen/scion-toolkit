@@ -29,7 +29,7 @@ interface StoredTable {
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
 
-export class ɵSciTable<T> implements SciTable {
+export class ɵSciTable<T> implements SciTable<T> {
 
   public readonly tableStorage = inject(SCI_TABLE_STORAGE);
 
@@ -51,7 +51,7 @@ export class ɵSciTable<T> implements SciTable {
   private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
   private readonly _filterCriteria = signal<SciColumnFilter[]>([]);
   private readonly _globalFilter = signal<string | undefined>(undefined);
-  private readonly _selectedItems = signal<Set<unknown>>(new Set());
+  private readonly _selectedIds = signal<Set<unknown>>(new Set());
   private readonly _totalCount = signal<number | undefined>(undefined);
   private readonly _storedTable = signal<StoredTable | undefined>(undefined);
 
@@ -84,12 +84,12 @@ export class ɵSciTable<T> implements SciTable {
     return rangeInclusive(startPage, endPage);
   }, {equal: (a, b) => Objects.isEqual(a, b)});
 
-  private readonly _activeItem = linkedSignal({
+  private readonly _activeId = linkedSignal({
     source: () => this.criteria(),
     computation: () => undefined as unknown,
   });
 
-  private readonly _hoveredItem = linkedSignal({
+  private readonly _hoveredId = linkedSignal({
     source: () => this.criteria(),
     computation: () => undefined as unknown,
   });
@@ -100,7 +100,7 @@ export class ɵSciTable<T> implements SciTable {
    * Resets, as soon as selection changes again.
    */
   private readonly _allSelected = linkedSignal({
-    source: () => this._selectedItems(),
+    source: () => this._selectedIds(),
     computation: () => false,
   });
 
@@ -144,14 +144,21 @@ export class ɵSciTable<T> implements SciTable {
     return rows.slice(range.start - firstPageStart, Math.min(range.end, totalCount ?? Infinity) - firstPageStart);
   });
 
-  public readonly activeIndex = computed(() => this.indexById(this._activeItem(), this.rowsByIndex()));
-  public readonly hoveredIndex = computed(() => this.indexById(this._hoveredItem(), this.rowsByIndex()));
+  public readonly activeIndex = computed(() => this.indexById(this._activeId(), this.rowsByIndex()));
+  public readonly hoveredIndex = computed(() => this.indexById(this._hoveredId(), this.rowsByIndex()));
+  public readonly activeItem = computed(() => this.rowsByIndex().get(this.activeIndex())?.item);
+  public readonly selectedItems = computed(() => {
+    const rows = this.rowsByIndex();
+    return [...this._selectedIds().values()]
+      .map(id => rows.get(this.indexById(id, rows))?.item)
+      .filter((item): item is T => !!item);
+  });
 
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
   public readonly globalFilter = this._globalFilter.asReadonly();
-  public readonly activeItem = this._activeItem.asReadonly();
-  public readonly selectedItems = this._selectedItems.asReadonly();
+  public readonly activeId = this._activeId.asReadonly();
+  public readonly selectedIds = this._selectedIds.asReadonly();
   public readonly allSelected = this._allSelected.asReadonly();
   public readonly totalCount = this._totalCount.asReadonly();
 
@@ -293,20 +300,20 @@ export class ɵSciTable<T> implements SciTable {
     } : column));
   }
 
-  public setActiveItem(id: unknown | undefined): void {
-    this._activeItem.set(id);
+  public setActiveId(id: unknown | undefined): void {
+    this._activeId.set(id);
   }
 
-  public setHoveredItem(id: unknown | undefined): void {
-    this._hoveredItem.set(id);
+  public setHoveredId(id: unknown | undefined): void {
+    this._hoveredId.set(id);
   }
 
-  public updateSelectedItems(updateFn: (ids: Set<unknown>) => Set<unknown>): void {
-    this._selectedItems.update(updateFn);
+  public updateSelectedIds(updateFn: (ids: Set<unknown>) => Set<unknown>): void {
+    this._selectedIds.update(updateFn);
   }
 
   public selectAll(): void {
-    this._selectedItems.set(new Set());
+    this._selectedIds.set(new Set());
     this._allSelected.set(true);
   }
 

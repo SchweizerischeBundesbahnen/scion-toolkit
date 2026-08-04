@@ -83,7 +83,7 @@ export class TableOverlayComponent<T> {
   protected onMouseLeave(): void {
     // Reset hovered item on mouse leave, because hovering a splitter prevents the reset.
     // This makes sure the row actions disappear when leaving a splitter for another element than a row (i.e. the header)
-    this.table().setHoveredItem(undefined);
+    this.table().setHoveredId(undefined);
   }
 
   protected onMouseWheel(event: WheelEvent): void {

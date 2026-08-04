@@ -62,7 +62,7 @@ import {SciTextPipe} from '@scion/components/text';
 })
 export class SciTableComponent<T> {
 
-  public readonly table = input.required<SciTable>();
+  public readonly table = input.required<SciTable<T>>();
 
   private readonly _verticalViewport = viewChild.required<ElementRef<HTMLElement>>('verticalViewport');
   private readonly _header = viewChild<ElementRef<HTMLElement>>('header');
@@ -138,7 +138,7 @@ export class SciTableComponent<T> {
       return;
     }
     // Only hide row actions when leaving the row actions and not hovering a column resize splitter (overlay).
-    this.sciTable().setHoveredItem(undefined);
+    this.sciTable().setHoveredId(undefined);
   }
 
   protected onRowActionsMouseWheel(event: WheelEvent): void {
@@ -244,7 +244,7 @@ export class SciTableComponent<T> {
           subscribeIn(fn => this._zone.runOutsideAngular(fn)),
         ).subscribe(() => {
           this._scrollTop.set(element.scrollTop);
-          this.sciTable().setHoveredItem(undefined);
+          this.sciTable().setHoveredId(undefined);
         });
 
         onCleanup(() => subscription.unsubscribe());

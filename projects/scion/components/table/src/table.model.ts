@@ -70,16 +70,16 @@ export interface SciTableDescriptor<T> {
   trackBy?: (item: T) => unknown;
 }
 
-export interface SciTable {
+export interface SciTable<T> {
   /**
-   * Currently active item id.
+   * Currently active item.
    */
-  readonly activeItem: Signal<unknown | undefined>;
+  readonly activeItem: Signal<T | undefined>;
 
   /**
-   * Selected item ids.
+   * Selected items.
    */
-  readonly selectedItems: Signal<Set<unknown>>;
+  readonly selectedItems: Signal<Array<T>>;
 
   /**
    * True if all items are selected.

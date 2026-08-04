@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {firstValueFrom, from, isObservable, Observable, of} from 'rxjs';
+import {from, isObservable, Observable, of} from 'rxjs';
 
 export type MaybeAsync<T> = T | Promise<T> | Observable<T>;
 export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
@@ -16,18 +16,6 @@ export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
     return from(input);
   }
   return of(input);
-}
-
-export function coercePromise<T>(input: MaybeAsync<T>): Promise<T> {
-  if (input instanceof Promise) {
-    return input;
-  }
-
-  if (isObservable(input)) {
-    return firstValueFrom(input);
-  }
-
-  return Promise.resolve(input);
 }
 
 /**
