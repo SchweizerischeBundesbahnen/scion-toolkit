@@ -1,5 +1,7 @@
 <main>
-  <sci-table [table]="table()" />
+  @if (table(); as table) {
+    <sci-table [table]="table" />
+  }
 </main>
 
 <aside class="e2e-settings">
@@ -37,6 +39,17 @@
       <input [formField]="form.slowDataSource" type="checkbox" />
       Use Slow DataSource
     </label>
+
+    <div>
+      <label>
+        <input type="checkbox" [formField]="form.columns.id" />
+        Id
+      </label>
+      <label>
+        <input type="checkbox" [formField]="form.columns.code" />
+        Code
+      </label>
+    </div>
   </form>
 
   <form>
@@ -52,6 +65,6 @@
     <dd>{{activeItem()?.code ?? '-'}}</dd>
 
     <dt>Selected Code Count:</dt>
-    <dd>{{selectedItems().length}}</dd>
+    <dd>{{selectedItems()?.length}}</dd>
   </dl>
 </aside>

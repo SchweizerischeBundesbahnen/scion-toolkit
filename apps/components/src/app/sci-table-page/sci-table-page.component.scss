@@ -27,6 +27,10 @@
       display: grid;
       grid-auto-flow: row;
       gap: 0.5em;
+
+      label {
+        display: block;
+      }
     }
   }
 }

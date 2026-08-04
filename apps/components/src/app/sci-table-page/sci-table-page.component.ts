@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, signal, untracked} from '@angular/core';
-import {SciDataLoaderFn, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {companies, Company, filter, sort} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
@@ -101,6 +101,10 @@ export default class SciTablePageComponent {
     showHeader: true,
     slowDataSource: true,
     selectable: 'multi',
+    columns: {
+      id: true,
+      code: true,
+    },
   });
   protected form = form(this.settings);
 
@@ -109,7 +113,6 @@ export default class SciTablePageComponent {
   });
   protected updateForm = form(this.update);
 
-  private _useSlowDataSource = computed(() => this.settings().slowDataSource);
   private _slowDataSource = slowDataSource();
 
   protected tableConfig: Omit<SciTableDescriptor<Company>, 'data'> = {
@@ -165,37 +168,45 @@ export default class SciTablePageComponent {
     },
   };
 
-  protected table = signal(table<Company>({...this.tableConfig, data}, table => this.createTable(false, table)));
-  protected activeItem = computed(() => this.table().activeItem());
-  protected selectedItems = computed(() => this.table().selectedItems());
+  protected table = signal<SciTable<Company> | undefined>(undefined);
+  protected activeItem = computed(() => this.table()?.activeItem());
+  protected selectedItems = computed(() => this.table()?.selectedItems());
 
   constructor() {
     effect(onCleanup => {
-      const slowDataSource = this._useSlowDataSource();
+      const slowDataSource = computed(() => this.settings().slowDataSource)();
+      const columns = computed(() => this.settings().columns, {equal: (a, b) => a.code === b.code && a.id === b.id})();
+
       const dataSource = slowDataSource ? this._slowDataSource : data;
       untracked(() => {
         const injector = createDestroyableInjector({parent: this.injector});
         onCleanup(() => injector.destroy());
         this.table.set(runInInjectionContext(injector,
-          () => table<Company>({...this.tableConfig, data: dataSource}, table => this.createTable(slowDataSource, table)),
+          () => table<Company>({...this.tableConfig, data: dataSource}, table => this.createTable({slowDataSource, columns}, table)),
         ));
       });
     });
   }
 
-  protected createTable(slowDataSource: boolean, table: SciTableFactory<Company>): SciTableFactory<Company> {
-    return table
-      .addStringColumn({
+  protected createTable(settings: {slowDataSource: boolean; columns: {id: boolean; code: boolean}}, table: SciTableFactory<Company>): SciTableFactory<Company> {
+    if (settings.columns.id) {
+      table.addStringColumn({
         header: 'ID',
         value: company => company.dataId,
         name: 'column:id',
         filterable: false,
-      })
-      .addNumberColumn({
+      });
+    }
+
+    if (settings.columns.code) {
+      table.addNumberColumn({
         header: 'Code',
         value: company => company.code,
         name: 'column:code',
-      })
+      });
+    }
+
+    return table
       .addStringColumn({
         header: '%scion.components.clear.tooltip',
         value: company => company.abbreviation,
@@ -216,8 +227,8 @@ export default class SciTablePageComponent {
       .addComponentColumn({
         header: 'Gültig ab',
         name: 'column:validFrom',
-        sortable: slowDataSource ? true : {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
-        filterable: slowDataSource ? true : {matcher: (query, item) => item.item.validFrom.includes(query)},
+        sortable: settings.slowDataSource ? true : {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
+        filterable: settings.slowDataSource ? true : {matcher: (query, item) => item.item.validFrom.includes(query)},
         component: item => ({
           component: DateCellComponent,
           bindings: [inputBinding('date', () => new Date(item.validFrom))],
@@ -226,8 +237,8 @@ export default class SciTablePageComponent {
       .addComponentColumn({
         header: 'Gültig bis',
         name: 'column:validTo',
-        filterable: slowDataSource ? true : {matcher: (query, item) => item.item.validTo.includes(query)},
-        sortable: slowDataSource ? true : {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
+        filterable: settings.slowDataSource ? true : {matcher: (query, item) => item.item.validTo.includes(query)},
+        sortable: settings.slowDataSource ? true : {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
         component: item => ({
           component: DateCellComponent,
           bindings: [inputBinding('date', () => new Date(item.validTo))],
