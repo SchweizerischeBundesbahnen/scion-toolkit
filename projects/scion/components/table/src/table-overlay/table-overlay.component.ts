@@ -102,7 +102,7 @@ export class TableOverlayComponent<T> {
     this.table().resizingState.set(undefined);
   }
 
-  protected async onResizeAuto(column: SciColumnLike<T>): Promise<void> {
+  public async onResizeAuto(column: SciColumnLike<T>): Promise<void> {
     this.onResizeStart(column);
     const cellWidths = this.rows().map(row => row.getCellWidth(column.name));
     const maxWidth = Math.max(...cellWidths, column.minWidth);

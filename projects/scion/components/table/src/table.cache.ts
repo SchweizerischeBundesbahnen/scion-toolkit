@@ -13,10 +13,6 @@ type TableCacheKey = `${number}-${number}`;
 export class TableCache<T> {
   private readonly _cache = signal(new Map<TableCacheKey, TableCacheEntry<T>>());
 
-  public get cache(): Signal<Map<TableCacheKey, TableCacheEntry<T>>> {
-    return this._cache.asReadonly();
-  }
-
   public has(key: TableCacheKey): boolean {
     return this._cache().has(key);
   }

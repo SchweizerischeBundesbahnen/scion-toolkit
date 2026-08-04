@@ -1,6 +1,8 @@
 import {ComponentFixture} from '@angular/core/testing';
 import {DebugElement} from '@angular/core';
 import {By} from '@angular/platform-browser';
+import {TableOverlayComponent} from './table-overlay/table-overlay.component';
+import {SciColumnLike} from '@scion/components/table';
 
 export class TablePO {
 
@@ -23,12 +25,21 @@ export class TablePO {
     return this.debugElement.queryAll(By.css(`sci-column-header`)).map(element => new ColumnPo(element, this._fixture));
   }
 
+  public get overlay(): TableOverlayComponent<unknown> {
+    return this.debugElement.query(By.directive(TableOverlayComponent)).componentInstance as TableOverlayComponent<unknown>;
+  }
+
   public get scrollTop(): number {
     return this.viewport.scrollTop;
   }
 
+  public async autoResize<T>(column: SciColumnLike<T>): Promise<void> {
+    await this.overlay.onResizeAuto(column as SciColumnLike<unknown>);
+    await this._fixture.whenStable();
+  }
+
   public getColumnByHeader(columnName: string): ColumnPo | undefined {
-    return this.columns.find(column => column.name === columnName);
+    return this.columns.find(column => column.header === columnName);
   }
 
   public columnEntries(columnName: string): Array<string> {
@@ -47,7 +58,7 @@ export class TablePO {
   }
 
   private getColumnIndexByName(columnName: string): number {
-    return this.columns.findIndex(column => column.name === columnName);
+    return this.columns.findIndex(column => column.header === columnName);
   }
 }
 
@@ -64,8 +75,12 @@ export class ColumnPo {
     return this.debugElement.nativeElement as HTMLButtonElement;
   }
 
-  public get name(): string | undefined {
+  public get header(): string | undefined {
     return this.nativeElement.querySelector('.text')?.textContent.trim();
+  }
+
+  public get width(): number {
+    return this.nativeElement.getBoundingClientRect().width;
   }
 
   public async toggleSort(): Promise<void> {
@@ -96,7 +111,7 @@ export class ColumnPo {
 
 export class RowPo {
 
-  constructor(private _debugElement: DebugElement, private _fixture: ComponentFixture<unknown>) {
+  constructor(private _debugElement: DebugElement, private fixture: ComponentFixture<unknown>) {
   }
 
   public get debugElement(): DebugElement {
