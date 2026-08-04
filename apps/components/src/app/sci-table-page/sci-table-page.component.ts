@@ -207,7 +207,6 @@ export default class SciTablePageComponent {
       .addBooleanColumn({
         header: 'EVU',
         value: company => company.railwayUndertaking,
-        width: '20%',
         name: 'column:railwayUndertaking',
       })
       .addComponentColumn({

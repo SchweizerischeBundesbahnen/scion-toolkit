@@ -23,9 +23,6 @@ import {SciTextPipe} from '@scion/components/text';
     SciIconComponent,
     SciTextPipe,
   ],
-  host: {
-    '[class.resizing]': 'resizing()',
-  },
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-header.component.html',
   styleUrl: './column-header.component.scss',
@@ -34,17 +31,10 @@ export class ColumnHeaderComponent<T> {
 
   public readonly column = input.required<SciColumnLike<T>>();
 
-  public readonly resizeStart = output();
-  public readonly resize = output<number>();
-  public readonly autoResize = output();
-
   protected readonly table = inject(ɵSCI_TABLE);
   private readonly _element = inject(ElementRef);
 
-  private readonly _lastWidth = signal<number | undefined>(undefined);
-
   protected readonly columnSort = computed(() => this.table().sortCriteria().find(s => s.columnName === this.column().name)?.direction);
-  protected readonly resizing = computed(() => this._lastWidth() !== undefined);
 
   public readonly boundingClientRect = boundingClientRect(this._element.nativeElement as HTMLElement);
 

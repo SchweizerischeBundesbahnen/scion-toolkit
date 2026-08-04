@@ -1,7 +1,10 @@
-import {Component, computed, inject, input, output, Signal} from '@angular/core';
+import {Component, computed, ElementRef, inject, input, output, Signal, viewChildren} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
 import {SciColumnLike} from '../table.model';
+import {TableRowComponent} from '../table-row/table-row.component';
+import {toObservable} from '@angular/core/rxjs-interop';
+import {firstValueFrom, skip} from 'rxjs';
 
 export const TABLE_OVERLAY_SELECTOR = 'sci-table-overlay';
 
@@ -18,19 +21,23 @@ export const TABLE_OVERLAY_SELECTOR = 'sci-table-overlay';
 })
 export class TableOverlayComponent<T> {
 
-  public columnWidths = input.required<Map<`column:${string}`, number>>();
+  public readonly columnWidths = input.required<Map<`column:${string}`, number>>();
+  public readonly hasOverflow = input.required<boolean>();
+  public readonly rows = input.required<ReadonlyArray<TableRowComponent<unknown>>>();
 
-  public readonly autoResize = output<SciColumnLike<T>>();
-  public readonly widthChange = output<void>();
   public readonly scrollBy = output<number>();
 
   protected table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
 
+  private readonly _splitters = viewChildren(SciSplitterComponent, {read: ElementRef});
+  private readonly _columnWidths$ = toObservable(this.columnWidths);
   protected readonly resizing = computed(() => this.table().resizingState() !== undefined);
 
   protected onResizeStart(column: SciColumnLike<T>): void {
     this.table().resizingState.set({
       column,
+      hadOverflow: this.hasOverflow(),
+      initialColumnWidths: new Map(this.columnWidths()),
       initialFractionColumns: new Set(this.table().columns().filter(c => !c.absoluteWidth && c.isFraction && c !== column).map(column => column.name)),
       temporaryColumnWidths: this.calculateTemporaryColumns(column),
     });
@@ -38,7 +45,24 @@ export class TableOverlayComponent<T> {
 
   protected onResize(column: SciColumnLike<T>, event: SplitterMoveEvent): void {
     const columnIndex = this.table().columns().findIndex(c => c.name === column.name);
-    if (columnIndex < 0) {
+    const splitter = this._splitters()[columnIndex]?.nativeElement as HTMLElement | undefined;
+    if (columnIndex < 0 || !splitter) {
+      return;
+    }
+
+    const splitterRect = splitter.getBoundingClientRect();
+    const splitterStart = splitterRect.left;
+    const splitterEnd = splitterRect.left + splitterRect.width;
+
+    // Ignore the event if outside the splitter's action scope.
+    const eventPos = event.position.clientPos;
+    // The column should not grow after moved the mouse pointer beyond the left bounds of the column and now moving the mouse pointer back toward the current column.
+    if (event.distance > 0 && eventPos < splitterStart) {
+      return;
+    }
+
+    // The column should not shrink after moved the mouse pointer beyond the right bounds of the column and now moving the mouse pointer back toward the current column.
+    if (event.distance < 0 && eventPos > splitterEnd) {
       return;
     }
 
@@ -46,13 +70,15 @@ export class TableOverlayComponent<T> {
       if (!state) {
         return state;
       }
+
       const width = this.fromPx(state.temporaryColumnWidths.get(column.name)!) + event.distance;
+      const boundedWidth = Math.max(column.minWidth, Math.min(column.maxWidth ?? width, width));
+
       return ({
         ...state,
-        temporaryColumnWidths: new Map(state.temporaryColumnWidths).set(column.name, `${Math.max(column.minWidth, Math.min(column.maxWidth ?? width, width))}px`),
+        temporaryColumnWidths: new Map(state.temporaryColumnWidths).set(column.name, `${boundedWidth}px`),
       });
     });
-    this.widthChange.emit();
   }
 
   protected onResizeEnd(): void {
@@ -76,8 +102,19 @@ export class TableOverlayComponent<T> {
     this.table().resizingState.set(undefined);
   }
 
-  protected onResizeAuto(column: SciColumnLike<T>): void {
-    this.autoResize.emit(column);
+  protected async onResizeAuto(column: SciColumnLike<T>): Promise<void> {
+    this.onResizeStart(column);
+    const cellWidths = this.rows().map(row => row.getCellWidth(column.name));
+    const maxWidth = Math.max(...cellWidths, column.minWidth);
+    this.table().resizingState.update(state => state ? ({
+      ...state,
+      temporaryColumnWidths: new Map(state.temporaryColumnWidths).set(column.name, `${maxWidth}px`),
+    }) : undefined);
+
+    // Wait until the resize is reflected in the DOM.
+    // Skip first emission, because a `toObservable` always emits upon subscription.
+    await firstValueFrom(this._columnWidths$.pipe(skip(1)));
+    this.onResizeEnd();
   }
 
   protected onMouseLeave(): void {

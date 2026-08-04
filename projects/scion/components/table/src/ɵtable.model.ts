@@ -58,7 +58,9 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly range = signal<{start: number; end: number} | undefined>(undefined);
   public readonly resizingState = signal<{
     column: SciColumnLike<T>;
+    hadOverflow: boolean;
     initialFractionColumns: Set<`column:${string}`>;
+    initialColumnWidths: Map<`column:${string}`, number>;
     temporaryColumnWidths: Map<`column:${string}`, string>;
   } | undefined>(undefined);
 
@@ -293,13 +295,6 @@ export class ɵSciTable<T> implements SciTable<T> {
     this._globalFilter.set(undefined);
   }
 
-  public setResizedColumn(columnName: string, width: number): void {
-    this.columns.update(columns => columns.map(column => column.name === columnName ? {
-      ...column,
-      absoluteWidth: `${Math.max(column.minWidth, Math.min(column.maxWidth ?? width, width))}px`,
-    } : column));
-  }
-
   public setActiveId(id: unknown | undefined): void {
     this._activeId.set(id);
   }
@@ -356,7 +351,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       resizable: computed(() => (config.resizable ?? true) && this.resizable()),
       header: coerceSignal(config.header ?? ''),
       absoluteWidth: storedColumn?.width,
-      isFraction: width.endsWith('fr') || width.endsWith('%'),
+      isFraction: width.endsWith('fr'),
       width,
       minWidth: config.minWidth ?? 100,
       maxWidth: config.maxWidth,

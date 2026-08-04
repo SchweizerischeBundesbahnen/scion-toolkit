@@ -2,8 +2,8 @@
   user-select: none; // has to be disabled because of selection
   border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
 
-  // Prevent hovering row while scrolling.
-  @container not style(--ɵsci-table-scrolling: true) {
+  // Prevent hovering row while scrolling and resizing.
+  @container (not style(--ɵsci-table-scrolling: true)) and (not style(--ɵsci-table-resizing: true)) {
     &:hover {
       background-color: var(--sci-table-row-hover-color);
     }

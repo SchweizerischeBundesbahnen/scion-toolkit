@@ -38,6 +38,7 @@ import {SciTextPipe} from '@scion/components/text';
     '[style.--ɵsci-table-virtual-scroll-height]': 'virtualScrollHeight()',
     '[style.--ɵsci-table-columns]': 'columnWidths()',
     '[style.--ɵsci-table-scrolling]': 'scrolling() ? `true` : null',
+    '[style.--ɵsci-table-resizing]': 'resizing() ? `true` : null',
     '[style.--ɵsci-table-toolbar-offset]': '`${rowActionToolbarOffset()}px`',
     '[style.--ɵsci-table-width]': 'tableWidth()',
   },
@@ -67,8 +68,8 @@ export class SciTableComponent<T> {
   private readonly _verticalViewport = viewChild.required<ElementRef<HTMLElement>>('verticalViewport');
   private readonly _header = viewChild<ElementRef<HTMLElement>>('header');
   private readonly _headers = viewChildren(ColumnHeaderComponent);
-  private readonly _rows = viewChildren(TableRowComponent);
   private readonly _itemSizeElement = viewChild<ElementRef<HTMLElement>>('itemSizeElement');
+  protected readonly rows = viewChildren(TableRowComponent);
 
   private readonly _zone = inject(NgZone);
   private readonly _element = inject(ElementRef);
@@ -93,6 +94,7 @@ export class SciTableComponent<T> {
   });
 
   protected readonly scrolling = this.computeScrolling(this._verticalViewport);
+  protected readonly resizing = computed(() => !!this.sciTable().resizingState());
   protected readonly columnWidths = this.computeColumnWidths();
   protected readonly headerDimension = dimension(this._header);
 
@@ -119,7 +121,12 @@ export class SciTableComponent<T> {
    * A grid will never grow beyond its parent unless explicitly set, that is why we need to set the table width.
    * This allows the grid to overflow when resizing.
    */
-  protected readonly tableWidth = signal('100%');
+  protected readonly tableWidth = computed(() => {
+    const containerWidth = this.containerDimension().clientWidth;
+    const columnWidths = [...this.absoluteColumnWidths().values()].reduce((sum, width) => sum + width, 0);
+
+    return columnWidths > containerWidth ? `${columnWidths}px` : '100%';
+  });
 
   private readonly _scrollTop = signal(0);
 
@@ -144,12 +151,6 @@ export class SciTableComponent<T> {
   protected onRowActionsMouseWheel(event: WheelEvent): void {
     event.preventDefault();
     this.onOverlayScrollBy(event.deltaY);
-  }
-
-  protected onResizeAuto(column: SciColumnLike<T>): void {
-    const cellWidths = this._rows().map(row => row.getCellWidth(column.name));
-    const maxWidth = Math.max(...cellWidths, 0);
-    this.sciTable().setResizedColumn(column.name, maxWidth);
   }
 
   /**
@@ -285,16 +286,24 @@ export class SciTableComponent<T> {
       const hasResizedColumns = columns.some(column => column.absoluteWidth);
 
       if (!resizingState) {
+        // As soon as there is one resized column, don't use the min/max in the grid definition. Only for initial layouting.
+        // Otherwise, unchanged fraction columns can change in size after resizing a column.
         return columns
           .map(column => column.absoluteWidth ?? (hasResizedColumns ? column.width : minmax(column.minWidth, column.width, column.maxWidth)))
           .join(' ');
       }
 
-      const {temporaryColumnWidths} = resizingState;
+      const {temporaryColumnWidths, initialColumnWidths, hadOverflow} = resizingState;
       return columns
         .map(column => {
           if (temporaryColumnWidths.get(column.name)!.endsWith('fr')) {
-            return hasOverflow ? `${column.minWidth}px` : minmax(column.minWidth, temporaryColumnWidths.get(column.name)!, column.maxWidth);
+            if (hasOverflow) {
+              // Fix fraction columns, if the table was and still is overflowing.
+              // If the table went from no overflow, to overflow, fraction columns should all be at minWidth.
+              return hadOverflow ? `${initialColumnWidths.get(column.name)!}px` : `${column.minWidth}px`;
+            }
+            // If the table does not overflow, use the actual column definition.
+            return minmax(column.minWidth, temporaryColumnWidths.get(column.name)!, column.maxWidth);
           }
           return temporaryColumnWidths.get(column.name)!;
         })
@@ -325,12 +334,5 @@ export class SciTableComponent<T> {
 
   protected onOverlayScrollBy(deltaY: number): void {
     this._verticalViewport().nativeElement.scrollBy({top: deltaY});
-  }
-
-  protected onTableWidthChange(): void {
-    const containerWidth = this.containerDimension().clientWidth;
-    const columnWidths = [...this.absoluteColumnWidths().values()].reduce((sum, width) => sum + width, 0);
-
-    this.tableWidth.set(columnWidths > containerWidth ? `${columnWidths}px` : '100%');
   }
 }
