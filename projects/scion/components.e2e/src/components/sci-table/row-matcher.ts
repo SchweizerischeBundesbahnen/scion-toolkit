@@ -12,28 +12,12 @@ export function expectRow(row: RowPo): RowMatcher {
     async toBeSelected(): Promise<void> {
       await expect(row.locator).toContainClass('selected');
     },
-    async toHavePart(part?: string): Promise<void> {
-      if (part) {
-        await expect(row.locator).toHaveAttribute('part', part);
-      }
-      else {
-        await expect(row.locator).toHaveAttribute('part');
-      }
-    },
     not: {
       async toBeSelected(): Promise<void> {
         await expect(row.locator).not.toContainClass('selected');
       },
       async toBeActive(): Promise<void> {
         await expect(row.locator).not.toContainClass('active');
-      },
-      async toHavePart(part?: string): Promise<void> {
-        if (part) {
-          await expect(row.locator).not.toHaveAttribute('part', part);
-        }
-        else {
-          await expect(row.locator).not.toHaveAttribute('part');
-        }
       },
     },
   };
@@ -43,11 +27,9 @@ export interface RowMatcher {
   toBeAttached(): Promise<void>;
   toBeSelected(): Promise<void>;
   toBeActive(): Promise<void>;
-  toHavePart(part?: string): Promise<void>;
 
   not: {
     toBeSelected(): Promise<void>;
     toBeActive(): Promise<void>;
-    toHavePart(part?: string): Promise<void>;
   };
 }

@@ -1,6 +1,7 @@
 @for (column of table().columns(); track column.name) {
   @if (column.resizable()) {
     <sci-splitter [class.resizing]="table().resizingState()?.column?.name === column.name" orientation="vertical"
+                  [attr.data-column]="column.name"
                   (start)="onResizeStart(column)"
                   (move)="onResize(column, $event)"
                   (end)="onResizeEnd()"

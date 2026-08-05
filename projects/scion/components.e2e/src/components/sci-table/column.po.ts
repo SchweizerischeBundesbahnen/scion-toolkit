@@ -1,6 +1,5 @@
 import {Locator} from '@playwright/test';
 import {TablePo} from './table.po';
-import {fromRect} from '../../helper/testing.utils';
 
 export class ColumnPo {
   public locator: Locator;
@@ -37,18 +36,5 @@ export class ColumnPo {
 
   public async getHeaderWidth(): Promise<number | undefined> {
     return this.locator.boundingBox().then(b => b?.width);
-  }
-
-  public async dragSplitter(distance: number): Promise<void> {
-    const splitterBounds = fromRect(await this.locator.locator('sci-splitter').boundingBox());
-
-    await this.locator.page().mouse.move(splitterBounds.hcenter, splitterBounds.vcenter);
-    await this.locator.page().mouse.down();
-    await this.locator.page().mouse.move(splitterBounds.hcenter + distance, splitterBounds.vcenter, {steps: 10});
-    await this.locator.page().mouse.up();
-  }
-
-  public async dblclickSplitter(): Promise<void> {
-    await this.locator.locator('sci-splitter').dblclick();
   }
 }

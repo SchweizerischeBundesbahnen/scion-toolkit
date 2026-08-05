@@ -122,9 +122,8 @@ export class SciTableComponent<T> {
    */
   protected readonly tableWidth = computed(() => {
     const containerWidth = this.containerDimension().clientWidth;
-    const columnWidths = [...this.absoluteColumnWidths().values()].reduce((sum, width) => sum + width, 0);
-
-    return columnWidths > containerWidth ? `${columnWidths}px` : '100%';
+    const tableWidth = this.verticalViewportDimension().clientWidth;
+    return tableWidth > containerWidth ? `${tableWidth}px` : '100%';
   });
 
   private readonly _scrollTop = signal(0);

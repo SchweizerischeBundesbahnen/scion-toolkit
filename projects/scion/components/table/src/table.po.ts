@@ -4,7 +4,7 @@ import {By} from '@angular/platform-browser';
 import {TableOverlayComponent} from './table-overlay/table-overlay.component';
 import {SciColumnLike} from '@scion/components/table';
 
-export class TablePO {
+export class TablePo {
 
   constructor(private _fixture: ComponentFixture<unknown>) {
   }

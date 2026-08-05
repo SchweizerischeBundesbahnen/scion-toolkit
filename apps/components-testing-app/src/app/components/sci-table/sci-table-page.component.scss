@@ -10,13 +10,14 @@
 
     > sci-table {
       height: var(--table-page-height);
+      width: var(--table-page-width);
 
       &:first-child:last-child {
         grid-column: 1 / -1;
       }
 
-      &::part(red-row name),
-      &::part(red-row) {
+      &::part(row\:red),
+      &::part(column\:red) {
         background-color: rgba(255, 0, 0, 0.2);
       }
     }

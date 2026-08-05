@@ -1,6 +1,6 @@
 <main>
-  @for (table of tables; track $index) {
-    <sci-table [table]="table()" />
+  @for (table of tables(); track $index) {
+    <sci-table [table]="table" />
   }
   <ng-template let-product #cell>
     <span class="material-symbols-outlined custom-cell e2e-custom-cell" [class.up]="product.price > 500" [class.down]="product.price <= 500">
@@ -29,6 +29,9 @@
         <sci-form-field label="Show Header">
           <input [formField]="settingsForm.showHeader" type="checkbox" class="e2e-show-header" />
         </sci-form-field>
+        <sci-form-field label="Row Action">
+          <input [formField]="settingsForm.showRowAction" type="checkbox" class="e2e-row-actions" />
+        </sci-form-field>
         <sci-form-field label="Conditional Style Row (Part)">
           <input [formField]="settingsForm.conditionallyStyleRow" type="checkbox" class="e2e-conditional-style">
         </sci-form-field>
@@ -43,6 +46,9 @@
         </sci-form-field>
         <sci-form-field label="Table Height">
           <input [formField]="settingsForm.height" type="number" class="e2e-height" />
+        </sci-form-field>
+        <sci-form-field label="Table Width">
+          <input [formField]="settingsForm.width" type="number" class="e2e-width" />
         </sci-form-field>
       </form>
     </ng-template>
@@ -69,9 +75,6 @@
         </sci-form-field>
         <sci-form-field label="Custom Filter">
           <input [formField]="columnForm.customFilter" type="checkbox" class="e2e-column-custom-filter">
-        </sci-form-field>
-        <sci-form-field label="Conditional Style (Part)">
-          <input [formField]="columnForm.conditionallyStyleCell" type="checkbox" class="e2e-column-conditional-style">
         </sci-form-field>
         <sci-form-field label="Width">
           <input [formField]="columnForm.width" class="e2e-column-width">

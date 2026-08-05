@@ -21,7 +21,6 @@ export interface ColumnOptions {
   width?: string;
   minWidth?: number;
   maxWidth?: number;
-  conditionallyStyleCell?: boolean;
 }
 
 export class TablePagePO {
@@ -70,6 +69,11 @@ export class TablePagePO {
     await this._properties.locator('input.e2e-height').fill(height.toString());
   }
 
+  public async setWidth(width: number): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('input.e2e-width').fill(width.toString());
+  }
+
   public async setRowSize(rowSize: number): Promise<void> {
     await this._tabbar.locator('button.e2e-settings').click();
     await this._properties.locator('input.e2e-row-size').fill(rowSize.toString());
@@ -78,6 +82,11 @@ export class TablePagePO {
   public async setRowCount(rowCount: number): Promise<void> {
     await this._tabbar.locator('button.e2e-settings').click();
     await this._properties.locator('form input.e2e-row-count').fill(rowCount.toString());
+  }
+
+  public async setRowActions(checked: boolean): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('input.e2e-row-actions').setChecked(checked);
   }
 
   public async setTableCount(tableCount: number): Promise<void> {
@@ -100,9 +109,6 @@ export class TablePagePO {
     }
     if (options.customFilter) {
       await this._properties.locator('form input.e2e-column-custom-filter').check();
-    }
-    if (options.conditionallyStyleCell) {
-      await this._properties.locator('form input.e2e-column-conditional-style').check();
     }
     if (options.width !== undefined) {
       await this._properties.locator('form input.e2e-column-width').fill(options.width);

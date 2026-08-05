@@ -313,11 +313,10 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
       await table.scrollViewPort({x: 0, y: 1000});
-      const scrollTopAfterScroll = await table.viewport.evaluate(el => el.scrollTop);
-      expect(scrollTopAfterScroll).toBeGreaterThan(0);
+      await expect.poll(() => table.verticalViewport.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
 
       await table.column('Name').filter('999');
-      await expect.poll(() => table.viewport.evaluate(el => el.scrollTop)).toBe(0);
+      await expect.poll(() => table.verticalViewport.evaluate(el => el.scrollTop)).toBe(0);
     });
 
     test('should show empty state', async ({page}) => {
@@ -329,7 +328,7 @@ test.describe.only('sci-table', () => {
 
       await table.column('Name').filter('abc');
       await expect(table.rows).toHaveCount(0);
-      await expect(table.locator).toContainText('Nothing to show');
+      await expect(table.locator).toContainText('No items found.');
     });
   });
 
@@ -341,7 +340,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
 
-      await table.column('Name').dragSplitter(100);
+      await table.dragSplitter('column:name', 100);
       await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(200);
     });
 
@@ -352,7 +351,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px', maxWidth: 200});
 
-      await table.column('Name').dragSplitter(300);
+      await table.dragSplitter('column:name', 300);
       await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(200);
     });
 
@@ -363,7 +362,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '200px'});
 
-      await table.column('Name').dragSplitter(-100);
+      await table.dragSplitter('column:name', -100);
       await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(100);
     });
 
@@ -374,7 +373,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '200px', minWidth: 100});
 
-      await table.column('Name').dragSplitter(-300);
+      await table.dragSplitter('column:name', -300);
       await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(100);
     });
 
@@ -385,8 +384,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '200px'});
 
-      await table.column('Name').dragSplitter(page.viewportSize()?.width ?? 0);
-
+      await table.dragSplitter('column:name', page.viewportSize()?.width ?? 0);
       await expectTable(table).toHaveHorizontalOverflow();
     });
 
@@ -397,7 +395,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '200px'});
 
-      await table.column('Name').dblclickSplitter();
+      await table.dblclickSplitter('column:name');
       await expect.poll(() => table.column('Name').getHeaderWidth()).toBeLessThan(200);
     });
 
@@ -405,15 +403,63 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);
       await tablePage.navigate();
+      await tablePage.setWidth(500);
 
-      const col = table.column(0);
-
-      await col.dragSplitter(100);
-      await expect.poll(() => col.getHeaderWidth()).toBe(200);
+      await table.dragSplitter('column:id', -100);
+      await expect.poll(() => table.column('Id').getHeaderWidth()).toBe(400);
 
       await page.reload();
+      await expect.poll(() => table.column('Id').getHeaderWidth()).toBe(400);
+    });
 
-      await expect.poll(() => col.getHeaderWidth()).toBe(200);
+    test('should push out flexible columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+      await tablePage.setWidth(800);
+
+      await tablePage.addColumn({name: 'one', header: 'One', type: 'string'});
+      await tablePage.addColumn({name: 'two', header: 'Two', type: 'string'});
+      await tablePage.addColumn({name: 'three', header: 'Three', type: 'string'});
+
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(200);
+
+      await table.dragSplitter('column:two', 600);
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(200);
+      await expect.poll(() => table.column('Two').getHeaderWidth()).toBe(800);
+      await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(100);
+
+      await table.scrollViewPort('right');
+      await table.dragSplitter('column:two', -650);
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(200);
+      await expect.poll(() => table.column('Two').getHeaderWidth()).toBe(150);
+      await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(250);
+    });
+
+    test('should fix flexible rows on overflow', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+      await tablePage.setWidth(1000);
+
+      await tablePage.addColumn({name: 'one', header: 'One', type: 'string'});
+      await tablePage.addColumn({name: 'two', header: 'Two', type: 'string'});
+      await tablePage.addColumn({name: 'three', header: 'Three', type: 'string'});
+      await tablePage.addColumn({name: 'four', header: 'Four', type: 'string'});
+
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(200);
+
+      await table.dragSplitter('column:three', 600);
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(200);
+      await expect.poll(() => table.column('Two').getHeaderWidth()).toBe(200);
+      await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(800);
+      await expect.poll(() => table.column('Four').getHeaderWidth()).toBe(100);
+
+      await table.dragSplitter('column:one', 100);
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(300);
+      await expect.poll(() => table.column('Two').getHeaderWidth()).toBe(200);
+      await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(800);
+      await expect.poll(() => table.column('Four').getHeaderWidth()).toBeCloseTo(100, 1);
     });
   });
 
@@ -489,12 +535,11 @@ test.describe.only('sci-table', () => {
 
       // scroll down so the viewport is no longer at the top.
       await table.scrollViewPort({x: 0, y: 1000});
-      const scrollTopAfterScroll = await table.viewport.evaluate(el => el.scrollTop);
-      expect(scrollTopAfterScroll).toBeGreaterThan(0);
+      await expect.poll(() => table.verticalViewport.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
 
       // applying a sort should reset the viewport scroll position to the top.
       await table.column('Name').sort();
-      await expect.poll(() => table.viewport.evaluate(el => el.scrollTop)).toBe(0);
+      await expect.poll(() => table.verticalViewport.evaluate(el => el.scrollTop)).toBe(0);
     });
   });
 
@@ -639,7 +684,7 @@ test.describe.only('sci-table', () => {
       await expectRow(table.row(2)).not.toBeSelected();
       await expectRow(table.row(3)).not.toBeSelected();
 
-      await page.keyboard.press('Space');
+      await page.keyboard.press('ControlOrMeta+Space');
       await expectRow(table.row(0)).not.toBeSelected();
       await expectRow(table.row(1)).toBeSelected();
       await expectRow(table.row(2)).toBeSelected();
@@ -687,15 +732,17 @@ test.describe.only('sci-table', () => {
       const table = new TablePo(page);
       await tablePage.navigate();
 
-      await expectRow(table.row(0)).not.toHavePart();
-      await expectRow(table.row(1)).not.toHavePart();
-      await expectRow(table.row(2)).not.toHavePart();
+      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:id row:red');
+      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:id row:red');
+      await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part', 'column:id row:red');
 
       await tablePage.conditionallyStyleRow();
 
-      await expectRow(table.row(0)).not.toHavePart();
-      await expectRow(table.row(1)).not.toHavePart();
-      await expectRow(table.row(2)).toHavePart('red-row');
+      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:id row:red');
+      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:id row:red');
+      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:id row:red');
+      await expect.poll(() => table.row(2).cell(0).locator.evaluate(element => getComputedStyle(element).backgroundColor))
+        .toEqual('rgba(255, 0, 0, 0.2)');
     });
 
     test('should not conditionally style selected row', async ({page}) => {
@@ -705,28 +752,39 @@ test.describe.only('sci-table', () => {
 
       await tablePage.conditionallyStyleRow();
 
-      await expectRow(table.row(2)).toHavePart('red-row');
+      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:id row:red');
 
       await table.row(2).click();
 
-      await expectRow(table.row(2)).not.toHavePart();
+      await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part');
     });
 
-    test('should conditionally style cell', async ({page}) => {
+    test('should conditionally style column', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);
       await tablePage.navigate();
 
       await tablePage.addColumn({
-        header: 'Style',
-        name: 'style',
+        header: 'Red',
+        name: 'red',
         type: 'string',
-        conditionallyStyleCell: true,
       });
 
-      await expect(table.row(0).cell(1).locator).not.toHaveAttribute('part');
-      await expect(table.row(1).cell(1).locator).not.toHaveAttribute('part');
-      await expect(table.row(2).cell(1).locator).toHaveAttribute('part', 'red-cell');
+      await expect(table.row(0).cell(1).locator).toHaveAttribute('part', 'column:red');
+      await expect.poll(() => table.row(0).cell(1).locator.evaluate(element => getComputedStyle(element).backgroundColor))
+        .toEqual('rgba(255, 0, 0, 0.2)');
+    });
+  });
+
+  test.describe('row actions', () => {
+    test('should show row actions on hover', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+      await tablePage.setRowActions(true);
+
+      await table.row(3).hover();
+      await expect(table.rowActions).toBeVisible();
     });
   });
 });

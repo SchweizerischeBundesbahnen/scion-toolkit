@@ -39,7 +39,7 @@ export function expectTable(table: TablePo): TableMatcher {
       }).toPass();
     },
     async toHaveVerticalScroll(): Promise<void> {
-      await expect.poll(() => table.viewport.evaluate(v => v.scrollTop)).toBeGreaterThan(0);
+      await expect.poll(() => table.verticalViewport.evaluate(v => v.scrollTop)).toBeGreaterThan(0);
     },
     async toHaveHorizontalOverflow(): Promise<void> {
       await expect(table.locator.locator('sci-scrollbar.horizontal.overflow')).toBeAttached();

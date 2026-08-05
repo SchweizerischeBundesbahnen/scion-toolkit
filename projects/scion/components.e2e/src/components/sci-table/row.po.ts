@@ -15,4 +15,8 @@ export class RowPo {
   public async click(modifiers?: Array<'Alt' | 'Control' | 'ControlOrMeta' | 'Meta' | 'Shift'>): Promise<void> {
     await this.locator.click({modifiers});
   }
+
+  public async hover(): Promise<void> {
+    await this.locator.hover();
+  }
 }

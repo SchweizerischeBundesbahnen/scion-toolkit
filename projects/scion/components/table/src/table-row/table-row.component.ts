@@ -24,7 +24,6 @@ import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/table-overlay.component';
     '[class.active]': 'isActive()',
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
-    '[attr.part]': 'part()',
     '(click)': 'onRowClick($event)',
     '(keydown.enter)': 'onRowEnter($event)',
     '(mouseenter)': 'onMouseEnter()',
@@ -48,7 +47,6 @@ export class TableRowComponent<T> {
   protected readonly loading = computed(() => this.item() === undefined); // Rows are initialized with an undefined item, before data is loaded
   protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeId());
   protected readonly isSelected = computed(() => this.table().allSelected() || this.table().selectedIds().has(this.id()));
-  protected readonly part = computed(() => this.item() && !this.isSelected() ? this.table().rowName?.(this.item()) : null); // selection takes precedence over custom styles
 
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;

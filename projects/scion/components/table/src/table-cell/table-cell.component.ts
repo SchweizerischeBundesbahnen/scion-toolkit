@@ -22,7 +22,7 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-type]': 'cell().type',
-    '[attr.part]': 'name()',
+    '[attr.part]': 'isSelected() ? null : name()',
   },
   imports: [
     NgTemplateOutlet,
