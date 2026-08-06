@@ -16,6 +16,10 @@ export default [
     loadChildren: () => import('./sci-viewport/routes'),
   },
   {
+    path: 'sci-scrollbar',
+    loadChildren: () => import('./sci-scrollbar/routes'),
+  },
+  {
     path: 'sci-sashbox',
     loadChildren: () => import('./sci-sashbox/routes'),
   },
