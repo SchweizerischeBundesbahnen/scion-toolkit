@@ -1,0 +1,12 @@
+@use '@scion/components/scrollbar' as sci-scrollbar;
+
+:host {
+  display: grid;
+  position: relative; // positioned anchor for the scrollbar
+  overflow: hidden;
+  @include sci-scrollbar.scrollbar-hide-when-inactive();
+
+  > sci-scrollbar {
+    @include sci-scrollbar.scrollbar-position();
+  }
+}

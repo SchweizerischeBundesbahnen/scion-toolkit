@@ -12,7 +12,7 @@ import {Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, i
 import {fromEvent, merge, mergeWith, Observable, of, timer} from 'rxjs';
 import {debounceTime, first, map, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
-import {filterArray, subscribeIn} from '@scion/toolkit/operators';
+import {subscribeIn} from '@scion/toolkit/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 /**
@@ -328,7 +328,10 @@ function children$(element: HTMLElement): Observable<HTMLElement[]> {
   return fromMutation$(element, {subtree: false, childList: true})
     .pipe(
       startWith(undefined as void),
-      map(() => Array.from(element.children)),
-      filterArray((child: Element): child is HTMLElement => child instanceof HTMLElement),
+      map(() => Array.from(element.children)
+        // Map to slotted content if a slot (Shadow DOM).
+        .flatMap(child => child instanceof HTMLSlotElement ? child.assignedElements() : child)
+        // Filter HTML elements.
+        .filter((child: Element): child is HTMLElement => child instanceof HTMLElement)),
     );
 }

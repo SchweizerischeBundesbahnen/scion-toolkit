@@ -39,7 +39,10 @@
  * Invoke from within the viewport selector.
  */
 @mixin hide-when-inactive() {
-  &:host-context(:not(:hover):not(:active)) sci-scrollbar:not(.scrolling) { // use :host-context to work with shadow DOM, i.e., to select the shadow host of the shadow DOM
+  &:is(
+    :not(:hover):not(:active), // Support "regular" host
+    :host(:not(:hover):not(:active)) // Support "shadow" host
+  ) sci-scrollbar:not(.scrolling) {
     opacity: 0; // do not use 'display' nor 'visibility' property to fade the scrollbar
   }
 }

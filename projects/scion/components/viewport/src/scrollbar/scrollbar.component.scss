@@ -21,6 +21,27 @@ $thumb-hover-size: 100%;
     flex-grow: var(--ɵsci-scrollbar-thumb-position-fr)
   }
 
+  // Hide scrollbar if no overflow.
+  &:not(.overflow) {
+    display: none;
+  }
+
+  // Enlarge thumb on hover or scroll.
+  &:hover, &.scrolling {
+    > div.thumb-handle > div.thumb {
+      background-color: var(--sci-scrollbar-color);
+      opacity: .75;
+
+      &.vertical {
+        width: $thumb-hover-size;
+      }
+
+      &.horizontal {
+        height: $thumb-hover-size;
+      }
+    }
+  }
+
   > div.thumb-handle {
     flex-basis: $thumb-base-height;
     display: flex;
@@ -58,25 +79,3 @@ $thumb-hover-size: 100%;
     flex-grow: calc(1 - (var(--ɵsci-scrollbar-thumb-position-fr) + var(--ɵsci-scrollbar-thumb-size-fr)));
   }
 }
-
-// hide the scrollbar if there is no content overflow
-:host-context(:not(.overflow)) {
-  display: none;
-}
-
-// enlarge the thumb on hover or while scrolling (e.g. when dragging the thumb outside of the scrolltrack)
-:host-context(:hover), :host-context(.scrolling) {
-  > div.thumb-handle > div.thumb {
-    background-color: var(--sci-scrollbar-color);
-    opacity: .75;
-
-    &.vertical {
-      width: $thumb-hover-size;
-    }
-
-    &.horizontal {
-      height: $thumb-hover-size;
-    }
-  }
-}
-

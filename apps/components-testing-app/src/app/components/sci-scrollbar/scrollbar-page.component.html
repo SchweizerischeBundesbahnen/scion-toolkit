@@ -1,0 +1,31 @@
+<h2>Shadow DOM Viewport</h2>
+<app-shadow-dom-viewport>
+  <div class="viewport-client e2e-viewport-client">
+    <div>top-left</div>
+    <div>top-right</div>
+    <div>bottom-left</div>
+    <div>bottom-right</div>
+  </div>
+</app-shadow-dom-viewport>
+
+<h2>Light DOM Viewport</h2>
+<app-light-dom-viewport>
+  <div class="viewport-client e2e-viewport-client">
+    <div>top-left</div>
+    <div>top-right</div>
+    <div>bottom-left</div>
+    <div>bottom-right</div>
+  </div>
+</app-light-dom-viewport>
+
+<fieldset>
+  <label>
+    <input type="checkbox" [(ngModel)]="verticalViewportOverflow" class="e2e-vertical-viewport-overflow"/>
+    Vertical Overflow
+  </label>
+
+  <label>
+    <input type="checkbox" [(ngModel)]="horizontalViewportOverflow" class="e2e-horizontal-viewport-overflow"/>
+    Horizontal Overflow
+  </label>
+</fieldset>

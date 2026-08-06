@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Locator} from '@playwright/test';
+import {Locator, Page} from '@playwright/test';
 import {exhaustMap, filter, firstValueFrom, map, pairwise, timer} from 'rxjs';
 
 /**
@@ -76,4 +76,17 @@ export async function waitUntilStable<A>(value: () => Promise<A> | A, options?: 
       map(([previous]) => previous),
     );
   return firstValueFrom(value$);
+}
+
+/**
+ * Waits for Angular to finish pending microtasks and stabilize.
+ */
+export async function waitUntilAngularStable(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    if (!('__whenAngularStable' in window)) {
+      throw Error('Function `__whenAngularStable` not found on window');
+    }
+
+    await (window.__whenAngularStable as () => Promise<void>)();
+  });
 }

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component} from '@angular/core';
+import {ApplicationRef, Component, inject} from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 
 @Component({
@@ -18,4 +18,18 @@ import {RouterOutlet} from '@angular/router';
   imports: [RouterOutlet],
 })
 export class AppComponent {
+
+  constructor() {
+    this.provideWhenAngularStable();
+  }
+
+  /**
+   * Provides `window.__whenAngularStable` function for tests to wait for Angular to finish pending microtasks and stabilize.
+   */
+  private provideWhenAngularStable(): void {
+    const applicationRef = inject(ApplicationRef);
+    (window as unknown as Record<string, unknown>)['__whenAngularStable'] = async (): Promise<void> => {
+      await applicationRef.whenStable();
+    };
+  }
 }

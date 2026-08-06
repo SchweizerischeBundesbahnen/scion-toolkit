@@ -1,0 +1,63 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  --viewport-size: 300px;
+  --viewport-client-overflow-size: 10000px;
+
+  > h2 {
+    margin: 0; // Remove default margin for precise positioning of subsequent elements (no pixel fractions), simplifying position assertions in tests.
+  }
+
+  > app-shadow-dom-viewport {
+    height: var(--viewport-size);
+    width: var(--viewport-size);
+    border: 1px solid black;
+    box-sizing: content-box;
+
+    > div.viewport-client {
+      background-color: lightskyblue;
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-template-rows: auto auto;
+      place-content: space-between space-between;
+
+      @container style(--vertical-viewport-overflow: true) {
+        height: var(--viewport-client-overflow-size);
+      }
+
+      @container style(--horizontal-viewport-overflow: true) {
+        width: var(--viewport-client-overflow-size);
+      }
+    }
+  }
+
+  > app-light-dom-viewport {
+    height: var(--viewport-size);
+    width: var(--viewport-size);
+    border: 1px solid black;
+    box-sizing: content-box;
+
+    div.viewport-client {
+      background-color: lightskyblue;
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-template-rows: auto auto;
+      place-content: space-between space-between;
+
+      @container style(--vertical-viewport-overflow: true) {
+        height: var(--viewport-client-overflow-size);
+      }
+
+      @container style(--horizontal-viewport-overflow: true) {
+        width: var(--viewport-client-overflow-size);
+      }
+    }
+  }
+
+  > fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+  }
+}
