@@ -6,27 +6,18 @@
  * Invoke from within the 'sci-scrollbar' selector.
  */
 @mixin position() {
-  $scrollbar-size: 12px;
-
   position: absolute;
-  transition-duration: 1s;
-  transition-property: opacity;
-  transition-timing-function: ease-out;
 
   &.vertical {
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: unset;
-    width: $scrollbar-size;
+    top: 1px;
+    right: 1px;
+    bottom: 1px;
   }
 
   &.horizontal {
-    top: unset;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: $scrollbar-size;
+    left: 1px;
+    bottom: 1px;
+    right: 1px;
   }
 }
 

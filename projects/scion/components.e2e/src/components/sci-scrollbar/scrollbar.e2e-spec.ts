@@ -11,6 +11,7 @@
 import {expect} from '@playwright/test';
 import {test} from '../../fixtures';
 import {ScrollbarPagePO} from './scrollbar-page.po';
+import {waitUntilStable} from '../../helper/testing.utils';
 
 test.describe('sci-scrollbar', () => {
 
@@ -402,7 +403,129 @@ test.describe('sci-scrollbar', () => {
           // Stop scrolling.
           await page.mouse.up();
         });
+
+        test('should scroll when clicking and dragging on the scrolltrack', async ({page}) => {
+          const pagePO = new ScrollbarPagePO(page);
+          await pagePO.navigate();
+          await pagePO.setCssVariable('--viewport-size', '400px');
+          await pagePO.setCssVariable('--viewport-client-overflow-size', '100000px');
+
+          const viewport = pagePO[viewportName];
+          const scrollbar = viewport.verticalScrollbar;
+
+          // Simulate viewport overflow.
+          await pagePO.setOverflow({vertical: true});
+
+          // Hover viewport to display scrollbars.
+          await viewport.hover();
+          await expect(scrollbar.locator).toBeVisible();
+
+          // Hover thumb and wait until its size is stable.
+          await scrollbar.thumb.hover();
+          await scrollbar.thumb.boundingBox();
+
+          // Capture scrollbar bounds.
+          const scrollbarBounds = await scrollbar.innerBounds();
+          const thumbHeight = await scrollbar.thumb.height();
+
+          // Install thumb position logger.
+          const consoleLogs = await scrollbar.thumb.installPositionLogger();
+
+          // Click scrolltrack 300px below the thumb.
+          let currentMousePosition = await scrollbar.thumb.bottom() + 300;
+          await page.mouse.move(scrollbarBounds.hcenter, currentMousePosition, {steps: 20});
+          await page.mouse.down();
+          await page.mouse.up();
+
+          // Expect immediate scrolling by one step (due to click).
+          await expect.poll(() => scrollbar.thumb.top()).toEqual(scrollbarBounds.top + thumbHeight);
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Press mouse button (300px below the initial thumb).
+          await page.mouse.down();
+
+          // Expect thumb to be positioned in the center of the pointer.
+          await expect.poll(() => scrollbar.thumb.vcenter()).toEqual(currentMousePosition);
+          // Expect scrolling in discrete steps proportional to the thumb height.
+          await expect.poll(() => consoleLogs.length).toEqual(Math.ceil((300 - thumbHeight) / thumbHeight));
+          consoleLogs.clear();
+
+          // Drag pointer down by 15px along the scrolltrack.
+          currentMousePosition += 15;
+          await page.mouse.move(scrollbarBounds.hcenter, currentMousePosition);
+
+          // Expect thumb to be positioned in the center of the pointer.
+          await expect.poll(() => scrollbar.thumb.vcenter()).toEqual(currentMousePosition);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Drag pointer up by 100px along the scrolltrack.
+          currentMousePosition -= 100;
+          await page.mouse.move(scrollbarBounds.hcenter, currentMousePosition, {steps: 20});
+
+          // Expect thumb to be positioned in the center of the pointer.
+          await expect.poll(() => scrollbar.thumb.vcenter()).toEqual(currentMousePosition);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(20);
+          consoleLogs.clear();
+
+          // Drag pointer up out of the scrolltrack.
+          currentMousePosition = scrollbarBounds.top - 100;
+          await page.mouse.move(scrollbarBounds.hcenter, currentMousePosition); // y out of scrolltrack
+
+          // Expect thumb to be positioned at the start.
+          await expect.poll(() => scrollbar.thumb.top()).toEqual(scrollbarBounds.top);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Drag pointer down out of the scrolltrack.
+          currentMousePosition = scrollbarBounds.bottom + 100;
+          await page.mouse.move(scrollbarBounds.hcenter, currentMousePosition); // y out of scrolltrack
+
+          // Expect thumb to be positioned at the end.
+          await expect.poll(() => scrollbar.thumb.bottom()).toEqual(scrollbarBounds.bottom);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Drag pointer up along the side of the scrolltrack.
+          currentMousePosition = scrollbarBounds.top - 100;
+          await page.mouse.move(scrollbarBounds.hcenter + 100, currentMousePosition); // x and y out of scrolltrack
+
+          // Expect thumb to be positioned at the start.
+          await expect.poll(() => scrollbar.thumb.top()).toEqual(scrollbarBounds.top);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Drag pointer down along the side of the scrolltrack.
+          currentMousePosition = scrollbarBounds.bottom + 100;
+          await page.mouse.move(scrollbarBounds.hcenter + 100, currentMousePosition); // x and y out of scrolltrack
+
+          // Expect thumb to be positioned at the end.
+          await expect.poll(() => scrollbar.thumb.bottom()).toEqual(scrollbarBounds.bottom);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Stop scrolling.
+          await page.mouse.up();
+
+          // Move pointer to the center of the scrolltrack.
+          await page.mouse.move(scrollbarBounds.hcenter, scrollbarBounds.vcenter);
+          await waitUntilStable(() => consoleLogs.get().length);
+
+          // Expect no scroll because completed stopped scrolling.
+          await expect.poll(() => scrollbar.thumb.bottom()).toEqual(scrollbarBounds.bottom);
+
+          // Dispose console logger.
+          consoleLogs.dispose();
+        });
       });
+
       test.describe('Horizontal Scrolling', () => {
 
         test('should scroll using the scrollbar thumb', async ({page}) => {
@@ -690,6 +813,127 @@ test.describe('sci-scrollbar', () => {
 
           // Stop scrolling.
           await page.mouse.up();
+        });
+
+        test('should scroll when clicking and dragging on the scrolltrack', async ({page}) => {
+          const pagePO = new ScrollbarPagePO(page);
+          await pagePO.navigate();
+          await pagePO.setCssVariable('--viewport-size', '400px');
+          await pagePO.setCssVariable('--viewport-client-overflow-size', '100000px');
+
+          const viewport = pagePO[viewportName];
+          const scrollbar = viewport.horizontalScrollbar;
+
+          // Simulate viewport overflow.
+          await pagePO.setOverflow({horizontal: true});
+
+          // Hover viewport to display scrollbars.
+          await viewport.hover();
+          await expect(scrollbar.locator).toBeVisible();
+
+          // Hover thumb and wait until its size is stable.
+          await scrollbar.thumb.hover();
+          await scrollbar.thumb.boundingBox();
+
+          // Capture scrollbar bounds.
+          const scrollbarBounds = await scrollbar.innerBounds();
+          const thumbWidth = await scrollbar.thumb.width();
+
+          // Install thumb position logger.
+          const consoleLogs = await scrollbar.thumb.installPositionLogger();
+
+          // Click scrolltrack 300px right to the thumb.
+          let currentMousePosition = await scrollbar.thumb.right() + 300;
+          await page.mouse.move(currentMousePosition, scrollbarBounds.vcenter, {steps: 20});
+          await page.mouse.down();
+          await page.mouse.up();
+
+          // Expect immediate scrolling by one step (due to click).
+          await expect.poll(() => scrollbar.thumb.left()).toEqual(scrollbarBounds.left + thumbWidth);
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Press mouse button (300px right to the initial thumb.).
+          await page.mouse.down();
+
+          // Expect thumb to be positioned in the center of the pointer.
+          await expect.poll(() => scrollbar.thumb.hcenter()).toEqual(currentMousePosition);
+          // Expect scrolling in discrete steps proportional to the thumb width.
+          await expect.poll(() => consoleLogs.length).toEqual(Math.ceil((300 - thumbWidth) / thumbWidth));
+          consoleLogs.clear();
+
+          // Drag pointer to the right by 15px along the scrolltrack.
+          currentMousePosition += 15;
+          await page.mouse.move(currentMousePosition, scrollbarBounds.vcenter);
+
+          // Expect thumb to be positioned in the center of the pointer.
+          await expect.poll(() => scrollbar.thumb.hcenter()).toEqual(currentMousePosition);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Drag pointer to the left by 100px along the scrolltrack.
+          currentMousePosition -= 100;
+          await page.mouse.move(currentMousePosition, scrollbarBounds.vcenter, {steps: 20});
+
+          // Expect thumb to be positioned in the center of the pointer.
+          await expect.poll(() => scrollbar.thumb.hcenter()).toEqual(currentMousePosition);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(20);
+          consoleLogs.clear();
+
+          // Drag pointer to the left out of the scrolltrack.
+          currentMousePosition = scrollbarBounds.left - 100;
+          await page.mouse.move(currentMousePosition, scrollbarBounds.vcenter); // x out of scrolltrack
+
+          // Expect thumb to be positioned at the start.
+          await expect.poll(() => scrollbar.thumb.left()).toEqual(scrollbarBounds.left);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Drag pointer to the right out of the scrolltrack.
+          currentMousePosition = scrollbarBounds.right + 100;
+          await page.mouse.move(currentMousePosition, scrollbarBounds.vcenter); // x out of scrolltrack
+
+          // Expect thumb to be positioned at the end.
+          await expect.poll(() => scrollbar.thumb.right()).toEqual(scrollbarBounds.right);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Drag pointer to the left along the side of the scrolltrack.
+          currentMousePosition = scrollbarBounds.left - 100;
+          await page.mouse.move(currentMousePosition, scrollbarBounds.vcenter + 100); // x and y out of scrolltrack
+
+          // Expect thumb to be positioned at the start.
+          await expect.poll(() => scrollbar.thumb.left()).toEqual(scrollbarBounds.left);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Drag pointer to the right along the side of the scrolltrack.
+          currentMousePosition = scrollbarBounds.right + 100;
+          await page.mouse.move(currentMousePosition, scrollbarBounds.vcenter + 100); // x and y out of scrolltrack
+
+          // Expect thumb to be positioned at the end.
+          await expect.poll(() => scrollbar.thumb.right()).toEqual(scrollbarBounds.right);
+          // Expect thumb to directly following the pointer.
+          await expect.poll(() => consoleLogs.length).toBe(1);
+          consoleLogs.clear();
+
+          // Stop scrolling.
+          await page.mouse.up();
+
+          // Move pointer to the center of the scrolltrack.
+          await page.mouse.move(scrollbarBounds.hcenter, scrollbarBounds.vcenter);
+          await waitUntilStable(() => consoleLogs.get().length);
+
+          // Expect no scroll because completed stopped scrolling.
+          await expect.poll(() => scrollbar.thumb.right()).toEqual(scrollbarBounds.right);
+
+          // Dispose console logger.
+          consoleLogs.dispose();
         });
       });
     });

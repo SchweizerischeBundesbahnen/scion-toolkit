@@ -1,4 +1,5 @@
-<div class="scrolltrack-start"></div>
+<!-- scrolltrack for moving the viewport client upwards (paging) -->
+<div class="scrolltrack" (mousedown)="onScrollTrackMouseDown($event)"></div>
 
 <!-- scrollthumb -->
 <div #thumb_handle
@@ -12,4 +13,5 @@
   </div>
 </div>
 
-<div class="scrolltrack-end"></div>
+<!-- scrolltrack for moving the viewport client downwards (paging) -->
+<div class="scrolltrack" (mousedown)="onScrollTrackMouseDown($event)"></div>

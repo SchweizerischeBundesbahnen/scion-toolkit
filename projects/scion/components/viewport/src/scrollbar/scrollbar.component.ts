@@ -9,8 +9,8 @@
  */
 
 import {Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, signal, untracked, viewChild} from '@angular/core';
-import {finalize, fromEvent, merge, mergeWith, Observable, race, tap} from 'rxjs';
-import {debounceTime, map, startWith, switchMap, takeUntil} from 'rxjs/operators';
+import {concatWith, exhaustMap, finalize, fromEvent, merge, mergeWith, Observable, of, race, tap, timer} from 'rxjs';
+import {debounceTime, map, startWith, switchMap, takeUntil, withLatestFrom} from 'rxjs/operators';
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -143,6 +143,57 @@ export class SciScrollbarComponent {
         // Calculate new thumb position.
         const pointerPosition = this.vertical() ? mousemoveEvent.pageY : mousemoveEvent.pageX;
         this.scrollViewport(pointerPosition - thumbStartOffset);
+      });
+  }
+
+  /**
+   * Method invoked when clicking on the scrollbar track.
+   *
+   * Scrolls in discrete steps to the pointer, then switches to regular scrolling until releasing the mouse.
+   */
+  protected onScrollTrackMouseDown(event: MouseEvent): void {
+    const mouseMove$ = merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'));
+    // Stop scrolling when releasing the mouse. Handle the event in the capture phase and stop propagation to not close a potential overlay when releasing the mouse outside the overlay.
+    const mouseUp$ = race(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true, once: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup', {once: true}))
+      .pipe(tap(mouseupEvent => mouseupEvent.stopPropagation()));
+
+    // Prevent text selection during drag.
+    event.preventDefault();
+    this.scrolling.set(true);
+
+    // Scroll in discrete steps to the pointer position, then switch to regular scrolling.
+    timer(250, 50)
+      .pipe(
+        // Track current pointer position.
+        withLatestFrom(mouseMove$.pipe(startWith(event)), (_tick, event) => event),
+        // Scroll immediately on initial click.
+        startWith(event),
+        subscribeIn(fn => this._zone.runOutsideAngular(fn)),
+        exhaustMap(event => {
+          const pointerPosition = this.vertical() ? event.pageY : event.pageX;
+          const [thumbStartPosition, thumbEndPosition] = this.thumbPosition();
+          const thumbSize = thumbEndPosition - thumbStartPosition;
+
+          // Step scroll until the pointer hits the thumb.
+          if (!isBetween(pointerPosition, {from: thumbStartPosition - thumbSize, to: thumbEndPosition + thumbSize})) {
+            const scrollingDown = pointerPosition > thumbEndPosition;
+            return of(scrollingDown ? thumbStartPosition + thumbSize : thumbStartPosition - thumbSize);
+          }
+
+          // Switch to "smooth scrolling" following the pointer.
+          return of(event)
+            .pipe(
+              concatWith(mouseMove$),
+              map(event => (this.vertical() ? event.pageY : event.pageX) - (thumbSize / 2)),
+            );
+        }),
+        // Stop on mouse release.
+        takeUntil(mouseUp$),
+        finalize(() => this.scrolling.set(false)),
+      )
+      .subscribe((thumbPosition: number) => {
+        NgZone.assertNotInAngularZone();
+        this.scrollViewport(thumbPosition);
       });
   }
 
@@ -317,4 +368,11 @@ function children$(element: HTMLElement): Observable<HTMLElement[]> {
  */
 function clamp(value: number, minmax: {min: number; max: number}): number {
   return Math.max(minmax.min, Math.min(value, minmax.max));
+}
+
+/**
+ * Returns whether the value is between the specified range (inclusive).
+ */
+function isBetween(value: number, range: {from: number; to: number}): boolean {
+  return value >= range.from && value <= range.to;
 }

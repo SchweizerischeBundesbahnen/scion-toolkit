@@ -17,7 +17,7 @@ export class ConsoleLogs {
 
   private _messages = new Array<ConsoleMessage>();
 
-  constructor(private _page: Page) {
+  constructor(private _page: Page, private _options?: {filter?: RegExp | string}) {
     this._page.on('console', this.onConsole);
   }
 
@@ -36,12 +36,18 @@ export class ConsoleLogs {
     this._messages.length = 0;
   }
 
+  public get length(): number {
+    return this._messages.length;
+  }
+
   public dispose(): void {
     this._page.off('console', () => this.onConsole);
   }
 
   private onConsole = (message: ConsoleMessage): void => {
-    this._messages.push(message);
+    if (!this._options?.filter || filterMessage(message.text(), this._options.filter)) {
+      this._messages.push(message);
+    }
   };
 }
 
