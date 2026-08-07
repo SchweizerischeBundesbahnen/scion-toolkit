@@ -1,23 +1,28 @@
+$scrollbar-size: 8px;
 $thumb-base-height: 20px;
 $thumb-default-size: 60%;
 $thumb-hover-size: 100%;
 
 :host {
   display: flex;
-  border: 2px solid transparent;
   box-sizing: border-box;
+  transition-duration: 1s;
+  transition-property: opacity;
+  transition-timing-function: ease-out;
   --ɵsci-scrollbar-thumb-position-fr: 0;
   --ɵsci-scrollbar-thumb-size-fr: 0;
 
   &.vertical {
     flex-direction: column;
+    width: $scrollbar-size;
   }
 
   &.horizontal {
     flex-direction: row;
+    height: $scrollbar-size;
   }
 
-  > div.scrolltrack-start {
+  > div.scrolltrack:first-child {
     flex-grow: var(--ɵsci-scrollbar-thumb-position-fr)
   }
 
@@ -76,7 +81,7 @@ $thumb-hover-size: 100%;
     }
   }
 
-  > div.scrolltrack-end {
+  > div.scrolltrack:last-child {
     flex-grow: calc(1 - (var(--ɵsci-scrollbar-thumb-position-fr) + var(--ɵsci-scrollbar-thumb-size-fr)));
   }
 }

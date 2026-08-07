@@ -10,6 +10,7 @@
 
 import {Locator, Page} from '@playwright/test';
 import {DomRect, fromRect, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
+import {ConsoleLogs} from '../../console-logs';
 
 const PATH = '/#/components/sci-scrollbar';
 
@@ -154,5 +155,35 @@ export class ThumbPO {
 
   public async right(): Promise<number> {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).right);
+  }
+
+  /**
+   * Installs a logger to capture position changes of the scrollbar thumb.
+   */
+  public async installPositionLogger(): Promise<ConsoleLogs> {
+    const logIdentifier = crypto.randomUUID().substring(0, 4);
+    const consoleLogs = new ConsoleLogs(this.locator.page(), {filter: new RegExp(logIdentifier)});
+
+    await this.locator.evaluate((thumb: HTMLElement, label: string) => {
+      let x: number | undefined;
+      let y: number | undefined;
+
+      logPosition();
+
+      function logPosition(): void {
+        const newPosition = thumb.getBoundingClientRect();
+        if (Math.floor(newPosition.x) !== x || Math.floor(newPosition.y) !== y) {
+          x = Math.floor(newPosition.x);
+          y = Math.floor(newPosition.y);
+          console.info(`[${label}] Thumb position has changed: [x=${x}, y=${y}]`);
+        }
+        requestAnimationFrame(logPosition);
+      }
+    }, logIdentifier);
+
+    // Clear initial log.
+    consoleLogs.clear();
+
+    return consoleLogs;
   }
 }
