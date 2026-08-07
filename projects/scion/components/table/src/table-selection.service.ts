@@ -96,7 +96,7 @@ export class TableSelectionService<T> {
 
     const table = this._table();
     const totalCount = table.totalCount();
-    if (table.selectable() === 'single' || totalCount === undefined || totalCount <= 0) {
+    if (!table.selectable() || table.selectable() === 'single' || totalCount === undefined || totalCount <= 0) {
       return;
     }
 

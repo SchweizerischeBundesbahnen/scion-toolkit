@@ -125,7 +125,10 @@ export class SciTableComponent<T> {
   protected readonly tableWidth = computed(() => {
     const containerWidth = this.containerDimension().clientWidth;
     const tableWidth = this.verticalViewportDimension().clientWidth;
-    return tableWidth > containerWidth ? `${tableWidth}px` : '100%';
+    const hasFractionColumn = this.sciTable().columns().some(column => column.isFraction && !column.absoluteWidth);
+
+    // Only allow full width table when at least one column takes the remaining space.
+    return tableWidth > containerWidth || !hasFractionColumn ? `${tableWidth}px` : '100%';
   });
 
   private readonly _scrollTop = signal(0);

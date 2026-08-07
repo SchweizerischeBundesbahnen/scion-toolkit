@@ -501,6 +501,40 @@ test.describe('sci-table', () => {
       await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(800);
       await expect.poll(() => table.column('Four').getHeaderWidth()).toBeCloseTo(100, 1);
     });
+
+    test('should hide row hover while resizing', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
+
+      const splitterBounds = await table.splitterBounds('column:name');
+      const rowBounds = await table.row(3).bounds();
+      await page.mouse.move(splitterBounds.hcenter, splitterBounds.top);
+      await page.mouse.down();
+      await page.mouse.move(rowBounds.left, rowBounds.vcenter);
+      await expect(table.row(3).locator).not.toHaveCSS('background-color', 'rgb(233, 233, 233)');
+
+      await page.mouse.up();
+      await expect(table.row(3).locator).toHaveCSS('background-color', 'rgb(233, 233, 233)');
+    });
+
+    test('should scroll viewport and when wheeling on splitter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'test', header: 'Test', type: 'string', width: '100px'});
+
+      const splitterBounds = await table.splitterBounds('column:name');
+      await page.mouse.move(splitterBounds.hcenter, splitterBounds.vcenter);
+
+      const initialScrollTop = await table.verticalViewport.evaluate(el => el.scrollTop);
+      await page.mouse.wheel(0, 250);
+      await expect.poll(() => table.verticalViewport.evaluate(el => el.scrollTop)).toBeGreaterThan(initialScrollTop);
+    });
   });
 
   test.describe('sorting', () => {
@@ -825,6 +859,113 @@ test.describe('sci-table', () => {
 
       await table.row(3).hover();
       await expect(table.rowActions).toBeVisible();
+    });
+
+    test('should hide row actions while resizing', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.setRowActions(true);
+
+      const splitterBounds = await table.splitterBounds('column:name');
+      const rowBounds = await table.row(3).bounds();
+      await page.mouse.move(splitterBounds.hcenter, splitterBounds.top);
+      await page.mouse.down();
+      await page.mouse.move(rowBounds.hcenter, rowBounds.vcenter);
+      await expect(table.rowActions).not.toBeAttached();
+
+      await page.mouse.up();
+      await expect(table.rowActions).toBeVisible();
+    });
+
+    test('should hide row actions while scrolling', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.setRowActions(true);
+
+      await table.row(10).hover();
+      await expect(table.rowActions).toBeVisible();
+
+      const initialScrollTop = await table.verticalViewport.evaluate(el => el.scrollTop);
+      await page.mouse.wheel(0, 250);
+      await expect.poll(() => table.verticalViewport.evaluate(el => el.scrollTop)).toBeGreaterThan(initialScrollTop);
+      await expect(table.rowActions).toBeHidden();
+
+      await table.row(10).hover();
+      await expect(table.rowActions).toBeVisible();
+    });
+
+    test('should scroll viewport and hide row actions when wheeling on toolbar', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'test', header: 'Test', type: 'string', width: '100px'});
+      await tablePage.setRowActions(true);
+
+      await table.row(10).hover();
+      await expect(table.rowActions).toBeVisible();
+
+      await table.rowActions.hover();
+      const initialScrollTop = await table.verticalViewport.evaluate(el => el.scrollTop);
+      await page.mouse.wheel(0, 250);
+      await expect.poll(() => table.verticalViewport.evaluate(el => el.scrollTop)).toBeGreaterThan(initialScrollTop);
+      await expect(table.rowActions).toBeHidden();
+    });
+
+    test('should keep row actions visible when moving between row toolbar and overlay', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'test', header: 'Test', type: 'string', width: '100px'});
+      await tablePage.setRowActions(true);
+
+      await table.row(10).hover();
+      await expect(table.rowActions).toBeVisible();
+
+      await table.rowActions.hover();
+      await expect(table.rowActions).toBeVisible();
+
+      const splitterBounds = await table.splitterBounds('column:name');
+      await page.mouse.move(splitterBounds.hcenter, splitterBounds.vcenter);
+      await expect(table.rowActions).toBeVisible();
+    });
+
+    test('should hide row actions when leaving overlay or toolbar for header', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'test', header: 'Test', type: 'string', width: '100px'});
+      await tablePage.setRowActions(true);
+
+      await table.row(10).hover();
+      await expect(table.rowActions).toBeVisible();
+
+      const splitterBounds = await table.splitterBounds('column:name');
+      await page.mouse.move(splitterBounds.hcenter, splitterBounds.vcenter);
+      await expect(table.rowActions).toBeVisible();
+
+      await table.headers.first().hover();
+      await expect(table.rowActions).toBeHidden();
+
+      await table.row(10).hover();
+      await expect(table.rowActions).toBeVisible();
+
+      await table.rowActions.hover();
+      await expect(table.rowActions).toBeVisible();
+
+      await table.headers.first().hover();
+      await expect(table.rowActions).toBeHidden();
     });
   });
 });

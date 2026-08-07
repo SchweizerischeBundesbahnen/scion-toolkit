@@ -67,6 +67,18 @@ export class TablePo {
     await this.locator.locator(`sci-splitter[data-column="${columnName}"]`).dblclick();
   }
 
+  public async verticalScrollThumbBounds(): Promise<DomRect> {
+    return fromRect(await this.locator.locator('sci-scrollbar .thumb.vertical').boundingBox());
+  }
+
+  public async scrollVerticalWithScrollbar(distance: number): Promise<void> {
+    const thumb = await this.verticalScrollThumbBounds();
+    await this.locator.page().mouse.move(thumb.hcenter, thumb.vcenter);
+    await this.locator.page().mouse.down();
+    await this.locator.page().mouse.move(thumb.hcenter, thumb.vcenter + distance, {steps: 20});
+    await this.locator.page().mouse.up();
+  }
+
   public async scrollViewPort(scroll: 'right' | {x: number; y: number}): Promise<void> {
     await this.locator.locator('div.e2e-horizontal-viewport').evaluate((element, {scroll}) => {
       const x = scroll === 'right' ? element.scrollWidth : scroll.x;

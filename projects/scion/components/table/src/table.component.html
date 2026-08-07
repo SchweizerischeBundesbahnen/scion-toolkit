@@ -26,7 +26,7 @@
                        [rows]="rows()"
                        (scrollBy)="onOverlayScrollBy($event)" />
   </div>
-  @if (sciTable().rowActions) {
+  @if (sciTable().rowActions && !resizing()) {
     <div class="row-actions" (mouseleave)="onRowActionsMouseLeave($event)" (wheel)="onRowActionsMouseWheel($event)">
       <sci-toolbar [name]="rowActionToolbarName()" />
     </div>

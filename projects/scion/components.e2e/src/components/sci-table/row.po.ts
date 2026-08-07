@@ -1,5 +1,6 @@
 import {Locator} from '@playwright/test';
 import {CellPo} from './cell.po';
+import {DomRect, fromRect} from '../../helper/testing.utils';
 
 export class RowPo {
   public cells: Locator;
@@ -18,5 +19,9 @@ export class RowPo {
 
   public async hover(): Promise<void> {
     await this.locator.hover();
+  }
+
+  public async bounds(): Promise<DomRect> {
+    return fromRect(await this.locator.boundingBox());
   }
 }

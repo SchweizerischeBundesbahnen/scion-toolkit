@@ -39,6 +39,9 @@ export class ColumnHeaderComponent<T> {
   public readonly boundingClientRect = boundingClientRect(this._element.nativeElement as HTMLElement);
 
   protected onSort(event: PointerEvent): void {
+    if (!this.column().sortable()) {
+      return;
+    }
     this.table().sort(this.column().name, event.ctrlKey || event.metaKey);
   }
 }

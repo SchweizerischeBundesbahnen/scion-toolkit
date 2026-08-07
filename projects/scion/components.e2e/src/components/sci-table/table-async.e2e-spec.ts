@@ -21,6 +21,23 @@ test.describe('sci-table async datasource', () => {
     await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
   });
 
+  test('should load pages when scrolling with scrollbar', async ({page}) => {
+    const tablePage = new TablePagePO(page);
+    const table = new TablePo(page);
+    await tablePage.navigate('slow-data-source');
+
+    // wait for initial page to finish loading.
+    await expect(table.rows.locator('.skeleton').first()).toBeAttached();
+    await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
+    await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
+
+    await table.scrollVerticalWithScrollbar(100);
+
+    await expect(table.rows.locator('.skeleton').first()).toBeAttached();
+    await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
+    await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
+  });
+
   test('should show skeletons when applying sort while using async datasource', async ({page}) => {
     const tablePage = new TablePagePO(page);
     const table = new TablePo(page);
