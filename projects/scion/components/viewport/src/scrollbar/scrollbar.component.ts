@@ -9,8 +9,8 @@
  */
 
 import {Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, signal, untracked, viewChild} from '@angular/core';
-import {fromEvent, merge, mergeWith, Observable, of, timer} from 'rxjs';
-import {debounceTime, first, map, startWith, switchMap, takeUntil, takeWhile, withLatestFrom} from 'rxjs/operators';
+import {finalize, fromEvent, merge, mergeWith, Observable, race, tap} from 'rxjs';
+import {debounceTime, map, startWith, switchMap, takeUntil} from 'rxjs/operators';
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -19,7 +19,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
  * Renders a vertical or horizontal scrollbar.
  *
  * The scrollbar features the following functionality:
- * - allows to move the thumb by mouse or touch
+ * - allows to move the thumb by mouse
  * - enlarges the thumb if the mouse pointer is near the thumb
  * - allows paging on mousedown on the scroll track
  *
@@ -28,7 +28,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
  * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
  * To style a specific `sci-scrollbar` component, the following CSS variables can be set directly on the component.
  *
- * - sci-scrollbar-color:    Sets the color of the scrollbar.
+ * - --sci-scrollbar-color:    Sets the color of the scrollbar.
  *
  * Example:
  *
@@ -47,6 +47,9 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
     '[class.vertical]': 'vertical()',
     '[class.horizontal]': 'horizontal()',
     '[class.scrolling]': 'scrolling()',
+    '[class.overflow]': 'overflow()',
+    '[style.--ɵsci-scrollbar-thumb-position-fr]': 'thumbPositionFr()',
+    '[style.--ɵsci-scrollbar-thumb-size-fr]': 'thumbSizeFr()',
   },
 })
 export class SciScrollbarComponent {
@@ -68,7 +71,7 @@ export class SciScrollbarComponent {
   public readonly direction = input<'vscroll' | 'hscroll'>('vscroll');
 
   /**
-   * The viewport to provide scrollbars for.
+   * Specifies the viewport associated with the scrollbar.
    */
   public readonly viewport = input.required<HTMLElement>();
 
@@ -77,106 +80,70 @@ export class SciScrollbarComponent {
   private readonly _zone = inject(NgZone);
   private readonly _destroyRef = inject(DestroyRef);
   private readonly _thumbElement = viewChild.required<ElementRef<HTMLDivElement>>('thumb_handle');
-  private readonly _lastDragPosition = signal<number | null>(null);
 
   protected readonly vertical = computed(() => this.direction() === 'vscroll');
   protected readonly horizontal = computed(() => !this.vertical());
-  protected readonly scrolling = computed(() => this._lastDragPosition() !== null);
-
-  private _overflow = false;
-  private _thumbSizeFr = 0;
-  private _thumbPositionFr = 0;
+  protected readonly scrolling = signal(false);
+  protected readonly overflow = signal(false);
+  protected readonly thumbSizeFr = signal(0);
+  protected readonly thumbPositionFr = signal(0);
 
   constructor() {
     this.installScrollPositionRenderer();
   }
 
   /**
-   * Computes the scroll position and updates CSS variables to render the scroll position in the UI.
+   * Computes the scroll position and updates CSS variables to render the scroll position.
    */
   private renderScrollPosition(): void {
     NgZone.assertNotInAngularZone();
-    const viewportSize = this.viewportSize;
-    const viewportClientSize = this.viewportClientSize;
-    const thumbPositionFr = this.scrollPosition / viewportClientSize;
-    const thumbSizeFr = viewportSize / viewportClientSize;
-    const overflow = viewportClientSize > viewportSize;
+    const viewportSize = this.viewportSize();
+    const viewportClientSize = this.viewportClientSize();
 
-    if (thumbPositionFr !== this._thumbPositionFr || thumbSizeFr !== this._thumbSizeFr) {
-      this._thumbPositionFr = thumbPositionFr;
-      this._thumbSizeFr = thumbSizeFr;
-      this.setCssVariable('--ɵsci-scrollbar-thumb-position-fr', thumbPositionFr);
-      this.setCssVariable('--ɵsci-scrollbar-thumb-size-fr', thumbSizeFr);
-    }
-
-    if (overflow !== this._overflow) {
-      this._overflow = overflow;
-      overflow ? this._host.classList.add('overflow') : this._host.classList.remove('overflow');
-    }
+    this.thumbPositionFr.set(this.viewportScrollPosition() / viewportClientSize);
+    this.thumbSizeFr.set(viewportSize / viewportClientSize);
+    this.overflow.set(viewportClientSize > viewportSize);
   }
 
-  protected onTouchStart(event: TouchEvent): void {
-    event.preventDefault();
-    this._lastDragPosition.set(this.vertical() ? event.touches[0]!.screenY : event.touches[0]!.screenX);
-  }
-
-  protected onTouchMove(event: TouchEvent): void {
-    event.preventDefault();
-
-    const newDragPositionPx = this.vertical() ? event.touches[0]!.screenY : event.touches[0]!.screenX;
-    const scrollbarPanPx = newDragPositionPx - this._lastDragPosition()!;
-    const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
-    this._lastDragPosition.set(newDragPositionPx);
-    this.moveViewportClient(viewportPanPx);
-  }
-
-  protected onTouchEnd(event: TouchEvent): void {
-    event.preventDefault();
-    this._lastDragPosition.set(null);
-  }
-
-  protected onMouseDown(mousedownEvent: MouseEvent): void {
+  /**
+   * Method invoked when clicking on the scrollbar thumb.
+   */
+  protected onThumbMouseDown(mousedownEvent: MouseEvent): void {
     if (mousedownEvent.button !== 0) {
       return;
     }
 
-    mousedownEvent.preventDefault();
-    this._lastDragPosition.set(this.vertical() ? mousedownEvent.screenY : mousedownEvent.screenX);
+    this.scrolling.set(true);
 
-    // Listen for 'mousemove' events
-    const mousemoveListener = merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
+    // Prevent text selection during drag.
+    mousedownEvent.preventDefault();
+
+    // Memoize offset where thumb was clicked.
+    const [thumbStartPosition] = this.thumbPosition();
+    const thumbStartOffset = (this.vertical() ? mousedownEvent.pageY : mousedownEvent.pageX) - thumbStartPosition;
+
+    // Stop scrolling when releasing the mouse. Handle the event in the capture phase and stop propagation to not close a potential overlay when releasing the mouse outside the overlay.
+    const mouseUp$ = race(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true, once: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup', {once: true}))
+      .pipe(tap(mouseupEvent => mouseupEvent.stopPropagation()));
+
+    // Track pointer until mouse release.
+    merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
       .pipe(
         subscribeIn(fn => this._zone.runOutsideAngular(fn)),
         takeUntilDestroyed(this._destroyRef),
+        takeUntil(mouseUp$),
+        finalize(() => this.scrolling.set(false)),
       )
       .subscribe(mousemoveEvent => {
         NgZone.assertNotInAngularZone();
+
+        // Prevent user agent scrolling while during drag.
         mousemoveEvent.preventDefault();
-        const newDragPositionPx = this.vertical() ? mousemoveEvent.screenY : mousemoveEvent.screenX;
-        const scrollbarPanPx = newDragPositionPx - this._lastDragPosition()!;
-        const viewportPanPx = this.toViewportPanPx(scrollbarPanPx);
-        this._lastDragPosition.set(newDragPositionPx);
-        this.moveViewportClient(viewportPanPx);
-      });
 
-    // Listen for 'mouseup' events; use 'capture phase' and 'stop propagation' to not close overlays
-    merge(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup'))
-      .pipe(
-        subscribeIn(fn => this._zone.runOutsideAngular(fn)),
-        first(),
-        takeUntilDestroyed(this._destroyRef),
-      )
-      .subscribe(mouseupEvent => {
-        NgZone.assertNotInAngularZone();
-        mouseupEvent.stopPropagation();
-        mousemoveListener.unsubscribe();
-        this._lastDragPosition.set(null);
+        // Calculate new thumb position.
+        const pointerPosition = this.vertical() ? mousemoveEvent.pageY : mousemoveEvent.pageX;
+        this.scrollViewport(pointerPosition - thumbStartOffset);
       });
-  }
-
-  protected onScrollTrackMouseDown(event: MouseEvent, direction: 'up' | 'down'): void {
-    const signum = (direction === 'up' ? -1 : 1);
-    this.scrollWhileMouseDown(this.toViewportPanPx(signum * this.thumbSize), event);
   }
 
   /**
@@ -200,88 +167,97 @@ export class SciScrollbarComponent {
   }
 
   /**
-   * Projects the given scrollbar scroll pixels into viewport scroll pixels.
+   * Moves the scrollbar thumb to the specified position, scrolling the viewport accordingly.
+   *
+   * The thumb position must be given in page coordinates relative to the top-left corner of the document.
    */
-  private toViewportPanPx(scrollbarPanPx: number): number {
-    const scrollRangePx = this.trackSize - this.thumbSize;
-    const scrollRatio = scrollbarPanPx / scrollRangePx;
-    return scrollRatio * (this.viewportClientSize - this.viewportSize);
-  }
+  private scrollViewport(thumbPosition: number): void {
+    const [scrollbarComponentStartPosition] = this.scrollbarComponentPosition();
+    const scrollbarBorderWidth = this.vertical() ? this._host.clientTop : this._host.clientLeft;
+    const scrollRatio = clamp((thumbPosition - scrollbarComponentStartPosition - scrollbarBorderWidth) / (this.trackSize() - this.thumbSize()), {min: 0, max: 1});
+    const viewportScrollPosition = scrollRatio * (this.viewportClientSize() - this.viewportSize());
 
-  /**
-   * Moves the viewport client by the specified numbers of pixels.
-   */
-  private moveViewportClient(viewportPanPx: number): void {
     if (this.vertical()) {
-      this.viewport().scrollTop += viewportPanPx;
+      this.viewport().scrollTop = viewportScrollPosition;
     }
     else {
-      this.viewport().scrollLeft += viewportPanPx;
+      this.viewport().scrollLeft = viewportScrollPosition;
     }
   }
 
   /**
-   * Indicates if the content overflows.
+   * Returns the position of this component in page coordinates.
+   *
+   * Returned coordinates are relative to the top-left corner of the document.
+   * Depending on the scrollbar orientation, returned coordinates are `[top, bottom]` or `[left, right]`.
    */
-  public get overflow(): boolean {
-    return this._overflow;
+  private scrollbarComponentPosition(): [number, number] {
+    const boundingBox = this._host.getBoundingClientRect();
+    return this.vertical() ? [boundingBox.top + window.scrollY, boundingBox.bottom + window.scrollY] : [boundingBox.left + window.scrollX, boundingBox.right + window.scrollX];
   }
 
   /**
-   * Scrolls continuously while holding the mouse pressed, or until the mouse leaves the scrolltrack.
+   * Returns the size of the viewport in pixels.
+   *
+   * The viewport is the container for scrollable content (viewport client), displaying scrollbars if it overflows.
+   * Depending on the scrollbar orientation, the returned size is `viewport.clientHeight` or `viewport.clientWidth`.
    */
-  private scrollWhileMouseDown(viewportScrollPx: number, mousedownEvent: MouseEvent): void {
-    // The `EventTarget` type of `Event.target` is not yet compatible with `FromEventTarget` used in `fromEvent`.
-    // This will be fixed in rxjs version 7.0.0. Refer to https://github.com/ReactiveX/rxjs/commit/5f022d784570684632e6fd5ae247fc259ee34c4b
-    // for more details.
-    const scrollTrackElement = mousedownEvent.target as Element;
-
-    // scroll continuously every 50ms after an initial delay of 250ms
-    timer(250, 50)
-      .pipe(
-        // continue chain with latest mouse event
-        withLatestFrom(merge(of(mousedownEvent), fromEvent<MouseEvent>(scrollTrackElement, 'mousemove')), (tick, event) => event),
-        // start immediately
-        startWith(mousedownEvent),
-        // stop scrolling if the thumb hits the mouse pointer position
-        takeWhile((event: MouseEvent) => scrollTrackElement === this._document.elementFromPoint(event.clientX, event.clientY)),
-        debounceTime(10),
-        // stop scrolling on mouseout or mouseup
-        takeUntil(merge(fromEvent(scrollTrackElement, 'mouseout'), fromEvent(scrollTrackElement, 'mouseup'))),
-      )
-      .subscribe(() => {
-        this.moveViewportClient(viewportScrollPx);
-      });
-  }
-
-  private setCssVariable(key: string, value: number): void {
-    this._host.style.setProperty(key, `${value}`);
-  }
-
-  private get viewportSize(): number {
+  private viewportSize(): number {
     return this.vertical() ? this.viewport().clientHeight : this.viewport().clientWidth;
   }
 
-  private get viewportClientSize(): number {
+  /**
+   * Returns the size of the viewport client in pixels.
+   *
+   * The viewport client represents scrollable content displayed in the viewport.
+   * Depending on the scrollbar orientation, the returned size is `viewport.scrollHeight` or `viewport.scrollWidth`.
+   */
+  private viewportClientSize(): number {
     return this.vertical() ? this.viewport().scrollHeight : this.viewport().scrollWidth;
   }
 
-  private get scrollPosition(): number {
+  /**
+   * Returns the viewport's scroll position in pixels.
+   *
+   * Depending on the scrollbar orientation, the returned position is `viewport.scrollTop` or `viewport.scrollLeft`.
+   */
+  private viewportScrollPosition(): number {
     return this.vertical() ? this.viewport().scrollTop : this.viewport().scrollLeft;
   }
 
-  private get thumbSize(): number {
+  /**
+   * Returns the size of the scrollbar thumb in pixels.
+   *
+   * The thumb is the handle used to scroll the scrollbar.
+   */
+  private thumbSize(): number {
     const thumbElement = this._thumbElement().nativeElement;
-    return this.vertical() ? thumbElement.clientHeight : thumbElement.clientWidth;
+    return this.vertical() ? thumbElement.offsetHeight : thumbElement.offsetWidth;
   }
 
-  private get trackSize(): number {
+  /**
+   * Returns the current thumb position in page coordinates.
+   *
+   * Returned coordinates are relative to the top-left corner of the document.
+   * Depending on the scrollbar orientation, returned coordinates are `[top, bottom]` or `[left, right]`.
+   */
+  private thumbPosition(): [number, number] {
+    const boundingBox = this._thumbElement().nativeElement.getBoundingClientRect();
+    return this.vertical() ? [boundingBox.top + window.scrollY, boundingBox.bottom + window.scrollY] : [boundingBox.left + window.scrollX, boundingBox.right + window.scrollX];
+  }
+
+  /**
+   * Returns the size of the scrollbar track in pixels.
+   *
+   * The scrollbar track is the track along which the scrollbar thumb moves.
+   */
+  private trackSize(): number {
     return this.vertical() ? this._host.clientHeight : this._host.clientWidth;
   }
 }
 
 /**
- * Emits whenever the viewport scrolls.
+ * Emits whenever the viewport is scrolled.
  */
 function viewportScroll$(viewport: HTMLElement): Observable<void> {
   return fromEvent(viewport, 'scroll', {passive: true}).pipe(map(() => undefined));
@@ -334,4 +310,11 @@ function children$(element: HTMLElement): Observable<HTMLElement[]> {
         // Filter HTML elements.
         .filter((child: Element): child is HTMLElement => child instanceof HTMLElement)),
     );
+}
+
+/**
+ * Returns the value clamped to the inclusive range of min and max.
+ */
+function clamp(value: number, minmax: {min: number; max: number}): number {
+  return Math.max(minmax.min, Math.min(value, minmax.max));
 }

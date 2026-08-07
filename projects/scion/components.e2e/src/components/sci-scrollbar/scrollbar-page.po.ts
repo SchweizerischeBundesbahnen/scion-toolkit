@@ -38,6 +38,12 @@ export class ScrollbarPagePO {
     await (overflow.horizontal ? this.horizontalOverflow.check() : this.horizontalOverflow.uncheck());
     await waitUntilAngularStable(this._page);
   }
+
+  public async setCssVariable(name: `--${string}`, value: string): Promise<void> {
+    await this.locator.evaluate((page, variable: {name: string; value: string}): void => {
+      page.style.setProperty(variable.name, variable.value);
+    }, {name, value});
+  }
 }
 
 export class ViewportPO {
@@ -60,6 +66,30 @@ export class ViewportPO {
     const viewportBounds = fromRect(await this.locator.boundingBox());
     await this.locator.page().mouse.move(viewportBounds.right + 10, viewportBounds.bottom + 10);
   }
+
+  public async viewportHeight(): Promise<number> {
+    return this.viewport.evaluate(viewport => viewport.clientHeight);
+  }
+
+  public async viewportWidth(): Promise<number> {
+    return this.viewport.evaluate(viewport => viewport.clientWidth);
+  }
+
+  public async viewportClientHeight(): Promise<number> {
+    return this.viewport.evaluate(viewport => viewport.scrollHeight);
+  }
+
+  public async viewportClientWidth(): Promise<number> {
+    return this.viewport.evaluate(viewport => viewport.scrollWidth);
+  }
+
+  public scrollTop(): Promise<number> {
+    return this.viewport.evaluate(viewport => viewport.scrollTop);
+  }
+
+  public scrollLeft(): Promise<number> {
+    return this.viewport.evaluate(viewport => viewport.scrollLeft);
+  }
 }
 
 export class ScrollbarPO {
@@ -68,6 +98,16 @@ export class ScrollbarPO {
 
   constructor(public readonly locator: Locator) {
     this.thumb = new ThumbPO(locator.locator('div.e2e-thumb'));
+  }
+
+  /**
+   * Returns the bounding box without borders (content-box).
+   */
+  public async innerBounds(): Promise<DomRect> {
+    return fromRect(await this.locator.evaluate(element => {
+      const {x, y} = element.getBoundingClientRect();
+      return new DOMRect(x + element.clientLeft, y + element.clientTop, element.clientWidth, element.clientHeight);
+    }));
   }
 }
 
@@ -86,5 +126,33 @@ export class ThumbPO {
 
   public async width(): Promise<number> {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).width);
+  }
+
+  public async height(): Promise<number> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).height);
+  }
+
+  public async top(): Promise<number> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).top);
+  }
+
+  public async bottom(): Promise<number> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).bottom);
+  }
+
+  public async vcenter(): Promise<number> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).vcenter);
+  }
+
+  public async hcenter(): Promise<number> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).hcenter);
+  }
+
+  public async left(): Promise<number> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).left);
+  }
+
+  public async right(): Promise<number> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).right);
   }
 }
