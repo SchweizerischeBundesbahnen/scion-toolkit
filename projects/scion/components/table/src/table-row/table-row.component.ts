@@ -45,8 +45,8 @@ export class TableRowComponent<T> {
   protected readonly item = computed(() => this.row().item);
   protected readonly id = computed(() => this.row().id);
   protected readonly loading = computed(() => this.item() === undefined); // Rows are initialized with an undefined item, before data is loaded
-  protected readonly isActive = computed(() => this.id() !== undefined && this.id() === this.table().activeId());
-  protected readonly isSelected = computed(() => this.table().allSelected() || this.table().selectedIds().has(this.id()));
+  protected readonly isActive = computed(() => this.item() !== undefined && this.item() === this.table().activeItem());
+  protected readonly isSelected = computed(() => this.table().selectedIds().has(this.id()));
 
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;
@@ -56,14 +56,14 @@ export class TableRowComponent<T> {
     if (this.loading()) {
       return;
     }
-    this._selectionService.onRowClick(this.index(), event as KeyboardEvent);
+    void this._selectionService.onRowClick(this.index(), event as KeyboardEvent);
   }
 
   protected onRowClick(event: PointerEvent): void {
     if (this.loading()) {
       return;
     }
-    this._selectionService.onRowClick(this.index(), event);
+    void this._selectionService.onRowClick(this.index(), event);
   }
 
   protected onMouseEnter(): void {

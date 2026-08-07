@@ -81,11 +81,6 @@ export interface SciTable<T> {
    */
   readonly selectedItems: Signal<Array<T>>;
 
-  /**
-   * True if all items are selected.
-   */
-  readonly allSelected: Signal<boolean>;
-
   filter(text: string | undefined): void;
 }
 

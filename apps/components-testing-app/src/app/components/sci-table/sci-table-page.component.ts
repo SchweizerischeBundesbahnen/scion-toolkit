@@ -115,6 +115,7 @@ export default class SciTablePageComponent {
   protected tables = signal<SciTable<Product>[]>([]);
 
   private cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
+  protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
 
   constructor() {
     effect(() => {

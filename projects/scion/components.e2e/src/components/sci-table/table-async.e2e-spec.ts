@@ -68,4 +68,35 @@ test.describe('sci-table async datasource', () => {
     await table.scrollViewPort({x: 0, y: 1500});
     await expect(table.rows.locator('.skeleton').isVisible()).resolves.toBe(false);
   });
+
+  test('should select over multiple pages', async ({page}) => {
+    const tablePage = new TablePagePO(page);
+    const table = new TablePo(page);
+    await tablePage.navigate('slow-data-source');
+
+    // wait for initial page to finish loading.
+    await expect(table.rows.locator('.skeleton').first()).toBeAttached();
+    await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
+    await table.rows.first().click();
+
+    await table.scrollViewPort({x: 0, y: 10_000});
+    await expect(table.rows.locator('.skeleton').first()).toBeAttached();
+    await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
+    await table.rows.first().click({modifiers: ['Shift']});
+
+    await expect(tablePage.selectedItems).toContainText('348');
+  });
+
+  test('should select all items with ctrl+a', async ({page}) => {
+    const tablePage = new TablePagePO(page);
+    const table = new TablePo(page);
+    await tablePage.navigate('slow-data-source');
+
+    // wait for initial page to finish loading.
+    await expect(table.rows.locator('.skeleton').first()).toBeAttached();
+    await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
+    await table.verticalViewport.click();
+    await page.keyboard.press('Control+A');
+    await expect(tablePage.selectedItems).toContainText('10000');
+  });
 });

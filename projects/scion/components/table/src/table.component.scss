@@ -120,4 +120,11 @@
       right: max(calc(100% - var(--ɵsci-table-width)), 0px);
     }
   }
+
+  > sci-spinner-throbber {
+    --sci-throbber-size: 1.5em;
+    position: absolute;
+    top: 0.25em;
+    right: 0.25em;
+  }
 }

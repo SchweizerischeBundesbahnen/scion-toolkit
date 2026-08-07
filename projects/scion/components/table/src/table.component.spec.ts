@@ -263,7 +263,7 @@ describe('Table', () => {
         await fixture.whenStable();
         expect(po.columnEntries('ID')).toEqual(['3']);
 
-        model.resetFilter();
+        model.filter(null, {columnName: 'column:id'});
         await fixture.whenStable();
         expect(po.columnEntries('ID')).toEqual(['1', '3', '2']);
       });
@@ -287,7 +287,7 @@ describe('Table', () => {
         await fixture.whenStable();
         expect(po.columnEntries('Name')).toEqual(['c']);
 
-        model.resetFilter();
+        model.filter(null, {columnName: 'column:name'});
         await fixture.whenStable();
         expect(po.columnEntries('Name')).toEqual(['a', 'c', 'b']);
       });
@@ -311,7 +311,7 @@ describe('Table', () => {
         await fixture.whenStable();
         expect(po.columnEntries('Active')).toEqual(['checkmark', 'checkmark']);
 
-        model.resetFilter();
+        model.filter(null, {columnName: 'column:active'});
         await fixture.whenStable();
         expect(po.columnEntries('Active')).toEqual(['checkmark', 'clear', 'checkmark']);
       });
@@ -336,7 +336,7 @@ describe('Table', () => {
         await fixture.whenStable();
         expect(po.columnEntries('Name')).toEqual(['beta']);
 
-        model.resetFilter();
+        model.filter(null, {columnName: 'column:name'});
         await fixture.whenStable();
         expect(po.columnEntries('Name')).toEqual(['alpha', 'beta', 'gamma']);
       });
@@ -408,8 +408,8 @@ describe('Table', () => {
         await fixture.whenStable();
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
-        selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
-        selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
+        void selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
+        void selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
         expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual([{id: 2}]);
@@ -425,10 +425,10 @@ describe('Table', () => {
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
 
-        selectionService.onRowClick(0, {ctrlKey: true, metaKey: false, shiftKey: false});
+        void selectionService.onRowClick(0, {ctrlKey: true, metaKey: false, shiftKey: false});
         expect(model.selectedItems()).toEqual([{id: 1}]);
 
-        selectionService.onRowClick(0, {ctrlKey: false, metaKey: true, shiftKey: false});
+        void selectionService.onRowClick(0, {ctrlKey: false, metaKey: true, shiftKey: false});
         expect(model.selectedItems()).toEqual([]);
       });
 
@@ -442,8 +442,8 @@ describe('Table', () => {
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
 
-        selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
-        selectionService.onRowClick(4, {ctrlKey: false, metaKey: false, shiftKey: true});
+        void selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
+        void selectionService.onRowClick(4, {ctrlKey: false, metaKey: false, shiftKey: true});
 
         expect(model.activeItem()).toEqual({id: 5});
         expect(model.selectedItems()).toEqual([{id: 2}, {id: 3}, {id: 4}, {id: 5}]);
@@ -534,7 +534,7 @@ describe('Table', () => {
         selectionService.onControlSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
         expect(model.selectedItems()).toEqual([]);
 
-        selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
+        void selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
         selectionService.onControlSpace({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
         expect(model.selectedItems()).toEqual([]);
 
@@ -552,11 +552,9 @@ describe('Table', () => {
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
         const event = {preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent;
-
-        selectionService.onControlA(event);
+        void selectionService.onControlA(event);
 
         expect(event.preventDefault).toHaveBeenCalled();
-        expect(model.allSelected()).toBeFalse();
         expect(model.selectedItems()).toEqual([{id: 1}, {id: 2}, {id: 3}]);
       });
     });
@@ -572,8 +570,8 @@ describe('Table', () => {
         await fixture.whenStable();
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
-        selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
-        selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
+        void selectionService.onRowClick(0, {ctrlKey: false, metaKey: false, shiftKey: false});
+        void selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
         expect(model.activeItem()).toEqual({id: 2});
         expect(model.selectedItems()).toEqual([{id: 2}]);
@@ -684,7 +682,7 @@ describe('Table', () => {
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
 
-        selectionService.onRowClick(9, {ctrlKey: false, shiftKey: false, metaKey: false});
+        void selectionService.onRowClick(9, {ctrlKey: false, shiftKey: false, metaKey: false});
         await fixture.whenStable();
         expect(po.scrollTop).toBe(0);
 
@@ -696,7 +694,7 @@ describe('Table', () => {
         await fixture.whenStable();
         expect(po.scrollTop).toBe(60);
 
-        selectionService.onRowClick(15, {ctrlKey: false, shiftKey: false, metaKey: false});
+        void selectionService.onRowClick(15, {ctrlKey: false, shiftKey: false, metaKey: false});
         await fixture.whenStable();
         expect(po.scrollTop).toBe(180);
       });
@@ -756,7 +754,7 @@ describe('Table', () => {
       const po = new TablePo(fixture);
       await po.autoResize(model.columns()[0]!);
 
-      expect(store).toHaveBeenCalledWith('{"columns":[{"name":"0","width":"100px"},{"name":"1"}]}');
+      expect(store).toHaveBeenCalledWith('table:test', '{"columns":[{"name":"0","width":"100px"},{"name":"1"}]}');
     });
 
     it('should load column widths from storage', async () => {
@@ -1017,6 +1015,63 @@ describe('Table', () => {
       await fixture.whenStable();
 
       expect(loaded).toEqual([0, 2]); // should only have loaded the initial page and the last.
+    });
+
+    it('should allow selection over multiple pages', async () => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => ({
+        totalCount: 1_000,
+        items: rangeInclusive(request.start, request.end - 1).map(id => ({id})),
+      }) as SciTableResponse<{id: number}>) as SciDataLoaderFn<{id: number}>;
+
+      const model = createTable({
+        name: 'table:test',
+        data: loader,
+        bufferSize: 0,
+        trackBy: item => item.id,
+      }, table => table.addNumberColumn(i => i.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+      });
+      (fixture.nativeElement as HTMLElement).style.height = '300px';
+      await fixture.whenStable();
+
+      const po = new TablePo(fixture);
+      const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
+      await selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
+
+      await po.scrollY(3000);
+      expect(po.rows[0]?.cells[0]?.value).toEqual('100'); // 3000px = 100 rows
+
+      await selectionService.onRowClick(100, {ctrlKey: false, metaKey: false, shiftKey: true});
+      expect(loader).toHaveBeenCalledTimes(11); // page 0-10
+      expect(model.selectedItems()).toHaveSize(100);
+    });
+
+    it('should load and select all rows on Ctrl+a', async () => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => ({
+        totalCount: 1_000,
+        items: rangeInclusive(request.start, request.end - 1).map(id => ({id})),
+      }) as SciTableResponse<{id: number}>) as SciDataLoaderFn<{id: number}>;
+
+      const model = createTable({
+        name: 'table:test',
+        data: loader,
+        bufferSize: 0,
+        trackBy: item => item.id,
+      }, table => table.addNumberColumn(i => i.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+      });
+      (fixture.nativeElement as HTMLElement).style.height = '300px';
+      await fixture.whenStable();
+
+      const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
+      await selectionService.onControlA({preventDefault: jasmine.createSpy()} as unknown as KeyboardEvent);
+
+      expect(loader).toHaveBeenCalledTimes(100);
+      expect(model.selectedItems()).toHaveSize(1_000);
     });
   });
 });

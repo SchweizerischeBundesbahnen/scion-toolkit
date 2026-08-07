@@ -11,79 +11,72 @@
 import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
+import {firstValueFrom, timer} from 'rxjs';
 
 @Injectable()
 export class TableSelectionService<T> {
 
   private _table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
 
-  public onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): void {
+  public async onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();
     const rowsByIndex = table.rowsByIndex();
-    const id = rowsByIndex.get(index)?.id;
+    const row = rowsByIndex.get(index);
+    const item = rowsByIndex.get(index)?.item;
     const previousFocusedIndex = table.activeIndex();
 
-    table.setActiveId(id);
+    table.setActiveItem(item);
 
-    if (id === undefined || !table.selectable()) {
+    if (item === undefined || !table.selectable()) {
       return;
     }
 
     if (table.selectable() === 'single') {
-      this.toggleSelectedItem(id);
+      this.toggleSelectedItem(item);
       return;
     }
 
     if (event.shiftKey && previousFocusedIndex >= 0) {
       const start = Math.min(previousFocusedIndex, index);
       const end = Math.max(previousFocusedIndex, index);
-      const ids = rangeInclusive(start, end).map(i => rowsByIndex.get(i)?.id);
-
-      if (ids.every(id => id !== undefined)) {
-        // Only add shift click selection if all items are loaded.
-        table.updateSelectedIds(existing => new Set([...existing, ...ids]));
-      }
-      else {
-        // If not all id's could be found (big range is selected) treat the selection as normal click.
-        table.updateSelectedIds(() => new Set([id]));
-      }
+      await this.addItemsToSelection(start, end);
     }
     else if (event.ctrlKey || event.metaKey) {
-      this.toggleSelectedItem(id);
+      this.toggleSelectedItem(item);
     }
     else {
       // If no modifier is pressed set the selection to the clicked row.
-      table.updateSelectedIds(() => new Set([id]));
+      table.updateSelectedItems(() => new Map<unknown, T>().set(row!.id, item));
     }
   }
 
   public onArrowUp(event: Event): void {
     event.preventDefault();
 
-    const focusedIndex = this._table().activeIndex();
-    if (focusedIndex <= 0) {
+    const activeIndex = this._table().activeIndex();
+    if (activeIndex <= 0) {
       return;
     }
 
     // Also add the current focused item on shift+arrowUp.
-    this.addItemsToSelection(this._table().rowsByIndex().get(focusedIndex)?.id, event as KeyboardEvent);
-    this.addItemsToSelection(this._table().rowsByIndex().get(focusedIndex - 1)?.id, event as KeyboardEvent);
+    this.addItemToSelection(this._table().rowsByIndex().get(activeIndex)?.item, event as KeyboardEvent);
+    this.addItemToSelection(this._table().rowsByIndex().get(activeIndex - 1)?.item, event as KeyboardEvent);
   }
 
   public onArrowDown(event: Event): void {
     event.preventDefault();
 
-    const focusedIndex = this._table().activeIndex();
+    const activeIndex = this._table().activeIndex();
     const table = this._table();
     const lastIndex = this.rowCount(table) - 1;
-    if (focusedIndex >= lastIndex) {
+    if (activeIndex >= lastIndex) {
       return;
     }
 
     // Also add the current focused item on shift+arrowDown.
-    this.addItemsToSelection(table.rowsByIndex().get(focusedIndex)?.id, event as KeyboardEvent);
-    // If the focusedIndex was not found (-1) select the first item (0).
-    this.addItemsToSelection(table.rowsByIndex().get(focusedIndex + 1)?.id, event as KeyboardEvent);
+    this.addItemToSelection(table.rowsByIndex().get(activeIndex)?.item, event as KeyboardEvent);
+    // If the activeIndex was not found (-1) select the first item (0).
+    this.addItemToSelection(table.rowsByIndex().get(activeIndex + 1)?.item, event as KeyboardEvent);
   }
 
   public onControlSpace(event: Event): void {
@@ -92,68 +85,85 @@ export class TableSelectionService<T> {
       return;
     }
 
-    const activeId = this._table().activeId();
-    if (activeId === undefined) {
-      return;
+    const activeItem = this._table().activeItem();
+    if (activeItem !== undefined) {
+      this.toggleSelectedItem(activeItem);
     }
-
-    this.toggleSelectedItem(activeId);
   }
 
-  public onControlA(event: Event): void {
+  public async onControlA(event: Event): Promise<void> {
     event.preventDefault();
 
     const table = this._table();
-    if (table.selectable() === 'single') {
+    const totalCount = table.totalCount();
+    if (table.selectable() === 'single' || totalCount === undefined || totalCount <= 0) {
       return;
     }
 
-    const rowsByIndex = table.rowsByIndex();
-    const ids = [...rowsByIndex.values()].map(row => row.id).filter(id => !!id);
-
-    // If all rows are loaded, add all to selection, else toggle all selected flag.
-    if (rowsByIndex.size === this.rowCount(table)) {
-      table.updateSelectedIds(() => new Set(ids));
-    }
-    else {
-      table.selectAll();
-    }
+    await this.addItemsToSelection(0, totalCount - 1);
   }
 
   private rowCount(table: ɵSciTable<T>): number {
     return table.totalCount() === undefined ? table.pageSize() : table.totalCount()!;
   }
 
-  private addItemsToSelection(item: unknown, event: KeyboardEvent): void {
+  private async addItemsToSelection(startIndex: number, endIndex: number): Promise<void> {
+    const table = this._table();
+    const indices = rangeInclusive(startIndex, endIndex);
+    let rows = indices.map(i => table.rowsByIndex().get(i));
+
+    if (rows.some(row => row?.id === undefined)) {
+      // If not all id's could be found load the missing items.
+      await Promise.race([
+        table.loadRange(startIndex, endIndex),
+        firstValueFrom(timer(5_000)),
+      ]);
+      rows = indices.map(i => table.rowsByIndex().get(i));
+    }
+
+    table.updateSelectedItems(existing => new Map<unknown, T>([
+      ...existing,
+      ...rows
+        .filter((row): row is {id: unknown; item: T} => row?.id !== undefined && row.item !== undefined)
+        .map(row => [row.id, row.item]) satisfies [unknown, T][],
+    ]));
+  }
+
+  private addItemToSelection(item: T | undefined, event: KeyboardEvent): void {
     const table = this._table();
 
     if (item !== undefined) {
-      table.setActiveId(item);
+      table.setActiveItem(item);
     }
 
     if (!table.selectable() || item === undefined) {
       return;
     }
 
+    const id = table.trackBy?.(item) ?? item;
+
     if (event.shiftKey && table.selectable() === 'multi') {
-      table.updateSelectedIds(ids => new Set(ids).add(item));
+      table.updateSelectedItems(items => new Map(items).set(id, item));
     }
     else if (!event.ctrlKey && !event.metaKey) { // Don't update selected items at all when control is pressed.
-      table.updateSelectedIds(() => new Set([item]));
+      table.updateSelectedItems(() => new Map<unknown, T>().set(id, item));
     }
   }
 
-  private toggleSelectedItem(id: unknown): void {
-    this._table().updateSelectedIds(selection => {
-      const next = new Set(selection);
+  private toggleSelectedItem(item: T): void {
+    const table = this._table();
+    const id = table.trackBy?.(item) ?? item;
+
+    table.updateSelectedItems(selection => {
+      const next = new Map(selection);
       if (next.has(id)) {
         next.delete(id);
       }
       else {
-        if (this._table().selectable() === 'single') {
+        if (table.selectable() === 'single') {
           next.clear();
         }
-        next.add(id);
+        next.set(id, item);
       }
       return next;
     });

@@ -51,6 +51,11 @@
           <input [formField]="settingsForm.width" type="number" class="e2e-width" />
         </sci-form-field>
       </form>
+
+      <dl>
+        <dt>Selected Items Count:</dt>
+        <dd class="e2e-selected-items">{{selectedItems()?.length}}</dd>
+      </dl>
     </ng-template>
 
     <ng-template sciTab label="Columns" [cssClass]="'e2e-columns'">

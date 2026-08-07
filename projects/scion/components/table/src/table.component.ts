@@ -26,6 +26,7 @@ import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 import {TABLE_OVERLAY_SELECTOR, TableOverlayComponent} from './table-overlay/table-overlay.component';
 import {SciTextPipe} from '@scion/components/text';
+import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/spinner-throbber.component';
 
 @Component({
   selector: 'sci-table',
@@ -51,6 +52,7 @@ import {SciTextPipe} from '@scion/components/text';
     TableRowComponent,
     TableOverlayComponent,
     SciTextPipe,
+    SciSpinnerThrobberComponent,
   ],
   providers: [
     {

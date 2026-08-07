@@ -37,3 +37,7 @@
   <sci-scrollbar [direction]="'hscroll'" [viewport]="horizontalViewport" />
   <sci-scrollbar [direction]="'vscroll'" class="vscroll" [viewport]="verticalViewport"/>
 }
+
+@if (sciTable().loading()) {
+  <sci-spinner-throbber />
+}

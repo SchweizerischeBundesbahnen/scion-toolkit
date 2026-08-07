@@ -11,8 +11,7 @@
 import {Locator, Page} from '@playwright/test';
 import {ColumnPo} from './column.po';
 import {RowPo} from './row.po';
-import {fromRect} from '../../helper/testing.utils';
-import {elementAt} from 'rxjs';
+import {DomRect, fromRect} from '../../helper/testing.utils';
 
 export class TablePo {
 
@@ -46,29 +45,21 @@ export class TablePo {
     return new RowPo(this.rows.nth(index));
   }
 
-  public async firstVisibleRow(): Promise<RowPo> {
-    const rows = await this.rows.all();
-    for (let i = 0; i < rows.length; i++) {
-      if (await rows[i]!.isVisible()) {
-        return new RowPo(this.rows.nth(i));
-      }
-    }
-
-    throw new Error('No visible row found');
-  }
-
   public column(indexOrHeader: number | string): ColumnPo {
     return typeof indexOrHeader === 'number' ?
       new ColumnPo(this.locator.locator('sci-column-header').nth(indexOrHeader), this) :
       new ColumnPo(indexOrHeader, this);
   }
 
-  public async dragSplitter(columnName: `column:${string}`, distance: number): Promise<void> {
-    const splitterBounds = fromRect(await this.locator.locator(`sci-splitter[data-column="${columnName}"]`).boundingBox());
+  public async splitterBounds(columnName: `column:${string}`): Promise<DomRect> {
+    return fromRect(await this.locator.locator(`sci-splitter[data-column="${columnName}"]`).boundingBox());
+  }
 
-    await this.locator.page().mouse.move(splitterBounds.hcenter, splitterBounds.vcenter);
+  public async dragSplitter(columnName: `column:${string}`, distance: number): Promise<void> {
+    const splitterBounds = await this.splitterBounds(columnName);
+    await this.locator.page().mouse.move(splitterBounds.hcenter, splitterBounds.top);
     await this.locator.page().mouse.down();
-    await this.locator.page().mouse.move(splitterBounds.hcenter + distance, splitterBounds.vcenter, {steps: 20});
+    await this.locator.page().mouse.move(splitterBounds.hcenter + distance, splitterBounds.top, {steps: 20});
     await this.locator.page().mouse.up();
   }
 

@@ -10,10 +10,10 @@
 
 import {SciDataLoaderFn, SciColumnFilter, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciColumnLike} from './table.model';
-import {computed, Signal} from '@angular/core';
+import {computed, linkedSignal, Signal} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {map, Observable} from 'rxjs';
+import {map, Observable, shareReplay} from 'rxjs';
 
 type MappedCriterion<T, CRIT extends {columnName: string}> = CRIT & {
   column: SciColumnLike<T>;
@@ -132,6 +132,11 @@ function sort<T>(a: ItemWithValues<T>, b: ItemWithValues<T>, sortCriteria: Mappe
 }
 
 export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnLike<T>[]>): SciDataLoaderFn<T> {
+  const cache = linkedSignal({
+    source: () => ({data: data(), columns: columns()}),
+    computation: () => new Map<string, typeof items$>(),
+  });
+
   const items$ = toObservable(computed(() => {
     const resolveColumns = columns();
     const items = data();
@@ -145,10 +150,22 @@ export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnL
     const sortCols = mapCriteria(request.sortCriteria, columns());
     const filterCols = mapCriteria(request.columnFilters, columns());
 
-    return items$.pipe(
+    const sortHash = sortCols.map(sc => `${sc.columnName}_${sc.direction}`).join('-');
+    const filterHash = filterCols.map(fc => `${fc.columnName}_${fc.text}`).join('-');
+    const hash = `${sortHash}-${filterHash}-${request.globalFilter ?? ''}`;
+    const sortedFiltered$ = cache().has(hash) ? cache().get(hash)! : items$.pipe(
       map(items => items
         .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.globalFilter))
         .sort((a, b) => sort(a, b, sortCols))),
+      shareReplay({bufferSize: 1, refCount: true}), // as soon as there are no subscribers left unsubscribe from the source.
+    );
+
+    // Only store one item in the cache.
+    // The cache is used for scrolling and multipage selection.
+    // So while scrolling the whole array is not always filtered.
+    cache.set(new Map<string, typeof items$>().set(hash, sortedFiltered$));
+
+    return sortedFiltered$.pipe(
       map(items => ({
         totalCount: items.length,
         items: items.slice(request.start, request.end).map(i => i.item),

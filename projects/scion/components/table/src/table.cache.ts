@@ -64,4 +64,21 @@ export class TableCache<T> {
   public get values(): Signal<Array<TableCacheEntry<T>>> {
     return computed(() => [...this._cache().values()]);
   }
+
+  public get rowByIndex(): Signal<Map<number, SciRow<T>>> {
+    return computed(() => {
+      const rows = new Map<number, SciRow<T>>();
+
+      for (const page of this.values()) {
+        const items = page.items();
+        if (!items) {
+          continue;
+        }
+
+        items.forEach((item, index) => rows.set(page.start + index, item));
+      }
+
+      return rows;
+    });
+  }
 }

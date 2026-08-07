@@ -15,7 +15,7 @@ import {TablePo} from './table.po';
 import {expectTable} from './table-matcher';
 import {expectRow} from './row-matcher';
 
-test.describe.only('sci-table', () => {
+test.describe('sci-table', () => {
 
   test.describe('global properties', () => {
     test('should disable filters', async ({page}) => {
@@ -333,15 +333,55 @@ test.describe.only('sci-table', () => {
   });
 
   test.describe('resizing', () => {
-    test('should increase column width', async ({page}) => {
+    test('should resize column', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
 
-      await table.dragSplitter('column:name', 100);
+      const splitterBounds = await table.splitterBounds('column:name');
+      let mouseX = splitterBounds.hcenter;
+      await page.mouse.move(mouseX, splitterBounds.top);
+      await page.mouse.down();
+
+      mouseX += 100;
+      await page.mouse.move(mouseX, splitterBounds.top, {steps: 20});
       await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(200);
+
+      mouseX += 50;
+      await page.mouse.move(mouseX, splitterBounds.top, {steps: 20});
+      await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(250);
+
+      mouseX -= 20;
+      await page.mouse.move(mouseX, splitterBounds.top, {steps: 20});
+      await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(230);
+
+      mouseX += 50;
+      await page.mouse.move(mouseX, splitterBounds.top, {steps: 20});
+      await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(280);
+
+      await page.mouse.up();
+      mouseX += 50;
+      await page.mouse.move(mouseX, splitterBounds.top, {steps: 20});
+      await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(280);
+    });
+
+    test('should resize multiple columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'test', header: 'Test', type: 'string', width: '200px'});
+
+      await table.dragSplitter('column:name', -50);
+      await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(150);
+      await expect.poll(() => table.column('Test').getHeaderWidth()).toBe(200);
+
+      await table.dragSplitter('column:test', 50);
+      await expect.poll(() => table.column('Name').getHeaderWidth()).toBe(150);
+      await expect.poll(() => table.column('Test').getHeaderWidth()).toBe(250);
     });
 
     test('should stop at max width', async ({page}) => {
