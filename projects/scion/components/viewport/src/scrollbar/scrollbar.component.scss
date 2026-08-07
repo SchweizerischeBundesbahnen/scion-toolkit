@@ -43,17 +43,18 @@ $thumb-hover-size: 100%;
   }
 
   > div.thumb-handle {
-    flex-basis: $thumb-base-height;
     display: flex;
     flex-grow: var(--ɵsci-scrollbar-thumb-size-fr);
     align-items: center;
 
     &.vertical {
       flex-direction: column;
+      min-height: $thumb-base-height;
     }
 
     &.horizontal {
       flex-direction: row;
+      min-width: $thumb-base-height;
     }
 
     > div.thumb {
