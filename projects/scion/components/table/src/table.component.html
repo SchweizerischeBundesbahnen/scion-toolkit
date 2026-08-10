@@ -13,7 +13,7 @@
           <div class="rows" [style.transform]="`translateY(${range.start * (itemSize() ?? 0)}px)`">
             <!-- Track index to reuse the table row elements -->
             @for (row of sciTable().rows(); track $index) {
-              <sci-table-row [row]="row" [index]="range.start + $index" />
+              <sci-table-row [row]="row" [index]="range.start + $index" (primaryAction)="onRowPrimaryAction(row.item)" />
             } @empty {
               <div class="empty-state">{{ ('%scion.components.no_items.message' | sciText)() }}</div>
             }

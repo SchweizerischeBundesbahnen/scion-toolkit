@@ -130,6 +130,14 @@ export class RowPo {
     this.nativeElement.dispatchEvent(new MouseEvent('mouseenter'));
   }
 
+  public dblClick(): void {
+    this.nativeElement.dispatchEvent(new MouseEvent('dblclick'));
+  }
+
+  public enter(): void {
+    this.nativeElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'enter'}));
+  }
+
   public select(): void {
     this.nativeElement.click();
   }

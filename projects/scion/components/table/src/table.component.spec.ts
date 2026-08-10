@@ -364,6 +364,46 @@ describe('Table', () => {
   });
 
   describe('Row Actions', () => {
+    it('should trigger primary action on dbl click', async () => {
+      const onPrimaryAction = jasmine.createSpy();
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+      const model = createTable({
+        name: 'table:test',
+        data,
+      }, table => table.addNumberColumn(item => item.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+      });
+      fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
+      await fixture.whenStable();
+
+      const po = new TablePo(fixture);
+      po.rows[1]!.dblClick();
+
+      expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
+    });
+
+    it('should trigger primary action on enter', async () => {
+      const onPrimaryAction = jasmine.createSpy();
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+      const model = createTable({
+        name: 'table:test',
+        data,
+      }, table => table.addNumberColumn(item => item.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+      });
+      fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
+      await fixture.whenStable();
+
+      const po = new TablePo(fixture);
+      po.rows[1]!.enter();
+
+      expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
+    });
+
     it('should show actions', async () => {
       const onSelect = jasmine.createSpy();
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);

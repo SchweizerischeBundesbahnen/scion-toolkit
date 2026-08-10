@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, Injector, input, NgZone, signal, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, forwardRef, inject, Injector, input, NgZone, output, signal, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciTable} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
@@ -66,6 +66,8 @@ import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/s
 export class SciTableComponent<T> {
 
   public readonly table = input.required<SciTable<T>>();
+
+  public readonly primaryAction = output<T>();
 
   private readonly _verticalViewport = viewChild.required<ElementRef<HTMLElement>>('verticalViewport');
   private readonly _header = viewChild<ElementRef<HTMLElement>>('header');
@@ -153,6 +155,12 @@ export class SciTableComponent<T> {
   protected onRowActionsMouseWheel(event: WheelEvent): void {
     event.preventDefault();
     this.onOverlayScrollBy(event.deltaY);
+  }
+
+  protected onRowPrimaryAction(item?: T): void {
+    if (item) {
+      this.primaryAction.emit(item);
+    }
   }
 
   /**

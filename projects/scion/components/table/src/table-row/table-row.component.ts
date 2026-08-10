@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, inject, input, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, input, output, viewChildren} from '@angular/core';
 import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
@@ -25,7 +25,8 @@ import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/table-overlay.component';
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
     '(click)': 'onRowClick($event)',
-    '(keydown.enter)': 'onRowEnter($event)',
+    '(dblclick)': 'onRowDblClick()',
+    '(keydown.enter)': 'onRowEnter()',
     '(mouseenter)': 'onMouseEnter()',
     '(mouseleave)': 'onMouseLeave($event)',
   },
@@ -37,6 +38,8 @@ export class TableRowComponent<T> {
 
   public readonly row = input.required<SciRow<T>>();
   public readonly index = input.required<number>();
+
+  public readonly primaryAction = output<void>();
 
   private readonly _selectionService = inject(TableSelectionService);
   protected readonly table = inject(ɵSCI_TABLE);
@@ -52,11 +55,11 @@ export class TableRowComponent<T> {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;
   }
 
-  protected onRowEnter(event: Event): void {
+  protected onRowEnter(): void {
     if (this.loading()) {
       return;
     }
-    void this._selectionService.onRowClick(this.index(), event as KeyboardEvent);
+    this.primaryAction.emit();
   }
 
   protected onRowClick(event: PointerEvent): void {
@@ -64,6 +67,13 @@ export class TableRowComponent<T> {
       return;
     }
     void this._selectionService.onRowClick(this.index(), event);
+  }
+
+  protected onRowDblClick(): void {
+    if (this.loading()) {
+      return;
+    }
+    this.primaryAction.emit();
   }
 
   protected onMouseEnter(): void {
