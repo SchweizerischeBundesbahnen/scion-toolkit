@@ -73,10 +73,11 @@ export class TableOverlayComponent<T> {
 
       const width = this.fromPx(state.temporaryColumnWidths.get(column.name)!) + event.distance;
       const boundedWidth = Math.max(column.minWidth, Math.min(column.maxWidth ?? width, width));
+      const temporaryColumnWidths = this.calculateTemporaryColumns(state.column).set(column.name, `${boundedWidth}px`);
 
       return ({
         ...state,
-        temporaryColumnWidths: new Map(state.temporaryColumnWidths).set(column.name, `${boundedWidth}px`),
+        temporaryColumnWidths,
       });
     });
   }
@@ -85,19 +86,17 @@ export class TableOverlayComponent<T> {
     const {column, temporaryColumnWidths, initialFractionColumns} = this.table().resizingState()!;
     // Recalculate fraction ratios based on the remaining flexible space.
     const fractionRatios = this.calculateFractionRatios(initialFractionColumns);
-    this.table().columns.update(columns => {
-      return columns.map(c => {
-        if (c.name === column.name) {
-          c.absoluteWidth = temporaryColumnWidths.get(c.name)!;
-        }
+    this.table().columns.update(columns => columns.map(c => {
+      if (c.name === column.name) {
+        c.absoluteWidth = this.fromPx(temporaryColumnWidths.get(c.name)!);
+      }
 
-        if (fractionRatios.has(c.name)) {
-          c.width = fractionRatios.get(c.name)!;
-        }
+      if (fractionRatios.has(c.name)) {
+        c.width = fractionRatios.get(c.name)!;
+      }
 
-        return c;
-      });
-    });
+      return c;
+    }));
 
     this.table().resizingState.set(undefined);
   }
@@ -105,15 +104,22 @@ export class TableOverlayComponent<T> {
   public async onResizeAuto(column: SciColumnLike<T>): Promise<void> {
     this.onResizeStart(column);
     const cellWidths = this.rows().map(row => row.getCellWidth(column.name));
-    const maxWidth = Math.max(...cellWidths, column.minWidth);
-    this.table().resizingState.update(state => state ? ({
-      ...state,
-      temporaryColumnWidths: new Map(state.temporaryColumnWidths).set(column.name, `${maxWidth}px`),
-    }) : undefined);
+    const previousWidth = this.table().resizingState()!.temporaryColumnWidths.get(column.name)!;
+    // Get the maximum cell width, bounded by the min/max width.
+    const maxWidth = `${Math.min(Math.max(...cellWidths, column.minWidth), column.maxWidth ?? Infinity)}px`;
 
-    // Wait until the resize is reflected in the DOM.
-    // Skip first emission, because a `toObservable` always emits upon subscription.
-    await firstValueFrom(this._columnWidths$.pipe(skip(1)));
+    // Only apply the change if the columnWidth actually changed.
+    if (maxWidth !== previousWidth) {
+      this.table().resizingState.update(state => state ? ({
+        ...state,
+        temporaryColumnWidths: new Map(state.temporaryColumnWidths).set(column.name, maxWidth),
+      }) : undefined);
+
+      // Wait until the resize is reflected in the DOM.
+      // Skip first emission, because a `toObservable` always emits upon subscription.
+      await firstValueFrom(this._columnWidths$.pipe(skip(1)));
+    }
+
     this.onResizeEnd();
   }
 
@@ -130,7 +136,13 @@ export class TableOverlayComponent<T> {
 
   private calculateFractionRatios(factionColumns: Set<`column:${string}`>): Map<`column:${string}`, string> {
     const columnWidths = this.columnWidths();
-    const totalFlexWidth = [...columnWidths.entries()].reduce((sum, [name, width]) => factionColumns.has(name) ? sum + width : sum, 0);
+
+    // Skip fractionColumns which are already at max width. They should not contribute to the flex width.
+    const actualFractionColumns = this.table().columns()
+      .filter(column => factionColumns.has(column.name) && columnWidths.get(column.name)! < (column.maxWidth ?? Infinity))
+      .reduce((set, column) => set.add(column.name), new Set<`column:${string}`>());
+
+    const totalFlexWidth = [...columnWidths.entries()].reduce((sum, [name, width]) => actualFractionColumns.has(name) ? sum + width : sum, 0);
     return this.table().columns().reduce((map, column) => {
       if (!factionColumns.has(column.name)) {
         return map;
@@ -152,7 +164,8 @@ export class TableOverlayComponent<T> {
       // 1. Check if column was already resized and use this value.
       // 2. Check if column is a fraction, use the fraction ratio.
       // 3. Use the computed column width in px.
-      return map.set(column.name, column.absoluteWidth ?? fractionRatios.get(column.name) ?? `${columnWidths.get(column.name)}px`);
+      const absoluteWidth = column.absoluteWidth ? `${column.absoluteWidth}px` : null;
+      return map.set(column.name, absoluteWidth ?? fractionRatios.get(column.name) ?? `${columnWidths.get(column.name)}px`);
     }, new Map<`column:${string}`, string>());
   }
 

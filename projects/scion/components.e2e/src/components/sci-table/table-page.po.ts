@@ -34,7 +34,7 @@ export class TablePagePO {
     this._locator = this._page.locator('app-table-page');
     this._properties = this._locator.locator('aside.e2e-properties');
     this._tabbar = this._properties.locator('sci-tabbar');
-    this.selectedItems = this._page.locator('.e2e-selected-items');
+    this.selectedItems = this._properties.locator('dd.e2e-selected-items');
   }
 
   public async navigate(type: 'slow-data-source' | 'default' = 'default'): Promise<void> {

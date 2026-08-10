@@ -18,7 +18,8 @@ export class RowPo {
   }
 
   public async hover(): Promise<void> {
-    await this.locator.hover();
+    const bounds = await this.bounds();
+    await this.locator.page().mouse.move(bounds.left, bounds.vcenter);
   }
 
   public async bounds(): Promise<DomRect> {

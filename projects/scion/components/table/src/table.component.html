@@ -8,7 +8,7 @@
       }
     </header>
     <div class="vertical-viewport e2e-vertical-viewport" #verticalViewport sciScrollable>
-      <div class="vertical-content" sciTableKeyboardNavigator tabindex="0">
+      <div class="vertical-content e2e-table-keyboard-navigator" sciTableKeyboardNavigator tabindex="0">
         @if (sciTable().range(); as range) {
           <div class="rows" [style.transform]="`translateY(${range.start * (itemSize() ?? 0)}px)`">
             <!-- Track index to reuse the table row elements -->

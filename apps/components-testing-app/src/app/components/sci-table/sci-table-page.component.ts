@@ -151,12 +151,6 @@ export default class SciTablePageComponent {
   }
 
   protected createTable(table: SciTableFactory<Product>): SciTableFactory<Product> {
-    table.addNumberColumn({
-      header: 'Id',
-      value: product => product.id,
-      name: 'column:id',
-    });
-
     for (const column of this.columns()) {
       const baseColumn = {
         header: column.header,

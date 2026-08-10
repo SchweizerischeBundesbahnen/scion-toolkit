@@ -1,6 +1,7 @@
 # TODO
 
 - Table Model Interface aufräumen und nur die sachen exposen, die es auch wirklich braucht
+- Fix build
 
 ## 2. Prio
 - Native Scrollbar overlaps mit header auf MacOS

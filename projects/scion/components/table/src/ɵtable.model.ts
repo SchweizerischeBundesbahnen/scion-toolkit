@@ -24,7 +24,7 @@ import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {filter, skip} from 'rxjs';
 
 interface StoredTable {
-  columns: {name: string; width: string | undefined}[];
+  columns: {name: string; width: number | undefined}[];
 }
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');

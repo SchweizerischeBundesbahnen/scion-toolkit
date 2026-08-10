@@ -127,10 +127,10 @@ export class SciTableComponent<T> {
   protected readonly tableWidth = computed(() => {
     const containerWidth = this.containerDimension().clientWidth;
     const tableWidth = this.verticalViewportDimension().clientWidth;
-    const hasFractionColumn = this.sciTable().columns().some(column => column.isFraction && !column.absoluteWidth);
+    const hasFullFractionColumn = this.sciTable().columns().some(column => column.isFraction && !column.absoluteWidth && !column.maxWidth);
 
     // Only allow full width table when at least one column takes the remaining space.
-    return tableWidth > containerWidth || !hasFractionColumn ? `${tableWidth}px` : '100%';
+    return tableWidth < containerWidth && hasFullFractionColumn ? '100%' : `${tableWidth}px`;
   });
 
   private readonly _scrollTop = signal(0);
@@ -277,10 +277,12 @@ export class SciTableComponent<T> {
       const hasResizedColumns = columns.some(column => column.absoluteWidth);
 
       if (!resizingState) {
-        // As soon as there is one resized column, don't use the min/max in the grid definition. Only for initial layouting.
+        // Return the override width (absolutWidth) if the column was resized.
+        // Else if there is one other resized column or the column is a fixed width (non-fraction) use the column width.
+        // Else use the min/max grid definition (only for initial layouting).
         // Otherwise, unchanged fraction columns can change in size after resizing a column.
         return columns
-          .map(column => column.absoluteWidth ?? (hasResizedColumns ? column.width : minmax(column.minWidth, column.width, column.maxWidth)))
+          .map(column => column.absoluteWidth ? `${column.absoluteWidth}px` : (hasResizedColumns || !column.isFraction ? column.width : minmax(column.minWidth, column.width, column.maxWidth)))
           .join(' ');
       }
 
