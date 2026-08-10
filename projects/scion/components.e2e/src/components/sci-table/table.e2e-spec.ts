@@ -861,6 +861,25 @@ test.describe('sci-table', () => {
       await expect(table.rowActions).toBeVisible();
     });
 
+    test('should stick row actions to the right', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+      await tablePage.setWidth(500);
+      await tablePage.setRowActions(true);
+
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string', width: '100px'});
+      await table.dragSplitter('column:name', 500);
+      await table.scrollViewPort({x: 0, y: 0});
+
+      const rowBounds = await table.row(3).bounds();
+      await page.mouse.move(
+        rowBounds.left + 10,
+        rowBounds.vcenter,
+      );
+      await expect(table.rowActions).toBeInViewport({ratio: 1});
+    });
+
     test('should hide row actions while resizing', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);

@@ -152,6 +152,10 @@ export class SciTableComponent<T> {
     this.sciTable().setHoveredId(undefined);
   }
 
+  protected onOverlayScrollBy(deltaY: number): void {
+    this._verticalViewport().nativeElement.scrollBy({top: deltaY});
+  }
+
   protected onRowActionsMouseWheel(event: WheelEvent): void {
     event.preventDefault();
     this.onOverlayScrollBy(event.deltaY);
@@ -317,9 +321,5 @@ export class SciTableComponent<T> {
     else if (focusedRowBottom > viewportBottom) {
       viewport.scrollTop = focusedRowBottom - viewportHeight;
     }
-  }
-
-  protected onOverlayScrollBy(deltaY: number): void {
-    this._verticalViewport().nativeElement.scrollBy({top: deltaY});
   }
 }

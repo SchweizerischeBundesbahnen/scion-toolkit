@@ -97,6 +97,7 @@
     > .row-actions {
       position: sticky; // actions should always stick to the right of the viewport.
       top: var(--ɵsci-table-toolbar-offset);
+      right: 0;
       height: var(--sci-table-row-height); // match the height of row elements.
       width: 0; // should not take up space next to the table.
       display: flex; // vertically position actions in the middle of the row.
