@@ -118,9 +118,11 @@ export class SciScrollbarComponent {
     // Prevent text selection during drag.
     mousedownEvent.preventDefault();
 
+    // Calculate screen offset to convert screen coordinates into client coordinates, required for `sci-mousemove` events which originate from other documents (iframes).
+    const {screenOffsetX, screenOffsetY} = calculateScreenOffset(mousedownEvent);
+
     // Memoize offset where thumb was clicked.
-    const [thumbStartPosition] = this.thumbPosition();
-    const thumbStartOffset = (this.vertical() ? mousedownEvent.pageY : mousedownEvent.pageX) - thumbStartPosition;
+    const thumbStartOffset = this.vertical() ? mousedownEvent.offsetY : mousedownEvent.offsetX;
 
     // Stop scrolling when releasing the mouse. Handle the event in the capture phase and stop propagation to not close a potential overlay when releasing the mouse outside the overlay.
     const mouseUp$ = race(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true, once: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup', {once: true}))
@@ -141,7 +143,7 @@ export class SciScrollbarComponent {
         mousemoveEvent.preventDefault();
 
         // Calculate new thumb position.
-        const pointerPosition = this.vertical() ? mousemoveEvent.pageY : mousemoveEvent.pageX;
+        const pointerPosition = this.vertical() ? mousemoveEvent.screenY - screenOffsetY : mousemoveEvent.screenX - screenOffsetX;
         this.scrollViewport(pointerPosition - thumbStartOffset);
       });
   }
@@ -152,14 +154,19 @@ export class SciScrollbarComponent {
    * Scrolls in discrete steps to the pointer, then switches to regular scrolling until releasing the mouse.
    */
   protected onScrollTrackMouseDown(event: MouseEvent): void {
-    const mouseMove$ = merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'));
-    // Stop scrolling when releasing the mouse. Handle the event in the capture phase and stop propagation to not close a potential overlay when releasing the mouse outside the overlay.
-    const mouseUp$ = race(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true, once: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup', {once: true}))
-      .pipe(tap(mouseupEvent => mouseupEvent.stopPropagation()));
+    this.scrolling.set(true);
 
     // Prevent text selection during drag.
     event.preventDefault();
-    this.scrolling.set(true);
+
+    const mouseMove$ = merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'));
+
+    // Handle the event in the capture phase and stop propagation to not close a potential overlay when releasing the mouse outside the overlay.
+    const mouseUp$ = race(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true, once: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup', {once: true}))
+      .pipe(tap(mouseupEvent => mouseupEvent.stopPropagation()));
+
+    // Calculate screen offset to convert screen coordinates into client coordinates, required for `sci-mousemove` events which originate from other documents (iframes).
+    const {screenOffsetX, screenOffsetY} = calculateScreenOffset(event);
 
     // Scroll in discrete steps to the pointer position, then switch to regular scrolling.
     timer(250, 50)
@@ -170,7 +177,7 @@ export class SciScrollbarComponent {
         startWith(event),
         subscribeIn(fn => this._zone.runOutsideAngular(fn)),
         exhaustMap(event => {
-          const pointerPosition = this.vertical() ? event.pageY : event.pageX;
+          const pointerPosition = this.vertical() ? event.screenY - screenOffsetY : event.screenX - screenOffsetX;
           const [thumbStartPosition, thumbEndPosition] = this.thumbPosition();
           const thumbSize = thumbEndPosition - thumbStartPosition;
 
@@ -184,7 +191,7 @@ export class SciScrollbarComponent {
           return of(event)
             .pipe(
               concatWith(mouseMove$),
-              map(event => (this.vertical() ? event.pageY : event.pageX) - (thumbSize / 2)),
+              map(event => (this.vertical() ? event.screenY - screenOffsetY : event.screenX - screenOffsetX) - (thumbSize / 2)),
             );
         }),
         // Stop on mouse release.
@@ -220,7 +227,7 @@ export class SciScrollbarComponent {
   /**
    * Moves the scrollbar thumb to the specified position, scrolling the viewport accordingly.
    *
-   * The thumb position must be given in page coordinates relative to the top-left corner of the document.
+   * The thumb position must be given in client coordinates (relative to the top-left corner of the page viewport).
    */
   private scrollViewport(thumbPosition: number): void {
     const [scrollbarComponentStartPosition] = this.scrollbarComponentPosition();
@@ -237,14 +244,14 @@ export class SciScrollbarComponent {
   }
 
   /**
-   * Returns the position of this component in page coordinates.
+   * Returns the position of this component in client coordinates.
    *
-   * Returned coordinates are relative to the top-left corner of the document.
+   * Returned coordinates are relative to the top-left corner of the page viewport.
    * Depending on the scrollbar orientation, returned coordinates are `[top, bottom]` or `[left, right]`.
    */
   private scrollbarComponentPosition(): [number, number] {
     const boundingBox = this._host.getBoundingClientRect();
-    return this.vertical() ? [boundingBox.top + window.scrollY, boundingBox.bottom + window.scrollY] : [boundingBox.left + window.scrollX, boundingBox.right + window.scrollX];
+    return this.vertical() ? [boundingBox.top, boundingBox.bottom] : [boundingBox.left, boundingBox.right];
   }
 
   /**
@@ -287,14 +294,14 @@ export class SciScrollbarComponent {
   }
 
   /**
-   * Returns the current thumb position in page coordinates.
+   * Returns the current thumb position in client coordinates.
    *
-   * Returned coordinates are relative to the top-left corner of the document.
+   * Returned coordinates are relative to the top-left corner of the page viewport.
    * Depending on the scrollbar orientation, returned coordinates are `[top, bottom]` or `[left, right]`.
    */
   private thumbPosition(): [number, number] {
     const boundingBox = this._thumbElement().nativeElement.getBoundingClientRect();
-    return this.vertical() ? [boundingBox.top + window.scrollY, boundingBox.bottom + window.scrollY] : [boundingBox.left + window.scrollX, boundingBox.right + window.scrollX];
+    return this.vertical() ? [boundingBox.top, boundingBox.bottom] : [boundingBox.left, boundingBox.right];
   }
 
   /**
@@ -375,4 +382,19 @@ function clamp(value: number, minmax: {min: number; max: number}): number {
  */
 function isBetween(value: number, range: {from: number; to: number}): boolean {
   return value >= range.from && value <= range.to;
+}
+
+/**
+ * Calculates the distance between the top-left corner of the screen (monitor) and the top-left corner of the page viewport of this document.
+ *
+ * Use to convert screen coordinates from `sci-mousemove` and `sci-mouseup` events into client coordinates relative to the page viewport of the current document.
+ *
+ * The `sci-mousemove` and `sci-mouseup` events originate from other documents (iframes) and do not include client coordinates. Even if they did, they would be
+ * relative to the source document, not the current one.
+ */
+function calculateScreenOffset(mousedownEvent: MouseEvent): {screenOffsetX: number; screenOffsetY: number} {
+  return {
+    screenOffsetX: mousedownEvent.screenX - mousedownEvent.clientX,
+    screenOffsetY: mousedownEvent.screenY - mousedownEvent.clientY,
+  };
 }
