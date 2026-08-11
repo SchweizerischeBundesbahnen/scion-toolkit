@@ -360,6 +360,66 @@ describe('Table', () => {
         await column.filter('3');
         expect(po.columnEntries('ID')).toEqual(['3']);
       });
+
+      it('should ignore invalid number input in filter field', async () => {
+        const data = signal([{id: 1}, {id: 3}, {id: 2}]);
+        const model = createTable(data, table => table.addNumberColumn({
+          name: 'column:id',
+          header: 'ID',
+          value: item => item.id,
+        }));
+
+        const fixture = TestBed.createComponent(SciTableComponent, {
+          bindings: [inputBinding('table', () => model)],
+        });
+        await fixture.whenStable();
+
+        const po = new TablePo(fixture);
+        const column = po.getColumnByHeader('ID')!;
+
+        await column.filter('invalid');
+        expect(po.columnEntries('ID')).toEqual(['1', '3', '2']);
+      });
+
+      it('should trim filter field input', async () => {
+        const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
+        const model = createTable(data, table => table.addStringColumn({
+          name: 'column:name',
+          header: 'Name',
+          value: item => item.name,
+        }));
+
+        const fixture = TestBed.createComponent(SciTableComponent, {
+          bindings: [inputBinding('table', () => model)],
+        });
+        await fixture.whenStable();
+
+        const po = new TablePo(fixture);
+        const column = po.getColumnByHeader('Name')!;
+
+        await column.filter(' beta ');
+        expect(po.columnEntries('Name')).toEqual(['beta']);
+      });
+
+      it('should filter string column case-insensitively', async () => {
+        const data = signal([{name: 'Alpha'}, {name: 'beta'}, {name: 'gamma'}]);
+        const model = createTable(data, table => table.addStringColumn({
+          name: 'column:name',
+          header: 'Name',
+          value: item => item.name,
+        }));
+
+        const fixture = TestBed.createComponent(SciTableComponent, {
+          bindings: [inputBinding('table', () => model)],
+        });
+        await fixture.whenStable();
+
+        const po = new TablePo(fixture);
+        const column = po.getColumnByHeader('Name')!;
+
+        await column.filter('ALPHA');
+        expect(po.columnEntries('Name')).toEqual(['Alpha']);
+      });
     });
   });
 
@@ -927,7 +987,7 @@ describe('Table', () => {
       const po = new TablePo(fixture);
       await po.autoResize(model.columns()[0]!);
 
-      expect(store).toHaveBeenCalledWith('table:test', '{"columns":[{"name":"0","width":"100px"},{"name":"1"}]}');
+      expect(store).toHaveBeenCalledWith('table:test', '{"columns":[{"name":"0","width":100},{"name":"1"}]}');
     });
 
     it('should load column widths from storage', async () => {
@@ -935,7 +995,7 @@ describe('Table', () => {
         providers: [
           provideTableStorage(class {
             public load(key: string): string {
-              return key === 'table:test' ? JSON.stringify({columns: [{name: '0', width: '100px'}, {name: '1'}]}) : '';
+              return key === 'table:test' ? JSON.stringify({columns: [{name: '0', width: 100}, {name: '1'}]}) : '';
             }
             public store(): void {
               // noop
