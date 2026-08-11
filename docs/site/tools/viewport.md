@@ -209,14 +209,16 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
    <main>
      <cdk-virtual-scroll-viewport #cdkViewport
                                   [itemSize]="25"
-                                  sciScrollable>
+                                  sciScrollable #sciScrollable="sciScrollable">
        <div *cdkVirtualFor="let item of items" [style.height.px]="25">
          {{item}}
        </div>
      </cdk-virtual-scroll-viewport>
 
-     <!-- render vertical scrollbar which sits on top of the cdk viewport -->
-     <sci-scrollbar [direction]="'vscroll'" [viewport]="cdkViewport.getElementRef().nativeElement"/>
+     <!-- Vertical scrollbar rendered on top of the CDK viewport -->
+     @if (sciScrollable.isNativeScrollbarCropped()) {
+       <sci-scrollbar direction="vscroll" [viewport]="cdkViewport.getElementRef().nativeElement"/>
+     }
    </main>
    ```
    
@@ -224,8 +226,8 @@ The module `@scion/components/viewport` exports the scrollbar component `<sci-sc
 
     - Adds the `<cdk-virtual-scroll-viewport>` element as child element to the `<main>` element. Instead of the `<main>` element, you could use any other container element.
     - Creates the local template variable `#cdkViewport` to hold the reference to the CDK viewport component.
-    - Decorates the CDK viewport with the `sciScrollable` directive to hide its native scrollbars.
-    - Adds the vertical scrollbar `<sci-scrollbar>` and connects it to the CDK viewport.
+    - Decorates the CDK viewport with the `sciScrollable` directive, which crops native scrollbars if not rendered on top.
+    - Adds the vertical `<sci-scrollbar>` and connects it to the CDK viewport, but only if the native scrollbar is cropped.
 
 1. Add the following code to the component:
 

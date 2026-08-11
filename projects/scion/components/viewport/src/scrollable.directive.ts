@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, effect, ElementRef, inject, input, Renderer2, untracked} from '@angular/core';
-import {NativeScrollbarTrackSize, SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
+import {computed, Directive, effect, ElementRef, inject, input, Renderer2, untracked} from '@angular/core';
+import {SciNativeScrollbarTrackSize, SciNativeScrollbarTrackSizeProvider} from './scrolltrack/native-scrollbar-track-size-provider.service';
 import {Dictionary} from '@scion/toolkit/util';
 
 /**
@@ -22,12 +22,31 @@ import {Dictionary} from '@scion/toolkit/util';
  * This directive expects its host element to be the only child in document flow in its parent DOM element. It makes the host element
  * fill up the entire space (width and height set to 100%). The parent element must have its CSS `overflow` property set to `hidden`
  * to hide the pushed out native scrollbars.
+ *
+ * This directive provides the `isNativeScrollbarCropped` signal, which indicates whether native scrollbars are pushed out of the viewport element.
+ * In templates, access it via the exported template reference variable `sciScrollable`.
+ *
+ * ```html
+ * <div sciScrollable #sciScrollable="sciScrollable" #viewport>
+ *   content
+ * </div>
+ *
+ * <!-- Render scrollbars only if native scrollbars are pushed out of the viewport element. -->
+ * @if (sciScrollable.isNativeScrollbarCropped()) {
+ *   <sci-scrollbar [viewport]="viewport" direction="vscroll"/>
+ *   <sci-scrollbar [viewport]="viewport" direction="hscroll"/>
+ * }
+ * ```
  */
-@Directive({selector: '[sciScrollable]'})
+@Directive({
+  selector: '[sciScrollable]',
+  exportAs: 'sciScrollable',
+})
 export class SciScrollableDirective {
 
   /**
    * Controls whether to display native scrollbars.
+   *
    * Has no effect if the native scrollbar sits on top of the content, e.g. in OS X.
    */
   public readonly displayNativeScrollbar = input(false, {alias: 'sciScrollableDisplayNativeScrollbar'});
@@ -35,6 +54,11 @@ export class SciScrollableDirective {
   private readonly _host = inject(ElementRef<HTMLDivElement>).nativeElement as HTMLElement;
   private readonly _renderer = inject(Renderer2);
   private readonly _nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
+
+  /**
+   * Indicates whether native scrollbars are pushed out of the viewport element.
+   */
+  public readonly isNativeScrollbarCropped = computed(() => !this.displayNativeScrollbar() && this._nativeScrollbarTrackSizeProvider.trackSize() !== null);
 
   constructor() {
     this.controlDisplayOfNativeScrollbar();
@@ -45,15 +69,9 @@ export class SciScrollableDirective {
    */
   private controlDisplayOfNativeScrollbar(): void {
     effect(() => {
-      const displayNativeScrollbar = this.displayNativeScrollbar();
-      if (displayNativeScrollbar) {
-        untracked(() => this.useNativeScrollbars());
-        return;
-      }
-
-      const nativeScrollbarTrackSize = this._nativeScrollbarTrackSizeProvider.trackSize();
-      if (nativeScrollbarTrackSize) {
-        untracked(() => this.shiftNativeScrollbars(nativeScrollbarTrackSize));
+      if (this.isNativeScrollbarCropped()) {
+        const trackSize = this._nativeScrollbarTrackSizeProvider.trackSize()!;
+        untracked(() => this.shiftNativeScrollbars(trackSize));
       }
       else {
         untracked(() => this.useNativeScrollbars());
@@ -77,13 +95,13 @@ export class SciScrollableDirective {
   /**
    * Shifts the native scrollbars out of the visible viewport area.
    */
-  private shiftNativeScrollbars(nativeScrollbarTrackSize: NativeScrollbarTrackSize): void {
+  private shiftNativeScrollbars(trackSize: SciNativeScrollbarTrackSize): void {
     this.setStyle(this._host, {
       overflow: 'scroll',
-      width: `calc(100% + ${nativeScrollbarTrackSize.vScrollbarTrackWidth}px`,
-      height: `calc(100% + ${nativeScrollbarTrackSize.hScrollbarTrackHeight}px`,
-      marginRight: `-${nativeScrollbarTrackSize.vScrollbarTrackWidth}px`,
-      marginBottom: `-${nativeScrollbarTrackSize.hScrollbarTrackHeight}px`,
+      width: `calc(100% + ${trackSize.vScrollbarTrackWidth}px`,
+      height: `calc(100% + ${trackSize.hScrollbarTrackHeight}px`,
+      marginRight: `-${trackSize.vScrollbarTrackWidth}px`,
+      marginBottom: `-${trackSize.hScrollbarTrackHeight}px`,
     });
   }
 

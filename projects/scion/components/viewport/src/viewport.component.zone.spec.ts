@@ -10,7 +10,7 @@
 
 import {TestBed} from '@angular/core/testing';
 import {Component, NgZone, viewChild} from '@angular/core';
-import {SciViewportComponent} from '@scion/components/viewport';
+import {SciViewportComponent} from './viewport.component';
 import {flushChanges} from './viewport.component.spec';
 
 describe('Viewport', () => {
