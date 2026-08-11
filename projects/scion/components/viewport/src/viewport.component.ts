@@ -8,8 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, effect, ElementRef, inject, input, NgZone, output, untracked, viewChild, ViewEncapsulation, ChangeDetectionStrategy} from '@angular/core';
-import {SciNativeScrollbarTrackSizeProvider} from './native-scrollbar-track-size-provider.service';
+import {ChangeDetectionStrategy, Component, effect, ElementRef, inject, input, NgZone, output, untracked, viewChild, ViewEncapsulation} from '@angular/core';
 import {coerceElement} from '@angular/cdk/coercion';
 import {SciScrollableDirective} from './scrollable.directive';
 import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
@@ -115,8 +114,6 @@ export class SciViewportComponent {
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
   private readonly _viewport = viewChild.required<ElementRef<HTMLDivElement>>('viewport');
   private readonly _viewportClient = viewChild.required<ElementRef<HTMLDivElement>>('viewport_client');
-
-  protected readonly nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   constructor() {
     this.installScrollEmitter();

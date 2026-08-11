@@ -88,7 +88,10 @@
               "includePaths": [
                 "projects/scion/components"
               ]
-            }
+            },
+            "styles": [
+              "projects/scion/components/_index.scss"
+            ]
           }
         },
         "test-zone": {
@@ -105,6 +108,9 @@
                 "projects/scion/components"
               ]
             },
+            "styles": [
+              "projects/scion/components/_index.scss"
+            ],
             "polyfills": [
               "zone.js",
               "zone.js/testing"

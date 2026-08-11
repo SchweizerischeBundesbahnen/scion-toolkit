@@ -44,6 +44,11 @@ export class ViewportHoverPagePO {
 
   public locateScrollbar(selector: {viewport: 'vertical' | 'horizontal'; scrollbar: 'vertical' | 'horizontal'}): Locator {
     const viewport = this.locateViewport(selector.viewport);
-    return viewport.locator(`> sci-scrollbar.e2e-${selector.scrollbar}`);
+    if (selector.scrollbar === 'vertical') {
+      return viewport.locator('> sci-scrollbar[direction="vscroll"]');
+    }
+    else {
+      return viewport.locator('> sci-scrollbar[direction="hscroll"]');
+    }
   }
 }
