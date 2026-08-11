@@ -2,6 +2,7 @@
 
 - Table Model Interface aufräumen und nur die sachen exposen, die es auch wirklich braucht
 - Fix build
+- Positionierng (v.a. höhe anschauen) Use case: Auswahlliste welche z.B. nur 3 rows hat sollte dynamisch kleiner werden können
 
 ## 2. Prio
 - Native Scrollbar overlaps mit header auf MacOS

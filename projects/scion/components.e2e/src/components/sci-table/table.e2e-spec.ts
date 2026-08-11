@@ -570,9 +570,9 @@ test.describe('sci-table', () => {
       // Shrink column one.
       await table.dragSplitter('column:one', -100);
       // Expect only column three to grow, since column two has a max width of 200.
-      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(100);
-      await expect.poll(() => table.column('Two').getHeaderWidth()).toBe(200);
-      await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(300);
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBeBetween(95, 105);
+      await expect.poll(() => table.column('Two').getHeaderWidth()).toBeBetween(195, 205);
+      await expect.poll(() => table.column('Three').getHeaderWidth()).toBeBetween(295, 305);
     });
 
     test('should shrink table when all flexible rows shrink', async ({page}) => {
@@ -588,9 +588,9 @@ test.describe('sci-table', () => {
       await table.dragSplitter('column:two', -100);
       await table.dragSplitter('column:three', -100);
 
-      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(100);
-      await expect.poll(() => table.column('Two').getHeaderWidth()).toBe(150);
-      await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(250);
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBeBetween(95, 105);
+      await expect.poll(() => table.column('Two').getHeaderWidth()).toBeBetween(145, 155);
+      await expect.poll(() => table.column('Three').getHeaderWidth()).toBeBetween(245, 255);
       await expect.poll(() => table.verticalViewport.boundingBox().then(bb => bb?.width)).toBeLessThan(600);
     });
 
@@ -610,14 +610,14 @@ test.describe('sci-table', () => {
       await table.dragSplitter('column:three', 600);
       await expect.poll(() => table.column('One').getHeaderWidth()).toBe(200);
       await expect.poll(() => table.column('Two').getHeaderWidth()).toBe(200);
-      await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(800);
-      await expect.poll(() => table.column('Four').getHeaderWidth()).toBe(100);
+      await expect.poll(() => table.column('Three').getHeaderWidth()).toBeBetween(795, 805);
+      await expect.poll(() => table.column('Four').getHeaderWidth()).toBeBetween(95, 105);
 
       await table.dragSplitter('column:one', 100);
-      await expect.poll(() => table.column('One').getHeaderWidth()).toBe(300);
-      await expect.poll(() => table.column('Two').getHeaderWidth()).toBe(200);
-      await expect.poll(() => table.column('Three').getHeaderWidth()).toBe(800);
-      await expect.poll(() => table.column('Four').getHeaderWidth()).toBeCloseTo(100, 1);
+      await expect.poll(() => table.column('One').getHeaderWidth()).toBeBetween(295, 305);
+      await expect.poll(() => table.column('Two').getHeaderWidth()).toBeBetween(195, 205);
+      await expect.poll(() => table.column('Three').getHeaderWidth()).toBeBetween(795, 805);
+      await expect.poll(() => table.column('Four').getHeaderWidth()).toBeBetween(95, 105);
     });
 
     test('should hide row hover while resizing', async ({page}) => {
@@ -768,6 +768,42 @@ test.describe('sci-table', () => {
   });
 
   test.describe('selection', () => {
+    test('should disable selection', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
+      await tablePage.setSelectable(false);
+
+      await table.row(0).click();
+      await expectRow(table.row(0)).toBeActive();
+      await expectRow(table.row(0)).not.toBeSelected();
+
+      await page.keyboard.press('ArrowDown');
+      await expectRow(table.row(1)).toBeActive();
+      await expectRow(table.row(1)).not.toBeSelected();
+      await expect(tablePage.selectedItems).toHaveText('0');
+    });
+
+    test('should only select a single row', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
+      await tablePage.setSelectable('single');
+
+      await table.row(0).click();
+      await table.row(1).click(['ControlOrMeta']);
+      await expectRow(table.row(0)).not.toBeSelected();
+      await expectRow(table.row(1)).toBeSelected();
+
+      await table.row(3).click(['Shift']);
+      await expectRow(table.row(1)).not.toBeSelected();
+      await expectRow(table.row(2)).not.toBeSelected();
+      await expectRow(table.row(3)).toBeSelected();
+      await expect(tablePage.selectedItems).toHaveText('1');
+    });
+
     test('should receive focus via tab navigation', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);

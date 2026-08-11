@@ -61,6 +61,11 @@ export class TablePagePO {
     await this._properties.locator('input.e2e-resizable').setChecked(checked);
   }
 
+  public async setSelectable(selectable: false | 'single' | 'multi'): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('select.e2e-selectable').selectOption(selectable === false ? 'false' : selectable);
+  }
+
   public async showHeader(show: boolean): Promise<void> {
     await this._tabbar.locator('button.e2e-settings').click();
     await this._properties.locator('input.e2e-show-header').setChecked(show);

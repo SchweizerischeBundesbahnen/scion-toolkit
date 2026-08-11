@@ -50,7 +50,7 @@ function slowDataLoader(data: Signal<Product[]>) {
   };
 }
 
-const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean;} => ({
+const createDefaultColumn = (): {name: string; type: string; header: string; resizable: boolean; width: string; minWidth: string; maxWidth: string; customSort: boolean; customFilter: boolean} => ({
   name: '',
   type: '',
   header: '',
@@ -90,6 +90,7 @@ export default class SciTablePageComponent {
     filterable: true,
     sortable: true,
     resizable: true,
+    selectable: 'multi',
     showHeader: true,
     showRowAction: false,
     slowDataSource: false,
@@ -133,6 +134,10 @@ export default class SciTablePageComponent {
           sortable: computed(() => this.settings().sortable),
           filterable: computed(() => this.settings().filterable),
           resizable: computed(() => this.settings().resizable),
+          selectable: computed<false | 'single' | 'multi'>(() => {
+            const selectable = this.settings().selectable;
+            return selectable === 'false' ? false : selectable as 'single' | 'multi';
+          }),
           data: type === 'slow' ? slowDataLoader(this.data) : this.data,
           rowState: conditionallyStyleRow ?
             (row: Product) => row.id % 3 === 0 ? 'row:red' : [] :
