@@ -20,7 +20,6 @@ import {minmax} from './common';
 import {dimension} from '@scion/components/dimension';
 import {TableSelectionService} from './table-selection.service';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
-import {SciNativeScrollbarTrackSizeProvider} from '../../viewport/src/native-scrollbar-track-size-provider.service';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
@@ -78,8 +77,6 @@ export class SciTableComponent<T> {
   private readonly _zone = inject(NgZone);
   private readonly _element = inject(ElementRef);
   private readonly _injector = inject(Injector);
-
-  protected readonly nativeScrollbarTrackSizeProvider = inject(SciNativeScrollbarTrackSizeProvider);
 
   protected readonly containerDimension = dimension(this._element.nativeElement as HTMLElement);
   protected readonly verticalViewportDimension = dimension(this._verticalViewport);

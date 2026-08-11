@@ -1,6 +1,6 @@
 <div class="item-size" #itemSizeElement></div>
 
-<div class="horizontal-viewport e2e-horizontal-viewport" #horizontalViewport sciScrollable>
+<div class="horizontal-viewport e2e-horizontal-viewport" #horizontalViewport sciScrollable #horizontalViewportScrollable="sciScrollable">
   <div class="horizontal-content">
     <header #header>
       @for (column of sciTable().columns(); track column.name) {
@@ -33,7 +33,7 @@
   }
 </div>
 
-@if (nativeScrollbarTrackSizeProvider.trackSize() !== null) {
+@if (horizontalViewportScrollable.isNativeScrollbarCropped()) {
   <sci-scrollbar [direction]="'hscroll'" [viewport]="horizontalViewport" />
   <sci-scrollbar [direction]="'vscroll'" class="vscroll" [viewport]="verticalViewport"/>
 }
