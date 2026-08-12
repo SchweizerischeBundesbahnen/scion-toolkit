@@ -33,11 +33,25 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
 
-    await table.scrollVerticalWithScrollbar(100);
+    await table.scrollVerticalWithScrollbar(10_000);
 
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
+    await expect(table.locateColumnCells(0).last()).toHaveText('Product 10000');
+  });
+
+  test('should load first and last row correctly', async ({page}) => {
+    const tablePage = new TablePagePO(page);
+    const table = new TablePo(page);
+    await tablePage.navigate('slow-data-source');
+    await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
+
+    await expect(table.locateColumnCells(0).first()).toHaveText('Product 1');
+
+    const scrollHeight = await table.verticalViewport.evaluate(vp => vp.scrollHeight);
+    await table.scrollViewPort({x: 0, y: scrollHeight});
+
+    await expect(table.locateColumnCells(0).last()).toHaveText('Product 10000');
   });
 
   test('should show skeletons when applying sort while using async datasource', async ({page}) => {

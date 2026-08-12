@@ -77,7 +77,7 @@ export class TableRowComponent<T> {
   }
 
   protected onMouseEnter(): void {
-    this.table().setHoveredId(this.id());
+    this.table().setHoveredIndex(this.index());
   }
 
   protected onMouseLeave(event: MouseEvent): void {
@@ -86,6 +86,6 @@ export class TableRowComponent<T> {
       return;
     }
     // Only hide row actions when leaving the row and not hovering the actions itself or a column resize splitter (overlay).
-    this.table().setHoveredId(undefined);
+    this.table().setHoveredIndex(undefined);
   }
 }

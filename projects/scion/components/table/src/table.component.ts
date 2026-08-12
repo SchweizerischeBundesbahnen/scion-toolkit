@@ -146,7 +146,7 @@ export class SciTableComponent<T> {
       return;
     }
     // Only hide row actions when leaving the row actions and not hovering a column resize splitter (overlay).
-    this.sciTable().setHoveredId(undefined);
+    this.sciTable().setHoveredIndex(undefined);
   }
 
   protected onOverlayScrollBy(deltaY: number): void {
@@ -233,7 +233,7 @@ export class SciTableComponent<T> {
           subscribeIn(fn => this._zone.runOutsideAngular(fn)),
         ).subscribe(() => {
           this._scrollTop.set(element.scrollTop);
-          this.sciTable().setHoveredId(undefined);
+          this.sciTable().setHoveredIndex(undefined);
         });
 
         onCleanup(() => subscription.unsubscribe());
