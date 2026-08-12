@@ -17,7 +17,7 @@ import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciColumnDescriptors} from './table.factory';
 import {UUID} from '@scion/toolkit/uuid';
 import {coerceSignal} from '@scion/components/common';
-import {Arrays, Objects} from '@scion/toolkit/util';
+import {Arrays} from '@scion/toolkit/util';
 import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
@@ -53,7 +53,6 @@ export class ɵSciTable<T> implements SciTable<T> {
   private readonly _filterCriteria = signal<SciColumnFilter[]>([]);
   private readonly _globalFilter = signal<string | undefined>(undefined);
   private readonly _selectedItems = signal(new Map<unknown, T>());
-  private readonly _totalCount = signal<number | undefined>(undefined);
   private readonly _storedTable = signal<StoredTable | undefined>(undefined);
 
   public readonly range = signal<{start: number; end: number} | undefined>(undefined);
@@ -74,6 +73,12 @@ export class ɵSciTable<T> implements SciTable<T> {
       // PageSize should never be smaller than the minimum size (5).
       return Math.max(visibleRowCount, previous?.value ?? 5);
     },
+  });
+
+  // Reset totalCount on criteria change, to show skeletons instead of stale data while loading.
+  private readonly _totalCount = linkedSignal({
+    source: () => this.criteria(),
+    computation: () => undefined as number | undefined,
   });
 
   private readonly _activeItem = linkedSignal({
@@ -104,7 +109,6 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly hoveredIndex = this._hoveredIndex.asReadonly();
   public readonly totalCount = this._totalCount.asReadonly();
 
-  private readonly _pages = this.computePages();
   public readonly rows = this.computeRows();
 
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T>) {
@@ -299,13 +303,16 @@ export class ɵSciTable<T> implements SciTable<T> {
    */
   private installPageLoader(): void {
     effect(onCleanup => {
-      const pages = this._pages();
+      const range = this.range();
       const pageSize = this.pageSize();
       const sortCriteria = this.sortCriteria();
       const columnFilters = this.filterCriteria();
       const globalFilter = this.globalFilter();
+      if (!range) {
+        return;
+      }
 
-      untracked(() => pages.forEach(page => {
+      untracked(() => this.pagesByRange(range.start, range.end, pageSize).forEach(page => {
         this.loadPage({
           pageSize,
           page,
@@ -427,44 +434,28 @@ export class ɵSciTable<T> implements SciTable<T> {
   }
 
   /**
-   * Computes the pages which need to be loaded based on the current viewport range.
-   */
-  private computePages(): Signal<number[]> {
-    return computed(() => {
-      const range = this.range();
-      const pageSize = this.pageSize();
-      if (!range) {
-        return [];
-      }
-      return this.pagesByRange(range.start, range.end, pageSize);
-    }, {equal: (a, b) => Objects.isEqual(a, b)});
-  }
-
-  /**
    * Computes the rows currently visible in the viewport (+buffer).
    */
   private computeRows(): Signal<SciRow<T>[]> {
     return computed(() => {
       const pageSize = this.pageSize();
-      const visiblePages = this._pages();
       const rowsByIndex = this.rowsByIndex();
       const range = this.range();
       const totalCount = this._totalCount();
-
-      if (!range || visiblePages.length <= 0) {
+      if (!range) {
         return [];
       }
 
-      const firstPageStart = visiblePages[0]! * pageSize;
-      const lastPageEnd = (visiblePages.at(-1)! + 1) * pageSize;
+      // If total count is not defined yet (no page loaded) show only skeletons.
+      if (totalCount === undefined) {
+        return new Array(pageSize).fill({}) as Array<SciRow<T>>;
+      }
 
-      // Populate rows with cached rows in the loaded page window, fallback to row shell to show skeleton.
-      const rows = Array.from({length: Math.min(lastPageEnd - firstPageStart, totalCount ?? pageSize)}, (_, i) => {
-        return rowsByIndex.get(firstPageStart + i) ?? {};
-      });
+      // Cut the rowCount off at totalCount, else the user can scroll infinitely.
+      const rowCount = Math.min(range.end, totalCount) - range.start;
 
-      // Only return the rows which are actually in the viewport.
-      return rows.slice(range.start - firstPageStart, Math.min(range.end, totalCount ?? Infinity) - firstPageStart);
+      // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
+      return Array.from({length: Math.min(pageSize, rowCount, totalCount)}, (_, i) => rowsByIndex.get(range.start + i) ?? {});
     });
   }
 }
