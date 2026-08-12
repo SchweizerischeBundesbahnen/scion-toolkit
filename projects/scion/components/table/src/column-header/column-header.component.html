@@ -1,5 +1,5 @@
-<div class="header" [class.filterable]="table().showColumnFilters()">
-  @if (table().showColumnHeaders()) {
+<div class="header" [class.filterable]="table().headerVisible()">
+  @if (table().headerVisible()) {
     <button class="column-sort e2e-column-sort"
             [tabIndex]="column().sortable() ? 0 : -1"
             [attr.data-sort]="columnSort()"
@@ -27,7 +27,7 @@
   }
   @if (column().filterable()) {
     <sci-column-filter [column]="column()"/>
-  } @else if (table().showColumnFilters())  {
+  } @else if (table().filterable())  {
     <div></div>
   }
 </div>

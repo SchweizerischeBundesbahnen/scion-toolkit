@@ -140,7 +140,7 @@ export class TableSelectionService<T> {
       return;
     }
 
-    const id = table.trackBy?.(item) ?? item;
+    const id = table.trackBy(item);
 
     if (event.shiftKey && table.selectable() === 'multi') {
       table.updateSelectedItems(items => new Map(items).set(id, item));
@@ -152,7 +152,7 @@ export class TableSelectionService<T> {
 
   private toggleSelectedItem(item: T): void {
     const table = this._table();
-    const id = table.trackBy?.(item) ?? item;
+    const id = table.trackBy(item);
 
     table.updateSelectedItems(selection => {
       const next = new Map(selection);

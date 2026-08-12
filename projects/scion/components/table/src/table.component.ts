@@ -202,7 +202,7 @@ export class SciTableComponent<T> {
     effect(() => {
       const viewportDimension = this.verticalViewportDimension();
       const itemSize = this.itemSizeDimension()?.clientHeight;
-      const overscan = this.sciTable().overscan();
+      const overscan = this.sciTable().bufferSize();
       const scrollTop = this._scrollTop();
       if (itemSize) {
         const visibleRowCount = Math.ceil(viewportDimension.clientHeight / itemSize) + overscan * 2;

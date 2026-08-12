@@ -134,38 +134,47 @@ function sort<T>(a: ItemWithValues<T>, b: ItemWithValues<T>, sortCriteria: Mappe
 export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnLike<T>[]>): SciDataLoaderFn<T> {
   const cache = linkedSignal({
     source: () => ({data: data(), columns: columns()}),
-    computation: () => new Map<string, typeof items$>(),
+    computation: () => new Map<string, Observable<ItemWithValues<T>[]>>(),
   });
 
   const items$ = toObservable(computed(() => {
-    const resolveColumns = columns();
-    const items = data();
-    return items.map(item => ({
+    const resolvedColumns = columns();
+    const items = data().map(item => ({
       item,
-      values: resolveColumns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
+      values: resolvedColumns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
     }));
+
+    return {
+      items,
+      columns: resolvedColumns,
+    };
   }));
 
   return (request: SciTableRequest): Observable<SciTableResponse<T>> => {
-    const sortCols = mapCriteria(request.sortCriteria, columns());
-    const filterCols = mapCriteria(request.columnFilters, columns());
-
-    const sortHash = sortCols.map(sc => `${sc.columnName}_${sc.direction}`).join('-');
-    const filterHash = filterCols.map(fc => `${fc.columnName}_${fc.text}`).join('-');
+    const sortHash = request.sortCriteria.map(sc => `${sc.columnName}_${sc.direction}`).join('-');
+    const filterHash = request.columnFilters.map(fc => `${fc.columnName}_${fc.text}`).join('-');
     const hash = `${sortHash}-${filterHash}-${request.globalFilter ?? ''}`;
-    const sortedFiltered$ = cache().has(hash) ? cache().get(hash)! : items$.pipe(
-      map(items => items
-        .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.globalFilter))
-        .sort((a, b) => sort(a, b, sortCols))),
-      shareReplay({bufferSize: 1, refCount: true}), // as soon as there are no subscribers left unsubscribe from the source.
-    );
 
-    // Only store one item in the cache.
-    // The cache is used for scrolling and multipage selection.
-    // So while scrolling the whole array is not always filtered.
-    cache.set(new Map<string, typeof items$>().set(hash, sortedFiltered$));
+    if (!cache().has(hash)) {
+      const sortedAndFiltered$ = items$.pipe(
+        map(({items, columns}) => {
+          const sortCols = mapCriteria(request.sortCriteria, columns);
+          const filterCols = mapCriteria(request.columnFilters, columns);
 
-    return sortedFiltered$.pipe(
+          return items
+            .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.globalFilter))
+            .sort((a, b) => sort(a, b, sortCols));
+        }),
+        shareReplay({bufferSize: 1, refCount: true}), // as soon as there are no subscribers left unsubscribe from the source.
+      );
+
+      // Only store one item in the cache.
+      // The cache is used for scrolling and multipage selection.
+      // It caches the data based on the current filter and sort.
+      cache.set(new Map<string, Observable<ItemWithValues<T>[]>>().set(hash, sortedAndFiltered$));
+    }
+
+    return cache().get(hash)!.pipe(
       map(items => ({
         totalCount: items.length,
         items: items.slice(request.start, request.end).map(i => i.item),

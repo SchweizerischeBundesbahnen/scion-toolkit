@@ -31,20 +31,20 @@ export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSc
 
 export class ɵSciTable<T> implements SciTable<T> {
 
-  public readonly tableStorage = inject(SCI_TABLE_STORAGE);
+  private readonly _tableStorage = inject(SCI_TABLE_STORAGE);
   private readonly _injector = inject(Injector);
 
   public readonly instanceId = UUID.randomUUID();
   public readonly name: `table:${string}`;
   public readonly columns: WritableSignal<SciColumnLike<T>[]>;
-  public readonly dataLoaderFn: SciDataLoaderFn<T>;
-  public readonly trackBy?: (item: T) => unknown;
   public readonly rowActions?: SciRowActionFactoryFn<T>;
-  public readonly rowName?: (item: T) => string | string[] | undefined;
+  private readonly _rowName?: (item: T) => string | string[] | undefined;
+  private readonly _dataLoaderFn: SciDataLoaderFn<T>;
+  private readonly _trackBy?: (item: T) => unknown;
 
-  public readonly overscan: Signal<number>;
-  public readonly showColumnFilters: Signal<boolean>;
-  public readonly showColumnHeaders: Signal<boolean>;
+  public readonly bufferSize: Signal<number>;
+  public readonly filterable: Signal<boolean>;
+  public readonly headerVisible: Signal<boolean>;
   public readonly sortable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectable: Signal<'single' | 'multi' | false>;
@@ -65,7 +65,8 @@ export class ɵSciTable<T> implements SciTable<T> {
     temporaryColumnWidths: Map<`column:${string}`, string>;
   } | undefined>(undefined);
 
-  public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria(), globalFilter: this._globalFilter()}));
+  private readonly _cache = new TableCache<T>();
+
   public readonly pageSize = linkedSignal<{start: number; end: number} | undefined, number>({
     source: () => this.range(),
     computation: (range, previous) => {
@@ -75,73 +76,43 @@ export class ɵSciTable<T> implements SciTable<T> {
     },
   });
 
-  private readonly _pages = computed(() => {
-    const range = this.range();
-    const pageSize = this.pageSize();
-    if (!range) {
-      return [];
-    }
-    return this.pagesByRange(range.start, range.end, pageSize);
-  }, {equal: (a, b) => Objects.isEqual(a, b)});
-
   private readonly _activeItem = linkedSignal({
     source: () => this.criteria(),
     computation: () => undefined as T | undefined,
   });
 
-  private readonly _hoveredId = linkedSignal({
+  private readonly _hoveredIndex = linkedSignal({
     source: () => this.criteria(),
-    computation: () => undefined as unknown,
+    computation: () => -1,
   });
 
-  private readonly _cache = new TableCache<T>();
-
-  public readonly rowsByIndex = this._cache.rowByIndex;
-  public readonly rows = computed(() => {
-    const pageSize = this.pageSize();
-    const visiblePages = this._pages();
-    const rowsByIndex = this.rowsByIndex();
-    const range = this.range();
-    const totalCount = this._totalCount();
-
-    if (!range || visiblePages.length <= 0) {
-      return [];
-    }
-
-    const firstPageStart = visiblePages[0]! * pageSize;
-    const lastPageEnd = (visiblePages.at(-1)! + 1) * pageSize;
-
-    // Populate rows with cached rows in the loaded page window, fallback to row shell to show skeleton.
-    const rows = Array.from({length: Math.min(lastPageEnd - firstPageStart, totalCount ?? pageSize)}, (_, i) => {
-      return rowsByIndex.get(firstPageStart + i) ?? {};
-    });
-
-    // Only return the rows which are actually in the viewport.
-    return rows.slice(range.start - firstPageStart, Math.min(range.end, totalCount ?? Infinity) - firstPageStart);
-  });
-
+  public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria(), globalFilter: this._globalFilter()}));
   public readonly loading = computed(() => this._cache.values().some(entry => entry.items() === undefined));
   public readonly activeIndex = computed(() => {
     const activeItem = this._activeItem();
-    return activeItem ? this.indexById(this.trackBy?.(activeItem) ?? activeItem, this.rowsByIndex()) : -1;
+    return activeItem ? this.indexById(this.trackBy(activeItem), this.rowsByIndex()) : -1;
   });
-  public readonly hoveredIndex = computed(() => this.indexById(this._hoveredId(), this.rowsByIndex()));
-  public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
+  public readonly hoveredRow = computed(() => this.rowsByIndex().get(this._hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
 
+  public readonly rowsByIndex = this._cache.rowByIndex;
   public readonly sortCriteria = this._sortCriteria.asReadonly();
   public readonly filterCriteria = this._filterCriteria.asReadonly();
   public readonly globalFilter = this._globalFilter.asReadonly();
   public readonly activeItem = this._activeItem.asReadonly();
+  public readonly hoveredIndex = this._hoveredIndex.asReadonly();
   public readonly totalCount = this._totalCount.asReadonly();
+
+  private readonly _pages = this.computePages();
+  public readonly rows = this.computeRows();
 
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T>) {
     this.name = descriptor.name;
-    this.overscan = coerceSignal(descriptor.bufferSize ?? 10);
+    this.bufferSize = coerceSignal(descriptor.bufferSize ?? 10);
     this.sortable = coerceSignal(descriptor.sortable ?? true);
-    this.showColumnFilters = coerceSignal(descriptor.filterable ?? true);
-    this.showColumnHeaders = coerceSignal(descriptor.headerVisible ?? true);
+    this.filterable = coerceSignal(descriptor.filterable ?? true);
+    this.headerVisible = coerceSignal(descriptor.headerVisible ?? true);
     this.resizable = coerceSignal(descriptor.resizable ?? true);
     this.selectable = coerceSignal(descriptor.selectable ?? 'multi');
     this.columns = linkedSignal(() => {
@@ -154,9 +125,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
 
     this.rowActions = descriptor.rowActions;
-    this.rowName = descriptor.rowState;
-    this.trackBy = descriptor.trackBy;
-    this.dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
+    this._rowName = descriptor.rowState;
+    this._trackBy = descriptor.trackBy;
+    this._dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 
     void this.readTableStorage();
     this.installCriteriaWatcher();
@@ -164,6 +135,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.installPageLoader();
   }
 
+  /**
+   * Loads a range of rows, based on the current sort and filter criteria, into the cache.
+   */
   public loadRange(start: number, end: number): Promise<void[]> {
     const pageSize = this.pageSize();
     const sortCriteria = this.sortCriteria();
@@ -188,6 +162,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     return Promise.all(requests);
   }
 
+  /**
+   * Loads a page from the dataSource and saves it to the page cache.
+   */
   private loadPage({page, pageSize, sortCriteria, columnFilters, globalFilter}: {page: number; pageSize: number; sortCriteria: SciSortCriterion[]; columnFilters: SciColumnFilter[]; globalFilter?: string}, onCleanup?: EffectCleanupRegisterFn): Signal<SciRow<T>[] | undefined> {
     const pageStart = page * pageSize;
     const pageEnd = pageStart + pageSize;
@@ -197,7 +174,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     }
 
     const items = signal<T[] | undefined>(undefined);
-    const subscription = coerceObservable(this.dataLoaderFn({
+    const subscription = coerceObservable(this._dataLoaderFn({
       start: pageStart,
       end: pageEnd,
       pageSize,
@@ -211,7 +188,7 @@ export class ɵSciTable<T> implements SciTable<T> {
         items.set(result.items);
       },
       error: err => {
-        // TODO: what do we do here?
+        // TODO: what do we do when the datasource throws an error?
         this._cache.deleteIfEmpty(cacheKey);
       },
     });
@@ -235,6 +212,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     return cacheEntry.items;
   }
 
+  /**
+   * Toggles sort on a column. ASC -> DESC -> No sort
+   */
   public sort(columnName: `column:${string}`, multi: boolean): void {
     if (!this.sortable()) {
       return;
@@ -254,11 +234,14 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
+  /**
+   * Applies a filter, either via global filter or on a specific column.
+   */
   public filter(text: string): void;
   public filter(text: string | number | boolean | null, options: {columnName: `column:${string}`}): void;
   public filter(text: string | number | boolean | null, options?: {columnName: `column:${string}`}): void {
     if (options) {
-      if (!this.showColumnFilters()) {
+      if (!this.filterable()) {
         return;
       }
 
@@ -283,14 +266,21 @@ export class ɵSciTable<T> implements SciTable<T> {
     this._activeItem.set(item);
   }
 
-  public setHoveredId(id: unknown | undefined): void {
-    this._hoveredId.set(id);
+  public setHoveredIndex(index: number | undefined): void {
+    this._hoveredIndex.set(index ?? -1);
   }
 
   public updateSelectedItems(updateFn: (ids: Map<unknown, T>) => Map<unknown, T>): void {
     this._selectedItems.update(updateFn);
   }
 
+  public dispose(): void {
+    this._cache.clear();
+  }
+
+  /**
+   * Persist column widths to storage on change.
+   */
   private installTablePersister(): void {
     toObservable(this.columns).pipe(
       filter(columns => columns.length > 0), // don't persist when columns are not yet loaded
@@ -300,12 +290,12 @@ export class ɵSciTable<T> implements SciTable<T> {
         columns: columns.map(col => ({name: col.name, width: col.absoluteWidth})),
       } satisfies StoredTable;
 
-      void untracked(() => this.tableStorage.store(this.name, JSON.stringify(storedTable)));
+      void untracked(() => this._tableStorage.store(this.name, JSON.stringify(storedTable)));
     });
   }
 
   /**
-   * Instructs the internal table model to load a set of pages.
+   * Loads a set of pages on criteria or viewport changes.
    */
   private installPageLoader(): void {
     effect(onCleanup => {
@@ -327,12 +317,15 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
+  /**
+   * Resets cache on criteria changes.
+   */
   private installCriteriaWatcher(): void {
     toObservable(this.criteria).pipe(
       skip(1), // skip first emission to avoid race condition with loader on initialization.
       takeUntilDestroyed(),
     ).subscribe(() => {
-      this._cache.clear(); // clear cache as soon as criteria change.
+      this._cache.clear();
     });
   }
 
@@ -347,7 +340,8 @@ export class ɵSciTable<T> implements SciTable<T> {
       !!config.filterable :
       config.filterable !== false;
 
-    const name = config.name ?? index.toString();
+    // Fallback to the column index as the column name
+    const name = config.name ?? `column:${index}`;
     const storedColumn = storedTable?.columns.find(column => column.name === name);
     const width = config.width ?? '1fr';
 
@@ -358,7 +352,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       filter: typeof config.filterable === 'object' ? config.filterable.matcher : defaultFilter,
       sort: typeof config.sortable === 'object' ? config.sortable.comparator : defaultSort,
       sortable: computed(() => sortable && this.sortable()),
-      filterable: computed(() => filterable && this.showColumnFilters()),
+      filterable: computed(() => filterable && this.filterable()),
       resizable: computed(() => (config.resizable ?? true) && this.resizable()),
       header: coerceSignal(config.header ?? ''),
       absoluteWidth: storedColumn?.width,
@@ -384,10 +378,10 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   private mapItemsToRow(items: T[], columns: SciColumnLike<T>[]): SciRow<T>[] {
     return items.map(item => {
-      const rowName = Arrays.coerce(this.rowName?.(item));
+      const rowName = Arrays.coerce(this._rowName?.(item));
       return ({
         item: item,
-        id: this.trackBy?.(item) ?? item,
+        id: this.trackBy(item),
         cells: columns.map(column => ({
           value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,
@@ -400,12 +394,8 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
-  public dispose(): void {
-    this._cache.clear();
-  }
-
   private async readTableStorage(): Promise<void> {
-    const saved = await this.tableStorage.load(this.name);
+    const saved = await this._tableStorage.load(this.name);
     if (!saved) {
       this._storedTable.set({columns: []});
       return;
@@ -420,10 +410,62 @@ export class ɵSciTable<T> implements SciTable<T> {
     }
   }
 
+  /**
+   * Get pages by range and pageSize. End is exclusive
+   */
   private pagesByRange(start: number, end: number, pageSize: number): number[] {
     const startPage = Math.floor(start / pageSize);
     const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
     return rangeInclusive(startPage, endPage);
+  }
+
+  /**
+   * Call trackBy function or fallback to track by object reference.
+   */
+  public trackBy(item: T): unknown {
+    return this._trackBy?.(item) ?? item;
+  }
+
+  /**
+   * Computes the pages which need to be loaded based on the current viewport range.
+   */
+  private computePages(): Signal<number[]> {
+    return computed(() => {
+      const range = this.range();
+      const pageSize = this.pageSize();
+      if (!range) {
+        return [];
+      }
+      return this.pagesByRange(range.start, range.end, pageSize);
+    }, {equal: (a, b) => Objects.isEqual(a, b)});
+  }
+
+  /**
+   * Computes the rows currently visible in the viewport (+buffer).
+   */
+  private computeRows(): Signal<SciRow<T>[]> {
+    return computed(() => {
+      const pageSize = this.pageSize();
+      const visiblePages = this._pages();
+      const rowsByIndex = this.rowsByIndex();
+      const range = this.range();
+      const totalCount = this._totalCount();
+
+      if (!range || visiblePages.length <= 0) {
+        return [];
+      }
+
+      const firstPageStart = visiblePages[0]! * pageSize;
+      const lastPageEnd = (visiblePages.at(-1)! + 1) * pageSize;
+
+      // Populate rows with cached rows in the loaded page window, fallback to row shell to show skeleton.
+      const rows = Array.from({length: Math.min(lastPageEnd - firstPageStart, totalCount ?? pageSize)}, (_, i) => {
+        return rowsByIndex.get(firstPageStart + i) ?? {};
+      });
+
+      // Only return the rows which are actually in the viewport.
+      return rows.slice(range.start - firstPageStart, Math.min(range.end, totalCount ?? Infinity) - firstPageStart);
+    });
   }
 }
 
