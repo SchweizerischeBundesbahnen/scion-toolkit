@@ -337,6 +337,20 @@ test.describe('sci-table', () => {
       await expect(table.rows).toHaveCount(0);
       await expect(table.locator).toContainText('No items found.');
     });
+
+    test('should retain selection on filtering', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
+
+      await table.row(0).click();
+      await expectRow(table.row(0)).toBeSelected();
+
+      await table.column('Name').filter('Product 1');
+      await expectTable(table).allCellsToContainText(0, 'Product 1');
+      await expectRow(table.row(0)).toBeSelected();
+    });
   });
 
   test.describe('resizing', () => {
@@ -594,7 +608,7 @@ test.describe('sci-table', () => {
       await expect.poll(() => table.verticalViewport.boundingBox().then(bb => bb?.width)).toBeLessThan(600);
     });
 
-    test('should fix flexible rows on overflow', async ({page}) => {
+    test('should lock flexible rows on overflow', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);
       await tablePage.navigate();
@@ -638,7 +652,7 @@ test.describe('sci-table', () => {
       await expect(table.row(3).locator).toHaveCSS('background-color', 'rgb(233, 233, 233)');
     });
 
-    test('should scroll viewport and when wheeling on splitter', async ({page}) => {
+    test('should scroll viewport when wheeling on splitter', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);
       await tablePage.navigate();
@@ -721,7 +735,7 @@ test.describe('sci-table', () => {
       await expect(sortButtons.nth(1)).toHaveAttribute('data-sort', 'asc');
     });
 
-    test('should retain filtering when sorting', async ({page}) => {
+    test('should retain filter after sorting', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);
       await tablePage.navigate();
@@ -764,6 +778,20 @@ test.describe('sci-table', () => {
       // applying a sort should reset the viewport scroll position to the top.
       await table.column('Name').sort();
       await expect.poll(() => table.verticalViewport.evaluate(el => el.scrollTop)).toBe(0);
+    });
+
+    test('should retain selection after sorting', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePo(page);
+      await tablePage.navigate();
+      await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
+
+      await table.row(0).click();
+      await expectRow(table.row(0)).toBeSelected();
+
+      await table.column('Name').sort();
+      await expectTable(table).toHaveColumnSorted(0);
+      await expectRow(table.row(0)).toBeSelected();
     });
   });
 

@@ -997,7 +997,7 @@ describe('Table', () => {
       const po = new TablePo(fixture);
       await po.autoResize(model.columns()[0]!);
 
-      expect(store).toHaveBeenCalledWith('table:test', '{"columns":[{"name":"0","width":100},{"name":"1"}]}');
+      expect(store).toHaveBeenCalledWith('table:test', '{"columns":[{"name":"column:0","width":100},{"name":"column:1"}]}');
     });
 
     it('should load column widths from storage', async () => {
@@ -1005,7 +1005,7 @@ describe('Table', () => {
         providers: [
           provideTableStorage(class {
             public load(key: string): string {
-              return key === 'table:test' ? JSON.stringify({columns: [{name: '0', width: 100}, {name: '1'}]}) : '';
+              return key === 'table:test' ? JSON.stringify({columns: [{name: 'column:0', width: 100}, {name: 'column:1'}]}) : '';
             }
             public store(): void {
               // noop
