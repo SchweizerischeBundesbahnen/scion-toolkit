@@ -27,10 +27,10 @@
   }
 
   > main {
-    flex: auto;
+    flex: 1 1 0;
     padding: 1em;
     display: grid;
-    grid-template-columns: 100%;
+    overflow: hidden;
 
     > router-outlet {
       position: absolute; // out of the document flow

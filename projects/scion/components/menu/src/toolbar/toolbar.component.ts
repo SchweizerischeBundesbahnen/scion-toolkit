@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, effect, ElementRef, inject, Injector, input, untracked, ViewContainerRef} from '@angular/core';
+import {Component, computed, effect, ElementRef, inject, Injector, input, untracked, viewChild, ViewContainerRef} from '@angular/core';
 import {SciToolbarGroupComponent} from './toolbar-group.component';
 import {ɵinstallMenuAccelerators, ɵSciMenuAcceleratorOptions} from '../menu-accelerators';
 import {ɵSciMenuService} from '../ɵmenu.service';
@@ -189,10 +189,19 @@ export class SciToolbarComponent {
    */
   public readonly popoverViewContainerRef = input<ViewContainerRef>(inject(ViewContainerRef));
 
+  /**
+   * Indicates whether a menu is opened in this or any child group.
+   *
+   * TODO should it be internal?
+   */
+  public readonly toolbarMenuOpen = computed(() => this._toolbarGroupComponent()?.toolbarMenuOpen() ?? false);
+
   private readonly _environmentContext = injectMenuContext();
   private readonly _context = computed(() => new Map([...this._environmentContext(), ...this.context() ?? new Map()]));
 
   protected readonly menuItems = inject(ɵSciMenuService).menuItems(this.name, this._context);
+
+  private readonly _toolbarGroupComponent = viewChild(SciToolbarGroupComponent);
 
   constructor() {
     this.installAccelerators();

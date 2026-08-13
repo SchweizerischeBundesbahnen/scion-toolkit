@@ -18,6 +18,7 @@ import {toObservable} from '@angular/core/rxjs-interop';
 import {UUID} from '@scion/toolkit/uuid';
 import {startWith, switchMap} from 'rxjs/operators';
 import {createDestroyableInjector} from '@scion/components/common';
+import {contributeMenu} from '@scion/components/menu';
 
 @Component({
   selector: 'app-date-cell',
@@ -25,7 +26,7 @@ import {createDestroyableInjector} from '@scion/components/common';
     DatePipe,
   ],
   template: `
-    {{ date() | date : 'dd.MM.yyyy' }}
+    {{date() | date : 'dd.MM.yyyy'}}
   `,
 })
 class DateCellComponent {
@@ -123,14 +124,12 @@ export default class SciTablePageComponent {
     resizable: computed(() => this.settings().resizable),
     selectable: computed(() => this.settings().selectable === 'disabled' ? false : this.settings().selectable as 'single' | 'multi'),
     trackBy: company => company.dataId,
-    rowActions: (company, toolbar) => {
-      toolbar.addToolbarButton({
+    rowActions: (company, toolbar) => toolbar
+      .addToolbarButton({
         icon: 'scion.delete',
-        onSelect: () => {
-          data.update(companies => companies.filter(c => c.dataId !== company.dataId));
-        },
-      });
-      toolbar.addToolbarButton({
+        onSelect: () => data.update(companies => companies.filter(c => c.dataId !== company.dataId)),
+      })
+      .addToolbarButton({
         icon: 'content_copy',
         onSelect: () => {
           const index = data().findIndex(c => c.dataId === company.dataId);
@@ -138,34 +137,38 @@ export default class SciTablePageComponent {
             create$.next({index, company: {...company, dataId: UUID.randomUUID()}});
           }
         },
-      });
-      toolbar.addToolbarMenu({
-        icon: 'scion.more_vertical',
-        visualMenuIndicator: false,
-      }, menu => {
-        menu.addGroup(group => group.addMenuItem({
-          label: 'Edit',
-          onSelect: () => {console.log('edit', company);},
-        }).addMenuItem({
-          label: 'Duplicate',
-          onSelect: () => {console.log('duplicate', company);},
-        }).addMenuItem({
-          label: 'Delete',
-          onSelect: () => {console.log('delete', company);},
-        })).addGroup(group => {
-          group.addMenuItem({
-            label: 'Copy to...',
-            onSelect: () => {console.log('copy', company);},
-          }).addMenuItem({
-            label: 'Move to...',
-            onSelect: () => {console.log('move', company);},
-          });
-        }).addMenuItem({
-          label: 'Info...',
-          onSelect: () => {console.log('info', company);},
-        });
-      });
-    },
+      })
+      .addToolbarMenu({
+          icon: 'scion.more_vertical',
+          visualMenuIndicator: false,
+        }, menu => menu
+          .addMenuItem({
+            label: 'Edit',
+            onSelect: () => console.log('edit', company),
+          })
+          .addMenuItem({
+            label: 'Duplicate',
+            onSelect: () => console.log('duplicate', company),
+          })
+          .addMenu({label: 'SubMenu'}, menu => menu
+            .addMenuItem({
+              label: 'Delete Delete Delete Delete Delete Delete Delete',
+              onSelect: () => console.log('delete', company),
+            }))
+          .addMenu({label: 'Actions'}, menu => menu
+            .addMenuItem({
+              label: 'Copy to...',
+              onSelect: () => console.log('copy', company),
+            })
+            .addMenuItem({
+              label: 'Move to...',
+              onSelect: () => console.log('move', company),
+            })
+            .addMenuItem({
+              label: 'Info...',
+              onSelect: () => console.log('info', company),
+            })),
+      ),
   };
 
   protected table = signal<SciTable<Company> | undefined>(undefined);
@@ -186,6 +189,48 @@ export default class SciTablePageComponent {
         ));
       });
     });
+
+    contributeMenu('toolbar:actions', toolbar => toolbar
+      .addToolbarButton({
+        icon: 'scion.delete',
+        onSelect: () => console.log('>>> delete'),
+      })
+      .addToolbarButton({
+        icon: 'content_copy',
+        onSelect: () => console.log('>>> copy'),
+      })
+      .addToolbarMenu({
+          icon: 'scion.more_vertical',
+          visualMenuIndicator: false,
+        }, menu => menu
+          .addMenuItem({
+            label: 'Edit',
+            onSelect: () => console.log('edit'),
+          })
+          .addMenuItem({
+            label: 'Duplicate',
+            onSelect: () => console.log('duplicate'),
+          })
+          .addMenu({label: 'SubMenu'}, menu => menu
+            .addMenuItem({
+              label: 'Delete Delete Delete Delete Delete Delete Delete',
+              onSelect: () => console.log('delete'),
+            }))
+          .addMenu({label: 'Actions'}, menu => menu
+            .addMenuItem({
+              label: 'Copy to...',
+              onSelect: () => console.log('copy'),
+            })
+            .addMenuItem({
+              label: 'Move to...',
+              onSelect: () => console.log('move'),
+            })
+            .addMenuItem({
+              label: 'Info...',
+              onSelect: () => console.log('info'),
+            })),
+      ),
+    )
   }
 
   protected createTable(settings: {slowDataSource: boolean; columns: {id: boolean; code: boolean}}, table: SciTableFactory<Company>): SciTableFactory<Company> {

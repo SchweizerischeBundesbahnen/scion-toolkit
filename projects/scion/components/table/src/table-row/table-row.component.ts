@@ -8,12 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, inject, input, output, viewChildren} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, input, output, viewChild, viewChildren} from '@angular/core';
 import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {TableSelectionService} from '../table-selection.service';
 import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/table-overlay.component';
+import {SciToolbarComponent} from '@scion/components/menu';
 
 @Component({
   selector: 'sci-table-row',
@@ -32,6 +33,7 @@ import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/table-overlay.component';
   },
   imports: [
     TableCellComponent,
+    SciToolbarComponent,
   ],
 })
 export class TableRowComponent<T> {
@@ -50,6 +52,7 @@ export class TableRowComponent<T> {
   protected readonly loading = computed(() => this.item() === undefined); // Rows are initialized with an undefined item, before data is loaded
   protected readonly isActive = computed(() => this.item() !== undefined && this.item() === this.table().activeItem());
   protected readonly isSelected = computed(() => this.table().selectedIds().has(this.id()));
+  protected readonly actionToolbar = viewChild(SciToolbarComponent);
 
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;
@@ -87,5 +90,10 @@ export class TableRowComponent<T> {
     }
     // Only hide row actions when leaving the row and not hovering the actions itself or a column resize splitter (overlay).
     this.table().setHoveredIndex(undefined);
+  }
+
+  protected onActionToolbarClick(event: PointerEvent): void {
+    event.stopPropagation(); // prevent selecting the row
+    this.table().setActiveItem(this.item());
   }
 }

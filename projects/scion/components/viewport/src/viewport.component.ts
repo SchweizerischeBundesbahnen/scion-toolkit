@@ -291,7 +291,7 @@ export class SciViewportComponent {
 
     return toSignal(toObservable(viewport)
       .pipe(
-        switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll').pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))),
+        switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll', {passive: true}).pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))),
         tap(event => this.scroll.emit(event)),
         switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
       ), {initialValue: false});

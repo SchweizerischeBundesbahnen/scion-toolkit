@@ -3,41 +3,36 @@
 :host {
   position: relative;
   background-color: var(--sci-table-background-color);
-  display: flex;
+  display: block;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden; // TODO document: required to have the table overflowing
 
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
-  > div.item-size { // div to read row item size via sciDimension.
-    height: var(--sci-table-row-height);
-    position: absolute;
-    pointer-events: none;
-    visibility: hidden;
-  }
+  > div.viewport {
+    height: 100%;
+    overflow: auto;
+    scrollbar-width: none;
 
-  > div.horizontal-viewport {
-    flex: var(--sci-table-flex);
-    display: flex;
-
-    > div.horizontal-content {
+    > div.viewport-client {
       width: var(--ɵsci-table-width); // width cannot be set on sciScrollable viewports, because it is overwritten.
-      height: 100%;
       display: grid;
-      grid-template-columns: var(--ɵsci-table-columns);
-      grid-template-rows: auto 1fr;
-      overflow: hidden;
-      flex: none;
+      grid-template-columns: var(--ɵsci-table-columns) 0; // last column used for row actions
+      grid-auto-rows: min-content;
 
-      &:has(header.hidden) {
-        grid-template-rows: 0 1fr;
+      &:focus {
+        outline: none;
       }
 
       > header {
+        grid-row: 1; // The sci-table-overlay positioning requires all grid items to be positioned.
         display: grid;
         grid-template-columns: subgrid;
         grid-column: 1 / -1;
-        grid-row: 1; // The sci-table-overlay positioning requires all grid items to be positioned.
+        position: sticky;
+        top: 0;
+        anchor-name: --header;
+        background-color: var(--sci-table-header-background-color);
 
         > sci-column-header {
           border-right: var(--sci-table-border-size) solid var(--sci-table-border-color);
@@ -48,45 +43,23 @@
         }
       }
 
-      > div.vertical-viewport {
+      > div.rows {
+        grid-row: 2; // The sci-table-overlay positioning requires all grid items to be positioned.
         display: grid;
         grid-template-columns: subgrid;
         grid-column: 1 / -1;
-        grid-row: 2; // The sci-table-overlay positioning requires all grid items to be positioned.
-        position: relative;
-        anchor-name: --vertical-viewport;
+        grid-auto-rows: var(--sci-table-row-height);
 
-        > div.vertical-content {
-            display: grid;
-            grid-template-columns: subgrid;
-            grid-column: 1 / -1;
-            height: max(var(--ɵsci-table-virtual-scroll-height), 100%);
+        // TODO Document
+        margin-top: var(--ɵsci-table-virtual-scroll-offset-top);
+        margin-bottom: var(--ɵsci-table-virtual-scroll-offset-bottom);
 
-            &:focus {
-              outline: none;
-            }
-
-            > div.rows {
-              display: grid;
-              grid-template-columns: subgrid;
-              grid-column: 1 / -1;
-              grid-auto-rows: var(--sci-table-row-height);
-              height: fit-content;
-
-              > div.empty-state {
-                grid-column: 1 / -1;
-                text-align: center;
-                padding: 1em;
-                color: var(--sci-color-text-subtle);
-              }
-
-              > sci-table-row {
-                display: grid;
-                grid-template-columns: subgrid;
-                grid-column: 1 / -1;
-              }
-            }
-          }
+        > div.empty-state {
+          grid-column: 1 / -1;
+          text-align: center;
+          padding: 1em;
+          color: var(--sci-color-text-subtle);
+        }
       }
 
       > sci-table-overlay {
@@ -94,32 +67,32 @@
       }
     }
 
-    > .row-actions {
-      position: sticky; // actions should always stick to the right of the viewport.
-      top: var(--ɵsci-table-toolbar-offset);
-      right: 0;
-      height: var(--sci-table-row-height); // match the height of row elements.
-      width: 0; // should not take up space next to the table.
-      display: flex; // vertically position actions in the middle of the row.
-      align-items: center;
-      justify-content: flex-end;
-
-      > sci-toolbar {
-        margin-right: var(--sci-table-cell-horizontal-padding);
-        background-color: var(--sci-table-background-color);
-        border-radius: var(--sci-corner);
-      }
-    }
+    //> .row-actions {
+    //  position: sticky; // actions should always stick to the right of the viewport.
+    //  top: var(--ɵsci-table-toolbar-offset);
+    //  right: 0;
+    //  height: var(--sci-table-row-height); // match the height of row elements.
+    //  width: 0; // should not take up space next to the table.
+    //  display: flex; // vertically position actions in the middle of the row.
+    //  align-items: center;
+    //  justify-content: flex-end;
+    //
+    //  > sci-toolbar {
+    //    margin-right: var(--sci-table-cell-horizontal-padding);
+    //    background-color: var(--sci-table-background-color);
+    //    border-radius: var(--sci-corner);
+    //  }
+    //}
   }
 
   > sci-scrollbar {
     @include sci-scrollbar.scrollbar-position();
+  }
 
-    &.vscroll {
-      position-anchor: --vertical-viewport;
-      top: anchor(top);
-      right: max(calc(100% - var(--ɵsci-table-width)), 0px);
-    }
+  &:has(header) > sci-scrollbar[direction="vscroll"] {
+    position-anchor: --header; // TODO Anlayse why not working in firefox
+    top: anchor(bottom);
+    right: 0;
   }
 
   > sci-spinner-throbber {
@@ -127,5 +100,12 @@
     position: absolute;
     top: 0.25em;
     right: 0.25em;
+  }
+
+  > div.item-size { // div to read row item size via sciDimension.
+    height: var(--sci-table-row-height);
+    position: absolute;
+    pointer-events: none;
+    visibility: hidden;
   }
 }

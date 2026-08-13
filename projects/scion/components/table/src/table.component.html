@@ -1,43 +1,40 @@
-<div class="item-size" #itemSizeElement></div>
+<div class="viewport e2e-viewport" #viewport>
+  <!-- [DISCUSS] Consider changing to named component sci-table-grid; grid CSS definition  -->
+  <div class="viewport-client" sciTableKeyboardNavigator tabindex="0" #viewport_client>
 
-<div class="horizontal-viewport e2e-horizontal-viewport" #horizontalViewport sciScrollable #horizontalViewportScrollable="sciScrollable">
-  <div class="horizontal-content">
-    <header #header>
-      @for (column of sciTable().columns(); track column.name) {
-        <sci-column-header [column]="column" />
-      }
-    </header>
-    <div class="vertical-viewport e2e-vertical-viewport" #verticalViewport sciScrollable>
-      <div class="vertical-content e2e-table-keyboard-navigator" sciTableKeyboardNavigator tabindex="0">
-        @if (sciTable().range(); as range) {
-          <div class="rows" [style.transform]="`translateY(${range.start * (itemSize() ?? 0)}px)`">
-            <!-- Track index to reuse the table row elements -->
-            @for (row of sciTable().rows(); track $index) {
-              <sci-table-row [row]="row" [index]="range.start + $index" (primaryAction)="onRowPrimaryAction(row.item)" />
-            } @empty {
-              <div class="empty-state">{{ ('%scion.components.no_items.message' | sciText)() }}</div>
-            }
-          </div>
+    @if (sciTable().range(); as range) {
+      <!-- [DISCUSS] Consider renaming to viewport-client -->
+      <div class="rows">
+        <!-- Track index to reuse the table row elements -->
+        @for (row of sciTable().rows(); track $index) {
+          <sci-table-row [row]="row" [index]="range.start + $index" (primaryAction)="onRowPrimaryAction(row.item)"/>
+        } @empty {
+          <div class="empty-state">{{('%scion.components.no_items.message' | sciText)()}}</div>
         }
       </div>
-    </div>
+    }
+
+    <!-- Place header after rows to naturally paint sticky header on top of the rows. -->
+    @if (sciTable().showColumnFilters() || sciTable().showColumnHeaders()) {
+      <header #header (wheel)="onHeaderMouseWheel($event)">
+        @for (column of sciTable().columns(); track column.name) {
+          <sci-column-header [column]="column"/>
+        }
+      </header>
+    }
+
     <sci-table-overlay [columnWidths]="absoluteColumnWidths()"
-                       [hasOverflow]="hasOverflow()"
+                       [hasOverflow]="hasHorizontalOverflow()"
                        [rows]="rows()"
-                       (scrollBy)="onOverlayScrollBy($event)" />
+                       (scrollBy)="onOverlayScrollBy($event)"/>
   </div>
-  @if (sciTable().rowActions && !resizing()) {
-    <div class="row-actions" (mouseleave)="onRowActionsMouseLeave($event)" (wheel)="onRowActionsMouseWheel($event)">
-      <sci-toolbar [name]="rowActionToolbarName()" />
-    </div>
-  }
 </div>
 
-@if (horizontalViewportScrollable.isNativeScrollbarCropped()) {
-  <sci-scrollbar [direction]="'hscroll'" [viewport]="horizontalViewport" />
-  <sci-scrollbar [direction]="'vscroll'" class="vscroll" [viewport]="verticalViewport"/>
-}
+<sci-scrollbar direction="hscroll" [viewport]="viewport"/>
+<sci-scrollbar direction="vscroll" [viewport]="viewport"/>
 
 @if (sciTable().loading()) {
-  <sci-spinner-throbber />
+  <sci-spinner-throbber/>
 }
+
+<div class="item-size" #itemSizeElement></div>

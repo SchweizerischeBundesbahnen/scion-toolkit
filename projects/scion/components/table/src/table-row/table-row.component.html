@@ -1,8 +1,21 @@
-@let _row = row();
-@for (cell of _row.cells; track cell.columnName) {
-  <sci-table-cell [cell]="cell" [item]="_row.item" [isSelected]="isSelected()" #cell />
+@let row = this.row();
+@for (cell of row.cells; track cell.columnName) {
+  <sci-table-cell [cell]="cell" [item]="row.item" [isSelected]="isSelected()" #cell/>
 } @empty {
   @for (column of table().columns(); track column.name) {
     <div class="skeleton"></div>
   }
 }
+
+@if (table().hoveredRow() === row || actionToolbar()?.toolbarMenuOpen()) {
+  <div class="row-actions" (click)="onActionToolbarClick($event)">
+    <sci-toolbar name="toolbar:actions"/>
+  </div>
+}
+
+
+<!--  @if (sciTable().rowActions && !resizing()) {-->
+<!--    <div class="row-actions" (mouseleave)="onRowActionsMouseLeave($event)" (wheel)="onRowActionsMouseWheel($event)">-->
+<!--      <sci-toolbar [name]="rowActionToolbarName()" />-->
+<!--    </div>-->
+<!--  }-->
