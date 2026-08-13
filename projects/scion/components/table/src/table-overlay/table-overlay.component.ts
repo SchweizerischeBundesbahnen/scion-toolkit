@@ -48,7 +48,7 @@ export class TableOverlayComponent<T> {
       column,
       hadOverflow: this.hasOverflow(),
       initialColumnWidths: new Map(this.columnWidths()),
-      initialFractionColumns: new Set(this.table().columns().filter(c => !c.absoluteWidth && c.isFraction && c !== column).map(column => column.name)),
+      initialFractionColumns: new Set(this.table().columns().filter(c => !c.userWidth && c.isFraction && c !== column).map(column => column.name)),
       temporaryColumnWidths: this.calculateTemporaryColumns(column),
     });
   }
@@ -98,7 +98,7 @@ export class TableOverlayComponent<T> {
     const fractionRatios = this.calculateFractionRatios(initialFractionColumns);
     this.table().columns.update(columns => columns.map(c => {
       if (c.name === column.name) {
-        c.absoluteWidth = this.fromPx(temporaryColumnWidths.get(c.name)!);
+        c.userWidth = this.fromPx(temporaryColumnWidths.get(c.name)!);
       }
 
       if (fractionRatios.has(c.name)) {
@@ -166,7 +166,7 @@ export class TableOverlayComponent<T> {
     const columnWidths = this.columnWidths();
     // Only allow columns to the right of the resized column to flex.
     const fractionColumns = new Set(this.table().columns()
-      .filter((column, i) => i > columnIndex && column.isFraction && !column.absoluteWidth)
+      .filter((column, i) => i > columnIndex && column.isFraction && !column.userWidth)
       .map(column => column.name));
     const fractionRatios = this.calculateFractionRatios(fractionColumns);
 
@@ -174,12 +174,12 @@ export class TableOverlayComponent<T> {
       // 1. Check if column was already resized and use this value.
       // 2. Check if column is a fraction, use the fraction ratio.
       // 3. Use the computed column width in px.
-      const absoluteWidth = column.absoluteWidth ? `${column.absoluteWidth}px` : null;
-      return map.set(column.name, absoluteWidth ?? fractionRatios.get(column.name) ?? `${columnWidths.get(column.name)}px`);
+      const userWidth = column.userWidth ? `${column.userWidth}px` : null;
+      return map.set(column.name, userWidth ?? fractionRatios.get(column.name) ?? `${columnWidths.get(column.name)}px`);
     }, new Map<`column:${string}`, string>());
   }
 
   private fromPx(value: string): number {
-    return +value.substring(0, value.length - 2);
+    return Number.parseInt(value);
   }
 }

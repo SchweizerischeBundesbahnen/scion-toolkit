@@ -16,11 +16,11 @@ import {provideTableStorage} from '../../../../projects/scion/components/table/s
 import {SciTableStorage} from '@scion/components/table';
 
 class TableSessionStorage implements SciTableStorage {
-  public load(name: `table:${string}`): Promise<string | null> | string | null {
+  public load(name: string): Promise<string | null> | string | null {
     return sessionStorage.getItem(name);
   }
 
-  public store(name: `table:${string}`, value: string): Promise<void> | void {
+  public store(name: string, value: string): Promise<void> | void {
     sessionStorage.setItem(name, value);
   }
 }

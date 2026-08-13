@@ -26,6 +26,9 @@ import {SciTextPipe} from '@scion/components/text';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-header.component.html',
   styleUrl: './column-header.component.scss',
+  host: {
+    '[class.filterable]': 'table().filterable()',
+  },
 })
 export class ColumnHeaderComponent<T> {
 

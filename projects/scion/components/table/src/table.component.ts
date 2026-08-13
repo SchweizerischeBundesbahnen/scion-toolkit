@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, NgZone, output, signal, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, NgZone, output, Provider, signal, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciTable} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {toObservable, toSignal} from '@angular/core/rxjs-interop';
@@ -16,14 +16,14 @@ import {concat, fromEvent, map, of, switchMap, timer} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollbarComponent} from '@scion/components/viewport';
 import {startWith} from 'rxjs/operators';
-import {minmax} from './common';
+import {cssMinmax} from './common';
 import {dimension} from '@scion/components/dimension';
 import {TableSelectionService} from './table-selection.service';
 import {contributeMenu} from '@scion/components/menu';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
-import {TABLE_OVERLAY_SELECTOR, TableOverlayComponent} from './table-overlay/table-overlay.component';
+import {TableOverlayComponent} from './table-overlay/table-overlay.component';
 import {SciTextPipe} from '@scion/components/text';
 import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/spinner-throbber.component';
 
@@ -52,13 +52,7 @@ import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/s
 
   ],
   providers: [
-    {
-      provide: ɵSCI_TABLE,
-      useFactory: () => {
-        const component = inject(SciTableComponent);
-        return computed(() => component.table() as ɵSciTable<unknown>)
-      },
-    },
+    provideSciTable(),
     TableSelectionService,
   ],
 })
@@ -85,7 +79,7 @@ export class SciTableComponent<T> {
   protected readonly itemSizeDimension = dimension(this._itemSizeElement);
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
-  protected readonly itemSize = computed(() => this.itemSizeDimension()?.clientHeight);
+  protected readonly itemSize = computed(() => this.itemSizeDimension().clientHeight);
 
   protected readonly rowActionToolbarName = computed(() => `toolbar:${this.sciTable().instanceId}` as const);
 
@@ -109,11 +103,7 @@ export class SciTableComponent<T> {
     const columns = this.sciTable().columns();
 
     return headers.reduce((map, header, i) => {
-      const column = columns[i];
-      if (column) {
-        map.set(column.name, header.boundingClientRect().width);
-      }
-      return map;
+      return map.set(columns[i]!.name, header.boundingClientRect().width);
     }, new Map<`column:${string}`, number>());
   });
 
@@ -128,12 +118,11 @@ export class SciTableComponent<T> {
    * This allows the grid to overflow when resizing.
    */
   protected readonly tableWidth = computed(() => {
-    const viewportWidth = this.viewportDimension().clientWidth;
-    const viewportClientWidth = this.viewportClientDimension().clientWidth;
-    const hasFullFractionColumn = this.sciTable().columns().some(column => column.isFraction && !column.absoluteWidth && !column.maxWidth);
+    const hasHorizontalOverflow = this.hasHorizontalOverflow();
+    const hasFullFractionColumn = this.sciTable().columns().some(column => column.isFraction && !column.userWidth && !column.maxWidth);
 
     // Only allow full width table when at least one column takes the remaining space.
-    return viewportClientWidth < viewportWidth && hasFullFractionColumn ? '100%' : `${viewportClientWidth}px`;
+    return !hasHorizontalOverflow && hasFullFractionColumn ? '100%' : `${this.viewportClientDimension().offsetWidth}px`;
   });
 
   private readonly _scrollTop = signal(0);
@@ -197,7 +186,7 @@ export class SciTableComponent<T> {
   private installDimensionWatcher(): void {
     effect(() => {
       const viewportDimension = this.viewportDimension();
-      const itemSize = this.itemSizeDimension()?.offsetHeight;
+      const itemSize = this.itemSizeDimension().offsetHeight;
       const overscan = this.sciTable().bufferSize();
       const scrollTop = this._scrollTop() - this._headerHeight();
       if (itemSize) {
@@ -267,15 +256,15 @@ export class SciTableComponent<T> {
       const columns = this.sciTable().columns();
       const resizingState = this.sciTable().resizingState();
       const hasHorizontalOverflow = this.hasHorizontalOverflow();
-      const hasResizedColumns = columns.some(column => column.absoluteWidth);
+      const hasResizedColumns = columns.some(column => column.userWidth !== undefined);
 
       if (!resizingState) {
-        // Return the override width (absolutWidth) if the column was resized.
+        // Return the user's width (userWidth) if the column was resized.
         // Else if there is one other resized column or the column is a fixed width (non-fraction) use the column width.
         // Else use the min/max grid definition (only for initial layouting).
         // Otherwise, unchanged fraction columns can change in size after resizing a column.
         return columns
-          .map(column => column.absoluteWidth ? `${column.absoluteWidth}px` : (hasResizedColumns || !column.isFraction ? column.width : minmax(column.minWidth, column.width, column.maxWidth)))
+          .map(column => column.userWidth ? `${column.userWidth}px` : (hasResizedColumns || !column.isFraction ? column.width : cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width})))
           .join(' ');
       }
 
@@ -289,7 +278,7 @@ export class SciTableComponent<T> {
               return hadOverflow ? `${initialColumnWidths.get(column.name)!}px` : `${column.minWidth}px`;
             }
             // If the table does not overflow, use the actual column definition.
-            return minmax(column.minWidth, temporaryColumnWidths.get(column.name)!, column.maxWidth);
+            return cssMinmax({min: column.minWidth, max: column.maxWidth ?? temporaryColumnWidths.get(column.name)!});
           }
           return temporaryColumnWidths.get(column.name)!;
         })
@@ -299,7 +288,7 @@ export class SciTableComponent<T> {
 
   private scrollFocusedRowIntoViewport(focusedIndex: number): void {
     const viewport = this._viewport().nativeElement;
-    const itemSize = this.itemSizeDimension()?.offsetHeight;
+    const itemSize = this.itemSizeDimension().offsetHeight;
     if (!itemSize) {
       return;
     }
@@ -317,4 +306,14 @@ export class SciTableComponent<T> {
       viewport.scrollTop = focusedRowBottom - viewportHeight;
     }
   }
+}
+
+function provideSciTable(): Provider {
+  return {
+    provide: ɵSCI_TABLE,
+    useFactory: () => {
+      const component = inject(SciTableComponent);
+      return computed(() => component.table() as ɵSciTable<unknown>);
+    },
+  };
 }

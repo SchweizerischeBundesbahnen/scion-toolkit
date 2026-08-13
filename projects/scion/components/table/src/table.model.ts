@@ -98,7 +98,7 @@ export interface SciColumn {
   header: Signal<string>;
   width: string;
   isFraction: boolean;
-  absoluteWidth: number | undefined;
+  userWidth: number | undefined;
   minWidth: number;
   maxWidth: number | undefined;
 }

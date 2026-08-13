@@ -15,7 +15,7 @@
     }
 
     <!-- Place header after rows to naturally paint sticky header on top of the rows. -->
-    @if (sciTable().showColumnFilters() || sciTable().showColumnHeaders()) {
+    @if (sciTable().filterable() || sciTable().headerVisible()) {
       <header #header (wheel)="onHeaderMouseWheel($event)">
         @for (column of sciTable().columns(); track column.name) {
           <sci-column-header [column]="column"/>

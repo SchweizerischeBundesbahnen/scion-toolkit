@@ -11,6 +11,7 @@
 import {from, isObservable, Observable, of} from 'rxjs';
 
 export type MaybeAsync<T> = T | Promise<T> | Observable<T>;
+
 export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
   if (input instanceof Promise || isObservable(input)) {
     return from(input);
@@ -20,11 +21,11 @@ export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
 
 /**
  * CSS minmax for use in a CSS grid.
- * Either sets the max width to the given max or the preferred if no max is given.
  */
-export function minmax(min: number, preferred: string, max: number | undefined): string {
-  const maxDef = max === undefined ? preferred : `${max}px`;
-  return `minmax(${min}px, ${maxDef})`;
+export function cssMinmax(minmax: {min: number; max: number | string}): string {
+  const min = `${minmax.min}px`;
+  const max = typeof minmax.max === 'number' ? `${minmax.max}px` : minmax.max;
+  return `minmax(${min}, ${max})`;
 }
 
 /**

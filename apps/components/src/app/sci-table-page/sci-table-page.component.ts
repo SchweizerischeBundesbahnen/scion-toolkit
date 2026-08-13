@@ -35,7 +35,7 @@ class DateCellComponent {
 
 const data = signal(new Array(100_000).fill(0).map((_, i) => ({
   ...companies[i % companies.length]!,
-  dataId: UUID.randomUUID(),
+  dataId: `${i}`,
 })));
 
 const updates$ = new Subject<Company>();

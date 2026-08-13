@@ -8,6 +8,7 @@
 }
 
 @if (table().hoveredRow() === row || actionToolbar()?.toolbarMenuOpen()) {
+  <!--eslint-disable-next-line @angular-eslint/template/click-events-have-key-events,@angular-eslint/template/interactive-supports-focus -->
   <div class="row-actions" (click)="onActionToolbarClick($event)">
     <sci-toolbar name="toolbar:actions"/>
   </div>
