@@ -103,7 +103,14 @@ export class SciTableComponent<T> {
     const columns = this.sciTable().columns();
 
     return headers.reduce((map, header, i) => {
-      return map.set(columns[i]!.name, header.boundingClientRect().width);
+      // TODO Etienne: Ohne Null-Check kommt es zu einem Fehler beim togglen der Datasource. Weisst du warum? Habe es nicht analysiert
+      const column = columns[i];
+      // return map.set(columns[i]!.name, header.boundingClientRect().width);
+
+      if (column) {
+        map.set(column.name, header.boundingClientRect().width);
+      }
+      return map;
     }, new Map<`column:${string}`, number>());
   });
 
