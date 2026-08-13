@@ -27,10 +27,9 @@
 
   &.loading {
     pointer-events: none;
-    display: flex;
     align-items: center;
 
-    > .skeleton {
+    > div.skeleton {
       border-radius: var(--sci-table-skeleton-border-radius);
       background-color: var(--sci-table-skeleton-color);
       height: 1em;
