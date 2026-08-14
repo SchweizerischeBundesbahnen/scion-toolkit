@@ -102,16 +102,13 @@ export class SciTableComponent<T> {
     const headers = this._headers();
     const columns = this.sciTable().columns();
 
-    return headers.reduce((map, header, i) => {
-      // TODO Etienne: Ohne Null-Check kommt es zu einem Fehler beim togglen der Datasource. Weisst du warum? Habe es nicht analysiert
-      const column = columns[i];
-      // return map.set(columns[i]!.name, header.boundingClientRect().width);
+    // While loading the table definition from storage, the columns are empty.
+    // Calculating the widths only makes sense, when the column definitions are ready.
+    if (columns.length <= 0) {
+      return new Map<`column:${string}`, number>();
+    }
 
-      if (column) {
-        map.set(column.name, header.boundingClientRect().width);
-      }
-      return map;
-    }, new Map<`column:${string}`, number>());
+    return headers.reduce((map, header, i) => map.set(columns[i]!.name, header.boundingClientRect().width), new Map<`column:${string}`, number>());
   });
 
   protected readonly hasHorizontalOverflow = computed(() => {
