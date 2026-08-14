@@ -89,7 +89,7 @@ export class TableRowComponent<T> {
   }
 
   protected onMouseEnter(): void {
-    this.table().setHoveredIndex(this.index());
+    this.table().hoveredIndex.set(this.index());
   }
 
   protected onMouseLeave(event: MouseEvent): void {
@@ -99,12 +99,12 @@ export class TableRowComponent<T> {
       return;
     }
 
-    this.table().setHoveredIndex(undefined);
+    this.table().hoveredIndex.set(-1);
   }
 
   protected onActionToolbarClick(event: PointerEvent): void {
     event.stopPropagation(); // prevent selecting the row
-    this.table().setActiveItem(this.item());
+    this.table().activeItem.set(this.item());
   }
 
   private contributeRowActions(): void {

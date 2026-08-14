@@ -25,7 +25,7 @@ export class TableSelectionService<T> {
     const item = rowsByIndex.get(index)?.item;
     const previousFocusedIndex = table.activeIndex();
 
-    table.setActiveItem(item);
+    table.activeItem.set(item);
 
     if (item === undefined || !table.selectable()) {
       return;
@@ -133,7 +133,7 @@ export class TableSelectionService<T> {
     const table = this._table();
 
     if (item !== undefined) {
-      table.setActiveItem(item);
+      table.activeItem.set(item);
     }
 
     if (!table.selectable() || item === undefined) {

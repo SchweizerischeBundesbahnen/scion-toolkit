@@ -243,7 +243,7 @@ export class SciTableComponent<T> {
         takeUntilDestroyed(),
       )
       .subscribe(scrolling => {
-        this.sciTable().setScrolling(scrolling);
+        this.sciTable().scrolling.set(scrolling);
       });
   }
 

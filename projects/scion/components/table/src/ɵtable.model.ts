@@ -47,12 +47,9 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly resizable: Signal<boolean>;
   public readonly selectable: Signal<'single' | 'multi' | false>;
 
-  private readonly _sortCriteria = signal<SciSortCriterion[]>([]);
-  private readonly _filterCriteria = signal<SciColumnFilter[]>([]);
-  private readonly _globalFilter = signal<string | undefined>(undefined);
-  private readonly _selectedItems = signal(new Map<unknown, T>());
-  private readonly _storedTable = signal<SciTableStorageModel | undefined>(undefined);
-
+  public readonly scrolling = signal(false);
+  public readonly sortCriteria = signal<SciSortCriterion[]>([]);
+  public readonly filterCriteria = signal<SciColumnFilter[]>([]);
   public readonly range = signal<{start: number; end: number} | undefined>(undefined);
   public readonly resizingState = signal<{
     column: SciColumnLike<T>;
@@ -62,6 +59,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     temporaryColumnWidths: Map<`column:${string}`, string>;
   } | undefined>(undefined);
 
+  private readonly _globalFilter = signal<string | undefined>(undefined);
+  private readonly _selectedItems = signal(new Map<unknown, T>());
+  private readonly _storedTable = signal<SciTableStorageModel | undefined>(undefined);
   private readonly _cache = new TableCache<T>();
 
   public readonly pageSize = linkedSignal<{start: number; end: number} | undefined, number>({
@@ -79,34 +79,26 @@ export class ɵSciTable<T> implements SciTable<T> {
     computation: () => undefined as number | undefined,
   });
 
-  private readonly _activeItem = linkedSignal({
+  public readonly activeItem = linkedSignal({
     source: () => this.criteria(),
     computation: () => undefined as T | undefined,
   });
 
-  private readonly _hoveredIndex = linkedSignal({
+  public readonly hoveredIndex = linkedSignal({
     source: () => this.criteria() || this.scrolling(), // unset when criteria change or on scroll start
     computation: () => -1,
   });
 
-  public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria(), globalFilter: this._globalFilter()}));
+  public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), globalFilter: this._globalFilter()}));
   public readonly loading = computed(() => this._cache.values().some(entry => entry.items() === undefined));
-  public readonly scrolling = signal(false);
   public readonly activeIndex = computed(() => {
-    const activeItem = this._activeItem();
+    const activeItem = this.activeItem();
     return activeItem ? this.indexById(this.trackBy(activeItem), this.rowsByIndex()) : -1;
   });
-  public readonly hoveredRow = computed(() => this.rowsByIndex().get(this._hoveredIndex()));
+  public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
-
   public readonly rowsByIndex = this._cache.rowByIndex;
-  public readonly sortCriteria = this._sortCriteria.asReadonly();
-  public readonly filterCriteria = this._filterCriteria.asReadonly();
-  public readonly globalFilter = this._globalFilter.asReadonly();
-  public readonly activeItem = this._activeItem.asReadonly();
-  public readonly hoveredIndex = this._hoveredIndex.asReadonly();
-
   public readonly rows = this.computeRows();
 
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T>) {
@@ -144,7 +136,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     const pageSize = this.pageSize();
     const sortCriteria = this.sortCriteria();
     const columnFilters = this.filterCriteria();
-    const globalFilter = this.globalFilter();
+    const globalFilter = this._globalFilter();
 
     const pages = this.pagesByRange(start, end, pageSize);
     const requests = pages.map(page => {
@@ -222,7 +214,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       return;
     }
 
-    this._sortCriteria.update(sort => {
+    this.sortCriteria.update(sort => {
       const existing = sort.find(sc => sc.columnName === columnName);
       const other = sort.filter(sc => sc !== existing);
 
@@ -247,7 +239,7 @@ export class ɵSciTable<T> implements SciTable<T> {
         return;
       }
 
-      this._filterCriteria.update(filter => {
+      this.filterCriteria.update(filter => {
         const other = filter.filter(f => f.columnName !== options.columnName);
         if (text === null) {
           return other;
@@ -264,20 +256,12 @@ export class ɵSciTable<T> implements SciTable<T> {
     }
   }
 
-  public setActiveItem(item: T | undefined): void {
-    this._activeItem.set(item);
-  }
-
   public setHoveredIndex(index: number | undefined): void {
-    this._hoveredIndex.set(index ?? -1);
+    this.hoveredIndex.set(index ?? -1);
   }
 
   public updateSelectedItems(updateFn: (ids: Map<unknown, T>) => Map<unknown, T>): void {
     this._selectedItems.update(updateFn);
-  }
-
-  public setScrolling(scrolling: boolean): void {
-    this.scrolling.set(scrolling);
   }
 
   public dispose(): void {
@@ -309,7 +293,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       const pageSize = this.pageSize();
       const sortCriteria = this.sortCriteria();
       const columnFilters = this.filterCriteria();
-      const globalFilter = this.globalFilter();
+      const globalFilter = this._globalFilter();
       if (!range) {
         return;
       }
