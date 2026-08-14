@@ -14,7 +14,8 @@ import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {TableSelectionService} from '../table-selection.service';
 import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/table-overlay.component';
-import {SciToolbarComponent} from '@scion/components/menu';
+import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
+import {UUID} from '@scion/toolkit/uuid';
 
 @Component({
   selector: 'sci-table-row',
@@ -25,6 +26,7 @@ import {SciToolbarComponent} from '@scion/components/menu';
     '[class.active]': 'isActive()',
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
+    '[class.hover]': 'isHovered()',
     '(click)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick()',
     '(keydown.enter)': 'onRowEnter()',
@@ -52,7 +54,14 @@ export class TableRowComponent<T> {
   protected readonly loading = computed(() => this.item() === undefined); // Rows are initialized with an undefined item, before data is loaded
   protected readonly isActive = computed(() => this.item() !== undefined && this.item() === this.table().activeItem());
   protected readonly isSelected = computed(() => this.table().selectedIds().has(this.id()));
-  protected readonly actionToolbar = viewChild(SciToolbarComponent);
+  protected readonly isHovered = computed(() => this.table().hoveredRow() === this.row());
+  protected readonly rowActionToolbar = viewChild(SciToolbarComponent);
+
+  protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
+
+  constructor() {
+    this.contributeRowActions();
+  }
 
   public getCellWidth(columnId: string): number {
     return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;
@@ -85,15 +94,26 @@ export class TableRowComponent<T> {
 
   protected onMouseLeave(event: MouseEvent): void {
     const next = event.relatedTarget;
-    if (next instanceof Element && next.closest(`${TABLE_OVERLAY_SELECTOR}, sci-toolbar`)) {
+    // Do not unset hovered row when hovering a column resize splitter.
+    if (next instanceof Element && next.closest(TABLE_OVERLAY_SELECTOR)) {
       return;
     }
-    // Only hide row actions when leaving the row and not hovering the actions itself or a column resize splitter (overlay).
+
     this.table().setHoveredIndex(undefined);
   }
 
   protected onActionToolbarClick(event: PointerEvent): void {
     event.stopPropagation(); // prevent selecting the row
     this.table().setActiveItem(this.item());
+  }
+
+  private contributeRowActions(): void {
+    contributeMenu(this.rowActionsToolbarName, toolbar => {
+      const item = this.row().item;
+      const rowActionsFactoryFn = this.table().rowActions;
+      if (item && rowActionsFactoryFn) {
+        rowActionsFactoryFn(item, toolbar);
+      }
+    });
   }
 }

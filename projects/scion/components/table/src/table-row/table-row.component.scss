@@ -6,7 +6,7 @@
   user-select: none; // has to be disabled because of selection
   border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
 
-  &:hover {
+  &.hover {
     background-color: var(--sci-table-row-hover-color);
   }
 
@@ -37,19 +37,17 @@
     }
   }
 
-  > div.row-actions {
+  > sci-toolbar.row-actions {
     position: sticky;
     right: var(--sci-table-cell-horizontal-padding); // prevent hiding vertical scrollbar
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
+    justify-self: end;
+    align-self: center;
+    background-color: var(--sci-table-background-color);
+    border-radius: var(--sci-corner);
+    padding: 1px;
 
-    > sci-toolbar {
-      // TODO improve visual
-      background-color: var(--sci-table-background-color);
-      border-radius: var(--sci-corner);
-      padding: 1px;
+    &:empty {
+      display: none;
     }
   }
 }

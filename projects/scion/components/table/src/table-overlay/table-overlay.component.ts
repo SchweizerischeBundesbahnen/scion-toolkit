@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, ElementRef, inject, input, output, Signal, viewChildren} from '@angular/core';
+import {Component, computed, ElementRef, inject, input, output, signal, Signal, viewChildren} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
 import {SciColumnLike} from '../table.model';
@@ -40,8 +40,9 @@ export class TableOverlayComponent<T> {
   protected table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
 
   private readonly _splitters = viewChildren(SciSplitterComponent, {read: ElementRef});
+  private readonly _hovered = signal(false);
+  private readonly _resizing = computed(() => this.table().resizingState() !== undefined);
   private readonly _columnWidths$ = toObservable(this.columnWidths);
-  protected readonly resizing = computed(() => this.table().resizingState() !== undefined);
 
   protected onResizeStart(column: SciColumnLike<T>): void {
     this.table().resizingState.set({
@@ -109,6 +110,11 @@ export class TableOverlayComponent<T> {
     }));
 
     this.table().resizingState.set(undefined);
+
+    // Clear the hovered row when resizing ends outside the splitter (for example, above or below it).
+    if (!this._hovered()) {
+      this.table().setHoveredIndex(undefined);
+    }
   }
 
   public async onResizeAuto(column: SciColumnLike<T>): Promise<void> {
@@ -133,10 +139,18 @@ export class TableOverlayComponent<T> {
     this.onResizeEnd();
   }
 
+  protected onMouseEnter(): void {
+    this._hovered.set(true);
+  }
+
   protected onMouseLeave(): void {
-    // Reset hovered item on mouse leave, because hovering a splitter prevents the reset.
-    // This makes sure the row actions disappear when leaving a splitter for another element than a row (i.e. the header)
-    this.table().setHoveredIndex(undefined);
+    this._hovered.set(false);
+
+    // Do not clear the hovered row while dragging the resize handle, or quick movements will accidentally clear it.
+    // If the mouse leaves the splitter during drag (above or below), the hovered row is unset when resizing ends.
+    if (!this._resizing()) {
+      this.table().setHoveredIndex(undefined);
+    }
   }
 
   protected onMouseWheel(event: WheelEvent): void {

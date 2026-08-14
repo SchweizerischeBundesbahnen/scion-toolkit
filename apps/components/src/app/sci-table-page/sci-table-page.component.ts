@@ -18,7 +18,6 @@ import {toObservable} from '@angular/core/rxjs-interop';
 import {UUID} from '@scion/toolkit/uuid';
 import {startWith, switchMap} from 'rxjs/operators';
 import {createDestroyableInjector} from '@scion/components/common';
-import {contributeMenu} from '@scion/components/menu';
 
 @Component({
   selector: 'app-date-cell',
@@ -127,6 +126,7 @@ export default class SciTablePageComponent {
     rowActions: (company, toolbar) => toolbar
       .addToolbarButton({
         icon: 'scion.delete',
+        accelerator: {key: 'delete'},
         onSelect: () => data.update(companies => companies.filter(c => c.dataId !== company.dataId)),
       })
       .addToolbarButton({
@@ -189,48 +189,6 @@ export default class SciTablePageComponent {
         ));
       });
     });
-
-    contributeMenu('toolbar:actions', toolbar => toolbar
-      .addToolbarButton({
-        icon: 'scion.delete',
-        onSelect: () => console.log('>>> delete'),
-      })
-      .addToolbarButton({
-        icon: 'content_copy',
-        onSelect: () => console.log('>>> copy'),
-      })
-      .addToolbarMenu({
-          icon: 'scion.more_vertical',
-          visualMenuIndicator: false,
-        }, menu => menu
-          .addMenuItem({
-            label: 'Edit',
-            onSelect: () => console.log('edit'),
-          })
-          .addMenuItem({
-            label: 'Duplicate',
-            onSelect: () => console.log('duplicate'),
-          })
-          .addMenu({label: 'SubMenu'}, menu => menu
-            .addMenuItem({
-              label: 'Delete Delete Delete Delete Delete Delete Delete',
-              onSelect: () => console.log('delete'),
-            }))
-          .addMenu({label: 'Actions'}, menu => menu
-            .addMenuItem({
-              label: 'Copy to...',
-              onSelect: () => console.log('copy'),
-            })
-            .addMenuItem({
-              label: 'Move to...',
-              onSelect: () => console.log('move'),
-            })
-            .addMenuItem({
-              label: 'Info...',
-              onSelect: () => console.log('info'),
-            })),
-      ),
-    )
   }
 
   protected createTable(settings: {slowDataSource: boolean; columns: {id: boolean; code: boolean}}, table: SciTableFactory<Company>): SciTableFactory<Company> {

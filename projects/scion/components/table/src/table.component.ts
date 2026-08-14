@@ -8,10 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, NgZone, output, Provider, signal, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, NgZone, output, Provider, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciTable} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
-import {toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {concat, fromEvent, map, of, switchMap, timer} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollbarComponent} from '@scion/components/viewport';
@@ -19,7 +19,6 @@ import {startWith} from 'rxjs/operators';
 import {cssMinmax} from './common';
 import {dimension} from '@scion/components/dimension';
 import {TableSelectionService} from './table-selection.service';
-import {contributeMenu} from '@scion/components/menu';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
@@ -35,7 +34,7 @@ import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/s
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
     '[style.--ɵsci-table-columns]': 'columnWidths()',
-    '[style.--ɵsci-table-scrolling]': 'scrolling() ? `true` : null',
+    '[style.--ɵsci-table-scrolling]': 'sciTable().scrolling() ? `true` : null',
     '[style.--ɵsci-table-resizing]': 'resizing() ? `true` : null',
     '[style.--ɵsci-table-width]': 'tableWidth()',
     '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
@@ -81,9 +80,6 @@ export class SciTableComponent<T> {
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly itemSize = computed(() => this.itemSizeDimension().clientHeight);
 
-  protected readonly rowActionToolbarName = computed(() => `toolbar:${this.sciTable().instanceId}` as const);
-
-  protected readonly scrolling = this.computeScrolling(this._viewport);
   protected readonly resizing = computed(() => !!this.sciTable().resizingState());
   protected readonly columnWidths = this.computeColumnWidths();
   protected readonly headerDimension = dimension(this._header);
@@ -104,7 +100,7 @@ export class SciTableComponent<T> {
 
     // While loading the table definition from storage, the columns are empty.
     // Calculating the widths only makes sense, when the column definitions are ready.
-    if (columns.length <= 0) {
+    if (!columns.length) {
       return new Map<`column:${string}`, number>();
     }
 
@@ -129,10 +125,9 @@ export class SciTableComponent<T> {
     return !hasHorizontalOverflow && hasFullFractionColumn ? '100%' : `${this.viewportClientDimension().offsetWidth}px`;
   });
 
-  private readonly _scrollTop = signal(0);
+  private readonly _scrollTop = this.computeScrollTop();
 
   constructor() {
-    this.setupToolbar();
     this.installActiveItemWatcher();
     this.installDimensionWatcher();
     this.installCriteriaListener();
@@ -166,24 +161,6 @@ export class SciTableComponent<T> {
   }
 
   /**
-   * The row id is taken from the table model and used to create the row-actions toolbar.
-   * The toolbar creation needs to be in an effect because the {@link SciTable} model is passed as an input to this component.
-   */
-  private setupToolbar(): void {
-    effect(onCleanup => {
-      const id = this.rowActionToolbarName();
-      const menu = untracked(() => contributeMenu(id, toolbar => {
-        const row = this.sciTable().hoveredRow();
-        if (row?.item) {
-          this.sciTable().rowActions?.(row.item, toolbar);
-        }
-      }, {injector: this._injector}));
-
-      onCleanup(() => menu.dispose());
-    });
-  }
-
-  /**
    * Sets the visible row count based on the internal table model.
    * The count is calculated based on container and item size.
    */
@@ -210,24 +187,21 @@ export class SciTableComponent<T> {
   }
 
   /**
-   * Updates the range of currently visible rows on scroll.
+   * Tracks {@link HTMLElement.scrollTop} of the viewport.
    */
-  private installScrollListener(): void {
-    effect(onCleanup => {
-      const viewport = this._viewport().nativeElement;
+  private computeScrollTop(): Signal<number> {
+    const zone = inject(NgZone);
 
-      untracked(() => {
-        const subscription = fromEvent(viewport, 'scroll', {passive: true}).pipe(
-          startWith(null),
-          subscribeIn(fn => this._zone.runOutsideAngular(fn)),
-        ).subscribe(() => {
-          this._scrollTop.set(viewport.scrollTop);
-          this.sciTable().setHoveredIndex(undefined);
-        });
-
-        onCleanup(() => subscription.unsubscribe());
-      });
-    });
+    return toSignal(toObservable(this._viewport)
+      .pipe(
+        switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll', {passive: true})
+          .pipe(
+            startWith(undefined),
+            subscribeIn(fn => zone.runOutsideAngular(fn)),
+            map(() => viewport.nativeElement.scrollTop),
+          ),
+        ),
+      ), {initialValue: 0});
   }
 
   private installActiveItemWatcher(): void {
@@ -238,21 +212,25 @@ export class SciTableComponent<T> {
         return;
       }
 
-      untracked(() => this.scrollFocusedRowIntoViewport(activeIndex));
+      untracked(() => this.scrollActiveRowIntoViewport(activeIndex));
     });
   }
 
   /**
-   * Computes whether currently scrolling the viewport.
+   * Tracks whether currently scrolling the viewport.
    */
-  private computeScrolling(viewport: Signal<ElementRef<HTMLElement>>): Signal<boolean> {
+  private installScrollListener(): void {
     const zone = inject(NgZone);
 
-    return toSignal(toObservable(viewport)
+    toObservable(this._viewport)
       .pipe(
         switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll', {passive: true}).pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))),
         switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
-      ), {initialValue: false});
+        takeUntilDestroyed(),
+      )
+      .subscribe(scrolling => {
+        this.sciTable().setScrolling(scrolling);
+      });
   }
 
   private computeColumnWidths(): Signal<string> {
@@ -290,24 +268,24 @@ export class SciTableComponent<T> {
     });
   }
 
-  private scrollFocusedRowIntoViewport(focusedIndex: number): void {
+  private scrollActiveRowIntoViewport(activeRowIndex: number): void {
     const viewport = this._viewport().nativeElement;
     const itemSize = this.itemSizeDimension().offsetHeight;
     if (!itemSize) {
       return;
     }
 
-    const focusedRowTop = focusedIndex * itemSize;
-    const focusedRowBottom = focusedRowTop + itemSize;
-    const viewportHeight = viewport.clientHeight;
-    const scrollTop = viewport.scrollTop;
-    const viewportBottom = scrollTop + viewportHeight;
+    const activeRowTop = activeRowIndex * itemSize;
+    const activeRowBottom = activeRowTop + itemSize;
+    const viewportHeight = viewport.clientHeight - this._headerHeight();
+    const viewportClientTop = viewport.scrollTop;
+    const viewportClientBottom = viewportClientTop + viewportHeight;
 
-    if (focusedRowTop < scrollTop) {
-      viewport.scrollTop = focusedRowTop;
+    if (activeRowTop < viewportClientTop) {
+      viewport.scrollTop = activeRowTop;
     }
-    else if (focusedRowBottom > viewportBottom) {
-      viewport.scrollTop = focusedRowBottom - viewportHeight;
+    else if (activeRowBottom > viewportClientBottom) {
+      viewport.scrollTop = activeRowBottom - viewportHeight;
     }
   }
 }

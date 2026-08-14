@@ -15,7 +15,6 @@ import {ɵSciTableFactory} from './ɵtable.factory';
 import {coerceObservable, rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciColumnDescriptors} from './table.factory';
-import {UUID} from '@scion/toolkit/uuid';
 import {coerceSignal} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
 import {arrayDataSource} from './ɵarray-data-source';
@@ -34,7 +33,6 @@ export class ɵSciTable<T> implements SciTable<T> {
   private readonly _tableStorage = inject(SCI_TABLE_STORAGE);
   private readonly _injector = inject(Injector);
 
-  public readonly instanceId = UUID.randomUUID();
   public readonly name: `scion.components.table:${string}`;
   public readonly columns: WritableSignal<SciColumnLike<T>[]>;
   public readonly rowActions?: SciRowActionFactoryFn<T>;
@@ -87,12 +85,13 @@ export class ɵSciTable<T> implements SciTable<T> {
   });
 
   private readonly _hoveredIndex = linkedSignal({
-    source: () => this.criteria(),
+    source: () => this.criteria() || this.scrolling(), // unset when criteria change or on scroll start
     computation: () => -1,
   });
 
   public readonly criteria = computed(() => ({sort: this._sortCriteria(), filter: this._filterCriteria(), globalFilter: this._globalFilter()}));
   public readonly loading = computed(() => this._cache.values().some(entry => entry.items() === undefined));
+  public readonly scrolling = signal(false);
   public readonly activeIndex = computed(() => {
     const activeItem = this._activeItem();
     return activeItem ? this.indexById(this.trackBy(activeItem), this.rowsByIndex()) : -1;
@@ -276,6 +275,10 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public updateSelectedItems(updateFn: (ids: Map<unknown, T>) => Map<unknown, T>): void {
     this._selectedItems.update(updateFn);
+  }
+
+  public setScrolling(scrolling: boolean): void {
+    this.scrolling.set(scrolling);
   }
 
   public dispose(): void {
