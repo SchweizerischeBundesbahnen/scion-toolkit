@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, NgZone, output, Provider, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, NgZone, output, Provider, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciTable} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
@@ -22,9 +22,12 @@ import {TableSelectionService} from './table-selection.service';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
-import {TableOverlayComponent} from './table-overlay/table-overlay.component';
+import {ColumnSplittersComponent} from './table-overlay/column-splitters.component';
 import {SciTextPipe} from '@scion/components/text';
 import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/spinner-throbber.component';
+import {SciTableGridComponent} from './table-grid.component';
+import {SciTableBodyComponent} from './table-body.component';
+import {SciTableHeaderComponent} from './table-header.component';
 
 @Component({
   selector: 'sci-table',
@@ -39,6 +42,9 @@ import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/s
     '[style.--ɵsci-table-width]': 'tableWidth()',
     '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
     '[style.--ɵsci-table-virtual-scroll-offset-bottom]': '`${virtualScrollOffsetBottom()}px`',
+    // Header visible cannot be computed inside CSS with :has because Firefox currently has a bug which does not allow :has on a ShadowRoot.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1979910
+    '[style.--ɵsci-table-header-visible]': 'headerVisible() ? `true` : null',
   },
   imports: [
     SciScrollbarComponent,
@@ -47,7 +53,10 @@ import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/s
     TableRowComponent,
     SciTextPipe,
     SciSpinnerThrobberComponent,
-    TableOverlayComponent,
+    ColumnSplittersComponent,
+    SciTableGridComponent,
+    SciTableBodyComponent,
+    SciTableHeaderComponent,
 
   ],
   providers: [
@@ -62,23 +71,23 @@ export class SciTableComponent<T> {
   public readonly primaryAction = output<T>();
 
   private readonly _viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
-  private readonly _viewportClient = viewChild.required<ElementRef<HTMLElement>>('viewport_client');
-  private readonly _header = viewChild<ElementRef<HTMLElement>>('header');
+  private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
+  private readonly _header = viewChild(SciTableHeaderComponent, {read: ElementRef});
+  private readonly _tableBody = viewChild(SciTableBodyComponent, {read: ElementRef});
   private readonly _headers = viewChildren(ColumnHeaderComponent);
   private readonly _itemSizeElement = viewChild.required<ElementRef<HTMLElement>>('itemSizeElement');
   protected readonly rows = viewChildren(TableRowComponent);
 
-  private readonly _zone = inject(NgZone);
-  private readonly _injector = inject(Injector);
   private readonly _headerHeight = computed(() => this.headerDimension()?.offsetHeight ?? 0);
 
-  // TODO change properties to private if not used in the template or host binding
-  protected readonly viewportDimension = dimension(this._viewport);
-  protected readonly viewportClientDimension = dimension(this._viewportClient);
-  protected readonly itemSizeDimension = dimension(this._itemSizeElement);
+  private readonly _viewportDimension = dimension(this._viewport);
+  private readonly _viewportClientDimension = dimension(this._viewportClient);
+  private readonly _itemSizeDimension = dimension(this._itemSizeElement);
+  private readonly _tableBodyDimension = dimension(this._tableBody);
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
-  protected readonly itemSize = computed(() => this.itemSizeDimension().clientHeight);
+  protected readonly itemSize = computed(() => this._itemSizeDimension().clientHeight);
+  protected readonly headerVisible = computed(() => this.sciTable().filterable() || this.sciTable().headerVisible())
 
   protected readonly resizing = computed(() => !!this.sciTable().resizingState());
   protected readonly columnWidths = this.computeColumnWidths();
@@ -108,21 +117,25 @@ export class SciTableComponent<T> {
   });
 
   protected readonly hasHorizontalOverflow = computed(() => {
-    const viewportWidth = this.viewportDimension().clientWidth;
-    const viewportClientWidth = this.viewportClientDimension().offsetWidth;
-    return viewportWidth > viewportClientWidth;
+    const viewportWidth = this._viewportDimension().clientWidth;
+    const viewportClientWidth = this._viewportClientDimension().offsetWidth;
+    return viewportClientWidth > viewportWidth;
   });
 
   /**
-   * A grid will never grow beyond its parent unless explicitly set, that is why we need to set the table width.
+   * An element will never grow beyond its parent unless explicitly set, that is why we need to set the table width.
    * This allows the grid to overflow when resizing.
    */
   protected readonly tableWidth = computed(() => {
-    const hasHorizontalOverflow = this.hasHorizontalOverflow();
+    const viewportWidth = this._viewportDimension().clientWidth;
+    // ViewportClient cannot be used, because it does not grow with its children.
+    const tableBodyWidth = this._tableBodyDimension()?.offsetWidth ?? 0;
     const hasFullFractionColumn = this.sciTable().columns().some(column => column.isFraction && !column.userWidth && !column.maxWidth);
 
+    // console.log(viewportWidth, tableBodyWidth);
+
     // Only allow full width table when at least one column takes the remaining space.
-    return !hasHorizontalOverflow && hasFullFractionColumn ? '100%' : `${this.viewportClientDimension().offsetWidth}px`;
+    return tableBodyWidth < viewportWidth && hasFullFractionColumn ? '100%' : `${tableBodyWidth}px`;
   });
 
   private readonly _scrollTop = this.computeScrollTop();
@@ -166,8 +179,8 @@ export class SciTableComponent<T> {
    */
   private installDimensionWatcher(): void {
     effect(() => {
-      const viewportDimension = this.viewportDimension();
-      const itemSize = this.itemSizeDimension().offsetHeight;
+      const viewportDimension = this._viewportDimension();
+      const itemSize = this._itemSizeDimension().offsetHeight;
       const overscan = this.sciTable().bufferSize();
       const scrollTop = this._scrollTop() - this._headerHeight();
       if (itemSize) {
@@ -175,6 +188,7 @@ export class SciTableComponent<T> {
         const firstVisible = Math.floor(scrollTop / itemSize);
         const start = Math.max(0, firstVisible - overscan);
         const end = start + visibleRowCount;
+        console.log(viewportDimension.clientWidth, itemSize, this._headerHeight());
         this.sciTable().range.update(range => {
           // Only update range signal if there is an actual change.
           if (start === range?.start && end === range.end) {
@@ -246,7 +260,7 @@ export class SciTableComponent<T> {
         // Else use the min/max grid definition (only for initial layouting).
         // Otherwise, unchanged fraction columns can change in size after resizing a column.
         return columns
-          .map(column => column.userWidth ? `${column.userWidth}px` : (hasResizedColumns || !column.isFraction ? column.width : cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width})))
+          .map(column => column.userWidth ? `${column.userWidth}px` : (hasResizedColumns && !column.isFraction ? column.width : cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width})))
           .join(' ');
       }
 
@@ -270,7 +284,7 @@ export class SciTableComponent<T> {
 
   private scrollActiveRowIntoViewport(activeRowIndex: number): void {
     const viewport = this._viewport().nativeElement;
-    const itemSize = this.itemSizeDimension().offsetHeight;
+    const itemSize = this._itemSizeDimension().offsetHeight;
     if (!itemSize) {
       return;
     }

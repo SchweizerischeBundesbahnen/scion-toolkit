@@ -11,7 +11,7 @@
 import {ComponentFixture} from '@angular/core/testing';
 import {DebugElement} from '@angular/core';
 import {By} from '@angular/platform-browser';
-import {TableOverlayComponent} from './table-overlay/table-overlay.component';
+import {ColumnSplittersComponent} from './table-overlay/column-splitters.component';
 import {SciColumnLike} from '@scion/components/table';
 
 export class TablePo {
@@ -35,8 +35,8 @@ export class TablePo {
     return this.debugElement.queryAll(By.css(`sci-column-header`)).map(element => new ColumnPo(element, this._fixture));
   }
 
-  public get overlay(): TableOverlayComponent<unknown> {
-    return this.debugElement.query(By.directive(TableOverlayComponent)).componentInstance as TableOverlayComponent<unknown>;
+  public get overlay(): ColumnSplittersComponent<unknown> {
+    return this.debugElement.query(By.directive(ColumnSplittersComponent)).componentInstance as ColumnSplittersComponent<unknown>;
   }
 
   public get scrollTop(): number {

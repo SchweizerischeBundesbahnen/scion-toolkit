@@ -13,7 +13,7 @@ import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {TableSelectionService} from '../table-selection.service';
-import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/table-overlay.component';
+import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/column-splitters.component';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 

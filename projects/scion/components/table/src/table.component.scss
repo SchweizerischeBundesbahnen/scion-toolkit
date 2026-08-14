@@ -5,22 +5,17 @@
   background-color: var(--sci-table-background-color);
   display: block;
   flex-direction: column;
-  overflow: hidden; // TODO document: required to have the table overflowing
+  overflow: hidden; // viewport should not grow beyond host height
 
   @include sci-scrollbar.scrollbar-hide-when-inactive();
-
-  // Indicate if header visible.
-  &:has(> div.viewport > div.viewport-client > header) {
-    --ɵsci-table-header-visible: true;
-  }
 
   > div.viewport {
     height: 100%;
     overflow: auto;
     scrollbar-width: none;
 
-    > div.viewport-client {
-      //width: var(--ɵsci-table-width); // width cannot be set on sciScrollable viewports, because it is overwritten.
+    > sci-table-grid {
+      width: var(--ɵsci-table-width); // width cannot be set on sciScrollable viewports, because it is overwritten.
       display: grid;
       grid-template-columns: var(--ɵsci-table-columns) 0; // last column used for row actions
       grid-auto-rows: min-content;
@@ -36,7 +31,7 @@
         outline: none;
       }
 
-      > header {
+      > sci-table-header {
         grid-row: 1; // The sci-table-overlay positioning requires all grid items to be positioned.
         display: grid;
         grid-template-columns: subgrid;
@@ -56,7 +51,7 @@
         //}
       }
 
-      > div.rows {
+      > sci-table-body {
         grid-row: 2; // The sci-table-overlay positioning requires all grid items to be positioned.
         @container not style(--ɵsci-table-header-visible: true) {
           grid-row: 1;
@@ -83,33 +78,18 @@
         grid-area: 1 / 1 / -1 / -1; // Overlay should fill the whole table grid.
       }
     }
-
-    //> .row-actions {
-    //  position: sticky; // actions should always stick to the right of the viewport.
-    //  top: var(--ɵsci-table-toolbar-offset);
-    //  right: 0;
-    //  height: var(--sci-table-row-height); // match the height of row elements.
-    //  width: 0; // should not take up space next to the table.
-    //  display: flex; // vertically position actions in the middle of the row.
-    //  align-items: center;
-    //  justify-content: flex-end;
-    //
-    //  > sci-toolbar {
-    //    margin-right: var(--sci-table-cell-horizontal-padding);
-    //    background-color: var(--sci-table-background-color);
-    //    border-radius: var(--sci-corner);
-    //  }
-    //}
   }
 
   > sci-scrollbar {
     @include sci-scrollbar.scrollbar-position();
   }
 
-  &:has(header) > sci-scrollbar[direction="vscroll"] {
-    position-anchor: --header; // TODO Anlayse why not working in firefox
-    top: anchor(bottom);
-    right: 0;
+  @container style(--ɵsci-table-header-visible: true) {
+    > sci-scrollbar[direction="vscroll"] {
+      position-anchor: --header;
+      top: anchor(bottom);
+      right: 0;
+    }
   }
 
   > sci-spinner-throbber {

@@ -1,33 +1,31 @@
 <div class="viewport e2e-viewport" #viewport>
-  <!-- [DISCUSS] Consider changing to named component sci-table-grid; grid CSS definition  -->
-  <div class="viewport-client" sciTableKeyboardNavigator tabindex="0" #viewport_client>
+  <sci-table-grid sciTableKeyboardNavigator tabindex="0">
 
     @if (sciTable().range(); as range) {
-      <!-- [DISCUSS] Consider renaming to viewport-client -->
-      <div class="rows">
+      <sci-table-body>
         <!-- Track index to reuse the table row elements -->
         @for (row of sciTable().rows(); track $index) {
           <sci-table-row [row]="row" [index]="range.start + $index" (primaryAction)="onRowPrimaryAction(row.item)"/>
         } @empty {
           <div class="empty-state">{{('%scion.components.no_items.message' | sciText)()}}</div>
         }
-      </div>
+      </sci-table-body>
     }
 
     <!-- Place header after rows to naturally paint sticky header on top of the rows. -->
-    @if (sciTable().filterable() || sciTable().headerVisible()) {
-      <header #header (wheel)="onHeaderMouseWheel($event)">
+    @if (headerVisible()) {
+      <sci-table-header (wheel)="onHeaderMouseWheel($event)">
         @for (column of sciTable().columns(); track column.name) {
           <sci-column-header [column]="column"/>
         }
-      </header>
+      </sci-table-header>
     }
 
     <sci-table-overlay [columnWidths]="absoluteColumnWidths()"
                        [hasOverflow]="hasHorizontalOverflow()"
                        [rows]="rows()"
                        (scrollBy)="onOverlayScrollBy($event)"/>
-  </div>
+  </sci-table-grid>
 </div>
 
 <sci-scrollbar direction="hscroll" [viewport]="viewport"/>

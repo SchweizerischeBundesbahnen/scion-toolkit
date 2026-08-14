@@ -26,10 +26,10 @@ export const TABLE_OVERLAY_SELECTOR = 'sci-table-overlay';
   host: {
     '(wheel)': 'onMouseWheel($event)',
   },
-  templateUrl: './table-overlay.component.html',
-  styleUrl: './table-overlay.component.scss',
+  templateUrl: './column-splitters.component.html',
+  styleUrl: './column-splitters.component.scss',
 })
-export class TableOverlayComponent<T> {
+export class ColumnSplittersComponent<T> {
 
   public readonly columnWidths = input.required<Map<`column:${string}`, number>>();
   public readonly hasOverflow = input.required<boolean>();

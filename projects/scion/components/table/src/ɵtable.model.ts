@@ -74,7 +74,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   });
 
   // Reset totalCount on criteria change, to show skeletons instead of stale data while loading.
-  private readonly _totalCount = linkedSignal({
+  public readonly totalCount = linkedSignal({
     source: () => this.criteria(),
     computation: () => undefined as number | undefined,
   });
@@ -106,7 +106,6 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly globalFilter = this._globalFilter.asReadonly();
   public readonly activeItem = this._activeItem.asReadonly();
   public readonly hoveredIndex = this._hoveredIndex.asReadonly();
-  public readonly totalCount = this._totalCount.asReadonly();
 
   public readonly rows = this.computeRows();
 
@@ -187,7 +186,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       columnFilters,
     })).subscribe({
       next: result => {
-        this._totalCount.set(result.totalCount);
+        this.totalCount.set(result.totalCount);
         items.set(result.items);
       },
       error: err => {
@@ -444,7 +443,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       const pageSize = this.pageSize();
       const rowsByIndex = this.rowsByIndex();
       const range = this.range();
-      const totalCount = this._totalCount();
+      const totalCount = this.totalCount();
       if (!range) {
         return [];
       }
