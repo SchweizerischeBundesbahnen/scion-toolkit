@@ -48,7 +48,7 @@ test.describe('sci-table async datasource', () => {
 
     await expect(table.locateColumnCells(0).first()).toHaveText('Product 1');
 
-    const scrollHeight = await table.verticalViewport.evaluate(vp => vp.scrollHeight);
+    const scrollHeight = await table.viewport.evaluate(vp => vp.scrollHeight);
     await table.scrollViewPort({x: 0, y: scrollHeight});
 
     await expect(table.locateColumnCells(0).last()).toHaveText('Product 10000');
@@ -121,7 +121,7 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await table.rows.first().click({modifiers: ['Shift']});
 
-    await expect(tablePage.selectedItems).toContainText('348');
+    await expect(tablePage.selectedItems).toContainText('345');
   });
 
   test('should select all items with ctrl+a', async ({page}) => {
@@ -133,7 +133,7 @@ test.describe('sci-table async datasource', () => {
     // wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await table.verticalViewport.click();
+    await table.viewport.click();
     await page.keyboard.press('Control+A');
     await expect(tablePage.selectedItems).toContainText('10000');
   });

@@ -24,7 +24,7 @@ export class TablePo {
   }
 
   public get viewport(): HTMLElement {
-    return this.debugElement.query(By.css('.e2e-vertical-viewport')).nativeElement as HTMLElement;
+    return this.debugElement.query(By.css('.e2e-viewport')).nativeElement as HTMLElement;
   }
 
   public get rows(): Array<RowPo> {

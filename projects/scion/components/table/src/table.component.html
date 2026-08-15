@@ -1,8 +1,8 @@
 <div class="viewport e2e-viewport" #viewport>
-  <sci-table-grid sciTableKeyboardNavigator tabindex="0">
+  <sci-table-grid>
 
     @if (sciTable().range(); as range) {
-      <sci-table-body>
+      <sci-table-body sciTableKeyboardNavigator tabindex="0">
         <!-- Track index to reuse the table row elements -->
         @for (row of sciTable().rows(); track $index) {
           <sci-table-row [row]="row" [index]="range.start + $index" (primaryAction)="onRowPrimaryAction(row.item)"/>

@@ -997,7 +997,7 @@ describe('Table', () => {
       const po = new TablePo(fixture);
       await po.autoResize(model.columns()[0]!);
 
-      expect(store).toHaveBeenCalledWith('table:test', '{"columns":[{"name":"column:0","width":100},{"name":"column:1"}]}');
+      expect(store).toHaveBeenCalledWith('scion.components.table:test', '{"columns":[{"name":"column:0","width":100},{"name":"column:1"}]}');
     });
 
     it('should load column widths from storage', async () => {
@@ -1005,7 +1005,7 @@ describe('Table', () => {
         providers: [
           provideTableStorage(class {
             public load(key: string): string {
-              return key === 'table:test' ? JSON.stringify({columns: [{name: 'column:0', width: 100}, {name: 'column:1'}]}) : '';
+              return key === 'scion.components.table:test' ? JSON.stringify({columns: [{name: 'column:0', width: 100}, {name: 'column:1'}]}) : '';
             }
             public store(): void {
               // noop
@@ -1040,6 +1040,8 @@ describe('Table', () => {
       const model = createTable({
         name: 'table:test',
         data: loader,
+        headerVisible: false,
+        filterable: false,
         bufferSize: 0,
         trackBy: item => item.id,
       }, table => table.addNumberColumn(i => i.id));
@@ -1048,6 +1050,7 @@ describe('Table', () => {
         bindings: [inputBinding('table', () => model)],
       });
       (fixture.nativeElement as HTMLElement).style.height = '300px';
+      (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
       const po = new TablePo(fixture);
@@ -1075,12 +1078,15 @@ describe('Table', () => {
         bufferSize: 3,
         trackBy: item => item.id,
         data: loader,
+        headerVisible: false,
+        filterable: false,
       }, table => table.addNumberColumn(i => i.id));
 
       const fixture = TestBed.createComponent(SciTableComponent, {
         bindings: [inputBinding('table', () => model)],
       });
       (fixture.nativeElement as HTMLElement).style.height = '300px';
+      (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
       const po = new TablePo(fixture);
@@ -1269,6 +1275,8 @@ describe('Table', () => {
       const model = createTable({
         name: 'table:test',
         data: loader,
+        headerVisible: false,
+        filterable: false,
         bufferSize: 0,
         trackBy: item => item.id,
       }, table => table.addNumberColumn(i => i.id));
@@ -1277,6 +1285,7 @@ describe('Table', () => {
         bindings: [inputBinding('table', () => model)],
       });
       (fixture.nativeElement as HTMLElement).style.height = '300px';
+      (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
       const po = new TablePo(fixture);

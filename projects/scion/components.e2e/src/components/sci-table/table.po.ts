@@ -22,21 +22,17 @@ export class TablePo {
   public readonly headers: Locator;
   public readonly rows: Locator;
   public readonly viewport: Locator;
-  public readonly verticalViewport: Locator;
-  public readonly keyboardNavigator: Locator;
-  public readonly rowActions: Locator;
+  public readonly body: Locator;
 
   constructor(private _page: Page) {
     this.locator = this._page.locator('sci-table');
     this.filters = this.locator.locator('sci-column-filter');
     this.sortButtons = this.locator.locator('button.e2e-column-sort.sortable');
     this.splitters = this.locator.locator('.e2e-table-splitter');
-    this.rowActions = this.locator.locator('sci-toolbar');
     this.headers = this.locator.locator('sci-column-header button.e2e-column-sort');
     this.rows = this.locator.locator('sci-table-row');
-    this.viewport = this.locator.locator('div.e2e-horizontal-viewport');
-    this.verticalViewport = this.locator.locator('div.e2e-vertical-viewport');
-    this.keyboardNavigator = this.locator.locator('.e2e-table-keyboard-navigator');
+    this.viewport = this.locator.locator('div.e2e-viewport');
+    this.body = this.locator.locator('sci-table-body');
   }
 
   public locateColumnCells(columnIndex: number): Locator {
@@ -53,15 +49,21 @@ export class TablePo {
       new ColumnPo(indexOrHeader, this);
   }
 
+  public viewportBounds(): Promise<DomRect> {
+    return waitUntilStable(async () => fromRect(await this.viewport.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
+  }
+
   public splitterBounds(columnName: `column:${string}`): Promise<DomRect> {
     return waitUntilStable(async () => fromRect(await this.locator.locator(`.e2e-table-splitter[data-column="${columnName}"]`).boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
 
   public async dragSplitter(columnName: `column:${string}`, distance: number): Promise<void> {
     const splitterBounds = await this.splitterBounds(columnName);
-    await this.locator.page().mouse.move(splitterBounds.hcenter, splitterBounds.top);
+    // Drag at header vcenter, because last splitter and scrollbar overlap.
+    const headerBounds = fromRect(await this.headers.first().boundingBox());
+    await this.locator.page().mouse.move(splitterBounds.hcenter, headerBounds.vcenter);
     await this.locator.page().mouse.down();
-    await this.locator.page().mouse.move(splitterBounds.hcenter + distance, splitterBounds.top, {steps: 20});
+    await this.locator.page().mouse.move(splitterBounds.hcenter + distance, headerBounds.vcenter, {steps: 20});
     await this.locator.page().mouse.up();
   }
 
@@ -82,17 +84,10 @@ export class TablePo {
   }
 
   public async scrollViewPort(scroll: 'right' | {x: number; y: number}): Promise<void> {
-    await this.locator.locator('div.e2e-horizontal-viewport').evaluate((element, {scroll}) => {
+    await this.locator.locator('div.e2e-viewport').evaluate((element, {scroll}) => {
       const x = scroll === 'right' ? element.scrollWidth : scroll.x;
-      element.scrollTo(x, 0);
-    }, {scroll});
-
-    if (typeof scroll !== 'object') {
-      return;
-    }
-
-    await this.locator.locator('div.e2e-vertical-viewport').evaluate((element, {scroll}) => {
-      element.scrollTo(0, scroll.y);
+      const y = scroll === 'right' ? element.scrollTop : scroll.y;
+      element.scrollTo(x, y);
     }, {scroll});
   }
 }

@@ -87,7 +87,7 @@ export class SciTableComponent<T> {
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly itemSize = computed(() => this._itemSizeDimension().clientHeight);
-  protected readonly headerVisible = computed(() => this.sciTable().filterable() || this.sciTable().headerVisible())
+  protected readonly headerVisible = computed(() => this.sciTable().filterable() || this.sciTable().headerVisible());
 
   protected readonly resizing = computed(() => !!this.sciTable().resizingState());
   protected readonly columnWidths = this.computeColumnWidths();
@@ -131,8 +131,6 @@ export class SciTableComponent<T> {
     // ViewportClient cannot be used, because it does not grow with its children.
     const tableBodyWidth = this._tableBodyDimension()?.offsetWidth ?? 0;
     const hasFullFractionColumn = this.sciTable().columns().some(column => column.isFraction && !column.userWidth && !column.maxWidth);
-
-    // console.log(viewportWidth, tableBodyWidth);
 
     // Only allow full width table when at least one column takes the remaining space.
     return tableBodyWidth < viewportWidth && hasFullFractionColumn ? '100%' : `${tableBodyWidth}px`;
@@ -188,7 +186,6 @@ export class SciTableComponent<T> {
         const firstVisible = Math.floor(scrollTop / itemSize);
         const start = Math.max(0, firstVisible - overscan);
         const end = start + visibleRowCount;
-        console.log(viewportDimension.clientWidth, itemSize, this._headerHeight());
         this.sciTable().range.update(range => {
           // Only update range signal if there is an actual change.
           if (start === range?.start && end === range.end) {
@@ -260,7 +257,13 @@ export class SciTableComponent<T> {
         // Else use the min/max grid definition (only for initial layouting).
         // Otherwise, unchanged fraction columns can change in size after resizing a column.
         return columns
-          .map(column => column.userWidth ? `${column.userWidth}px` : (hasResizedColumns && !column.isFraction ? column.width : cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width})))
+          .map(column => {
+            if (column.userWidth) {
+              return `${column.userWidth}px`;
+            }
+
+            return hasResizedColumns || !column.isFraction ? column.width : cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width});
+          })
           .join(' ');
       }
 

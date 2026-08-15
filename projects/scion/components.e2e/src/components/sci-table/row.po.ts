@@ -4,9 +4,11 @@ import {DomRect, fromRect} from '../../helper/testing.utils';
 
 export class RowPo {
   public cells: Locator;
+  public rowActions: Locator;
 
   constructor(public locator: Locator) {
     this.cells = this.locator.locator('sci-table-cell');
+    this.rowActions = this.locator.locator('sci-toolbar');
   }
 
   public cell(index: number): CellPo {
@@ -24,5 +26,9 @@ export class RowPo {
 
   public async bounds(): Promise<DomRect> {
     return fromRect(await this.locator.boundingBox());
+  }
+
+  public async rowActionsBounds(): Promise<DomRect> {
+    return fromRect(await this.rowActions.boundingBox());
   }
 }

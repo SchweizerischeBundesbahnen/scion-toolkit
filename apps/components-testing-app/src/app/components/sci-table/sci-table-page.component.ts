@@ -143,10 +143,14 @@ export default class SciTablePageComponent {
             (row: Product) => row.id % 3 === 0 ? 'row:red' : [] :
             undefined,
           rowActions: showRowActions ? (item, toolbar) => {
-            toolbar.addToolbarButton({
-              icon: 'scion.delete',
-              onSelect: () => console.log('delete', item.id),
-            });
+            toolbar.addToolbarMenu({
+              icon: 'scion.more_vertical',
+              visualMenuIndicator: false,
+            }, menu => menu
+              .addMenuItem({
+                label: 'Edit',
+                onSelect: () => console.log('edit', item.id),
+              }));
           } : undefined,
         }, table => this.createTable(table), {injector: this._injector})));
       }
