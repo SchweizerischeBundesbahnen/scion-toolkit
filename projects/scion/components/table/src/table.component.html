@@ -21,7 +21,7 @@
       </sci-table-header>
     }
 
-    <sci-table-overlay [columnWidths]="absoluteColumnWidths()"
+    <sci-column-splitters [columnWidths]="absoluteColumnWidths()"
                        [hasOverflow]="hasHorizontalOverflow()"
                        [rows]="rows()"
                        (scrollBy)="onOverlayScrollBy($event)"/>

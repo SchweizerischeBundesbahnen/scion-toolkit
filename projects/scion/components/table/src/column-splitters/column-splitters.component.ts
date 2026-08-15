@@ -16,10 +16,10 @@ import {TableRowComponent} from '../table-row/table-row.component';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {firstValueFrom, skip} from 'rxjs';
 
-export const TABLE_OVERLAY_SELECTOR = 'sci-table-overlay';
+export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
 
 @Component({
-  selector: TABLE_OVERLAY_SELECTOR,
+  selector: TABLE_SPLITTERS_SELECTOR,
   imports: [
     SciSplitterComponent,
   ],

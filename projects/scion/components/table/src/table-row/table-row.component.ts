@@ -13,7 +13,7 @@ import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {TableSelectionService} from '../table-selection.service';
-import {TABLE_OVERLAY_SELECTOR} from '../table-overlay/column-splitters.component';
+import {TABLE_SPLITTERS_SELECTOR} from '../column-splitters/column-splitters.component';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 
@@ -95,7 +95,7 @@ export class TableRowComponent<T> {
   protected onMouseLeave(event: MouseEvent): void {
     const next = event.relatedTarget;
     // Do not unset hovered row when hovering a column resize splitter.
-    if (next instanceof Element && next.closest(TABLE_OVERLAY_SELECTOR)) {
+    if (next instanceof Element && next.closest(TABLE_SPLITTERS_SELECTOR)) {
       return;
     }
 

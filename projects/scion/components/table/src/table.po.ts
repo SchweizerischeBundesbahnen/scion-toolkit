@@ -11,7 +11,7 @@
 import {ComponentFixture} from '@angular/core/testing';
 import {DebugElement} from '@angular/core';
 import {By} from '@angular/platform-browser';
-import {ColumnSplittersComponent} from './table-overlay/column-splitters.component';
+import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
 import {SciColumnLike} from '@scion/components/table';
 
 export class TablePo {

@@ -22,7 +22,7 @@ import {TableSelectionService} from './table-selection.service';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
-import {ColumnSplittersComponent} from './table-overlay/column-splitters.component';
+import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
 import {SciTextPipe} from '@scion/components/text';
 import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/spinner-throbber.component';
 import {SciTableGridComponent} from './table-grid.component';
