@@ -1,15 +1,20 @@
 import {Locator} from '@playwright/test';
-import {TablePo} from './table.po';
+import {TablePO} from './table.po';
+import {fromRect, waitUntilStable} from '../../helper/testing.utils';
 
-export class ColumnPo {
+export class ColumnPO {
   public locator: Locator;
   public filterLocator: Locator;
 
-  constructor(locatorOrHeader: Locator | string, table: TablePo) {
+  constructor(locatorOrHeader: Locator | string, table: TablePO) {
     this.locator = typeof locatorOrHeader === 'string' ?
       table.locator.locator('sci-column-header', {hasText: locatorOrHeader}) :
       locatorOrHeader;
     this.filterLocator = this.locator.locator('sci-column-filter');
+  }
+
+  public async width(): Promise<number> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).width);
   }
 
   public async sort(): Promise<void> {
@@ -32,9 +37,5 @@ export class ColumnPo {
     else {
       await select.selectOption(value);
     }
-  }
-
-  public async getHeaderWidth(): Promise<number | undefined> {
-    return this.locator.boundingBox().then(b => b?.width);
   }
 }

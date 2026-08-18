@@ -90,3 +90,39 @@ export async function waitUntilAngularStable(page: Page): Promise<void> {
     await (window.__whenAngularStable as () => Promise<void>)();
   });
 }
+
+/**
+ * Checks whether the element maintains a default stacking level, allowing a subsequent DOM sibling (without an explicit z-index) to completely cover it.
+ */
+export function hasDefaultStackingLevel(locator: Locator): Promise<boolean> {
+  return locator.evaluate(async (element: HTMLElement) => {
+    const elementBounds = element.getBoundingClientRect();
+
+    // Create a fixed overlay aligned with the element's bounds.
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = `${elementBounds.top}px`;
+    overlay.style.left = `${elementBounds.left}px`;
+    overlay.style.width = `${elementBounds.width}px`;
+    overlay.style.height = `${elementBounds.height}px`;
+    overlay.style.backgroundColor = 'gray';
+
+    // Insert overlay immediately after the element in DOM order.
+    element.after(overlay);
+
+    // Test that no element overlaps the overlay.
+    try {
+      for (let x = elementBounds.left + 1; x < elementBounds.right - 1; x += 10) {
+        for (let y = elementBounds.top + 1; y < elementBounds.bottom - 1; y += 10) {
+          if (document.elementFromPoint(x, y) !== overlay) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+    finally {
+      overlay.remove();
+    }
+  });
+}

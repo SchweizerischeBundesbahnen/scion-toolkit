@@ -1,8 +1,8 @@
 import {Locator} from '@playwright/test';
-import {CellPo} from './cell.po';
+import {CellPO} from './cell.po';
 import {DomRect, fromRect} from '../../helper/testing.utils';
 
-export class RowPo {
+export class RowPO {
   public cells: Locator;
   public rowActions: Locator;
 
@@ -11,8 +11,8 @@ export class RowPo {
     this.rowActions = this.locator.locator('sci-toolbar');
   }
 
-  public cell(index: number): CellPo {
-    return new CellPo(this.cells.nth(index));
+  public cell(index: number): CellPO {
+    return new CellPO(this.cells.nth(index));
   }
 
   public async click(modifiers?: Array<'Alt' | 'Control' | 'ControlOrMeta' | 'Meta' | 'Shift'>): Promise<void> {

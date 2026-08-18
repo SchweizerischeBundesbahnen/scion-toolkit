@@ -8,11 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {TablePo} from './table.po';
+import {TablePO} from './table.po';
 import {expect} from '@playwright/test';
-import {RowPo} from './row.po';
+import {RowPO} from './row.po';
 
-export function expectTable(table: TablePo): TableMatcher {
+export function expectTable(table: TablePO): TableMatcher {
   return {
     async toHaveColumnSorted(columnIndex: number, dir: 'desc' | 'asc' = 'asc'): Promise<void> {
       await expect(async () => {
@@ -34,12 +34,12 @@ export function expectTable(table: TablePo): TableMatcher {
         for (const row of await table.rows.all()) {
           // Do not use web first assertion since we already opted out with `.all()`
           // This prevents waiting for the 5s timeout in the first try
-          await expect(new RowPo(row).cells.nth(columnIndex).textContent()).resolves.toContain(text);
+          await expect(new RowPO(row).cells.nth(columnIndex).textContent()).resolves.toContain(text);
         }
       }).toPass();
     },
     async toHaveVerticalScroll(): Promise<void> {
-      await expect.poll(() => table.viewport.evaluate(v => v.scrollTop)).toBeGreaterThan(0);
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
     },
     async toHaveHorizontalOverflow(): Promise<void> {
       await expect(table.locator.locator('sci-scrollbar.horizontal.overflow')).toBeAttached();
@@ -50,7 +50,7 @@ export function expectTable(table: TablePo): TableMatcher {
 
     not: {
       async toHaveVerticalScroll(): Promise<void> {
-        await expect.poll(() => table.viewport.evaluate(v => v.scrollTop)).toBe(0);
+        await expect.poll(() => table.scrollTop()).toBe(0);
       },
     },
   };
@@ -58,10 +58,15 @@ export function expectTable(table: TablePo): TableMatcher {
 
 export interface TableMatcher {
   toHaveColumnSorted(columnIndex: number, dir?: 'desc' | 'asc'): Promise<void>;
+
   allCellsToContainText(columnIndex: number, text: string): Promise<void>;
+
   toHaveHorizontalOverflow(): Promise<void>;
+
   toHaveColumnCount(count: number): Promise<void>;
+
   toHaveVerticalScroll(): Promise<void>;
+
   not: {
     toHaveVerticalScroll(): Promise<void>;
   };

@@ -1,7 +1,7 @@
 import {expect} from '@playwright/test';
-import {RowPo} from './row.po';
+import {RowPO} from './row.po';
 
-export function expectRow(row: RowPo): RowMatcher {
+export function expectRow(row: RowPO): RowMatcher {
   return {
     async toBeActive(): Promise<void> {
       await expect(row.locator).toContainClass('active');

@@ -14,7 +14,7 @@ import {By} from '@angular/platform-browser';
 import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
 import {SciColumnLike} from '@scion/components/table';
 
-export class TablePo {
+export class TablePO {
 
   constructor(private _fixture: ComponentFixture<unknown>) {
   }
@@ -27,12 +27,12 @@ export class TablePo {
     return this.debugElement.query(By.css('.e2e-viewport')).nativeElement as HTMLElement;
   }
 
-  public get rows(): Array<RowPo> {
-    return this.debugElement.queryAll(By.css(`sci-table-row`)).map(element => new RowPo(element, this._fixture));
+  public get rows(): Array<RowPO> {
+    return this.debugElement.queryAll(By.css(`sci-table-row`)).map(element => new RowPO(element, this._fixture));
   }
 
-  public get columns(): Array<ColumnPo> {
-    return this.debugElement.queryAll(By.css(`sci-column-header`)).map(element => new ColumnPo(element, this._fixture));
+  public get columns(): Array<ColumnPO> {
+    return this.debugElement.queryAll(By.css(`sci-column-header`)).map(element => new ColumnPO(element, this._fixture));
   }
 
   public get overlay(): ColumnSplittersComponent<unknown> {
@@ -48,7 +48,7 @@ export class TablePo {
     await this._fixture.whenStable();
   }
 
-  public getColumnByHeader(columnName: string): ColumnPo | undefined {
+  public getColumnByHeader(columnName: string): ColumnPO | undefined {
     return this.columns.find(column => column.header === columnName);
   }
 
@@ -72,7 +72,7 @@ export class TablePo {
   }
 }
 
-export class ColumnPo {
+export class ColumnPO {
 
   constructor(private _debugElement: DebugElement, private _fixture: ComponentFixture<unknown>) {
   }
@@ -119,7 +119,7 @@ export class ColumnPo {
   }
 }
 
-export class RowPo {
+export class RowPO {
 
   constructor(private _debugElement: DebugElement, private fixture: ComponentFixture<unknown>) {
   }
@@ -132,8 +132,8 @@ export class RowPo {
     return this.debugElement.nativeElement as HTMLButtonElement;
   }
 
-  public get cells(): Array<CellPo> {
-    return this.debugElement.queryAll(By.css('sci-table-cell')).map(element => new CellPo(element));
+  public get cells(): Array<CellPO> {
+    return this.debugElement.queryAll(By.css('sci-table-cell')).map(element => new CellPO(element));
   }
 
   public hover(): void {
@@ -153,7 +153,7 @@ export class RowPo {
   }
 }
 
-export class CellPo {
+export class CellPO {
 
   constructor(private _debugElement: DebugElement) {
   }

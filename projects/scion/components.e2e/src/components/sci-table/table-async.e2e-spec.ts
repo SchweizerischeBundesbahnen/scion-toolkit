@@ -1,12 +1,12 @@
 import {test} from '../../fixtures';
 import {TablePagePO} from './table-page.po';
-import {TablePo} from './table.po';
+import {TablePO} from './table.po';
 import {expect} from '@playwright/test';
 
 test.describe('sci-table async datasource', () => {
   test('should load pages', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePo(page);
+    const table = new TablePO(page);
     await tablePage.navigate('slow-data-source');
     await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
@@ -15,7 +15,7 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
 
-    await table.scrollViewPort({x: 0, y: 1500});
+    await table.scrollTo({y: 1500});
 
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
@@ -24,7 +24,7 @@ test.describe('sci-table async datasource', () => {
 
   test('should load pages when scrolling with scrollbar', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePo(page);
+    const table = new TablePO(page);
     await tablePage.navigate('slow-data-source');
     await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
@@ -33,7 +33,7 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
 
-    await table.scrollVerticalWithScrollbar(10_000);
+    await table.verticalScrollbar.scroll(10_000);
 
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
@@ -42,21 +42,19 @@ test.describe('sci-table async datasource', () => {
 
   test('should load first and last row correctly', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePo(page);
+    const table = new TablePO(page);
     await tablePage.navigate('slow-data-source');
     await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
     await expect(table.locateColumnCells(0).first()).toHaveText('Product 1');
 
-    const scrollHeight = await table.viewport.evaluate(vp => vp.scrollHeight);
-    await table.scrollViewPort({x: 0, y: scrollHeight});
-
+    await table.scrollTo({y: 'end'});
     await expect(table.locateColumnCells(0).last()).toHaveText('Product 10000');
   });
 
   test('should show skeletons when applying sort while using async datasource', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePo(page);
+    const table = new TablePO(page);
     await tablePage.navigate('slow-data-source');
     await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
@@ -71,7 +69,7 @@ test.describe('sci-table async datasource', () => {
 
   test('should show skeletons when applying filter while using async datasource', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePo(page);
+    const table = new TablePO(page);
     await tablePage.navigate('slow-data-source');
     await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
@@ -86,7 +84,7 @@ test.describe('sci-table async datasource', () => {
 
   test('should not show skeletons when scrolling back to an already-loaded page', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePo(page);
+    const table = new TablePO(page);
     await tablePage.navigate('slow-data-source');
     await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
@@ -94,20 +92,20 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
-    await table.scrollViewPort({x: 0, y: 1500});
+    await table.scrollTo({y: 1500});
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
-    await table.scrollViewPort({x: 0, y: 0});
+    await table.scrollTo({y: 0});
     await expect(table.rows.locator('.skeleton').isVisible()).resolves.toBe(false);
 
-    await table.scrollViewPort({x: 0, y: 1500});
+    await table.scrollTo({y: 1500});
     await expect(table.rows.locator('.skeleton').isVisible()).resolves.toBe(false);
   });
 
   test('should select over multiple pages', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePo(page);
+    const table = new TablePO(page);
     await tablePage.navigate('slow-data-source');
     await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
@@ -116,7 +114,7 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await table.rows.first().click();
 
-    await table.scrollViewPort({x: 0, y: 10_000});
+    await table.scrollTo({y: 10_000});
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await table.rows.first().click({modifiers: ['Shift']});
@@ -126,14 +124,14 @@ test.describe('sci-table async datasource', () => {
 
   test('should select all items with ctrl+a', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePo(page);
+    const table = new TablePO(page);
     await tablePage.navigate('slow-data-source');
     await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
     // wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await table.viewport.click();
+    await table.locator.click();
     await page.keyboard.press('Control+A');
     await expect(tablePage.selectedItems).toContainText('10000');
   });

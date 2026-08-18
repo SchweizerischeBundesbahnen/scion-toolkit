@@ -12,7 +12,7 @@ import {TestBed} from '@angular/core/testing';
 import {table} from './table';
 import {SciTableComponent} from './table.component';
 import {Component, computed, Injector, input, inputBinding, Signal, signal, TemplateRef, viewChild} from '@angular/core';
-import {TablePo} from './table.po';
+import {TablePO} from './table.po';
 import {SciDataLoaderFn, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse} from '@scion/components/table';
 import {rangeInclusive} from './common';
 import {ɵSciTable} from './ɵtable.model';
@@ -49,7 +49,7 @@ describe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.rows.length).toEqual(3);
 
       data.update(d => d.concat({id: 4}));
@@ -71,7 +71,7 @@ describe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.columns).toHaveSize(1);
 
       columns.update(c => c.concat(['name']));
@@ -99,7 +99,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
         expect(po.columnEntries('Value')).toEqual(['5']);
 
         // Update input signal => should update inside component.
@@ -112,7 +112,7 @@ describe('Table', () => {
         const fixture = TestBed.createComponent(TestTemplate);
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
         expect(po.columnEntries('ID')).toEqual(['1', '2', '3']);
         expect(po.columnEntries('Price')).toEqual(['50', '100', '200']);
       });
@@ -133,7 +133,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         model.sort('column:id', false);
         await fixture.whenStable();
@@ -157,7 +157,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         model.sort('column:name', false);
         await fixture.whenStable();
@@ -181,7 +181,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         model.sort('column:active', false);
         await fixture.whenStable();
@@ -196,7 +196,7 @@ describe('Table', () => {
         const fixture = TestBed.createComponent(TestTemplate);
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
         expect(po.columnEntries('Price')).toEqual(['50', '100', '200']);
 
         fixture.componentInstance.table.sort('column:price', false);
@@ -218,7 +218,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
         const column = po.getColumnByHeader('ID')!;
 
         await column.toggleSort();
@@ -243,7 +243,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         model.filter('alpha');
         await fixture.whenStable();
@@ -267,7 +267,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         model.filter(3, {columnName: 'column:id'});
         await fixture.whenStable();
@@ -291,7 +291,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         model.filter('c', {columnName: 'column:name'});
         await fixture.whenStable();
@@ -315,7 +315,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         model.filter(true, {columnName: 'column:active'});
         await fixture.whenStable();
@@ -340,7 +340,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         model.filter('abcd', {columnName: 'column:name'});
         await fixture.whenStable();
@@ -364,7 +364,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
         const column = po.getColumnByHeader('ID')!;
 
         await column.filter('3');
@@ -384,7 +384,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
         const column = po.getColumnByHeader('ID')!;
 
         await column.filter('invalid');
@@ -404,7 +404,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
         const column = po.getColumnByHeader('Name')!;
 
         await column.filter(' beta ');
@@ -424,7 +424,7 @@ describe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
         const column = po.getColumnByHeader('Name')!;
 
         await column.filter('ALPHA');
@@ -448,7 +448,7 @@ describe('Table', () => {
       fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       po.rows[1]!.dblClick();
 
       expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
@@ -468,7 +468,7 @@ describe('Table', () => {
       fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       po.rows[1]!.enter();
 
       expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
@@ -496,7 +496,7 @@ describe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       po.rows[1]!.hover();
       await fixture.whenStable();
       po.clickRowAction('testee');
@@ -860,7 +860,7 @@ describe('Table', () => {
         });
         (fixture.nativeElement as HTMLElement).style.height = '300px';
         await fixture.whenStable();
-        const po = new TablePo(fixture);
+        const po = new TablePO(fixture);
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
 
@@ -956,7 +956,7 @@ describe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.width = '400px';
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.columns[0]?.width).toBe(200);
       expect(po.columns[1]?.width).toBe(200);
 
@@ -994,7 +994,7 @@ describe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.width = '400px';
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       await po.autoResize(model.columns()[0]!);
 
       expect(store).toHaveBeenCalledWith('scion.components.table:test', '{"columns":[{"name":"column:0","width":100},{"name":"column:1"}]}');
@@ -1024,7 +1024,7 @@ describe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.width = '400px';
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.columns[0]?.width).toBe(100);
       expect(po.columns[1]?.width).toBe(300);
     });
@@ -1053,7 +1053,7 @@ describe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.rows.length).toEqual(10); // 300px / 30px per row
       expect(po.rows[0]?.cells[0]?.value).toEqual('0');
       expect(loader).toHaveBeenCalledTimes(1);
@@ -1089,7 +1089,7 @@ describe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.rows.length).toEqual(16); // (300px / 30px per row) + (2 * 3 rows buffer) = 16 rows in DOM
       expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({start: 0, end: 16}));
 
@@ -1118,7 +1118,7 @@ describe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.rows[0]?.cells[0]?.value).toEqual('0');
 
       model.filter('test');
@@ -1150,7 +1150,7 @@ describe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.rows[0]?.cells[0]?.value).toEqual('0');
 
       model.filter('5', {columnName: 'column:id'});
@@ -1181,7 +1181,7 @@ describe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       expect(po.rows[0]?.cells[0]?.value).toEqual('0');
 
       model.sort('column:id', false);
@@ -1210,7 +1210,7 @@ describe('Table', () => {
       });
       (fixture.nativeElement as HTMLElement).style.height = '300px';
       await fixture.whenStable();
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
 
       update$.next(0); // trigger initial load.
       await fixture.whenStable();
@@ -1249,7 +1249,7 @@ describe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.height = '300px';
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       release$.next(); // trigger initial loader response (so scrolling is possible).
       await fixture.whenStable();
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({page: 0}));
@@ -1288,7 +1288,7 @@ describe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
-      const po = new TablePo(fixture);
+      const po = new TablePO(fixture);
       const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
       await selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
