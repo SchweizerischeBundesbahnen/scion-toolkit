@@ -37,13 +37,13 @@ export class TablePagePO {
     this.selectedItems = this._properties.locator('dd.e2e-selected-items');
   }
 
-  public async navigate(type: 'slow-data-source' | 'default' = 'default'): Promise<void> {
-    if (type === 'slow-data-source') {
-      await this._page.goto(`${PATH}/slow`);
-    }
-    else {
-      await this._page.goto(PATH);
-    }
+  public async navigate(): Promise<void> {
+    await this._page.goto(PATH);
+  }
+
+  public async setSlowDataSource(checked: boolean): Promise<void> {
+    await this._tabbar.locator('button.e2e-settings').click();
+    await this._properties.locator('input.e2e-slow-datasource').setChecked(checked);
   }
 
   public async setFilterable(checked: boolean): Promise<void> {

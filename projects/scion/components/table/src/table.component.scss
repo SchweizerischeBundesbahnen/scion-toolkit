@@ -52,6 +52,7 @@
       > sci-table-body {
         anchor-name: --sci-table-body;
         grid-row: 2; // The sci-column-splitters positioning requires all grid items to be positioned.
+        outline: none; // tabindex set for keyboard navigation
         @container style(--ɵsci-table-header-visible: false) {
           grid-row: 1;
         }

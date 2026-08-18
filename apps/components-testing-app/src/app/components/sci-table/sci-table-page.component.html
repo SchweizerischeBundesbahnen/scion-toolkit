@@ -2,15 +2,6 @@
   @for (table of tables(); track $index) {
     <sci-table [table]="table"/>
   }
-  <ng-template let-product #cell>
-    <span class="material-symbols-outlined custom-cell e2e-custom-cell" [class.up]="product.price > 500" [class.down]="product.price <= 500">
-      @if (product.price > 500) {
-        trending_up
-      } @else {
-        trending_down
-      }
-    </span>
-  </ng-template>
 </main>
 
 <aside class="e2e-properties">
@@ -39,8 +30,11 @@
         <sci-form-field label="Row Action">
           <input [formField]="settingsForm.showRowAction" type="checkbox" class="e2e-row-actions"/>
         </sci-form-field>
-        <sci-form-field label="Conditional Style Row (Part)">
-          <input [formField]="settingsForm.conditionallyStyleRow" type="checkbox" class="e2e-conditional-style">
+        <sci-form-field label="Custom Row Styling">
+          <input [formField]="settingsForm.customRowStyling" type="checkbox" class="e2e-conditional-style">
+        </sci-form-field>
+        <sci-form-field label="Slow Datasource">
+          <input [formField]="settingsForm.slowDataSource" type="checkbox" class="e2e-slow-datasource"/>
         </sci-form-field>
         <sci-form-field label="Table Count">
           <input [formField]="settingsForm.tableCount" type="number" class="e2e-table-count"/>
@@ -57,10 +51,6 @@
         <sci-form-field label="Table Width">
           <input [formField]="settingsForm.width" type="number" class="e2e-width"/>
         </sci-form-field>
-        <label>
-          <input [formField]="settingsForm.slowDataSource" type="checkbox" />
-          Use Slow DataSource
-        </label>
       </form>
     </ng-template>
 
@@ -106,3 +96,9 @@
     <dd class="e2e-selected-items">{{selectedItems()?.length}}</dd>
   </dl>
 </aside>
+
+<ng-template let-product #cell>
+  <sci-icon class="custom-cell" [class.up]="product.price > 500" [class.down]="product.price <= 500">
+    {{product.price > 500 ? 'trending_up' : 'trending_down'}}
+  </sci-icon>
+</ng-template>
