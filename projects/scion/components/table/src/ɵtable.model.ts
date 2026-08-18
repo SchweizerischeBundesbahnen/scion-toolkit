@@ -85,7 +85,10 @@ export class ɵSciTable<T> implements SciTable<T> {
   });
 
   public readonly hoveredIndex = linkedSignal({
-    source: () => this.criteria() || this.scrolling(), // unset when criteria change or on scroll start
+    source: () => {
+      this.criteria(); // reset on criteria change
+      this.scrolling(); // reset when start scrolling
+    },
     computation: () => -1,
   });
 

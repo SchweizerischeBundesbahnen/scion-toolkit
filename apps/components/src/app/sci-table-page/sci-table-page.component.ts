@@ -139,36 +139,37 @@ export default class SciTablePageComponent {
         },
       })
       .addToolbarMenu({
-          icon: 'scion.more_vertical',
-          visualMenuIndicator: false,
-        }, menu => menu
+        icon: 'scion.more_vertical',
+        visualMenuIndicator: false,
+      }, menu => menu
+        .addMenuItem({
+          label: 'Edit',
+          onSelect: () => console.log('edit', company),
+        })
+        .addMenuItem({
+          label: 'Duplicate',
+          onSelect: () => console.log('duplicate', company),
+        })
+        .addMenu({label: 'SubMenu'}, menu => menu
           .addMenuItem({
-            label: 'Edit',
-            onSelect: () => console.log('edit', company),
+            label: 'Delete Delete Delete Delete Delete Delete Delete',
+            onSelect: () => console.log('delete', company),
+          }),
+        )
+        .addMenu({label: 'Actions'}, menu => menu
+          .addMenuItem({
+            label: 'Copy to...',
+            onSelect: () => console.log('copy', company),
           })
           .addMenuItem({
-            label: 'Duplicate',
-            onSelect: () => console.log('duplicate', company),
+            label: 'Move to...',
+            onSelect: () => console.log('move', company),
           })
-          .addMenu({label: 'SubMenu'}, menu => menu
-            .addMenuItem({
-              label: 'Delete Delete Delete Delete Delete Delete Delete',
-              onSelect: () => console.log('delete', company),
-            }))
-          .addMenu({label: 'Actions'}, menu => menu
-            .addMenuItem({
-              label: 'Copy to...',
-              onSelect: () => console.log('copy', company),
-            })
-            .addMenuItem({
-              label: 'Move to...',
-              onSelect: () => console.log('move', company),
-            })
-            .addMenuItem({
-              label: 'Info...',
-              onSelect: () => console.log('info', company),
-            })),
-      ),
+          .addMenuItem({
+            label: 'Info...',
+            onSelect: () => console.log('info', company),
+          }),
+        )),
   };
 
   protected table = signal<SciTable<Company> | undefined>(undefined);
