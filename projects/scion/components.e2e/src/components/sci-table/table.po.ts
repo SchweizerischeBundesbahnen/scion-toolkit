@@ -18,7 +18,6 @@ export class TablePO {
   public readonly locator: Locator;
   public readonly filters: Locator;
   public readonly sortButtons: Locator;
-  public readonly splitters: Locator;
   public readonly header: Locator;
   public readonly headers: Locator;
   public readonly rows: Locator;
@@ -31,7 +30,6 @@ export class TablePO {
     this.locator = this._page.locator('sci-table');
     this.filters = this.locator.locator('sci-column-filter');
     this.sortButtons = this.locator.locator('button.e2e-column-sort.sortable');
-    this.splitters = this.locator.locator('.e2e-table-splitter');
     this.header = this.locator.locator('sci-table-header');
     this.headers = this.locator.locator('sci-column-header button.e2e-column-sort');
     this.rows = this.locator.locator('sci-table-row');

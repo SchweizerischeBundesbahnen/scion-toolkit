@@ -65,10 +65,10 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'name', header: 'Name', type: 'string'});
 
       await tablePage.setResizable(false);
-      await expect(table.splitters).toHaveCount(0);
+      await expect(table.columnSplitter('column:name').locator).not.toBeAttached();
 
       await tablePage.setResizable(true);
-      await expect(table.splitters).toHaveCount(1);
+      await expect(table.columnSplitter('column:name').locator).toBeAttached();
     });
 
     test('should adapt to container size', async ({page}) => {
