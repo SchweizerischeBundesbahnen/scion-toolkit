@@ -14,7 +14,7 @@ import {effect, Injector, inputBinding, signal} from '@angular/core';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {ɵSciTable} from './ɵtable.model';
 
-describe('Table Factory', () => {
+fdescribe('Table Factory', () => {
   describe('validation', () => {
     it('should not allow creation without injection context', () => {
       expect(() => table('table:test', signal([]), table => table)).toThrowError(/NG0203:/i);

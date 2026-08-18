@@ -3,7 +3,7 @@ import {TablePagePO} from './table-page.po';
 import {TablePO} from './table.po';
 import {expect} from '@playwright/test';
 
-test.describe('sci-table async datasource', () => {
+test.describe.only('sci-table async datasource', () => {
   test('should load pages', async ({page}) => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(page);

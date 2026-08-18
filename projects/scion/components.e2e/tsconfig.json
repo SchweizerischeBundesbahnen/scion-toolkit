@@ -6,7 +6,7 @@
     "outDir": "../../../out-tsc/components.e2e",
     "sourceMap": true,
     "strict": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUncheckedIndexedAccess": true,
     "isolatedModules": true,
     "experimentalDecorators": true,

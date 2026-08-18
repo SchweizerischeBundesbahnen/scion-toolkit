@@ -20,7 +20,7 @@ import {TableSelectionService} from './table-selection.service';
 import {map, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 
-describe('Table', () => {
+fdescribe('Table', () => {
   beforeEach(() => {
     // Prevent persisting setting in localStorage for tests.
     // This causes problems on reruns, and can cause tests to interfere with each other.

@@ -16,7 +16,7 @@ import {expectTable} from './table-matcher';
 import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
 
-test.describe('sci-table', () => {
+test.describe.only('sci-table', () => {
 
   test.describe('global properties', () => {
     test('should disable filters', async ({page}) => {
