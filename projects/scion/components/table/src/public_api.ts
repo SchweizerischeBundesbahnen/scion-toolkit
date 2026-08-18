@@ -10,7 +10,7 @@
 
 export {table} from './table';
 export {SciTableComponent} from './table.component';
-export type {ColumnType, SciColumnLike, SciCellContext, SciTable, SciTableDescriptor} from './table.model';
-export type {SciDataLoaderFn, SciTableResponse, SciTableRequest, SciColumnFilter, SciSortCriterion} from './table-data-source';
-export type {SciTableFactory} from './table.factory';
-export type {SciTableStorage} from './table-storage';
+export {type ColumnType, type SciColumnLike, type  SciCellContext, type  SciTable, type  SciTableDescriptor} from './table.model';
+export {type SciDataLoaderFn, type SciTableResponse, type  SciTableRequest, type  SciColumnFilter, type  SciSortCriterion} from './table-data-source';
+export {type SciTableFactory, type SciColumnDescriptor, type SciStringColumnDescriptor, type SciNumberColumnDescriptor, type  SciBooleanColumnDescriptor, type  SciComponentColumnDescriptor, type  SciTemplateColumnDescriptor} from './table.factory';
+export {type SciTableStorage, provideTableStorage} from './table-storage';

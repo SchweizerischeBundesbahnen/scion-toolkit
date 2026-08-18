@@ -1,6 +1,6 @@
 <main>
   @for (table of tables(); track $index) {
-    <sci-table [table]="table" />
+    <sci-table [table]="table"/>
   }
   <ng-template let-product #cell>
     <span class="material-symbols-outlined custom-cell e2e-custom-cell" [class.up]="product.price > 500" [class.down]="product.price <= 500">
@@ -18,13 +18,13 @@
     <ng-template sciTab label="Settings" [cssClass]="'e2e-settings'">
       <form>
         <sci-form-field label="Filterable">
-          <input [formField]="settingsForm.filterable" type="checkbox" class="e2e-filterable" />
+          <input [formField]="settingsForm.filterable" type="checkbox" class="e2e-filterable"/>
         </sci-form-field>
         <sci-form-field label="Sortable">
-          <input [formField]="settingsForm.sortable" type="checkbox" class="e2e-sortable" />
+          <input [formField]="settingsForm.sortable" type="checkbox" class="e2e-sortable"/>
         </sci-form-field>
         <sci-form-field label="Resizable">
-          <input [formField]="settingsForm.resizable" type="checkbox" class="e2e-resizable" />
+          <input [formField]="settingsForm.resizable" type="checkbox" class="e2e-resizable"/>
         </sci-form-field>
         <sci-form-field label="Selectable">
           <select [formField]="settingsForm.selectable" class="e2e-selectable">
@@ -34,34 +34,38 @@
           </select>
         </sci-form-field>
         <sci-form-field label="Show Header">
-          <input [formField]="settingsForm.showHeader" type="checkbox" class="e2e-show-header" />
+          <input [formField]="settingsForm.showHeader" type="checkbox" class="e2e-show-header"/>
         </sci-form-field>
         <sci-form-field label="Row Action">
-          <input [formField]="settingsForm.showRowAction" type="checkbox" class="e2e-row-actions" />
+          <input [formField]="settingsForm.showRowAction" type="checkbox" class="e2e-row-actions"/>
         </sci-form-field>
         <sci-form-field label="Conditional Style Row (Part)">
           <input [formField]="settingsForm.conditionallyStyleRow" type="checkbox" class="e2e-conditional-style">
         </sci-form-field>
         <sci-form-field label="Table Count">
-          <input [formField]="settingsForm.tableCount" type="number" class="e2e-table-count" />
+          <input [formField]="settingsForm.tableCount" type="number" class="e2e-table-count"/>
         </sci-form-field>
         <sci-form-field label="Row Count">
-          <input [formField]="settingsForm.rowCount" type="number" class="e2e-row-count" />
+          <input [formField]="settingsForm.rowCount" type="number" class="e2e-row-count"/>
         </sci-form-field>
         <sci-form-field label="Row Size">
-          <input [formField]="settingsForm.rowSize" type="number" class="e2e-row-size" />
+          <input [formField]="settingsForm.rowSize" type="number" class="e2e-row-size"/>
         </sci-form-field>
         <sci-form-field label="Table Height">
-          <input [formField]="settingsForm.height" type="number" class="e2e-height" />
+          <input [formField]="settingsForm.height" type="number" class="e2e-height"/>
         </sci-form-field>
         <sci-form-field label="Table Width">
-          <input [formField]="settingsForm.width" type="number" class="e2e-width" />
+          <input [formField]="settingsForm.width" type="number" class="e2e-width"/>
         </sci-form-field>
+        <label>
+          <input [formField]="settingsForm.slowDataSource" type="checkbox" />
+          Use Slow DataSource
+        </label>
       </form>
     </ng-template>
 
     <ng-template sciTab label="Columns" [cssClass]="'e2e-columns'">
-      <form (submit)="onColumnSubmit()">
+      <form [formRoot]="columnForm">
         <sci-form-field label="Name">
           <input [formField]="columnForm.name" class="e2e-column-name">
         </sci-form-field>
@@ -92,7 +96,7 @@
         <sci-form-field label="Max Width">
           <input [formField]="columnForm.maxWidth" type="number" class="e2e-column-max-width">
         </sci-form-field>
-        <button class="e2e-column-add" type="submit">Add</button>
+        <button class="e2e-column-add" type="submit" [disabled]="columnForm().invalid()">Add</button>
       </form>
     </ng-template>
   </sci-tabbar>

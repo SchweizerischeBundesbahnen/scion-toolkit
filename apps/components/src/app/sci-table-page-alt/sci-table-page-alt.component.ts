@@ -13,7 +13,7 @@ import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {form, FormField} from '@angular/forms/signals';
 import {UUID} from '@scion/toolkit/uuid';
-import {SciFilterFieldComponent} from '../../../../../projects/scion/components.internal/filter-field/src/filter-field.component';
+import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 
 const data = signal(new Array(100_000).fill(0).map((_, i) => ({
   ...companies[i % companies.length]!,
@@ -66,24 +66,36 @@ export default class SciTablePageComponent {
       }, menu => {
         menu.addGroup(group => group.addMenuItem({
           label: 'Edit',
-          onSelect: () => {console.log('edit', company);},
+          onSelect: () => {
+            console.log('edit', company);
+          },
         }).addMenuItem({
           label: 'Duplicate',
-          onSelect: () => {console.log('duplicate', company);},
+          onSelect: () => {
+            console.log('duplicate', company);
+          },
         }).addMenuItem({
           label: 'Delete',
-          onSelect: () => {console.log('delete', company);},
+          onSelect: () => {
+            console.log('delete', company);
+          },
         })).addGroup(group => {
           group.addMenuItem({
             label: 'Copy to...',
-            onSelect: () => {console.log('copy', company);},
+            onSelect: () => {
+              console.log('copy', company);
+            },
           }).addMenuItem({
             label: 'Move to...',
-            onSelect: () => {console.log('move', company);},
+            onSelect: () => {
+              console.log('move', company);
+            },
           });
         }).addMenuItem({
           label: 'Info...',
-          onSelect: () => {console.log('info', company);},
+          onSelect: () => {
+            console.log('info', company);
+          },
         });
       });
     },
