@@ -42,9 +42,6 @@ import {SciTableHeaderComponent} from './table-header.component';
     '[style.--ɵsci-table-width]': 'tableWidth()',
     '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
     '[style.--ɵsci-table-virtual-scroll-offset-bottom]': '`${virtualScrollOffsetBottom()}px`',
-    // Header visible cannot be computed inside CSS with :has because Firefox currently has a bug which does not allow :has on a ShadowRoot.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1979910
-    '[style.--ɵsci-table-header-visible]': 'headerVisible() ? `true` : null',
   },
   imports: [
     SciScrollbarComponent,
@@ -87,7 +84,6 @@ export class SciTableComponent<T> {
 
   protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly itemSize = computed(() => this._itemSizeDimension().clientHeight);
-  protected readonly headerVisible = computed(() => this.sciTable().filterable() || this.sciTable().headerVisible());
 
   protected readonly resizing = computed(() => !!this.sciTable().resizingState());
   protected readonly columnWidths = this.computeColumnWidths();
@@ -181,19 +177,17 @@ export class SciTableComponent<T> {
       const itemSize = this._itemSizeDimension().offsetHeight;
       const overscan = this.sciTable().bufferSize();
       const scrollTop = this._scrollTop() - this._headerHeight();
-      if (itemSize) {
-        const visibleRowCount = Math.ceil((viewportDimension.clientHeight - this._headerHeight()) / itemSize) + overscan * 2;
-        const firstVisible = Math.floor(scrollTop / itemSize);
-        const start = Math.max(0, firstVisible - overscan);
-        const end = start + visibleRowCount;
-        this.sciTable().range.update(range => {
-          // Only update range signal if there is an actual change.
-          if (start === range?.start && end === range.end) {
-            return range;
-          }
-          return {start, end};
-        });
-      }
+      const visibleRowCount = Math.ceil((viewportDimension.clientHeight - this._headerHeight()) / itemSize) + overscan * 2;
+      const firstVisible = Math.floor(scrollTop / itemSize);
+      const start = Math.max(0, firstVisible - overscan);
+      const end = start + visibleRowCount;
+      this.sciTable().range.update(range => {
+        // Only update range signal if there is an actual change.
+        if (start === range?.start && end === range.end) {
+          return range;
+        }
+        return {start, end};
+      });
     });
   }
 

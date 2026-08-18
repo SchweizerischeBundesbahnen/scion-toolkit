@@ -256,10 +256,6 @@ export class ɵSciTable<T> implements SciTable<T> {
     }
   }
 
-  public setHoveredIndex(index: number | undefined): void {
-    this.hoveredIndex.set(index ?? -1);
-  }
-
   public updateSelectedItems(updateFn: (ids: Map<unknown, T>) => Map<unknown, T>): void {
     this._selectedItems.update(updateFn);
   }

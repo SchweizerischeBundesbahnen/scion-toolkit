@@ -5,17 +5,14 @@
   pointer-events: none;
 
   > sci-splitter {
-    --sci-splitter-background-color: transparent;
-    --sci-splitter-background-color-hover: transparent;
+    --sci-splitter-background-color: var(--sci-table-border-color);
+    --sci-splitter-background-color-hover: var(--sci-table-border-color);;
+    --sci-splitter-size-hover: var(--sci-table-border-size);
     --sci-splitter-size: var(--sci-table-border-size);
     justify-self: end;
 
-    &:hover {
-      --sci-splitter-background-color: var(--sci-table-border-color);
-    }
-
-    &.resizing {
-      --sci-splitter-background-color: var(--sci-table-active-color);
+    &:not(:hover):not(.resizing) {
+      opacity: 0;
     }
   }
 }

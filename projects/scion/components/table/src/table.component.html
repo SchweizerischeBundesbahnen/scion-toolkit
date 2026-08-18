@@ -1,37 +1,40 @@
+@let table = sciTable();
+
 <div class="viewport e2e-viewport" #viewport>
   <sci-table-grid>
 
-    @if (sciTable().range(); as range) {
-      <sci-table-body sciTableKeyboardNavigator tabindex="0">
-        <!-- Track index to reuse the table row elements -->
-        @for (row of sciTable().rows(); track $index) {
-          <sci-table-row [row]="row" [index]="range.start + $index" (primaryAction)="onRowPrimaryAction(row.item)"/>
-        } @empty {
-          <div class="empty-state">{{('%scion.components.no_items.message' | sciText)()}}</div>
-        }
-      </sci-table-body>
-    }
-
-    <!-- Place header after rows to naturally paint sticky header on top of the rows. -->
-    @if (headerVisible()) {
+    <!-- Table header -->
+    @if (table.filterable() || table.headerVisible()) {
       <sci-table-header (wheel)="onHeaderMouseWheel($event)">
-        @for (column of sciTable().columns(); track column.name) {
+        @for (column of table.columns(); track column.name) {
           <sci-column-header [column]="column"/>
         }
       </sci-table-header>
     }
 
+    <!-- Table body -->
+    <sci-table-body sciTableKeyboardNavigator tabindex="0">
+      <!-- Track index to reuse the table row elements -->
+      @for (row of table.rows(); track $index) {
+        <sci-table-row [row]="row" [index]="table.range()!.start + $index" (primaryAction)="onRowPrimaryAction(row.item)"/>
+      } @empty {
+        <div class="empty-state">{{('%scion.components.no_items.message' | sciText)()}}</div>
+      }
+    </sci-table-body>
+
+    <!-- Column splitters -->
     <sci-column-splitters [columnWidths]="absoluteColumnWidths()"
-                       [hasOverflow]="hasHorizontalOverflow()"
-                       [rows]="rows()"
-                       (scrollBy)="onOverlayScrollBy($event)"/>
+                          [hasOverflow]="hasHorizontalOverflow()"
+                          [rows]="rows()"
+                          (scrollBy)="onOverlayScrollBy($event)"/>
   </sci-table-grid>
 </div>
 
+<!--Scrollbars-->
 <sci-scrollbar direction="hscroll" [viewport]="viewport"/>
 <sci-scrollbar direction="vscroll" [viewport]="viewport"/>
 
-@if (sciTable().loading()) {
+@if (table.loading()) {
   <sci-spinner-throbber/>
 }
 

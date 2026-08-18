@@ -835,10 +835,7 @@ test.describe('sci-table', () => {
       await expect(tablePage.selectedItems).toHaveText('1');
     });
 
-    /**
-     * TODO: Tab order ist falsch: Da der header nach dem body in der DOM order kommt, wird der body vor dem header fokussiert, wenn man durchtabbt.
-     */
-    test.skip('should receive focus via tab navigation', async ({page}) => {
+    test('should receive focus via tab navigation', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePo(page);
       await tablePage.navigate();

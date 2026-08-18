@@ -32,7 +32,7 @@ class DateCellComponent {
   protected readonly date = input.required<Date>();
 }
 
-const data = signal(new Array(100_000).fill(0).map((_, i) => ({
+const data = signal(new Array(100).fill(0).map((_, i) => ({
   ...companies[i % companies.length]!,
   dataId: `${i}`,
 })));
@@ -99,7 +99,7 @@ export default class SciTablePageComponent {
     sortable: true,
     resizable: true,
     showHeader: true,
-    slowDataSource: true,
+    slowDataSource: false,
     selectable: 'multi',
     columns: {
       id: true,
