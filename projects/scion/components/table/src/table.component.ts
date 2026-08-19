@@ -100,6 +100,7 @@ export class SciTableComponent<T> {
   });
 
   protected readonly absoluteColumnWidths = computed(() => {
+    // TODO [Etienne] Does only work if header columns -> use splitters instead
     const headers = this._headers();
     const columns = this.sciTable().columns();
 
@@ -109,7 +110,7 @@ export class SciTableComponent<T> {
       return new Map<`column:${string}`, number>();
     }
 
-    return headers.reduce((map, header, i) => map.set(columns[i]!.name, header.boundingClientRect().width), new Map<`column:${string}`, number>());
+    return columns.reduce((map, column, i) => map.set(column.name, headers[i]?.boundingClientRect().width ?? 0), new Map<`column:${string}`, number>());
   });
 
   protected readonly hasHorizontalOverflow = computed(() => {

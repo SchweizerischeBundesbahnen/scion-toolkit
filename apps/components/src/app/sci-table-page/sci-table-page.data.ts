@@ -1,7 +1,68 @@
-import {SciColumnFilter, SciSortCriterion} from '@scion/components/table';
+import {SciColumnFilter, SciSortCriterion, SciTableRequest, SciTableResponse} from '@scion/components/table';
+import {linkedSignal, Service, signal, untracked} from '@angular/core';
+import {defer, Observable, of, timer} from 'rxjs';
+import {toObservable} from '@angular/core/rxjs-interop';
+import {map, switchMap} from 'rxjs/operators';
+
+@Service()
+export class CompanyService {
+
+  public readonly companyCount = signal(100);
+  public readonly companies = linkedSignal(() => {
+    const count = this.companyCount();
+    return untracked(() => Companies.generate(count));
+  });
+  private readonly _companies$ = toObservable(this.companies);
+
+  public updateCompany(company: Company): void {
+    this.companies.update(companies => {
+      const index = companies.findIndex(it => it.id === company.id);
+      if (index === -1) {
+        return companies;
+      }
+
+      const copy = [...companies];
+      copy.splice(index, 1, company);
+      return copy;
+    });
+  }
+
+  public addCompany(company: Company): void {
+    this.companies.update(companies => {
+      const copy = [...companies];
+      copy.push({...company, id: `${companies.length + 1}`});
+      return copy;
+    });
+  }
+
+  public deleteCompany(id: string): void {
+    this.companies.update(companies => {
+      const index = companies.findIndex(company => company.id === id);
+      if (index === -1) {
+        return companies;
+      }
+      const copy = [...companies];
+      copy.splice(index, 1);
+      return copy;
+    });
+  }
+
+  public getCompanies$(request: SciTableRequest, options?: {slowDataSource?: boolean}): Observable<SciTableResponse<Company>> {
+    return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
+      .pipe(
+        switchMap(() => this._companies$),
+        map(companies => Companies.filter(companies, request.columnFilters, request.globalFilter)),
+        map(companies => Companies.sort(companies, request.sortCriteria)),
+        map(companies => ({
+          items: companies.slice(request.start, request.end),
+          totalCount: companies.length,
+        })),
+      );
+  }
+}
 
 export interface Company {
-  dataId: string;
+  id: string;
   code: number;
   abbreviation: string;
   name: string;
@@ -10,88 +71,87 @@ export interface Company {
   validTo: string;
 }
 
-export function sort(companies: Company[], sortCriteria: SciSortCriterion[]): Company[] {
-  return [...companies].sort((a, b) => {
-    for (const sortCriterion of sortCriteria) {
-      const ascendingComparison = (() => {
-        switch (sortCriterion.columnName) {
-          case 'column:id':
-            return a.dataId.localeCompare(b.dataId);
-          case 'column:code':
-            return a.code - b.code;
-          case 'column:abbreviation':
-            return a.abbreviation.localeCompare(b.abbreviation);
-          case 'column:name':
-            return a.name.localeCompare(b.name);
-          case 'column:railwayUndertaking':
-            return Number(a.railwayUndertaking) - Number(b.railwayUndertaking);
-          case 'column:validFrom':
-            return a.validFrom.localeCompare(b.validFrom);
-          case 'column:validTo':
-            return a.validTo.localeCompare(b.validTo);
-          default:
-            return 0;
-        }
-      })();
+export namespace Companies {
 
-      if (ascendingComparison !== 0) {
-        return sortCriterion.direction === 'desc' ? -ascendingComparison : ascendingComparison;
+  export function generate(count: number): Company[] {
+    return Array.from(Array(count), (_, i) => ({
+      ...companies[i % companies.length]!,
+      id: `${i + 1}`,
+    }));
+  }
+
+  export function sort(companies: Company[], sortCriteria: SciSortCriterion[]): Company[] {
+    return [...companies].sort((a, b) => {
+      for (const sortCriterion of sortCriteria) {
+        const ascendingComparison = (() => {
+          switch (sortCriterion.columnName) {
+            case 'column:id':
+              return a.id.localeCompare(b.id);
+            case 'column:code':
+              return a.code - b.code;
+            case 'column:abbreviation':
+              return a.abbreviation.localeCompare(b.abbreviation);
+            case 'column:name':
+              return a.name.localeCompare(b.name);
+            case 'column:railwayUndertaking':
+              return Number(a.railwayUndertaking) - Number(b.railwayUndertaking);
+            case 'column:validFrom':
+              return new Date(a.validFrom).getTime() - new Date(b.validFrom).getTime()
+            case 'column:validTo':
+              return new Date(a.validTo).getTime() - new Date(b.validTo).getTime()
+            default:
+              return 0;
+          }
+        })();
+
+        if (ascendingComparison !== 0) {
+          return sortCriterion.direction === 'desc' ? -ascendingComparison : ascendingComparison;
+        }
       }
+
+      return 0;
+    });
+  }
+
+  export function filter(companies: Company[], filterCriteria: SciColumnFilter[], globalFilter?: string): Company[] {
+    let copy = [...companies];
+    for (const filterCriterion of filterCriteria) {
+      const filterText = `${filterCriterion.text}`.toLocaleLowerCase();
+      copy = copy.filter(company => {
+        switch (filterCriterion.columnName) {
+          case 'column:id':
+            return company.id.toLocaleLowerCase().includes(filterText);
+          case 'column:code':
+            return company.code.toString().includes(filterText);
+          case 'column:abbreviation':
+            return company.abbreviation.toLocaleLowerCase().includes(filterText);
+          case 'column:name':
+            return company.name.toLocaleLowerCase().includes(filterText);
+          case 'column:railwayUndertaking':
+            return filterCriterion.text === company.railwayUndertaking;
+          case 'column:validFrom':
+            return company.validFrom.toLocaleLowerCase().includes(filterText);
+          case 'column:validTo':
+            return company.validTo.toLocaleLowerCase().includes(filterText);
+          default:
+            return true;
+        }
+      });
     }
 
-    return 0;
-  });
-}
+    if (globalFilter) {
+      copy = copy.filter(company => {
+        return Object.values(company).some(value => `${value}`.toLocaleLowerCase().includes(globalFilter.toLocaleLowerCase()));
+      });
+    }
 
-export function filter(companies: Company[], filterCriteria: SciColumnFilter[], globalFilter?: string): Company[] {
-  let newCompanies = companies;
-  for (const filterCriterion of filterCriteria) {
-    const query = filterCriterion.text.toString().toLocaleLowerCase();
-    newCompanies = newCompanies.filter(company => {
-      switch (filterCriterion.columnName) {
-        case 'column:id':
-          return company.dataId.toLocaleLowerCase().includes(query);
-        case 'column:code':
-          return company.code.toString().includes(query);
-        case 'column:abbreviation':
-          return company.abbreviation.toLocaleLowerCase().includes(query);
-        case 'column:name':
-          return company.name.toLocaleLowerCase().includes(query);
-        case 'column:railwayUndertaking': {
-          const normalized = query.trim();
-          if (normalized === '') {
-            return true;
-          }
-          if (normalized === 'true') {
-            return company.railwayUndertaking;
-          }
-          if (normalized === 'false') {
-            return !company.railwayUndertaking;
-          }
-          return String(company.railwayUndertaking).includes(normalized);
-        }
-        case 'column:validFrom':
-          return company.validFrom.toLocaleLowerCase().includes(query);
-        case 'column:validTo':
-          return company.validTo.toLocaleLowerCase().includes(query);
-        default:
-          return true;
-      }
-    });
+    return copy;
   }
-
-  if (globalFilter) {
-    newCompanies = newCompanies.filter(company => {
-      return Object.values(company).some(value => (value as object | null)?.toString().toLocaleLowerCase().includes(globalFilter.toLocaleLowerCase()));
-    });
-  }
-
-  return newCompanies;
 }
 
 export const companies: Company[] = [
   {
-    'dataId': '7d18fa1f-9385-4dc0-a6a1-8944dfe992ab',
+    'id': '7d18fa1f-9385-4dc0-a6a1-8944dfe992ab',
     'code': 3208,
     'abbreviation': 'HRAB',
     'name': 'Hector Rail A4',
@@ -100,7 +160,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'bb97bdbd-8b97-4b43-808e-f60f6bbba551',
+    'id': 'bb97bdbd-8b97-4b43-808e-f60f6bbba551',
     'code': 3308,
     'abbreviation': 'TXL',
     'name': 'TX Logistik AG',
@@ -109,7 +169,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '86206156-8cc4-449a-9a85-c4be4131c403',
+    'id': '86206156-8cc4-449a-9a85-c4be4131c403',
     'code': 1185,
     'abbreviation': 'SBB-Passengers',
     'name': 'Swiss Federal Railways-Passenger subsidiary',
@@ -118,7 +178,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '6958181a-a34e-409d-b348-b7485874bd8e',
+    'id': '6958181a-a34e-409d-b348-b7485874bd8e',
     'code': 3706,
     'abbreviation': 'HRDE',
     'name': 'Hector Rail Gmbh',
@@ -127,7 +187,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '69c6ee71-926f-43a2-af20-66219372202f',
+    'id': '69c6ee71-926f-43a2-af20-66219372202f',
     'code': 3873,
     'abbreviation': 'RTB',
     'name': 'Rurtalbahn GmbH',
@@ -136,7 +196,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '6696edbb-d364-4299-a3bc-de56fb6c2bcf',
+    'id': '6696edbb-d364-4299-a3bc-de56fb6c2bcf',
     'code': 4034,
     'abbreviation': 'HUPAC',
     'name': 'HUPAC SA',
@@ -145,7 +205,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e759e965-dcfa-42d8-82d3-8af0da8a0525',
+    'id': 'e759e965-dcfa-42d8-82d3-8af0da8a0525',
     'code': 5495,
     'abbreviation': 'TPF TRAFIC',
     'name': 'Transports publics fribourgeois Trafic (TPF TRAFIC) SA',
@@ -154,7 +214,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'b637173d-f3b8-4166-bc07-1b21f2180238',
+    'id': 'b637173d-f3b8-4166-bc07-1b21f2180238',
     'code': 2180,
     'abbreviation': 'DBCDE',
     'name': 'DB Cargo AG',
@@ -163,7 +223,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '5d7ee8dc-df32-4589-88db-48d204f7bd77',
+    'id': '5d7ee8dc-df32-4589-88db-48d204f7bd77',
     'code': 2585,
     'abbreviation': 'SBBCINT',
     'name': 'SBB Cargo International',
@@ -172,7 +232,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'c97f0197-2fef-420e-b2b8-aff17a48ee4e',
+    'id': 'c97f0197-2fef-420e-b2b8-aff17a48ee4e',
     'code': 3096,
     'abbreviation': 'DBCCH',
     'name': 'DB Cargo Schweiz GmbH',
@@ -181,7 +241,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '0023c34a-0b75-453f-8a86-067a58acb52a',
+    'id': '0023c34a-0b75-453f-8a86-067a58acb52a',
     'code': 3538,
     'abbreviation': 'RLC',
     'name': 'railCare AG',
@@ -190,7 +250,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'd4c8f4b1-cd24-4912-928f-4d1ecd7e288b',
+    'id': 'd4c8f4b1-cd24-4912-928f-4d1ecd7e288b',
     'code': 3267,
     'abbreviation': 'RhB',
     'name': 'Rhätische Bahn AG',
@@ -199,7 +259,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '0e728301-a98e-49a1-b6ff-0678c432ba91',
+    'id': '0e728301-a98e-49a1-b6ff-0678c432ba91',
     'code': 5404,
     'abbreviation': 'SBB D',
     'name': 'SBB GmbH',
@@ -208,7 +268,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '7919d737-2826-41e5-9043-836bab2d2513',
+    'id': '7919d737-2826-41e5-9043-836bab2d2513',
     'code': 5003,
     'abbreviation': 'HSLCH',
     'name': 'HSL Schweiz GmbH',
@@ -217,7 +277,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '2b58abc0-e7cb-4d78-b406-e7d243fe3d1f',
+    'id': '2b58abc0-e7cb-4d78-b406-e7d243fe3d1f',
     'code': 5184,
     'abbreviation': 'SBB Infrastruktur Baulogistik',
     'name': 'Schweizerische Bundesbahnen SBB Infrastruktur Baulogistik',
@@ -226,7 +286,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'b1c7c74d-eab7-456f-90ef-0de41e7970f5',
+    'id': 'b1c7c74d-eab7-456f-90ef-0de41e7970f5',
     'code': 3917,
     'abbreviation': 'THU',
     'name': 'Regionalbahn Thurbo AG',
@@ -235,7 +295,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '3795a852-1337-4d48-b7f5-2d28e4fa14b3',
+    'id': '3795a852-1337-4d48-b7f5-2d28e4fa14b3',
     'code': 3579,
     'abbreviation': 'Sersa',
     'name': 'Sersa Group AG (Schweiz)',
@@ -244,7 +304,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'df815d50-6602-4ddb-b7f2-c2dde5ef85c8',
+    'id': 'df815d50-6602-4ddb-b7f2-c2dde5ef85c8',
     'code': 5458,
     'abbreviation': 'SOB T',
     'name': 'Schweizerische Südostbahn AG, Transport EVU',
@@ -253,7 +313,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e965b925-40d9-4a8f-b4f8-bcfb54161eb5',
+    'id': 'e965b925-40d9-4a8f-b4f8-bcfb54161eb5',
     'code': 2183,
     'abbreviation': 'MIR',
     'name': 'Mercitalia Rail',
@@ -262,7 +322,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '1690a260-0f7e-4f3f-814a-9daa5cb7b14f',
+    'id': '1690a260-0f7e-4f3f-814a-9daa5cb7b14f',
     'code': 2380,
     'abbreviation': 'DBCIT',
     'name': 'DB Cargo Italia Srl',
@@ -271,7 +331,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'b299f9a3-bbe3-43c9-b2d6-c7fe948fc7b8',
+    'id': 'b299f9a3-bbe3-43c9-b2d6-c7fe948fc7b8',
     'code': 5271,
     'abbreviation': 'MDWBE',
     'name': 'Medway Belgium NV',
@@ -280,7 +340,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'a3ca74de-74df-413c-9032-07d48a355eaa',
+    'id': 'a3ca74de-74df-413c-9032-07d48a355eaa',
     'code': 3203,
     'abbreviation': 'CR',
     'name': 'Crossrail AG',
@@ -289,7 +349,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'b36d1777-f2d2-48bd-95cc-dd84146a348d',
+    'id': 'b36d1777-f2d2-48bd-95cc-dd84146a348d',
     'code': 4038,
     'abbreviation': 'MARTI',
     'name': 'Marti Infra AG ',
@@ -298,7 +358,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '3be23a4d-1c80-4cb7-b69a-3b2fb5395a12',
+    'id': '3be23a4d-1c80-4cb7-b69a-3b2fb5395a12',
     'code': 3128,
     'abbreviation': 'INRAIL',
     'name': 'INRAIL S.p.A.',
@@ -307,7 +367,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'c192cc0f-c370-43d3-ab0c-809341285101',
+    'id': 'c192cc0f-c370-43d3-ab0c-809341285101',
     'code': 3239,
     'abbreviation': 'RBH',
     'name': 'RBH Logistics GmbH',
@@ -316,7 +376,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '4df19ae2-7050-40c2-9225-2cf450299b6f',
+    'id': '4df19ae2-7050-40c2-9225-2cf450299b6f',
     'code': 4192,
     'abbreviation': 'RAN',
     'name': 'Railservice Alexander Neubauer',
@@ -325,7 +385,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '39cbba9b-bc5f-437b-964e-ebd988821985',
+    'id': '39cbba9b-bc5f-437b-964e-ebd988821985',
     'code': 3187,
     'abbreviation': 'DBCFR',
     'name': 'DB Cargo France SAS ',
@@ -334,7 +394,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '8bff2042-5364-469a-bdf5-bdb0020aed6b',
+    'id': '8bff2042-5364-469a-bdf5-bdb0020aed6b',
     'code': 5429,
     'abbreviation': 'TMR',
     'name': 'Transports de Martigny et Régions SA',
@@ -343,7 +403,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '28a7f3c0-b1eb-490c-a2d1-62bc5277b88e',
+    'id': '28a7f3c0-b1eb-490c-a2d1-62bc5277b88e',
     'code': 3286,
     'abbreviation': 'Retrack',
     'name': 'Retrack Germany GmbH',
@@ -352,7 +412,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'bf590599-9f25-4390-8e27-4b2fca7313e8',
+    'id': 'bf590599-9f25-4390-8e27-4b2fca7313e8',
     'code': 3423,
     'abbreviation': 'CROBE',
     'name': 'CROSSRAIL BENELUX NV',
@@ -361,7 +421,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '7e762007-5ad8-47e0-a97f-89bdba131dd5',
+    'id': '7e762007-5ad8-47e0-a97f-89bdba131dd5',
     'code': 2185,
     'abbreviation': 'SBB Cargo',
     'name': 'SBB CFF FFS Cargo',
@@ -370,7 +430,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '039e2402-c066-4abf-a2da-c2316ecad12f',
+    'id': '039e2402-c066-4abf-a2da-c2316ecad12f',
     'code': 3718,
     'abbreviation': 'MDW',
     'name': 'MEDWAY ITALIA SRL',
@@ -379,7 +439,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '0698a5e8-69d5-4b45-9f46-0fbfbb818a2f',
+    'id': '0698a5e8-69d5-4b45-9f46-0fbfbb818a2f',
     'code': 5186,
     'abbreviation': 'SBB Infrastruktur PathOrderTool',
     'name': 'Schweizerische Bundesbahnen SBB Infrastruktur',
@@ -388,7 +448,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'f6fe0b2f-1185-4e71-adfd-040188e1210c',
+    'id': 'f6fe0b2f-1185-4e71-adfd-040188e1210c',
     'code': 5109,
     'abbreviation': 'BRAG',
     'name': 'BRAG BauRail AG',
@@ -397,7 +457,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '4c254e9e-1ef5-4932-b33f-4147e77c8649',
+    'id': '4c254e9e-1ef5-4932-b33f-4147e77c8649',
     'code': 3621,
     'abbreviation': 'L&W',
     'name': 'Laeger & Wöstenhöfer GmbH & Co.KG',
@@ -406,7 +466,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '9e77e1e3-9802-4460-9b71-714fca69da81',
+    'id': '9e77e1e3-9802-4460-9b71-714fca69da81',
     'code': 3273,
     'abbreviation': 'RTXX',
     'name': 'Railtraxx',
@@ -415,7 +475,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '818c4b55-2176-4ce9-afd4-4bb898bea202',
+    'id': '818c4b55-2176-4ce9-afd4-4bb898bea202',
     'code': 3552,
     'abbreviation': 'TX L GmbH',
     'name': 'TX Logistik Schweiz GmbH',
@@ -424,7 +484,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '75c22f15-665a-4247-8e21-918658c8736f',
+    'id': '75c22f15-665a-4247-8e21-918658c8736f',
     'code': 2181,
     'abbreviation': 'RCA',
     'name': 'Rail Cargo Austria AG',
@@ -433,7 +493,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '0bc5a826-5173-4800-a87b-103cac0f191f',
+    'id': '0bc5a826-5173-4800-a87b-103cac0f191f',
     'code': 3090,
     'abbreviation': 'HU',
     'name': 'HU Hupac SpA',
@@ -442,7 +502,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e1a2dc00-132d-4c81-922b-f6875feb0091',
+    'id': 'e1a2dc00-132d-4c81-922b-f6875feb0091',
     'code': 3020,
     'abbreviation': 'HGK',
     'name': 'Häfen und Güterverkehr Köln AG',
@@ -451,7 +511,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '835404e2-4869-4a12-a42e-cd21980866bf',
+    'id': '835404e2-4869-4a12-a42e-cd21980866bf',
     'code': 4206,
     'abbreviation': 'SWEG',
     'name': 'SWEG Südwestdeutsche Landesverkehrs-GmbH',
@@ -460,7 +520,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'da35ca08-7782-4fec-a392-aaec66d2a359',
+    'id': 'da35ca08-7782-4fec-a392-aaec66d2a359',
     'code': 3482,
     'abbreviation': 'FuoriMuro SrL',
     'name': 'FuoriMuro Impresa Ferroviara S.r.L.',
@@ -469,7 +529,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'ac432f03-ac43-430e-8ec3-4d6a699173f1',
+    'id': 'ac432f03-ac43-430e-8ec3-4d6a699173f1',
     'code': 3449,
     'abbreviation': 'TXL Italia',
     'name': 'TX Logistik Transalpine GmbH – Sede secondaria italiana',
@@ -478,7 +538,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'acbe44fa-aecd-48b6-9cc3-63b3442e887d',
+    'id': 'acbe44fa-aecd-48b6-9cc3-63b3442e887d',
     'code': 1187,
     'abbreviation': 'SNCF Voyages',
     'name': 'SNCF Voyages',
@@ -487,7 +547,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'b5ca03d3-d623-4c7b-a113-036202e94d2a',
+    'id': 'b5ca03d3-d623-4c7b-a113-036202e94d2a',
     'code': 1181,
     'abbreviation': 'ÖBB PV AG',
     'name': 'ÖBB Personenverkehr AG',
@@ -496,7 +556,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '97bb5d7e-8bf7-4c89-a96b-3c87a1eb52e5',
+    'id': '97bb5d7e-8bf7-4c89-a96b-3c87a1eb52e5',
     'code': 3373,
     'abbreviation': 'SRTAG',
     'name': 'Swiss Rail Traffic AG',
@@ -505,7 +565,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '005def4c-9edb-4569-a655-30b47492122a',
+    'id': '005def4c-9edb-4569-a655-30b47492122a',
     'code': 2287,
     'abbreviation': 'CTI',
     'name': 'Captrain Italia Srl',
@@ -514,7 +574,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '4e053fc0-36e4-4396-9ea6-56abe5f29c70',
+    'id': '4e053fc0-36e4-4396-9ea6-56abe5f29c70',
     'code': 1281,
     'abbreviation': 'ÖBB',
     'name': 'ÖBB- Personenverkehr AG',
@@ -523,7 +583,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '6647d484-23ba-4f0c-ab4c-4c7502ddf33e',
+    'id': '6647d484-23ba-4f0c-ab4c-4c7502ddf33e',
     'code': 5491,
     'abbreviation': 'OeBB',
     'name': 'Oensingen-Balsthal Bahn AG',
@@ -532,7 +592,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'a16a659f-1194-496b-8538-bb9162b32c0a',
+    'id': 'a16a659f-1194-496b-8538-bb9162b32c0a',
     'code': 3302,
     'abbreviation': 'RONE',
     'name': 'Rail One S.p.A',
@@ -541,7 +601,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'd76a4110-3202-4393-a83f-d4d5667c6f7d',
+    'id': 'd76a4110-3202-4393-a83f-d4d5667c6f7d',
     'code': 5249,
     'abbreviation': 'SZU',
     'name': 'Sihltal Zürich Uetliberg Bahn SZU AG',
@@ -550,7 +610,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '9198ba4c-9edf-4c3e-8403-c1db0530e128',
+    'id': '9198ba4c-9edf-4c3e-8403-c1db0530e128',
     'code': 3758,
     'abbreviation': 'MEV CH',
     'name': 'MEV Schweiz AG',
@@ -559,7 +619,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '1e6cff17-4236-4834-8933-e698169267d6',
+    'id': '1e6cff17-4236-4834-8933-e698169267d6',
     'code': 3143,
     'abbreviation': 'Europorte France',
     'name': 'Europorte France',
@@ -568,7 +628,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '4e6aa98d-0fc8-4ae1-87fd-6a7288c47d57',
+    'id': '4e6aa98d-0fc8-4ae1-87fd-6a7288c47d57',
     'code': 5227,
     'abbreviation': 'TRAVYS',
     'name': 'TRAVYS SA',
@@ -577,7 +637,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e281e044-1364-4dbf-9f45-d8100e664994',
+    'id': 'e281e044-1364-4dbf-9f45-d8100e664994',
     'code': 5230,
     'abbreviation': 'MBC',
     'name': 'Transports de la région Morges-Bière-Cossonay',
@@ -586,7 +646,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e11b1427-1091-4239-b01b-aaab9195e6c1',
+    'id': 'e11b1427-1091-4239-b01b-aaab9195e6c1',
     'code': 4045,
     'abbreviation': 'RCS',
     'name': 'Rheinland cargo Schweiz GmbH',
@@ -595,7 +655,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '7d8b0ae9-683b-4fda-9682-a1c00db3db1a',
+    'id': '7d8b0ae9-683b-4fda-9682-a1c00db3db1a',
     'code': 2385,
     'abbreviation': 'SBBCD',
     'name': 'SBB Cargo Deutschland GmbH',
@@ -604,7 +664,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e006442c-e1bd-45d8-a0da-6ae1a110228c',
+    'id': 'e006442c-e1bd-45d8-a0da-6ae1a110228c',
     'code': 1163,
     'abbreviation': 'BLS P',
     'name': 'BLS AG',
@@ -613,7 +673,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '7e4f8efd-a2c1-410f-b37d-ff1f52026d27',
+    'id': '7e4f8efd-a2c1-410f-b37d-ff1f52026d27',
     'code': 3609,
     'abbreviation': 'DB Cargo Belgium',
     'name': 'DB Cargo Belgium BVBA',
@@ -622,7 +682,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e29db97f-496a-4979-8496-1960e68b9254',
+    'id': 'e29db97f-496a-4979-8496-1960e68b9254',
     'code': 5097,
     'abbreviation': 'UTL',
     'name': 'Umwelt- und Transportlogistik AG',
@@ -631,7 +691,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '3d1209bf-bb04-41b4-8289-b5758636510b',
+    'id': '3d1209bf-bb04-41b4-8289-b5758636510b',
     'code': 2182,
     'abbreviation': 'CFL cargo',
     'name': 'CFL cargo SA',
@@ -640,7 +700,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '510f0f8c-cb33-4cf1-b400-39b9e432b980',
+    'id': '510f0f8c-cb33-4cf1-b400-39b9e432b980',
     'code': 3513,
     'abbreviation': 'GTSR',
     'name': 'GTS Rail S.p.A.',
@@ -649,7 +709,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'b5ad0b68-7a48-4f75-8638-d11130403dd7',
+    'id': 'b5ad0b68-7a48-4f75-8638-d11130403dd7',
     'code': 3195,
     'abbreviation': 'CCW',
     'name': 'Captrain Deutschland CargoWest GmbH',
@@ -658,7 +718,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '19bae654-ca8d-43f7-9e0a-91075a090747',
+    'id': '19bae654-ca8d-43f7-9e0a-91075a090747',
     'code': 3499,
     'abbreviation': 'CFI',
     'name': 'Compagnia Ferroviaria Italiana',
@@ -667,7 +727,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '0abfc999-803f-49ca-a319-55455c7dca13',
+    'id': '0abfc999-803f-49ca-a319-55455c7dca13',
     'code': 2187,
     'abbreviation': 'Hexafret',
     'name': 'Hexafret SAS',
@@ -676,7 +736,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '3fc143d4-c4c2-42d6-9e92-f2efb437fbc8',
+    'id': '3fc143d4-c4c2-42d6-9e92-f2efb437fbc8',
     'code': 1080,
     'abbreviation': 'DB AG',
     'name': 'Deutsche Bahn AG',
@@ -685,7 +745,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'ce876b67-0614-44d0-964b-9538169fdfad',
+    'id': 'ce876b67-0614-44d0-964b-9538169fdfad',
     'code': 8987,
     'abbreviation': 'SIB',
     'name': 'SIBELIT S.A.',
@@ -694,7 +754,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'a7e7f713-5ec0-4f87-9d66-bc3c7548089a',
+    'id': 'a7e7f713-5ec0-4f87-9d66-bc3c7548089a',
     'code': 3466,
     'abbreviation': 'WRS AG',
     'name': 'WRS Widmer Rail Services AG',
@@ -703,7 +763,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '1c3f9794-84e2-42fb-8864-f2acda1f7f42',
+    'id': '1c3f9794-84e2-42fb-8864-f2acda1f7f42',
     'code': 3270,
     'abbreviation': 'TN',
     'name': 'Trenord Srl',
@@ -712,7 +772,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '2b41d13b-2dfd-4f70-82a3-c90d03898cc4',
+    'id': '2b41d13b-2dfd-4f70-82a3-c90d03898cc4',
     'code': 5251,
     'abbreviation': 'ST',
     'name': 'Sursee-Triengen-Bahn, ST',
@@ -721,7 +781,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '348fae94-42ad-41d5-85f4-8b58920d9122',
+    'id': '348fae94-42ad-41d5-85f4-8b58920d9122',
     'code': 3471,
     'abbreviation': 'TR',
     'name': 'TR Trans Rail AG',
@@ -730,7 +790,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '65ad7d57-1e84-4689-9d0c-62f2f888bef4',
+    'id': '65ad7d57-1e84-4689-9d0c-62f2f888bef4',
     'code': 3527,
     'abbreviation': 'LTE CH',
     'name': 'LTE Schweiz GmbH',
@@ -739,7 +799,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '8d19cde6-daac-466b-8c1f-01bf4430da8e',
+    'id': '8d19cde6-daac-466b-8c1f-01bf4430da8e',
     'code': 2263,
     'abbreviation': 'BLS N EVU',
     'name': 'BLS Netz AG Eisenbahnverkehrsunternehmung',
@@ -748,7 +808,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e7c68023-9e30-47e6-8b5c-961bfbf8d369',
+    'id': 'e7c68023-9e30-47e6-8b5c-961bfbf8d369',
     'code': 3504,
     'abbreviation': 'Rail Force One',
     'name': 'Rail Force One B.V.',
@@ -757,7 +817,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '2a90257d-844d-494b-8ebe-a71016cec181',
+    'id': '2a90257d-844d-494b-8ebe-a71016cec181',
     'code': 5244,
     'abbreviation': 'TransN',
     'name': 'transports publics neuchatelois',
@@ -766,7 +826,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e7cfaa17-0153-4904-9fc6-578f285c6282',
+    'id': 'e7cfaa17-0153-4904-9fc6-578f285c6282',
     'code': 3672,
     'abbreviation': 'ERS',
     'name': 'Eurorail Logistics d.o.o..',
@@ -775,7 +835,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '3a8af73f-7488-4c53-9b28-303530e0f474',
+    'id': '3a8af73f-7488-4c53-9b28-303530e0f474',
     'code': 3233,
     'abbreviation': 'CPTF',
     'name': 'CAPTRAIN France',
@@ -784,7 +844,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '6786e9f5-aafe-4ec4-aa1a-2744bf6c2cce',
+    'id': '6786e9f5-aafe-4ec4-aa1a-2744bf6c2cce',
     'code': 3337,
     'abbreviation': 'RRI',
     'name': 'Rhenus Rail St. Ingbert GmbH',
@@ -793,7 +853,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '87dfb066-c0b5-4ddb-8b42-c50cbfa18354',
+    'id': '87dfb066-c0b5-4ddb-8b42-c50cbfa18354',
     'code': 3178,
     'abbreviation': 'RNE',
     'name': 'RailNetEurope',
@@ -802,7 +862,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '03106a6e-a6b8-4da8-9eda-2957d299dfdf',
+    'id': '03106a6e-a6b8-4da8-9eda-2957d299dfdf',
     'code': 5226,
     'abbreviation': 'CJ',
     'name': 'Chemin de fer du Jura',
@@ -811,7 +871,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '2c13f27f-c0c7-4639-a0fe-9799666abd96',
+    'id': '2c13f27f-c0c7-4639-a0fe-9799666abd96',
     'code': 2485,
     'abbreviation': 'SBBCI',
     'name': 'SBB Cargo Italia',
@@ -820,7 +880,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '95cba601-938c-4e46-a7c4-13309bbc2c30',
+    'id': '95cba601-938c-4e46-a7c4-13309bbc2c30',
     'code': 3127,
     'abbreviation': 'HSL',
     'name': 'HSL Logistik GmbH',
@@ -829,7 +889,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '9c359d09-8c0e-4218-9d01-b097e2ce4c69',
+    'id': '9c359d09-8c0e-4218-9d01-b097e2ce4c69',
     'code': 85,
     'abbreviation': 'SBB Infrastructure',
     'name': 'Swiss Federal Railways - Infrastructure',
@@ -838,7 +898,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '2311efb7-106a-4c5a-b754-fd61010b78b6',
+    'id': '2311efb7-106a-4c5a-b754-fd61010b78b6',
     'code': 3015,
     'abbreviation': 'BYB',
     'name': 'BayernBahn Betriebsgesellschaft mbH',
@@ -847,7 +907,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'cf4761e4-6bb5-437e-9c17-a9afb79336f7',
+    'id': 'cf4761e4-6bb5-437e-9c17-a9afb79336f7',
     'code': 3221,
     'abbreviation': 'CRO',
     'name': 'Crossrail Italia Srl',
@@ -856,7 +916,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'cd6e6bc5-ae1f-46a6-8afe-9917a6d427ad',
+    'id': 'cd6e6bc5-ae1f-46a6-8afe-9917a6d427ad',
     'code': 3356,
     'abbreviation': 'BLSC',
     'name': 'BLS Cargo AG',
@@ -865,7 +925,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '3bb57f03-d2a0-4a6c-a08a-f85ab91ae684',
+    'id': '3bb57f03-d2a0-4a6c-a08a-f85ab91ae684',
     'code': 2188,
     'abbreviation': 'LNS',
     'name': 'Lineas',
@@ -874,7 +934,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '83261c97-cb13-4b14-aac5-a90da3952db4',
+    'id': '83261c97-cb13-4b14-aac5-a90da3952db4',
     'code': 3832,
     'abbreviation': 'EVM',
     'name': 'EVM Rail S.r.l.',
@@ -883,7 +943,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'abd9527e-d3a2-4dcf-b1e2-4c1926c5b108',
+    'id': 'abd9527e-d3a2-4dcf-b1e2-4c1926c5b108',
     'code': 3395,
     'abbreviation': 'Weco',
     'name': 'Weco Rail GmbH',
@@ -892,7 +952,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'c708e057-b16b-4c4b-b309-24650b9668ef',
+    'id': 'c708e057-b16b-4c4b-b309-24650b9668ef',
     'code': 3291,
     'abbreviation': 'RheinCargo',
     'name': 'RheinCargo GmbH & Co. KG',
@@ -901,7 +961,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e84010d2-7359-41f2-8de6-3bf03da967e9',
+    'id': 'e84010d2-7359-41f2-8de6-3bf03da967e9',
     'code': 3063,
     'abbreviation': 'RTS',
     'name': 'RTS Rail Transport Service GmbH',
@@ -910,7 +970,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'eac91e70-ea6a-452b-898a-c33a71e01519',
+    'id': 'eac91e70-ea6a-452b-898a-c33a71e01519',
     'code': 1183,
     'abbreviation': 'TI',
     'name': 'Trenitalia S.p.A.',
@@ -919,7 +979,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '3628d068-b828-4f64-9e46-b241465bd3ea',
+    'id': '3628d068-b828-4f64-9e46-b241465bd3ea',
     'code': 3368,
     'abbreviation': 'OCEANOGATE',
     'name': 'OCEANOGATE Italia S.P.A.',
@@ -928,7 +988,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'e555eab3-ed04-4fae-9e03-51947ec58019',
+    'id': 'e555eab3-ed04-4fae-9e03-51947ec58019',
     'code': 4108,
     'abbreviation': 'CBAG',
     'name': 'CargoBeamer AG',
@@ -937,7 +997,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'eb40542f-aa1b-4637-963d-2fe6ddb39243',
+    'id': 'eb40542f-aa1b-4637-963d-2fe6ddb39243',
     'code': 5234,
     'abbreviation': 'TPF INFRA',
     'name': 'Transports publics fribourgeois TPF INFRA SA',
@@ -946,7 +1006,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '35f3691e-ff8f-4da5-8ce3-613f81694c6f',
+    'id': '35f3691e-ff8f-4da5-8ce3-613f81694c6f',
     'code': 5459,
     'abbreviation': 'SOB I-TI',
     'name': 'Schweizerische Südostbahn AG, Infrastrukturmanager',
@@ -955,7 +1015,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '16790772-004b-4fed-a5c6-2e2fd6fcd1e6',
+    'id': '16790772-004b-4fed-a5c6-2e2fd6fcd1e6',
     'code': 5460,
     'abbreviation': 'SOB I',
     'name': 'Schweizerische Südostbahn AG, Infrastruktur',
@@ -964,7 +1024,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': '3766bcea-ebfe-407b-ad7f-4c973f015059',
+    'id': '3766bcea-ebfe-407b-ad7f-4c973f015059',
     'code': 3915,
     'abbreviation': 'TVS',
     'name': 'Schweizerische Trassenvergabestelle',
@@ -973,7 +1033,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'd12c2c6a-ced5-4ac3-80b9-9a2496736bd8',
+    'id': 'd12c2c6a-ced5-4ac3-80b9-9a2496736bd8',
     'code': 9998,
     'abbreviation': 'TEST2',
     'name': 'Mounties',
@@ -982,7 +1042,7 @@ export const companies: Company[] = [
     'validTo': '9999-12-12',
   },
   {
-    'dataId': 'fa647dd4-ee72-4dd8-92a3-5dbad4534829',
+    'id': 'fa647dd4-ee72-4dd8-92a3-5dbad4534829',
     'code': 9997,
     'abbreviation': 'TEST3',
     'name': 'Mounties',

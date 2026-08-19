@@ -7,79 +7,17 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, signal, untracked} from '@angular/core';
-import {SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
-import {companies, Company, filter, sort} from './sci-table-page.data';
+import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
+import {SciRowActionFactoryFn, SciTable, SciTableComponent, SciTableFactory, table} from '@scion/components/table';
+import {Company, CompanyService} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
-import {form, FormField} from '@angular/forms/signals';
-import {combineLatestWith, map, Observable, scan, Subject, timer} from 'rxjs';
+import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
 import {DatePipe} from '@angular/common';
-import {toObservable} from '@angular/core/rxjs-interop';
-import {UUID} from '@scion/toolkit/uuid';
-import {startWith, switchMap} from 'rxjs/operators';
 import {createDestroyableInjector} from '@scion/components/common';
-
-@Component({
-  selector: 'app-date-cell',
-  imports: [
-    DatePipe,
-  ],
-  template: `
-    {{date() | date : 'dd.MM.yyyy'}}
-  `,
-})
-class DateCellComponent {
-  protected readonly date = input.required<Date>();
-}
-
-const data = signal(new Array(100).fill(0).map((_, i) => ({
-  ...companies[i % companies.length]!,
-  dataId: `${i}`,
-})));
-
-const updates$ = new Subject<Company>();
-const create$ = new Subject<{index: number; company: Company}>();
-
-function slowDataSource(): SciDataLoaderFn<Company> {
-  const _data$ = toObservable(data).pipe(
-    switchMap(data => create$.pipe(
-      startWith(null),
-      scan((companies, create) => {
-        const newCompanies = companies.length === 0 ? data : companies;
-        if (create == null) {
-          return newCompanies;
-        }
-        newCompanies.splice(create.index, 0, create.company);
-        return newCompanies;
-      }, [] as Company[]),
-    )),
-  );
-
-  return (request: SciTableRequest): Observable<SciTableResponse<Company>> => {
-    return timer(1000).pipe(
-      combineLatestWith(_data$),
-      switchMap(([_, data]) => updates$.pipe(
-        startWith(null),
-        scan((companies, update) => {
-          const newCompanies = companies.length === 0 ? data : companies;
-          if (update === null) {
-            return newCompanies;
-          }
-          const index = newCompanies.findIndex(company => company.dataId == update.dataId);
-          newCompanies.splice(index, 1, update);
-          return newCompanies;
-        }, [] as Company[]),
-      )),
-      map(companies => {
-        const filtered = sort(filter(companies, request.columnFilters, request.globalFilter), request.sortCriteria);
-        return ({
-          items: filtered.slice(request.start, request.end),
-          totalCount: filtered.length,
-        });
-      }),
-    );
-  };
-}
+import {SciToolbarFactory} from '@scion/components/menu';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
+import {FieldValidationDirective} from '../common/field-validation.directive';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
   selector: 'app-table-page',
@@ -89,169 +27,284 @@ function slowDataSource(): SciDataLoaderFn<Company> {
     SciTableComponent,
     FormsModule,
     FormField,
+    SciFormFieldComponent,
+    FormRoot,
+    FieldValidationDirective,
+    SciTabDirective,
+    SciTabbarComponent,
   ],
 })
 export default class SciTablePageComponent {
-  protected injector = inject(Injector);
 
-  protected settings = signal({
-    filterable: true,
-    sortable: true,
-    resizable: true,
-    showHeader: true,
-    slowDataSource: false,
-    selectable: 'multi',
-    columns: {
-      id: true,
-      code: true,
-    },
-  });
-  protected form = form(this.settings);
+  private readonly _injector = inject(Injector);
+  private readonly _tabbar = viewChild.required(SciTabbarComponent);
 
-  protected update = signal({
-    companyJSON: '',
-  });
-  protected updateForm = form(this.update);
+  protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
+  protected readonly companyForm: FieldTree<CompanyForm> = this.createCompanyForm();
 
-  private _slowDataSource = slowDataSource();
+  protected readonly table = this.computeTable();
 
-  protected tableConfig: Omit<SciTableDescriptor<Company>, 'data'> = {
-    name: 'table:companies',
-    headerVisible: computed(() => this.settings().showHeader),
-    sortable: computed(() => this.settings().sortable),
-    filterable: computed(() => this.settings().filterable),
-    resizable: computed(() => this.settings().resizable),
-    selectable: computed(() => this.settings().selectable === 'disabled' ? false : this.settings().selectable as 'single' | 'multi'),
-    trackBy: company => company.dataId,
-    rowActions: (company, toolbar) => toolbar
-      .addToolbarButton({
-        icon: 'scion.delete',
-        accelerator: {key: 'delete'},
-        onSelect: () => data.update(companies => companies.filter(c => c.dataId !== company.dataId)),
-      })
-      .addToolbarButton({
-        icon: 'content_copy',
-        onSelect: () => {
-          const index = data().findIndex(c => c.dataId === company.dataId);
-          if (index >= 0) {
-            create$.next({index, company: {...company, dataId: UUID.randomUUID()}});
-          }
-        },
-      })
-      .addToolbarMenu({
-        icon: 'scion.more_vertical',
-        visualMenuIndicator: false,
-      }, menu => menu
-        .addMenuItem({
-          label: 'Edit',
-          onSelect: () => console.log('edit', company),
-        })
-        .addMenuItem({
-          label: 'Duplicate',
-          onSelect: () => console.log('duplicate', company),
-        })
-        .addMenu({label: 'SubMenu'}, menu => menu
-          .addMenuItem({
-            label: 'Delete Delete Delete Delete Delete Delete Delete',
-            onSelect: () => console.log('delete', company),
+  private createTable(options: {slowDataSource: boolean}): SciTable<Company> {
+    const companyService = inject(CompanyService);
+    const companyForm = this.companyForm;
+    const tabbar = this._tabbar;
+
+    return table({
+      name: 'table:companies',
+      headerVisible: computed(() => this.settingsForm.showHeader().value()),
+      sortable: computed(() => this.settingsForm.sortable().value()),
+      filterable: computed(() => this.settingsForm.filterable().value()),
+      resizable: computed(() => this.settingsForm.resizable().value()),
+      selectable: computed(() => {
+        const selectable = this.settingsForm.selectable().value();
+        return selectable === 'false' ? false : selectable;
+      }),
+      trackBy: company => company.id,
+      data: options.slowDataSource ? request => companyService.getCompanies$(request, {slowDataSource: true}) : companyService.companies,
+      rowActions: createRowActions(),
+    }, (table: SciTableFactory<Company>) => {
+      const visibleColumns = this.settingsForm.visibleColumns().value();
+
+      // ID Column.
+      if (visibleColumns.id) {
+        table.addStringColumn({
+          name: 'column:id',
+          header: 'ID',
+          value: company => company.id,
+          filterable: false,
+        });
+      }
+
+      // Code Column.
+      if (visibleColumns.code) {
+        table.addNumberColumn({
+          name: 'column:code',
+          header: 'Code',
+          value: company => company.code,
+        });
+      }
+
+      // Abbreviation Column.
+      if (visibleColumns.abbreviation) {
+        table.addStringColumn({
+          name: 'column:abbreviation',
+          header: 'Abbreviation',
+          value: company => company.abbreviation,
+          width: '1fr',
+        });
+      }
+
+      // Name Column.
+      if (visibleColumns.name) {
+        table.addStringColumn({
+          name: 'column:name',
+          header: 'Name',
+          value: company => company.name,
+          width: '1fr',
+        });
+      }
+
+      // EVU Column.
+      if (visibleColumns.railwayUndertaking) {
+        table.addBooleanColumn({
+          name: 'column:railwayUndertaking',
+          header: 'EVU',
+          value: company => company.railwayUndertaking,
+        });
+      }
+
+      // Valid From Column.
+      if (visibleColumns.validFrom) {
+        table.addComponentColumn({
+          name: 'column:validFrom',
+          header: 'Valid From',
+          sortable: this.settingsForm.slowDataSource().value() ? true : {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
+          filterable: this.settingsForm.slowDataSource().value() ? true : {matcher: (filterText, item) => item.item.validFrom.includes(filterText)},
+          component: (company: Company) => ({
+            component: DateCellComponent,
+            bindings: [inputBinding('date', () => new Date(company.validFrom))],
           }),
-        )
-        .addMenu({label: 'Actions'}, menu => menu
+        });
+      }
+
+      // Valid To Column.
+      if (visibleColumns.validTo) {
+        table.addComponentColumn({
+          name: 'column:validTo',
+          header: 'Valid To',
+          filterable: this.settingsForm.slowDataSource().value() ? true : {matcher: (filterText, item) => item.item.validTo.includes(filterText)},
+          sortable: this.settingsForm.slowDataSource().value() ? true : {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
+          component: (company: Company) => ({
+            component: DateCellComponent,
+            bindings: [inputBinding('date', () => new Date(company.validTo))],
+          }),
+        });
+      }
+    });
+
+    function createRowActions(): SciRowActionFactoryFn<Company> {
+      return (company: Company, toolbar: SciToolbarFactory) => toolbar
+        .addToolbarButton({
+          icon: 'scion.edit',
+          onSelect: () => {
+            companyForm().reset(company);
+            requestAnimationFrame(() => tabbar().activateTab('company-editor'));
+          },
+        })
+        .addToolbarButton({
+          icon: 'scion.delete',
+          accelerator: {key: 'delete'},
+          onSelect: () => companyService.deleteCompany(company.id),
+        })
+        .addToolbarButton({
+          icon: 'content_copy',
+          onSelect: () => companyService.addCompany(company),
+        })
+        .addToolbarMenu({
+          icon: 'scion.more_vertical',
+          visualMenuIndicator: false,
+        }, menu => menu
           .addMenuItem({
-            label: 'Copy to...',
-            onSelect: () => console.log('copy', company),
+            icon: 'scion.edit',
+            label: 'Edit',
+            onSelect: () => {
+              companyForm().reset(company);
+              requestAnimationFrame(() => tabbar().activateTab('company-editor'));
+            },
           })
           .addMenuItem({
-            label: 'Move to...',
-            onSelect: () => console.log('move', company),
+            label: 'Copy',
+            icon: 'content_copy',
+            onSelect: () => companyService.addCompany(company),
           })
-          .addMenuItem({
-            label: 'Info...',
-            onSelect: () => console.log('info', company),
-          }),
-        )),
-  };
+          .addMenu({label: 'More'}, menu => menu
+            .addMenuItem({
+              label: 'Copy to...',
+              onSelect: () => console.log('copy', company),
+            })
+            .addMenuItem({
+              label: 'Move to...',
+              onSelect: () => console.log('move', company),
+            })
+            .addMenuItem({
+              label: 'Info...',
+              onSelect: () => console.log('info', company),
+            }),
+          ))
+    }
+  }
 
-  protected table = signal<SciTable<Company> | undefined>(undefined);
-  protected activeItem = computed(() => this.table()?.activeItem());
-  protected selectedItems = computed(() => this.table()?.selectedItems());
+  private computeTable(): Signal<SciTable<Company> | undefined> {
+    const table = signal<SciTable<Company> | undefined>(undefined)
 
-  constructor() {
     effect(onCleanup => {
-      const slowDataSource = computed(() => this.settings().slowDataSource)();
-      const columns = computed(() => this.settings().columns, {equal: (a, b) => a.code === b.code && a.id === b.id})();
+      const slowDataSource = this.settingsForm.slowDataSource().value();
 
-      const dataSource = slowDataSource ? this._slowDataSource : data;
       untracked(() => {
-        const injector = createDestroyableInjector({parent: this.injector});
+        const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        this.table.set(runInInjectionContext(injector,
-          () => table<Company>({...this.tableConfig, data: dataSource}, table => this.createTable({slowDataSource, columns}, table)),
-        ));
+        table.set(runInInjectionContext(injector, () => this.createTable({slowDataSource})));
       });
+    });
+
+    return table;
+  }
+
+  private createSettingsForm(): FieldTree<SettingsForm> {
+    const defaults: SettingsForm = {
+      filterable: true,
+      sortable: true,
+      resizable: true,
+      showHeader: true,
+      slowDataSource: false,
+      selectable: 'multi',
+      rowCount: 100,
+      visibleColumns: {
+        id: true,
+        code: true,
+        abbreviation: true,
+        name: true,
+        railwayUndertaking: true,
+        validFrom: true,
+        validTo: true,
+      },
+    };
+    return form(signal(defaults));
+  }
+
+  private createCompanyForm(): FieldTree<CompanyForm> {
+    const companyService = inject(CompanyService);
+
+    const defaults: CompanyForm = {
+      id: '',
+      code: null,
+      abbreviation: '',
+      name: '',
+      railwayUndertaking: false,
+      validFrom: '',
+      validTo: '',
+    };
+
+    return form(signal(defaults), company => {
+      required(company.id);
+      required(company.code);
+      required(company.abbreviation);
+      required(company.name);
+      required(company.validFrom);
+      required(company.validTo);
+      readonly(company.id);
+    }, {
+      submission: {
+        action: async form => {
+          companyService.updateCompany(form().value() as Company);
+          this.companyForm().reset(defaults);
+          this._tabbar().activateTab('settings');
+        },
+      },
     });
   }
 
-  protected createTable(settings: {slowDataSource: boolean; columns: {id: boolean; code: boolean}}, table: SciTableFactory<Company>): SciTableFactory<Company> {
-    if (settings.columns.id) {
-      table.addStringColumn({
-        header: 'ID',
-        value: company => company.dataId,
-        name: 'column:id',
-        filterable: false,
-      });
-    }
-
-    if (settings.columns.code) {
-      table.addNumberColumn({
-        header: 'Code',
-        value: company => company.code,
-        name: 'column:code',
-      });
-    }
-
-    return table
-      .addStringColumn({
-        header: '%scion.components.clear.tooltip',
-        value: company => company.abbreviation,
-        width: '1fr',
-        name: 'column:abbreviation',
-      })
-      .addStringColumn({
-        header: 'Name',
-        value: company => company.name,
-        width: '1fr',
-        name: 'column:name',
-      })
-      .addBooleanColumn({
-        header: 'EVU',
-        value: company => company.railwayUndertaking,
-        name: 'column:railwayUndertaking',
-      })
-      .addComponentColumn({
-        header: 'Gültig ab',
-        name: 'column:validFrom',
-        sortable: settings.slowDataSource ? true : {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
-        filterable: settings.slowDataSource ? true : {matcher: (query, item) => item.item.validFrom.includes(query)},
-        component: item => ({
-          component: DateCellComponent,
-          bindings: [inputBinding('date', () => new Date(item.validFrom))],
-        }),
-      })
-      .addComponentColumn({
-        header: 'Gültig bis',
-        name: 'column:validTo',
-        filterable: settings.slowDataSource ? true : {matcher: (query, item) => item.item.validTo.includes(query)},
-        sortable: settings.slowDataSource ? true : {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
-        component: item => ({
-          component: DateCellComponent,
-          bindings: [inputBinding('date', () => new Date(item.validTo))],
-        }),
-      });
+  protected onCompanyFormCancel(): void {
+    this.companyForm.id().value.set('');
+    this._tabbar().activateTab('settings');
   }
+}
 
-  protected onUpdate(): void {
-    const company = JSON.parse(this.update().companyJSON) as Company;
-    updates$.next(company);
-  }
+@Component({
+  selector: 'app-date-cell',
+  imports: [DatePipe],
+  template: `{{date() | date : 'dd.MM.yyyy'}}`,
+})
+class DateCellComponent {
+
+  protected readonly date = input.required<Date>();
+}
+
+interface SettingsForm {
+  filterable: boolean,
+  sortable: boolean,
+  resizable: boolean,
+  showHeader: boolean,
+  slowDataSource: false,
+  selectable: 'false' | 'single' | 'multi',
+  rowCount: number;
+  visibleColumns: {
+    id: boolean,
+    code: boolean,
+    abbreviation: boolean;
+    name: boolean;
+    railwayUndertaking: boolean;
+    validFrom: boolean;
+    validTo: boolean;
+  },
+}
+
+export interface CompanyForm {
+  id: string;
+  code: number | null;
+  abbreviation: string;
+  name: string;
+  railwayUndertaking: boolean;
+  validFrom: string;
+  validTo: string;
 }

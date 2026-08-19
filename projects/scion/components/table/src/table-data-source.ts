@@ -27,7 +27,7 @@ export interface SciTableRequest {
   page: number;
   sortCriteria: SciSortCriterion[];
   columnFilters: SciColumnFilter[];
-  globalFilter?: string;
+  globalFilter?: string; // TODO [etienne] still supported?
 }
 
 export interface SciTableResponse<T> {

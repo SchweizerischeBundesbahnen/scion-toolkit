@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, input, inputBinding, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
-import {SciCellContext, SciColumnDescriptor, SciTable, SciTableComponent, SciTableDescriptor, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {SciCellContext, SciColumnDescriptor, SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -80,7 +80,7 @@ export default class SciTablePageComponent {
           sortable: computed(() => settingsForm.sortable().value()),
           filterable: computed(() => settingsForm.filterable().value()),
           resizable: computed(() => settingsForm.resizable().value()),
-          selectable: computed<false | 'single' | 'multi'>(() => {
+          selectable: computed(() => {
             const selectable = settingsForm.selectable().value();
             return selectable === 'false' ? false : selectable;
           }),
@@ -241,8 +241,8 @@ interface Product {
   inStock: boolean;
 }
 
-function generateData(length: number = 10_000): Product[] {
-  return Array.from(Array(length), (_, i) => ({
+function generateData(count: number): Product[] {
+  return Array.from(Array(count), (_, i) => ({
     id: i + 1,
     name: `Product ${i + 1}`,
     price: Math.floor(Math.random() * 1000) + 1,
@@ -258,7 +258,7 @@ function customComparator(a: SciCellContext<Product, unknown>, b: SciCellContext
   return a.item.id - b.item.id;
 }
 
-function slowDataLoader(data: Signal<Product[]>) {
+function slowDataLoader(data: Signal<Product[]>): SciDataLoaderFn<Product> {
   return (request: SciTableRequest): Observable<SciTableResponse<Product>> => {
     return timer(1000).pipe(map(() => ({
       items: request.columnFilters.length ? [] : data().slice(request.start, request.end),

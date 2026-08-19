@@ -6,7 +6,7 @@
 
 <aside class="e2e-properties">
   <sci-tabbar>
-    <ng-template sciTab label="Settings" [cssClass]="'e2e-settings'">
+    <ng-template sciTab label="Settings" cssClass="e2e-settings">
       <form>
         <sci-form-field label="Filterable">
           <input [formField]="settingsForm.filterable" type="checkbox" class="e2e-filterable"/>
@@ -21,7 +21,7 @@
           <select [formField]="settingsForm.selectable" class="e2e-selectable">
             <option value="multi">Multi</option>
             <option value="single">Single</option>
-            <option value="false">Disabled</option>
+            <option value="false">False</option>
           </select>
         </sci-form-field>
         <sci-form-field label="Show Header">
@@ -54,7 +54,7 @@
       </form>
     </ng-template>
 
-    <ng-template sciTab label="Columns" [cssClass]="'e2e-columns'">
+    <ng-template sciTab label="Columns" cssClass="e2e-columns">
       <form [formRoot]="columnForm">
         <sci-form-field label="Name">
           <input [formField]="$any(columnForm.name)" class="e2e-column-name" placeholder="column:<string>" appFieldValidation>

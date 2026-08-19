@@ -1,70 +1,134 @@
 <main>
   @if (table(); as table) {
-    <sci-table [table]="table" />
+    <sci-table [table]="table"/>
   }
 </main>
 
 <aside>
-  <form>
-    <label>
-      <input [formField]="form.filterable" type="checkbox" />
-      Filterable
-    </label>
+  <sci-tabbar>
+    <!-- Settings -->
+    <ng-template sciTab label="Settings" name="settings">
+      <section>
+        <sci-form-field label="Filterable">
+          <input [formField]="settingsForm.filterable" type="checkbox"/>
+        </sci-form-field>
 
-    <label>
-      <input [formField]="form.sortable" type="checkbox" />
-      Sortable
-    </label>
+        <sci-form-field label="Sortable">
+          <input [formField]="settingsForm.sortable" type="checkbox"/>
+        </sci-form-field>
 
-    <label>
-      <input [formField]="form.resizable" type="checkbox" />
-      Resizable
-    </label>
+        <sci-form-field label="Resizable">
+          <input [formField]="settingsForm.resizable" type="checkbox"/>
+        </sci-form-field>
 
-    <label>
-      <input [formField]="form.showHeader" type="checkbox" />
-      Show Header
-    </label>
+        <sci-form-field label="Show Header">
+          <input [formField]="settingsForm.showHeader" type="checkbox"/>
+        </sci-form-field>
 
-    <label>
-      Selection
-      <select [formField]="form.selectable">
-        <option value="multi">Multi</option>
-        <option value="single">Single</option>
-        <option value="disabled">Disabled</option>
-      </select>
-    </label>
+        <sci-form-field label="Slow Datasource">
+          <input [formField]="settingsForm.slowDataSource" type="checkbox"/>
+        </sci-form-field>
 
-    <label>
-      <input [formField]="form.slowDataSource" type="checkbox" />
-      Use Slow DataSource
-    </label>
+        <sci-form-field label="Selectable">
+          <select [formField]="settingsForm.selectable">
+            <option value="multi">Multi</option>
+            <option value="single">Single</option>
+            <option value="false">False</option>
+          </select>
+        </sci-form-field>
+      </section>
+    </ng-template>
 
-    <div>
-      <label>
-        <input type="checkbox" [formField]="form.columns.id" />
-        Id
-      </label>
-      <label>
-        <input type="checkbox" [formField]="form.columns.code" />
-        Code
-      </label>
-    </div>
-  </form>
+    <!-- Date Source -->
+    <ng-template sciTab label="Datasource" name="settings">
+      <sci-form-field label="Slow Datasource">
+        <input [formField]="settingsForm.slowDataSource" type="checkbox"/>
+      </sci-form-field>
+    </ng-template>
 
-  <form>
-    <label>
-      Company JSON
-      <textarea [formField]="updateForm.companyJSON"></textarea>
-    </label>
-    <button (click)="onUpdate()">Update Company</button>
-  </form>
+    <!-- Visible Columns -->
+    <ng-template sciTab label="Visible Columns">
+      <section>
+        <sci-form-field label="ID">
+          <input [formField]="settingsForm.visibleColumns.id" type="checkbox"/>
+        </sci-form-field>
 
-  <dl>
-    <dt>Active UUID:</dt>
-    <dd>{{activeItem()?.dataId ?? '-'}}</dd>
+        <sci-form-field label="Code">
+          <input [formField]="settingsForm.visibleColumns.code" type="checkbox"/>
+        </sci-form-field>
 
-    <dt>Selected Code Count:</dt>
-    <dd>{{selectedItems()?.length}}</dd>
-  </dl>
+        <sci-form-field label="Abbreviation">
+          <input [formField]="settingsForm.visibleColumns.abbreviation" type="checkbox"/>
+        </sci-form-field>
+
+        <sci-form-field label="Name">
+          <input [formField]="settingsForm.visibleColumns.name" type="checkbox"/>
+        </sci-form-field>
+
+        <sci-form-field label="EVU">
+          <input [formField]="settingsForm.visibleColumns.railwayUndertaking" type="checkbox"/>
+        </sci-form-field>
+
+        <sci-form-field label="Valid From">
+          <input [formField]="settingsForm.visibleColumns.validFrom" type="checkbox"/>
+        </sci-form-field>
+
+        <sci-form-field label="Valid To">
+          <input [formField]="settingsForm.visibleColumns.validTo" type="checkbox"/>
+        </sci-form-field>
+      </section>
+    </ng-template>
+
+    <!-- Company Editor -->
+    @if (companyForm.id().value()) {
+      <ng-template sciTab label="Edit Company" name="company-editor">
+        <form [formRoot]="companyForm">
+          <sci-form-field label="ID">
+            <input [formField]="companyForm.id" appFieldValidation/>
+          </sci-form-field>
+
+          <sci-form-field label="Code">
+            <input [formField]="companyForm.code" type="number" appFieldValidation/>
+          </sci-form-field>
+
+          <sci-form-field label="Abbreviation">
+            <input [formField]="companyForm.abbreviation" appFieldValidation/>
+          </sci-form-field>
+
+          <sci-form-field label="Name">
+            <input [formField]="companyForm.name" appFieldValidation/>
+          </sci-form-field>
+
+          <sci-form-field label="EVU">
+            <input [formField]="companyForm.railwayUndertaking" type="checkbox" appFieldValidation/>
+          </sci-form-field>
+
+          <sci-form-field label="Valid From">
+            <input [formField]="companyForm.validFrom" appFieldValidation/>
+          </sci-form-field>
+
+          <sci-form-field label="Valid To">
+            <input [formField]="companyForm.validTo" appFieldValidation/>
+          </sci-form-field>
+
+          <div class="button-bar">
+            <button type="submit" [disabled]="companyForm().invalid()">Update</button>
+            <button type="button" (click)="onCompanyFormCancel()">Cancel</button>
+          </div>
+        </form>
+      </ng-template>
+    }
+  </sci-tabbar>
+
+  <section class="table-state">
+    <header>Table State</header>
+
+    <sci-form-field label="Active Id">
+      {{table()?.activeItem()?.id ?? '-'}}
+    </sci-form-field>
+
+    <sci-form-field label="Selection Count">
+      {{table()?.selectedItems()?.length}}
+    </sci-form-field>
+  </section>
 </aside>

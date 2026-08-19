@@ -1,6 +1,6 @@
 :host {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1em;
 
   > main {
@@ -13,27 +13,48 @@
   }
 
   > aside {
-    flex: none;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: 1em;
     border: 1px solid var(--sci-color-border);
     border-radius: var(--sci-corner);
     background-color: var(--sci-color-background-secondary);
     padding: 1em;
 
-    > form {
-      display: grid;
-      grid-auto-flow: row;
-      gap: 0.5em;
+    > sci-tabbar {
+      section {
+        display: flex;
+        flex-direction: column;
+        gap: .5em;
+      }
 
-      label {
-        display: block;
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: .5em;
+      }
+
+      div.button-bar {
+        display: flex;
+        gap: .5em;
+        justify-content: flex-end;
+      }
+    }
+
+    > section.table-state {
+      display: flex;
+      flex-direction: column;
+      gap: .5em;
+      border: 1px solid var(--sci-color-border);
+      border-radius: var(--sci-corner);
+      padding: 1em;
+      background-color: var(--sci-color-background-primary);
+
+      > header {
+        margin-bottom: 1em;
+        font-weight: bold;
       }
     }
   }
-}
-
-.custom-cell {
-  padding-inline: .5em;
 }
