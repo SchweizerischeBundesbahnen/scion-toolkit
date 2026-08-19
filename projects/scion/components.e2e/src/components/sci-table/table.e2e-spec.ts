@@ -21,7 +21,7 @@ test.describe.only('sci-table', () => {
   test.describe('global properties', () => {
     test('should disable filters', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -34,7 +34,7 @@ test.describe.only('sci-table', () => {
 
     test('should disable sort', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -47,7 +47,7 @@ test.describe.only('sci-table', () => {
 
     test('should hide header', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -60,7 +60,7 @@ test.describe.only('sci-table', () => {
 
     test('should disable resize', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
@@ -73,7 +73,7 @@ test.describe.only('sci-table', () => {
 
     test('should adapt to container size', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -89,7 +89,7 @@ test.describe.only('sci-table', () => {
 
     test('should be able to set item size', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -107,31 +107,42 @@ test.describe.only('sci-table', () => {
 
     test('should render multiple tables', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
       await tablePage.setTableCount(4);
 
-      await expect(table.locator).toHaveCount(4);
+      await expect(tablePage.table).toHaveCount(4);
 
-      // Should not interfere with other tables
-      await table.column({index: 0}).sort();
+      const table1 = new TablePO(tablePage.locator.locator('sci-table').nth(0));
+      const table2 = new TablePO(tablePage.locator.locator('sci-table').nth(1));
+      const table3 = new TablePO(tablePage.locator.locator('sci-table').nth(2));
+      const table4 = new TablePO(tablePage.locator.locator('sci-table').nth(3));
 
-      await expect(table.column({index: 0}).locator.locator('[data-sort="asc"]')).toBeAttached();
-      await expect(table.column({index: 1}).locator).toBeAttached();
-      await expect(table.column({index: 1}).locator.locator('[data-sort="asc"]')).not.toBeAttached();
-      await expect(table.column({index: 2}).locator).toBeAttached();
-      await expect(table.column({index: 2}).locator.locator('[data-sort="asc"]')).not.toBeAttached();
-      await expect(table.column({index: 3}).locator).toBeAttached();
-      await expect(table.column({index: 3}).locator.locator('[data-sort="asc"]')).not.toBeAttached();
+      await expectTable(table1).toHaveColumnCount(1);
+      await expectTable(table2).toHaveColumnCount(1);
+      await expectTable(table3).toHaveColumnCount(1);
+      await expectTable(table4).toHaveColumnCount(1);
+
+      // Verify no interference when interacting with a table.
+      await table1.column({name: 'column:name'}).sort();
+      await expect.poll(() => table1.column({name: 'column:name'}).sortDirection()).toEqual('asc');
+      await expect.poll(() => table2.column({name: 'column:name'}).sortDirection()).toBeNull();
+      await expect.poll(() => table3.column({name: 'column:name'}).sortDirection()).toBeNull();
+      await expect.poll(() => table4.column({name: 'column:name'}).sortDirection()).toBeNull();
+
+      await table3.column({name: 'column:name'}).sort();
+      await expect.poll(() => table1.column({name: 'column:name'}).sortDirection()).toEqual('asc');
+      await expect.poll(() => table2.column({name: 'column:name'}).sortDirection()).toBeNull();
+      await expect.poll(() => table3.column({name: 'column:name'}).sortDirection()).toEqual('asc')
+      await expect.poll(() => table4.column({name: 'column:name'}).sortDirection()).toBeNull();
     });
   });
 
   test.describe('columns', () => {
     test('should add string column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'string'});
@@ -140,7 +151,7 @@ test.describe.only('sci-table', () => {
 
     test('should add number column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'number'});
@@ -149,7 +160,7 @@ test.describe.only('sci-table', () => {
 
     test('should add boolean column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'boolean'});
@@ -158,7 +169,7 @@ test.describe.only('sci-table', () => {
 
     test('should add template column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'template'});
@@ -167,7 +178,7 @@ test.describe.only('sci-table', () => {
 
     test('should add component column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'component'});
@@ -176,7 +187,7 @@ test.describe.only('sci-table', () => {
 
     test('should add a lot of columns', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       for (let i = 0; i < 20; i++) {
@@ -199,7 +210,7 @@ test.describe.only('sci-table', () => {
   test.describe('filtering', () => {
     test('should filter string column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -215,7 +226,7 @@ test.describe.only('sci-table', () => {
 
     test('should filter number column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
@@ -232,7 +243,7 @@ test.describe.only('sci-table', () => {
 
     test('should filter boolean column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:inStock', header: 'In Stock', type: 'boolean'});
@@ -247,7 +258,7 @@ test.describe.only('sci-table', () => {
 
     test('should not filter template column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:template', header: 'Template', type: 'template'});
@@ -259,7 +270,7 @@ test.describe.only('sci-table', () => {
 
     test('should filter template column with custom filter', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:template', header: 'Template', type: 'template', customFilter: true});
@@ -274,7 +285,7 @@ test.describe.only('sci-table', () => {
 
     test('should not filter component column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:component', header: 'Component', type: 'component'});
@@ -287,7 +298,7 @@ test.describe.only('sci-table', () => {
 
     test('should filter component column with custom filter', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:component', header: 'Component', type: 'component', customFilter: true});
@@ -302,7 +313,7 @@ test.describe.only('sci-table', () => {
 
     test('should filter large amount of data', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.setRowCount(1_000_000);
@@ -314,7 +325,7 @@ test.describe.only('sci-table', () => {
 
     test('should reset scroll position to top when applying filter', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -328,7 +339,7 @@ test.describe.only('sci-table', () => {
 
     test('should show empty state', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -340,7 +351,7 @@ test.describe.only('sci-table', () => {
 
     test('should retain selection on filtering', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
@@ -356,7 +367,7 @@ test.describe.only('sci-table', () => {
   test.describe('resizing', () => {
     test('should resize column by moving splitter between column headers', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
@@ -390,7 +401,7 @@ test.describe.only('sci-table', () => {
 
     test('should resize column by moving splitter between column cells', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
@@ -425,7 +436,7 @@ test.describe.only('sci-table', () => {
 
     test('should resize multiple columns', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px'});
@@ -442,7 +453,7 @@ test.describe.only('sci-table', () => {
 
     test('should stop at max width', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px', maxWidth: 200});
@@ -453,7 +464,7 @@ test.describe.only('sci-table', () => {
 
     test('should ignore reverse dragging when pointer is beyond splitter bounds', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px', maxWidth: 200});
@@ -491,7 +502,7 @@ test.describe.only('sci-table', () => {
 
     test('should decrease column width', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px'});
@@ -502,7 +513,7 @@ test.describe.only('sci-table', () => {
 
     test('should stop at min width', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px', minWidth: 100});
@@ -513,7 +524,7 @@ test.describe.only('sci-table', () => {
 
     test('should allow to overflow while resizing', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px'});
@@ -524,7 +535,7 @@ test.describe.only('sci-table', () => {
 
     test('should auto resize', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px'});
@@ -536,7 +547,7 @@ test.describe.only('sci-table', () => {
 
     test('should auto resize to max-width', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '50px', minWidth: 0, maxWidth: 75});
@@ -552,7 +563,7 @@ test.describe.only('sci-table', () => {
 
     test('should auto resize to min-width', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '600px', minWidth: 400});
@@ -568,7 +579,7 @@ test.describe.only('sci-table', () => {
 
     test('should save sizes between reloads', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
@@ -582,7 +593,7 @@ test.describe.only('sci-table', () => {
 
     test('should push out flexible columns', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string'});
@@ -609,7 +620,7 @@ test.describe.only('sci-table', () => {
 
     test('should never grow columns beyond max-size', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string'});
@@ -626,7 +637,7 @@ test.describe.only('sci-table', () => {
 
     test('should shrink table when all flexible columns shrink', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string'});
@@ -645,7 +656,7 @@ test.describe.only('sci-table', () => {
 
     test('should lock flexible columns on overflow', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.setWidth(800);
 
@@ -671,7 +682,7 @@ test.describe.only('sci-table', () => {
 
     test('should hide row hover while resizing', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
@@ -689,7 +700,7 @@ test.describe.only('sci-table', () => {
 
     test('should scroll viewport when wheeling on splitter', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
@@ -710,7 +721,7 @@ test.describe.only('sci-table', () => {
   test.describe('sorting', () => {
     test('should sort string column ascending and descending', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -726,7 +737,7 @@ test.describe.only('sci-table', () => {
 
     test('should sort number column ascending and descending', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
@@ -742,7 +753,7 @@ test.describe.only('sci-table', () => {
 
     test('should sort boolean column ascending and descending', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:inStock', header: 'In Stock', type: 'boolean'});
@@ -758,7 +769,7 @@ test.describe.only('sci-table', () => {
 
     test('should sort multiple columns with ctrl or meta', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -775,7 +786,7 @@ test.describe.only('sci-table', () => {
 
     test('should retain filter after sorting', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -790,7 +801,7 @@ test.describe.only('sci-table', () => {
 
     test('should sort large amount of data', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.setRowCount(1_000_000);
@@ -804,7 +815,7 @@ test.describe.only('sci-table', () => {
 
     test('should reset scroll position to top when applying sort', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -820,7 +831,7 @@ test.describe.only('sci-table', () => {
 
     test('should retain selection after sorting', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
@@ -836,7 +847,7 @@ test.describe.only('sci-table', () => {
   test.describe('selection', () => {
     test('should disable selection', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
       await tablePage.setSelectable(false);
@@ -853,7 +864,7 @@ test.describe.only('sci-table', () => {
 
     test('should only select a single row', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
       await tablePage.setSelectable('single');
@@ -872,7 +883,7 @@ test.describe.only('sci-table', () => {
 
     test('should receive focus via tab navigation', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -886,7 +897,7 @@ test.describe.only('sci-table', () => {
 
     test('should scroll the active row into view during keyboard navigation', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -906,7 +917,7 @@ test.describe.only('sci-table', () => {
 
     test('should keep the active row within keyboard navigation boundaries', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.setRowCount(3);
       await tablePage.addColumn({header: 'Name', type: 'string'});
@@ -929,7 +940,7 @@ test.describe.only('sci-table', () => {
 
     test('should select all rows with ctrl+a from the keyboard navigator', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -942,7 +953,7 @@ test.describe.only('sci-table', () => {
 
     test('should toggle the row with ctrl+space', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -961,7 +972,7 @@ test.describe.only('sci-table', () => {
 
     test('should toggle row', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -975,7 +986,7 @@ test.describe.only('sci-table', () => {
 
     test('should select multiple rows with ctrl', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -993,7 +1004,7 @@ test.describe.only('sci-table', () => {
 
     test('should select multiple rows with shift', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -1015,7 +1026,7 @@ test.describe.only('sci-table', () => {
 
     test('should keep selection on scroll', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -1031,7 +1042,7 @@ test.describe.only('sci-table', () => {
 
     test('should keep selection on filter', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
@@ -1047,7 +1058,7 @@ test.describe.only('sci-table', () => {
 
     test('should keep selection on sort', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
@@ -1065,7 +1076,7 @@ test.describe.only('sci-table', () => {
 
     test('should activate element with keyboard', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -1085,7 +1096,7 @@ test.describe.only('sci-table', () => {
 
     test('should select element with keyboard', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -1128,7 +1139,7 @@ test.describe.only('sci-table', () => {
 
     test('should scroll on with active element', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Name', type: 'string'});
 
@@ -1153,7 +1164,7 @@ test.describe.only('sci-table', () => {
   test.describe('styling', () => {
     test('should conditionally style row', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
@@ -1172,7 +1183,7 @@ test.describe.only('sci-table', () => {
 
     test('should not conditionally style selected row', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
@@ -1187,7 +1198,7 @@ test.describe.only('sci-table', () => {
 
     test('should conditionally style column', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.addColumn({header: 'Red', name: 'column:red', type: 'string'});
 
@@ -1200,7 +1211,7 @@ test.describe.only('sci-table', () => {
   test.describe('row actions', () => {
     test('should show row actions on hover', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.setRowActions(true);
       await tablePage.addColumn({header: 'Name', type: 'string'});
@@ -1211,7 +1222,7 @@ test.describe.only('sci-table', () => {
 
     test('should stick row actions to the right', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.setWidth(500);
       await tablePage.setRowActions(true);
@@ -1244,7 +1255,7 @@ test.describe.only('sci-table', () => {
 
     test('should hide row actions while resizing', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
@@ -1263,7 +1274,7 @@ test.describe.only('sci-table', () => {
 
     test('should hide row actions while scrolling', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({header: 'Name', type: 'string', width: '100px'});
@@ -1282,7 +1293,7 @@ test.describe.only('sci-table', () => {
 
     test('should scroll viewport when wheeling on toolbar', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
@@ -1301,7 +1312,7 @@ test.describe.only('sci-table', () => {
 
     test('should keep row actions visible when moving between row toolbar and overlay', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
@@ -1328,7 +1339,7 @@ test.describe.only('sci-table', () => {
 
     test('should hide row actions when leaving overlay or toolbar for header', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
@@ -1358,7 +1369,7 @@ test.describe.only('sci-table', () => {
 
     test('should keep menu open when hovering other row', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({header: 'Name', type: 'string', width: '100px'});
@@ -1386,7 +1397,7 @@ test.describe.only('sci-table', () => {
   test.describe('scrollbar', () => {
     test('should overlap column splitters', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string', width: '100px'});
@@ -1444,7 +1455,7 @@ test.describe.only('sci-table', () => {
 
     test('should not hover scrollbar during resize', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string', width: '100px'});
@@ -1491,7 +1502,7 @@ test.describe.only('sci-table', () => {
 
     test('should not have horizontal overflow', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.setRowCount(1);
@@ -1526,7 +1537,7 @@ test.describe.only('sci-table', () => {
 
     test('should allow subsequent elements to cover the table', async ({page}) => {
       const tablePage = new TablePagePO(page);
-      const table = new TablePO(page);
+      const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
       await tablePage.addColumn({header: 'Column', type: 'string', width: '100px'});

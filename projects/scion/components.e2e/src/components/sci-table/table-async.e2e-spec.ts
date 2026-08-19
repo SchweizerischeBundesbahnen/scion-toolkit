@@ -6,7 +6,7 @@ import {expect} from '@playwright/test';
 test.describe.only('sci-table async datasource', () => {
   test('should load pages', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePO(page);
+    const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -25,7 +25,7 @@ test.describe.only('sci-table async datasource', () => {
 
   test('should load pages when scrolling with scrollbar', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePO(page);
+    const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -44,7 +44,7 @@ test.describe.only('sci-table async datasource', () => {
 
   test('should load first and last row correctly', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePO(page);
+    const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -57,7 +57,7 @@ test.describe.only('sci-table async datasource', () => {
 
   test('should show skeletons when applying sort while using async datasource', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePO(page);
+    const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -73,7 +73,7 @@ test.describe.only('sci-table async datasource', () => {
 
   test('should show skeletons when applying filter while using async datasource', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePO(page);
+    const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
@@ -89,7 +89,7 @@ test.describe.only('sci-table async datasource', () => {
 
   test('should not show skeletons when scrolling back to an already-loaded page', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePO(page);
+    const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({header: 'Name', type: 'string'});
@@ -111,7 +111,7 @@ test.describe.only('sci-table async datasource', () => {
 
   test('should select over multiple pages', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePO(page);
+    const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({header: 'Name', type: 'string'});
@@ -131,7 +131,7 @@ test.describe.only('sci-table async datasource', () => {
 
   test('should select all items with ctrl+a', async ({page}) => {
     const tablePage = new TablePagePO(page);
-    const table = new TablePO(page);
+    const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({header: 'Name', type: 'string'});

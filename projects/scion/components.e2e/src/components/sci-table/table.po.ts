@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Locator, Page} from '@playwright/test';
+import {Locator} from '@playwright/test';
 import {ColumnPO} from './column.po';
 import {RowPO} from './row.po';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
@@ -16,7 +16,6 @@ import {RequireOne} from '@scion/toolkit/types';
 
 export class TablePO {
 
-  public readonly locator: Locator;
   public readonly filters: Locator;
   public readonly sortButtons: Locator;
   public readonly header: Locator;
@@ -27,17 +26,16 @@ export class TablePO {
   public readonly verticalScrollbar: ScrollbarPO;
   public readonly horizontalScrollbar: ScrollbarPO;
 
-  constructor(private _page: Page) {
-    this.locator = this._page.locator('sci-table');
-    this.filters = this.locator.locator('sci-column-filter');
-    this.sortButtons = this.locator.locator('button.e2e-column-sort.sortable');
+  constructor(public readonly locator: Locator) {
     this.header = this.locator.locator('sci-table-header');
     this.headers = this.locator.locator('sci-column-header button.e2e-column-sort');
+    this.body = this.locator.locator('sci-table-body');
     this.rows = this.locator.locator('sci-table-row');
     this.viewport = this.locator.locator('div.e2e-viewport');
-    this.body = this.locator.locator('sci-table-body');
     this.verticalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="vscroll"]'));
     this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
+    this.filters = this.locator.locator('sci-column-filter');
+    this.sortButtons = this.locator.locator('button.e2e-column-sort.sortable');
   }
 
   public row(index: number): RowPO {

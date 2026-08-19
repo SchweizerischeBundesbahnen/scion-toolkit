@@ -42,6 +42,10 @@ export class ColumnPO {
       await select.selectOption(value);
     }
   }
+
+  public async sortDirection(): Promise<'asc' | 'desc' | null> {
+    return (await this.locator.locator('button.e2e-column-sort').getAttribute('data-sort')) as 'asc' | 'desc' | null;
+  }
 }
 
 /**
