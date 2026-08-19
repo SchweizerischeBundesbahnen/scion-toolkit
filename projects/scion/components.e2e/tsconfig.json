@@ -2,18 +2,29 @@
 /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "compilerOptions": {
-    "baseUrl": "../../../",
+    "rootDir": "../../../",
     "outDir": "../../../out-tsc/components.e2e",
     "sourceMap": true,
     "strict": true,
-    "noUnusedLocals": false,
-    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
     "isolatedModules": true,
     "experimentalDecorators": true,
+    "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
+    "noUnusedLocals": false,
+    "noUncheckedIndexedAccess": true,
     "types": [
       "node"
-    ]
+    ],
+    "paths": {
+      "@scion/toolkit/types": [
+        "../../../projects/scion/toolkit/types/src/public_api"
+      ]
+    }
   }
 }

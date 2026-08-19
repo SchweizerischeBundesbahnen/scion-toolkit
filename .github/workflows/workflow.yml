@@ -75,6 +75,8 @@ jobs:
         with:
           name: components-internal-dist
           path: dist/scion/components.internal
+      - name: 'Building Playwright E2E Tests'
+        run: npm run components:e2e:build
   build-apps:
     name: 'Building Apps'
     needs: build-libs

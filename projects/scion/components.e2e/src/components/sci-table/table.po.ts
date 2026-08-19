@@ -12,7 +12,7 @@ import {Locator, Page} from '@playwright/test';
 import {ColumnPO} from './column.po';
 import {RowPO} from './row.po';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
-import {RequireOne} from '../../helper/utility-types'; // TODO [dwie] Replace by @scion/toolkit/types
+import {RequireOne} from '@scion/toolkit/types';
 
 export class TablePO {
 
