@@ -9,18 +9,18 @@ test.describe.only('sci-table async datasource', () => {
     const table = new TablePO(page);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
-    await tablePage.addColumn({header: 'Name', type: 'string'});
+    await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
     // wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
+    await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
 
     await table.scrollTo({y: 1500});
 
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
+    await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
   });
 
   test('should load pages when scrolling with scrollbar', async ({page}) => {
@@ -28,18 +28,18 @@ test.describe.only('sci-table async datasource', () => {
     const table = new TablePO(page);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
-    await tablePage.addColumn({header: 'Name', type: 'string'});
+    await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
     // wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await expect(table.locateColumnCells(0).first()).not.toBeEmpty();
+    await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
 
     await table.verticalScrollbar.scroll(10_000);
 
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await expect(table.locateColumnCells(0).last()).toHaveText('Product 10000');
+    await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 10000');
   });
 
   test('should load first and last row correctly', async ({page}) => {
@@ -47,12 +47,12 @@ test.describe.only('sci-table async datasource', () => {
     const table = new TablePO(page);
     await tablePage.navigate();
     await tablePage.setSlowDataSource(true);
-    await tablePage.addColumn({header: 'Name', type: 'string'});
+    await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
-    await expect(table.locateColumnCells(0).first()).toHaveText('Product 1');
+    await expect(table.column({name: 'column:name'}).cells.first()).toHaveText('Product 1');
 
     await table.scrollTo({y: 'end'});
-    await expect(table.locateColumnCells(0).last()).toHaveText('Product 10000');
+    await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 10000');
   });
 
   test('should show skeletons when applying sort while using async datasource', async ({page}) => {

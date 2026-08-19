@@ -40,10 +40,6 @@ export class TablePO {
     this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
   }
 
-  public locateColumnCells(columnIndex: number): Locator {
-    return this.rows.locator(`sci-table-cell:nth-child(${columnIndex + 1})`);
-  }
-
   public row(index: number): RowPO {
     return new RowPO(this.rows.nth(index));
   }

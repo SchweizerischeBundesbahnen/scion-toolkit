@@ -11,32 +11,39 @@
 import {TablePO} from './table.po';
 import {expect} from '@playwright/test';
 import {RowPO} from './row.po';
+import {RequireOne} from '@scion/toolkit/types';
 
 export function expectTable(table: TablePO): TableMatcher {
   return {
-    async toHaveColumnSorted(columnIndex: number, dir: 'desc' | 'asc' = 'asc'): Promise<void> {
-      await expect(async () => {
-        const cells = await table.locateColumnCells(columnIndex).allTextContents()
-          // Map boolean cells
-          .then(contents => contents.map(v => v === 'checkmark' ? 1 : v === 'clear' ? 0 : v))
-          .then(contents => contents.map(v => isNaN(+v) ? v : +v));
+    column(locateBy: RequireOne<{name: `column:${string}`; index: number}>): ColumnMatcher {
+      return {
+        async toBeSorted(direction: 'desc' | 'asc' = 'asc'): Promise<void> {
+          await expect(async () => {
+            const cells = await table.column(locateBy).cells.allTextContents()
+              // Map boolean cells
+              .then(contents => contents.map(v => v === 'checkmark' ? 1 : v === 'clear' ? 0 : v))
+              .then(contents => contents.map(v => isNaN(+v) ? v : +v));
 
-        if (dir === 'asc') {
-          expect(cells.every((v, i) => i === 0 || cells.at(i - 1)! <= v)).toBe(true);
-        }
-        else {
-          expect(cells.every((v, i) => i === 0 || cells.at(i - 1)! >= v)).toBe(true);
-        }
-      }).toPass();
-    },
-    async allCellsToContainText(columnIndex: number, text: string): Promise<void> {
-      await expect(async () => {
-        for (const row of await table.rows.all()) {
-          // Do not use web first assertion since we already opted out with `.all()`
-          // This prevents waiting for the 5s timeout in the first try
-          await expect(new RowPO(row).cells.nth(columnIndex).textContent()).resolves.toContain(text);
-        }
-      }).toPass();
+            if (direction === 'asc') {
+              expect(cells.every((cell, i) => i === 0 || cells.at(i - 1)! <= cell)).toBe(true);
+            }
+            else {
+              expect(cells.every((cell, i) => i === 0 || cells.at(i - 1)! >= cell)).toBe(true);
+            }
+          }).toPass();
+        },
+        cells: {
+          async toContainText(text: string): Promise<void> {
+            await expect(async () => {
+              for (const row of await table.rows.all()) {
+                // Do not use web first assertion since we already opted out with `.all()`
+                // This prevents waiting for the 5s timeout in the first try
+                await expect(new RowPO(row).cell(locateBy).textContent()).resolves.toContain(text);
+              }
+            }).toPass();
+          },
+        },
+      }
     },
     async toHaveVerticalScroll(): Promise<void> {
       await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
@@ -56,10 +63,18 @@ export function expectTable(table: TablePO): TableMatcher {
   };
 }
 
-export interface TableMatcher {
-  toHaveColumnSorted(columnIndex: number, dir?: 'desc' | 'asc'): Promise<void>;
+export interface ColumnMatcher {
 
-  allCellsToContainText(columnIndex: number, text: string): Promise<void>;
+  toBeSorted(direction?: 'desc' | 'asc'): Promise<void>;
+
+  cells: {
+    toContainText(text: string): Promise<void>;
+  }
+}
+
+export interface TableMatcher {
+
+  column(locateBy: RequireOne<{name: `column:${string}`; index: number}>): ColumnMatcher;
 
   toHaveHorizontalOverflow(): Promise<void>;
 

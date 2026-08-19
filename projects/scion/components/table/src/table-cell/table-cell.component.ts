@@ -22,7 +22,8 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-type]': 'cell().type',
-    '[attr.part]': 'isSelected() ? null : name()',
+    '[attr.data-column]': 'cell().columnName',
+    '[attr.part]': 'isSelected() ? null : name()', // prevent styling selected rows
   },
   imports: [
     NgTemplateOutlet,

@@ -8,11 +8,13 @@ export class ColumnPO {
   public readonly filterField: Locator;
   public readonly splitter: ColumnSplitterPO;
   public readonly locator: Locator;
+  public readonly cells: Locator;
 
   constructor(table: TablePO, locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
-    this.locator = locate(table.locator.locator('sci-column-header'), locateBy);
-    this.splitter = new ColumnSplitterPO(locate(table.locator.locator('sci-column-splitters sci-splitter'), locateBy), table);
+    this.locator = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
+    this.splitter = new ColumnSplitterPO(table.locator.locator('sci-column-splitters sci-splitter').locator(selectByColumn(locateBy)), table);
     this.filterField = this.locator.locator('sci-column-filter');
+    this.cells = table.rows.locator('sci-table-cell').locator(selectByColumn(locateBy));
   }
 
   public async width(): Promise<number> {
@@ -42,12 +44,15 @@ export class ColumnPO {
   }
 }
 
-function locate(locator: Locator, locateBy: RequireOne<{name: `column:${string}`; index: number}>): Locator {
-  if (locateBy.name !== undefined) {
-    locator = locator.locator(`:scope[data-column="${locateBy.name}"]`);
+/**
+ * Creates a CSS selector to match an element (column, cell) by the given column name and index.
+ */
+export function selectByColumn(selectBy: RequireOne<{name: `column:${string}`; index: number}>): string {
+  if (selectBy.name !== undefined) {
+    return `:scope[data-column="${selectBy.name}"]`;
   }
-  if (locateBy.index !== undefined) {
-    locator = locator.nth(locateBy.index);
+  if (selectBy.index !== undefined) {
+    return `:scope:nth-child(${selectBy.index + 1})`;
   }
-  return locator;
+  return ':scope';
 }

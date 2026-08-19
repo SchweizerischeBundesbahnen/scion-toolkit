@@ -207,7 +207,7 @@ test.describe.only('sci-table', () => {
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       await table.column({name: 'column:name'}).filter('Product 1');
-      await expectTable(table).allCellsToContainText(0, 'Product 1');
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
 
       await table.column({name: 'column:name'}).clearFilter();
       await expect(table.rows).toHaveCount(noFilterCount);
@@ -224,7 +224,7 @@ test.describe.only('sci-table', () => {
       // read the first visible price value and use it as the filter criterion
       const firstPrice = (await table.row(0).cell(0).textContent())!.trim();
       await table.column({name: 'column:price'}).filter(firstPrice);
-      await expectTable(table).allCellsToContainText(0, firstPrice);
+      await expectTable(table).column({name: 'column:price'}).cells.toContainText(firstPrice);
 
       await table.column({name: 'column:price'}).clearFilter();
       await expect(table.rows).toHaveCount(noFilterCount);
@@ -239,7 +239,7 @@ test.describe.only('sci-table', () => {
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       await table.column({name: 'column:inStock'}).filter('false');
-      await expectTable(table).allCellsToContainText(0, 'clear');
+      await expectTable(table).column({name: 'column:inStock'}).cells.toContainText('clear');
 
       await table.column({name: 'column:inStock'}).filter('');
       await expect(table.rows).toHaveCount(noFilterCount);
@@ -348,7 +348,7 @@ test.describe.only('sci-table', () => {
       await expectRow(table.row(0)).toBeSelected();
 
       await table.column({name: 'column:name'}).filter('Product 1');
-      await expectTable(table).allCellsToContainText(0, 'Product 1');
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
       await expectRow(table.row(0)).toBeSelected();
     });
   });
@@ -717,11 +717,11 @@ test.describe.only('sci-table', () => {
 
       // sort ascending
       await table.column({name: 'column:name'}).sort();
-      await expectTable(table).toHaveColumnSorted(0);
+      await expectTable(table).column({name: 'column:price'}).toBeSorted();
 
       // sort descending
       await table.column({name: 'column:name'}).sort();
-      await expectTable(table).toHaveColumnSorted(0, 'desc');
+      await expectTable(table).column({name: 'column:price'}).toBeSorted('desc');
     });
 
     test('should sort number column ascending and descending', async ({page}) => {
@@ -733,11 +733,11 @@ test.describe.only('sci-table', () => {
 
       // sort ascending
       await table.column({name: 'column:price'}).sort();
-      await expectTable(table).toHaveColumnSorted(0);
+      await expectTable(table).column({name: 'column:price'}).toBeSorted();
 
       // sort descending
       await table.column({name: 'column:price'}).sort();
-      await expectTable(table).toHaveColumnSorted(0, 'desc');
+      await expectTable(table).column({name: 'column:price'}).toBeSorted('desc');
     });
 
     test('should sort boolean column ascending and descending', async ({page}) => {
@@ -749,11 +749,11 @@ test.describe.only('sci-table', () => {
 
       // sort ascending: false values first
       await table.column({name: 'column:inStock'}).sort();
-      await expectTable(table).toHaveColumnSorted(0);
+      await expectTable(table).column({name: 'column:inStock'}).toBeSorted();
 
       // sort descending: true values first
       await table.column({name: 'column:inStock'}).sort();
-      await expectTable(table).toHaveColumnSorted(0, 'desc');
+      await expectTable(table).column({name: 'column:inStock'}).toBeSorted('desc');
     });
 
     test('should sort multiple columns with ctrl or meta', async ({page}) => {
@@ -768,7 +768,7 @@ test.describe.only('sci-table', () => {
       await sortButtons.nth(0).click();
       await sortButtons.nth(1).click({modifiers: ['ControlOrMeta']});
 
-      await expectTable(table).toHaveColumnSorted(0);
+      await expectTable(table).column({name: 'column:name'}).toBeSorted();
       await expect(sortButtons.nth(0)).toHaveAttribute('data-sort', 'asc');
       await expect(sortButtons.nth(1)).toHaveAttribute('data-sort', 'asc');
     });
@@ -780,12 +780,12 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
       await table.column({name: 'column:name'}).filter('Product 1');
-      await expectTable(table).allCellsToContainText(0, 'Product 1');
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
 
       await table.column({name: 'column:name'}).sort();
 
-      await expectTable(table).allCellsToContainText(0, 'Product 1');
-      await expectTable(table).toHaveColumnSorted(0);
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+      await expectTable(table).column({name: 'column:name'}).toBeSorted();
     });
 
     test('should sort large amount of data', async ({page}) => {
@@ -797,9 +797,9 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
 
       await table.column({name: 'column:price'}).sort();
-      await expect(table.locateColumnCells(0).first()).toHaveText('1');
+      await expect(table.column({name: 'column:price'}).cells.first()).toHaveText('1');
       await table.column({name: 'column:price'}).sort();
-      await expect(table.locateColumnCells(0).first()).toHaveText('1000');
+      await expect(table.column({name: 'column:price'}).cells.first()).toHaveText('1000');
     });
 
     test('should reset scroll position to top when applying sort', async ({page}) => {
@@ -828,7 +828,7 @@ test.describe.only('sci-table', () => {
       await expectRow(table.row(0)).toBeSelected();
 
       await table.column({name: 'column:name'}).sort();
-      await expectTable(table).toHaveColumnSorted(0);
+      await expectTable(table).column({name: 'column:name'}).toBeSorted();
       await expectRow(table.row(0)).toBeSelected();
     });
   });

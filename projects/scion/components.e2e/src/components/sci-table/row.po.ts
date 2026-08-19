@@ -1,18 +1,22 @@
 import {Locator} from '@playwright/test';
 import {CellPO} from './cell.po';
 import {DomRect, fromRect} from '../../helper/testing.utils';
+import {RequireOne} from '@scion/toolkit/types';
+import {selectByColumn} from './column.po';
 
 export class RowPO {
-  public cells: Locator;
   public rowActions: Locator;
 
   constructor(public locator: Locator) {
-    this.cells = this.locator.locator('sci-table-cell');
     this.rowActions = this.locator.locator('sci-toolbar');
   }
 
-  public cell(index: number): CellPO {
-    return new CellPO(this.cells.nth(index));
+  public cell(columnName: `column:${string}`): CellPO;
+  public cell(columnIndex: number): CellPO;
+  public cell(locateBy: RequireOne<{name: `column:${string}`; index: number}>): CellPO;
+  public cell(column: `column:${string}` | number | RequireOne<{name: `column:${string}`; index: number}>): CellPO {
+    const locateBy = typeof column === 'number' ? {index: column} : typeof column === 'string' ? {name: column} : column;
+    return new CellPO(this.locator.locator('sci-table-cell').locator(selectByColumn(locateBy)));
   }
 
   public async click(modifiers?: Array<'Alt' | 'Control' | 'ControlOrMeta' | 'Meta' | 'Shift'>): Promise<void> {
