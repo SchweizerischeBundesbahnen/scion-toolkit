@@ -85,7 +85,7 @@ export default class SciTablePageComponent {
             return selectable === 'false' ? false : selectable;
           }),
           data: slowDataSource ? slowDataLoader(data) : data,
-          rowState: customRowStyling ? (product: Product) => product.id % 3 === 0 ? 'row:red' : [] : undefined,
+          rowState: customRowStyling ? (product: Product) => product.id % 3 === 0 ? 'row:negative' : [] : undefined,
           rowActions: showRowActions ? (product, toolbar) => toolbar.addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
             .addMenuItem({
               label: 'Edit',

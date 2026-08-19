@@ -1179,15 +1179,15 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
-      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:name row:red');
-      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:red');
-      await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part', 'column:name row:red');
+      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
+      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
+      await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
 
       await tablePage.conditionallyStyleRow();
 
-      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:name row:red');
-      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:red');
-      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:name row:red');
+      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
+      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
+      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:name row:negative');
       await expect.poll(() => table.row(2).cell(0).locator.evaluate(element => getComputedStyle(element).backgroundColor))
         .toEqual('rgba(255, 0, 0, 0.2)');
     });
@@ -1200,7 +1200,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.conditionallyStyleRow();
 
-      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:name row:red');
+      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:name row:negative');
 
       await table.row(2).click();
 
@@ -1211,9 +1211,9 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Red', name: 'column:red', type: 'string'});
+      await tablePage.addColumn({header: 'Negative', name: 'column:negative', type: 'string'});
 
-      await expect(table.row(0).cell(0).locator).toHaveAttribute('part', 'column:red');
+      await expect(table.row(0).cell(0).locator).toHaveAttribute('part', 'column:negative');
       await expect.poll(() => table.row(0).cell(0).locator.evaluate(element => getComputedStyle(element).backgroundColor))
         .toEqual('rgba(255, 0, 0, 0.2)');
     });
