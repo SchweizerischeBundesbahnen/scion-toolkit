@@ -271,16 +271,16 @@ export class ɵSciTable<T> implements SciTable<T> {
    * Persist column widths to storage on change.
    */
   private installTablePersister(): void {
-    toObservable(this.columns).pipe(
-      filter(columns => columns.length > 0), // don't persist when columns are not yet loaded
-      skip(1), // don't persist initial load
-    ).subscribe(columns => {
-      const storedTable = {
-        columns: columns.map(col => ({name: col.name, width: col.userWidth})),
-      } satisfies SciTableStorageModel;
-
-      void untracked(() => this._tableStorage.store(this.name, JSON.stringify(storedTable)));
-    });
+    toObservable(this.columns)
+      .pipe(
+        filter(columns => columns.length > 0), // don't persist when columns are not yet loaded
+        skip(1), // do not persist initial load
+      )
+      .subscribe(columns => untracked(() => {
+        this._tableStorage.store(this.name, JSON.stringify({
+          columns: columns.map(column => ({name: column.name, width: column.userWidth})),
+        }));
+      }));
   }
 
   /**

@@ -49,25 +49,11 @@ export class TablePO {
   }
 
   public column(locateBy: RequireOne<{name: `column:${string}`; index: number}>): ColumnPO {
-    const name = locateBy.name ?? `column:${locateBy.index}`;
-    let locator = this.locator.locator('sci-column-header');
-    if (locateBy.name !== undefined) {
-      locator = locator.locator(`:scope[data-column="${name}"]`);
-    }
-    if (locateBy.index !== undefined) {
-      locator = locator.nth(locateBy.index);
-    }
-
-    return new ColumnPO(locator);
+    return new ColumnPO(this, locateBy);
   }
 
   public bounds(): Promise<DomRect> {
     return waitUntilStable(async () => fromRect(await this.viewport.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
-  }
-
-  // TODO [dwie] Move to column PO
-  public columnSplitter(columnName: `column:${string}`): ColumnSplitterPO {
-    return new ColumnSplitterPO(this.locator.locator(`sci-column-splitters sci-splitter[data-column="${columnName}"]`), this);
   }
 
   public async scrollTo(scrollTo: {x?: number | 'start' | 'end'; y?: number | 'start' | 'end'}): Promise<void> {
