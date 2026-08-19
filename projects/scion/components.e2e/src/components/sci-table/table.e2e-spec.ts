@@ -18,7 +18,8 @@ import {fromRect, hasDefaultStackingLevel, waitUntilAngularStable, waitUntilStab
 
 test.describe.only('sci-table', () => {
 
-  test.describe('global properties', () => {
+  test.describe('Table Configuration', () => {
+
     test('should disable filters', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -139,7 +140,8 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('columns', () => {
+  test.describe('Columns', () => {
+
     test('should add string column', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -207,7 +209,8 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('filtering', () => {
+  test.describe('Filtering', () => {
+
     test('should filter string column', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -232,7 +235,7 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
-      // read the first visible price value and use it as the filter criterion
+      // Read the first visible price value and use it as the filter criterion.
       const firstPrice = (await table.row(0).cell(0).textContent())!.trim();
       await table.column({name: 'column:price'}).filter(firstPrice);
       await expectTable(table).column({name: 'column:price'}).cells.toContainText(firstPrice);
@@ -364,7 +367,8 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('resizing', () => {
+  test.describe('Resizing', () => {
+
     test('should resize column by moving splitter between column headers', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -494,6 +498,7 @@ test.describe.only('sci-table', () => {
       // Move mouse back between min and max width.
       mouseX += 125;
       await page.mouse.move(mouseX, splitterBounds.top, {steps: 20});
+
       // Should be somewhere between the min and max size. Absolute values can not be expected, because the sashing can be too fast for the boundary check in overlay.
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBeGreaterThan(100);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBeLessThan(200);
@@ -556,7 +561,7 @@ test.describe.only('sci-table', () => {
       await table.column({name: 'column:name'}).splitter.dblclick();
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(75);
 
-      // Should still be able to resize after auto resize
+      // Should still be able to resize after auto resize.
       await table.column({name: 'column:name'}).splitter.drag(-25);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(50);
     });
@@ -572,7 +577,7 @@ test.describe.only('sci-table', () => {
       await table.column({name: 'column:name'}).splitter.dblclick();
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(400);
 
-      // Should still be able to resize after auto resize
+      // Should still be able to resize after auto resize.
       await table.column({name: 'column:name'}).splitter.drag(25);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(425);
     });
@@ -610,6 +615,7 @@ test.describe.only('sci-table', () => {
 
       // Scroll right to grab the splitter.
       await table.scrollTo({x: 'end'});
+
       // Shrink column two. Columns to the left should stay the same, to the right should grow.
       await table.column({name: 'column:2'}).splitter.drag(-650);
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
@@ -629,6 +635,7 @@ test.describe.only('sci-table', () => {
 
       // Shrink column one.
       await table.column({name: 'column:1'}).splitter.drag(-100);
+
       // Expect only column three to grow, since column two has a max width of 200.
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBeBetween(95, 105);
       await expect.poll(() => table.column({name: 'column:2'}).width()).toBeBetween(195, 205);
@@ -718,7 +725,8 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('sorting', () => {
+  test.describe('Sorting', () => {
+
     test('should sort string column ascending and descending', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -726,11 +734,11 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
-      // sort ascending
+      // Sort ascending.
       await table.column({name: 'column:name'}).sort();
       await expectTable(table).column({name: 'column:price'}).toBeSorted();
 
-      // sort descending
+      // Sort descending.
       await table.column({name: 'column:name'}).sort();
       await expectTable(table).column({name: 'column:price'}).toBeSorted('desc');
     });
@@ -742,11 +750,11 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
 
-      // sort ascending
+      // Sort ascending.
       await table.column({name: 'column:price'}).sort();
       await expectTable(table).column({name: 'column:price'}).toBeSorted();
 
-      // sort descending
+      // Sort descending.
       await table.column({name: 'column:price'}).sort();
       await expectTable(table).column({name: 'column:price'}).toBeSorted('desc');
     });
@@ -758,11 +766,11 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:inStock', header: 'In Stock', type: 'boolean'});
 
-      // sort ascending: false values first
+      // Sort ascending: false values first.
       await table.column({name: 'column:inStock'}).sort();
       await expectTable(table).column({name: 'column:inStock'}).toBeSorted();
 
-      // sort descending: true values first
+      // Sort descending: true values first.
       await table.column({name: 'column:inStock'}).sort();
       await expectTable(table).column({name: 'column:inStock'}).toBeSorted('desc');
     });
@@ -820,11 +828,11 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
-      // scroll down so the viewport is no longer at the top.
+      // Scroll down so the viewport is no longer at the top.
       await table.scrollTo({y: 1000});
       await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
 
-      // applying a sort should reset the viewport scroll position to the top.
+      // Applying a sort should reset the viewport scroll position to the top.
       await table.column({name: 'column:name'}).sort();
       await expect.poll(() => table.scrollTop()).toBe(0);
     });
@@ -844,7 +852,8 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('selection', () => {
+  test.describe('Selection', () => {
+
     test('should disable selection', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -1066,7 +1075,8 @@ test.describe.only('sci-table', () => {
       await expectRow(table.row(0)).toBeSelected();
 
       await table.column({name: 'column:name'}).sort();
-      // click twice to sort descending
+
+      // Click twice to sort descending.
       await table.column({name: 'column:name'}).sort();
       await expectRow(table.row(0)).not.toBeSelected();
 
@@ -1161,7 +1171,8 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('styling', () => {
+  test.describe('Styling', () => {
+
     test('should conditionally style row', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -1208,7 +1219,8 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('row actions', () => {
+  test.describe('Row Actions', () => {
+
     test('should show row actions on hover', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -1332,7 +1344,7 @@ test.describe.only('sci-table', () => {
       await page.mouse.move(splitterBounds.hcenter, rowBounds.vcenter);
       await expect(table.row(10).rowActions).toBeVisible();
 
-      // move out of splitter bounds on top
+      // Move out of splitter bounds on top.
       await page.mouse.move(splitterBounds.hcenter, splitterBounds.top - 10);
       await expect(table.row(10).rowActions).not.toBeVisible();
     });
@@ -1394,7 +1406,8 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('scrollbar', () => {
+  test.describe('Scrollbar', () => {
+
     test('should overlap column splitters', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -1533,7 +1546,7 @@ test.describe.only('sci-table', () => {
     });
   });
 
-  test.describe('layout', () => {
+  test.describe('Layout', () => {
 
     test('should allow subsequent elements to cover the table', async ({page}) => {
       const tablePage = new TablePagePO(page);

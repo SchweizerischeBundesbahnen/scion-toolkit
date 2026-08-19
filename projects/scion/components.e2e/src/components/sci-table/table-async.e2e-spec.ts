@@ -4,6 +4,7 @@ import {TablePO} from './table.po';
 import {expect} from '@playwright/test';
 
 test.describe.only('sci-table async datasource', () => {
+
   test('should load pages', async ({page}) => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
@@ -11,7 +12,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
-    // wait for initial page to finish loading.
+    // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
@@ -30,7 +31,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
-    // wait for initial page to finish loading.
+    // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
@@ -62,7 +63,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
-    // wait for initial page to finish loading.
+    // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
@@ -78,7 +79,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
 
-    // wait for initial page to finish loading.
+    // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
@@ -94,7 +95,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({header: 'Name', type: 'string'});
 
-    // wait for initial page to finish loading.
+    // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
@@ -116,7 +117,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({header: 'Name', type: 'string'});
 
-    // wait for initial page to finish loading.
+    // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await table.rows.first().click();
@@ -136,7 +137,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({header: 'Name', type: 'string'});
 
-    // wait for initial page to finish loading.
+    // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await table.locator.click();
