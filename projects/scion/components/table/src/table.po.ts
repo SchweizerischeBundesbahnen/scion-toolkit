@@ -12,7 +12,7 @@ import {ComponentFixture} from '@angular/core/testing';
 import {DebugElement} from '@angular/core';
 import {By} from '@angular/platform-browser';
 import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
-import {SciColumnLike} from '@scion/components/table';
+import {SciColumnLike} from './table.model';
 
 export class TablePO {
 

@@ -12,6 +12,7 @@ import {Locator, Page} from '@playwright/test';
 import {ColumnPO} from './column.po';
 import {RowPO} from './row.po';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
+import {RequireOne} from '../../helper/utility-types'; // TODO [dwie] Replace by @scion/toolkit/types
 
 export class TablePO {
 
@@ -47,10 +48,17 @@ export class TablePO {
     return new RowPO(this.rows.nth(index));
   }
 
-  public column(indexOrHeader: number | string): ColumnPO {
-    return typeof indexOrHeader === 'number' ?
-      new ColumnPO(this.locator.locator('sci-column-header').nth(indexOrHeader), this) :
-      new ColumnPO(indexOrHeader, this);
+  public column(locateBy: RequireOne<{name: `column:${string}`; index: number}>): ColumnPO {
+    const name = locateBy.name ?? `column:${locateBy.index}`;
+    let locator = this.locator.locator('sci-column-header');
+    if (locateBy.name !== undefined) {
+      locator = locator.locator(`:scope[data-column="${name}"]`);
+    }
+    if (locateBy.index !== undefined) {
+      locator = locator.nth(locateBy.index);
+    }
+
+    return new ColumnPO(locator);
   }
 
   public bounds(): Promise<DomRect> {

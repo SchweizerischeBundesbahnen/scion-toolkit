@@ -13,8 +13,8 @@ import {Locator, Page} from '@playwright/test';
 const PATH = '/#/components/sci-table';
 
 export interface ColumnOptions {
-  name: string;
-  header: string;
+  name?: `column:${string}`;
+  header?: string;
   type: 'string' | 'number' | 'boolean' | 'template' | 'component';
   customFilter?: boolean;
   customSort?: boolean;
@@ -108,8 +108,8 @@ export class TablePagePO {
 
   public async addColumn(options: ColumnOptions): Promise<void> {
     await this._tabbar.locator('button.e2e-columns').click();
-    await this._properties.locator('form input.e2e-column-name').fill(options.name);
-    await this._properties.locator('form input.e2e-column-header').fill(options.header);
+    await this._properties.locator('form input.e2e-column-name').fill(options.name ?? '');
+    await this._properties.locator('form input.e2e-column-header').fill(options.header ?? '');
     await this._properties.locator('form select.e2e-column-type').selectOption(options.type);
     if (options.customSort) {
       await this._properties.locator('form input.e2e-column-custom-sort').check();

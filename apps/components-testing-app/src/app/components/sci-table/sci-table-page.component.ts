@@ -10,12 +10,13 @@
 import {Component, computed, effect, inject, Injector, input, inputBinding, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
 import {SciCellContext, SciColumnDescriptor, SciTable, SciTableComponent, SciTableDescriptor, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
-import {FieldTree, form, FormField, FormRoot, required} from '@angular/forms/signals';
+import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {map, Observable, timer} from 'rxjs';
 import {createDestroyableInjector} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
+import {FieldValidationDirective} from '../field-validation.directive';
 
 @Component({
   selector: 'app-table-page',
@@ -35,6 +36,7 @@ import {SciIconComponent} from '@scion/components/icon';
     SciTabbarComponent,
     FormRoot,
     SciIconComponent,
+    FieldValidationDirective,
   ],
 })
 export default class SciTablePageComponent {
@@ -94,11 +96,11 @@ export default class SciTablePageComponent {
 
         return table(tableDescriptor, table => columns().forEach(columnForm => {
           const column: SciColumnDescriptor = {
-            header: columnForm.header,
-            name: `column:${columnForm.name}` as const,
-            width: columnForm.width ? columnForm.width : undefined,
-            minWidth: columnForm.minWidth ? +columnForm.minWidth : undefined,
-            maxWidth: columnForm.maxWidth ? +columnForm.maxWidth : undefined,
+            header: columnForm.header || undefined,
+            name: columnForm.name || undefined,
+            width: columnForm.width || undefined,
+            minWidth: columnForm.minWidth ?? undefined,
+            maxWidth: columnForm.maxWidth ?? undefined,
             resizable: columnForm.resizable,
           };
 
@@ -147,18 +149,19 @@ export default class SciTablePageComponent {
 
   private createColumnForm(): FieldTree<ColumnForm> {
     const defaults: ColumnForm = {
-      name: 'column:name',
-      type: '',
+      name: '',
+      type: 'string',
       header: '',
       resizable: true,
       width: '',
-      minWidth: '',
-      maxWidth: '',
+      minWidth: null,
+      maxWidth: null,
       customSort: false,
       customFilter: false,
     };
 
     return form(signal<ColumnForm>(defaults), column => {
+      pattern(column.name, /column:.+/)
       required(column.type);
       required(column.header);
     }, {
@@ -204,13 +207,13 @@ class CustomCellComponent {
 }
 
 interface ColumnForm {
-  name: string;
-  type: string;
+  name: `column:${string}` | '';
+  type: 'string' | 'number' | 'boolean' | 'template' | 'component';
   header: string;
   resizable: boolean;
   width: string;
-  minWidth: string;
-  maxWidth: string;
+  minWidth: number | null;
+  maxWidth: number | null;
   customSort: boolean;
   customFilter: boolean
 }

@@ -1,5 +1,6 @@
 @use '@angular/cdk';
 @use '@scion/components';
+@use '@scion/components.internal/design' as sci-design;
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..24,400,0&display=block');
@@ -18,6 +19,10 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+button {
+  @include sci-design.style-button();
 }
 
 // Install Angular CDK styles

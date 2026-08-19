@@ -57,13 +57,13 @@
     <ng-template sciTab label="Columns" [cssClass]="'e2e-columns'">
       <form [formRoot]="columnForm">
         <sci-form-field label="Name">
-          <input [formField]="columnForm.name" class="e2e-column-name">
+          <input [formField]="$any(columnForm.name)" class="e2e-column-name" placeholder="column:<string>" appFieldValidation>
         </sci-form-field>
         <sci-form-field label="Header">
-          <input [formField]="columnForm.header" class="e2e-column-header">
+          <input [formField]="columnForm.header" class="e2e-column-header" appFieldValidation>
         </sci-form-field>
         <sci-form-field label="Column Type">
-          <select [formField]="columnForm.type" class="e2e-column-type">
+          <select [formField]="columnForm.type" class="e2e-column-type" appFieldValidation>
             <option value="string">String</option>
             <option value="number">Number</option>
             <option value="boolean">Boolean</option>

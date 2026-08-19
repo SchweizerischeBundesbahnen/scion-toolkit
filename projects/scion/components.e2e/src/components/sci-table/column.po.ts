@@ -1,15 +1,11 @@
 import {Locator} from '@playwright/test';
-import {TablePO} from './table.po';
 import {fromRect, waitUntilStable} from '../../helper/testing.utils';
 
 export class ColumnPO {
-  public locator: Locator;
-  public filterLocator: Locator;
 
-  constructor(locatorOrHeader: Locator | string, table: TablePO) {
-    this.locator = typeof locatorOrHeader === 'string' ?
-      table.locator.locator('sci-column-header', {hasText: locatorOrHeader}) :
-      locatorOrHeader;
+  public readonly filterLocator: Locator;
+
+  constructor(public locator: Locator) {
     this.filterLocator = this.locator.locator('sci-column-filter');
   }
 
