@@ -50,7 +50,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly scrolling = signal(false);
   public readonly sortCriteria = signal<SciSortCriterion[]>([]);
   public readonly filterCriteria = signal<SciColumnFilter[]>([]);
-  public readonly range = signal<{start: number; end: number} | undefined>(undefined);
+  public readonly range = signal<{start: number; /*inclusive*/ end: number /*exclusive*/} | undefined>(undefined);
   public readonly resizingState = signal<{
     column: SciColumnLike<T>;
     hadOverflow: boolean;
@@ -403,7 +403,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   }
 
   /**
-   * Get pages by range and pageSize. End is exclusive
+   * Get pages by range and pageSize. End is exclusive.
    */
   private pagesByRange(start: number, end: number, pageSize: number): number[] {
     const startPage = Math.floor(start / pageSize);

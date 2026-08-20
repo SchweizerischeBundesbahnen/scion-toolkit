@@ -41,9 +41,15 @@
 
     <!-- Date Source -->
     <ng-template sciTab label="Datasource" name="settings">
-      <sci-form-field label="Slow Datasource">
-        <input [formField]="settingsForm.slowDataSource" type="checkbox"/>
-      </sci-form-field>
+      <section>
+        <sci-form-field label="Slow Datasource">
+          <input [formField]="settingsForm.slowDataSource" type="checkbox"/>
+        </sci-form-field>
+
+        <sci-form-field label="Row Count">
+          <input [(ngModel)]="rowCount" appMinMax min="0" max="100000" type="number"/>
+        </sci-form-field>
+      </section>
     </ng-template>
 
     <!-- Visible Columns -->

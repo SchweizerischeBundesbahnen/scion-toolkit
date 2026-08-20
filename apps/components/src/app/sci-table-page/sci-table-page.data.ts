@@ -7,11 +7,13 @@ import {map, switchMap} from 'rxjs/operators';
 @Service()
 export class CompanyService {
 
-  public readonly companyCount = signal(100);
+  public readonly companyCount = signal(100_000);
+
   public readonly companies = linkedSignal(() => {
     const count = this.companyCount();
     return untracked(() => Companies.generate(count));
   });
+
   private readonly _companies$ = toObservable(this.companies);
 
   public updateCompany(company: Company): void {

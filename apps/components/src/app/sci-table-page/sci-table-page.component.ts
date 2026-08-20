@@ -18,6 +18,7 @@ import {SciToolbarFactory} from '@scion/components/menu';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
+import {MinMaxDirective} from '../common/min-max.directive';
 
 @Component({
   selector: 'app-table-page',
@@ -32,6 +33,7 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     FieldValidationDirective,
     SciTabDirective,
     SciTabbarComponent,
+    MinMaxDirective,
   ],
 })
 export default class SciTablePageComponent {
@@ -43,6 +45,7 @@ export default class SciTablePageComponent {
   protected readonly companyForm: FieldTree<CompanyForm> = this.createCompanyForm();
 
   protected readonly table = this.computeTable();
+  protected readonly rowCount = inject(CompanyService).companyCount;
 
   private createTable(options: {slowDataSource: boolean}): SciTable<Company> {
     const companyService = inject(CompanyService);
@@ -67,11 +70,10 @@ export default class SciTablePageComponent {
 
       // ID Column.
       if (visibleColumns.id) {
-        table.addStringColumn({
+        table.addNumberColumn({
           name: 'column:id',
           header: 'ID',
-          value: company => company.id,
-          filterable: false,
+          value: company => +company.id,
         });
       }
 
@@ -218,7 +220,6 @@ export default class SciTablePageComponent {
       showHeader: true,
       slowDataSource: false,
       selectable: 'multi',
-      rowCount: 100,
       visibleColumns: {
         id: true,
         code: true,
@@ -287,7 +288,6 @@ interface SettingsForm {
   showHeader: boolean,
   slowDataSource: false,
   selectable: 'false' | 'single' | 'multi',
-  rowCount: number;
   visibleColumns: {
     id: boolean,
     code: boolean,

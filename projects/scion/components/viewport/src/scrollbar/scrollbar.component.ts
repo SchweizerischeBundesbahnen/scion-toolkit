@@ -14,6 +14,7 @@ import {debounceTime, map, startWith, switchMap, takeUntil, withLatestFrom} from
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {clamp, isBetween} from '@scion/toolkit/util';
 
 /**
  * Renders a vertical or horizontal scrollbar.
@@ -368,20 +369,6 @@ function children$(element: HTMLElement): Observable<HTMLElement[]> {
         // Filter HTML elements.
         .filter((child: Element): child is HTMLElement => child instanceof HTMLElement)),
     );
-}
-
-/**
- * Returns the value clamped to the inclusive range of min and max.
- */
-function clamp(value: number, minmax: {min: number; max: number}): number {
-  return Math.max(minmax.min, Math.min(value, minmax.max));
-}
-
-/**
- * Returns whether the value is between the specified range (inclusive).
- */
-function isBetween(value: number, range: {from: number; to: number}): boolean {
-  return value >= range.from && value <= range.to;
 }
 
 /**
