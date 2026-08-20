@@ -7,25 +7,25 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, inject, Injector, input, inputBinding, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
-import {SciCellContext, SciColumnDescriptor, SciDataLoaderFn, SciTable, SciTableComponent, SciTableDescriptor, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
+import {SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
-import {map, Observable, timer} from 'rxjs';
 import {createDestroyableInjector} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
 import {FieldValidationDirective} from '../field-validation.directive';
+import {Product, ProductService} from './sci-table-page.data';
 
 @Component({
   selector: 'app-table-page',
   templateUrl: './sci-table-page.component.html',
   styleUrls: ['./sci-table-page.component.scss'],
   host: {
-    '[style.--table-page-height]': '`${settingsForm.height().value()}px`',
-    '[style.--table-page-width]': '`${settingsForm.width().value()}px`',
-    '[style.--sci-table-row-height]': '`${settingsForm.rowSize().value()}px`',
+    '[style.--table-page-height]': 'settingsForm.height().value() ? `${settingsForm.height().value()}px` : null',
+    '[style.--table-page-width]': 'settingsForm.width().value() ? `${settingsForm.width().value()}px` : null',
+    '[style.--sci-table-row-height]': 'settingsForm.rowSize().value() ? `${settingsForm.rowSize().value()}px` : null',
   },
   imports: [
     SciTableComponent,
@@ -42,136 +42,144 @@ import {FieldValidationDirective} from '../field-validation.directive';
 export default class SciTablePageComponent {
 
   private readonly _injector = inject(Injector);
+  private readonly _productService = inject(ProductService);
+
   private readonly _cellTemplate = viewChild.required<TemplateRef<Product>>('cell');
-  private readonly _columns = signal<ColumnForm[]>([]);
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
   protected readonly columnForm: FieldTree<ColumnForm> = this.createColumnForm();
+  protected readonly columns = signal<ColumnForm[]>([]);
 
-  protected readonly tables = signal<SciTable<Product>[]>([]);
+  protected readonly tables = this.computeTables();
+  protected readonly rowCount = inject(ProductService).productCount;
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
 
-  constructor() {
-    this.createTables();
+  private createTable(name: `table:${string}`, options: {slowDataSource: boolean; showRowActions: boolean; customRowStyling: boolean}): SciTable<Product> {
+    return table({
+      name,
+      headerVisible: computed(() => this.settingsForm.showHeader().value()),
+      sortable: computed(() => this.settingsForm.sortable().value()),
+      filterable: computed(() => this.settingsForm.filterable().value()),
+      resizable: computed(() => this.settingsForm.resizable().value()),
+      selectable: computed(() => {
+        const selectable = this.settingsForm.selectable().value();
+        return selectable === 'false' ? false : selectable;
+      }),
+      trackBy: product => product.id,
+      data: options.slowDataSource ? request => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: true}) : this._productService.products,
+      rowState: options.customRowStyling ? (product: Product) => product.id % 3 === 0 ? 'row:negative' : [] : undefined,
+      rowActions: options.showRowActions ? (product, toolbar) => toolbar.addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
+        .addMenuItem({
+          label: 'Edit',
+          onSelect: () => console.log('edit', product.id),
+        }),
+      ) : undefined,
+    }, table => this.columns().forEach(columnForm => {
+      if (!columnForm.visible()) {
+        return;
+      }
+
+      const column: SciColumnDescriptor = {
+        name: columnForm.name || undefined,
+        header: columnForm.header || undefined,
+        width: columnForm.width || undefined,
+        minWidth: columnForm.minWidth ?? undefined,
+        maxWidth: columnForm.maxWidth ?? undefined,
+        resizable: columnForm.resizable,
+      };
+
+      switch (columnForm.type) {
+        case 'string':
+          table.addStringColumn({
+            ...column,
+            filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
+            sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
+            value: product => product.name,
+          });
+          break;
+        case 'number':
+          table.addNumberColumn({
+            ...column,
+            value: product => product.price,
+          });
+          break;
+        case 'boolean':
+          table.addBooleanColumn({
+            ...column,
+            value: product => product.inStock,
+          });
+          break;
+        case 'component':
+          table.addComponentColumn({
+            ...column,
+            filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
+            sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
+            component: product => ({component: CustomCellComponent, bindings: [inputBinding('product', () => product)]}),
+          });
+          break;
+        case 'template':
+          table.addTemplateColumn({
+            ...column,
+            filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
+            sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
+            template: () => ({template: this._cellTemplate}),
+          });
+          break;
+      }
+    }));
   }
 
-  private createTables(): void {
+  private computeTables(): Signal<SciTable<Product>[]> {
+    const tables = signal<SciTable<Product>[]>([]);
+
     effect(onCleanup => {
       const tableCount = this.settingsForm.tableCount().value();
+      const slowDataSource = this.settingsForm.slowDataSource().value();
       const showRowActions = this.settingsForm.showRowAction().value();
       const customRowStyling = this.settingsForm.customRowStyling().value();
-      const slowDataSource = this.settingsForm.slowDataSource().value();
-      const settingsForm = this.settingsForm;
-      const data = computed(() => generateData(this.settingsForm.rowCount().value()));
-      const columns = this._columns;
-      const cellTemplate = this._cellTemplate;
 
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-
-        this.tables.set(Array.from(Array(tableCount), (_, i) => createTable(`table:${i}`, {injector})));
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable(`table:${i}`, {slowDataSource, showRowActions, customRowStyling}))));
       });
-
-      function createTable(name: `table:${string}`, options: {injector: Injector}): SciTable<Product> {
-        const tableDescriptor: SciTableDescriptor<Product> = {
-          name,
-          headerVisible: computed(() => settingsForm.showHeader().value()),
-          sortable: computed(() => settingsForm.sortable().value()),
-          filterable: computed(() => settingsForm.filterable().value()),
-          resizable: computed(() => settingsForm.resizable().value()),
-          selectable: computed(() => {
-            const selectable = settingsForm.selectable().value();
-            return selectable === 'false' ? false : selectable;
-          }),
-          data: slowDataSource ? slowDataLoader(data) : data,
-          rowState: customRowStyling ? (product: Product) => product.id % 3 === 0 ? 'row:negative' : [] : undefined,
-          rowActions: showRowActions ? (product, toolbar) => toolbar.addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
-            .addMenuItem({
-              label: 'Edit',
-              onSelect: () => console.log('edit', product.id),
-            }),
-          ) : undefined,
-        };
-
-        return table(tableDescriptor, table => columns().forEach(columnForm => {
-          const column: SciColumnDescriptor = {
-            header: columnForm.header || undefined,
-            name: columnForm.name || undefined,
-            width: columnForm.width || undefined,
-            minWidth: columnForm.minWidth ?? undefined,
-            maxWidth: columnForm.maxWidth ?? undefined,
-            resizable: columnForm.resizable,
-          };
-
-          switch (columnForm.type) {
-            case 'string':
-              table.addStringColumn({
-                ...column,
-                filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
-                sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
-                value: product => product.name,
-              });
-              break;
-            case 'number':
-              table.addNumberColumn({
-                ...column,
-                value: product => product.price,
-              });
-              break;
-            case 'boolean':
-              table.addBooleanColumn({
-                ...column,
-                value: product => product.inStock,
-              });
-              break;
-            case 'component':
-              table.addComponentColumn({
-                ...column,
-                filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
-                sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
-                component: product => ({component: CustomCellComponent, bindings: [inputBinding('product', () => product)]}),
-              });
-              break;
-            case 'template':
-              table.addTemplateColumn({
-                ...column,
-                filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
-                sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
-                template: () => ({template: cellTemplate}),
-              });
-              break;
-          }
-        }), {injector: options.injector});
-      }
     });
+
+    return tables;
   }
 
   private createColumnForm(): FieldTree<ColumnForm> {
-    const defaults: ColumnForm = {
-      name: '',
-      type: 'string',
-      header: '',
-      resizable: true,
-      width: '',
-      minWidth: null,
-      maxWidth: null,
-      customSort: false,
-      customFilter: false,
-    };
-
-    return form(signal<ColumnForm>(defaults), column => {
-      pattern(column.name, /column:.+/)
+    return form(signal<ColumnForm>(defaults()), column => {
+      pattern(column.name, /column:.+/);
+      required(column.name);
       required(column.type);
-      required(column.header);
     }, {
       submission: {
         action: async form => {
-          this._columns.update(columns => columns.concat(form().value()));
-          this.columnForm().reset(defaults);
+          this.columns.update(columns => columns.concat({
+            ...form().value(),
+            header: form.header().value() || form.name().value(),
+            visible: signal(true),
+          }));
+          this.columnForm().reset(defaults());
         },
       },
     });
+
+    function defaults(): ColumnForm {
+      return {
+        name: 'column:',
+        type: 'string',
+        header: '',
+        resizable: true,
+        width: '',
+        minWidth: null,
+        maxWidth: null,
+        customSort: false,
+        customFilter: false,
+        visible: signal(true),
+      };
+    }
   }
 
   private createSettingsForm(): FieldTree<SettingsForm> {
@@ -184,7 +192,6 @@ export default class SciTablePageComponent {
       showRowAction: false,
       slowDataSource: false,
       customRowStyling: false,
-      rowCount: 10000,
       rowSize: 28,
       height: 600,
       width: 600,
@@ -208,61 +215,40 @@ class CustomCellComponent {
 
 interface ColumnForm {
   name: `column:${string}` | '';
-  type: 'string' | 'number' | 'boolean' | 'template' | 'component';
+  type: SciColumnType;
   header: string;
   resizable: boolean;
   width: string;
   minWidth: number | null;
   maxWidth: number | null;
   customSort: boolean;
-  customFilter: boolean
+  customFilter: boolean;
+  visible: Signal<boolean>;
 }
 
 interface SettingsForm {
   filterable: boolean;
   sortable: boolean;
   resizable: boolean;
-  selectable: 'false' | 'single' | 'multi',
+  selectable: 'false' | 'single' | 'multi';
   showHeader: boolean;
   showRowAction: boolean;
   slowDataSource: boolean;
   customRowStyling: boolean;
-  rowCount: number;
   rowSize: number;
   height: number;
   width: number;
   tableCount: number;
 }
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  inStock: boolean;
-}
-
-function generateData(count: number): Product[] {
-  return Array.from(Array(count), (_, i) => ({
-    id: i + 1,
-    name: `Product ${i + 1}`,
-    price: Math.floor(Math.random() * 1000) + 1,
-    inStock: Math.random() > 0.5,
-  }));
-}
-
 function customFilter(text: string, context: SciCellContext<Product, unknown>): boolean {
-  return context.item.name.includes(text as string);
+  return context.item.name.includes(text);
 }
 
 function customComparator(a: SciCellContext<Product, unknown>, b: SciCellContext<Product, unknown>): number {
   return a.item.id - b.item.id;
 }
 
-function slowDataLoader(data: Signal<Product[]>): SciDataLoaderFn<Product> {
-  return (request: SciTableRequest): Observable<SciTableResponse<Product>> => {
-    return timer(1000).pipe(map(() => ({
-      items: request.columnFilters.length ? [] : data().slice(request.start, request.end),
-      totalCount: request.columnFilters.length ? 0 : data().length,
-    })));
-  };
+function columnDataTypes(columns: ColumnForm[]): Map<`column:${string}`, ColumnForm['type']> {
+  return columns.reduce((map, column) => map.set(column.name as `column:${string}`, column.type), new Map<`column:${string}`, ColumnForm['type']>());
 }

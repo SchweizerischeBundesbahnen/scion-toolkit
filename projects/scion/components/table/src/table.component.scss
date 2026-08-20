@@ -24,7 +24,7 @@
     > sci-table-grid {
       width: var(--ɵsci-table-width); // TODO describe why
       display: grid;
-      grid-template-columns: var(--ɵsci-table-columns) 0; // last column used for row actions
+      grid-template-columns: var(--ɵsci-table-columns, 100%) 0; // last column used for row actions
       grid-auto-rows: min-content;
       grid-template-rows:
         min-content // header

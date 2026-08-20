@@ -192,12 +192,12 @@ export default class SciTablePageComponent {
               label: 'Info...',
               onSelect: () => console.log('info', company),
             }),
-          ))
+          ));
     }
   }
 
   private computeTable(): Signal<SciTable<Company> | undefined> {
-    const table = signal<SciTable<Company> | undefined>(undefined)
+    const table = signal<SciTable<Company> | undefined>(undefined);
 
     effect(onCleanup => {
       const slowDataSource = this.settingsForm.slowDataSource().value();
@@ -282,21 +282,21 @@ class DateCellComponent {
 }
 
 interface SettingsForm {
-  filterable: boolean,
-  sortable: boolean,
-  resizable: boolean,
-  showHeader: boolean,
-  slowDataSource: false,
-  selectable: 'false' | 'single' | 'multi',
+  filterable: boolean;
+  sortable: boolean;
+  resizable: boolean;
+  showHeader: boolean;
+  slowDataSource: boolean;
+  selectable: 'false' | 'single' | 'multi';
   visibleColumns: {
-    id: boolean,
-    code: boolean,
+    id: boolean;
+    code: boolean;
     abbreviation: boolean;
     name: boolean;
     railwayUndertaking: boolean;
     validFrom: boolean;
     validTo: boolean;
-  },
+  };
 }
 
 export interface CompanyForm {

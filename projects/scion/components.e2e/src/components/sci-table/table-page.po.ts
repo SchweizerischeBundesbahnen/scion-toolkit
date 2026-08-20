@@ -9,6 +9,7 @@
  */
 
 import {Locator, Page} from '@playwright/test';
+import {SciColumnType} from '@scion/components/table';
 
 const PATH = '/#/components/sci-table';
 
@@ -16,6 +17,7 @@ export class TablePagePO {
 
   public readonly locator: Locator;
   public readonly properties: Locator;
+  public readonly tableState: Locator;
   public readonly tabbar: Locator;
 
   public readonly table: Locator;
@@ -24,18 +26,14 @@ export class TablePagePO {
   constructor(private _page: Page) {
     this.locator = this._page.locator('app-table-page');
     this.properties = this.locator.locator('aside.e2e-properties');
+    this.tableState = this.properties.locator('section.e2e-table-state ');
     this.tabbar = this.properties.locator('sci-tabbar');
     this.table = this.locator.locator('sci-table');
-    this.selectedItems = this.properties.locator('dd.e2e-selected-items');
+    this.selectedItems = this.tableState.locator('output.e2e-selected-items');
   }
 
   public async navigate(): Promise<void> {
     await this._page.goto(PATH);
-  }
-
-  public async setSlowDataSource(checked: boolean): Promise<void> {
-    await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-slow-datasource').setChecked(checked);
   }
 
   public async setFilterable(checked: boolean): Promise<void> {
@@ -79,8 +77,13 @@ export class TablePagePO {
   }
 
   public async setRowCount(rowCount: number): Promise<void> {
-    await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('form input.e2e-row-count').fill(rowCount.toString());
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-row-count').fill(rowCount.toString());
+  }
+
+  public async setSlowDataSource(checked: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-slow-datasource').setChecked(checked);
   }
 
   public async setRowActions(checked: boolean): Promise<void> {
@@ -90,42 +93,48 @@ export class TablePagePO {
 
   public async setTableCount(tableCount: number): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('form input.e2e-table-count').fill(tableCount.toString());
+    await this.properties.locator('input.e2e-table-count').fill(tableCount.toString());
   }
 
   public async conditionallyStyleRow(): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('form input.e2e-conditional-style').check();
+    await this.properties.locator('input.e2e-conditional-style').check();
+  }
+
+  public async setColumnVisible(column: `column:${string}`, visible: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-columns').click();
+    const checkbox = this.properties.locator(`input.e2e-column-visibility[data-column="${column}"]`);
+    await (visible ? checkbox.check() : checkbox.uncheck());
   }
 
   public async addColumn(options: ColumnOptions): Promise<void> {
     await this.tabbar.locator('button.e2e-columns').click();
-    await this.properties.locator('form input.e2e-column-name').fill(options.name ?? '');
-    await this.properties.locator('form input.e2e-column-header').fill(options.header ?? '');
-    await this.properties.locator('form select.e2e-column-type').selectOption(options.type);
+    await this.properties.locator('input.e2e-column-name').fill(options.name ?? '');
+    await this.properties.locator('input.e2e-column-header').fill(options.header ?? options.name ?? '');
+    await this.properties.locator('select.e2e-column-type').selectOption(options.type);
     if (options.customSort) {
-      await this.properties.locator('form input.e2e-column-custom-sort').check();
+      await this.properties.locator('input.e2e-column-custom-sort').check();
     }
     if (options.customFilter) {
-      await this.properties.locator('form input.e2e-column-custom-filter').check();
+      await this.properties.locator('input.e2e-column-custom-filter').check();
     }
     if (options.width !== undefined) {
-      await this.properties.locator('form input.e2e-column-width').fill(options.width);
+      await this.properties.locator('input.e2e-column-width').fill(options.width);
     }
     if (options.minWidth !== undefined) {
-      await this.properties.locator('form input.e2e-column-min-width').fill(options.minWidth.toString());
+      await this.properties.locator('input.e2e-column-min-width').fill(options.minWidth.toString());
     }
     if (options.maxWidth !== undefined) {
-      await this.properties.locator('form input.e2e-column-max-width').fill(options.maxWidth.toString());
+      await this.properties.locator('input.e2e-column-max-width').fill(options.maxWidth.toString());
     }
-    await this.properties.locator('form button.e2e-column-add').click();
+    await this.properties.locator('button.e2e-column-add').click();
   }
 }
 
 export interface ColumnOptions {
-  name?: `column:${string}`;
+  name: `column:${string}`;
   header?: string;
-  type: 'string' | 'number' | 'boolean' | 'template' | 'component';
+  type: SciColumnType;
   customFilter?: boolean;
   customSort?: boolean;
   width?: string;

@@ -23,13 +23,7 @@
     padding: 1em;
 
     > sci-tabbar {
-      section {
-        display: flex;
-        flex-direction: column;
-        gap: .5em;
-      }
-
-      form {
+      section, form {
         display: flex;
         flex-direction: column;
         gap: .5em;

@@ -8,11 +8,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableComponent, table} from '@scion/components/table';
 import {TestBed} from '@angular/core/testing';
 import {effect, Injector, inputBinding, signal} from '@angular/core';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {ɵSciTable} from './ɵtable.model';
+import {table} from './table';
+import {SciTableComponent} from './table.component';
 
 fdescribe('Table Factory', () => {
   describe('validation', () => {

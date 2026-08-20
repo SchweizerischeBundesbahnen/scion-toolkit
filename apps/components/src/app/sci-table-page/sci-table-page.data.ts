@@ -98,9 +98,9 @@ export namespace Companies {
             case 'column:railwayUndertaking':
               return Number(a.railwayUndertaking) - Number(b.railwayUndertaking);
             case 'column:validFrom':
-              return new Date(a.validFrom).getTime() - new Date(b.validFrom).getTime()
+              return new Date(a.validFrom).getTime() - new Date(b.validFrom).getTime();
             case 'column:validTo':
-              return new Date(a.validTo).getTime() - new Date(b.validTo).getTime()
+              return new Date(a.validTo).getTime() - new Date(b.validTo).getTime();
             default:
               return 0;
           }

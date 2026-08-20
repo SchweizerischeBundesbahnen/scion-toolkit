@@ -10,9 +10,9 @@
 
 import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, NgZone, output, Provider, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciTable} from './table.model';
-import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
+import {SciScrollRange, ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
-import {concat, fromEvent, map, of, switchMap, timer} from 'rxjs';
+import {concat, fromEvent, map, mergeWith, of, switchMap, timer} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollbarComponent} from '@scion/components/viewport';
 import {startWith} from 'rxjs/operators';
@@ -28,6 +28,7 @@ import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/s
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
+import {clamp, Objects} from '@scion/toolkit/util';
 
 @Component({
   selector: 'sci-table',
@@ -90,11 +91,11 @@ export class SciTableComponent<T> {
   protected readonly headerDimension = dimension(this._header);
 
   protected readonly virtualScrollOffsetTop = computed(() => {
-    return (this.sciTable().range()?.start ?? 0) * this.itemSize();
+    return (this.sciTable().scrollRange()?.start ?? 0) * this.itemSize();
   });
 
   protected readonly virtualScrollOffsetBottom = computed(() => {
-    const rangeEnd = Math.min(this.sciTable().range()?.end ?? 0, this.sciTable().totalCount() ?? 0);
+    const rangeEnd = Math.min(this.sciTable().scrollRange()?.end ?? 0, this.sciTable().totalCount() ?? 0);
     const totalCount = this.sciTable().totalCount() ?? 0;
     return (totalCount - rangeEnd) * this.itemSize();
   });
@@ -124,6 +125,10 @@ export class SciTableComponent<T> {
    * This allows the grid to overflow when resizing.
    */
   protected readonly tableWidth = computed(() => {
+    if (!this.sciTable().columns().length) {
+      return '100%';
+    }
+
     const viewportWidth = this._viewportDimension().clientWidth;
     // ViewportClient cannot be used, because it does not grow with its children.
     const tableBodyWidth = this._tableBodyDimension()?.offsetWidth ?? 0;
@@ -137,7 +142,7 @@ export class SciTableComponent<T> {
 
   constructor() {
     this.installActiveItemWatcher();
-    this.installDimensionWatcher();
+    this.installScrollRangeTracker();
     this.installCriteriaListener();
     this.installScrollListener();
   }
@@ -168,28 +173,27 @@ export class SciTableComponent<T> {
     });
   }
 
+  private installScrollRangeTracker(): void {
+    const scrollRange = this.computeScrollRange();
+    effect(() => this.sciTable().scrollRange.set(scrollRange()));
+  }
+
   /**
-   * Sets the visible row count based on the internal table model.
-   * The count is calculated based on container and item size.
+   * Computes the visible row count based on the viewport size.
    */
-  private installDimensionWatcher(): void {
-    effect(() => {
+  private computeScrollRange(): Signal<SciScrollRange> {
+    return computed(() => {
       const viewportDimension = this._viewportDimension();
       const itemSize = this._itemSizeDimension().offsetHeight;
-      const overscan = this.sciTable().bufferSize();
+      const bufferSize = this.sciTable().bufferSize();
       const scrollTop = this._scrollTop() - this._headerHeight();
-      const visibleRowCount = Math.ceil((viewportDimension.clientHeight - this._headerHeight()) / itemSize) + overscan * 2;
+      const visibleRowCount = Math.ceil((viewportDimension.clientHeight - this._headerHeight()) / itemSize) + bufferSize * 2;
       const firstVisible = Math.floor(scrollTop / itemSize);
-      const start = Math.max(0, firstVisible - overscan);
-      const end = start + visibleRowCount;
-      this.sciTable().range.update(range => {
-        // Only update range signal if there is an actual change.
-        if (start === range?.start && end === range.end) {
-          return range;
-        }
-        return {start, end};
-      });
-    });
+      const totalCount = this.sciTable().totalCount() ?? Number.MAX_SAFE_INTEGER; // max value if no data loaded yet
+      const start = clamp(firstVisible - bufferSize, {min: 0, max: totalCount});
+      const end = Math.min(start + visibleRowCount, totalCount);
+      return {start, end};
+    }, {equal: Objects.isEqual});
   }
 
   /**
@@ -197,11 +201,15 @@ export class SciTableComponent<T> {
    */
   private computeScrollTop(): Signal<number> {
     const zone = inject(NgZone);
+    const viewportDimension$ = toObservable(this._viewportDimension);
+    const viewportClientDimension$ = toObservable(this._viewportClientDimension);
 
     return toSignal(toObservable(this._viewport)
       .pipe(
         switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll', {passive: true})
           .pipe(
+            mergeWith(viewportDimension$),
+            mergeWith(viewportClientDimension$),
             startWith(undefined),
             subscribeIn(fn => zone.runOutsideAngular(fn)),
             map(() => viewport.nativeElement.scrollTop),

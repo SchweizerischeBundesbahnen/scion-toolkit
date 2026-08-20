@@ -11,14 +11,16 @@
 import {TestBed} from '@angular/core/testing';
 import {table} from './table';
 import {SciTableComponent} from './table.component';
-import {Component, computed, Injector, input, inputBinding, Signal, signal, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, EnvironmentProviders, Injector, input, inputBinding, Signal, signal, TemplateRef, viewChild} from '@angular/core';
 import {TablePO} from './table.po';
-import {SciDataLoaderFn, SciTableDescriptor, SciTableFactory, SciTableRequest, SciTableResponse} from '@scion/components/table';
 import {rangeInclusive} from './common';
 import {ɵSciTable} from './ɵtable.model';
 import {TableSelectionService} from './table-selection.service';
 import {map, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
+import {SciTableDescriptor} from './table.model';
+import {SciTableFactory} from './table.factory';
+import {SciDataLoaderFn, SciTableRequest, SciTableResponse} from './table-data-source';
 
 fdescribe('Table', () => {
   beforeEach(() => {
@@ -26,14 +28,7 @@ fdescribe('Table', () => {
     // This causes problems on reruns, and can cause tests to interfere with each other.
     TestBed.configureTestingModule({
       providers: [
-        provideTableStorage(class {
-          public load(): null {
-            return null;
-          }
-          public store(): void {
-            // noop
-          }
-        }),
+        provideNullTableStorage(),
       ],
     });
   });
@@ -49,12 +44,12 @@ fdescribe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.rows.length).toEqual(3);
+      const table = new TablePO(fixture);
+      expect(table.rows.length).toEqual(3);
 
       data.update(d => d.concat({id: 4}));
       await fixture.whenStable();
-      expect(po.rows.length).toEqual(4);
+      expect(table.rows.length).toEqual(4);
     });
 
     it('should update table on columns change', async () => {
@@ -71,12 +66,12 @@ fdescribe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.columns).toHaveSize(1);
+      const table = new TablePO(fixture);
+      expect(table.columns).toHaveSize(1);
 
       columns.update(c => c.concat(['name']));
       await fixture.whenStable();
-      expect(po.columns).toHaveSize(2);
+      expect(table.columns).toHaveSize(2);
     });
 
     describe('Columns', () => {
@@ -99,22 +94,22 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
-        expect(po.columnEntries('Value')).toEqual(['5']);
+        const table = new TablePO(fixture);
+        expect(table.columnEntries('Value')).toEqual(['5']);
 
         // Update input signal => should update inside component.
         value.set(20);
         await fixture.whenStable();
-        expect(po.columnEntries('Value')).toEqual(['10']);
+        expect(table.columnEntries('Value')).toEqual(['10']);
       });
 
       it('should support custom template cell', async () => {
         const fixture = TestBed.createComponent(TestTemplate);
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
-        expect(po.columnEntries('ID')).toEqual(['1', '2', '3']);
-        expect(po.columnEntries('Price')).toEqual(['50', '100', '200']);
+        const table = new TablePO(fixture);
+        expect(table.columnEntries('ID')).toEqual(['1', '2', '3']);
+        expect(table.columnEntries('Price')).toEqual(['50', '100', '200']);
       });
     });
 
@@ -133,15 +128,15 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         model.sort('column:id', false);
         await fixture.whenStable();
-        expect(po.columnEntries('ID')).toEqual(['1', '2', '3']);
+        expect(table.columnEntries('ID')).toEqual(['1', '2', '3']);
 
         model.sort('column:id', false);
         await fixture.whenStable();
-        expect(po.columnEntries('ID')).toEqual(['3', '2', '1']);
+        expect(table.columnEntries('ID')).toEqual(['3', '2', '1']);
       });
 
       it('should sort string column', async () => {
@@ -157,15 +152,15 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         model.sort('column:name', false);
         await fixture.whenStable();
-        expect(po.columnEntries('Name')).toEqual(['a', 'b', 'c']);
+        expect(table.columnEntries('Name')).toEqual(['a', 'b', 'c']);
 
         model.sort('column:name', false);
         await fixture.whenStable();
-        expect(po.columnEntries('Name')).toEqual(['c', 'b', 'a']);
+        expect(table.columnEntries('Name')).toEqual(['c', 'b', 'a']);
       });
 
       it('should sort boolean column', async () => {
@@ -181,31 +176,31 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         model.sort('column:active', false);
         await fixture.whenStable();
-        expect(po.columnEntries('Active')).toEqual(['clear', 'checkmark', 'checkmark']);
+        expect(table.columnEntries('Active')).toEqual(['clear', 'checkmark', 'checkmark']);
 
         model.sort('column:active', false);
         await fixture.whenStable();
-        expect(po.columnEntries('Active')).toEqual(['checkmark', 'checkmark', 'clear']);
+        expect(table.columnEntries('Active')).toEqual(['checkmark', 'checkmark', 'clear']);
       });
 
       it('should sort custom template column', async () => {
         const fixture = TestBed.createComponent(TestTemplate);
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
-        expect(po.columnEntries('Price')).toEqual(['50', '100', '200']);
+        const table = new TablePO(fixture);
+        expect(table.columnEntries('Price')).toEqual(['50', '100', '200']);
 
         fixture.componentInstance.table.sort('column:price', false);
         await fixture.whenStable();
-        expect(po.columnEntries('Price')).toEqual(['50', '100', '200']);
+        expect(table.columnEntries('Price')).toEqual(['50', '100', '200']);
 
         fixture.componentInstance.table.sort('column:price', false);
         await fixture.whenStable();
-        expect(po.columnEntries('Price')).toEqual(['200', '100', '50']);
+        expect(table.columnEntries('Price')).toEqual(['200', '100', '50']);
       });
 
       it('should sort with header click', async () => {
@@ -218,14 +213,14 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
-        const column = po.getColumnByHeader('ID')!;
+        const table = new TablePO(fixture);
+        const column = table.getColumnByHeader('ID')!;
 
         await column.toggleSort();
-        expect(po.columnEntries('ID')).toEqual(['1', '2', '3']);
+        expect(table.columnEntries('ID')).toEqual(['1', '2', '3']);
 
         await column.toggleSort();
-        expect(po.columnEntries('ID')).toEqual(['3', '2', '1']);
+        expect(table.columnEntries('ID')).toEqual(['3', '2', '1']);
       });
     });
 
@@ -243,15 +238,15 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         model.filter('alpha');
         await fixture.whenStable();
-        expect(po.columnEntries('Name')).toEqual(['alpha']);
+        expect(table.columnEntries('Name')).toEqual(['alpha']);
 
         model.filter('a');
         await fixture.whenStable();
-        expect(po.columnEntries('Name')).toEqual(['alpha', 'beta', 'gamma']);
+        expect(table.columnEntries('Name')).toEqual(['alpha', 'beta', 'gamma']);
       });
 
       it('should filter number column', async () => {
@@ -267,15 +262,15 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         model.filter(3, {columnName: 'column:id'});
         await fixture.whenStable();
-        expect(po.columnEntries('ID')).toEqual(['3']);
+        expect(table.columnEntries('ID')).toEqual(['3']);
 
         model.filter(null, {columnName: 'column:id'});
         await fixture.whenStable();
-        expect(po.columnEntries('ID')).toEqual(['1', '3', '2']);
+        expect(table.columnEntries('ID')).toEqual(['1', '3', '2']);
       });
 
       it('should filter string column', async () => {
@@ -291,15 +286,15 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         model.filter('c', {columnName: 'column:name'});
         await fixture.whenStable();
-        expect(po.columnEntries('Name')).toEqual(['c']);
+        expect(table.columnEntries('Name')).toEqual(['c']);
 
         model.filter(null, {columnName: 'column:name'});
         await fixture.whenStable();
-        expect(po.columnEntries('Name')).toEqual(['a', 'c', 'b']);
+        expect(table.columnEntries('Name')).toEqual(['a', 'c', 'b']);
       });
 
       it('should filter boolean column', async () => {
@@ -315,15 +310,15 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         model.filter(true, {columnName: 'column:active'});
         await fixture.whenStable();
-        expect(po.columnEntries('Active')).toEqual(['checkmark', 'checkmark']);
+        expect(table.columnEntries('Active')).toEqual(['checkmark', 'checkmark']);
 
         model.filter(null, {columnName: 'column:active'});
         await fixture.whenStable();
-        expect(po.columnEntries('Active')).toEqual(['checkmark', 'clear', 'checkmark']);
+        expect(table.columnEntries('Active')).toEqual(['checkmark', 'clear', 'checkmark']);
       });
 
       it('should support filter with custom filter function', async () => {
@@ -340,15 +335,15 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         model.filter('abcd', {columnName: 'column:name'});
         await fixture.whenStable();
-        expect(po.columnEntries('Name')).toEqual(['beta']);
+        expect(table.columnEntries('Name')).toEqual(['beta']);
 
         model.filter(null, {columnName: 'column:name'});
         await fixture.whenStable();
-        expect(po.columnEntries('Name')).toEqual(['alpha', 'beta', 'gamma']);
+        expect(table.columnEntries('Name')).toEqual(['alpha', 'beta', 'gamma']);
       });
 
       it('should filter number with filter field', async () => {
@@ -364,11 +359,11 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
-        const column = po.getColumnByHeader('ID')!;
+        const table = new TablePO(fixture);
+        const column = table.getColumnByHeader('ID')!;
 
         await column.filter('3');
-        expect(po.columnEntries('ID')).toEqual(['3']);
+        expect(table.columnEntries('ID')).toEqual(['3']);
       });
 
       it('should ignore invalid number input in filter field', async () => {
@@ -384,11 +379,11 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
-        const column = po.getColumnByHeader('ID')!;
+        const table = new TablePO(fixture);
+        const column = table.getColumnByHeader('ID')!;
 
         await column.filter('invalid');
-        expect(po.columnEntries('ID')).toEqual(['1', '3', '2']);
+        expect(table.columnEntries('ID')).toEqual(['1', '3', '2']);
       });
 
       it('should trim filter field input', async () => {
@@ -404,11 +399,11 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
-        const column = po.getColumnByHeader('Name')!;
+        const table = new TablePO(fixture);
+        const column = table.getColumnByHeader('Name')!;
 
         await column.filter(' beta ');
-        expect(po.columnEntries('Name')).toEqual(['beta']);
+        expect(table.columnEntries('Name')).toEqual(['beta']);
       });
 
       it('should filter string column case-insensitively', async () => {
@@ -424,11 +419,11 @@ fdescribe('Table', () => {
         });
         await fixture.whenStable();
 
-        const po = new TablePO(fixture);
-        const column = po.getColumnByHeader('Name')!;
+        const table = new TablePO(fixture);
+        const column = table.getColumnByHeader('Name')!;
 
         await column.filter('ALPHA');
-        expect(po.columnEntries('Name')).toEqual(['Alpha']);
+        expect(table.columnEntries('Name')).toEqual(['Alpha']);
       });
     });
   });
@@ -448,8 +443,8 @@ fdescribe('Table', () => {
       fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      po.rows[1]!.dblClick();
+      const table = new TablePO(fixture);
+      table.rows[1]!.dblClick();
 
       expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
     });
@@ -468,8 +463,8 @@ fdescribe('Table', () => {
       fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      po.rows[1]!.enter();
+      const table = new TablePO(fixture);
+      table.rows[1]!.enter();
 
       expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
     });
@@ -496,10 +491,10 @@ fdescribe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      po.rows[1]!.hover();
+      const table = new TablePO(fixture);
+      table.rows[1]!.hover();
       await fixture.whenStable();
-      po.clickRowAction('testee');
+      table.clickRowAction('testee');
       await fixture.whenStable();
 
       expect(onSelect).toHaveBeenCalledOnceWith({id: 2});
@@ -860,25 +855,25 @@ fdescribe('Table', () => {
         });
         (fixture.nativeElement as HTMLElement).style.height = '300px';
         await fixture.whenStable();
-        const po = new TablePO(fixture);
+        const table = new TablePO(fixture);
 
         const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
 
         void selectionService.onRowClick(9, {ctrlKey: false, shiftKey: false, metaKey: false});
         await fixture.whenStable();
-        expect(po.scrollTop).toBe(0);
+        expect(table.scrollTop).toBe(0);
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
         await fixture.whenStable();
-        expect(po.scrollTop).toBe(30);
+        expect(table.scrollTop).toBe(30);
 
         selectionService.onArrowDown({preventDefault: jasmine.createSpy(), shiftKey: false, ctrlKey: false, metaKey: false} as unknown as KeyboardEvent);
         await fixture.whenStable();
-        expect(po.scrollTop).toBe(60);
+        expect(table.scrollTop).toBe(60);
 
         void selectionService.onRowClick(15, {ctrlKey: false, shiftKey: false, metaKey: false});
         await fixture.whenStable();
-        expect(po.scrollTop).toBe(180);
+        expect(table.scrollTop).toBe(180);
       });
     });
 
@@ -956,17 +951,17 @@ fdescribe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.width = '400px';
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.columns[0]?.width).toBe(200);
-      expect(po.columns[1]?.width).toBe(200);
+      const table = new TablePO(fixture);
+      expect(table.columns[0]?.width).toBe(200);
+      expect(table.columns[1]?.width).toBe(200);
 
-      await po.autoResize(model.columns()[1]!);
-      expect(po.columns[0]?.width).toBe(300);
-      expect(po.columns[1]?.width).toBe(100);
+      await table.autoResize(model.columns()[1]!);
+      expect(table.columns[0]?.width).toBe(300);
+      expect(table.columns[1]?.width).toBe(100);
 
-      await po.autoResize(model.columns()[0]!);
-      expect(po.columns[0]?.width).toBe(100);
-      expect(po.columns[1]?.width).toBe(100);
+      await table.autoResize(model.columns()[0]!);
+      expect(table.columns[0]?.width).toBe(100);
+      expect(table.columns[1]?.width).toBe(100);
     });
 
     it('should store column widths to storage', async () => {
@@ -977,6 +972,7 @@ fdescribe('Table', () => {
             public load(): null {
               return null;
             }
+
             public store(key: string, value: string): void {
               store(key, value);
             }
@@ -994,8 +990,8 @@ fdescribe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.width = '400px';
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      await po.autoResize(model.columns()[0]!);
+      const table = new TablePO(fixture);
+      await table.autoResize(model.columns()[0]!);
 
       expect(store).toHaveBeenCalledWith('scion.components.table:test', '{"columns":[{"name":"column:0","width":100},{"name":"column:1"}]}');
     });
@@ -1007,6 +1003,7 @@ fdescribe('Table', () => {
             public load(key: string): string {
               return key === 'scion.components.table:test' ? JSON.stringify({columns: [{name: 'column:0', width: 100}, {name: 'column:1'}]}) : '';
             }
+
             public store(): void {
               // noop
             }
@@ -1024,9 +1021,9 @@ fdescribe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.width = '400px';
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.columns[0]?.width).toBe(100);
-      expect(po.columns[1]?.width).toBe(300);
+      const table = new TablePO(fixture);
+      expect(table.columns[0]?.width).toBe(100);
+      expect(table.columns[1]?.width).toBe(300);
     });
   });
 
@@ -1053,17 +1050,17 @@ fdescribe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.rows.length).toEqual(10); // 300px / 30px per row
-      expect(po.rows[0]?.cells[0]?.value).toEqual('0');
+      const table = new TablePO(fixture);
+      expect(table.rows.length).toEqual(10); // 300px / 30px per row
+      expect(table.rows[0]?.cells[0]?.value).toEqual('0');
       expect(loader).toHaveBeenCalledTimes(1);
 
-      await po.scrollY(600);
-      expect(po.rows[0]?.cells[0]?.value).toEqual('20'); // 600px = 20 rows
+      await table.scrollY(600);
+      expect(table.rows[0]?.cells[0]?.value).toEqual('20'); // 600px = 20 rows
       expect(loader).toHaveBeenCalledTimes(2);
 
-      await po.scrollY(-600);
-      expect(po.rows[0]?.cells[0]?.value).toEqual('0');
+      await table.scrollY(-600);
+      expect(table.rows[0]?.cells[0]?.value).toEqual('0');
       expect(loader).toHaveBeenCalledTimes(2); // Should cache page 0 and not call loader again
     });
 
@@ -1089,11 +1086,11 @@ fdescribe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.rows.length).toEqual(16); // (300px / 30px per row) + (2 * 3 rows buffer) = 16 rows in DOM
+      const table = new TablePO(fixture);
+      expect(table.rows.length).toEqual(16); // (300px / 30px per row) + (2 * 3 rows buffer) = 16 rows in DOM
       expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({start: 0, end: 16}));
 
-      await po.scrollY(120); // Scroll 4 rows so viewport is ID 3-13 and overscan is 0-2 and 14-17 => should load page 2 because row 17 is loaded
+      await table.scrollY(120); // Scroll 4 rows so viewport is ID 3-13 and overscan is 0-2 and 14-17 => should load page 2 because row 17 is loaded
       expect(loader).toHaveBeenCalledTimes(2);
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({start: 16, end: 32}));
     });
@@ -1118,12 +1115,12 @@ fdescribe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.rows[0]?.cells[0]?.value).toEqual('0');
+      const table = new TablePO(fixture);
+      expect(table.rows[0]?.cells[0]?.value).toEqual('0');
 
       model.filter('test');
       await fixture.whenStable();
-      expect(po.rows[0]?.cells[0]?.value).toEqual('1000');
+      expect(table.rows[0]?.cells[0]?.value).toEqual('1000');
     });
 
     it('should filter', async () => {
@@ -1150,12 +1147,12 @@ fdescribe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.rows[0]?.cells[0]?.value).toEqual('0');
+      const table = new TablePO(fixture);
+      expect(table.rows[0]?.cells[0]?.value).toEqual('0');
 
       model.filter('5', {columnName: 'column:id'});
       await fixture.whenStable();
-      expect(po.columnEntries('ID')).toEqual(['5']);
+      expect(table.columnEntries('ID')).toEqual(['5']);
     });
 
     it('should sort', async () => {
@@ -1181,12 +1178,12 @@ fdescribe('Table', () => {
       });
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
-      expect(po.rows[0]?.cells[0]?.value).toEqual('0');
+      const table = new TablePO(fixture);
+      expect(table.rows[0]?.cells[0]?.value).toEqual('0');
 
       model.sort('column:id', false);
       await fixture.whenStable();
-      expect(po.rows[0]?.cells[0]?.value).toEqual('1000');
+      expect(table.rows[0]?.cells[0]?.value).toEqual('1000');
     });
 
     it('should load data from observable', async () => {
@@ -1210,16 +1207,16 @@ fdescribe('Table', () => {
       });
       (fixture.nativeElement as HTMLElement).style.height = '300px';
       await fixture.whenStable();
-      const po = new TablePO(fixture);
+      const table = new TablePO(fixture);
 
       update$.next(0); // trigger initial load.
       await fixture.whenStable();
-      expect(po.rows[0]?.cells.map(c => c.value)).toEqual(['0', '0']);
+      expect(table.rows[0]?.cells.map(c => c.value)).toEqual(['0', '0']);
       expect(loader).toHaveBeenCalledTimes(1);
 
       update$.next(1); // send update from loader.
       await fixture.whenStable();
-      expect(po.rows[0]?.cells.map(c => c.value)).toEqual(['0', '1']);
+      expect(table.rows[0]?.cells.map(c => c.value)).toEqual(['0', '1']);
       expect(loader).toHaveBeenCalledTimes(1); // should not call the loader again.
     });
 
@@ -1249,15 +1246,15 @@ fdescribe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.height = '300px';
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
+      const table = new TablePO(fixture);
       release$.next(); // trigger initial loader response (so scrolling is possible).
       await fixture.whenStable();
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({page: 0}));
 
-      await po.scrollY(300); // scroll one page.
+      await table.scrollY(300); // scroll one page.
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({page: 1}));
 
-      await po.scrollY(300); // scroll again before loader response.
+      await table.scrollY(300); // scroll again before loader response.
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({page: 2}));
 
       release$.next();
@@ -1288,12 +1285,12 @@ fdescribe('Table', () => {
       (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
       await fixture.whenStable();
 
-      const po = new TablePO(fixture);
+      const table = new TablePO(fixture);
       const selectionService = fixture.componentRef.injector.get(TableSelectionService<number>);
       await selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
-      await po.scrollY(3000);
-      expect(po.rows[0]?.cells[0]?.value).toEqual('100'); // 3000px = 100 rows
+      await table.scrollY(3000);
+      expect(table.rows[0]?.cells[0]?.value).toEqual('100'); // 3000px = 100 rows
 
       await selectionService.onRowClick(100, {ctrlKey: false, metaKey: false, shiftKey: true});
       expect(loader).toHaveBeenCalledTimes(11); // page 0-10
@@ -1331,7 +1328,7 @@ fdescribe('Table', () => {
 @Component({
   selector: 'spec-test-cell',
   template: `
-    {{ half() }}
+    {{half()}}
   `,
 })
 class TestComponent {
@@ -1347,7 +1344,7 @@ class TestComponent {
   template: `
     <sci-table [table]="table"></sci-table>
     <ng-template let-product #cell>
-      {{ product.price / 2 }}
+      {{product.price / 2}}
     </ng-template>
   `,
 })
@@ -1390,4 +1387,16 @@ function createTable<T>(
   }
 
   return table('table:test', arg1, arg2, {injector}) as ɵSciTable<T>;
+}
+
+function provideNullTableStorage(): EnvironmentProviders {
+  return provideTableStorage(class {
+    public load(): null {
+      return null;
+    }
+
+    public store(): void {
+      // noop
+    }
+  });
 }

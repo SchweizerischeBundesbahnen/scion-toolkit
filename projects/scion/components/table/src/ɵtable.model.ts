@@ -10,7 +10,7 @@
 
 import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
-import {ColumnType, SciCellContext, SciCellLike, SciColumnLike, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
+import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {coerceObservable, rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
@@ -50,7 +50,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly scrolling = signal(false);
   public readonly sortCriteria = signal<SciSortCriterion[]>([]);
   public readonly filterCriteria = signal<SciColumnFilter[]>([]);
-  public readonly range = signal<{start: number; /*inclusive*/ end: number /*exclusive*/} | undefined>(undefined);
+  public readonly scrollRange = signal<SciScrollRange | undefined>(undefined);
   public readonly resizingState = signal<{
     column: SciColumnLike<T>;
     hadOverflow: boolean;
@@ -64,10 +64,10 @@ export class ɵSciTable<T> implements SciTable<T> {
   private readonly _storedTable = signal<SciTableStorageModel | undefined>(undefined);
   private readonly _cache = new TableCache<T>();
 
-  public readonly pageSize = linkedSignal<{start: number; end: number} | undefined, number>({
-    source: () => this.range(),
-    computation: (range, previous) => {
-      const visibleRowCount = (range?.end ?? 0) - (range?.start ?? 0);
+  public readonly pageSize = linkedSignal<SciScrollRange | undefined, number>({
+    source: () => this.scrollRange(),
+    computation: (scrollRange, previous) => {
+      const visibleRowCount = (scrollRange?.end ?? 0) - (scrollRange?.start ?? 0);
       // PageSize should never be smaller than the minimum size (5).
       return Math.max(visibleRowCount, previous?.value ?? 5);
     },
@@ -211,23 +211,26 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   /**
    * Toggles sort on a column. ASC -> DESC -> No sort
+   *
+   * TODO [Etienne] No magic! Remove toggling logic
    */
   public sort(columnName: `column:${string}`, multi: boolean): void {
-    if (!this.sortable()) {
-      return;
-    }
-
-    this.sortCriteria.update(sort => {
-      const existing = sort.find(sc => sc.columnName === columnName);
-      const other = sort.filter(sc => sc !== existing);
-
-      const direction = existing ? (existing.direction === 'asc' ? 'desc' : undefined) : 'asc';
-      if (!direction) {
-        return multi ? other : [];
+    this.sortCriteria.update(sortCriteria => {
+      const column = this.columns().find(column => column.name === columnName);
+      if (!column) {
+        throw Error(`[NullColumnError] Column '${columnName}' not found in table '${this.name}'.`);
       }
 
-      const newSort = {columnName, direction} satisfies SciSortCriterion;
-      return multi ? [...other, newSort] : [newSort];
+      const currentSortCriterion = sortCriteria.find(sortCriterion => sortCriterion.columnName === column.name);
+      const otherSortCriteria = sortCriteria.filter(sortCriterion => sortCriterion !== currentSortCriterion);
+
+      const direction = currentSortCriterion ? (currentSortCriterion.direction === 'asc' ? 'desc' : undefined) : 'asc';
+      if (!direction) {
+        return multi ? otherSortCriteria : [];
+      }
+
+      const newSortCriterion = {columnName: column.name, direction} satisfies SciSortCriterion;
+      return multi ? [...otherSortCriteria, newSortCriterion] : [newSortCriterion];
     });
   }
 
@@ -237,26 +240,24 @@ export class ɵSciTable<T> implements SciTable<T> {
   public filter(text: string): void;
   public filter(text: string | number | boolean | null, options: {columnName: `column:${string}`}): void;
   public filter(text: string | number | boolean | null, options?: {columnName: `column:${string}`}): void {
-    if (options) {
-      if (!this.filterable()) {
-        return;
+    if (!options) {
+      this._globalFilter.set(text as string);
+      return;
+    }
+
+    const column = this.columns().find(column => column.name === options.columnName);
+    if (!column) {
+      throw Error(`[NullColumnError] Column '${options.columnName}' not found in table '${this.name}'.`);
+    }
+
+    this.filterCriteria.update(filterCriterion => {
+      const otherFilterCriteria = filterCriterion.filter(filterCriterion => filterCriterion.columnName !== options.columnName);
+      if (text === null) {
+        return otherFilterCriteria;
       }
 
-      this.filterCriteria.update(filter => {
-        const other = filter.filter(f => f.columnName !== options.columnName);
-        if (text === null) {
-          return other;
-        }
-
-        return [
-          ...other,
-          {columnName: options.columnName, text},
-        ];
-      });
-    }
-    else {
-      this._globalFilter.set(text as string);
-    }
+      return otherFilterCriteria.concat({columnName: column.name, text});
+    });
   }
 
   public updateSelectedItems(updateFn: (ids: Map<unknown, T>) => Map<unknown, T>): void {
@@ -277,7 +278,7 @@ export class ɵSciTable<T> implements SciTable<T> {
         skip(1), // do not persist initial load
       )
       .subscribe(columns => untracked(() => {
-        this._tableStorage.store(this.name, JSON.stringify({
+        void this._tableStorage.store(this.name, JSON.stringify({
           columns: columns.map(column => ({name: column.name, width: column.userWidth})),
         }));
       }));
@@ -288,16 +289,16 @@ export class ɵSciTable<T> implements SciTable<T> {
    */
   private installPageLoader(): void {
     effect(onCleanup => {
-      const range = this.range();
+      const scrollRange = this.scrollRange();
       const pageSize = this.pageSize();
       const sortCriteria = this.sortCriteria();
       const columnFilters = this.filterCriteria();
       const globalFilter = this._globalFilter();
-      if (!range) {
+      if (!scrollRange) {
         return;
       }
 
-      untracked(() => this.pagesByRange(range.start, range.end, pageSize).forEach(page => {
+      untracked(() => this.pagesByRange(scrollRange.start, scrollRange.end, pageSize).forEach(page => {
         this.loadPage({
           pageSize,
           page,
@@ -321,7 +322,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
-  private initColumn(type: ColumnType, config: SciColumnDescriptors<T>, index: number, storedTable: SciTableStorageModel | undefined): SciColumnLike<T> {
+  private initColumn(type: SciColumnType, config: SciColumnDescriptors<T>, index: number, storedTable: SciTableStorageModel | undefined): SciColumnLike<T> {
     // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
     const sortable = type === 'component' || type === 'template' ?
       !!config.sortable :
@@ -425,9 +426,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     return computed(() => {
       const pageSize = this.pageSize();
       const rowsByIndex = this.rowsByIndex();
-      const range = this.range();
+      const scrollRange = this.scrollRange();
       const totalCount = this.totalCount();
-      if (!range) {
+      if (!scrollRange) {
         return [];
       }
 
@@ -437,10 +438,10 @@ export class ɵSciTable<T> implements SciTable<T> {
       }
 
       // Cut the rowCount off at totalCount, else the user can scroll infinitely.
-      const rowCount = Math.min(range.end, totalCount) - range.start;
+      const rowCount = Math.min(scrollRange.end, totalCount) - scrollRange.start;
 
       // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
-      return Array.from({length: Math.min(pageSize, rowCount, totalCount)}, (_, i) => rowsByIndex.get(range.start + i) ?? {});
+      return Array.from({length: Math.min(pageSize, rowCount, totalCount)}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {});
     });
   }
 }
@@ -473,4 +474,11 @@ function defaultSort<T>(a: SciCellContext<T, string | boolean | number>, b: SciC
     default:
       return 0;
   }
+}
+
+export interface SciScrollRange {
+  /** incluse */
+  start: number;
+  /** exclusive */
+  end: number;
 }

@@ -9,13 +9,13 @@
  */
 
 import {SciBooleanColumnDescriptor, SciColumnDescriptors, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableFactory, SciTemplateColumnDescriptor} from './table.factory';
-import {ColumnType, SciTableDescriptor} from './table.model';
+import {SciColumnType, SciTableDescriptor} from './table.model';
 import {isSignal, signal} from '@angular/core';
 
 export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   // Columns have to be a signal, because are observed inside the table model.
-  public readonly columns = signal<(SciColumnDescriptors<T> & {type: ColumnType})[]>([]);
+  public readonly columns = signal<(SciColumnDescriptors<T> & {type: SciColumnType})[]>([]);
 
   constructor(private readonly _descriptor: SciTableDescriptor<T>) {
   }
@@ -55,7 +55,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this.addColumn('template', config);
   }
 
-  private addColumn(type: ColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciColumnDescriptors<T>, value?: (item: T) => unknown): this {
+  private addColumn(type: SciColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciColumnDescriptors<T>, value?: (item: T) => unknown): this {
     const config = (() => {
       switch (typeof valueHeaderDescriptor) {
         case 'string':

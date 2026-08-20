@@ -22,8 +22,11 @@
       "node"
     ],
     "paths": {
-      "@scion/toolkit/types": [
-        "../../../projects/scion/toolkit/types/src/public_api"
+      "@scion/toolkit/*": [
+        "../../../projects/scion/toolkit/*/src/public_api"
+      ],
+      "@scion/components/*": [
+        "../../../projects/scion/components/*/src/public_api"
       ]
     }
   }

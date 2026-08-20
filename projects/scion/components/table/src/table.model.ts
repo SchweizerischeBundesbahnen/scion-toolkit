@@ -14,7 +14,7 @@ import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion
 import {SciToolbarFactory} from '@scion/components/menu';
 import {MaybeArray} from '@scion/toolkit/types';
 
-export type ColumnType = 'component' | 'template' | 'string' | 'number' | 'boolean';
+export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template';
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
 export interface SciTableDescriptor<T> {
@@ -90,7 +90,7 @@ export interface SciCellContext<T, VALUE> {
 }
 
 export interface SciColumn {
-  type: ColumnType;
+  type: SciColumnType;
   name: `column:${string}`;
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;
@@ -153,7 +153,7 @@ export interface SciRow<T> {
  * Mapped cell, used as display state.
  */
 export interface SciCell {
-  type: ColumnType;
+  type: SciColumnType;
   columnName: string;
   name: string[];
 }

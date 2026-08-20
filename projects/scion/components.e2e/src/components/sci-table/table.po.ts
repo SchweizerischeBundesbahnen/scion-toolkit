@@ -16,26 +16,28 @@ import {RequireOne} from '@scion/toolkit/types';
 
 export class TablePO {
 
-  public readonly filters: Locator;
-  public readonly sortButtons: Locator;
+  public readonly viewport: Locator;
+  public readonly grid: Locator;
   public readonly header: Locator;
   public readonly headers: Locator;
-  public readonly rows: Locator;
-  public readonly viewport: Locator;
   public readonly body: Locator;
+  public readonly rows: Locator;
+  public readonly filters: Locator;
+  public readonly sortButtons: Locator;
   public readonly verticalScrollbar: ScrollbarPO;
   public readonly horizontalScrollbar: ScrollbarPO;
 
   constructor(public readonly locator: Locator) {
+    this.viewport = this.locator.locator('div.e2e-viewport');
+    this.grid = this.locator.locator('sci-table-grid');
     this.header = this.locator.locator('sci-table-header');
     this.headers = this.locator.locator('sci-column-header button.e2e-column-sort');
     this.body = this.locator.locator('sci-table-body');
     this.rows = this.locator.locator('sci-table-row');
-    this.viewport = this.locator.locator('div.e2e-viewport');
-    this.verticalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="vscroll"]'));
-    this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
     this.filters = this.locator.locator('sci-column-filter');
     this.sortButtons = this.locator.locator('button.e2e-column-sort.sortable');
+    this.verticalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="vscroll"]'));
+    this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
   }
 
   public row(index: number): RowPO {
@@ -65,6 +67,14 @@ export class TablePO {
 
   public async scrollLeft(): Promise<number> {
     return waitUntilStable(async () => this.viewport.evaluate(viewport => viewport.scrollLeft));
+  }
+
+  public async scrollHeight(): Promise<number> {
+    return waitUntilStable(async () => this.viewport.evaluate(viewport => viewport.scrollHeight));
+  }
+
+  public async scrollWidth(): Promise<number> {
+    return waitUntilStable(async () => this.viewport.evaluate(viewport => viewport.scrollWidth));
   }
 }
 

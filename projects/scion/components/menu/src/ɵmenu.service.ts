@@ -85,7 +85,6 @@ export class ɵSciMenuService implements SciMenuService {
   }
 }
 
-
 /**
  * Intercepts calls to the menu registry by chaining registered menu adapters.
  *

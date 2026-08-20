@@ -24,7 +24,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setFilterable(false);
       await expect(table.filters).toHaveCount(0);
@@ -37,7 +37,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setSortable(false);
       await expect(table.sortButtons).toHaveCount(0);
@@ -50,7 +50,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.showHeader(false);
       await expect(table.headers).toHaveCount(0);
@@ -63,7 +63,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setResizable(false);
       await expect(table.column({name: 'column:name'}).splitter.locator).not.toBeAttached();
@@ -76,7 +76,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await expectRow(table.row(0)).toBeAttached();
       const count = await table.rows.count();
@@ -92,7 +92,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await expectRow(table.row(0)).toBeAttached();
       const count = await table.rows.count();
@@ -109,7 +109,7 @@ test.describe.only('sci-table', () => {
     test('should render multiple tables', async ({page}) => {
       const tablePage = new TablePagePO(page);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setTableCount(4);
 
@@ -147,7 +147,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'string'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string'});
       await expect(table.column({name: 'column:testee'}).locator).toBeVisible();
     });
 
@@ -156,7 +156,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'number'});
+      await tablePage.addColumn({name: 'column:testee', type: 'number'});
       await expect(table.column({name: 'column:testee'}).locator).toBeVisible();
     });
 
@@ -165,7 +165,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'boolean'});
+      await tablePage.addColumn({name: 'column:testee', type: 'boolean'});
       await expect(table.column({name: 'column:testee'}).locator).toBeVisible();
     });
 
@@ -174,7 +174,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'template'});
+      await tablePage.addColumn({name: 'column:testee', type: 'template'});
       await expect(table.column({name: 'column:testee'}).locator).toBeVisible();
     });
 
@@ -183,7 +183,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:testee', header: 'Test Column', type: 'component'});
+      await tablePage.addColumn({name: 'column:testee', type: 'component'});
       await expect(table.column({name: 'column:testee'}).locator).toBeVisible();
     });
 
@@ -193,7 +193,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       for (let i = 0; i < 20; i++) {
-        await tablePage.addColumn({header: `Column ${i}`, type: 'string'});
+        await tablePage.addColumn({name: `column:${i}`, type: 'string'});
       }
 
       await expectTable(table).toHaveColumnCount(20);
@@ -207,6 +207,63 @@ test.describe.only('sci-table', () => {
       await table.scrollTo({x: 'start'});
       await expect(col19.locator).not.toBeInViewport();
     });
+
+    test('should add and remove columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+
+      await expectTable(table).toHaveColumnCount(3);
+      await expect(table.column({name: 'column:1'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:3'}).locator).toBeVisible();
+
+      // Hide column 2.
+      await tablePage.setColumnVisible('column:2', false);
+      await expectTable(table).toHaveColumnCount(2);
+      await expect(table.column({name: 'column:1'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).locator).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).locator).toBeVisible();
+
+      // Hide column 3.
+      await tablePage.setColumnVisible('column:3', false);
+      await expectTable(table).toHaveColumnCount(2);
+      await expect(table.column({name: 'column:1'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).locator).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).locator).not.toBeAttached();
+
+      // Hide column 1.
+      await tablePage.setColumnVisible('column:1', false);
+      await expectTable(table).toHaveColumnCount(1);
+      await expect(table.column({name: 'column:1'}).locator).not.toBeAttached();
+      await expect(table.column({name: 'column:2'}).locator).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).locator).not.toBeAttached();
+
+      // Show column 2.
+      await tablePage.setColumnVisible('column:2', true);
+      await expectTable(table).toHaveColumnCount(1);
+      await expect(table.column({name: 'column:1'}).locator).not.toBeAttached();
+      await expect(table.column({name: 'column:2'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:3'}).locator).not.toBeAttached();
+
+      // Show column 1.
+      await tablePage.setColumnVisible('column:1', true);
+      await expectTable(table).toHaveColumnCount(2);
+      await expect(table.column({name: 'column:1'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:3'}).locator).not.toBeAttached();
+
+      // Show column 3.
+      await tablePage.setColumnVisible('column:3', true);
+      await expectTable(table).toHaveColumnCount(3);
+      await expect(table.column({name: 'column:1'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).locator).toBeVisible();
+      await expect(table.column({name: 'column:3'}).locator).toBeVisible();
+    });
   });
 
   test.describe('Filtering', () => {
@@ -216,7 +273,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
@@ -232,7 +289,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
+      await tablePage.addColumn({name: 'column:price', type: 'number'});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       // Read the first visible price value and use it as the filter criterion.
@@ -249,7 +306,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:inStock', header: 'In Stock', type: 'boolean'});
+      await tablePage.addColumn({name: 'column:inStock', type: 'boolean'});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       await table.column({name: 'column:inStock'}).filter('false');
@@ -264,7 +321,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:template', header: 'Template', type: 'template'});
+      await tablePage.addColumn({name: 'column:template', type: 'template'});
 
       const templateColumn = table.column({name: 'column:template'});
       await expect(templateColumn.locator).toBeAttached();
@@ -276,7 +333,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:template', header: 'Template', type: 'template', customFilter: true});
+      await tablePage.setRowCount(10_000);
+      await tablePage.addColumn({name: 'column:template', type: 'template', customFilter: true});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       await table.column({name: 'column:template'}).filter('Product 9999');
@@ -291,7 +349,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:component', header: 'Component', type: 'component'});
+      await tablePage.addColumn({name: 'column:component', type: 'component'});
 
       const componentColumn = table.column({name: 'column:component'});
 
@@ -304,7 +362,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:component', header: 'Component', type: 'component', customFilter: true});
+      await tablePage.setRowCount(10_000);
+      await tablePage.addColumn({name: 'column:component', type: 'component', customFilter: true});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       await table.column({name: 'column:component'}).filter('Product 9999');
@@ -320,7 +379,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setRowCount(1_000_000);
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.column({name: 'column:name'}).filter('999999');
       await expect(table.rows).toHaveCount(1);
@@ -331,7 +390,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.scrollTo({y: 1000});
       await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
@@ -345,8 +404,9 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
+      await tablePage.setRowCount(10_000);
       await table.column({name: 'column:name'}).filter('abc');
       await expect(table.rows).toHaveCount(0);
       await expect(table.locator).toContainText('No items found.');
@@ -356,7 +416,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -374,7 +434,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
       let mouseX = splitterBounds.hcenter;
@@ -408,7 +468,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
       const tableBounds = await table.bounds();
@@ -443,8 +503,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px'});
-      await tablePage.addColumn({name: 'column:testee', header: 'Testee', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '200px'});
 
       await table.column({name: 'column:name'}).splitter.drag(-50);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(150);
@@ -460,7 +520,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px', maxWidth: 200});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px', maxWidth: 200});
 
       await table.column({name: 'column:name'}).splitter.drag(300);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
@@ -471,7 +531,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px', maxWidth: 200});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px', maxWidth: 200});
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
       let mouseX = splitterBounds.hcenter;
@@ -510,7 +570,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
 
       await table.column({name: 'column:name'}).splitter.drag(-100);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(100);
@@ -521,7 +581,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px', minWidth: 100});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px', minWidth: 100});
 
       await table.column({name: 'column:name'}).splitter.drag(-300);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(100);
@@ -532,7 +592,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
 
       await table.column({name: 'column:name'}).splitter.drag(page.viewportSize()?.width ?? 0);
       await expectTable(table).toHaveHorizontalOverflow();
@@ -543,8 +603,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '200px'});
-      await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:price', type: 'string'});
 
       await table.column({name: 'column:name'}).splitter.dblclick();
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBeLessThan(200);
@@ -555,8 +615,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '50px', minWidth: 0, maxWidth: 75});
-      await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '50px', minWidth: 0, maxWidth: 75});
+      await tablePage.addColumn({name: 'column:price', type: 'string'});
 
       await table.column({name: 'column:name'}).splitter.dblclick();
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(75);
@@ -571,8 +631,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '600px', minWidth: 400});
-      await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '600px', minWidth: 400});
+      await tablePage.addColumn({name: 'column:price', type: 'string'});
 
       await table.column({name: 'column:name'}).splitter.dblclick();
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(400);
@@ -586,13 +646,13 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.column({name: 'column:name'}).splitter.drag(-100);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(500);
 
       await page.reload();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(500);
     });
 
@@ -601,9 +661,9 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string'});
-      await tablePage.addColumn({name: 'column:2', header: 'Column 2', type: 'string'});
-      await tablePage.addColumn({name: 'column:3', header: 'Column 3', type: 'string'});
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
 
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
 
@@ -629,9 +689,9 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string'});
-      await tablePage.addColumn({name: 'column:2', header: 'Column 2', type: 'string', maxWidth: 200});
-      await tablePage.addColumn({name: 'column:3', header: 'Column 3', type: 'string'});
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', maxWidth: 200});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
 
       // Shrink column one.
       await table.column({name: 'column:1'}).splitter.drag(-100);
@@ -647,9 +707,9 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string'});
-      await tablePage.addColumn({name: 'column:2', header: 'Column 2', type: 'string'});
-      await tablePage.addColumn({name: 'column:3', header: 'Column 3', type: 'string'});
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
 
       await table.column({name: 'column:1'}).splitter.drag(-100);
       await table.column({name: 'column:2'}).splitter.drag(-100);
@@ -658,7 +718,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBeBetween(95, 105);
       await expect.poll(() => table.column({name: 'column:2'}).width()).toBeBetween(145, 155);
       await expect.poll(() => table.column({name: 'column:3'}).width()).toBeBetween(245, 255);
-      await expect.poll(() => table.body.boundingBox().then(bb => bb?.width)).toBeLessThan(600);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds?.width)).toBeLessThan(600);
     });
 
     test('should lock flexible columns on overflow', async ({page}) => {
@@ -667,10 +727,10 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.setWidth(800);
 
-      await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string'});
-      await tablePage.addColumn({name: 'column:2', header: 'Column 2', type: 'string'});
-      await tablePage.addColumn({name: 'column:3', header: 'Column 3', type: 'string'});
-      await tablePage.addColumn({name: 'column:4', header: 'Column 4', type: 'string'});
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+      await tablePage.addColumn({name: 'column:4', type: 'string'});
 
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
 
@@ -692,7 +752,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
       const rowBounds = await table.row(3).bounds();
@@ -710,8 +770,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:testee', header: 'Testee', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
       const viewportBounds = await table.bounds();
@@ -732,7 +792,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       // Sort ascending.
       await table.column({name: 'column:name'}).sort();
@@ -748,7 +808,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
+      await tablePage.addColumn({name: 'column:price', type: 'number'});
 
       // Sort ascending.
       await table.column({name: 'column:price'}).sort();
@@ -764,7 +824,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:inStock', header: 'In Stock', type: 'boolean'});
+      await tablePage.addColumn({name: 'column:inStock', type: 'boolean'});
 
       // Sort ascending: false values first.
       await table.column({name: 'column:inStock'}).sort();
@@ -780,8 +840,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
-      await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.addColumn({name: 'column:price', type: 'number'});
 
       const sortButtons = table.locator.locator('.e2e-column-sort');
       await sortButtons.nth(0).click();
@@ -797,7 +857,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await table.column({name: 'column:name'}).filter('Product 1');
       await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
 
@@ -813,7 +873,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setRowCount(1_000_000);
-      await tablePage.addColumn({name: 'column:price', header: 'Price', type: 'number'});
+      await tablePage.addColumn({name: 'column:price', type: 'number'});
 
       await table.column({name: 'column:price'}).sort();
       await expect(table.column({name: 'column:price'}).cells.first()).toHaveText('1');
@@ -826,7 +886,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       // Scroll down so the viewport is no longer at the top.
       await table.scrollTo({y: 1000});
@@ -841,7 +901,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -858,7 +918,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setSelectable(false);
 
       await table.row(0).click();
@@ -875,7 +935,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setSelectable('single');
 
       await table.row(0).click();
@@ -894,7 +954,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.sortButtons.first().focus();
       await page.keyboard.press('Tab'); // Filter
@@ -908,7 +968,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.body.focus();
       const visibleRowCount = await waitUntilStable(() => table.rows.count());
@@ -929,7 +989,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.setRowCount(3);
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.body.focus();
       await page.keyboard.press('ArrowUp');
@@ -951,7 +1011,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.body.focus();
       await page.keyboard.press('ControlOrMeta+A');
@@ -964,7 +1024,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.body.focus();
       await page.keyboard.press('ArrowDown');
@@ -983,7 +1043,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -997,7 +1057,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -1015,7 +1075,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -1037,7 +1097,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -1053,7 +1113,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -1069,7 +1129,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -1088,7 +1148,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeActive();
@@ -1108,7 +1168,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -1151,7 +1211,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(0).click();
       await expectRow(table.row(0)).toBeSelected();
@@ -1177,7 +1237,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
       await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
@@ -1196,7 +1256,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.conditionallyStyleRow();
 
@@ -1211,7 +1271,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({header: 'Negative', name: 'column:negative', type: 'string'});
+      await tablePage.addColumn({name: 'column:negative', type: 'string'});
 
       await expect(table.row(0).cell(0).locator).toHaveAttribute('part', 'column:negative');
       await expect.poll(() => table.row(0).cell(0).locator.evaluate(element => getComputedStyle(element).backgroundColor))
@@ -1226,7 +1286,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
       await tablePage.setRowActions(true);
-      await tablePage.addColumn({header: 'Name', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row(3).hover();
       await expect(table.row(3).rowActions).toBeVisible();
@@ -1239,7 +1299,7 @@ test.describe.only('sci-table', () => {
       await tablePage.setWidth(500);
       await tablePage.setRowActions(true);
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await table.column({name: 'column:name'}).splitter.drag(500);
 
       const rowBounds = await table.row(3).bounds();
@@ -1270,7 +1330,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
@@ -1289,7 +1349,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
       await table.row(10).hover();
@@ -1308,8 +1368,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:testee', header: 'Testee', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
       await table.row(10).hover();
@@ -1327,8 +1387,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:testee', header: 'Testee', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
       const rowBounds = await table.row(10).bounds();
@@ -1354,8 +1414,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', header: 'Name', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:testee', header: 'Testee', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
       const row = table.row(10);
@@ -1363,7 +1423,7 @@ test.describe.only('sci-table', () => {
       await expect(row.rowActions).toBeVisible();
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
-      await page.mouse.move(splitterBounds.hcenter, await row.bounds().then(bb => bb.vcenter));
+      await page.mouse.move(splitterBounds.hcenter, await row.bounds().then(bounds => bounds.vcenter));
       await expect(row.rowActions).toBeVisible();
 
       await table.headers.first().hover();
@@ -1384,7 +1444,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({header: 'Name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
       const row = table.row(10);
@@ -1413,8 +1473,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:2', header: 'Column 2', type: 'string', width: '100000px'});
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '100000px'});
 
       const column = table.column({name: 'column:1'});
       const columnSplitter = table.column({name: 'column:1'}).splitter;
@@ -1471,8 +1531,8 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:1', header: 'Column 1', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:2', header: 'Column 2', type: 'string', width: '100000px'});
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '100000px'});
 
       const column = table.column({name: 'column:1'});
       const columnSplitter = table.column({name: 'column:1'}).splitter;
@@ -1519,7 +1579,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setRowCount(1);
-      await tablePage.addColumn({header: 'Column', type: 'string'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       // Hover the table.
       await table.locator.hover();
@@ -1553,10 +1613,89 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({header: 'Column', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
 
       // Verify that the table maintains a default stacking level, allowing subsequent DOM elements to cover it without an explicit z-index.
       expect(await hasDefaultStackingLevel(table.locator), 'Table has an elevated stacking level').toBe(true);
+    });
+
+    test('should fill full width if no column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1);
+      await tablePage.setWidth(500);
+
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.locator.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(500);
+
+      // Change width.
+      await tablePage.setWidth(800);
+
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.locator.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
+    });
+
+    test('should fill full width if one or more columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1);
+      await tablePage.setWidth(500);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.locator.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toEqual(500);
+
+      // Change width.
+      await tablePage.setWidth(800);
+
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.locator.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
+    });
+
+    test('should shrink viewport-client instantly if scrolled to the end and row count drops (e.g., when clearing all rows) ', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setRowCount(100_000);
+      await tablePage.setRowSize(20);
+      await tablePage.setHeight(500);
+      await waitUntilStable(() => table.rows.count());
+
+      // Scroll to the end.
+      await table.scrollTo({y: 'end'});
+
+      // Wait until scrolled to the end.
+      const scrollHeight = await table.scrollHeight();
+      await expect.poll(() => table.scrollTop()).toBe(scrollHeight - 500);
+
+      // Change row count to 5.
+      await tablePage.setRowCount(5);
+
+      // Expect viewport client to shrink instantly.
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height), {timeout: 250}).toBe(5 * 20);
+      await expect.poll(() => table.scrollTop(), {timeout: 250}).toBe(0);
+      await expect(table.rows).toHaveCount(5, {timeout: 250});
     });
   });
 });

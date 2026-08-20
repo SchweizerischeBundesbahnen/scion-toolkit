@@ -1,19 +1,24 @@
 :host {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 1em;
 
   > main {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 1em;
-    flex: 1;
+    flex: 1 1 0;
 
     > sci-table {
-      height: var(--table-page-height);
-      width: var(--table-page-width);
+      flex: 1 1 0;
 
-      &:first-child:last-child {
-        grid-column: 1 / -1;
+      @container style(--table-page-height) {
+        flex: none;
+        height: var(--table-page-height);
+      }
+
+      @container style(--table-page-width) {
+        width: var(--table-page-width);
       }
 
       &::part(row\:negative),
@@ -24,20 +29,47 @@
   }
 
   > aside {
-    flex: none;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: 1em;
     border: 1px solid var(--sci-color-border);
     border-radius: var(--sci-corner);
     background-color: var(--sci-color-background-secondary);
     padding: 1em;
-    width: 300px;
 
-    form {
-      display: grid;
-      grid-auto-flow: row;
-      gap: 1em;
+    > sci-tabbar {
+      section, form {
+        display: flex;
+        flex-direction: column;
+        gap: .5em;
+      }
+
+      div.columns {
+        display: flex;
+        flex-direction: column;
+        gap: 2em;
+      }
+
+      header {
+        margin-bottom: 1em;
+        font-weight: bold;
+      }
+    }
+
+    > section.table-state {
+      display: flex;
+      flex-direction: column;
+      gap: .5em;
+      border: 1px solid var(--sci-color-border);
+      border-radius: var(--sci-corner);
+      padding: 1em;
+      background-color: var(--sci-color-background-primary);
+
+      > header {
+        margin-bottom: 1em;
+        font-weight: bold;
+      }
     }
   }
 }
