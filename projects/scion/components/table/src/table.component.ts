@@ -38,7 +38,7 @@ import {clamp, Objects} from '@scion/toolkit/util';
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
     '[style.--ɵsci-table-columns]': 'columnWidths()',
-    '[style.--ɵsci-table-scrolling]': 'sciTable().scrolling() ? `true` : null',
+    '[style.--ɵsci-table-scrolling]': 'table().scrolling() ? `true` : null',
     '[style.--ɵsci-table-resizing]': 'resizing() ? `true` : null',
     '[style.--ɵsci-table-width]': 'tableWidth()',
     '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
@@ -64,7 +64,7 @@ import {clamp, Objects} from '@scion/toolkit/util';
 })
 export class SciTableComponent<T> {
 
-  public readonly table = input.required<SciTable<T>>();
+  public readonly table = input.required({transform: (table: SciTable<T>) => table as ɵSciTable<T>});
 
   public readonly primaryAction = output<T>();
 
@@ -83,27 +83,26 @@ export class SciTableComponent<T> {
   private readonly _itemSizeDimension = dimension(this._itemSizeElement);
   private readonly _tableBodyDimension = dimension(this._tableBody);
 
-  protected readonly sciTable = computed(() => this.table() as ɵSciTable<T>);
   protected readonly itemSize = computed(() => this._itemSizeDimension().clientHeight);
 
-  protected readonly resizing = computed(() => !!this.sciTable().resizingState());
+  protected readonly resizing = computed(() => !!this.table().resizingState());
   protected readonly columnWidths = this.computeColumnWidths();
   protected readonly headerDimension = dimension(this._header);
 
   protected readonly virtualScrollOffsetTop = computed(() => {
-    return (this.sciTable().scrollRange()?.start ?? 0) * this.itemSize();
+    return (this.table().scrollRange()?.start ?? 0) * this.itemSize();
   });
 
   protected readonly virtualScrollOffsetBottom = computed(() => {
-    const rangeEnd = Math.min(this.sciTable().scrollRange()?.end ?? 0, this.sciTable().totalCount() ?? 0);
-    const totalCount = this.sciTable().totalCount() ?? 0;
+    const rangeEnd = Math.min(this.table().scrollRange()?.end ?? 0, this.table().totalCount() ?? 0);
+    const totalCount = this.table().totalCount() ?? 0;
     return (totalCount - rangeEnd) * this.itemSize();
   });
 
   protected readonly absoluteColumnWidths = computed(() => {
     // TODO [Etienne] Does only work if header columns -> use splitters instead
     const headers = this._headers();
-    const columns = this.sciTable().columns();
+    const columns = this.table().columns();
 
     // While loading the table definition from storage, the columns are empty.
     // Calculating the widths only makes sense, when the column definitions are ready.
@@ -125,14 +124,14 @@ export class SciTableComponent<T> {
    * This allows the grid to overflow when resizing.
    */
   protected readonly tableWidth = computed(() => {
-    if (!this.sciTable().columns().length) {
+    if (!this.table().columns().length) {
       return '100%';
     }
 
     const viewportWidth = this._viewportDimension().clientWidth;
     // ViewportClient cannot be used, because it does not grow with its children.
     const tableBodyWidth = this._tableBodyDimension()?.offsetWidth ?? 0;
-    const hasFullFractionColumn = this.sciTable().columns().some(column => column.isFraction && !column.userWidth && !column.maxWidth);
+    const hasFullFractionColumn = this.table().columns().some(column => column.isFraction && !column.userWidth && !column.maxWidth);
 
     // Only allow full width table when at least one column takes the remaining space.
     return tableBodyWidth < viewportWidth && hasFullFractionColumn ? '100%' : `${tableBodyWidth}px`;
@@ -166,7 +165,7 @@ export class SciTableComponent<T> {
    */
   private installCriteriaListener(): void {
     effect(() => {
-      this.sciTable().criteria(); // track criteria
+      this.table().criteria(); // track criteria
 
       // as soon as the table criteria change (and on init), scroll to the top.
       this._viewport().nativeElement.scrollTo({top: 0});
@@ -175,7 +174,7 @@ export class SciTableComponent<T> {
 
   private installScrollRangeTracker(): void {
     const scrollRange = this.computeScrollRange();
-    effect(() => this.sciTable().scrollRange.set(scrollRange()));
+    effect(() => this.table().scrollRange.set(scrollRange()));
   }
 
   /**
@@ -185,11 +184,11 @@ export class SciTableComponent<T> {
     return computed(() => {
       const viewportDimension = this._viewportDimension();
       const itemSize = this._itemSizeDimension().offsetHeight;
-      const bufferSize = this.sciTable().bufferSize();
+      const bufferSize = this.table().bufferSize();
       const scrollTop = this._scrollTop() - this._headerHeight();
       const visibleRowCount = Math.ceil((viewportDimension.clientHeight - this._headerHeight()) / itemSize) + bufferSize * 2;
       const firstVisible = Math.floor(scrollTop / itemSize);
-      const totalCount = this.sciTable().totalCount() ?? Number.MAX_SAFE_INTEGER; // max value if no data loaded yet
+      const totalCount = this.table().totalCount() ?? Number.MAX_SAFE_INTEGER; // max value if no data loaded yet
       const start = clamp(firstVisible - bufferSize, {min: 0, max: totalCount});
       const end = Math.min(start + visibleRowCount, totalCount);
       return {start, end};
@@ -220,7 +219,7 @@ export class SciTableComponent<T> {
 
   private installActiveItemWatcher(): void {
     effect(() => {
-      const activeIndex = this.sciTable().activeIndex();
+      const activeIndex = this.table().activeIndex();
 
       if (activeIndex < 0) {
         return;
@@ -243,14 +242,14 @@ export class SciTableComponent<T> {
         takeUntilDestroyed(),
       )
       .subscribe(scrolling => {
-        this.sciTable().scrolling.set(scrolling);
+        this.table().scrolling.set(scrolling);
       });
   }
 
   private computeColumnWidths(): Signal<string> {
     return computed(() => {
-      const columns = this.sciTable().columns();
-      const resizingState = this.sciTable().resizingState();
+      const columns = this.table().columns();
+      const resizingState = this.table().resizingState();
       const hasHorizontalOverflow = this.hasHorizontalOverflow();
       const hasResizedColumns = columns.some(column => column.userWidth !== undefined);
 
