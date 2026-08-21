@@ -1703,6 +1703,38 @@ test.describe.only('sci-table', () => {
       // Expect vertical overflow.
       await expect(table.verticalScrollbar.locator).toBeVisible();
     });
+
+    test('should not display splitters while not moving thumb but keep pressing it', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      const scrollbarBounds = await table.verticalScrollbar.bounds();
+
+      // Click scrollbar thumb.
+      await table.verticalScrollbar.thumb.locator.hover();
+      await page.mouse.down();
+
+      // Move mouse over splitter of column 1.
+      const columnSplitterBounds1 = await table.column({name: 'column:1'}).splitter.bounds();
+      await page.mouse.move(columnSplitterBounds1.hcenter, scrollbarBounds.vcenter);
+
+      // Wait some time until scroll events end.
+      await page.waitForTimeout(1000);
+
+      // Expect splitter not to be visible.
+      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+
+      // Move mouse over splitter of column 2.
+      const columnSplitterBounds2 = await table.column({name: 'column:2'}).splitter.bounds();
+      await page.mouse.move(columnSplitterBounds2.hcenter, scrollbarBounds.vcenter);
+
+      // Expect splitter not to be visible.
+      await expect(table.column({name: 'column:2'}).splitter.locator).not.toBeVisible();
+    });
   });
 
   test.describe('Layout', () => {

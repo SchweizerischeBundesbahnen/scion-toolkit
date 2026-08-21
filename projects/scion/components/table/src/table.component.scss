@@ -21,6 +21,12 @@
       --ɵsci-table-header-visible: false;
     }
 
+    // Indicates active scrolling OR holding the scrollbar thumb pressed (i.e., user stopped moving while still pressing the thumb).
+    // Note: This CSS variable is also set via host binding in `SciTableComponent` to support mousewheel scrolling.
+    &:has(~ sci-scrollbar.scrolling) {
+      --ɵsci-table-scrolling: true;
+    }
+
     > sci-table-grid {
       width: var(--ɵsci-table-width); // TODO describe why
       display: grid;
@@ -92,6 +98,7 @@
     // Align vertical below the table header, if any.
     &[direction="vscroll"] {
       top: calc(anchor(--sci-table-body top) + 2px);
+      right: 2px; // reserve some space for the resize splitter of the last column
     }
 
     // Prevent hovering scrollbar while resizing a column.

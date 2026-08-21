@@ -4,6 +4,11 @@
   border-top: var(--sci-table-border-size) solid var(--sci-table-border-color);
   user-select: none;
 
+  // Prevent hovering header while resizing.
+  @container (style(--ɵsci-table-resizing: true)) {
+    pointer-events: none;
+  }
+
   &.filterable {
     border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
   }

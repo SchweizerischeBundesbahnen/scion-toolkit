@@ -10,9 +10,8 @@
 @let hasRowActions = !!table().rowActions;
 @let isRowHovered = table().hoveredRow() === row;
 @let isRowActionMenuOpen = rowActionToolbar()?.toolbarMenuOpen();
-@let isScrolling = table().scrolling();
 
-@if (hasRowActions && (isRowHovered || isRowActionMenuOpen) && !isScrolling) {
+@if (hasRowActions && (isRowHovered || isRowActionMenuOpen)) {
   <!--eslint-disable-next-line @angular-eslint/template/click-events-have-key-events,@angular-eslint/template/interactive-supports-focus -->
   <sci-toolbar [name]="rowActionsToolbarName" (click)="onActionToolbarClick($event)" class="row-actions"/>
 }
