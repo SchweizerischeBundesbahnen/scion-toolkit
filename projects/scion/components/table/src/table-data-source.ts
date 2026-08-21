@@ -27,7 +27,7 @@ export interface SciTableRequest {
   page: number;
   sortCriteria: SciSortCriterion[];
   columnFilters: SciColumnFilter[];
-  globalFilter?: string; // TODO [etienne] still supported?
+  globalFilter?: string; // TODO [etienne] still supported? I think yes, but consider renaming it to tableFilter
 }
 
 export interface SciTableResponse<T> {
