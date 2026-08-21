@@ -19,6 +19,7 @@ import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-table-page',
@@ -40,6 +41,7 @@ export default class SciTablePageComponent {
 
   private readonly _injector = inject(Injector);
   private readonly _tabbar = viewChild.required(SciTabbarComponent);
+  private readonly _router = inject(Router);
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
   protected readonly companyForm: FieldTree<CompanyForm> = this.createCompanyForm();
@@ -270,6 +272,11 @@ export default class SciTablePageComponent {
   protected onCompanyFormCancel(): void {
     this.companyForm.id().value.set('');
     this._tabbar().activateTab('settings');
+  }
+
+  protected onColumnsReset(): void {
+    sessionStorage.removeItem('scion.components.table:companies');
+    this._router.navigate(['/']).then(() => this._router.navigate(['/sci-table']));
   }
 }
 

@@ -12,17 +12,7 @@ import {ApplicationConfig} from '@angular/core';
 import {provideRouter, withHashLocation} from '@angular/router';
 import {provideAnimations} from '@angular/platform-browser/animations';
 import {routes} from './app.routes';
-import {provideTableStorage, SciTableStorage} from '@scion/components/table';
-
-class TableSessionStorage implements SciTableStorage {
-  public load(name: string): Promise<string | null> | string | null {
-    return sessionStorage.getItem(name);
-  }
-
-  public store(name: string, value: string): Promise<void> | void {
-    sessionStorage.setItem(name, value);
-  }
-}
+import {provideSessionTableStorage} from './sci-table-page/sci-table-session-storage.provider';
 
 /**
  * Central place to configure the application.
@@ -31,6 +21,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withHashLocation()),
     provideAnimations(),
-    provideTableStorage(TableSessionStorage),
+    provideSessionTableStorage(),
   ],
 };
