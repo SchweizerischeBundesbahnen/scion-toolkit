@@ -1324,7 +1324,7 @@ test.describe.only('sci-table', () => {
       await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
       await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
 
-      await tablePage.conditionallyStyleRow();
+      await tablePage.setCustomRowStyling(true);
 
       await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
       await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
@@ -1339,7 +1339,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await tablePage.conditionallyStyleRow();
+      await tablePage.setCustomRowStyling(true);
 
       await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:name row:negative');
 
@@ -1357,6 +1357,24 @@ test.describe.only('sci-table', () => {
       await expect(table.row(0).cell(0).locator).toHaveAttribute('part', 'column:negative');
       await expect.poll(() => table.row(0).cell(0).locator.evaluate(element => getComputedStyle(element).backgroundColor))
         .toEqual('rgba(255, 0, 0, 0.2)');
+    });
+
+    test('should show/hide gridlines', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      // Configure gridline color.
+      await tablePage.setCssVariable('--sci-table-gridline-color', 'rgb(0, 0, 255)');
+
+      // Show gridlines.
+      await tablePage.showGridlines(true);
+      await expect(table.row(0).locator).toHaveCSS('border-bottom-color', 'rgb(0, 0, 255)');
+
+      // Hide gridlines.
+      await tablePage.showGridlines(false);
+      await expect(table.row(0).locator).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
     });
   });
 

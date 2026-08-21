@@ -56,9 +56,14 @@ export class TablePagePO {
     await this.properties.locator('select.e2e-selectable').selectOption(selectable === false ? 'false' : selectable);
   }
 
-  public async showHeader(show: boolean): Promise<void> {
+  public async showHeader(showHeader: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-show-header').setChecked(show);
+    await this.properties.locator('input.e2e-show-header').setChecked(showHeader);
+  }
+
+  public async showGridlines(showGridlines: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-show-gridlines').setChecked(showGridlines);
   }
 
   public async setHeight(height: number): Promise<void> {
@@ -96,15 +101,14 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-table-count').fill(tableCount.toString());
   }
 
-  public async conditionallyStyleRow(): Promise<void> {
+  public async setCustomRowStyling(customRowStyling: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-conditional-style').check();
+    await this.properties.locator('input.e2e-custom-row-styling').setChecked(customRowStyling);
   }
 
   public async setColumnVisible(column: `column:${string}`, visible: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-columns').click();
-    const checkbox = this.properties.locator(`input.e2e-column-visibility[data-column="${column}"]`);
-    await (visible ? checkbox.check() : checkbox.uncheck());
+    await this.properties.locator(`input.e2e-column-visibility[data-column="${column}"]`).setChecked(visible);
   }
 
   public async addColumn(options: ColumnOptions): Promise<void> {
@@ -112,23 +116,19 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-column-name').fill(options.name ?? '');
     await this.properties.locator('input.e2e-column-header').fill(options.header ?? options.name ?? '');
     await this.properties.locator('select.e2e-column-type').selectOption(options.type);
-    if (options.customSort) {
-      await this.properties.locator('input.e2e-column-custom-sort').check();
-    }
-    if (options.customFilter) {
-      await this.properties.locator('input.e2e-column-custom-filter').check();
-    }
-    if (options.width !== undefined) {
-      await this.properties.locator('input.e2e-column-width').fill(options.width);
-    }
-    if (options.minWidth !== undefined) {
-      await this.properties.locator('input.e2e-column-min-width').fill(options.minWidth.toString());
-    }
-    if (options.maxWidth !== undefined) {
-      await this.properties.locator('input.e2e-column-max-width').fill(options.maxWidth.toString());
-    }
     await this.properties.locator('input.e2e-resizable').setChecked(options.resizable ?? true);
+    await this.properties.locator('input.e2e-column-custom-sort').setChecked(!!options.customSort);
+    await this.properties.locator('input.e2e-column-custom-filter').setChecked(!!options.customFilter);
+    await this.properties.locator('input.e2e-column-width').fill(options.width ?? '');
+    await this.properties.locator('input.e2e-column-min-width').fill(`${options.minWidth ?? ''}`);
+    await this.properties.locator('input.e2e-column-max-width').fill(`${options.maxWidth ?? ''}`);
     await this.properties.locator('button.e2e-column-add').click();
+  }
+
+  public async setCssVariable(name: `--${string}`, value: string): Promise<void> {
+    await this.locator.evaluate((page, variable: {name: string; value: string}): void => {
+      page.style.setProperty(variable.name, variable.value);
+    }, {name, value});
   }
 }
 

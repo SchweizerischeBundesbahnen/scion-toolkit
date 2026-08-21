@@ -37,12 +37,14 @@ import {clamp, Objects} from '@scion/toolkit/util';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
+    // TODO [Etienne] Consider moving styles bindings to viewport component (hidden from outside)
     '[style.--ɵsci-table-columns]': 'columnWidths()',
     '[style.--ɵsci-table-scrolling]': 'table().scrolling() ? `true` : null',
     '[style.--ɵsci-table-resizing]': 'resizing() ? `true` : null',
     '[style.--ɵsci-table-width]': 'tableWidth()',
     '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
     '[style.--ɵsci-table-virtual-scroll-offset-bottom]': '`${virtualScrollOffsetBottom()}px`',
+    '[style.--esci-table-gridlines]': 'table().gridlinesVisible() ? `true` : null',
   },
   imports: [
     SciScrollbarComponent,

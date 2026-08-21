@@ -4,7 +4,7 @@
   grid-column: 1 / -1;
   grid-auto-rows: var(--sci-table-row-height);
   user-select: none; // has to be disabled because of selection
-  border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
+  border-bottom: var(--sci-table-border-size) solid var(--sci-table-gridline-color);
 
   &.hover {
     background-color: var(--sci-table-row-background-color-hover);

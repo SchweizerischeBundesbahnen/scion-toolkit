@@ -43,6 +43,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly bufferSize: Signal<number>;
   public readonly filterable: Signal<boolean>;
   public readonly headerVisible: Signal<boolean>;
+  public readonly gridlinesVisible: Signal<boolean>;
   public readonly sortable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectable: Signal<'single' | 'multi' | false>;
@@ -110,6 +111,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.sortable = coerceSignal(descriptor.sortable ?? true);
     this.filterable = coerceSignal(descriptor.filterable ?? true);
     this.headerVisible = coerceSignal(descriptor.headerVisible ?? true);
+    this.gridlinesVisible = coerceSignal(descriptor.gridlinesVisible ?? false);
     this.resizable = coerceSignal(descriptor.resizable ?? true);
     this.selectable = coerceSignal(descriptor.selectable ?? 'multi');
     this.columns = linkedSignal(() => {
@@ -344,9 +346,9 @@ export class ɵSciTable<T> implements SciTable<T> {
       name,
       filter: typeof config.filterable === 'object' ? config.filterable.matcher : defaultFilter,
       sort: typeof config.sortable === 'object' ? config.sortable.comparator : defaultSort,
-      sortable: computed(() => sortable && this.sortable()),
-      filterable: computed(() => filterable && this.filterable()),
-      resizable: computed(() => (config.resizable ?? true) && this.resizable()),
+      sortable: computed(() => this.sortable() && sortable),
+      filterable: computed(() => this.filterable() && filterable),
+      resizable: computed(() => this.resizable() && (config.resizable ?? true)),
       header: coerceSignal(config.header ?? ''),
       userWidth: storedColumn?.width,
       isFraction: width.endsWith('fr'),

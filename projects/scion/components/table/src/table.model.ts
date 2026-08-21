@@ -28,6 +28,7 @@ export interface SciTableDescriptor<T> {
   filterable?: MaybeSignal<boolean>;
   selectable?: MaybeSignal<false | 'single' | 'multi'>;
   headerVisible?: MaybeSignal<boolean>;
+  gridlinesVisible?: MaybeSignal<boolean>;
   sortBy?: Array<`column:${string}` | SciSortCriterion>;
   /**
    * Row actions shown at the end of a row.

@@ -34,6 +34,10 @@
         grid-template-rows: min-content;
       }
 
+      @container not style(--esci-table-gridlines: true) {
+        --sci-table-gridline-color: transparent;
+      }
+
       &:focus {
         outline: none;
       }

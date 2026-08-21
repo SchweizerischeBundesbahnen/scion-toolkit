@@ -58,6 +58,7 @@ export default class SciTablePageComponent {
     return table({
       name,
       headerVisible: computed(() => this.settingsForm.showHeader().value()),
+      gridlinesVisible: computed(() => this.settingsForm.showGridlines().value()),
       sortable: computed(() => this.settingsForm.sortable().value()),
       filterable: computed(() => this.settingsForm.filterable().value()),
       resizable: computed(() => this.settingsForm.resizable().value()),
@@ -189,6 +190,7 @@ export default class SciTablePageComponent {
       resizable: true,
       selectable: 'multi',
       showHeader: true,
+      showGridlines: false,
       showRowAction: false,
       slowDataSource: false,
       customRowStyling: false,
@@ -232,6 +234,7 @@ interface SettingsForm {
   resizable: boolean;
   selectable: 'false' | 'single' | 'multi';
   showHeader: boolean;
+  showGridlines: boolean;
   showRowAction: boolean;
   slowDataSource: boolean;
   customRowStyling: boolean;
