@@ -89,12 +89,12 @@ export class ColumnSplitterPO {
 
   public async drag(distance: number): Promise<void> {
     const splitterBounds = await this.bounds();
-    const headerBounds = fromRect(await this._table.header.boundingBox());
+    const tableBounds = await this._table.bounds();
 
     // Drag at header vcenter, because last splitter and scrollbar overlap.
-    await this.locator.page().mouse.move(splitterBounds.hcenter, headerBounds.vcenter + 10);
+    await this.locator.page().mouse.move(splitterBounds.hcenter, tableBounds.vcenter);
     await this.locator.page().mouse.down();
-    await this.locator.page().mouse.move(splitterBounds.hcenter + distance, headerBounds.vcenter + 10, {steps: 20});
+    await this.locator.page().mouse.move(splitterBounds.hcenter + distance, tableBounds.vcenter, {steps: 20});
     await this.locator.page().mouse.up();
   }
 

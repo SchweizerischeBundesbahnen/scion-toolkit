@@ -127,6 +127,7 @@ export class TablePagePO {
     if (options.maxWidth !== undefined) {
       await this.properties.locator('input.e2e-column-max-width').fill(options.maxWidth.toString());
     }
+    await this.properties.locator('input.e2e-resizable').setChecked(options.resizable ?? true);
     await this.properties.locator('button.e2e-column-add').click();
   }
 }
@@ -135,6 +136,7 @@ export interface ColumnOptions {
   name: `column:${string}`;
   header?: string;
   type: SciColumnType;
+  resizable?: boolean;
   customFilter?: boolean;
   customSort?: boolean;
   width?: string;

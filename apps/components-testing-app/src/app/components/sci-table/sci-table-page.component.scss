@@ -8,6 +8,7 @@
     flex-direction: column;
     gap: 1em;
     flex: 1 1 0;
+    overflow: hidden; // to not overlay detail panel if table has fixed width
 
     > sci-table {
       flex: 1 1 0;

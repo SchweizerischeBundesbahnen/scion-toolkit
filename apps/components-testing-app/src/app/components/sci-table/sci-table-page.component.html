@@ -28,6 +28,10 @@
             </select>
           </sci-form-field>
 
+          <sci-form-field label="Resizable">
+            <input [formField]="columnForm.resizable" type="checkbox" class="e2e-resizable"/>
+          </sci-form-field>
+
           <sci-form-field label="Custom Sort">
             <input [formField]="columnForm.customSort" type="checkbox" class="e2e-column-custom-sort">
           </sci-form-field>
@@ -56,7 +60,7 @@
           <section>
             <header>Visible Columns</header>
 
-            @for (column of columns(); track $index) {
+            @for (column of columns(); track column.name) {
               <sci-form-field [label]="column.name">
                 <input [(ngModel)]="column.visible" type="checkbox" [attr.data-column]="column.name" class="e2e-column-visibility"/>
               </sci-form-field>
@@ -98,7 +102,7 @@
         </sci-form-field>
 
         <sci-form-field label="Custom Row Styling">
-          <input [formField]="settingsForm.customRowStyling" type="checkbox" class="e2e-conditional-style">
+          <input [formField]="settingsForm.customRowStyling" type="checkbox" class="e2e-custom-row-styling">
         </sci-form-field>
 
         <sci-form-field label="Table Count">

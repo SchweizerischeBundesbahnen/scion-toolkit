@@ -8,26 +8,28 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, ElementRef, inject, input, output, signal, Signal, viewChildren} from '@angular/core';
+import {Component, computed, inject, input, output, signal, Signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
 import {SciColumnLike} from '../table.model';
 import {TableRowComponent} from '../table-row/table-row.component';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {firstValueFrom, skip} from 'rxjs';
+import {SciElementRefDirective} from '../element-ref.directive';
 
 export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
 
 @Component({
   selector: TABLE_SPLITTERS_SELECTOR,
+  templateUrl: './column-splitters.component.html',
+  styleUrl: './column-splitters.component.scss',
   imports: [
     SciSplitterComponent,
+    SciElementRefDirective,
   ],
   host: {
     '(wheel)': 'onMouseWheel($event)',
   },
-  templateUrl: './column-splitters.component.html',
-  styleUrl: './column-splitters.component.scss',
 })
 export class ColumnSplittersComponent<T> {
 
@@ -37,9 +39,8 @@ export class ColumnSplittersComponent<T> {
 
   public readonly scrollBy = output<number>();
 
-  protected table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
+  protected readonly table = inject<Signal<ɵSciTable<T>>>(ɵSCI_TABLE);
 
-  private readonly _splitters = viewChildren(SciSplitterComponent, {read: ElementRef});
   private readonly _hovered = signal(false);
   private readonly _resizing = computed(() => this.table().resizingState() !== undefined);
   private readonly _columnWidths$ = toObservable(this.columnWidths);
@@ -54,26 +55,20 @@ export class ColumnSplittersComponent<T> {
     });
   }
 
-  protected onResize(column: SciColumnLike<T>, event: SplitterMoveEvent): void {
-    const columnIndex = this.table().columns().findIndex(c => c.name === column.name);
-    const splitter = this._splitters()[columnIndex]?.nativeElement as HTMLElement | undefined;
-    if (columnIndex < 0 || !splitter) {
-      return;
-    }
-
+  protected onResize(column: SciColumnLike<T>, splitter: HTMLElement, event: SplitterMoveEvent): void {
     const splitterRect = splitter.getBoundingClientRect();
     const splitterStart = splitterRect.left;
     const splitterEnd = splitterRect.left + splitterRect.width;
 
     // Ignore the event if outside the splitter's action scope.
-    const eventPos = event.position.clientPos;
+    const pointerPosition = event.position.clientPos;
     // The column should not grow after moved the mouse pointer beyond the left bounds of the column and now moving the mouse pointer back toward the current column.
-    if (event.distance > 0 && eventPos < splitterStart) {
+    if (event.distance > 0 && pointerPosition < splitterStart) {
       return;
     }
 
     // The column should not shrink after moved the mouse pointer beyond the right bounds of the column and now moving the mouse pointer back toward the current column.
-    if (event.distance < 0 && eventPos > splitterEnd) {
+    if (event.distance < 0 && pointerPosition > splitterEnd) {
       return;
     }
 

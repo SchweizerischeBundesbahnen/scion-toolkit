@@ -463,11 +463,48 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
     });
 
-    test('should resize column by moving splitter between column cells', async ({page}) => {
+    test('should resize column by moving splitter between column cells (table with header)', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+
+      const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
+      const tableBounds = await table.bounds();
+      let mouseX = splitterBounds.hcenter;
+      await page.mouse.move(mouseX, tableBounds.vcenter);
+      await page.mouse.down();
+
+      mouseX += 100;
+      await page.mouse.move(mouseX, tableBounds.vcenter, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
+
+      mouseX += 50;
+      await page.mouse.move(mouseX, tableBounds.vcenter, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(250);
+
+      mouseX -= 20;
+      await page.mouse.move(mouseX, tableBounds.vcenter, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(230);
+
+      mouseX += 50;
+      await page.mouse.move(mouseX, tableBounds.vcenter, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
+
+      await page.mouse.up();
+      mouseX += 50;
+      await page.mouse.move(mouseX, tableBounds.vcenter, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
+    });
+
+    test('should resize column by moving splitter between column cells (table without header)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(false);
+      await tablePage.setFilterable(false);
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
@@ -513,6 +550,50 @@ test.describe.only('sci-table', () => {
       await table.column({name: 'column:testee'}).splitter.drag(50);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(150);
       await expect.poll(() => table.column({name: 'column:testee'}).width()).toBe(250);
+    });
+
+    test('should render splitter at correct position', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      // Add resizable column.
+      await tablePage.addColumn({name: 'column:1', type: 'string', resizable: true, width: '100px'});
+      // Add non-resizable column.
+      await tablePage.addColumn({name: 'column:2', type: 'string', resizable: false, width: '100px'});
+      // Add resizable column.
+      await tablePage.addColumn({name: 'column:3', type: 'string', resizable: true, width: '100px'});
+      // Add resizable column.
+      await tablePage.addColumn({name: 'column:4', type: 'string', resizable: true, width: '100px'});
+
+      await expect(table.column({name: 'column:1'}).splitter.locator).toBeAttached();
+      await expect(table.column({name: 'column:2'}).splitter.locator).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).splitter.locator).toBeAttached();
+      await expect(table.column({name: 'column:4'}).splitter.locator).toBeAttached();
+
+      // Verify splitters to be at correct position.
+      const tableLeft = await table.locator.boundingBox().then(bounds => bounds!.x) - 1; // -1 because splitters are positioned at the end of cell content
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400);
+
+      // Resize 'column:1'.
+      await table.column({name: 'column:1'}).splitter.drag(10);
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10);
+
+      // Resize 'column:3'.
+      await table.column({name: 'column:3'}).splitter.drag(10);
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10 + 10);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10);
+
+      // Resize 'column:4'.
+      await table.column({name: 'column:4'}).splitter.drag(10);
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10 + 10);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10 + 10);
     });
 
     test('should stop at max width', async ({page}) => {
