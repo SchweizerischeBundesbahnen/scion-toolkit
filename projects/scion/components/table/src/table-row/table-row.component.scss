@@ -7,7 +7,7 @@
   border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
 
   &.hover {
-    background-color: var(--sci-table-row-hover-color);
+    background-color: var(--sci-table-row-background-color-hover);
   }
 
   // TODO Disable pointer events while scrolling and resizing, ensuring mouseenter event is fired AND stable UI
@@ -17,12 +17,12 @@
 
   &.active {
     border-bottom-color: transparent;
-    outline: var(--sci-table-border-size) solid var(--sci-table-active-color);
+    outline: var(--sci-table-row-outline-width) var(--sci-table-row-outline-style) var(--sci-table-row-outline-color);
     outline-offset: -1px;
   }
 
   &.selected {
-    background-color: var(--sci-table-row-selected-color);
+    background-color: var(--sci-table-row-background-color-selected);
   }
 
   &.loading {
@@ -39,7 +39,7 @@
 
   > sci-toolbar.row-actions {
     position: sticky;
-    right: var(--sci-table-cell-horizontal-padding); // prevent hiding vertical scrollbar
+    right: var(--sci-table-cell-padding-inline); // prevent hiding vertical scrollbar
     justify-self: end;
     align-self: center;
     background-color: var(--sci-table-background-color);

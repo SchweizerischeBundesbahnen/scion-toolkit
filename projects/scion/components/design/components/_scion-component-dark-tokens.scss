@@ -92,6 +92,25 @@ $sci-menubar: (
   --sci-menubar-item-outline-width: var(--sci-button-outline-width),
 );
 
+$sci-table: (
+  --sci-table-background-color: var(--sci-color-background-primary),
+  --sci-table-border-color: var(--sci-color-border),
+  --sci-table-border-size: 1px,
+  --sci-table-row-height: 30px,
+  --sci-table-row-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-table-row-background-color-selected: color-mix(in srgb, var(--sci-color-accent) 35%, var(--sci-color-gray-100)),
+  --sci-table-row-outline-color: color-mix(in srgb, var(--sci-menu-item-background-color-hover) 97.5%, var(--sci-static-color-white)),
+  --sci-table-row-outline-width: var(--sci-table-border-size),
+  --sci-table-row-outline-style: dotted,
+  --sci-table-cell-padding-inline: .5em,
+  --sci-table-header-height: 30px,
+  --sci-table-header-cursor: var(--sci-button-cursor),
+  --sci-table-header-background-color: var(--sci-color-background-primary),
+  --sci-table-header-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-table-skeleton-border-radius: var(--sci-corner),
+  --sci-table-skeleton-color: var(--sci-color-skeleton),
+);
+
 $sci-button: (
   --sci-button-cursor: default,
   --sci-button-background-color-hover: var(--sci-color-gray-200),
@@ -108,21 +127,6 @@ $sci-skeleton: (
   --sci-color-skeleton: var(--sci-color-gray-300),
   --sci-color-skeleton-hover: var(--sci-color-gray-400),
   --sci-color-skeleton-active: var(--sci-color-gray-400),
-);
-
-$sci-table: (
-  --sci-table-background-color: var(--sci-color-background-primary),
-  --sci-table-active-color: var(--sci-color-accent),
-  --sci-table-border-color: var(--sci-color-background-elevation-hover),
-  --sci-table-row-hover-color: var(--sci-color-background-elevation-hover),
-  --sci-table-row-selected-color: var(--sci-color-accent),
-  --sci-table-row-height: 30px,
-  --sci-table-skeleton-border-radius: var(--sci-corner),
-  --sci-table-skeleton-color: var(--sci-color-skeleton),
-  --sci-table-cell-horizontal-padding: .5em,
-  --sci-table-header-height: 30px,
-  --sci-table-header-background-color: var(--sci-color-background-primary),
-  --sci-table-border-size: 1px,
 );
 
 $tokens: sci-theming.map-merge(

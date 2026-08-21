@@ -19,10 +19,10 @@
     gap: .5em;
 
     &.sortable {
-      cursor: pointer;
+      cursor: var(--sci-table-header-cursor);
 
       &:is(:focus-visible, :hover) {
-        background-color: var(--sci-table-row-hover-color);
+        background-color: var(--sci-table-header-background-color-hover);
 
         > span.sort {
           display: flex;

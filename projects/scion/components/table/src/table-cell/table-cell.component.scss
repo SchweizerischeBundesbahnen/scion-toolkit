@@ -10,7 +10,7 @@
   }
 
   &:not([data-type="template"], [data-type="component"]) {
-    padding-inline: var(--sci-table-cell-horizontal-padding);
+    padding-inline: var(--sci-table-cell-padding-inline);
   }
 
   > .cell {
