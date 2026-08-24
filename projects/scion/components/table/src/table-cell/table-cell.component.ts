@@ -68,10 +68,11 @@ export class TableCellComponent<T> {
 
   private readonly _cellElement = viewChild.required<ElementRef<HTMLDivElement>>('cellElement');
 
+  // TODO [Etienne] Padding is included in offset width and client width! Revisit!
   public getWidth(): number {
     const paddingStr = getComputedStyle(this._host).paddingRight;
     // The actual column width has to include the cell padding, so the content gets enough space.
-    const padding = +paddingStr.substring(0, paddingStr.length - 2);
+    const padding =  Number.parseFloat(paddingStr); // cut unit
     const width = Math.ceil(this._cellElement().nativeElement.offsetWidth);
     return isNaN(padding) ? width : padding * 2 + width;
   }

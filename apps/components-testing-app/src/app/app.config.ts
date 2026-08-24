@@ -12,6 +12,7 @@ import {ApplicationConfig} from '@angular/core';
 import {provideRouter, withComponentInputBinding, withHashLocation} from '@angular/router';
 import {provideAnimations} from '@angular/platform-browser/animations';
 import {routes} from './app.routes';
+import {provideNullTableStorage} from './components/sci-table/sci-table-storage.provider';
 
 /**
  * Central place to configure the application.
@@ -20,5 +21,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withHashLocation(), withComponentInputBinding()),
     provideAnimations(),
+    provideNullTableStorage(),
   ],
 };

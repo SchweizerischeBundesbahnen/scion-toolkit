@@ -23,9 +23,8 @@ import {SciTableFactory} from './table.factory';
 import {SciDataLoaderFn, SciTableRequest, SciTableResponse} from './table-data-source';
 
 fdescribe('Table', () => {
+
   beforeEach(() => {
-    // Prevent persisting setting in localStorage for tests.
-    // This causes problems on reruns, and can cause tests to interfere with each other.
     TestBed.configureTestingModule({
       providers: [
         provideNullTableStorage(),
@@ -940,7 +939,7 @@ fdescribe('Table', () => {
   });
 
   describe('Resize', () => {
-    it('should auto-resize row', async () => {
+    it('should auto-resize column', async () => {
       const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
       const model = createTable(data, table => table
         .addNumberColumn(i => i.id)
@@ -956,7 +955,7 @@ fdescribe('Table', () => {
       expect(table.columns[1]?.width).toBe(200);
 
       await table.autoResize(model.columns()[1]!);
-      expect(table.columns[0]?.width).toBe(300);
+      expect(table.columns[0]?.width).toBe(200);
       expect(table.columns[1]?.width).toBe(100);
 
       await table.autoResize(model.columns()[0]!);
@@ -965,7 +964,8 @@ fdescribe('Table', () => {
     });
 
     it('should store column widths to storage', async () => {
-      const store = jasmine.createSpy();
+      const storeFn = jasmine.createSpy();
+
       TestBed.configureTestingModule({
         providers: [
           provideTableStorage(class {
@@ -974,7 +974,7 @@ fdescribe('Table', () => {
             }
 
             public store(key: string, value: string): void {
-              store(key, value);
+              storeFn(key, value);
             }
           }),
         ],
@@ -993,7 +993,7 @@ fdescribe('Table', () => {
       const table = new TablePO(fixture);
       await table.autoResize(model.columns()[0]!);
 
-      expect(store).toHaveBeenCalledWith('scion.components.table:test', '{"columns":[{"name":"column:0","width":100},{"name":"column:1"}]}');
+      expect(storeFn).toHaveBeenCalledWith('scion.components.table:test', '{"columns":[{"name":"column:0","width":100}]}');
     });
 
     it('should load column widths from storage', async () => {
@@ -1396,7 +1396,7 @@ function provideNullTableStorage(): EnvironmentProviders {
     }
 
     public store(): void {
-      // noop
+      // NOOP
     }
   });
 }

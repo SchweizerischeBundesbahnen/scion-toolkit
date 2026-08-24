@@ -16,7 +16,6 @@ import {concat, fromEvent, map, mergeWith, of, switchMap, timer} from 'rxjs';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciScrollbarComponent} from '@scion/components/viewport';
 import {startWith} from 'rxjs/operators';
-import {cssMinmax} from './common';
 import {dimension} from '@scion/components/dimension';
 import {TableSelectionService} from './table-selection.service';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
@@ -29,6 +28,8 @@ import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
 import {clamp, Objects} from '@scion/toolkit/util';
+import {ColumnBoundsComponent} from './column-bounds/column-bounds.component';
+import {SciTableViewportRefDirective} from './table-viewport-ref.directive';
 
 @Component({
   selector: 'sci-table',
@@ -38,10 +39,8 @@ import {clamp, Objects} from '@scion/toolkit/util';
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
     // TODO [Etienne] Consider moving styles bindings to viewport component (hidden from outside)
-    '[style.--ɵsci-table-columns]': 'columnWidths()',
     '[style.--ɵsci-table-scrolling]': 'table().scrolling() ? `true` : null',
-    '[style.--ɵsci-table-resizing]': 'resizing() ? `true` : null',
-    '[style.--ɵsci-table-width]': 'tableWidth()',
+    '[style.--ɵsci-table-resizing]': 'table().resizing() ? `true` : null',
     '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
     '[style.--ɵsci-table-virtual-scroll-offset-bottom]': '`${virtualScrollOffsetBottom()}px`',
     '[style.--esci-table-gridlines]': 'table().gridlinesVisible() ? `true` : null',
@@ -53,18 +52,19 @@ import {clamp, Objects} from '@scion/toolkit/util';
     TableRowComponent,
     SciTextPipe,
     SciSpinnerThrobberComponent,
-    ColumnSplittersComponent,
+    ColumnSplittersComponent, // TODO [etienne] Should start with Sci?
+    ColumnBoundsComponent, // TODO [etienne] Should start with Sci?
     SciTableGridComponent,
     SciTableBodyComponent,
     SciTableHeaderComponent,
-
+    SciTableViewportRefDirective,
   ],
   providers: [
     provideSciTable(),
     TableSelectionService,
   ],
 })
-export class SciTableComponent<T> {
+export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
 
   public readonly table = input.required({transform: (table: SciTable<T>) => table as ɵSciTable<T>});
 
@@ -73,8 +73,6 @@ export class SciTableComponent<T> {
   private readonly _viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
   private readonly _header = viewChild(SciTableHeaderComponent, {read: ElementRef});
-  private readonly _tableBody = viewChild(SciTableBodyComponent, {read: ElementRef});
-  private readonly _headers = viewChildren(ColumnHeaderComponent);
   private readonly _itemSizeElement = viewChild.required<ElementRef<HTMLElement>>('itemSizeElement');
   protected readonly rows = viewChildren(TableRowComponent);
 
@@ -83,12 +81,9 @@ export class SciTableComponent<T> {
   private readonly _viewportDimension = dimension(this._viewport);
   private readonly _viewportClientDimension = dimension(this._viewportClient);
   private readonly _itemSizeDimension = dimension(this._itemSizeElement);
-  private readonly _tableBodyDimension = dimension(this._tableBody);
 
   protected readonly itemSize = computed(() => this._itemSizeDimension().clientHeight);
 
-  protected readonly resizing = computed(() => !!this.table().resizingState());
-  protected readonly columnWidths = this.computeColumnWidths();
   protected readonly headerDimension = dimension(this._header);
 
   protected readonly virtualScrollOffsetTop = computed(() => {
@@ -101,44 +96,6 @@ export class SciTableComponent<T> {
     return (totalCount - rangeEnd) * this.itemSize();
   });
 
-  protected readonly absoluteColumnWidths = computed(() => {
-    // TODO [Etienne] Does only work if header columns -> use splitters instead
-    const headers = this._headers();
-    const columns = this.table().columns();
-
-    // While loading the table definition from storage, the columns are empty.
-    // Calculating the widths only makes sense, when the column definitions are ready.
-    if (!columns.length) {
-      return new Map<`column:${string}`, number>();
-    }
-
-    return columns.reduce((map, column, i) => map.set(column.name, headers[i]?.boundingClientRect().width ?? 0), new Map<`column:${string}`, number>());
-  });
-
-  protected readonly hasHorizontalOverflow = computed(() => {
-    const viewportWidth = this._viewportDimension().clientWidth;
-    const viewportClientWidth = this._viewportClientDimension().offsetWidth;
-    return viewportClientWidth > viewportWidth;
-  });
-
-  /**
-   * An element will never grow beyond its parent unless explicitly set, that is why we need to set the table width.
-   * This allows the grid to overflow when resizing.
-   */
-  protected readonly tableWidth = computed(() => {
-    if (!this.table().columns().length) {
-      return '100%';
-    }
-
-    const viewportWidth = this._viewportDimension().clientWidth;
-    // ViewportClient cannot be used, because it does not grow with its children.
-    const tableBodyWidth = this._tableBodyDimension()?.offsetWidth ?? 0;
-    const hasFullFractionColumn = this.table().columns().some(column => column.isFraction && !column.userWidth && !column.maxWidth);
-
-    // Only allow full width table when at least one column takes the remaining space.
-    return tableBodyWidth < viewportWidth && hasFullFractionColumn ? '100%' : `${tableBodyWidth}px`;
-  });
-
   private readonly _scrollTop = this.computeScrollTop();
 
   constructor() {
@@ -146,10 +103,6 @@ export class SciTableComponent<T> {
     this.installScrollRangeTracker();
     this.installCriteriaListener();
     this.installScrollListener();
-  }
-
-  protected onOverlayScrollBy(deltaY: number): void {
-    this._viewport().nativeElement.scrollBy({top: deltaY});
   }
 
   protected onRowPrimaryAction(item?: T): void {
@@ -246,47 +199,6 @@ export class SciTableComponent<T> {
       .subscribe(scrolling => {
         this.table().scrolling.set(scrolling);
       });
-  }
-
-  private computeColumnWidths(): Signal<string> {
-    return computed(() => {
-      const columns = this.table().columns();
-      const resizingState = this.table().resizingState();
-      const hasHorizontalOverflow = this.hasHorizontalOverflow();
-      const hasResizedColumns = columns.some(column => column.userWidth !== undefined);
-
-      if (!resizingState) {
-        // Return the user's width (userWidth) if the column was resized.
-        // Else if there is one other resized column or the column is a fixed width (non-fraction) use the column width.
-        // Else use the min/max grid definition (only for initial layouting).
-        // Otherwise, unchanged fraction columns can change in size after resizing a column.
-        return columns
-          .map(column => {
-            if (column.userWidth) {
-              return `${column.userWidth}px`;
-            }
-
-            return hasResizedColumns || !column.isFraction ? column.width : cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width});
-          })
-          .join(' ');
-      }
-
-      const {temporaryColumnWidths, initialColumnWidths, hadOverflow} = resizingState;
-      return columns
-        .map(column => {
-          if (temporaryColumnWidths.get(column.name)!.endsWith('fr')) {
-            if (hasHorizontalOverflow) {
-              // Fix fraction columns, if the table was and still is overflowing.
-              // If the table went from no overflow, to overflow, fraction columns should all be at minWidth.
-              return hadOverflow ? `${initialColumnWidths.get(column.name)!}px` : `${column.minWidth}px`;
-            }
-            // If the table does not overflow, use the actual column definition.
-            return cssMinmax({min: column.minWidth, max: column.maxWidth ?? temporaryColumnWidths.get(column.name)!});
-          }
-          return temporaryColumnWidths.get(column.name)!;
-        })
-        .join(' ');
-    });
   }
 
   private scrollActiveRowIntoViewport(activeRowIndex: number): void {

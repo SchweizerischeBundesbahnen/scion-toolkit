@@ -63,8 +63,8 @@ export class TableRowComponent<T> {
     this.contributeRowActions();
   }
 
-  public getCellWidth(columnId: string): number {
-    return this.cells().find(cell => cell.cell().columnName === columnId)?.getWidth() ?? 0;
+  public getCellWidth(columnName: `column:${string}`): number {
+    return this.cells().find(cell => cell.cell().columnName === columnName)?.getWidth() ?? 0;
   }
 
   protected onRowEnter(): void {

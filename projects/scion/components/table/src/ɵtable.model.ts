@@ -20,9 +20,9 @@ import {Arrays} from '@scion/toolkit/util';
 import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {filter, skip} from 'rxjs';
+import {skip} from 'rxjs';
 
-interface SciTableStorageModel {
+interface SciTableUserSettings {
   columns: {name: string; width: number | undefined}[];
 }
 
@@ -49,20 +49,13 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly selectable: Signal<'single' | 'multi' | false>;
 
   public readonly scrolling = signal(false);
+  public readonly resizing = computed(() => this.columns().some(column => column.resizing()));
   public readonly sortCriteria = signal<SciSortCriterion[]>([]);
   public readonly filterCriteria = signal<SciColumnFilter[]>([]);
   public readonly scrollRange = signal<SciScrollRange | undefined>(undefined);
-  public readonly resizingState = signal<{
-    column: SciColumnLike<T>;
-    hadOverflow: boolean;
-    initialFractionColumns: Set<`column:${string}`>;
-    initialColumnWidths: Map<`column:${string}`, number>;
-    temporaryColumnWidths: Map<`column:${string}`, string>;
-  } | undefined>(undefined);
 
   private readonly _globalFilter = signal<string | undefined>(undefined);
   private readonly _selectedItems = signal(new Map<unknown, T>());
-  private readonly _storedTable = signal<SciTableStorageModel | undefined>(undefined);
   private readonly _cache = new TableCache<T>();
 
   public readonly pageSize = linkedSignal<SciScrollRange | undefined, number>({
@@ -95,10 +88,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), globalFilter: this._globalFilter()}));
   public readonly loading = computed(() => this._cache.values().some(entry => entry.items() === undefined));
-  public readonly activeIndex = computed(() => {
-    const activeItem = this.activeItem();
-    return activeItem ? this.indexById(this.trackBy(activeItem), this.rowsByIndex()) : -1;
-  });
+  public readonly activeIndex = this.computeActiveIndex();
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
@@ -114,24 +104,29 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.gridlinesVisible = coerceSignal(descriptor.gridlinesVisible ?? false);
     this.resizable = coerceSignal(descriptor.resizable ?? true);
     this.selectable = coerceSignal(descriptor.selectable ?? 'multi');
-    this.columns = linkedSignal(() => {
-      const storedTable = this._storedTable();
-      // Wait for storedTable to be available before initializing columns.
-      if (storedTable === undefined) {
-        return [];
-      }
-      return factory.columns().map((column, index) => this.initColumn(column.type, column, index, storedTable));
-    });
+    this.columns = this.computeColumns(factory);
 
     this.rowActions = descriptor.rowActions;
     this._rowName = descriptor.rowState;
     this._trackBy = descriptor.trackBy;
     this._dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 
-    void this.readTableStorage();
     this.installCriteriaWatcher();
-    this.installTablePersister();
+    this.storeUserSettingsOnChange();
     this.installPageLoader();
+  }
+
+  private computeColumns(factory: ɵSciTableFactory<T>): WritableSignal<SciColumnLike<T>[]> {
+    const userSettings = this.loadUserSettings();
+
+    return linkedSignal(() => {
+      const settings = userSettings();
+      // Wait for user settings to be available before calling the factory.
+      if (settings === undefined) {
+        return [];
+      }
+      return factory.columns().map((column, index) => this.initColumn(column.type, column, index, settings));
+    });
   }
 
   /**
@@ -187,7 +182,7 @@ export class ɵSciTable<T> implements SciTable<T> {
         items.set(result.items);
       },
       error: err => {
-        // TODO: what do we do when the datasource throws an error?
+        // TODO [etienne]: what do we do when the datasource throws an error?
         this._cache.deleteIfEmpty(cacheKey);
       },
     });
@@ -271,19 +266,24 @@ export class ɵSciTable<T> implements SciTable<T> {
   }
 
   /**
-   * Persist column widths to storage on change.
+   * Write table user settings to storage.
    */
-  private installTablePersister(): void {
-    toObservable(this.columns)
-      .pipe(
-        filter(columns => columns.length > 0), // don't persist when columns are not yet loaded
-        skip(1), // do not persist initial load
-      )
-      .subscribe(columns => untracked(() => {
-        void this._tableStorage.store(this.name, JSON.stringify({
-          columns: columns.map(column => ({name: column.name, width: column.userWidth})),
-        }));
-      }));
+  private storeUserSettingsOnChange(): void {
+    effect(() => {
+      if (this.columns().every(column => column.width() === column.initialWidth)) {
+        return;
+      }
+
+      untracked(() => {
+        const userSettings: SciTableUserSettings = {
+          columns: this.columns()
+            .filter(column => column.width() !== column.initialWidth)
+            .map(column => ({name: column.name, width: Number.parseInt(column.width())})),
+        };
+
+        void this._tableStorage.store(this.name, JSON.stringify(userSettings));
+      });
+    });
   }
 
   /**
@@ -324,7 +324,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
-  private initColumn(type: SciColumnType, config: SciColumnDescriptors<T>, index: number, storedTable: SciTableStorageModel | undefined): SciColumnLike<T> {
+  private initColumn(type: SciColumnType, config: SciColumnDescriptors<T>, index: number, userSettings: SciTableUserSettings | undefined): SciColumnLike<T> {
     // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
     const sortable = type === 'component' || type === 'template' ?
       !!config.sortable :
@@ -336,25 +336,25 @@ export class ɵSciTable<T> implements SciTable<T> {
       config.filterable !== false;
 
     // Fallback to the column index as the column name
-    const name = config.name ?? `column:${index}`;
-    const storedColumn = storedTable?.columns.find(column => column.name === name);
-    const width = config.width ?? '1fr';
-
+    const columnName = config.name ?? `column:${index}`;
+    const columnUserSettings = userSettings?.columns.find(column => column.name === columnName);
+    const columnInitialWidth = config.width ?? '1fr';
     return {
       ...config,
       type,
-      name,
+      name: columnName,
       filter: typeof config.filterable === 'object' ? config.filterable.matcher : defaultFilter,
       sort: typeof config.sortable === 'object' ? config.sortable.comparator : defaultSort,
       sortable: computed(() => this.sortable() && sortable),
       filterable: computed(() => this.filterable() && filterable),
       resizable: computed(() => this.resizable() && (config.resizable ?? true)),
       header: coerceSignal(config.header ?? ''),
-      userWidth: storedColumn?.width,
-      isFraction: width.endsWith('fr'),
-      width,
+      width: signal(columnUserSettings?.width ? `${columnUserSettings.width}px` : columnInitialWidth),
       minWidth: config.minWidth ?? 100,
       maxWidth: config.maxWidth,
+      initialWidth: columnInitialWidth,
+      resizing: signal(false),
+      location: {x: 0, width: 0}, // injected in `SciColumnComponent`
     } as SciColumnLike<T>;
   }
 
@@ -389,20 +389,15 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
-  private async readTableStorage(): Promise<void> {
-    const saved = await this._tableStorage.load(this.name);
-    if (!saved) {
-      this._storedTable.set({columns: []});
-      return;
-    }
-
-    try {
-      this._storedTable.set(JSON.parse(saved) as SciTableStorageModel);
-    }
-    catch (error) {
-      console.warn(`Failed to parse item from storage.`, error);
-      this._storedTable.set({columns: []});
-    }
+  private loadUserSettings(): Signal<SciTableUserSettings | undefined> {
+    const settings = signal<SciTableUserSettings | undefined>(undefined);
+    Promise.resolve(this._tableStorage.load(this.name))
+      .then(serialized => settings.set(serialized ? JSON.parse(serialized) as SciTableUserSettings : {columns: []}))
+      .catch(error => {
+        console.warn(`[SciTable] Failed to load user settings for '${this.name}' from storage.`, error);
+        return {columns: []};
+      });
+    return settings;
   }
 
   /**
@@ -444,6 +439,13 @@ export class ɵSciTable<T> implements SciTable<T> {
 
       // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
       return Array.from({length: Math.min(pageSize, rowCount, totalCount)}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {});
+    });
+  }
+
+  private computeActiveIndex(): Signal<number> {
+    return computed(() => {
+      const activeItem = this.activeItem();
+      return activeItem ? this.indexById(this.trackBy(activeItem), this.rowsByIndex()) : -1;
     });
   }
 }

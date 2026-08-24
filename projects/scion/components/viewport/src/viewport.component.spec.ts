@@ -15,8 +15,6 @@ import {Dictionary} from '@scion/toolkit/util';
 import {SciViewportComponent} from './viewport.component';
 import {fromResize$} from '@scion/toolkit/observable';
 import {ObserveCaptor} from '@scion/toolkit/testing';
-import {asyncScheduler} from 'rxjs';
-import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
 import {map} from 'rxjs/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
@@ -1650,9 +1648,6 @@ export async function flushChanges(fixture: ComponentFixture<any>): Promise<void
 
   // Wait until the browser reported the dimension change.
   await awaitRenderCycles(2);
-  // Wait 50ms for the scroll position computation to start. The computation is triggered by a dimension change
-  // of the viewport but is debounced by 50ms.
-  await new Promise(resolve => asyncScheduler.schedule(resolve, SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME));
   // Wait for the scrollbar to be rendered.
   await awaitRenderCycles(2);
 }

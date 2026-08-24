@@ -21,7 +21,7 @@ export class TablePagePO {
   public readonly tabbar: Locator;
 
   public readonly table: Locator;
-  public readonly selectedItems: Locator;
+  public readonly selectionCount: Locator;
 
   constructor(private _page: Page) {
     this.locator = this._page.locator('app-table-page');
@@ -29,11 +29,21 @@ export class TablePagePO {
     this.tableState = this.properties.locator('section.e2e-table-state ');
     this.tabbar = this.properties.locator('sci-tabbar');
     this.table = this.locator.locator('sci-table');
-    this.selectedItems = this.tableState.locator('output.e2e-selected-items');
+    this.selectionCount = this.tableState.locator('output.e2e-selection-count');
   }
 
-  public async navigate(): Promise<void> {
-    await this._page.goto(PATH);
+  public async navigate(options?: {tableStorage?: true}): Promise<void> {
+    if (options?.tableStorage) {
+      await this._page.goto(`?sci-table-storage${PATH.substring(1)}`);
+    }
+    else {
+      await this._page.goto(PATH);
+    }
+  }
+
+  public async reload(options?: {tableStorage?: true}): Promise<void> {
+    // Do not use `Page.reload()` to preserve options.
+    await this._page.goto('about:blank').then(() => this.navigate(options));
   }
 
   public async setFilterable(checked: boolean): Promise<void> {

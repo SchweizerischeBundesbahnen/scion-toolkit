@@ -8,12 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {afterNextRender, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked, ChangeDetectionStrategy} from '@angular/core';
+import {afterNextRender, ChangeDetectionStrategy, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
 import {SciElementRefDirective} from './element-ref.directive';
 import {SashComponent} from './sash/sash.component';
+import {clamp} from '@scion/toolkit/util';
 
 /**
  * The <sci-sashbox> is like a CSS flexbox container that lays out its content children (sashes) in a row (which is by default)
@@ -204,8 +205,8 @@ export class SciSashboxComponent {
     const sashMinSize1 = sash1.minSize() ? this.toPixel(sash1.minSize()!) : 0;
     const sashMinSize2 = sash2.minSize() ? this.toPixel(sash2.minSize()!) : 0;
 
-    const newSashSize1 = between(Math.round(sashSize1 + distance), {min: sashMinSize1, max: sashSize1 + sashSize2 - sashMinSize2});
-    const newSashSize2 = between(Math.round(sashSize2 - distance), {min: sashMinSize2, max: sashSize1 + sashSize2 - sashMinSize1});
+    const newSashSize1 = clamp(Math.round(sashSize1 + distance), {min: sashMinSize1, max: sashSize1 + sashSize2 - sashMinSize2});
+    const newSashSize2 = clamp(Math.round(sashSize2 - distance), {min: sashMinSize2, max: sashSize1 + sashSize2 - sashMinSize1});
 
     // Set the new computed sash sizes.
     sash1.updateFlexProperties({flexBasis: `${newSashSize1}px`});
@@ -293,10 +294,6 @@ export class SciSashboxComponent {
 
     return sashes;
   }
-}
-
-function between(value: number, minmax: {min: number; max: number}): number {
-  return Math.min(minmax.max, Math.max(minmax.min, value));
 }
 
 /**

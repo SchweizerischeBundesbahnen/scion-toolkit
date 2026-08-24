@@ -4,8 +4,17 @@
   overflow-x: clip; // Prevent splitter touch targets from creating horizontal scroll overflow.
   pointer-events: none;
 
-  @container style(--ɵsci-table-scrolling: true) {
+  // Hide splitters during scroll, but NOT while resizing, since shrinking a column placed outside the viewport can trigger an auto-scroll.
+  // Hiding splitters during that scroll would break an ongoing resize drag operation.
+  @container (style(--ɵsci-table-scrolling: true)) and (not style(--ɵsci-table-resizing: true)) {
     display: none;
+  }
+
+  // Prevent hovering other splitters during resize.
+  @container (style(--ɵsci-table-resizing: true)) {
+    > sci-splitter:not(.resizing) {
+      display: none;
+    }
   }
 
   > sci-splitter {
@@ -13,7 +22,7 @@
     --sci-splitter-background-color-hover: var(--sci-table-border-color);;
     --sci-splitter-size-hover: var(--sci-table-border-size);
     --sci-splitter-size: var(--sci-table-border-size);
-    justify-self: end;
+    justify-self: end; // place at the end of cell content
 
     &:not(:hover):not(.resizing) {
       opacity: 0;

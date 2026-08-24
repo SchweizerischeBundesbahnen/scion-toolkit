@@ -8,14 +8,14 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, inject, input, output, signal, Signal} from '@angular/core';
+import {Component, inject, input, signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
-import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
+import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciColumnLike} from '../table.model';
 import {TableRowComponent} from '../table-row/table-row.component';
-import {toObservable} from '@angular/core/rxjs-interop';
-import {firstValueFrom, skip} from 'rxjs';
-import {SciElementRefDirective} from '../element-ref.directive';
+import {animationFrameScheduler} from 'rxjs';
+import {clamp} from '@scion/toolkit/util';
+import {SciColumnService} from '../column/column.service';
 
 export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
 
@@ -25,86 +25,34 @@ export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
   styleUrl: './column-splitters.component.scss',
   imports: [
     SciSplitterComponent,
-    SciElementRefDirective,
   ],
   host: {
-    '(wheel)': 'onMouseWheel($event)',
+    '(wheel)': 'onMouseWheel($event)', // prevent scrolling on splitter
   },
 })
 export class ColumnSplittersComponent<T> {
 
-  public readonly columnWidths = input.required<Map<`column:${string}`, number>>();
-  public readonly hasOverflow = input.required<boolean>();
   public readonly rows = input.required<ReadonlyArray<TableRowComponent<unknown>>>();
+  public readonly viewport = input.required<HTMLElement>();
 
-  public readonly scrollBy = output<number>();
-
-  protected readonly table = inject<Signal<ɵSciTable<T>>>(ɵSCI_TABLE);
+  protected readonly table = inject(ɵSCI_TABLE);
 
   private readonly _hovered = signal(false);
-  private readonly _resizing = computed(() => this.table().resizingState() !== undefined);
-  private readonly _columnWidths$ = toObservable(this.columnWidths);
+  private readonly _columnService = inject(SciColumnService);
 
-  protected onResizeStart(column: SciColumnLike<T>): void {
-    this.table().resizingState.set({
-      column,
-      hadOverflow: this.hasOverflow(),
-      initialColumnWidths: new Map(this.columnWidths()),
-      initialFractionColumns: new Set(this.table().columns().filter(c => !c.userWidth && c.isFraction && c !== column).map(column => column.name)),
-      temporaryColumnWidths: this.calculateTemporaryColumns(column),
-    });
+  protected onResizeStart(column: SciColumnLike): void {
+    this._columnService.startResize(column);
   }
 
-  protected onResize(column: SciColumnLike<T>, splitter: HTMLElement, event: SplitterMoveEvent): void {
-    const splitterRect = splitter.getBoundingClientRect();
-    const splitterStart = splitterRect.left;
-    const splitterEnd = splitterRect.left + splitterRect.width;
-
-    // Ignore the event if outside the splitter's action scope.
+  protected onResize(column: SciColumnLike<T>, event: SplitterMoveEvent): void {
     const pointerPosition = event.position.clientPos;
-    // The column should not grow after moved the mouse pointer beyond the left bounds of the column and now moving the mouse pointer back toward the current column.
-    if (event.distance > 0 && pointerPosition < splitterStart) {
-      return;
-    }
-
-    // The column should not shrink after moved the mouse pointer beyond the right bounds of the column and now moving the mouse pointer back toward the current column.
-    if (event.distance < 0 && pointerPosition > splitterEnd) {
-      return;
-    }
-
-    this.table().resizingState.update(state => {
-      if (!state) {
-        return state;
-      }
-
-      const width = this.fromPx(state.temporaryColumnWidths.get(column.name)!) + event.distance;
-      const boundedWidth = Math.max(column.minWidth, Math.min(column.maxWidth ?? width, width));
-      const temporaryColumnWidths = this.calculateTemporaryColumns(state.column).set(column.name, `${boundedWidth}px`);
-
-      return ({
-        ...state,
-        temporaryColumnWidths,
-      });
-    });
+    const columnStart = column.location.x - 1; // -1 because splitters are positioned at the end of cell content
+    const newColumnWidth = pointerPosition - columnStart;
+    this._columnService.resize(newColumnWidth);
   }
 
   protected onResizeEnd(): void {
-    const {column, temporaryColumnWidths, initialFractionColumns} = this.table().resizingState()!;
-    // Recalculate fraction ratios based on the remaining flexible space.
-    const fractionRatios = this.calculateFractionRatios(initialFractionColumns);
-    this.table().columns.update(columns => columns.map(c => {
-      if (c.name === column.name) {
-        c.userWidth = this.fromPx(temporaryColumnWidths.get(c.name)!);
-      }
-
-      if (fractionRatios.has(c.name)) {
-        c.width = fractionRatios.get(c.name)!;
-      }
-
-      return c;
-    }));
-
-    this.table().resizingState.set(undefined);
+    this._columnService.endResize();
 
     // Clear the hovered row when resizing ends outside the splitter (for example, above or below it).
     if (!this._hovered()) {
@@ -112,26 +60,17 @@ export class ColumnSplittersComponent<T> {
     }
   }
 
-  public async onResizeAuto(column: SciColumnLike<T>): Promise<void> {
-    this.onResizeStart(column);
-    const cellWidths = this.rows().map(row => row.getCellWidth(column.name));
-    const previousWidth = this.table().resizingState()!.temporaryColumnWidths.get(column.name)!;
+  public async onResizeAuto(column: SciColumnLike): Promise<void> {
     // Get the maximum cell width, bounded by the min/max width.
-    const maxWidth = `${Math.min(Math.max(...cellWidths, column.minWidth), column.maxWidth ?? Infinity)}px`;
+    const maxCellWidth = Math.max(...this.rows().map(row => row.getCellWidth(column.name)));
+    const packedWidth = clamp(maxCellWidth, {min: column.minWidth, max: column.maxWidth ?? maxCellWidth});
 
-    // Only apply the change if the columnWidth actually changed.
-    if (maxWidth !== previousWidth) {
-      this.table().resizingState.update(state => state ? ({
-        ...state,
-        temporaryColumnWidths: new Map(state.temporaryColumnWidths).set(column.name, maxWidth),
-      }) : undefined);
+    this._columnService.startResize(column);
+    this._columnService.resize(packedWidth);
 
-      // Wait until the resize is reflected in the DOM.
-      // Skip first emission, because a `toObservable` always emits upon subscription.
-      await firstValueFrom(this._columnWidths$.pipe(skip(1)));
-    }
+    // Wait until the resize is reflected in the DOM.
 
-    this.onResizeEnd();
+    this._columnService.endResize();
   }
 
   protected onMouseEnter(): void {
@@ -143,52 +82,12 @@ export class ColumnSplittersComponent<T> {
 
     // Do not clear the hovered row while dragging the resize handle, or quick movements will accidentally clear it.
     // If the mouse leaves the splitter during drag (above or below), the hovered row is unset when resizing ends.
-    if (!this._resizing()) {
+    if (!this.table().resizing()) {
       this.table().hoveredIndex.set(-1);
     }
   }
 
   protected onMouseWheel(event: WheelEvent): void {
     event.preventDefault();
-    this.scrollBy.emit(event.deltaY);
-  }
-
-  private calculateFractionRatios(factionColumns: Set<`column:${string}`>): Map<`column:${string}`, string> {
-    const columnWidths = this.columnWidths();
-
-    // Skip fractionColumns which are already at max width. They should not contribute to the flex width.
-    const actualFractionColumns = this.table().columns()
-      .filter(column => factionColumns.has(column.name) && columnWidths.get(column.name)! < (column.maxWidth ?? Infinity))
-      .reduce((set, column) => set.add(column.name), new Set<`column:${string}`>());
-
-    const totalFlexWidth = [...columnWidths.entries()].reduce((sum, [name, width]) => actualFractionColumns.has(name) ? sum + width : sum, 0);
-    return this.table().columns().reduce((map, column) => {
-      if (!factionColumns.has(column.name)) {
-        return map;
-      }
-      return map.set(column.name, `${(columnWidths.get(column.name) ?? 0) / totalFlexWidth}fr`);
-    }, new Map<`column:${string}`, string>());
-  }
-
-  private calculateTemporaryColumns(resizingColumn: SciColumnLike<T>): Map<`column:${string}`, string> {
-    const columnIndex = this.table().columns().indexOf(resizingColumn);
-    const columnWidths = this.columnWidths();
-    // Only allow columns to the right of the resized column to flex.
-    const fractionColumns = new Set(this.table().columns()
-      .filter((column, i) => i > columnIndex && column.isFraction && !column.userWidth)
-      .map(column => column.name));
-    const fractionRatios = this.calculateFractionRatios(fractionColumns);
-
-    return this.table().columns().reduce((map, column) => {
-      // 1. Check if column was already resized and use this value.
-      // 2. Check if column is a fraction, use the fraction ratio.
-      // 3. Use the computed column width in px.
-      const userWidth = column.userWidth ? `${column.userWidth}px` : null;
-      return map.set(column.name, userWidth ?? fractionRatios.get(column.name) ?? `${columnWidths.get(column.name)}px`);
-    }, new Map<`column:${string}`, string>());
-  }
-
-  private fromPx(value: string): number {
-    return Number.parseInt(value);
   }
 }

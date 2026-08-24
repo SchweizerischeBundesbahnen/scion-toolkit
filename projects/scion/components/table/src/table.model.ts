@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Signal} from '@angular/core';
+import {Signal, WritableSignal} from '@angular/core';
 import {SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
@@ -97,11 +97,12 @@ export interface SciColumn {
   filterable: Signal<boolean>;
   resizable: Signal<boolean>;
   header: Signal<string>;
-  width: string;
-  isFraction: boolean;
-  userWidth: number | undefined;
+  width: WritableSignal<string>;
   minWidth: number;
   maxWidth: number | undefined;
+  initialWidth: string;
+  resizing: WritableSignal<boolean>;
+  location: {x: number; width: number};
 }
 
 export interface SciStringColumn<T> extends SciColumn {
@@ -139,7 +140,7 @@ export interface SciTemplateColumn<T> extends SciColumn {
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
 }
 
-export type SciColumnLike<T> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
+export type SciColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
 
 /**
  * Mapped row, used as display state.
@@ -155,7 +156,7 @@ export interface SciRow<T> {
  */
 export interface SciCell {
   type: SciColumnType;
-  columnName: string;
+  columnName: `column:${string}`;
   name: string[];
 }
 

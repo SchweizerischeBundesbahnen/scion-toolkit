@@ -22,10 +22,9 @@
     </sci-table-body>
 
     <!-- Column splitters -->
-    <sci-column-splitters [columnWidths]="absoluteColumnWidths()"
-                          [hasOverflow]="hasHorizontalOverflow()"
-                          [rows]="rows()"
-                          (scrollBy)="onOverlayScrollBy($event)"/>
+    <sci-column-splitters [rows]="rows()"/>
+
+    <sci-column-bounds/>
   </sci-table-grid>
 </div>
 

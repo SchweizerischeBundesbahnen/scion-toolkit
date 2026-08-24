@@ -9,8 +9,8 @@ test.describe.only('sci-table async datasource', () => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
-    await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', type: 'string'});
+    await tablePage.setSlowDataSource(true);
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -28,8 +28,9 @@ test.describe.only('sci-table async datasource', () => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
-    await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', type: 'string'});
+    await tablePage.setRowCount(1000);
+    await tablePage.setSlowDataSource(true);
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -40,28 +41,31 @@ test.describe.only('sci-table async datasource', () => {
 
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 10000');
+    await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 1000');
   });
 
   test('should load first and last row correctly', async ({page}) => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
-    await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', type: 'string'});
+    await tablePage.setRowCount(1000);
+    await tablePage.setSlowDataSource(true);
 
-    await expect(table.column({name: 'column:name'}).cells.first()).toHaveText('Product 1');
+    // Wait for initial page to finish loading.
+    await expect(table.rows.locator('.skeleton').first()).toBeAttached();
+    await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
     await table.scrollTo({y: 'end'});
-    await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 10000');
+    await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 1000');
   });
 
   test('should show skeletons when applying sort while using async datasource', async ({page}) => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
-    await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', type: 'string'});
+    await tablePage.setSlowDataSource(true);
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -76,8 +80,8 @@ test.describe.only('sci-table async datasource', () => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
-    await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', type: 'string'});
+    await tablePage.setSlowDataSource(true);
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -92,8 +96,8 @@ test.describe.only('sci-table async datasource', () => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
-    await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', type: 'string'});
+    await tablePage.setSlowDataSource(true);
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -104,44 +108,45 @@ test.describe.only('sci-table async datasource', () => {
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
 
     await table.scrollTo({y: 0});
-    await expect(table.rows.locator('.skeleton').isVisible()).resolves.toBe(false);
+    await expect.poll(() => table.rows.locator('.skeleton').isVisible()).toBe(false);
 
     await table.scrollTo({y: 1500});
-    await expect(table.rows.locator('.skeleton').isVisible()).resolves.toBe(false);
+    await expect.poll(() => table.rows.locator('.skeleton').isVisible()).toBe(false);
   });
 
   test('should select over multiple pages', async ({page}) => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
-    await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', type: 'string'});
+    await tablePage.setRowCount(1000);
+    await tablePage.setSlowDataSource(true);
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await table.rows.first().click();
 
-    await table.scrollTo({y: 10_000});
+    await table.scrollTo({y: 'end'});
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
-    await table.rows.first().click({modifiers: ['Shift']});
+    await table.rows.last().click({modifiers: ['Shift']});
 
-    await expect(tablePage.selectedItems).toHaveText('345');
+    await expect(tablePage.selectionCount).toHaveText('1000', {timeout: 5000});
   });
 
   test('should select all items with ctrl+a', async ({page}) => {
     const tablePage = new TablePagePO(page);
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
-    await tablePage.setSlowDataSource(true);
     await tablePage.addColumn({name: 'column:name', type: 'string'});
+    await tablePage.setSlowDataSource(true);
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
     await expect(table.rows.locator('.skeleton').first()).not.toBeAttached();
     await table.locator.click();
     await page.keyboard.press('Control+A');
-    await expect(tablePage.selectedItems).toHaveText('10000');
+    await expect(tablePage.selectionCount).toHaveText('10000');
   });
 });

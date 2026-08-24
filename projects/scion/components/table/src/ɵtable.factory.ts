@@ -71,7 +71,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       throw Error('[ColumnDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
     }
 
-    this.columns.update(c => [...c, {...config, type}]);
+    this.columns.update(column => [...column, {...config, type}]);
     return this;
   }
 }

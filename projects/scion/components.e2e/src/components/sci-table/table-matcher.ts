@@ -45,19 +45,34 @@ export function expectTable(table: TablePO): TableMatcher {
         },
       }
     },
+    async toHaveVerticalOverflow(): Promise<void> {
+      await expect(table.locator.locator('sci-scrollbar[direction="vscroll"].overflow')).toBeAttached();
+    },
+    async toHaveHorizontalOverflow(): Promise<void> {
+      await expect(table.locator.locator('sci-scrollbar[direction="hscroll"].overflow')).toBeAttached();
+    },
     async toHaveVerticalScroll(): Promise<void> {
       await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
     },
-    async toHaveHorizontalOverflow(): Promise<void> {
-      await expect(table.locator.locator('sci-scrollbar.horizontal.overflow')).toBeAttached();
+    async toHaveHorizontalScroll(): Promise<void> {
+      await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
     },
     async toHaveColumnCount(count: number): Promise<void> {
-      await expect(table.locator.locator('sci-column-header')).toHaveCount(count);
+      await expect(table.locator.locator('sci-column')).toHaveCount(count);
     },
 
     not: {
+      async toHaveVerticalOverflow(): Promise<void> {
+        await expect(table.locator.locator('sci-scrollbar[direction="vscroll"].overflow')).not.toBeAttached();
+      },
+      async toHaveHorizontalOverflow(): Promise<void> {
+        await expect(table.locator.locator('sci-scrollbar[direction="hscroll"].overflow')).not.toBeAttached();
+      },
       async toHaveVerticalScroll(): Promise<void> {
         await expect.poll(() => table.scrollTop()).toBe(0);
+      },
+      async toHaveHorizontalScroll(): Promise<void> {
+        await expect.poll(() => table.scrollLeft()).toBe(0);
       },
     },
   };
@@ -76,13 +91,23 @@ export interface TableMatcher {
 
   column(locateBy: RequireOne<{name: `column:${string}`; index: number}>): ColumnMatcher;
 
+  toHaveVerticalOverflow(): Promise<void>;
+
   toHaveHorizontalOverflow(): Promise<void>;
 
   toHaveColumnCount(count: number): Promise<void>;
 
   toHaveVerticalScroll(): Promise<void>;
 
+  toHaveHorizontalScroll(): Promise<void>;
+
   not: {
+    toHaveVerticalOverflow(): Promise<void>;
+
+    toHaveHorizontalOverflow(): Promise<void>;
+
     toHaveVerticalScroll(): Promise<void>;
+
+    toHaveHorizontalScroll(): Promise<void>;
   };
 }

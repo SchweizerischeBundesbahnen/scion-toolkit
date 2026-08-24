@@ -89,6 +89,10 @@
         grid-area: 1 / 1 / -1 / -1; // Overlay should fill the whole table grid.
         z-index: 1; // required to overlap the table header, allowing resizing columns in the table header
       }
+
+      > sci-column-bounds {
+        grid-column: 1/-1;
+      }
     }
   }
 

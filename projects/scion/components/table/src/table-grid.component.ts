@@ -8,7 +8,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
+import {SciColumnService} from './column/column.service';
 
 /**
  * Represents a semantic element for the table body provided as slotted content.
@@ -16,6 +17,14 @@ import {Component} from '@angular/core';
 @Component({
   selector: 'sci-table-grid',
   template: '<ng-content/>',
+  providers: [
+    SciColumnService,
+  ],
+  host: {
+    '[style.--ɵsci-table-columns]': 'gridTemplateColumns()',
+  },
 })
 export class SciTableGridComponent {
+
+  protected readonly gridTemplateColumns = inject(SciColumnService).gridTemplateColumns;
 }

@@ -1,15 +1,14 @@
 @for (column of table().columns(); track column.name; let i = $index) {
   @if (column.resizable()) {
     <sci-splitter orientation="vertical"
-                  [class.resizing]="table().resizingState()?.column?.name === column.name"
+                  [class.resizing]="column.resizing()"
                   [attr.data-column]="column.name"
                   [style.grid-column]="i + 1"
                   (start)="onResizeStart(column)"
-                  (move)="onResize(column, sciElementRef.host, $event)"
+                  (move)="onResize(column, $event)"
                   (end)="onResizeEnd()"
                   (reset)="onResizeAuto(column)"
                   (mouseenter)="onMouseEnter()"
-                  (mouseleave)="onMouseLeave()"
-                  sciElementRef #sciElementRef="sciElementRef"/>
+                  (mouseleave)="onMouseLeave()"/>
   }
 }

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Locator} from '@playwright/test';
+import {Locator, Mouse} from '@playwright/test';
 import {ColumnPO} from './column.po';
 import {RowPO} from './row.po';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
@@ -87,19 +87,78 @@ export class ColumnSplitterPO {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
 
-  public async drag(distance: number): Promise<void> {
-    const splitterBounds = await this.bounds();
-    const tableBounds = await this._table.bounds();
+  /**
+   * Drags the splitter by the specified distance.
+   *
+   * Use `options` to control where to grab the splitter.
+   */
+  public async drag(distance: number, options?: {location: 'table-header' | 'table-body'}): Promise<void> {
+    const dragHandle = await this.startDrag(options);
+    await dragHandle.dragTo({deltaX: distance});
+    await dragHandle.release();
+  }
 
-    // Drag at header vcenter, because last splitter and scrollbar overlap.
-    await this.locator.page().mouse.move(splitterBounds.hcenter, tableBounds.vcenter);
-    await this.locator.page().mouse.down();
-    await this.locator.page().mouse.move(splitterBounds.hcenter + distance, tableBounds.vcenter, {steps: 20});
-    await this.locator.page().mouse.up();
+  /**
+   * Starts dragging the splitter.
+   *
+   * Use `options` to control where to grab the splitter.
+   *
+   * Use the returned drag handle to continue the drag operation.
+   */
+  public async startDrag(options?: {location: 'table-header' | 'table-body'}): Promise<DrageHandlePO> {
+    const splitterBounds = await this.bounds();
+    const x = splitterBounds.left;
+    const y = Math.floor(fromRect(await (options?.location === 'table-header' ? this._table.header : this._table.viewport).boundingBox()).vcenter);
+    const page = this.locator.page();
+
+    await page.mouse.move(x, y, {steps: 1});
+    await page.mouse.down();
+
+    return new DrageHandlePO(page.mouse, {x, y});
   }
 
   public async dblclick(): Promise<void> {
     await this.locator.dblclick();
+  }
+}
+
+export class DrageHandlePO {
+
+  private _x = 0;
+  private _y = 0;
+
+  constructor(private _mouse: Mouse, mousePosition: {x: number; y: number}) {
+    this._x = mousePosition.x;
+    this._y = mousePosition.y;
+  }
+
+  /**
+   * Drags this tab to the specified coordinate.
+   *
+   * The coordinate can be either absolute or relative to the current position.
+   */
+  public async dragTo(to: CoordinateOrDelta, options?: {steps?: number}): Promise<void> {
+    if ('x' in to) {
+      this._x = to.x!;
+    }
+    if ('y' in to) {
+      this._y = to.y!;
+    }
+    if ('deltaX' in to) {
+      this._x += to.deltaX!;
+    }
+    if ('deltaY' in to) {
+      this._y += to.deltaY!;
+    }
+
+    await this._mouse.move(this._x, this._y, {steps: options?.steps ?? 20});
+  }
+
+  /**
+   * Performs a drop, finishing the drag operation.
+   */
+  public async release(): Promise<void> {
+    await this._mouse.up();
   }
 }
 
@@ -148,3 +207,8 @@ export class ScrollbarThumbPO {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).height);
   }
 }
+
+/**
+ * Represents an absolute coordinate or a delta relative to the current position.
+ */
+export type CoordinateOrDelta = RequireOne<{x: number; y: number}> | RequireOne<{deltaX: number; deltaY: number}>;

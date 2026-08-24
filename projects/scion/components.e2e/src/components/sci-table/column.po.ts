@@ -5,15 +5,17 @@ import {RequireOne} from '@scion/toolkit/types';
 
 export class ColumnPO {
 
+  public readonly locator: Locator;
   public readonly filterField: Locator;
   public readonly splitter: ColumnSplitterPO;
-  public readonly locator: Locator;
+  public readonly header: Locator;
   public readonly cells: Locator;
 
   constructor(table: TablePO, locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
-    this.locator = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
+    this.locator = table.locator.locator('sci-column-bounds sci-column').locator(selectByColumn(locateBy));
+    this.header = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
     this.splitter = new ColumnSplitterPO(table.locator.locator('sci-column-splitters sci-splitter').locator(selectByColumn(locateBy)), table);
-    this.filterField = this.locator.locator('sci-column-filter');
+    this.filterField = this.header.locator('sci-column-filter');
     this.cells = table.rows.locator('sci-table-cell').locator(selectByColumn(locateBy));
   }
 
@@ -22,11 +24,11 @@ export class ColumnPO {
   }
 
   public async sort(): Promise<void> {
-    await this.locator.locator('button.e2e-column-sort').click();
+    await this.header.locator('button.e2e-column-sort').click();
   }
 
   public async clearFilter(): Promise<void> {
-    await this.locator.locator('button.e2e-clear').click();
+    await this.header.locator('button.e2e-clear').click();
   }
 
   public async filter(value: string): Promise<void> {
@@ -44,7 +46,7 @@ export class ColumnPO {
   }
 
   public async sortDirection(): Promise<'asc' | 'desc' | null> {
-    return (await this.locator.locator('button.e2e-column-sort').getAttribute('data-sort')) as 'asc' | 'desc' | null;
+    return (await this.header.locator('button.e2e-column-sort').getAttribute('data-sort')) as 'asc' | 'desc' | null;
   }
 }
 
