@@ -4,14 +4,8 @@
 - Native Focus für active Row
 - Tab order ist falsch: Da der header nach dem body in der DOM order kommt, wird der body vor dem header fokussiert, wenn man durchtabbt.
 - Der letzte splitter und die scrollbar sind bei einer 100% width table überlappend. Der splitter kann nur im header gedragged werden.
-- 
-- Zwei resizing tests failen noch mit dem neuen viewport
-  2 failed
-  projects/scion/components.e2e/src/components/sci-table/table.e2e-spec.ts:518:9 › sci-table › resizing › should auto resize to min-width
-  projects/scion/components.e2e/src/components/sci-table/table.e2e-spec.ts:655:9 › sci-table › resizing › should scroll viewport when wheeling on splitter
 
 ## Tests
-- Row Actions menu Offen
 - Viewport vergrössern / verkleinern
   - Beim vergrössern sollte die PageSize grösser werden, verkleinern sollte nichts machen
 
