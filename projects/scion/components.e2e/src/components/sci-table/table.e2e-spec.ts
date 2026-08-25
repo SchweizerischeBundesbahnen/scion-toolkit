@@ -1057,16 +1057,14 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-      await tablePage.addColumn({name: 'column:price', type: 'number'});
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'number'});
 
-      const sortButtons = table.locator.locator('.e2e-column-sort');
-      await sortButtons.nth(0).click();
-      await sortButtons.nth(1).click({modifiers: ['ControlOrMeta']});
+      await table.column({name: 'column:1'}).sort()
+      await table.column({name: 'column:2'}).sort({modifiers: ['ControlOrMeta']})
 
-      await expectTable(table).column({name: 'column:name'}).toBeSorted();
-      await expect(sortButtons.nth(0)).toHaveAttribute('data-sort', 'asc');
-      await expect(sortButtons.nth(1)).toHaveAttribute('data-sort', 'asc');
+      await expect.poll(() => table.column({name: 'column:1'}).sortDirection()).toEqual('asc')
+      await expect.poll(() => table.column({name: 'column:2'}).sortDirection()).toEqual('asc')
     });
 
     test('should retain filter after sorting', async ({page}) => {

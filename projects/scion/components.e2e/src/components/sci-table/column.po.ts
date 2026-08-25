@@ -10,12 +10,14 @@ export class ColumnPO {
   public readonly splitter: ColumnSplitterPO;
   public readonly header: Locator;
   public readonly cells: Locator;
+  public readonly sortButton: Locator;
 
   constructor(table: TablePO, locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
     this.locator = table.locator.locator('sci-column-bounds sci-column').locator(selectByColumn(locateBy));
     this.header = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
     this.splitter = new ColumnSplitterPO(table.locator.locator('sci-column-splitters sci-splitter').locator(selectByColumn(locateBy)), table);
     this.filterField = this.header.locator('sci-column-filter');
+    this.sortButton = this.header.locator('button.e2e-column-sort');
     this.cells = table.rows.locator('sci-table-cell').locator(selectByColumn(locateBy));
   }
 
@@ -23,8 +25,8 @@ export class ColumnPO {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).width);
   }
 
-  public async sort(): Promise<void> {
-    await this.header.locator('button.e2e-column-sort').click();
+  public async sort(options?: {modifiers?: Array<'Alt' | 'Control' | 'ControlOrMeta' | 'Meta' | 'Shift'>}): Promise<void> {
+    await this.sortButton.click({modifiers: options?.modifiers});
   }
 
   public async clearFilter(): Promise<void> {
@@ -46,7 +48,7 @@ export class ColumnPO {
   }
 
   public async sortDirection(): Promise<'asc' | 'desc' | null> {
-    return (await this.header.locator('button.e2e-column-sort').getAttribute('data-sort')) as 'asc' | 'desc' | null;
+    return (await this.sortButton.getAttribute('data-sort')) as 'asc' | 'desc' | null;
   }
 }
 

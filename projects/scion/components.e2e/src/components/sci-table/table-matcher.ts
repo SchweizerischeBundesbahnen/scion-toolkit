@@ -21,8 +21,13 @@ export function expectTable(table: TablePO): TableMatcher {
           await expect(async () => {
             const cells = await table.column(locateBy).cells.allTextContents()
               // Map boolean cells
-              .then(contents => contents.map(v => v === 'checkmark' ? 1 : v === 'clear' ? 0 : v))
-              .then(contents => contents.map(v => isNaN(+v) ? v : +v));
+              .then(contents => contents.map(cell => cell === 'checkmark' ? 1 : cell === 'clear' ? 0 : cell))
+              // Map number cells
+              .then(contents => contents.map(cell => isNaN(+cell) ? cell : +cell));
+
+            if (!cells.length) {
+              throw Error('[PageObjectError] Cannot assert sort order because no rows.');
+            }
 
             if (direction === 'asc') {
               expect(cells.every((cell, i) => i === 0 || cells.at(i - 1)! <= cell)).toBe(true);
