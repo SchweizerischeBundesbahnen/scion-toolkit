@@ -111,13 +111,6 @@ export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
     }
   }
 
-  protected onHeaderMouseWheel(event: WheelEvent): void {
-    // Prevent vertical scrolling on header, but not horizontal scrolling.
-    if (!event.shiftKey) {
-      event.preventDefault();
-    }
-  }
-
   /**
    * Scrolls viewport to the top, as soon as either filter or sort criteria change
    */

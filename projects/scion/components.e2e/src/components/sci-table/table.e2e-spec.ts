@@ -980,26 +980,6 @@ test.describe.only('sci-table', () => {
       // Expect splitter not to be visible.
       await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
     });
-
-    test('should scroll viewport when wheeling over splitter', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:2', type: 'string', width: '100px'});
-
-      const splitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
-      const viewportBounds = await table.bounds();
-
-      await page.mouse.move(splitterBounds.hcenter, viewportBounds.vcenter);
-      await expect(table.column({name: 'column:1'}).splitter.locator).toBeVisible();
-
-      await page.mouse.wheel(0, 250);
-
-      await expect.poll(() => table.scrollTop()).toBe(250);
-      await expect(table.column({name: 'column:1'}).splitter.locator).toBeVisible();
-    });
   });
 
   test.describe('Sorting', () => {
@@ -1593,25 +1573,6 @@ test.describe.only('sci-table', () => {
       await expect(table.row(10).rowActions).toBeVisible();
     });
 
-    test('should scroll viewport when wheeling on toolbar', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
-      await tablePage.setRowActions(true);
-
-      await table.row(10).hover();
-      await expect(table.row(10).rowActions).toBeVisible();
-
-      const actionBounds = await table.row(10).rowActionsBounds();
-      await table.row(10).rowActions.hover();
-      await page.mouse.move(actionBounds.hcenter, actionBounds.vcenter);
-      await page.mouse.wheel(0, 250);
-      await expect.poll(() => table.scrollTop()).toBe(250);
-    });
-
     test('should keep row actions visible when moving pointer over splitter', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -1839,6 +1800,164 @@ test.describe.only('sci-table', () => {
 
       // Expect vertical overflow.
       await expect(table.verticalScrollbar.locator).toBeVisible();
+    });
+  });
+
+  test.describe('Scrolling', () => {
+
+    test('should scroll viewport when wheeling on toolbar', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '1200px'});
+      await tablePage.setRowActions(true);
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await table.row(10).hover();
+      await expect(table.row(10).rowActions).toBeVisible();
+
+      const actionBounds = await table.row(10).rowActionsBounds();
+      await table.row(10).rowActions.hover();
+      await page.mouse.move(actionBounds.hcenter, actionBounds.vcenter);
+      await page.mouse.wheel(0, 250);
+      await expect.poll(() => table.scrollTop()).toBe(250);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+    });
+
+    test('should scroll viewport when wheeling on splitter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '1200px'});
+
+      const splitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+      const viewportBounds = await table.bounds();
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(splitterBounds.hcenter, viewportBounds.vcenter);
+      await expect(table.column({name: 'column:1'}).splitter.locator).toBeVisible();
+
+      await page.mouse.wheel(0, 250);
+
+      await expect.poll(() => table.scrollTop()).toBe(250);
+      await expect(table.column({name: 'column:1'}).splitter.locator).toBeVisible();
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+    });
+
+    test('should scroll viewport vertically when wheeling on table body', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
+      const tableBounds = await table.bounds();
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(tableBounds.hcenter, tableBounds.vcenter);
+      await page.mouse.wheel(0, 250);
+      await expect.poll(() => table.scrollTop()).toBe(250);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+    });
+
+    test('should scroll viewport horizontally when wheeling on table body with the shift-key pressed', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
+      const tableBounds = await table.bounds();
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(tableBounds.hcenter, tableBounds.vcenter);
+      await page.keyboard.down('Shift');
+      await page.mouse.wheel(0, 250);
+      await page.keyboard.up('Shift');
+      await expect.poll(() => table.scrollTop()).toBe(0);
+      await expect.poll(() => table.scrollLeft()).toBe(250);
+    });
+
+    test('should not scroll viewport vertically when wheeling on table header', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+      await tablePage.showHeader(true);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
+      const tableBounds = await table.bounds();
+      const tableHeaderBounds = fromRect(await table.header.boundingBox());
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(tableBounds.hcenter, tableHeaderBounds.vcenter);
+      await page.mouse.wheel(0, 250);
+
+      // Wait some time until wheeling ends.
+      await page.waitForTimeout(1000);
+
+      await expect.poll(() => table.scrollTop()).toBe(0);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+    });
+
+    test('should scroll viewport horizontally when wheeling on table header with the shift-key pressed', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+      await tablePage.showHeader(true);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
+      const tableBounds = await table.bounds();
+      const tableHeaderBounds = fromRect(await table.header.boundingBox());
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(tableBounds.hcenter, tableHeaderBounds.vcenter);
+      await page.keyboard.down('Shift');
+      await page.mouse.wheel(0, 250);
+      await page.keyboard.up('Shift');
+
+      // Wait some time until wheeling ends.
+      await page.waitForTimeout(1000);
+
+      await expect.poll(() => table.scrollTop()).toBe(0);
+      await expect.poll(() => table.scrollLeft()).toBe(250);
     });
   });
 

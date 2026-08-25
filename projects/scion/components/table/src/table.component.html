@@ -4,7 +4,7 @@
   <sci-table-grid>
     <!-- Table header -->
     @if (table.filterable() || table.headerVisible()) {
-      <sci-table-header (wheel)="onHeaderMouseWheel($event)">
+      <sci-table-header>
         @for (column of table.columns(); track column.name) {
           <sci-column-header [column]="column"/>
         }

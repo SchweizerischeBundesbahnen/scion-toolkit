@@ -16,6 +16,16 @@ import {Component} from '@angular/core';
 @Component({
   selector: 'sci-table-header',
   template: '<ng-content/>',
+  host: {
+    '(wheel)': 'onMouseWheel($event)',
+  },
 })
 export class SciTableHeaderComponent {
+
+  protected onMouseWheel(event: WheelEvent): void {
+    // Prevent vertical scrolling on header, but not horizontal scrolling.
+    if (!event.shiftKey) {
+      event.preventDefault();
+    }
+  }
 }
