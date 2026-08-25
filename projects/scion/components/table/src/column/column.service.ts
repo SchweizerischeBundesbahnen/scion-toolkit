@@ -9,7 +9,7 @@
  */
 
 import {SciColumnLike} from '../table.model';
-import {computed, effect, inject, Injectable, Signal, signal, WritableSignal} from '@angular/core';
+import {computed, inject, Injectable, Signal, signal, WritableSignal} from '@angular/core';
 import {clamp} from '@scion/toolkit/util';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciTableViewportRefDirective} from '../table-viewport-ref.directive';
@@ -31,10 +31,6 @@ export class SciColumnService {
    */
   public readonly gridTemplateColumns = this.computeGridTemplateColumns();
 
-  constructor() {
-    this.notifyOnColumnResize();
-  }
-
   /**
    * Computes the CSS `grid-template-columns` value.
    *
@@ -42,19 +38,18 @@ export class SciColumnService {
    */
   private computeGridTemplateColumns(): Signal<string> {
     return computed(() => {
-      const columns = this._table().columns();
-
-      if (this._resizingState()) {
-        const absoluteColumnWidths = this._resizingState()!.columnWidths();
-        return columns
-          .map(column => `${absoluteColumnWidths.get(column.name)}px`)
-          .join(' ');
-      }
-      else {
-        return columns
-          .map(column => column.width().endsWith('fr') ? cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width()}) : column.width())
-          .join(' ');
-      }
+      return this._table().columns()
+        .map(column => {
+          const columnWidth = this._resizingState()?.columnWidths()?.get(column.name);
+          if (columnWidth !== undefined) {
+            return `${columnWidth}px`;
+          }
+          if (column.width().endsWith('fr')) {
+            return cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width()});
+          }
+          return column.width();
+        })
+        .join(' ');
     });
   }
 
@@ -67,41 +62,36 @@ export class SciColumnService {
       column.width.set(`${column.location.width}px`);
     });
 
-    const columnWidth = column.location.width;
-    const columnWidths = signal(this.calculateAbsoluteColumnWidths(column, columnWidth));
-    this._resizingState.set({column, columnWidths});
+    column.resizing.set(true);
+    this._resizingState.set({column, columnWidths: signal(undefined)});
   }
 
   public resize(columnWidth: number): void {
     const state = this._resizingState()!;
     const clampedWidth = clamp(columnWidth, {min: state.column.minWidth, max: state.column.maxWidth ?? columnWidth});
 
-    if (clampedWidth !== state.columnWidths().get(state.column.name)) {
-      const columnWidths = this.calculateAbsoluteColumnWidths(state.column, clampedWidth);
+    if (clampedWidth !== state.columnWidths()?.get(state.column.name)) {
+      const columnWidths = this.calculateColumnWidths(state.column, clampedWidth);
       state.columnWidths.set(columnWidths);
     }
   }
 
   public endResize(): void {
     const state = this._resizingState()!;
-    const columns = this._table().columns();
 
-    const totalFlexWidth = columns
-      .filter(column => column !== state.column)
-      .filter(column => column.width().endsWith('fr'))
-      .filter(column => column.location.width < (column.maxWidth ?? Infinity))
-      .reduce((sum, column) => sum + column.location.width, 0);
+    this._table().columns().forEach(column => {
+      const width = this._resizingState()!.columnWidths()!.get(column.name);
 
-    columns.forEach(column => {
       if (column.name === state.column.name) {
-        column.width.set(`${column.location.width}px`);
+        column.width.set(`${width}px`);
       }
-      if (column.width().endsWith('fr')) {
-        column.width.set(`${column.location.width / totalFlexWidth}fr`);
+      else if (column.width().endsWith('fr')) {
+        column.width.set(`${width}fr`);
       }
       return column;
     });
 
+    state.column.resizing.set(false);
     this._resizingState.set(undefined);
   }
 
@@ -110,7 +100,7 @@ export class SciColumnService {
    *
    * Remaining viewport space is distributed proportionally among flex-sized (`fr`) columns using their current width ratio.
    */
-  private calculateAbsoluteColumnWidths(columnToResize: SciColumnLike, newColumnWidth: number): Map<`column:${string}`, number> {
+  private calculateColumnWidths(columnToResize: SciColumnLike, newColumnWidth: number): Map<`column:${string}`, number> {
     const columns = this._table().columns();
     const viewportWidth = this._tableViewport.clientWidth;
 
@@ -145,19 +135,6 @@ export class SciColumnService {
       return map.set(column.name, column.location.width);
     }, new Map<`column:${string}`, number>());
   }
-
-  /**
-   * Notifies {@link SciColumn} when resizing it.
-   */
-  private notifyOnColumnResize(): void {
-    effect(onCleanup => {
-      const column = this._resizingState()?.column;
-      if (column) {
-        column.resizing.set(true);
-        onCleanup(() => column.resizing.set(false));
-      }
-    });
-  }
 }
 
 /**
@@ -171,5 +148,5 @@ interface ColumnResizingState {
   /**
    * Map of column names to their current pixel widths.
    */
-  columnWidths: WritableSignal<Map<`column:${string}`, number>>;
+  columnWidths: WritableSignal<Map<`column:${string}`, number> | undefined>;
 }

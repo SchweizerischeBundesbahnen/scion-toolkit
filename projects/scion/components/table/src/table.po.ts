@@ -35,7 +35,7 @@ export class TablePO {
     return this.debugElement.queryAll(By.css(`sci-column-header`)).map(element => new ColumnPO(element, this._fixture));
   }
 
-  public get overlay(): ColumnSplittersComponent<unknown> {
+  public get splitters(): ColumnSplittersComponent<unknown> {
     return this.debugElement.query(By.directive(ColumnSplittersComponent)).componentInstance as ColumnSplittersComponent<unknown>;
   }
 
@@ -44,7 +44,7 @@ export class TablePO {
   }
 
   public async autoResize<T>(column: SciColumnLike<T>): Promise<void> {
-    await this.overlay.onResizeAuto(column as SciColumnLike<unknown>);
+    await this.splitters.onResizeAuto(column as SciColumnLike);
     await this._fixture.whenStable();
   }
 

@@ -112,7 +112,10 @@ export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
   }
 
   protected onHeaderMouseWheel(event: WheelEvent): void {
-    event.preventDefault(); // TODO document: prevent scrolling on header; viewport contains sticky header, but should not be scrollable
+    // Prevent vertical scrolling on header, but not horizontal scrolling.
+    if (!event.shiftKey) {
+      event.preventDefault();
+    }
   }
 
   /**

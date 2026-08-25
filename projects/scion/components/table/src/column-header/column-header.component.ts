@@ -8,12 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, input} from '@angular/core';
 import {SciColumnLike} from '../table.model';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciIconComponent} from '../../../icon/src/icon.component';
-import {boundingClientRect} from '@scion/components/dimension';
 import {SciTextPipe} from '@scion/components/text';
 
 @Component({
@@ -36,11 +35,8 @@ export class ColumnHeaderComponent<T> {
   public readonly column = input.required<SciColumnLike<T>>();
 
   protected readonly table = inject(ɵSCI_TABLE);
-  private readonly _element = inject(ElementRef);
 
   protected readonly columnSort = computed(() => this.table().sortCriteria().find(s => s.columnName === this.column().name)?.direction);
-
-  public readonly boundingClientRect = boundingClientRect(this._element.nativeElement as HTMLElement);
 
   protected onSort(event: PointerEvent): void {
     if (!this.column().sortable()) {

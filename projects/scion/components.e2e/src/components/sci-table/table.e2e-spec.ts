@@ -884,22 +884,121 @@ test.describe.only('sci-table', () => {
       await dragHandle.release();
       await expect(table.row(3).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
     });
+  });
 
-    test('should not scroll viewport when wheeling on splitter', async ({page}) => {
+  test.describe('Splitters', () => {
+
+    test('should display splitter on hover', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
 
-      const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
+      const scrollbarBounds = await table.verticalScrollbar.bounds();
+
+      // Move mouse beside slitter splitter of column 1.
+      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+      await page.mouse.move(columnSplitterBounds.hcenter + 10, scrollbarBounds.vcenter);
+
+      // Expect splitter not to be visible.
+      await expect(table.column({name: 'column:1'}).splitter.locator).toHaveCSS('opacity', '0');
+
+      // Move mouse over splitter of column 1.
+      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+
+      // Expect splitter to be visible.
+      await expect(table.column({name: 'column:1'}).splitter.locator).toHaveCSS('opacity', '1');
+    });
+
+    /**
+     * Verifies that splitters are still not displayed also if the scroll operation temporarily stops.
+     */
+    test('should not display splitter during scroll if not active scrolling', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      const scrollbarBounds = await table.verticalScrollbar.bounds();
+
+      // Click scrollbar thumb.
+      await table.verticalScrollbar.thumb.locator.hover();
+      await page.mouse.down();
+
+      // Move mouse over splitter of column 1.
+      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+
+      // Wait some time to simulate no active scrolling, but still not completed scrolling.
+      await page.waitForTimeout(1000);
+
+      // Expect splitter not to be visible.
+      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+
+      // Move mouse over splitter of column 2.
+      const columnSplitterBounds2 = await table.column({name: 'column:2'}).splitter.bounds();
+      await page.mouse.move(columnSplitterBounds2.hcenter, scrollbarBounds.vcenter);
+
+      // Expect splitter not to be visible.
+      await expect(table.column({name: 'column:2'}).splitter.locator).not.toBeVisible();
+    });
+
+    test('should not display splitter when scrolling via scrollbar', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      const scrollbarBounds = await table.verticalScrollbar.bounds();
+
+      // Click scrollbar thumb.
+      await table.verticalScrollbar.thumb.locator.hover();
+      await page.mouse.down();
+
+      // Move mouse over splitter of column 1.
+      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+
+      // Expect splitter not to be visible.
+      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+
+      // Scroll viewport to the end.
+      void page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.bottom); // do not await scrolling
+
+      // Expect splitter not to be visible.
+      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+
+      // Expect viewport to be scrolled.
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      // Expect splitter not to be visible.
+      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+    });
+
+    test('should scroll viewport when wheeling over splitter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '100px'});
+
+      const splitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
       const viewportBounds = await table.bounds();
 
       await page.mouse.move(splitterBounds.hcenter, viewportBounds.vcenter);
+      await expect(table.column({name: 'column:1'}).splitter.locator).toBeVisible();
 
       await page.mouse.wheel(0, 250);
-      await expect.poll(() => table.scrollTop()).toBe(0);
+
+      await expect.poll(() => table.scrollTop()).toBe(250);
+      await expect(table.column({name: 'column:1'}).splitter.locator).toBeVisible();
     });
   });
 
@@ -910,15 +1009,15 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.addColumn({name: 'column:string', type: 'string'});
 
       // Sort ascending.
-      await table.column({name: 'column:name'}).sort();
-      await expectTable(table).column({name: 'column:price'}).toBeSorted();
+      await table.column({name: 'column:string'}).sort();
+      await expectTable(table).column({name: 'column:string'}).toBeSorted('asc');
 
       // Sort descending.
-      await table.column({name: 'column:name'}).sort();
-      await expectTable(table).column({name: 'column:price'}).toBeSorted('desc');
+      await table.column({name: 'column:string'}).sort();
+      await expectTable(table).column({name: 'column:string'}).toBeSorted('desc');
     });
 
     test('should sort number column ascending and descending', async ({page}) => {
@@ -926,15 +1025,15 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:price', type: 'number'});
+      await tablePage.addColumn({name: 'column:number', type: 'number'});
 
       // Sort ascending.
-      await table.column({name: 'column:price'}).sort();
-      await expectTable(table).column({name: 'column:price'}).toBeSorted();
+      await table.column({name: 'column:number'}).sort();
+      await expectTable(table).column({name: 'column:number'}).toBeSorted('asc');
 
       // Sort descending.
-      await table.column({name: 'column:price'}).sort();
-      await expectTable(table).column({name: 'column:price'}).toBeSorted('desc');
+      await table.column({name: 'column:number'}).sort();
+      await expectTable(table).column({name: 'column:number'}).toBeSorted('desc');
     });
 
     test('should sort boolean column ascending and descending', async ({page}) => {
@@ -942,15 +1041,15 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:inStock', type: 'boolean'});
+      await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
 
       // Sort ascending: false values first.
-      await table.column({name: 'column:inStock'}).sort();
-      await expectTable(table).column({name: 'column:inStock'}).toBeSorted();
+      await table.column({name: 'column:boolean'}).sort();
+      await expectTable(table).column({name: 'column:boolean'}).toBeSorted('asc');
 
       // Sort descending: true values first.
-      await table.column({name: 'column:inStock'}).sort();
-      await expectTable(table).column({name: 'column:inStock'}).toBeSorted('desc');
+      await table.column({name: 'column:boolean'}).sort();
+      await expectTable(table).column({name: 'column:boolean'}).toBeSorted('desc');
     });
 
     test('should sort multiple columns with ctrl or meta', async ({page}) => {
@@ -1601,6 +1700,9 @@ test.describe.only('sci-table', () => {
 
   test.describe('Scrollbar', () => {
 
+    /**
+     * Verifies that splitters do not cover scrollbars.
+     */
     test('should overlap column splitters', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -1706,6 +1808,9 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.scrollLeft()).toEqual(0);
     });
 
+    /**
+     * Verifies the table not to have a horizontal overflow if enough horizontal space.
+     */
     test('should not have horizontal overflow', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -1736,38 +1841,6 @@ test.describe.only('sci-table', () => {
 
       // Expect vertical overflow.
       await expect(table.verticalScrollbar.locator).toBeVisible();
-    });
-
-    test('should not display splitters while not moving thumb but keep pressing it', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'column:1', type: 'string'});
-      await tablePage.addColumn({name: 'column:2', type: 'string'});
-
-      const scrollbarBounds = await table.verticalScrollbar.bounds();
-
-      // Click scrollbar thumb.
-      await table.verticalScrollbar.thumb.locator.hover();
-      await page.mouse.down();
-
-      // Move mouse over splitter of column 1.
-      const columnSplitterBounds1 = await table.column({name: 'column:1'}).splitter.bounds();
-      await page.mouse.move(columnSplitterBounds1.hcenter, scrollbarBounds.vcenter);
-
-      // Wait some time until scroll events end.
-      await page.waitForTimeout(1000);
-
-      // Expect splitter not to be visible.
-      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
-
-      // Move mouse over splitter of column 2.
-      const columnSplitterBounds2 = await table.column({name: 'column:2'}).splitter.bounds();
-      await page.mouse.move(columnSplitterBounds2.hcenter, scrollbarBounds.vcenter);
-
-      // Expect splitter not to be visible.
-      await expect(table.column({name: 'column:2'}).splitter.locator).not.toBeVisible();
     });
   });
 

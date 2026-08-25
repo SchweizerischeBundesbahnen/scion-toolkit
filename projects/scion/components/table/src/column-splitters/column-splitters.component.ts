@@ -13,7 +13,6 @@ import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitte
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciColumnLike} from '../table.model';
 import {TableRowComponent} from '../table-row/table-row.component';
-import {animationFrameScheduler} from 'rxjs';
 import {clamp} from '@scion/toolkit/util';
 import {SciColumnService} from '../column/column.service';
 
@@ -26,14 +25,10 @@ export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
   imports: [
     SciSplitterComponent,
   ],
-  host: {
-    '(wheel)': 'onMouseWheel($event)', // prevent scrolling on splitter
-  },
 })
 export class ColumnSplittersComponent<T> {
 
   public readonly rows = input.required<ReadonlyArray<TableRowComponent<unknown>>>();
-  public readonly viewport = input.required<HTMLElement>();
 
   protected readonly table = inject(ɵSCI_TABLE);
 
@@ -67,9 +62,6 @@ export class ColumnSplittersComponent<T> {
 
     this._columnService.startResize(column);
     this._columnService.resize(packedWidth);
-
-    // Wait until the resize is reflected in the DOM.
-
     this._columnService.endResize();
   }
 
@@ -85,9 +77,5 @@ export class ColumnSplittersComponent<T> {
     if (!this.table().resizing()) {
       this.table().hoveredIndex.set(-1);
     }
-  }
-
-  protected onMouseWheel(event: WheelEvent): void {
-    event.preventDefault();
   }
 }

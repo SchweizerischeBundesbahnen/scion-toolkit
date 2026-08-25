@@ -1,6 +1,6 @@
 @let table = this.table();
 
-<div class="viewport e2e-viewport" #viewport>
+<div class="viewport e2e-viewport" #viewport sciTableViewportRef>
   <sci-table-grid>
     <!-- Table header -->
     @if (table.filterable() || table.headerVisible()) {
@@ -24,6 +24,7 @@
     <!-- Column splitters -->
     <sci-column-splitters [rows]="rows()"/>
 
+    <!-- Column Bounds -->
     <sci-column-bounds/>
   </sci-table-grid>
 </div>

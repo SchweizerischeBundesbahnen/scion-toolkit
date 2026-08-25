@@ -276,7 +276,7 @@ export default class SciTablePageComponent {
 
   protected onColumnsReset(): void {
     sessionStorage.removeItem('scion.components.table:companies');
-    this._router.navigate(['/']).then(() => this._router.navigate(['/sci-table']));
+    void this._router.navigate(['/']).then(() => this._router.navigate(['/sci-table']));
   }
 }
 
