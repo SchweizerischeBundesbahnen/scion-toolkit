@@ -12,6 +12,8 @@
 
     > sci-table {
       flex: 1 1 0;
+      border: 1px solid var(--sci-color-border);
+      box-sizing: content-box;
 
       @container style(--table-page-height) {
         flex: none;

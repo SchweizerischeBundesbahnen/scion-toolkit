@@ -48,8 +48,14 @@ export class TablePO {
     return new ColumnPO(this, locateBy);
   }
 
-  public bounds(): Promise<DomRect> {
-    return waitUntilStable(async () => fromRect(await this.viewport.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
+  /**
+   * Returns the bounding box without borders (content-box).
+   */
+  public async bounds(): Promise<DomRect> {
+    return waitUntilStable(async () => fromRect(await this.locator.evaluate(element => {
+      const {x, y} = element.getBoundingClientRect();
+      return new DOMRect(x + element.clientLeft, y + element.clientTop, element.clientWidth, element.clientHeight);
+    })), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
 
   public async scrollTo(scrollTo: {x?: number | 'start' | 'end'; y?: number | 'start' | 'end'}): Promise<void> {

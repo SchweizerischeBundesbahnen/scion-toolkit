@@ -1,7 +1,6 @@
 :host {
   display: grid;
   grid-auto-rows: var(--sci-table-header-height);
-  border-top: var(--sci-table-border-size) solid var(--sci-table-border-color);
   user-select: none;
 
   // Prevent hovering header while resizing.

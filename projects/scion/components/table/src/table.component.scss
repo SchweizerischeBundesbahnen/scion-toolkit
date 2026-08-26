@@ -6,7 +6,6 @@
   background-color: var(--sci-table-background-color);
   overflow: hidden; // viewport should not grow beyond host height
   position: relative; // positioning context for scrollbars
-  box-sizing: border-box;
 
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
@@ -15,6 +14,7 @@
     overflow: auto;
     scrollbar-width: none;
     isolation: isolate; // Scope z-indices to this component so subsequent DOM elements naturally render on top of the table.
+    box-sizing: border-box; // must not be set on sci-table level for the application to control box sizing if setting a table border.
 
     // Indicate if table toolbar is not visible.
     &:not(:has(sci-table-header)) {

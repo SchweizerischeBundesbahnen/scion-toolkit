@@ -549,7 +549,7 @@ test.describe.only('sci-table', () => {
       await expect(table.column({name: 'column:4'}).splitter.locator).toBeAttached();
 
       // Verify splitters to be at correct position.
-      const tableLeft = await table.locator.boundingBox().then(bounds => bounds!.x) - 1; // -1 because splitters are positioned at the end of cell content
+      const tableLeft = await table.bounds().then(bounds => bounds!.x) - 1; // -1 because splitters are positioned at the end of cell content
       expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100);
       expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300);
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400);
@@ -1985,7 +1985,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
-      await expect.poll(() => table.locator.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(500);
 
       // Change width.
@@ -1994,7 +1994,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
-      await expect.poll(() => table.locator.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
     });
 
@@ -2011,7 +2011,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
-      await expect.poll(() => table.locator.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toEqual(500);
 
@@ -2021,7 +2021,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
-      await expect.poll(() => table.locator.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
     });
 
