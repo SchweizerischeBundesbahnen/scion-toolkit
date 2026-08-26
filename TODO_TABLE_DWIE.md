@@ -1,39 +1,44 @@
-TODO TABLE
-
-- check whether column name must be unique
-- is loader called in reactive context or injection context -> dispose injection context
-
-- prevent flickering when resizing in table header
-
-- add test to not display splitters during scrolling, also if only pressing the thumb
-- Add test that resizable can be overriden hat component level
-- add test to have stable column width when scrolling a column with different cell content length
-- add test to scroll viewport horizontally over header
-- add test to not scroll viewport vertically over header
-
-- moving splitters fast causes pointer mismatch
-- change default that filters are not visible by default
-- add test to prevent vertical scrolling while hovering the header, but not horizontal scrolling
-- resource als datasource?
-- icon column?
-- cell alignment?
--
-
-TODO Styling
-- Background color should be transparent (peripheral, non-peripheral)
-- Hide splitter when hovering row actions
-- background color of row actions
-- animate skeletons
-
+TODO TABLE DWIE/MARC
+====================
 
 Pending
+- is loader called in reactive context or injection context -> dispose injection context
 - Tastatursteuerung
 - Ctrl-End, Ctrl-Home
 - PageUp, PageDown
 - How To (Dokumentation)
 - Injection Context in Loader (für Cleanup)
 
-rename header to label (ist das label des headers, header ist alles)
+Tests
+- Add test that resizable can be overriden hat component level
+
+
+Bugs
+- BufferSize 1 geht nicht
+- bgcolor row actions im dark theme
+- ensure unique column name (challenge of auto-named rows)
+- change default that filters are not visible by default
+
+Feature für nächstes PI
+- Resource als datasource?
+- Icon column?
+- Cell alignment (left, right, center)
+- Workbench active view/part color (selection, active row color)
+
+Nice
+- Umstellung Test für async Datasource als e2e tests
+- column header zu column label
+
+TODO Styling
+- Background color should be transparent (peripheral, non-peripheral)
+- Hide splitter when hovering row actions
+- background color of row actions
+- animate skeletons
+- index auf context wegen row styling (zebra style)
+
+
+
+
 
 //   // 1. Check if column was already resized and use this value.
 //   // 2. Check if column is a fraction, use the fraction ratio.
