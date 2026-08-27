@@ -97,11 +97,11 @@ test.describe.only('sci-table', () => {
       await expectRow(table.row(0)).toBeAttached();
       const count = await table.rows.count();
 
-      await tablePage.setRowSize(50);
+      await tablePage.setRowHeight(50);
       await expect.poll(() => table.rows.first().boundingBox().then(b => b?.height)).toBe(50);
       await expect.poll(() => table.rows.count()).toBeLessThan(count);
 
-      await tablePage.setRowSize(20);
+      await tablePage.setRowHeight(20);
       await expect.poll(() => table.rows.first().boundingBox().then(b => b?.height)).toBe(20);
       await expect.poll(() => table.rows.count()).toBeGreaterThan(count);
     });
@@ -2025,7 +2025,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
     });
 
-    test('should shrink viewport-client instantly if scrolled to the end and row count drops (e.g., when clearing all rows) ', async ({page}) => {
+    test('should shrink viewport-client instantly if scrolled to the end and row count drops (e.g., when clearing all rows)', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -2033,7 +2033,7 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setRowCount(100_000);
-      await tablePage.setRowSize(20);
+      await tablePage.setRowHeight(20);
       await tablePage.setHeight(500);
       await waitUntilStable(() => table.rows.count());
 

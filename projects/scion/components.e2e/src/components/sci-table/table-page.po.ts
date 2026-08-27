@@ -23,8 +23,8 @@ export class TablePagePO {
   public readonly table: Locator;
   public readonly selectionCount: Locator;
 
-  constructor(private _page: Page) {
-    this.locator = this._page.locator('app-table-page');
+  constructor(public page: Page) {
+    this.locator = this.page.locator('app-table-page');
     this.properties = this.locator.locator('aside.e2e-properties');
     this.tableState = this.properties.locator('section.e2e-table-state ');
     this.tabbar = this.properties.locator('sci-tabbar');
@@ -34,16 +34,16 @@ export class TablePagePO {
 
   public async navigate(options?: {tableStorage?: true}): Promise<void> {
     if (options?.tableStorage) {
-      await this._page.goto(`?sci-table-storage${PATH.substring(1)}`);
+      await this.page.goto(`?sci-table-storage${PATH.substring(1)}`);
     }
     else {
-      await this._page.goto(PATH);
+      await this.page.goto(PATH);
     }
   }
 
   public async reload(options?: {tableStorage?: true}): Promise<void> {
     // Do not use `Page.reload()` to preserve options.
-    await this._page.goto('about:blank').then(() => this.navigate(options));
+    await this.page.goto('about:blank').then(() => this.navigate(options));
   }
 
   public async setFilterable(checked: boolean): Promise<void> {
@@ -86,9 +86,9 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-width').fill(width.toString());
   }
 
-  public async setRowSize(rowSize: number): Promise<void> {
+  public async setRowHeight(rowHeight: number): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-row-size').fill(rowSize.toString());
+    await this.properties.locator('input.e2e-row-height').fill(rowHeight.toString());
   }
 
   public async setRowCount(rowCount: number): Promise<void> {

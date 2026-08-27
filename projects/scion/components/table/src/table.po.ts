@@ -9,99 +9,100 @@
  */
 
 import {ComponentFixture} from '@angular/core/testing';
-import {DebugElement} from '@angular/core';
-import {By} from '@angular/platform-browser';
-import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
-import {SciColumnLike} from './table.model';
+import {RequireOne} from '@scion/toolkit/types';
+import {waitUntilStable} from './testing/testing.util';
 
 export class TablePO {
 
-  constructor(private _fixture: ComponentFixture<unknown>) {
-  }
+  public readonly element: ShadowRoot;
 
-  public get debugElement(): DebugElement {
-    return this._fixture.debugElement;
+  constructor(fixture: ComponentFixture<unknown>) {
+    const element = fixture.debugElement.nativeElement as Element;
+    this.element = element.tagName === 'SCI-TABLE' ? element.shadowRoot! : element.querySelector('sci-table')!.shadowRoot!;
   }
 
   public get viewport(): HTMLElement {
-    return this.debugElement.query(By.css('.e2e-viewport')).nativeElement as HTMLElement;
+    return this.element.querySelector('div.e2e-viewport')!;
   }
 
-  public get rows(): Array<RowPO> {
-    return this.debugElement.queryAll(By.css(`sci-table-row`)).map(element => new RowPO(element, this._fixture));
+  public get rows(): RowPO[] {
+    return [...this.element.querySelectorAll<HTMLElement>('sci-table-row')].map(element => new RowPO(element));
   }
 
-  public get columns(): Array<ColumnPO> {
-    return this.debugElement.queryAll(By.css(`sci-column-header`)).map(element => new ColumnPO(element, this._fixture));
+  public get columns(): ColumnPO[] {
+    return [...this.element.querySelectorAll('sci-column')]
+      .map(element => element.getAttribute('data-column') as `column:${string}`)
+      .map((name, i) => new ColumnPO(name, i, this));
   }
 
-  public get splitters(): ColumnSplittersComponent<unknown> {
-    return this.debugElement.query(By.directive(ColumnSplittersComponent)).componentInstance as ColumnSplittersComponent<unknown>;
+  public column(locateBy: RequireOne<{name: `column:${string}`; header: string; index: number}>): ColumnPO | undefined {
+    return this.columns.find(column => {
+      if (locateBy.name !== undefined && column.name !== locateBy.name) {
+        return false;
+      }
+      if (locateBy.index !== undefined && column.index !== locateBy.index) {
+        return false;
+      }
+      if (locateBy.header !== undefined && column.header !== locateBy.header) {
+        return false;
+      }
+      return true;
+    });
   }
 
   public get scrollTop(): number {
     return this.viewport.scrollTop;
   }
 
-  public async autoResize<T>(column: SciColumnLike<T>): Promise<void> {
-    await this.splitters.onResizeAuto(column as SciColumnLike);
-    await this._fixture.whenStable();
-  }
-
-  public getColumnByHeader(columnName: string): ColumnPO | undefined {
-    return this.columns.find(column => column.header === columnName);
-  }
-
-  public columnEntries(columnName: string): Array<string> {
-    const index = this.getColumnIndexByName(columnName);
-    return this.rows.map(row => row.cells[index]!.value);
-  }
-
-  public clickRowAction(cssClass: string): void {
-    (this.debugElement.query(By.css(`button.${cssClass}`)).nativeElement as HTMLElement).click();
-  }
-
   public async scrollY(offset: number): Promise<void> {
-    this.viewport.scrollTo(this.viewport.scrollLeft, this.viewport.scrollTop + offset);
+    this.viewport.scrollTo({top: this.viewport.scrollTop + offset});
     this.viewport.dispatchEvent(new Event('scroll'));
-    await this._fixture.whenStable();
+    await this.waitUntilStable();
   }
 
-  private getColumnIndexByName(columnName: string): number {
-    return this.columns.findIndex(column => column.header === columnName);
+  public async waitUntilStable(): Promise<void> {
+    await waitUntilStable(() => this.rows.length);
   }
 }
 
 export class ColumnPO {
 
-  constructor(private _debugElement: DebugElement, private _fixture: ComponentFixture<unknown>) {
-  }
+  private readonly _columnElement: HTMLElement;
+  private readonly _headerElement: HTMLElement | null;
 
-  public get debugElement(): DebugElement {
-    return this._debugElement;
-  }
-
-  public get nativeElement(): HTMLButtonElement {
-    return this.debugElement.nativeElement as HTMLButtonElement;
+  constructor(public name: `column:${string}`, public index: number, private _table: TablePO) {
+    this._columnElement = this._table.element.querySelector(`sci-column[data-column="${this.name}"]`)!;
+    this._headerElement = this._table.element.querySelector(`sci-column-header[data-column="${this.name}"]`);
   }
 
   public get header(): string | undefined {
-    return this.nativeElement.querySelector('.text')?.textContent.trim();
+    return this._headerElement?.querySelector('.text')?.textContent.trim();
   }
 
   public get width(): number {
-    return this.nativeElement.getBoundingClientRect().width;
+    return this._columnElement.getBoundingClientRect().width;
+  }
+
+  public get splitter(): HTMLElement {
+    return this._table.element.querySelector(`sci-splitter[data-column="${this.name}"]`)!;
   }
 
   public async toggleSort(): Promise<void> {
-    const sortButton: HTMLElement = this.nativeElement.querySelector('.e2e-column-sort')!;
+    if (!this._headerElement) {
+      throw Error('[PageObjectError] Table without header cannot be sorted.');
+    }
+
+    const sortButton: HTMLElement = this._headerElement.querySelector('.e2e-column-sort')!;
     sortButton.click();
-    await this._fixture.whenStable();
+    await this._table.waitUntilStable();
   }
 
   public async filter(text: string): Promise<void> {
-    const filterInput: HTMLInputElement | null = this.nativeElement.querySelector('sci-column-filter input');
-    const filterSelect: HTMLSelectElement | null = this.nativeElement.querySelector('sci-column-filter select');
+    if (!this._headerElement) {
+      throw Error('[PageObjectError] Table without header cannot be filtered.');
+    }
+    const filterInput: HTMLInputElement | null = this._headerElement.querySelector('sci-column-filter input');
+    const filterSelect: HTMLSelectElement | null = this._headerElement.querySelector('sci-column-filter select');
 
     if (filterInput) {
       filterInput.value = text;
@@ -112,66 +113,68 @@ export class ColumnPO {
       filterSelect.dispatchEvent(new Event('change'));
     }
 
-    // wait for debounce
+    // Wait for debounce.
     await new Promise(resolve => setTimeout(resolve, 210));
 
-    await this._fixture.whenStable();
+    await this._table.waitUntilStable();
+  }
+
+  public async pack(): Promise<void> {
+    this.splitter.dispatchEvent(new MouseEvent('dblclick'));
+    await this._table.waitUntilStable();
+  }
+
+  public async values(): Promise<string[]> {
+    await this._table.waitUntilStable();
+    return this._table.rows.map(row => row.cells[this.index]!.value);
   }
 }
 
 export class RowPO {
 
-  constructor(private _debugElement: DebugElement, private fixture: ComponentFixture<unknown>) {
-  }
-
-  public get debugElement(): DebugElement {
-    return this._debugElement;
-  }
-
-  public get nativeElement(): HTMLButtonElement {
-    return this.debugElement.nativeElement as HTMLButtonElement;
+  constructor(public element: HTMLElement) {
   }
 
   public get cells(): Array<CellPO> {
-    return this.debugElement.queryAll(By.css('sci-table-cell')).map(element => new CellPO(element));
+    return [...this.element.querySelectorAll<HTMLElement>('sci-table-cell')].map(element => new CellPO(element));
   }
 
   public hover(): void {
-    this.nativeElement.dispatchEvent(new MouseEvent('mouseenter'));
+    this.element.dispatchEvent(new MouseEvent('mouseenter'));
   }
 
   public dblClick(): void {
-    this.nativeElement.dispatchEvent(new MouseEvent('dblclick'));
+    this.element.dispatchEvent(new MouseEvent('dblclick'));
   }
 
   public enter(): void {
-    this.nativeElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'enter'}));
+    this.element.dispatchEvent(new KeyboardEvent('keydown', {key: 'enter'}));
   }
 
   public select(): void {
-    this.nativeElement.click();
+    this.element.click();
+  }
+
+  public get rowIndex(): number {
+    const rowIndex = this.element.getAttribute('data-row-index')!;
+    if (rowIndex === null) {
+      throw Error('[PageObjectError] Missing required `data-row-index` attribute on `<sci-table-row>`. Enable the `rowIndexAttribute` flag via the `ɵSCI_TABLE_FLAGS` DI token.')
+    }
+    return +rowIndex;
+  }
+
+  public rowAction(locateBy: {cssClass: string}): HTMLElement {
+    return this.element.querySelector(`sci-toolbar button.${locateBy.cssClass}`)!;
   }
 }
 
 export class CellPO {
 
-  constructor(private _debugElement: DebugElement) {
-  }
-
-  public get debugElement(): DebugElement {
-    return this._debugElement;
-  }
-
-  public get nativeElement(): HTMLButtonElement {
-    return this.debugElement.nativeElement as HTMLButtonElement;
+  constructor(public element: HTMLElement) {
   }
 
   public get value(): string {
-    return this.nativeElement.textContent.trim();
+    return this.element.textContent.trim();
   }
 }
 
-export function getByText<T extends Element = HTMLElement>(element: HTMLElement, selector: string, text: string): T | undefined {
-  return Array.from(element.querySelectorAll(selector))
-    .find(el => el.textContent.trim() === text) as T;
-}
