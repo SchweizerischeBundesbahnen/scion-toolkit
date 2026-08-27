@@ -53,9 +53,10 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly sortCriteria = signal<SciSortCriterion[]>([]);
   public readonly filterCriteria = signal<SciColumnFilter[]>([]);
   public readonly scrollRange = signal<SciScrollRange | undefined>(undefined);
+  public readonly viewportPageSize = signal(0);
+  public readonly _selectedItems = signal(new Map<unknown, T>());
 
   private readonly _globalFilter = signal<string | null>(null);
-  private readonly _selectedItems = signal(new Map<unknown, T>());
   private readonly _cache = new TableCache<T>();
 
   public readonly pageSize = linkedSignal<SciScrollRange | undefined, number>({

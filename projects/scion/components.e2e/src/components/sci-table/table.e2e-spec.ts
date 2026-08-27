@@ -17,7 +17,7 @@ import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
 import {generateData, provideHttpDatasource} from './datasource/table-http-datasource';
 
-test.describe.only('sci-table', () => {
+test.describe('sci-table', () => {
 
   test.describe('Table Configuration', () => {
 
@@ -1422,6 +1422,921 @@ test.describe.only('sci-table', () => {
         await page.keyboard.press('ArrowUp');
       }
       await expectTable(table).not.toHaveVerticalScroll();
+    });
+
+    test.describe('new', () => {
+
+      test.describe('ArrowDown / ArrowUp', () => {
+
+        test('should select with ArrowDown', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(40);
+
+          await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+        });
+
+        test('should select with ArrowUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(40);
+
+          await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          await table.row({index: 4}).click();
+          await expect(tablePage.selection).toHaveText('4');
+
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should expand selection with Shift+ArrowDown at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1')
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1 2')
+        });
+
+        test('should expand selection with Shift+ArrowUp at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 1')
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 1 0')
+        });
+
+        test('should shrink selection with Shift+ArrowDown at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 1')
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 1 0')
+
+          // Press Shift+ArrowDown at block start
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 1')
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+        });
+
+        test('should shrink selection with Shift+ArrowUp at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1')
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1 2')
+
+          // Press Shift+ArrowUp at block end
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0 1')
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+        });
+
+        test('should retain selection with Shift+ArrowDown in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+ArrowDown
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+        });
+
+        test('should retain selection with Shift+ArrowUp in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+ArrowUp
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+        });
+
+        test('should remove selection with Shift+ArrowDown outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3');
+          await page.keyboard.press('Control+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          // Press Shift+ArrowDown outside of block.
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('4 5');
+        });
+
+        test('should remove selection with Shift+ArrowUp outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 4}).click();
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('4 3');
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          // Press Shift+ArrowUp outside of block.
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 1');
+        });
+
+        test('should retain selection with Control+Shift+ArrowDown outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Control+ArrowDown');
+          await page.keyboard.press('Control+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          // Press Control+Shift+ArrowDown outside of block.
+          await page.keyboard.press('Control+Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 4 5');
+        });
+
+        test('should retain selection with Control+Shift+ArrowUp outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 5}).click();
+          await page.keyboard.press('Control+ArrowUp');
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Control+Shift+ArrowUp outside of block.
+          await page.keyboard.press('Control+Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('5 3 2');
+        });
+      });
+
+      test.describe('PageDown / PageUp', () => {
+
+        test('should select with PageDown', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('8');
+          await expect(tablePage.activeItemId).toHaveText('8');
+
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should select with PageUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          await table.row({index: 9}).click();
+          await expect(tablePage.selection).toHaveText('9');
+
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('5');
+          await expect(tablePage.activeItemId).toHaveText('5');
+
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should expand selection with Shift+PageDown at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8');
+          await expect(tablePage.activeItemId).toHaveText('8');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8 9 10 11 12');
+          await expect(tablePage.activeItemId).toHaveText('12');
+        });
+
+        test('should expand selection with Shift+PageUp at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          await table.row({index: 99}).click();
+          await expect(tablePage.selection).toHaveText('99');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('99 95 96 97 98');
+          await expect(tablePage.activeItemId).toHaveText('95');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('99 95 96 97 98 91 92 93 94');
+          await expect(tablePage.activeItemId).toHaveText('91');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('99 95 96 97 98 91 92 93 94 87 88 89 90');
+          await expect(tablePage.activeItemId).toHaveText('87');
+        });
+
+        test('should shrink selection with Shift+PageDown at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({index: 2}).click();
+          await page.keyboard.press('Shift+ArrowUp');
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 1 0');
+
+          // Press Shift+PageDown at block start
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+        });
+
+        test('should shrink selection with Shift+PageUp at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8');
+
+          // Press Shift+PageUp at block end
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('2 1 0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should retain selection with Shift+PageDown in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 10});
+
+          // Given
+          await table.row({index: 10}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('10 11 12');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('11');
+
+          // Press Shift+PageDown
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('10 11 12 13 14 15');
+          await expect(tablePage.activeItemId).toHaveText('15');
+        });
+
+        test('should retain selection with Shift+PageUp in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 10});
+
+          // Given
+          await table.row({index: 10}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('10 11 12');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('11');
+
+          // Press Shift+PageUp
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('10 11 12 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('7');
+        });
+
+        test('should remove selection with Shift+PageDown outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await page.keyboard.press('Control+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+PageDown outside of block.
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('3 4 5 6 7');
+        });
+
+        test('should remove selection with Shift+PageUp outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 10});
+
+          // Given
+          await table.row({nth: 10}).click();
+          await expect(tablePage.selection).toHaveText('10');
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          // Press Shift+PageUp outside of block.
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('5 6 7 8 9');
+        });
+
+        test('should retain selection with Control+Shift+PageDown outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await page.keyboard.press('Control+ArrowDown');
+          await page.keyboard.press('Control+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          // Press Control+Shift+PageDown outside of block.
+          await page.keyboard.press('Control+Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('2 4 5 6 7 8');
+        });
+
+        test('should retain selection with Control+Shift+PageUp outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 10});
+
+          // Given
+          await table.row({index: 10}).click();
+          await expect(tablePage.selection).toHaveText('10');
+          await page.keyboard.press('Control+ArrowUp');
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('8');
+
+          // Press Control+Shift+PageUp outside of block.
+          await page.keyboard.press('Control+Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('10 4 5 6 7 8');
+        });
+      });
+
+      test.describe('End / Home', () => {
+
+        test('should select with End', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should select with Home', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          await table.row({index: 9}).click();
+          await expect(tablePage.selection).toHaveText('9');
+
+          await page.keyboard.press('Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          await page.keyboard.press('Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should expand selection with Shift+End at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 1}).click();
+          await expect(tablePage.selection).toHaveText('1');
+
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('1 2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should expand selection with Shift+Home at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          await table.row({index: 8}).click();
+          await expect(tablePage.selection).toHaveText('8');
+
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('8 0 1 2 3 4 5 6 7');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should shrink selection with Shift+End at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({index: 2}).click();
+          await page.keyboard.press('Shift+ArrowUp');
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 1 0');
+
+          // Press Shift+End at block start
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should shrink selection with Shift+Home at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Press Shift+Home at block end
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('2 1 0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should retain selection with Shift+End in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({index: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+End
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should retain selection with Shift+Home in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({index: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+Home
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('2 3 4 0 1');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should remove selection with Shift+End outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 1}).click();
+          await expect(tablePage.selection).toHaveText('1');
+          await page.keyboard.press('Control+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          // Press Shift+End outside of block.
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8 9');
+        });
+
+        test('should remove selection with ShiftHome outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          // Given
+          await table.row({index: 8}).click();
+          await expect(tablePage.selection).toHaveText('8');
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('7');
+
+          // Press Shift+Home outside of block.
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7');
+        });
+
+        test('should retain selection with Control+Shift+End outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await page.keyboard.press('Control+ArrowDown');
+          await page.keyboard.press('Control+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          // Press Control+Shift+End outside of block.
+          await page.keyboard.press('Control+Shift+End');
+          await expect(tablePage.selection).toHaveText('2 4 5 6 7 8 9');
+        });
+
+        test('should retain selection with Control+Shift+Home outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          // Given
+          await table.row({index: 9}).click();
+          await expect(tablePage.selection).toHaveText('9');
+          await page.keyboard.press('Control+ArrowUp');
+          await page.keyboard.press('Control+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('7');
+
+          // Press Control+Shift+Home outside of block.
+          await page.keyboard.press('Control+Shift+Home');
+          await expect(tablePage.selection).toHaveText('9 0 1 2 3 4 5 6 7');
+        });
+      });
     });
   });
 

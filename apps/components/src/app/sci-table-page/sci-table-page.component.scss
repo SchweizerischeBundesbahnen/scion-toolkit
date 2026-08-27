@@ -1,6 +1,6 @@
 :host {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 1em;
 
   > main {
@@ -52,6 +52,10 @@
       > header {
         margin-bottom: 1em;
         font-weight: bold;
+      }
+
+      sci-viewport {
+        max-height: 100px;
       }
     }
   }

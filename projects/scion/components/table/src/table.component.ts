@@ -102,6 +102,7 @@ export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
   constructor() {
     this.installActiveItemWatcher();
     this.installScrollRangeTracker();
+    this.installViewportPageSizeTracker();
     this.installCriteriaListener();
     this.installScrollListener();
   }
@@ -129,6 +130,11 @@ export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
     effect(() => this.table().scrollRange.set(scrollRange()));
   }
 
+  private installViewportPageSizeTracker(): void {
+    const viewportPageSize = this.computeViewportPageSize();
+    effect(() => this.table().viewportPageSize.set(viewportPageSize()));
+  }
+
   /**
    * Computes the visible row count based on the viewport size.
    */
@@ -145,6 +151,14 @@ export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
       const end = Math.min(start + visibleRowCount, totalCount);
       return {start, end};
     }, {equal: Objects.isEqual});
+  }
+
+  private computeViewportPageSize(): Signal<number> {
+    return computed(() => {
+      const viewportDimension = this._viewportDimension();
+      const itemSize = this._itemSizeDimension().offsetHeight;
+      return Math.ceil((viewportDimension.clientHeight - this._headerHeight()) / itemSize);
+    });
   }
 
   /**

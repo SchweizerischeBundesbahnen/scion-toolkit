@@ -20,6 +20,7 @@ import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
   selector: 'app-table-page',
@@ -35,6 +36,7 @@ import {Router} from '@angular/router';
     SciTabDirective,
     SciTabbarComponent,
     MinMaxDirective,
+    SciViewportComponent,
   ],
 })
 export default class SciTablePageComponent {
@@ -48,6 +50,8 @@ export default class SciTablePageComponent {
 
   protected readonly table = this.computeTable();
   protected readonly rowCount = inject(CompanyService).companyCount;
+
+  protected readonly selection = computed(() => this.table()?.selectedItems().map(item => item.id).join(' '));
 
   private createTable(options: {slowDataSource: boolean}): SciTable<Company> {
     const companyService = inject(CompanyService);
