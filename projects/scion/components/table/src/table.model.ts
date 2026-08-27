@@ -63,7 +63,7 @@ export interface SciTableDescriptor<T> {
    * }
    * ```
    */
-  rowState?: (item: T) => MaybeArray<`row:${string}`>;
+  rowState?: (item: T, index: number) => MaybeArray<`row:${string}`>;
   /**
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
@@ -82,7 +82,7 @@ export interface SciTable<T> {
    */
   readonly selectedItems: Signal<Array<T>>;
 
-  filter(text: string | undefined): void;
+  filter(text: string | null): void;
 }
 
 export interface SciCellContext<T, VALUE> {
@@ -146,6 +146,7 @@ export type SciColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T>
  * Mapped row, used as display state.
  */
 export interface SciRow<T> {
+  index: number;
   item?: T;
   id?: unknown;
   cells?: SciCellLike[];

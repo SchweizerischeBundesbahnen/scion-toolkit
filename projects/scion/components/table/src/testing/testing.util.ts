@@ -13,7 +13,7 @@ export async function waitUntilStable<A>(value: () => Promise<A> | A, options?: 
     return value();
   }
 
-  const value$ = timer(0, options?.probeInterval ?? 100)
+  const value$ = timer(0, options?.probeInterval ?? 50)
     .pipe(
       exhaustMap(async () => await value()),
       pairwise(),

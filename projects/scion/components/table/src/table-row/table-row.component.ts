@@ -16,6 +16,7 @@ import {TableSelectionService} from '../table-selection.service';
 import {TABLE_SPLITTERS_SELECTOR} from '../column-splitters/column-splitters.component';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
+import {ɵSCI_TABLE_FLAGS} from '../ɵtable-flags';
 
 @Component({
   selector: 'sci-table-row',
@@ -27,6 +28,7 @@ import {UUID} from '@scion/toolkit/uuid';
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
     '[class.hover]': 'isHovered()',
+    '[attr.data-row-index]': 'tableFlags?.rowIndexAttribute ? this.row().index : null',
     '(click)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick()',
     '(keydown.enter)': 'onRowEnter()',
@@ -41,7 +43,6 @@ import {UUID} from '@scion/toolkit/uuid';
 export class TableRowComponent<T> {
 
   public readonly row = input.required<SciRow<T>>();
-  public readonly index = input.required<number>();
 
   public readonly primaryAction = output<void>();
 
@@ -58,6 +59,7 @@ export class TableRowComponent<T> {
   protected readonly rowActionToolbar = viewChild(SciToolbarComponent);
 
   protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
+  protected readonly tableFlags = inject(ɵSCI_TABLE_FLAGS, {optional: true});
 
   constructor() {
     this.contributeRowActions();
@@ -78,7 +80,7 @@ export class TableRowComponent<T> {
     if (this.loading()) {
       return;
     }
-    void this._selectionService.onRowClick(this.index(), event);
+    void this._selectionService.onRowClick(this.row().index, event);
   }
 
   protected onRowDblClick(): void {
@@ -89,7 +91,7 @@ export class TableRowComponent<T> {
   }
 
   protected onMouseEnter(): void {
-    this.table().hoveredIndex.set(this.index());
+    this.table().hoveredIndex.set(this.row().index);
   }
 
   protected onMouseLeave(event: MouseEvent): void {

@@ -12,6 +12,7 @@ import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
 import {firstValueFrom, timer} from 'rxjs';
+import {SciRow} from './table.model';
 
 @Injectable()
 export class TableSelectionService<T> {
@@ -124,8 +125,8 @@ export class TableSelectionService<T> {
     table.updateSelectedItems(existing => new Map<unknown, T>([
       ...existing,
       ...rows
-        .filter((row): row is {id: unknown; item: T} => row?.id !== undefined && row.item !== undefined)
-        .map(row => [row.id, row.item]) satisfies [unknown, T][],
+        .filter((row): row is Required<SciRow<T>> => row?.id !== undefined && row.item !== undefined)
+        .map((row): [unknown, T] => [row.id, row.item]),
     ]));
   }
 

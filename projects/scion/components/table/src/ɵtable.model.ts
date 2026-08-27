@@ -36,7 +36,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly name: `scion.components.table:${string}`;
   public readonly columns: WritableSignal<SciColumnLike<T>[]>;
   public readonly rowActions?: SciRowActionFactoryFn<T>;
-  private readonly _rowName?: (item: T) => string | string[] | undefined;
+  private readonly _rowState?: (item: T, index: number) => string | string[] | undefined;
   private readonly _dataLoaderFn: SciDataLoaderFn<T>;
   private readonly _trackBy?: (item: T) => unknown;
 
@@ -54,7 +54,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly filterCriteria = signal<SciColumnFilter[]>([]);
   public readonly scrollRange = signal<SciScrollRange | undefined>(undefined);
 
-  private readonly _globalFilter = signal<string | undefined>(undefined);
+  private readonly _globalFilter = signal<string | null>(null);
   private readonly _selectedItems = signal(new Map<unknown, T>());
   private readonly _cache = new TableCache<T>();
 
@@ -107,7 +107,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.columns = this.computeColumns(factory);
 
     this.rowActions = descriptor.rowActions;
-    this._rowName = descriptor.rowState;
+    this._rowState = descriptor.rowState;
     this._trackBy = descriptor.trackBy;
     this._dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 
@@ -136,11 +136,11 @@ export class ɵSciTable<T> implements SciTable<T> {
     const pageSize = this.pageSize();
     const sortCriteria = this.sortCriteria();
     const columnFilters = this.filterCriteria();
-    const globalFilter = this._globalFilter();
+    const globalFilter = this._globalFilter() ?? undefined;
 
     const pages = this.pagesByRange(start, end, pageSize);
     const requests = pages.map(page => {
-      const response = this.loadPage({page, pageSize, columnFilters, globalFilter, sortCriteria});
+      const response = this.loadPage({page, pageSize, columnFilters, globalFilter: globalFilter, sortCriteria});
       // Wait for the page to be loaded.
       return new Promise<void>(resolve => {
         const effectRef = effect(() => {
@@ -168,6 +168,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     }
 
     const items = signal<T[] | undefined>(undefined);
+    // TODO [Etienne] Cancel previous fetch
     const subscription = coerceObservable(this._dataLoaderFn({
       start: pageStart,
       end: pageEnd,
@@ -191,7 +192,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       items: computed(() => {
         const resolved = items();
         const columns = this.columns();
-        return untracked(() => resolved ? this.mapItemsToRow(resolved, columns) : undefined);
+        return untracked(() => resolved ? this.mapItemsToRow(resolved, columns, pageStart) : undefined);
       }),
       dispose: () => subscription.unsubscribe(),
       start: pageStart,
@@ -234,7 +235,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   /**
    * Applies a filter, either via global filter or on a specific column.
    */
-  public filter(text: string): void;
+  public filter(text: string | null): void;
   public filter(text: string | number | boolean | null, options: {columnName: `column:${string}`}): void;
   public filter(text: string | number | boolean | null, options?: {columnName: `column:${string}`}): void {
     if (!options) {
@@ -295,7 +296,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       const pageSize = this.pageSize();
       const sortCriteria = this.sortCriteria();
       const columnFilters = this.filterCriteria();
-      const globalFilter = this._globalFilter();
+      const globalFilter = this._globalFilter() ?? undefined;
       if (!scrollRange) {
         return;
       }
@@ -371,10 +372,11 @@ export class ɵSciTable<T> implements SciTable<T> {
     return -1;
   }
 
-  private mapItemsToRow(items: T[], columns: SciColumnLike<T>[]): SciRow<T>[] {
-    return items.map(item => {
-      const rowName = Arrays.coerce(this._rowName?.(item));
+  private mapItemsToRow(items: T[], columns: SciColumnLike<T>[], pageStart: number): SciRow<T>[] {
+    return items.map((item, i) => {
+      const rowState = Arrays.coerce(this._rowState?.(item, pageStart + i));
       return ({
+        index: pageStart + i,
         item: item,
         id: this.trackBy(item),
         cells: columns.map(column => ({
@@ -383,7 +385,7 @@ export class ɵSciTable<T> implements SciTable<T> {
           template: column.type === 'template' ? column.template(item) : undefined,
           type: column.type,
           columnName: column.name,
-          name: [column.name, ...rowName],
+          name: [column.name, ...rowState],
         } as SciCellLike)),
       });
     });
@@ -431,14 +433,14 @@ export class ɵSciTable<T> implements SciTable<T> {
 
       // If total count is not defined yet (no page loaded) show only skeletons.
       if (totalCount === undefined) {
-        return new Array(pageSize).fill({}) as Array<SciRow<T>>;
+        return Array.from({length: pageSize}, (_, i) => ({index: i}));
       }
 
       // Cut the rowCount off at totalCount, else the user can scroll infinitely.
       const rowCount = Math.min(scrollRange.end, totalCount) - scrollRange.start;
 
       // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
-      return Array.from({length: Math.min(pageSize, rowCount, totalCount)}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {});
+      return Array.from({length: Math.min(pageSize, rowCount, totalCount)}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {index: i});
     });
   }
 

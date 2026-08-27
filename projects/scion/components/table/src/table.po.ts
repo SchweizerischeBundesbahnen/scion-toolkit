@@ -9,16 +9,19 @@
  */
 
 import {ComponentFixture} from '@angular/core/testing';
-import {RequireOne} from '@scion/toolkit/types';
+import {OneOf, RequireOne} from '@scion/toolkit/types';
+import {Arrays} from '@scion/toolkit/util';
 import {waitUntilStable} from './testing/testing.util';
 
 export class TablePO {
 
   public readonly element: ShadowRoot;
+  public readonly body: HTMLElement;
 
   constructor(fixture: ComponentFixture<unknown>) {
     const element = fixture.debugElement.nativeElement as Element;
     this.element = element.tagName === 'SCI-TABLE' ? element.shadowRoot! : element.querySelector('sci-table')!.shadowRoot!;
+    this.body = this.element.querySelector('sci-table-body')!;
   }
 
   public get viewport(): HTMLElement {
@@ -54,8 +57,8 @@ export class TablePO {
     return this.viewport.scrollTop;
   }
 
-  public async scrollY(offset: number): Promise<void> {
-    this.viewport.scrollTo({top: this.viewport.scrollTop + offset});
+  public async scrollY(scrollTo: OneOf<{y: number; deltaY: number}>): Promise<void> {
+    this.viewport.scrollTo({top: scrollTo.y ?? this.viewport.scrollTop + scrollTo.deltaY});
     this.viewport.dispatchEvent(new Event('scroll'));
     await this.waitUntilStable();
   }
@@ -124,9 +127,32 @@ export class ColumnPO {
     await this._table.waitUntilStable();
   }
 
-  public async values(): Promise<string[]> {
-    await this._table.waitUntilStable();
-    return this._table.rows.map(row => row.cells[this.index]!.value);
+  /**
+   * Gets values displayed in this column.
+   *
+   * @param options.rows - Specifies whether to return values from DOM rows (`'dom'`) or all table rows (`'all'`). Defaults to `'dom'`.
+   */
+  public async values(options?: {rows?: 'dom' | 'all'}): Promise<string[]> {
+    const table = this._table;
+
+    // Scroll down page by page until the end and collect the rows.
+    if (options?.rows === 'all') {
+      await table.scrollY({y: 0})
+
+      const rows = new Array<{rowIndex: number; value: string}>();
+      rows.push(...table.rows.map(row => ({rowIndex: row.rowIndex, value: row.cells[this.index]!.value})));
+
+      while (table.scrollTop !== table.viewport.scrollHeight - table.viewport.clientHeight) {
+        await table.scrollY({deltaY: table.viewport.clientHeight})
+        rows.push(...table.rows.map(row => ({rowIndex: row.rowIndex, value: row.cells[this.index]!.value})));
+      }
+
+      // Remove duplicate rows, caused by virtual scrolling which inserts rows both before and after the visible area.
+      return Arrays.distinct(rows, entry => entry.rowIndex).map(entry => entry.value);
+    }
+    else {
+      return table.rows.map(row => row.cells[this.index]!.value);
+    }
   }
 }
 

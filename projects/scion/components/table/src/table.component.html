@@ -15,7 +15,7 @@
     <sci-table-body sciTableKeyboardNavigator tabindex="0">
       <!-- Track index to reuse the table row elements -->
       @for (row of table.rows(); track $index) {
-        <sci-table-row [row]="row" [index]="table.scrollRange()!.start + $index" (primaryAction)="onRowPrimaryAction(row.item)"/>
+        <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item)"/>
       } @empty {
         <div class="empty-state">{{('%scion.components.no_items.message' | sciText)()}}</div>
       }
