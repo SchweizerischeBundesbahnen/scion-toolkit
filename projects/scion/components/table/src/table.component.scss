@@ -28,16 +28,15 @@
     }
 
     > sci-table-grid {
-      //An element will never grow beyond its parent unless explicitly set, that is why we need to set the table width.
-      //This allows the grid to overflow when resizing.
-      width: min-content; // not max-content otherwise ellipsis do not work. crucial for grid container to be as wide as grid-template-columns
-      min-width: 100%; // crucial for grid container to be as wide as grid-template-columns
       display: grid;
       grid-template-columns: var(--ɵsci-table-columns, 100%) 0; // last column used for row actions
       grid-auto-rows: min-content;
       grid-template-rows:
         min-content // header
         min-content; // table body
+      // Fill viewport by default, shrinking columns to minimums before overflowing horizontally.
+      width: min-content;
+      min-width: 100%;
 
       @container style(--ɵsci-table-header-visible: false) {
         grid-template-rows: min-content;

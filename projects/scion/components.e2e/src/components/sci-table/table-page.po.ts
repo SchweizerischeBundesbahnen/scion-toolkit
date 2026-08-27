@@ -96,9 +96,14 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-row-count').fill(rowCount.toString());
   }
 
-  public async setSlowDataSource(checked: boolean): Promise<void> {
+  public async setBufferSize(bufferSize: number): Promise<void> {
     await this.tabbar.locator('button.e2e-datasource').click();
-    await this.properties.locator('input.e2e-slow-datasource').setChecked(checked);
+    await this.properties.locator('input.e2e-buffer-size').fill(bufferSize.toString());
+  }
+
+  public async setDatasource(datasource: 'array' | 'loader' | 'loader-delayed' | 'loader-http'): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('select.e2e-datasource').selectOption(datasource);
   }
 
   public async setRowActions(checked: boolean): Promise<void> {

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
-import {SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, table} from '@scion/components/table';
+import {SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -17,6 +17,7 @@ import {createDestroyableInjector} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
 import {FieldValidationDirective} from '../field-validation.directive';
 import {Product, ProductService} from './sci-table-page.data';
+import {HttpClient} from '@angular/common/http';
 
 @Component({
   selector: 'app-table-page',
@@ -25,7 +26,7 @@ import {Product, ProductService} from './sci-table-page.data';
   host: {
     '[style.--table-page-height]': 'settingsForm.height().value() ? `${settingsForm.height().value()}px` : null',
     '[style.--table-page-width]': 'settingsForm.width().value() ? `${settingsForm.width().value()}px` : null',
-    '[style.--sci-table-row-height]': 'settingsForm.rowSize().value() ? `${settingsForm.rowSize().value()}px` : null',
+    '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() ? `${settingsForm.rowHeight().value()}px` : null',
   },
   imports: [
     SciTableComponent,
@@ -43,6 +44,7 @@ export default class SciTablePageComponent {
 
   private readonly _injector = inject(Injector);
   private readonly _productService = inject(ProductService);
+  private readonly _httpClient = inject(HttpClient);
 
   private readonly _cellTemplate = viewChild.required<TemplateRef<Product>>('cell');
 
@@ -54,7 +56,7 @@ export default class SciTablePageComponent {
   protected readonly rowCount = inject(ProductService).productCount;
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
 
-  private createTable(name: `table:${string}`, options: {slowDataSource: boolean; showRowActions: boolean; customRowStyling: boolean}): SciTable<Product> {
+  private createTable(name: `table:${string}`, options: {datasource: 'array' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean}): SciTable<Product> {
     return table({
       name,
       headerVisible: computed(() => this.settingsForm.showHeader().value()),
@@ -66,8 +68,18 @@ export default class SciTablePageComponent {
         const selectable = this.settingsForm.selectable().value();
         return selectable === 'false' ? false : selectable;
       }),
-      trackBy: product => product.id,
-      data: options.slowDataSource ? request => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: true}) : this._productService.products,
+      data: (() => {
+        switch (options.datasource) {
+          case 'loader':
+            return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: false});
+          case 'loader-delayed':
+            return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: true});
+          case 'loader-http':
+            return (request: SciTableRequest) => this._httpClient.post<SciTableResponse<Product>>('/sci-table/products', request);
+          default:
+            return this._productService.products;
+        }
+      })(),
       rowState: options.customRowStyling ? (product: Product) => product.id % 3 === 0 ? 'row:negative' : [] : undefined,
       rowActions: options.showRowActions ? (product, toolbar) => toolbar.addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
         .addMenuItem({
@@ -75,6 +87,8 @@ export default class SciTablePageComponent {
           onSelect: () => console.log('edit', product.id),
         }),
       ) : undefined,
+      trackBy: product => product.id,
+      bufferSize: computed(() => this.settingsForm.bufferSize().value()),
     }, table => this.columns().forEach(columnForm => {
       if (!columnForm.visible()) {
         return;
@@ -135,14 +149,14 @@ export default class SciTablePageComponent {
 
     effect(onCleanup => {
       const tableCount = this.settingsForm.tableCount().value();
-      const slowDataSource = this.settingsForm.slowDataSource().value();
+      const datasource = this.settingsForm.datasource().value();
       const showRowActions = this.settingsForm.showRowAction().value();
       const customRowStyling = this.settingsForm.customRowStyling().value();
 
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable(`table:${i}`, {slowDataSource, showRowActions, customRowStyling}))));
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable(`table:${i}`, {datasource, showRowActions, customRowStyling}))));
       });
     });
 
@@ -192,9 +206,10 @@ export default class SciTablePageComponent {
       showHeader: true,
       showGridlines: false,
       showRowAction: false,
-      slowDataSource: false,
+      datasource: 'array',
+      bufferSize: 10,
       customRowStyling: false,
-      rowSize: 28,
+      rowHeight: 30,
       height: 600,
       width: 600,
       tableCount: 1,
@@ -236,9 +251,10 @@ interface SettingsForm {
   showHeader: boolean;
   showGridlines: boolean;
   showRowAction: boolean;
-  slowDataSource: boolean;
+  datasource: 'array' | 'loader' | 'loader-delayed' | 'loader-http';
+  bufferSize: number;
   customRowStyling: boolean;
-  rowSize: number;
+  rowHeight: number;
   height: number;
   width: number;
   tableCount: number;

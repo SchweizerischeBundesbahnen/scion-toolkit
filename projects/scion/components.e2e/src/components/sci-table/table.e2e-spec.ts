@@ -15,6 +15,7 @@ import {TablePO} from './table.po';
 import {expectTable} from './table-matcher';
 import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
+import {generateData, provideHttpDatasource} from './datasource/table-http-datasource';
 
 test.describe.only('sci-table', () => {
 
@@ -2051,6 +2052,64 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height), {timeout: 250}).toBe(5 * 20);
       await expect.poll(() => table.scrollTop(), {timeout: 250}).toBe(0);
       await expect(table.rows).toHaveCount(5, {timeout: 250});
+    });
+
+    test('should have stable column width if scrolling table with variable column content length', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await tablePage.setWidth(200);
+      await tablePage.setHeight(200);
+
+      // Generate 100 products with short names, plus one with a long name at the end.
+      await provideHttpDatasource(page, generateData(100, i => ({
+        name: i < 99 ? 'Product' : 'This is a longer product name which should be truncated with ellipsis.',
+      })));
+
+      // Expect each column to be 100px wide
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(100);
+
+      // Scroll to the end.
+      await table.scrollTo({y: 'end'});
+
+      // Wait until scrolled to the end.
+      const scrollHeight = await table.scrollHeight();
+      await expect.poll(() => table.scrollTop()).toBe(scrollHeight - 200);
+
+      // Expect column widths not to have changed after scrolling.
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(100);
+    });
+
+    test('should not overflow horizontally if flex columns with large content', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.setWidth(400);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await provideHttpDatasource(page, [
+        {name: 'This is a long product name which should be truncated with ellipsis.'},
+      ]);
+
+      // Expect no horizontal overflow and column to fill available space.
+      await expectTable(table).not.toHaveHorizontalOverflow();
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+
+      // Add another column.
+      await tablePage.addColumn({name: 'column:3', type: 'string', width: '200px'});
+
+      // Expect no horizontal overflow and columns to fill available space.
+      await expectTable(table).not.toHaveHorizontalOverflow();
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(100);
     });
   });
 });

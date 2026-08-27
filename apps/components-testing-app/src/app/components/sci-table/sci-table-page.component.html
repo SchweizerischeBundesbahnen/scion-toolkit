@@ -113,8 +113,8 @@
           <input [formField]="settingsForm.tableCount" type="number" class="e2e-table-count"/>
         </sci-form-field>
 
-        <sci-form-field label="Row Size">
-          <input [formField]="settingsForm.rowSize" type="number" class="e2e-row-size"/>
+        <sci-form-field label="Row Height">
+          <input [formField]="settingsForm.rowHeight" type="number" class="e2e-row-height"/>
         </sci-form-field>
 
         <sci-form-field label="Table Width">
@@ -130,12 +130,24 @@
     <!-- Date Source -->
     <ng-template sciTab label="Datasource" cssClass="e2e-datasource">
       <section>
-        <sci-form-field label="Row Count">
-          <input [(ngModel)]="rowCount" type="number" class="e2e-row-count"/>
+
+        <sci-form-field label="Datasource">
+          <select [formField]="settingsForm.datasource" class="e2e-datasource">
+            <option value="array">Array</option>
+            <option value="loader">Loader</option>
+            <option value="loader-delayed">Loader (Delayed)</option>
+            <option value="loader-http">Loader (HTTP)</option>
+          </select>
         </sci-form-field>
 
-        <sci-form-field label="Slow Datasource">
-          <input [formField]="settingsForm.slowDataSource" type="checkbox" class="e2e-slow-datasource"/>
+        @if (settingsForm.datasource().value() !== 'loader-http') {
+          <sci-form-field label="Row Count">
+            <input [(ngModel)]="rowCount" type="number" class="e2e-row-count"/>
+          </sci-form-field>
+        }
+
+        <sci-form-field label="Buffer Size">
+          <input [formField]="settingsForm.bufferSize" type="number" class="e2e-buffer-size"/>
         </sci-form-field>
       </section>
     </ng-template>

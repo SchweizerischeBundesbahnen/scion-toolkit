@@ -10,7 +10,7 @@ test.describe.only('sci-table async datasource', () => {
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.addColumn({name: 'column:name', type: 'string'});
-    await tablePage.setSlowDataSource(true);
+    await tablePage.setDatasource('loader-delayed');
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -30,7 +30,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.navigate();
     await tablePage.addColumn({name: 'column:name', type: 'string'});
     await tablePage.setRowCount(1000);
-    await tablePage.setSlowDataSource(true);
+    await tablePage.setDatasource('loader-delayed');
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -50,7 +50,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.navigate();
     await tablePage.addColumn({name: 'column:name', type: 'string'});
     await tablePage.setRowCount(1000);
-    await tablePage.setSlowDataSource(true);
+    await tablePage.setDatasource('loader-delayed');
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -65,7 +65,7 @@ test.describe.only('sci-table async datasource', () => {
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.addColumn({name: 'column:name', type: 'string'});
-    await tablePage.setSlowDataSource(true);
+    await tablePage.setDatasource('loader-delayed');
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -81,7 +81,7 @@ test.describe.only('sci-table async datasource', () => {
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.addColumn({name: 'column:name', type: 'string'});
-    await tablePage.setSlowDataSource(true);
+    await tablePage.setDatasource('loader-delayed');
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -97,7 +97,7 @@ test.describe.only('sci-table async datasource', () => {
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.addColumn({name: 'column:name', type: 'string'});
-    await tablePage.setSlowDataSource(true);
+    await tablePage.setDatasource('loader-delayed');
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -120,7 +120,7 @@ test.describe.only('sci-table async datasource', () => {
     await tablePage.navigate();
     await tablePage.addColumn({name: 'column:name', type: 'string'});
     await tablePage.setRowCount(1000);
-    await tablePage.setSlowDataSource(true);
+    await tablePage.setDatasource('loader-delayed');
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
@@ -140,7 +140,7 @@ test.describe.only('sci-table async datasource', () => {
     const table = new TablePO(tablePage.table);
     await tablePage.navigate();
     await tablePage.addColumn({name: 'column:name', type: 'string'});
-    await tablePage.setSlowDataSource(true);
+    await tablePage.setDatasource('loader-delayed');
 
     // Wait for initial page to finish loading.
     await expect(table.rows.locator('.skeleton').first()).toBeAttached();
