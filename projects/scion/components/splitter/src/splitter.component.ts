@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, output, signal, untracked, viewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, output, signal, untracked} from '@angular/core';
 import {audit, fromEvent, merge, Observable, Subscription} from 'rxjs';
 import {tapFirst} from '@scion/toolkit/operators';
 import {first, takeUntil} from 'rxjs/operators';
@@ -97,7 +97,6 @@ export class SciSplitterComponent {
   private readonly _cd = inject(ChangeDetectorRef);
   private readonly _document = inject(DOCUMENT);
   private readonly _destroyRef = inject(DestroyRef);
-  private readonly _touchTarget = viewChild.required<ElementRef<HTMLElement>>('touch_target');
 
   protected readonly moving = signal(false);
   protected readonly isHorizontal = computed(() => this.orientation() === 'horizontal');
@@ -105,14 +104,17 @@ export class SciSplitterComponent {
   protected readonly splitterCursor = computed(() => this.isVertical() ? 'ew-resize' : 'ns-resize');
 
   constructor() {
+    const host = inject(ElementRef).nativeElement as HTMLElement;
+
     effect(onCleanup => {
-      const touchTargetElement = this._touchTarget().nativeElement;
       const subscription = new Subscription();
 
       untracked(() => {
-        subscription.add(fromEvent(touchTargetElement, 'dblclick').subscribe(() => this.onReset()));
-        subscription.add(fromEvent<TouchEvent>(touchTargetElement, 'touchstart').subscribe((event: TouchEvent) => this.onTouchStart(event)));
-        subscription.add(fromEvent<MouseEvent>(touchTargetElement, 'mousedown').subscribe((event: MouseEvent) => this.onMouseDown(event)));
+        // Install event listeners on the host element instead of the touch target, enabling tests to target `sci-splitter`
+        // to perform a mousedown or double-click. The user can still interact with the touch target because events bubble up.
+        subscription.add(fromEvent(host, 'dblclick').subscribe(() => this.onReset()));
+        subscription.add(fromEvent<TouchEvent>(host, 'touchstart').subscribe((event: TouchEvent) => this.onTouchStart(event)));
+        subscription.add(fromEvent<MouseEvent>(host, 'mousedown').subscribe((event: MouseEvent) => this.onMouseDown(event)));
       });
 
       onCleanup(() => subscription.unsubscribe());
