@@ -20,6 +20,7 @@ import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
   selector: 'app-table-page',
@@ -35,6 +36,7 @@ import {Router} from '@angular/router';
     SciTabDirective,
     SciTabbarComponent,
     MinMaxDirective,
+    SciViewportComponent,
   ],
   host: {
     '[style.--sci-table-gridline-color]': 'settingsForm.showGridlines().value() ? "var(--sci-table-border-color)" : null',
@@ -55,6 +57,7 @@ export default class SciTablePageComponent {
     const selectable = this.table()?.selectable();
     return selectable === false ? 'false' : selectable;
   });
+  protected readonly selection = computed(() => this.table()?.selectedItems().map(item => Number(item.id)).sort((a, b) => a - b).join(' '));
 
   private createTable(options: {slowDataSource: boolean}): SciTable<Company> {
     const companyService = inject(CompanyService);
