@@ -18,6 +18,7 @@ import {SciIconComponent} from '@scion/components/icon';
 import {FieldValidationDirective} from '../field-validation.directive';
 import {Product, ProductService} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
+import {SciViewportComponent} from '@scion/components/viewport';
 import {noop} from 'rxjs';
 
 @Component({
@@ -39,6 +40,7 @@ import {noop} from 'rxjs';
     FormRoot,
     SciIconComponent,
     FieldValidationDirective,
+    SciViewportComponent,
   ],
   providers: [
     provideTableRowBinding([
@@ -62,7 +64,9 @@ export default class SciTablePageComponent {
 
   protected readonly tables = this.computeTables();
   protected readonly rowCount = inject(ProductService).productCount;
+  protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem()?.id);
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
+  protected readonly selection = computed(() => this.tables()[0]?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
 
   constructor() {
     this.bindTableSettings();

@@ -21,7 +21,9 @@ export class TablePagePO {
   public readonly tabbar: Locator;
 
   public readonly table: Locator;
+  public readonly activeItemId: Locator;
   public readonly selectionCount: Locator;
+  public readonly selection: Locator;
 
   constructor(public page: Page) {
     this.locator = this.page.locator('app-table-page');
@@ -29,7 +31,9 @@ export class TablePagePO {
     this.tableState = this.properties.locator('section.e2e-table-state ');
     this.tabbar = this.properties.locator('sci-tabbar');
     this.table = this.locator.locator('sci-table');
+    this.activeItemId = this.tableState.locator('output.e2e-active-item-id');
     this.selectionCount = this.tableState.locator('output.e2e-selection-count');
+    this.selection = this.tableState.locator('output.e2e-selection');
   }
 
   public async navigate(options?: {tableStorage?: true}): Promise<void> {

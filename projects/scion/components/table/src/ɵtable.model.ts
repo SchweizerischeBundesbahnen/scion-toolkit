@@ -52,6 +52,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly scrollRange: Signal<SciScrollRange | undefined>;
   public readonly scrollTop: Signal<number>;
   public readonly virtualScrollOffset: Signal<{top: number; bottom: number}>;
+  public readonly viewportPageSize: Signal<number>;
 
   public readonly scrolling: Signal<boolean>;
   public readonly resizing = computed(() => this.columns().some(column => column.resizing()));
@@ -104,6 +105,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this.scrollTop = this.computeScrollTop();
     this.scrolling = this.computeScrolling();
     this.virtualScrollOffset = this.computeVirtualScrollOffset();
+    this.viewportPageSize = this.computeViewportPageSize();
     this.activeRow = this.computeActiveRow();
     this.columns = this.computeColumns(factoryFn, descriptor);
 
@@ -197,6 +199,14 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         bottom: (totalCount - rangeEnd) * itemHeight,
       };
     }, {equal: Objects.isEqual});
+  }
+
+  private computeViewportPageSize(): Signal<number> {
+    return computed(() => {
+      const itemHeight = this.tableViewRef()?.itemHeight() ?? 0;
+      const viewportHeight = this.tableViewRef()?.viewportHeight() ?? 0;
+      return Math.ceil(viewportHeight / itemHeight);
+    });
   }
 
   /**

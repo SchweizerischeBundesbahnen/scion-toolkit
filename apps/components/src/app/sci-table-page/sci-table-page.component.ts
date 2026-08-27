@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
+import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
 import {partBinding, SciRowActionFactoryFn, SciTable, SciTableComponent, SciTableFactory, table} from '@scion/components/table';
 import {Company, CompanyService} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
@@ -20,6 +20,7 @@ import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
   selector: 'app-table-page',
@@ -35,6 +36,7 @@ import {Router} from '@angular/router';
     SciTabDirective,
     SciTabbarComponent,
     MinMaxDirective,
+    SciViewportComponent,
   ],
   host: {
     '[style.--sci-table-gridline-color]': 'settingsForm.showGridlines().value() ? "var(--sci-table-border-color)" : null',
@@ -51,6 +53,8 @@ export default class SciTablePageComponent {
 
   protected readonly table = this.computeTable();
   protected readonly rowCount = inject(CompanyService).companyCount;
+
+  protected readonly selection = computed(() => this.table()?.selectedItems().map(item => Number(item.id)).sort((a, b) => a - b).join(' '));
 
   constructor() {
     this.bindTableSettings();

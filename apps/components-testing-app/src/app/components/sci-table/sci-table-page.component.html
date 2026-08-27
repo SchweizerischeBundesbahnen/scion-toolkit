@@ -162,8 +162,18 @@
   <section class="table-state e2e-table-state">
     <header>Table State</header>
 
+    <sci-form-field label="Active Id">
+      <output class="e2e-active-item-id">{{activeItemId() ?? '-'}}</output>
+    </sci-form-field>
+
     <sci-form-field label="Selection Count">
       <output class="e2e-selection-count">{{selectedItems()?.length}}</output>
+    </sci-form-field>
+
+    <sci-form-field label="Selection">
+      <sci-viewport>
+        <output class="e2e-selection">{{selection()}}</output>
+      </sci-viewport>
     </sci-form-field>
   </section>
 </aside>
