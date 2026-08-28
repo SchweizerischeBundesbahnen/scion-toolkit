@@ -18,6 +18,7 @@ import {TableSelectionService} from './table-selection.service';
 import {BehaviorSubject, map, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {SciTableDescriptor} from './table.model';
+import {attributeBinding, classBinding, partBinding} from './table-row-binding';
 import {SciTableFactory} from './table.factory';
 import {SciTableRequest} from './table-data-source';
 import {ɵSCI_TABLE_FLAGS, ɵSciTableFlags} from './ɵtable-flags';
@@ -1595,13 +1596,11 @@ fdescribe('Table', () => {
       const model = createTable({
         name: 'table:testee',
         data,
-        rowBindings: (_item, index) => {
-          return {
-            attributes: {
-              'data-spec-index': `${index}`,
-            },
-          };
-        },
+        rowBindings: [
+          attributeBinding((_item, index) => ({'data-spec-index': index})),
+          partBinding((_item, index) => `row:spec-index-${index}`),
+          classBinding((_item, index) => `spec-index-${index}`),
+        ],
       }, table => table.addStringColumn(item => item));
 
       const fixture = TestBed.createComponent(SciTableComponent, {
@@ -1616,24 +1615,46 @@ fdescribe('Table', () => {
       await table.waitUntilStable();
 
       expect(table.rows[0]!.element.getAttribute('data-spec-index')).toEqual('0');
+      expect(table.rows[0]!.element).toHaveClass('spec-index-0');
+      expect(table.rows[0]!.cells[0]!.element.getAttribute('part')).toContain('row:spec-index-0');
+
       expect(table.rows[1]!.element.getAttribute('data-spec-index')).toEqual('1');
+      expect(table.rows[1]!.element).toHaveClass('spec-index-1');
+      expect(table.rows[1]!.cells[0]!.element.getAttribute('part')).toContain('row:spec-index-1');
 
       // Scroll down to load another page.
       await table.scrollY({y: 50 * 30});
 
       // Expect index to be in ascending order without gaps.
       const rowIndex = table.rows.findIndex(row => row.cells[0]!.value === 'Row 50');
+
       expect(table.rows[rowIndex]!.element.getAttribute('data-spec-index')).toEqual('50');
+      expect(table.rows[rowIndex]!.element).toHaveClass('spec-index-50');
+      expect(table.rows[rowIndex]!.cells[0]!.element.getAttribute('part')).toContain('row:spec-index-50');
+
       expect(table.rows[rowIndex + 1]!.element.getAttribute('data-spec-index')).toEqual('51');
+      expect(table.rows[rowIndex + 1]!.element).toHaveClass('spec-index-51');
+      expect(table.rows[rowIndex + 1]!.cells[0]!.element.getAttribute('part')).toContain('row:spec-index-51');
 
       // Filter table.
       await table.column({index: 0})?.filter('1');
 
       // Expect index to start at 0 in ascending order without gaps.
       expect(table.rows[0]!.element.getAttribute('data-spec-index')).toEqual('0');
+      expect(table.rows[0]!.element).toHaveClass('spec-index-0');
+      expect(table.rows[0]!.cells[0]!.element.getAttribute('part')).toContain('row:spec-index-0');
+
       expect(table.rows[1]!.element.getAttribute('data-spec-index')).toEqual('1');
+      expect(table.rows[1]!.element).toHaveClass('spec-index-1');
+      expect(table.rows[1]!.cells[0]!.element.getAttribute('part')).toContain('row:spec-index-1');
+
       expect(table.rows[2]!.element.getAttribute('data-spec-index')).toEqual('2');
+      expect(table.rows[2]!.element).toHaveClass('spec-index-2');
+      expect(table.rows[2]!.cells[0]!.element.getAttribute('part')).toContain('row:spec-index-2');
+
       expect(table.rows[3]!.element.getAttribute('data-spec-index')).toEqual('3');
+      expect(table.rows[3]!.element).toHaveClass('spec-index-3');
+      expect(table.rows[3]!.cells[0]!.element.getAttribute('part')).toContain('row:spec-index-3');
     });
 
     it('should bind attribute to row', async () => {
@@ -1642,13 +1663,9 @@ fdescribe('Table', () => {
       const model = createTable({
         name: 'table:testee',
         data,
-        rowBindings: item => {
-          return {
-            attributes: {
-              'data-spec-id': `${item.id}`,
-            },
-          };
-        },
+        rowBindings: [
+          attributeBinding<{id: number}>(item => ({'data-spec-id': item.id})), // TODO [dwie] remove generic
+        ],
       }, table => table.addNumberColumn(item => item.id));
 
       const fixture = TestBed.createComponent(SciTableComponent, {
@@ -1675,11 +1692,9 @@ fdescribe('Table', () => {
       const model = createTable({
         name: 'table:testee',
         data,
-        rowBindings: item => {
-          return {
-            attributes: attributes.get(item.id),
-          };
-        },
+        rowBindings: [
+          attributeBinding<{id: number}>(item => attributes.get(item.id)), // TODO [dwie] remove generic
+        ],
       }, table => table.addNumberColumn(item => item.id));
 
       const fixture = TestBed.createComponent(SciTableComponent, {
@@ -1709,11 +1724,9 @@ fdescribe('Table', () => {
       const model = createTable({
         name: 'table:testee',
         data,
-        rowBindings: item => {
-          return {
-            cssClass: `spec-${item.id}`,
-          };
-        },
+        rowBindings: [
+          classBinding<{id: number}>(item => `spec-${item.id}`), // TODO [dwie] remove generic
+        ],
       }, table => table.addNumberColumn(item => item.id));
 
       const fixture = TestBed.createComponent(SciTableComponent, {
@@ -1740,11 +1753,9 @@ fdescribe('Table', () => {
       const model = createTable({
         name: 'table:testee',
         data,
-        rowBindings: item => {
-          return {
-            cssClass: cssClasses.get(item.id),
-          };
-        },
+        rowBindings: [
+          classBinding<{id: number}>(item => cssClasses.get(item.id)), // TODO [dwie] remove generic
+        ],
       }, table => table.addNumberColumn(item => item.id));
 
       const fixture = TestBed.createComponent(SciTableComponent, {
@@ -1774,11 +1785,9 @@ fdescribe('Table', () => {
       const model = createTable({
         name: 'table:testee',
         data,
-        rowBindings: item => {
-          return {
-            part: `row:${item.id},`,
-          };
-        },
+        rowBindings: [
+          partBinding<{id: number}>(item => `row:${item.id}`), // TODO [dwie] remove generic
+        ],
       }, table => table.addNumberColumn(item => item.id));
 
       const fixture = TestBed.createComponent(SciTableComponent, {
@@ -1805,11 +1814,9 @@ fdescribe('Table', () => {
       const model = createTable({
         name: 'table:testee',
         data,
-        rowBindings: item => {
-          return {
-            part: partAttributes.get(item.id),
-          };
-        },
+        rowBindings: [
+          partBinding<{id: number}>(item => partAttributes.get(item.id)), // TODO [dwie] remove generic
+        ],
       }, table => table.addNumberColumn(item => item.id));
 
       const fixture = TestBed.createComponent(SciTableComponent, {

@@ -12,6 +12,7 @@ import {Signal, WritableSignal} from '@angular/core';
 import {SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
+import {SciTableRowBinding, SciRowBindings} from './table-row-binding';
 
 export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template';
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
@@ -47,22 +48,7 @@ export interface SciTableDescriptor<T> {
    *
    */
   rowActions?: SciRowActionFactoryFn<T>;
-  /**
-   * Adds name as part attribute to cell element.
-   * This can be used to conditionally style the row.
-   *
-   * Example usage:
-   * ```ts
-   * table({ data: persons, rowName: person => !person.active ? 'inactive' : [] }, table => ...);
-   * ```
-   *
-   * ```scss
-   * sci-table ::part(row\:inactive) {
-   *   background-color: rgba(255, 0, 0, 0.2);
-   * }
-   * ```
-   */
-  rowBindings?: (item: T, index: number) => SciRowBindings | undefined;
+  rowBindings?: SciTableRowBinding<T>[];
   /**
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
@@ -149,7 +135,7 @@ export interface SciRow<T> {
   item?: T;
   id?: unknown;
   cells?: SciCellLike[];
-  bindings?: ɵSciRowBindings;
+  bindings?: SciRowBindings;
 }
 
 /**
@@ -186,54 +172,3 @@ export interface SciTemplateCell extends SciCell {
 }
 
 export type SciCellLike = SciStringCell | SciNumberCell | SciBooleanCell | SciComponentCell | SciTemplateCell;
-
-export interface SciRowBindings {
-  /**
-   * Adds the specified values as part attributes to the row, enabling for custom styling of the row, e.g., based on a condition.
-   *
-   * Example usage:
-   * ```ts
-   * table({
-   *   name: 'table:persons',
-   *   data: persons,
-   *   rowBindings: person => ({
-   *     part: person.active ? 'row:active' : undefined,
-   *   }),
-   * }, table => ...);
-   * ```
-   *
-   * ```scss
-   * sci-table::part(row\:active) {
-   *   background-color: green;
-   * }
-   * ```
-   *
-   * Example usage:
-   * ```ts
-   * table({
-   *   name: 'table:persons',
-   *   data: persons,
-   *   rowBindings: (person, index) => ({
-   *     part: index % 2 === 0 ? 'row:even' : 'row:odd',
-   *   }),
-   * }, table => ...);
-   * ```
-   *
-   * ```scss
-   * sci-table::part(row\:even) {
-   *   background-color: lightgray;
-   * }
-   * ```
-   */
-  part?: MaybeSignal<`row:${string}` | `row:${string}`[] | undefined>;
-
-  cssClass?: MaybeSignal<string | string[] | undefined>;
-
-  attributes?: MaybeSignal<{[name: `data-${string}`]: string | undefined}>;
-}
-
-export interface ɵSciRowBindings {
-  part?: Signal<`row:${string}` | `row:${string}`[] | undefined>;
-  cssClass?: Signal<string | string[] | undefined>;
-  attributes?: Signal<{[name: `data-${string}`]: string | undefined}>;
-}

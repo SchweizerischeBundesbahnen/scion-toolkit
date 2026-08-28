@@ -1455,7 +1455,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.setCustomRowStyling(true);
 
-      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:name row:negative');
+      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
 
       await table.row(2).click();
 

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
-import {SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {partBinding, SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -80,12 +80,9 @@ export default class SciTablePageComponent {
             return this._productService.products;
         }
       })(),
-      rowBindings: options.customRowStyling ? (product: Product) => {
-        if (product.id % 3 === 0) {
-          return {part: 'row:negative'};
-        }
-        return undefined;
-      } : undefined,
+      rowBindings: options.customRowStyling ? [
+        partBinding(product => product.id % 3 === 0 ? 'row:negative' : undefined),
+      ] : undefined,
       rowActions: options.showRowActions ? (product, toolbar) => toolbar.addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
         .addMenuItem({
           label: 'Edit',

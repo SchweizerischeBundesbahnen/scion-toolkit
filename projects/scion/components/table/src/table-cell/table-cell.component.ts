@@ -83,7 +83,7 @@ export class TableCellComponent<T> {
   private computePartAttribute(): Signal<string> {
     return computed(() => {
       return [
-        ...Arrays.coerce(this.row().bindings?.part?.()),
+        ...Arrays.coerce(this.row().bindings?.part()),
         this.cell().columnName,
       ].join(' ');
     });

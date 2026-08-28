@@ -10,7 +10,7 @@
 
 import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
-import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciRowBindings, SciTable, SciTableDescriptor} from './table.model';
+import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {coerceObservable, rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
@@ -20,6 +20,7 @@ import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {skip} from 'rxjs';
+import {coerceTableRowBindings, SciTableRowBinding} from './table-row-binding';
 
 interface SciTableUserSettings {
   columns: {name: string; width: number | undefined}[];
@@ -35,7 +36,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly name: `scion.components.table:${string}`;
   public readonly columns: WritableSignal<SciColumnLike<T>[]>;
   public readonly rowActions?: SciRowActionFactoryFn<T>;
-  private readonly _rowBindings?: (item: T, index: number) => SciRowBindings | undefined;
+  private readonly _rowBindings?: SciTableRowBinding<T>[];
   private readonly _dataLoaderFn: SciDataLoaderFn<T>;
   private readonly _trackBy?: (item: T) => unknown;
 
@@ -373,17 +374,11 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   private mapItemsToRow(items: T[], columns: SciColumnLike<T>[], pageStart: number): SciRow<T>[] {
     return items.map((item, i) => {
-      const bindings = this._rowBindings?.(item, pageStart + i);
-
       return ({
         id: this.trackBy(item),
         index: pageStart + i,
         item: item,
-        bindings: {
-          part: coerceSignal(bindings?.part),
-          cssClass: coerceSignal(bindings?.cssClass),
-          attributes: coerceSignal(bindings?.attributes),
-        },
+        bindings: coerceTableRowBindings(this._rowBindings ?? [], item, pageStart + i),
         cells: columns.map(column => ({
           value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,

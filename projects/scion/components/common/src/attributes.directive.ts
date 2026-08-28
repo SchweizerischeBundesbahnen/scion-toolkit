@@ -21,7 +21,7 @@ export class SciAttributesDirective {
    *
    * Attributes with `null` or `undefined` values are removed.
    */
-  public readonly attributes = input<{[name: string]: string | undefined | null} | undefined | null>(undefined, {alias: 'sciAttributes'});
+  public readonly attributes = input<{[name: string]: unknown | undefined | null} | undefined | null>(undefined, {alias: 'sciAttributes'});
 
   constructor() {
     const host = inject(ElementRef).nativeElement as HTMLElement;
@@ -39,7 +39,7 @@ export class SciAttributesDirective {
         // Update added or changed attributes.
         Object.entries(attributes).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            renderer.setAttribute(host, key, value);
+            renderer.setAttribute(host, key, `${value}`);
           }
           else {
             renderer.removeAttribute(host, key);
