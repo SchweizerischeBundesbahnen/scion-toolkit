@@ -30,6 +30,7 @@ import {SciTableHeaderComponent} from './table-header.component';
 import {clamp, Objects} from '@scion/toolkit/util';
 import {ColumnBoundsComponent} from './column-bounds/column-bounds.component';
 import {SciTableViewportRefDirective} from './table-viewport-ref.directive';
+import {SciAttributesDirective} from '@scion/components/common';
 
 @Component({
   selector: 'sci-table',
@@ -58,6 +59,7 @@ import {SciTableViewportRefDirective} from './table-viewport-ref.directive';
     SciTableBodyComponent,
     SciTableHeaderComponent,
     SciTableViewportRefDirective,
+    SciAttributesDirective,
   ],
   providers: [
     provideSciTable(),

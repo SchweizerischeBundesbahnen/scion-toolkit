@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, viewChild} from '@angular/core';
-import {SciCellLike} from '../table.model';
+import {ChangeDetectorRef, Component, computed, ElementRef, inject, input, Signal, TemplateRef, viewChild} from '@angular/core';
+import {SciCellLike, SciRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {SciIconComponent} from '../../../icon/src/icon.component';
 import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
-import {ɵSCI_TABLE} from '../ɵtable.model';
+import {Arrays} from '@scion/toolkit/util';
 
 @Component({
   selector: 'sci-table-cell',
@@ -23,7 +23,7 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
   host: {
     '[attr.data-type]': 'cell().type',
     '[attr.data-column]': 'cell().columnName',
-    '[attr.part]': 'isSelected() ? null : name()', // prevent styling selected rows
+    '[attr.part]': 'isSelected() ? null : partAttribute()', // prevent styling selected rows
   },
   imports: [
     NgTemplateOutlet,
@@ -34,46 +34,59 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
 export class TableCellComponent<T> {
 
   public readonly cell = input.required<SciCellLike>();
-  public readonly item = input.required<T>();
+  public readonly row = input.required<SciRow<T>>();
   public readonly isSelected = input<boolean>();
 
-  protected readonly table = inject(ɵSCI_TABLE);
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
-
-  protected readonly name = computed(() => this.cell().name.join(' '));
-
-  protected readonly template = computed(() => {
-    const cell = this.cell();
-
-    if (cell.type !== 'template') {
-      return null;
-    }
-
-    return coerceSignal(cell.template.template)();
-  });
-
-  protected readonly templateContext = computed(() => {
-    const cell = this.cell();
-    const item = this.item();
-
-    if (cell.type !== 'template') {
-      return null;
-    }
-
-    return {
-      $implicit: item,
-      ...Object.entries(cell.template.context ?? {}).reduce((obj, [key, value]) => ({...obj, [key]: coerceSignal(value)()}), {}),
-    };
-  });
-
   private readonly _cellElement = viewChild.required<ElementRef<HTMLDivElement>>('cellElement');
+
+  protected readonly template = this.computeTemplate();
+  protected readonly templateContext = this.computeTemplateContext();
+  protected readonly partAttribute = this.computePartAttribute();
 
   // TODO [Etienne] Padding is included in offset width and client width! Revisit!
   public getWidth(): number {
     const paddingStr = getComputedStyle(this._host).paddingRight;
     // The actual column width has to include the cell padding, so the content gets enough space.
-    const padding =  Number.parseFloat(paddingStr); // cut unit
+    const padding = Number.parseFloat(paddingStr); // cut unit
     const width = Math.ceil(this._cellElement().nativeElement.offsetWidth);
     return isNaN(padding) ? width : padding * 2 + width;
+  }
+
+  private computeTemplate(): Signal<TemplateRef<unknown> | null> {
+    return computed(() => {
+      const cell = this.cell();
+
+      if (cell.type !== 'template') {
+        return null;
+      }
+
+      return coerceSignal(cell.template.template)();
+    });
+  }
+
+  private computeTemplateContext(): Signal<{$implicit: NonNullable<T>} | null> {
+    return computed(() => {
+      const cell = this.cell();
+      const item = this.row().item!;
+
+      if (cell.type !== 'template') {
+        return null;
+      }
+
+      return {
+        $implicit: item,
+        ...Object.entries(cell.template.context ?? {}).reduce((obj, [key, value]) => ({...obj, [key]: coerceSignal(value)()}), {}),
+      };
+    });
+  }
+
+  private computePartAttribute(): Signal<string> {
+    return computed(() => {
+      return [
+        ...Arrays.coerce(this.row().bindings?.part?.()),
+        this.cell().columnName,
+      ].join(' ');
+    });
   }
 }

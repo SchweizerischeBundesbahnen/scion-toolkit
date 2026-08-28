@@ -1435,15 +1435,15 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
-      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
-      await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
+      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
 
       await tablePage.setCustomRowStyling(true);
 
-      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
-      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'column:name row:negative');
-      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'column:name row:negative');
+      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
       await expect(table.row(2).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
     });
 

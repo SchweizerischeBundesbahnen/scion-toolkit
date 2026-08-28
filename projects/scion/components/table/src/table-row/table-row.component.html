@@ -1,6 +1,6 @@
 @let row = this.row();
 @for (cell of row.cells; track cell.columnName) {
-  <sci-table-cell [cell]="cell" [item]="row.item" [isSelected]="isSelected()" #cell/>
+  <sci-table-cell [cell]="cell" [row]="row" [isSelected]="isSelected()" #cell/>
 } @empty {
   @for (column of table().columns(); track column.name) {
     <div class="skeleton"></div>

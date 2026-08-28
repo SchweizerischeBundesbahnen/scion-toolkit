@@ -80,7 +80,12 @@ export default class SciTablePageComponent {
             return this._productService.products;
         }
       })(),
-      rowState: options.customRowStyling ? (product: Product) => product.id % 3 === 0 ? 'row:negative' : [] : undefined,
+      rowBindings: (options.customRowStyling || undefined) && ((product: Product) => {
+        if (product.id % 3 === 0) {
+          return {part: 'row:negative'};
+        }
+        return undefined;
+      }),
       rowActions: options.showRowActions ? (product, toolbar) => toolbar.addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
         .addMenuItem({
           label: 'Edit',

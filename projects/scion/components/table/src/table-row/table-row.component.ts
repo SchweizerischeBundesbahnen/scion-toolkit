@@ -23,22 +23,23 @@ import {ɵSCI_TABLE_FLAGS} from '../ɵtable-flags';
   templateUrl: './table-row.component.html',
   styleUrl: './table-row.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    TableCellComponent,
+    SciToolbarComponent,
+  ],
   host: {
     '[class.active]': 'isActive()',
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
     '[class.hover]': 'isHovered()',
     '[attr.data-row-index]': 'tableFlags?.rowIndexAttribute ? this.row().index : null',
+    '[class]': 'row().bindings?.cssClass?.()',
     '(click)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick()',
     '(keydown.enter)': 'onRowEnter()',
     '(mouseenter)': 'onMouseEnter()',
     '(mouseleave)': 'onMouseLeave($event)',
   },
-  imports: [
-    TableCellComponent,
-    SciToolbarComponent,
-  ],
 })
 export class TableRowComponent<T> {
 

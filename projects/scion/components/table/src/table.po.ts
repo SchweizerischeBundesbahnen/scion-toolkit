@@ -117,8 +117,7 @@ export class ColumnPO {
     }
 
     // Wait for debounce.
-    await new Promise(resolve => setTimeout(resolve, 210));
-
+    await new Promise(resolve => setTimeout(resolve, 250));
     await this._table.waitUntilStable();
   }
 

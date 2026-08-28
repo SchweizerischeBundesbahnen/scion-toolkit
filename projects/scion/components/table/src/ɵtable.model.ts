@@ -10,13 +10,12 @@
 
 import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
-import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
+import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciRowBindings, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {coerceObservable, rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciColumnDescriptors} from './table.factory';
 import {coerceSignal} from '@scion/components/common';
-import {Arrays} from '@scion/toolkit/util';
 import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
@@ -36,7 +35,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly name: `scion.components.table:${string}`;
   public readonly columns: WritableSignal<SciColumnLike<T>[]>;
   public readonly rowActions?: SciRowActionFactoryFn<T>;
-  private readonly _rowState?: (item: T, index: number) => string | string[] | undefined;
+  private readonly _rowBindings?: (item: T, index: number) => SciRowBindings | undefined;
   private readonly _dataLoaderFn: SciDataLoaderFn<T>;
   private readonly _trackBy?: (item: T) => unknown;
 
@@ -107,7 +106,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.columns = this.computeColumns(factory);
 
     this.rowActions = descriptor.rowActions;
-    this._rowState = descriptor.rowState;
+    this._rowBindings = descriptor.rowBindings;
     this._trackBy = descriptor.trackBy;
     this._dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 
@@ -374,18 +373,23 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   private mapItemsToRow(items: T[], columns: SciColumnLike<T>[], pageStart: number): SciRow<T>[] {
     return items.map((item, i) => {
-      const rowState = Arrays.coerce(this._rowState?.(item, pageStart + i));
+      const bindings = this._rowBindings?.(item, pageStart + i);
+
       return ({
+        id: this.trackBy(item),
         index: pageStart + i,
         item: item,
-        id: this.trackBy(item),
+        bindings: {
+          part: coerceSignal(bindings?.part),
+          cssClass: coerceSignal(bindings?.cssClass),
+          attributes: coerceSignal(bindings?.attributes),
+        },
         cells: columns.map(column => ({
           value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,
           template: column.type === 'template' ? column.template(item) : undefined,
           type: column.type,
           columnName: column.name,
-          name: [column.name, ...rowState],
         } as SciCellLike)),
       });
     });

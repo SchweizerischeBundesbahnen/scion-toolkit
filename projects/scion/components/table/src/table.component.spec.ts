@@ -11,7 +11,7 @@
 import {TestBed} from '@angular/core/testing';
 import {table} from './table';
 import {SciTableComponent} from './table.component';
-import {Component, computed, EnvironmentProviders, Injector, input, inputBinding, Signal, signal, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, EnvironmentProviders, Injector, input, inputBinding, Signal, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
 import {ɵSciTable} from './ɵtable.model';
 import {TableSelectionService} from './table-selection.service';
@@ -1073,16 +1073,16 @@ fdescribe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.columns[0]?.width).toBe(200);
-      expect(table.columns[1]?.width).toBe(200);
+      expect(table.columns[0]!.width).toBe(200);
+      expect(table.columns[1]!.width).toBe(200);
 
       await table.column({index: 1})!.pack();
-      expect(table.columns[0]?.width).toBe(200);
-      expect(table.columns[1]?.width).toBe(100);
+      expect(table.columns[0]!.width).toBe(200);
+      expect(table.columns[1]!.width).toBe(100);
 
       await table.column({index: 0})!.pack();
-      expect(table.columns[0]?.width).toBe(100);
-      expect(table.columns[1]?.width).toBe(100);
+      expect(table.columns[0]!.width).toBe(100);
+      expect(table.columns[1]!.width).toBe(100);
     });
 
     // TODO [dwie] fix storage!
@@ -1151,8 +1151,8 @@ fdescribe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.columns[0]?.width).toBe(100);
-      expect(table.columns[1]?.width).toBe(300);
+      expect(table.columns[0]!.width).toBe(100);
+      expect(table.columns[1]!.width).toBe(300);
     });
   });
 
@@ -1183,15 +1183,15 @@ fdescribe('Table', () => {
       await table.waitUntilStable();
 
       expect(table.rows.length).toEqual(10); // 300px / 30px per row
-      expect(table.rows[0]?.cells[0]?.value).toEqual('0');
+      expect(table.rows[0]!.cells[0]!.value).toEqual('0');
       expect(loader).toHaveBeenCalledTimes(1);
 
       await table.scrollY({deltaY: 600});
-      expect(table.rows[0]?.cells[0]?.value).toEqual('20'); // 600px = 20 rows
+      expect(table.rows[0]!.cells[0]!.value).toEqual('20'); // 600px = 20 rows
       expect(loader).toHaveBeenCalledTimes(2);
 
       await table.scrollY({deltaY: -600});
-      expect(table.rows[0]?.cells[0]?.value).toEqual('0');
+      expect(table.rows[0]!.cells[0]!.value).toEqual('0');
       expect(loader).toHaveBeenCalledTimes(2); // Should cache page 0 and not call loader again
     });
 
@@ -1254,7 +1254,7 @@ fdescribe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.rows[0]?.cells[0]?.value).toEqual('0');
+      expect(table.rows[0]!.cells[0]!.value).toEqual('0');
 
       loader.calls.reset();
       model.filter('50');
@@ -1555,7 +1555,7 @@ fdescribe('Table', () => {
       await selectionService.onRowClick(1, {ctrlKey: false, metaKey: false, shiftKey: false});
 
       await table.scrollY({deltaY: 3000});
-      expect(table.rows[0]?.cells[0]?.value).toEqual('100'); // 3000px = 100 rows
+      expect(table.rows[0]!.cells[0]!.value).toEqual('100'); // 3000px = 100 rows
 
       await selectionService.onRowClick(100, {ctrlKey: false, metaKey: false, shiftKey: true});
       expect(loader).toHaveBeenCalledTimes(11); // page 0-10
@@ -1586,6 +1586,252 @@ fdescribe('Table', () => {
       await table.waitUntilStable();
 
       expect(model.selectedItems()).toEqual(generateData(100, i => i));
+    });
+  });
+
+  describe('Row Bindings', () => {
+
+    it('should pass index to row binding function', async () => {
+      const data = signal(generateData(100, i => `Row ${i}`));
+      const model = createTable({
+        name: 'table:testee',
+        data,
+        rowBindings: (_item, index) => {
+          return {
+            attributes: {
+              'data-spec-index': `${index}`,
+            },
+          }
+        },
+      }, table => table.addStringColumn(item => item));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+        inferTagName: true,
+      });
+
+      (fixture.nativeElement as HTMLElement).style.height = '300px';
+      (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.element.getAttribute('data-spec-index')).toEqual('0');
+      expect(table.rows[1]!.element.getAttribute('data-spec-index')).toEqual('1');
+
+      // Scroll down to load another page.
+      await table.scrollY({y: 50 * 30});
+
+      // Expect index to be in ascending order without gaps.
+      const rowIndex = table.rows.findIndex(row => row.cells[0]!.value === 'Row 50')!;
+      expect(table.rows[rowIndex]!.element.getAttribute('data-spec-index')).toEqual('50');
+      expect(table.rows[rowIndex + 1]!.element.getAttribute('data-spec-index')).toEqual('51');
+
+      // Filter table.
+      await table.column({index: 0})?.filter('1');
+
+      // Expect index to start at 0 in ascending order without gaps.
+      expect(table.rows[0]!.element.getAttribute('data-spec-index')).toEqual('0');
+      expect(table.rows[1]!.element.getAttribute('data-spec-index')).toEqual('1');
+      expect(table.rows[2]!.element.getAttribute('data-spec-index')).toEqual('2');
+      expect(table.rows[3]!.element.getAttribute('data-spec-index')).toEqual('3');
+    });
+
+    it('should bind attribute to row', async () => {
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+
+      const model = createTable({
+        name: 'table:testee',
+        data,
+        rowBindings: item => {
+          return {
+            attributes: {
+              'data-spec-id': `${item.id}`,
+            },
+          }
+        },
+      }, table => table.addNumberColumn(item => item.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+        inferTagName: true,
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.element.getAttribute('data-spec-id')).toEqual('1');
+      expect(table.rows[1]!.element.getAttribute('data-spec-id')).toEqual('2');
+      expect(table.rows[2]!.element.getAttribute('data-spec-id')).toEqual('3');
+    });
+
+    it('should bind reactive attribute to row', async () => {
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+      const attributes = new Map<number, WritableSignal<{[name: string]: string | undefined}>>([
+        [1, signal({})],
+        [2, signal({'data-spec-attribute': 'a'})],
+        [3, signal({})],
+      ]);
+
+      const model = createTable({
+        name: 'table:testee',
+        data,
+        rowBindings: item => {
+          return {
+            attributes: attributes.get(item.id),
+          }
+        },
+      }, table => table.addNumberColumn(item => item.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+        inferTagName: true,
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.element.getAttribute('data-spec-attribute')).toBeNull();
+      expect(table.rows[1]!.element.getAttribute('data-spec-attribute')).toEqual('a');
+      expect(table.rows[2]!.element.getAttribute('data-spec-attribute')).toBeNull();
+
+      // Update attribute of row 2.
+      attributes.get(2)!.set({'data-spec-attribute': 'b'});
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.element.getAttribute('data-spec-attribute')).toBeNull();
+      expect(table.rows[1]!.element.getAttribute('data-spec-attribute')).toEqual('b');
+      expect(table.rows[2]!.element.getAttribute('data-spec-attribute')).toBeNull();
+    });
+
+    it('should bind CSS class to row', async () => {
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+
+      const model = createTable({
+        name: 'table:testee',
+        data,
+        rowBindings: item => {
+          return {
+            cssClass: `spec-${item.id}`,
+          }
+        },
+      }, table => table.addNumberColumn(item => item.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+        inferTagName: true,
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.element).toHaveClass('spec-1');
+      expect(table.rows[1]!.element).toHaveClass('spec-2');
+      expect(table.rows[2]!.element).toHaveClass('spec-3');
+    });
+
+    it('should bind reactive CSS class to row', async () => {
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+      const cssClasses = new Map<number, WritableSignal<string | undefined>>([
+        [1, signal(undefined)],
+        [2, signal('spec-a')],
+        [3, signal(undefined)],
+      ]);
+
+      const model = createTable({
+        name: 'table:testee',
+        data,
+        rowBindings: item => {
+          return {
+            cssClass: cssClasses.get(item.id),
+          }
+        },
+      }, table => table.addNumberColumn(item => item.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+        inferTagName: true,
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.element).not.toHaveClass('spec-a');
+      expect(table.rows[1]!.element).toHaveClass('spec-a');
+      expect(table.rows[2]!.element).not.toHaveClass('spec-a');
+
+      // Update attribute of row 2.
+      cssClasses.get(2)!.set('spec-b');
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.element).not.toHaveClass('spec-b');
+      expect(table.rows[1]!.element).toHaveClass('spec-b');
+      expect(table.rows[2]!.element).not.toHaveClass('spec-b');
+    });
+
+    it('should bind part-attribute to cell', async () => {
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+
+      const model = createTable({
+        name: 'table:testee',
+        data,
+        rowBindings: item => {
+          return {
+            part: `row:${item.id},`,
+          }
+        },
+      }, table => table.addNumberColumn(item => item.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+        inferTagName: true,
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.cells[0]!.element.getAttribute('part')).toContain('row:1');
+      expect(table.rows[1]!.cells[0]!.element.getAttribute('part')).toContain('row:2');
+      expect(table.rows[2]!.cells[0]!.element.getAttribute('part')).toContain('row:3');
+    });
+
+    it('should bind reactive part-attribute to cell', async () => {
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+      const partAttributes = new Map<number, WritableSignal<`row:${string}` | undefined>>([
+        [1, signal(undefined)],
+        [2, signal('row:negative')],
+        [3, signal(undefined)],
+      ]);
+
+      const model = createTable({
+        name: 'table:testee',
+        data,
+        rowBindings: item => {
+          return {
+            part: partAttributes.get(item.id),
+          }
+        },
+      }, table => table.addNumberColumn(item => item.id));
+
+      const fixture = TestBed.createComponent(SciTableComponent, {
+        bindings: [inputBinding('table', () => model)],
+        inferTagName: true,
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.cells[0]!.element.getAttribute('part')).not.toContain('row:negative');
+      expect(table.rows[1]!.cells[0]!.element.getAttribute('part')).toContain('row:negative');
+      expect(table.rows[2]!.cells[0]!.element.getAttribute('part')).not.toContain('row:negative');
+
+      // Update part attribute of row 2.
+      partAttributes.get(2)!.set('row:positive');
+      await table.waitUntilStable();
+
+      expect(table.rows[0]!.cells[0]!.element.getAttribute('part')).not.toContain('row:positive');
+      expect(table.rows[1]!.cells[0]!.element.getAttribute('part')).toContain('row:positive');
+      expect(table.rows[2]!.cells[0]!.element.getAttribute('part')).not.toContain('row:positive');
     });
   });
 });
