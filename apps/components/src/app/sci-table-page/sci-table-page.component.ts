@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
-import {SciRowActionFactoryFn, SciTable, SciTableComponent, SciTableFactory, table} from '@scion/components/table';
+import {partBinding, SciRowActionFactoryFn, SciTable, SciTableComponent, SciTableFactory, table} from '@scion/components/table';
 import {Company, CompanyService} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
@@ -61,6 +61,14 @@ export default class SciTablePageComponent {
       sortable: computed(() => this.settingsForm.sortable().value()),
       filterable: computed(() => this.settingsForm.filterable().value()),
       resizable: computed(() => this.settingsForm.resizable().value()),
+      rowBindings: [
+        partBinding((_item, index) => {
+          if (this.settingsForm.showZebraStriping().value()) {
+            return index % 2 === 0 ? 'row:even' : 'row:odd';
+          }
+          return undefined;
+        }),
+      ],
       selectable: computed(() => {
         const selectable = this.settingsForm.selectable().value();
         return selectable === 'false' ? false : selectable;
@@ -222,6 +230,7 @@ export default class SciTablePageComponent {
       resizable: true,
       showHeader: true,
       showGridlines: false,
+      showZebraStriping: false,
       slowDataSource: false,
       selectable: 'multi',
       visibleColumns: {
@@ -296,6 +305,7 @@ interface SettingsForm {
   resizable: boolean;
   showHeader: boolean;
   showGridlines: boolean;
+  showZebraStriping: boolean;
   slowDataSource: boolean;
   selectable: 'false' | 'single' | 'multi';
   visibleColumns: {

@@ -10,6 +10,10 @@
     > sci-table {
       flex: 1 1 0;
     }
+
+    > sci-table::part(row\:even) {
+      background-color: light-dark(rgb(211 211 211 / 0.25), rgb(66 66 66 / 0.25));
+    }
   }
 
   > aside {
