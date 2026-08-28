@@ -209,7 +209,7 @@ export class SciScrollbarComponent {
             subscribeIn(fn => this._zone.runOutsideAngular(fn)),
           )
           .subscribe(() => {
-            this.renderScrollPosition()
+            this.renderScrollPosition();
           });
         onCleanup(() => subscription.unsubscribe());
       });

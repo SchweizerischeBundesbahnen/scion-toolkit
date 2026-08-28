@@ -136,13 +136,13 @@ export class ColumnPO {
 
     // Scroll down page by page until the end and collect the rows.
     if (options?.rows === 'all') {
-      await table.scrollY({y: 0})
+      await table.scrollY({y: 0});
 
       const rows = new Array<{rowIndex: number; value: string}>();
       rows.push(...table.rows.map(row => ({rowIndex: row.rowIndex, value: row.cells[this.index]!.value})));
 
       while (table.scrollTop !== table.viewport.scrollHeight - table.viewport.clientHeight) {
-        await table.scrollY({deltaY: table.viewport.clientHeight})
+        await table.scrollY({deltaY: table.viewport.clientHeight});
         rows.push(...table.rows.map(row => ({rowIndex: row.rowIndex, value: row.cells[this.index]!.value})));
       }
 
@@ -181,9 +181,9 @@ export class RowPO {
   }
 
   public get rowIndex(): number {
-    const rowIndex = this.element.getAttribute('data-row-index')!;
+    const rowIndex = this.element.getAttribute('data-row-index');
     if (rowIndex === null) {
-      throw Error('[PageObjectError] Missing required `data-row-index` attribute on `<sci-table-row>`. Enable the `rowIndexAttribute` flag via the `ɵSCI_TABLE_FLAGS` DI token.')
+      throw Error('[PageObjectError] Missing required `data-row-index` attribute on `<sci-table-row>`. Enable the `rowIndexAttribute` flag via the `ɵSCI_TABLE_FLAGS` DI token.');
     }
     return +rowIndex;
   }
@@ -202,4 +202,3 @@ export class CellPO {
     return this.element.textContent.trim();
   }
 }
-

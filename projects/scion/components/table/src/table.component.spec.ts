@@ -1271,11 +1271,11 @@ fdescribe('Table', () => {
       const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => {
         const filtered = data.filter(item => {
           const idFilter = request.columnFilters.find(filter => filter.columnName === 'column:id');
-          if (idFilter && `${item.id}` !== idFilter.text) {
+          if (idFilter && item.id !== idFilter.text) {
             return false;
           }
           const nameFilter = request.columnFilters.find(filter => filter.columnName === 'column:name');
-          if (nameFilter && `${item.name}` !== nameFilter.text) {
+          if (nameFilter && item.name !== nameFilter.text) {
             return false;
           }
           return true;
@@ -1287,18 +1287,17 @@ fdescribe('Table', () => {
       });
 
       const model = createTable<{id: string; name: string}>({
-          name: 'table:test',
-          data: loader,
-        }, table => table
-          .addStringColumn({
-            name: 'column:id',
-            value: item => item.id,
-          })
-          .addStringColumn({
-            name: 'column:name',
-            value: item => item.name,
-          }),
-      );
+        name: 'table:test',
+        data: loader,
+      }, table => table
+        .addStringColumn({
+          name: 'column:id',
+          value: item => item.id,
+        })
+        .addStringColumn({
+          name: 'column:name',
+          value: item => item.name,
+        }));
 
       const fixture = TestBed.createComponent(SciTableComponent, {
         bindings: [inputBinding('table', () => model)],
@@ -1601,7 +1600,7 @@ fdescribe('Table', () => {
             attributes: {
               'data-spec-index': `${index}`,
             },
-          }
+          };
         },
       }, table => table.addStringColumn(item => item));
 
@@ -1623,7 +1622,7 @@ fdescribe('Table', () => {
       await table.scrollY({y: 50 * 30});
 
       // Expect index to be in ascending order without gaps.
-      const rowIndex = table.rows.findIndex(row => row.cells[0]!.value === 'Row 50')!;
+      const rowIndex = table.rows.findIndex(row => row.cells[0]!.value === 'Row 50');
       expect(table.rows[rowIndex]!.element.getAttribute('data-spec-index')).toEqual('50');
       expect(table.rows[rowIndex + 1]!.element.getAttribute('data-spec-index')).toEqual('51');
 
@@ -1648,7 +1647,7 @@ fdescribe('Table', () => {
             attributes: {
               'data-spec-id': `${item.id}`,
             },
-          }
+          };
         },
       }, table => table.addNumberColumn(item => item.id));
 
@@ -1679,7 +1678,7 @@ fdescribe('Table', () => {
         rowBindings: item => {
           return {
             attributes: attributes.get(item.id),
-          }
+          };
         },
       }, table => table.addNumberColumn(item => item.id));
 
@@ -1713,7 +1712,7 @@ fdescribe('Table', () => {
         rowBindings: item => {
           return {
             cssClass: `spec-${item.id}`,
-          }
+          };
         },
       }, table => table.addNumberColumn(item => item.id));
 
@@ -1744,7 +1743,7 @@ fdescribe('Table', () => {
         rowBindings: item => {
           return {
             cssClass: cssClasses.get(item.id),
-          }
+          };
         },
       }, table => table.addNumberColumn(item => item.id));
 
@@ -1778,7 +1777,7 @@ fdescribe('Table', () => {
         rowBindings: item => {
           return {
             part: `row:${item.id},`,
-          }
+          };
         },
       }, table => table.addNumberColumn(item => item.id));
 
@@ -1809,7 +1808,7 @@ fdescribe('Table', () => {
         rowBindings: item => {
           return {
             part: partAttributes.get(item.id),
-          }
+          };
         },
       }, table => table.addNumberColumn(item => item.id));
 

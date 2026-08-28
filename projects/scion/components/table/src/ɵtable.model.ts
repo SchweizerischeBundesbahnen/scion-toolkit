@@ -399,7 +399,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     const settings = signal<SciTableUserSettings | undefined>(undefined);
     Promise.resolve(this._tableStorage.load(this.name))
       .then(serialized => settings.set(serialized ? JSON.parse(serialized) as SciTableUserSettings : {columns: []}))
-      .catch(error => {
+      .catch((error: unknown) => {
         console.warn(`[SciTable] Failed to load user settings for '${this.name}' from storage.`, error);
         return {columns: []};
       });
