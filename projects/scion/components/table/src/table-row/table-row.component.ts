@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, inject, input, output, viewChild, viewChildren} from '@angular/core';
+import {Component, computed, inject, input, output, viewChild, viewChildren} from '@angular/core';
 import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
@@ -22,7 +22,6 @@ import {ɵSCI_TABLE_FLAGS} from '../ɵtable-flags';
   selector: 'sci-table-row',
   templateUrl: './table-row.component.html',
   styleUrl: './table-row.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TableCellComponent,
     SciToolbarComponent,

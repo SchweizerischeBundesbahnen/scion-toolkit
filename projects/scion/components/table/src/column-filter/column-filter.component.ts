@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, effect, inject, input} from '@angular/core';
+import {Component, computed, effect, inject, input} from '@angular/core';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {FormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciColumnLike} from '../table.model';
@@ -19,7 +19,6 @@ import {SciIconComponent} from '../../../icon/src/icon.component';
 @Component({
   selector: 'sci-column-filter',
   imports: [ReactiveFormsModule, SciIconComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-filter.component.html',
   styleUrl: './column-filter.component.scss',
 })

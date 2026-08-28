@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectionStrategy, Component, computed, inject, input} from '@angular/core';
+import {Component, computed, inject, input} from '@angular/core';
 import {SciColumnLike} from '../table.model';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
@@ -22,7 +22,6 @@ import {SciTextPipe} from '@scion/components/text';
     SciIconComponent,
     SciTextPipe,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './column-header.component.html',
   styleUrl: './column-header.component.scss',
   host: {

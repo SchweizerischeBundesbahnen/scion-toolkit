@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {ChangeDetectorRef, Component, computed, ElementRef, inject, input, Signal, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, ElementRef, inject, input, Signal, TemplateRef, viewChild} from '@angular/core';
 import {SciCellLike, SciRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {SciIconComponent} from '../../../icon/src/icon.component';
@@ -19,7 +19,6 @@ import {Arrays} from '@scion/toolkit/util';
   selector: 'sci-table-cell',
   templateUrl: './table-cell.component.html',
   styleUrl: './table-cell.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-type]': 'cell().type',
     '[attr.data-column]': 'cell().columnName',
