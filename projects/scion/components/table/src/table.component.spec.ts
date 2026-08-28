@@ -18,10 +18,9 @@ import {TableSelectionService} from './table-selection.service';
 import {BehaviorSubject, map, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {SciTableDescriptor} from './table.model';
-import {attributeBinding, classBinding, partBinding} from './table-row-binding';
+import {attributeBinding, classBinding, partBinding, provideTableRowBinding} from './table-row-binding';
 import {SciTableFactory} from './table.factory';
 import {SciTableRequest} from './table-data-source';
-import {ɵSCI_TABLE_FLAGS, ɵSciTableFlags} from './ɵtable-flags';
 
 fdescribe('Table', () => {
 
@@ -29,8 +28,10 @@ fdescribe('Table', () => {
     TestBed.configureTestingModule({
       providers: [
         provideNullTableStorage(),
-        // Instruct `SciTableComponent` to add the row index attribute; used by `ColumnPO.values` to identify duplicate rows when collecting data across pages.
-        {provide: ɵSCI_TABLE_FLAGS, useFactory: (): ɵSciTableFlags => ({rowIndexAttribute: true})},
+        provideTableRowBinding([
+          // Add row index attribute, required by `ColumnPO.values` to identify duplicate rows when collecting data across pages.
+          attributeBinding((_item, index) => ({'data-row-index': index})),
+        ]),
       ],
     });
   });

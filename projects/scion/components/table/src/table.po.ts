@@ -183,7 +183,7 @@ export class RowPO {
   public get rowIndex(): number {
     const rowIndex = this.element.getAttribute('data-row-index');
     if (rowIndex === null) {
-      throw Error('[PageObjectError] Missing required `data-row-index` attribute on `<sci-table-row>`. Enable the `rowIndexAttribute` flag via the `ɵSCI_TABLE_FLAGS` DI token.');
+      throw Error('[PageObjectError] Missing required \'data-row-index\' attribute on `<sci-table-row>. Add it via `provideTableRowBinding()` function.');
     }
     return +rowIndex;
   }

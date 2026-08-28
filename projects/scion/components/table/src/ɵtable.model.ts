@@ -20,7 +20,7 @@ import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {skip} from 'rxjs';
-import {coerceTableRowBindings, SciTableRowBinding} from './table-row-binding';
+import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBinding} from './table-row-binding';
 
 interface SciTableUserSettings {
   columns: {name: string; width: number | undefined}[];
@@ -107,7 +107,10 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.columns = this.computeColumns(factory);
 
     this.rowActions = descriptor.rowActions;
-    this._rowBindings = descriptor.rowBindings;
+    this._rowBindings = [
+      ...descriptor.rowBindings ?? [],
+      ...inject<SciTableRowBinding<T>[]>(SCI_TABLE_ROW_BINDING, {optional: true}) ?? [],
+    ];
     this._trackBy = descriptor.trackBy;
     this._dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 

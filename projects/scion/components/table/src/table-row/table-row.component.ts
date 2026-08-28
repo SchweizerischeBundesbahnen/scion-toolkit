@@ -16,7 +16,6 @@ import {TableSelectionService} from '../table-selection.service';
 import {TABLE_SPLITTERS_SELECTOR} from '../column-splitters/column-splitters.component';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
-import {ɵSCI_TABLE_FLAGS} from '../ɵtable-flags';
 
 @Component({
   selector: 'sci-table-row',
@@ -31,7 +30,6 @@ import {ɵSCI_TABLE_FLAGS} from '../ɵtable-flags';
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
     '[class.hover]': 'isHovered()',
-    '[attr.data-row-index]': 'tableFlags?.rowIndexAttribute ? this.row().index : null',
     '[class]': 'row().bindings?.cssClass?.()',
     '(click)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick()',
@@ -59,7 +57,6 @@ export class TableRowComponent<T> {
   protected readonly rowActionToolbar = viewChild(SciToolbarComponent);
 
   protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
-  protected readonly tableFlags = inject(ɵSCI_TABLE_FLAGS, {optional: true});
 
   constructor() {
     this.contributeRowActions();

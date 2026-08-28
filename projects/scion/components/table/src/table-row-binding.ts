@@ -8,9 +8,22 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, Signal} from '@angular/core';
+import {computed, InjectionToken, Provider, Signal} from '@angular/core';
 import {coerceSignal, MaybeSignal} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
+import {MaybeArray} from '@scion/toolkit/types';
+
+export const SCI_TABLE_ROW_BINDING = new InjectionToken<SciTableRowBinding[]>('SCI_TABLE_ROW_BINDING');
+
+export function provideTableRowBinding<T = unknown>(bindings: MaybeArray<SciTableRowBinding<T>>): Provider[] {
+  return Arrays.coerce(bindings).map(binding => {
+    return {
+      provide: SCI_TABLE_ROW_BINDING,
+      useValue: binding,
+      multi: true,
+    };
+  });
+}
 
 export function attributeBinding<T>(binding: (item: T, index: number) => MaybeSignal<{[name: string]: unknown | undefined} | undefined>): SciTableRowBinding<T> {
   return new SciTableRowAttributeBinding<T>(binding);
@@ -61,14 +74,14 @@ export function partBinding<T>(binding: (item: T, index: number) => MaybeSignal<
   return new SciTableRowPartBinding<T>(binding);
 }
 
-export type SciTableRowBinding<T> = SciTableRowAttributeBinding<T> | SciTableRowClassBinding<T> | SciTableRowPartBinding<T>;
+export type SciTableRowBinding<T = unknown> = SciTableRowAttributeBinding<T> | SciTableRowClassBinding<T> | SciTableRowPartBinding<T>;
 
-const SCI_TABLE_ROW_BINDING: unique symbol = Symbol('SCI_TABLE_ROW_BINDING');
+const SCI_TABLE_ROW_BINDING_TYPE: unique symbol = Symbol('SCI_TABLE_ROW_BINDING_TYPE');
 
 /** @internal */
 class SciTableRowAttributeBinding<T> {
 
-  public readonly [SCI_TABLE_ROW_BINDING] = 'attribute';
+  public readonly [SCI_TABLE_ROW_BINDING_TYPE] = 'attribute';
 
   constructor(public readonly binding: (item: T, index: number) => MaybeSignal<{[name: string]: unknown | undefined} | undefined>) {
   }
@@ -77,7 +90,7 @@ class SciTableRowAttributeBinding<T> {
 /** @internal */
 class SciTableRowClassBinding<T> {
 
-  public readonly [SCI_TABLE_ROW_BINDING] = 'class';
+  public readonly [SCI_TABLE_ROW_BINDING_TYPE] = 'class';
 
   constructor(public readonly binding: (item: T, index: number) => MaybeSignal<string | string[] | undefined>) {
   }
@@ -86,7 +99,7 @@ class SciTableRowClassBinding<T> {
 /** @internal */
 class SciTableRowPartBinding<T> {
 
-  public readonly [SCI_TABLE_ROW_BINDING] = 'part';
+  public readonly [SCI_TABLE_ROW_BINDING_TYPE] = 'part';
 
   constructor(public readonly binding: (item: T, index: number) => MaybeSignal<`row:${string}` | `row:${string}`[] | undefined>) {
   }
@@ -95,15 +108,15 @@ class SciTableRowPartBinding<T> {
 export function coerceTableRowBindings<T>(bindings: SciTableRowBinding<T>[], item: T, index: number): SciRowBindings {
   return {
     cssClass: computed(() => bindings
-      .filter(binding => binding[SCI_TABLE_ROW_BINDING] === 'class')
+      .filter(binding => binding[SCI_TABLE_ROW_BINDING_TYPE] === 'class')
       .map(binding => coerceSignal(binding.binding(item, index)))
       .reduce((acc, binding) => acc.concat(Arrays.coerce(binding?.())), new Array<string>())),
     attributes: computed(() => bindings
-      .filter(binding => binding[SCI_TABLE_ROW_BINDING] === 'attribute')
+      .filter(binding => binding[SCI_TABLE_ROW_BINDING_TYPE] === 'attribute')
       .map(binding => coerceSignal(binding.binding(item, index)))
       .reduce((acc, binding) => ({...acc, ...binding?.()}), {} as {[name: string]: unknown | undefined})),
     part: computed(() => bindings
-      .filter(binding => binding[SCI_TABLE_ROW_BINDING] === 'part')
+      .filter(binding => binding[SCI_TABLE_ROW_BINDING_TYPE] === 'part')
       .map(binding => coerceSignal(binding.binding(item, index)))
       .reduce((acc, binding) => acc.concat(Arrays.coerce(binding?.())), new Array<`row:${string}`>())),
   };
