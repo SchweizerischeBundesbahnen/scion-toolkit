@@ -32,14 +32,15 @@
       grid-template-columns: var(--ɵsci-table-columns, 100%) 0; // last column used for row actions
       grid-auto-rows: min-content;
       grid-template-rows:
-        min-content // header
-        min-content; // table body
+        min-content // table header
+        1fr; // table body
       // Fill viewport by default, shrinking columns to minimums before overflowing horizontally.
       width: min-content;
       min-width: 100%;
+      min-height: 100%;
 
       @container style(--ɵsci-table-header-visible: false) {
-        grid-template-rows: min-content;
+        grid-template-rows: 1fr; // table body
       }
 
       @container not style(--esci-table-gridlines: true) {

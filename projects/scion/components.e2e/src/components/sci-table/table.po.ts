@@ -13,12 +13,13 @@ import {ColumnPO} from './column.po';
 import {RowPO} from './row.po';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
 import {RequireOne} from '@scion/toolkit/types';
+import {HeaderPO} from './header.po';
 
 export class TablePO {
 
   public readonly viewport: Locator;
   public readonly grid: Locator;
-  public readonly header: Locator;
+  public readonly header: HeaderPO;
   public readonly headers: Locator;
   public readonly body: Locator;
   public readonly rows: Locator;
@@ -26,11 +27,12 @@ export class TablePO {
   public readonly sortButtons: Locator;
   public readonly verticalScrollbar: ScrollbarPO;
   public readonly horizontalScrollbar: ScrollbarPO;
+  public readonly splitters: Locator;
 
   constructor(public readonly locator: Locator) {
     this.viewport = this.locator.locator('div.e2e-viewport');
     this.grid = this.locator.locator('sci-table-grid');
-    this.header = this.locator.locator('sci-table-header');
+    this.header = new HeaderPO(this.locator.locator('sci-table-header'));
     this.headers = this.locator.locator('sci-column-header button.e2e-column-sort');
     this.body = this.locator.locator('sci-table-body');
     this.rows = this.locator.locator('sci-table-row');
@@ -38,6 +40,7 @@ export class TablePO {
     this.sortButtons = this.locator.locator('button.e2e-column-sort.sortable');
     this.verticalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="vscroll"]'));
     this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
+    this.splitters = this.locator.locator('sci-column-splitters');
   }
 
   public row(index: number): RowPO {
@@ -114,7 +117,7 @@ export class ColumnSplitterPO {
   public async startDrag(options?: {location: 'table-header' | 'table-body'}): Promise<DrageHandlePO> {
     const splitterBounds = await this.bounds();
     const x = splitterBounds.left;
-    const y = Math.floor(fromRect(await (options?.location === 'table-header' ? this._table.header : this._table.viewport).boundingBox()).vcenter);
+    const y = Math.floor(fromRect(await (options?.location === 'table-header' ? this._table.header.locator : this._table.viewport).boundingBox()).vcenter);
     const page = this.locator.page();
 
     await page.mouse.move(x, y, {steps: 1});

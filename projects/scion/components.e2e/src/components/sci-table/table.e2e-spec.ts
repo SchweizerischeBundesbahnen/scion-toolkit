@@ -1917,7 +1917,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
       const tableBounds = await table.bounds();
-      const tableHeaderBounds = fromRect(await table.header.boundingBox());
+      const tableHeaderBounds = await table.header.bounds();
 
       await expectTable(table).toHaveVerticalOverflow();
       await expectTable(table).toHaveHorizontalOverflow();
@@ -1944,7 +1944,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
       const tableBounds = await table.bounds();
-      const tableHeaderBounds = fromRect(await table.header.boundingBox());
+      const tableHeaderBounds = await table.header.bounds();
 
       await expectTable(table).toHaveVerticalOverflow();
       await expectTable(table).toHaveHorizontalOverflow();
@@ -1983,19 +1983,19 @@ test.describe.only('sci-table', () => {
       await tablePage.setRowCount(1);
       await tablePage.setWidth(500);
 
-      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
-      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
-      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(500);
 
       // Change width.
       await tablePage.setWidth(800);
 
-      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
-      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
-      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
     });
 
@@ -2009,21 +2009,109 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
-      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
-      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toEqual(500);
 
       // Change width.
       await tablePage.setWidth(800);
 
-      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
-      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
-      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
+    });
+
+    test('should fill full height if no rows', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(0);
+      await tablePage.setHeight(600);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.showHeader(false);
+      await tablePage.setFilterable(false);
+
+      await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+
+      await test.step('Show column labels', async () => {
+        await tablePage.showHeader(true);
+        const headerHeight = await table.header.height();
+
+        await expect(headerHeight).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - headerHeight);
+        await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      });
+
+      await test.step('Show column filters', async () => {
+        await tablePage.setFilterable(true);
+        const headerHeight = await table.header.height();
+
+        await expect(headerHeight).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - headerHeight);
+        await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      });
+    });
+
+    test('should fill full height if rows do not fill viewport', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(3);
+      await tablePage.setHeight(600);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.showHeader(false);
+      await tablePage.setFilterable(false);
+
+      await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+
+      await test.step('Show column labels', async () => {
+        await tablePage.showHeader(true);
+        const headerHeight = await table.header.height();
+
+        await expect(headerHeight).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - headerHeight);
+        await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      });
+
+      await test.step('Show column filters', async () => {
+        await tablePage.setFilterable(true);
+        const headerHeight = await table.header.height();
+
+        await expect(headerHeight).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - headerHeight);
+        await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      });
     });
 
     test('should shrink viewport-client instantly if scrolled to the end and row count drops (e.g., when clearing all rows)', async ({page}) => {
@@ -2049,7 +2137,7 @@ test.describe.only('sci-table', () => {
       await tablePage.setRowCount(5);
 
       // Expect viewport client to shrink instantly.
-      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height), {timeout: 250}).toBe(5 * 20);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height), {timeout: 250}).toBe(500 - await table.header.height());
       await expect.poll(() => table.scrollTop(), {timeout: 250}).toBe(0);
       await expect(table.rows).toHaveCount(5, {timeout: 250});
     });

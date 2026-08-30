@@ -28,7 +28,7 @@ export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
 })
 export class ColumnSplittersComponent<T> {
 
-  public readonly rows = input.required<ReadonlyArray<TableRowComponent<unknown>>>();
+  public readonly rows = input.required<readonly TableRowComponent<unknown>[]>();
 
   protected readonly table = inject(ɵSCI_TABLE);
 
