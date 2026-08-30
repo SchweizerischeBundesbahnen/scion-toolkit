@@ -8,19 +8,19 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {TestBed} from '@angular/core/testing';
-import {table} from './table';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {table, table as sciTable} from './table';
 import {SciTableComponent} from './table.component';
-import {Component, computed, EnvironmentProviders, Injector, input, inputBinding, Signal, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
+import {Component, computed, EnvironmentProviders, Injector, input, inputBinding, runInInjectionContext, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
-import {ɵSciTable} from './ɵtable.model';
 import {TableSelectionService} from './table-selection.service';
-import {BehaviorSubject, map, Subject, take, tap} from 'rxjs';
+import {BehaviorSubject, map, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
-import {SciTableDescriptor} from './table.model';
 import {attributeBinding, classBinding, partBinding, provideTableRowBinding} from './table-row-binding';
-import {SciTableFactory} from './table.factory';
-import {SciTableRequest} from './table-data-source';
+import {SciTableRequest, SciTableResponse} from './table-data-source';
+import {ɵSciTable} from './ɵtable.model';
+import {SciTable} from '@scion/components/table';
+import {Objects} from '@scion/toolkit/util';
 
 fdescribe('Table', () => {
 
@@ -40,13 +40,8 @@ fdescribe('Table', () => {
 
     it('should update table on data change', async () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const model = createTable(data, table => table.addNumberColumn(item => item.id));
 
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
-
+      const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
       const table = new TablePO(fixture);
       await table.waitUntilStable();
       expect(table.rows.length).toEqual(3);
@@ -59,17 +54,12 @@ fdescribe('Table', () => {
     it('should update table on columns change', async () => {
       const data = signal([{id: 1, name: 'a'}, {id: 2, name: 'b'}, {id: 3, name: 'c'}]);
       const columns = signal(['id']);
-      const model = createTable(data, table => {
+
+      const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => {
         for (const column of columns()) {
           table.addStringColumn(column, item => item[column as 'id' | 'name'].toString());
         }
-      });
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
-
+      }));
       const table = new TablePO(fixture);
       await table.waitUntilStable();
       expect(table.columns).toHaveSize(1);
@@ -84,7 +74,7 @@ fdescribe('Table', () => {
       it('should support custom component cell', async () => {
         const value = signal(10);
         const data = signal([{id: 1}]);
-        const model = createTable(data, table => table
+        const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table
           .addNumberColumn(item => item.id)
           .addComponentColumn({
             header: 'Value',
@@ -92,12 +82,8 @@ fdescribe('Table', () => {
               component: TestComponent,
               bindings: [inputBinding('value', value)],
             }),
-          }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+          })),
+        );
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -123,16 +109,11 @@ fdescribe('Table', () => {
 
       it('should sort number column', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const model = createTable(data, table => table.addNumberColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn({
           name: 'column:id',
           header: 'ID',
           value: item => item.id,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -148,16 +129,12 @@ fdescribe('Table', () => {
 
       it('should sort string column', async () => {
         const data = signal([{name: 'b'}, {name: 'c'}, {name: 'a'}]);
-        const model = createTable(data, table => table.addStringColumn({
+
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addStringColumn({
           name: 'column:name',
           header: 'Name',
           value: item => item.name,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -173,16 +150,11 @@ fdescribe('Table', () => {
 
       it('should sort boolean column', async () => {
         const data = signal([{active: true}, {active: false}, {active: true}]);
-        const model = createTable(data, table => table.addBooleanColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addBooleanColumn({
           name: 'column:active',
           header: 'Active',
           value: item => item.active,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -214,13 +186,7 @@ fdescribe('Table', () => {
 
       it('should sort with header click', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const model = createTable(data,
-          table => table.addNumberColumn('ID', item => item.id));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn('ID', item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -238,16 +204,11 @@ fdescribe('Table', () => {
 
       it('should allow global filtering', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const model = createTable(data, table => table.addStringColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addStringColumn({
           name: 'column:name',
           header: 'Name',
           value: item => item.name,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -271,16 +232,11 @@ fdescribe('Table', () => {
 
       it('should filter number column', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const model = createTable(data, table => table.addNumberColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn({
           name: 'column:id',
           header: 'ID',
           value: item => item.id,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -296,16 +252,11 @@ fdescribe('Table', () => {
 
       it('should filter string column', async () => {
         const data = signal([{name: 'a'}, {name: 'c'}, {name: 'b'}]);
-        const model = createTable(data, table => table.addStringColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addStringColumn({
           name: 'column:name',
           header: 'Name',
           value: item => item.name,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -321,16 +272,11 @@ fdescribe('Table', () => {
 
       it('should filter boolean column', async () => {
         const data = signal([{active: true}, {active: false}, {active: true}]);
-        const model = createTable(data, table => table.addBooleanColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addBooleanColumn({
           name: 'column:active',
           header: 'Active',
           value: item => item.active,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -346,17 +292,12 @@ fdescribe('Table', () => {
 
       it('should support filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const model = createTable(data, table => table.addStringColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addStringColumn({
           name: 'column:name',
           header: 'Name',
           value: item => item.name,
           filterable: {matcher: (text, context) => context.value.length === text.length},
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -373,17 +314,12 @@ fdescribe('Table', () => {
       // TODO [etienne] Fix that global filter uses custom matcher if configured
       xit('should support global filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const model = createTable(data, table => table.addStringColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addStringColumn({
           name: 'column:name',
           header: 'Name',
           value: item => item.name,
           filterable: {matcher: (text, context) => context.value.length === text.length},
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -399,16 +335,11 @@ fdescribe('Table', () => {
 
       it('should filter number with filter field', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const model = createTable(data, table => table.addNumberColumn({
+        const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn({
           name: 'column:id',
           header: 'ID',
           value: item => item.id,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -420,16 +351,11 @@ fdescribe('Table', () => {
 
       it('should ignore invalid number input in filter field', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const model = createTable(data, table => table.addNumberColumn({
+        const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn({
           name: 'column:id',
           header: 'ID',
           value: item => item.id,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -441,16 +367,11 @@ fdescribe('Table', () => {
 
       it('should trim filter field input', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const model = createTable(data, table => table.addStringColumn({
+        const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addStringColumn({
           name: 'column:name',
           header: 'Name',
           value: item => item.name,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -462,16 +383,11 @@ fdescribe('Table', () => {
 
       it('should filter string column case-insensitively', async () => {
         const data = signal([{name: 'Alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const model = createTable(data, table => table.addStringColumn({
+        const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addStringColumn({
           name: 'column:name',
           header: 'Name',
           value: item => item.name,
-        }));
-
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -488,15 +404,10 @@ fdescribe('Table', () => {
     it('should trigger primary action on dbl click', async () => {
       const onPrimaryAction = jasmine.createSpy();
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const model = createTable({
+      const {fixture} = createSciTableComponent(() => sciTable({
         name: 'table:test',
         data,
-      }, table => table.addNumberColumn(item => item.id));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
+      }, table => table.addNumberColumn(item => item.id)));
       fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
 
       const table = new TablePO(fixture);
@@ -509,15 +420,11 @@ fdescribe('Table', () => {
     it('should trigger primary action on enter', async () => {
       const onPrimaryAction = jasmine.createSpy();
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const model = createTable({
+      const {fixture} = createSciTableComponent(() => sciTable({
         name: 'table:test',
         data,
-      }, table => table.addNumberColumn(item => item.id));
+      }, table => table.addNumberColumn(item => item.id)));
 
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
       fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
 
       const table = new TablePO(fixture);
@@ -530,7 +437,7 @@ fdescribe('Table', () => {
     it('should show actions', async () => {
       const onSelect = jasmine.createSpy();
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const model = createTable({
+      const {fixture} = createSciTableComponent(() => sciTable({
         name: 'table:test',
         data,
         rowActions: (item, toolbar) => {
@@ -542,12 +449,7 @@ fdescribe('Table', () => {
             },
           });
         },
-      }, table => table.addNumberColumn(item => item.id));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
+      }, table => table.addNumberColumn(item => item.id)));
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -566,11 +468,7 @@ fdescribe('Table', () => {
 
       it('should set active item and replace selection on row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -585,11 +483,7 @@ fdescribe('Table', () => {
 
       it('should toggle selection on control/meta row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -605,11 +499,7 @@ fdescribe('Table', () => {
 
       it('should select range on shift row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]);
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -625,11 +515,7 @@ fdescribe('Table', () => {
 
       it('should navigate with arrow up and down', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -655,11 +541,7 @@ fdescribe('Table', () => {
 
       it('should not extend selection with ctrl + arrow up and down', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -686,11 +568,7 @@ fdescribe('Table', () => {
 
       it('should extend selection on shift arrow and keep selection on control/meta arrow', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -714,11 +592,7 @@ fdescribe('Table', () => {
 
       it('should ignore arrow up/down at table boundaries', async () => {
         const data = signal([{id: 1}, {id: 2}]);
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -737,11 +611,7 @@ fdescribe('Table', () => {
 
       it('should toggle active row selection on space and ignore when no active row', async () => {
         const data = signal([{id: 1}, {id: 2}]);
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -764,11 +634,7 @@ fdescribe('Table', () => {
 
       it('should select all rows on control/meta+a', async () => {
         const data = signal(Array.from({length: 200}, (_, id) => ({id})));
-        const model = createTable(data, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable('table:testee', data, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -786,11 +652,7 @@ fdescribe('Table', () => {
 
       it('should set active item and replace selection on row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -805,11 +667,7 @@ fdescribe('Table', () => {
 
       it('should navigate with arrow up and down', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -835,11 +693,7 @@ fdescribe('Table', () => {
 
       it('should not extend selection with ctrl + arrow up and down', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -866,11 +720,7 @@ fdescribe('Table', () => {
 
       it('should no select rows on control/meta+a', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -885,11 +735,7 @@ fdescribe('Table', () => {
 
       it('should keep selection on control/meta arrow', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -920,11 +766,7 @@ fdescribe('Table', () => {
 
       it('should not extend selection on shift arrow', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: 'single'}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -951,18 +793,15 @@ fdescribe('Table', () => {
 
       it('should scroll active row into viewport', async () => {
         const data = signal(new Array(100).fill(0).map((_, i) => ({id: i})));
-        const model = createTable({
+        const {fixture} = createSciTableComponent(() => sciTable({
           name: 'table:test',
           data,
           headerVisible: false,
           filterable: false,
           selectable: 'single',
-        }, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
+        }, table => table.addNumberColumn(item => item.id)), {
+          height: '300px',
         });
-        (fixture.nativeElement as HTMLElement).style.height = '300px';
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -991,11 +830,7 @@ fdescribe('Table', () => {
 
       it('should only set active item on row click', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: false}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: false}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -1010,11 +845,7 @@ fdescribe('Table', () => {
 
       it('should only set active item on arrow up and down', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: false}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: false}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -1040,11 +871,7 @@ fdescribe('Table', () => {
 
       it('should no select rows on control/meta+a', async () => {
         const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-        const model = createTable({name: 'table:test', data, selectable: false}, table => table.addNumberColumn(item => item.id));
-        const fixture = TestBed.createComponent(SciTableComponent, {
-          bindings: [inputBinding('table', () => model)],
-          inferTagName: true,
-        });
+        const {fixture, model} = createSciTableComponent(() => sciTable({name: 'table:test', data, selectable: false}, table => table.addNumberColumn(item => item.id)));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
@@ -1063,14 +890,10 @@ fdescribe('Table', () => {
 
     it('should pack column', async () => {
       const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
-      const model = createTable(data, table => table
+      const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table
         .addNumberColumn(item => item.id)
-        .addStringColumn(item => item.name));
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
-      (fixture.nativeElement as HTMLElement).style.width = '400px';
+        .addStringColumn(item => item.name),
+      ), {width: '400px'});
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1106,15 +929,10 @@ fdescribe('Table', () => {
       });
 
       const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
-      const model = createTable(data, table => table
+      const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table
         .addNumberColumn(item => item.id)
         .addStringColumn(item => item.name),
-      );
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
-      (fixture.nativeElement as HTMLElement).style.width = '400px';
+      ), {width: '400px'});
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1140,15 +958,10 @@ fdescribe('Table', () => {
       });
 
       const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
-      const model = createTable(data, table => table
+      const {fixture} = createSciTableComponent(() => sciTable('table:testee', data, table => table
         .addNumberColumn(item => item.id)
         .addStringColumn(item => item.name),
-      );
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
-      (fixture.nativeElement as HTMLElement).style.width = '400px';
+      ), {width: '400px'});
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1161,25 +974,21 @@ fdescribe('Table', () => {
   describe('Custom Data Source', () => {
 
     it('should cache pages', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => ({
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => ({
         totalCount: 1_000,
         items: generateData(request.pageSize, i => request.start + i),
       }));
 
-      const model = createTable<number>({
+      const {fixture} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
         data: loader,
         headerVisible: false,
         filterable: false,
         bufferSize: 0,
-      }, table => table.addNumberColumn(item => item));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '300px',
+        designTokens: {'--sci-table-row-height': '30px'},
       });
-      (fixture.nativeElement as HTMLElement).style.height = '300px';
-      (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1198,40 +1007,36 @@ fdescribe('Table', () => {
     });
 
     it('should load pages based on bufferSize', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => ({
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => ({
         totalCount: 1_000,
         items: generateData(request.pageSize, i => request.start + i),
       }));
 
-      const model = createTable<number>({
+      const {fixture} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
         bufferSize: 3,
         data: loader,
         headerVisible: false,
         filterable: false,
-      }, table => table.addNumberColumn(item => item));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '300px',
+        designTokens: {'--sci-table-row-height': '30px'},
       });
-      (fixture.nativeElement as HTMLElement).style.height = '300px';
-      (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
       expect(table.rows.length).toEqual(16); // (300px / 30px per row) + (2 * 3 rows buffer) = 16 rows in DOM
-      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({start: 0, end: 16}));
+      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 16}));
 
       await table.scrollY({deltaY: 120}); // Scroll 4 rows so viewport is ID 3-13 and overscan is 0-2 and 14-17 => should load page 2 because row 17 is loaded
       expect(loader).toHaveBeenCalledTimes(2);
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({start: 16, end: 32}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 16, end: 32}));
     });
 
     it('should allow global filtering', async () => {
       const data = generateData(100, i => i);
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => {
         const filtered = data.filter(item => !request.globalFilter || `${item}` === request.globalFilter);
         return {
           items: filtered.slice(request.start, request.end),
@@ -1239,19 +1044,15 @@ fdescribe('Table', () => {
         };
       });
 
-      const model = createTable<number>({
+      const {fixture, model} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
         data: loader,
       }, table => table.addNumberColumn({
         name: 'column:1',
         value: item => item,
-      }));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      })), {
+        height: '500px',
       });
-      (fixture.nativeElement as HTMLElement).style.height = '500px';
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1261,7 +1062,7 @@ fdescribe('Table', () => {
       loader.calls.reset();
       model.filter('50');
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
         globalFilter: '50',
         columnFilters: [],
       }));
@@ -1270,7 +1071,7 @@ fdescribe('Table', () => {
 
     it('should filter', async () => {
       const data = generateData(100, i => ({id: `ID: ${i}`, name: `Name: ${i}`}));
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<{id: string; name: string}> => {
         const filtered = data.filter(item => {
           const idFilter = request.columnFilters.find(filter => filter.columnName === 'column:id');
           if (idFilter && item.id !== idFilter.text) {
@@ -1288,7 +1089,7 @@ fdescribe('Table', () => {
         };
       });
 
-      const model = createTable<{id: string; name: string}>({
+      const {fixture, model} = createSciTableComponent<{id: string; name: string}>(() => sciTable({
         name: 'table:test',
         data: loader,
       }, table => table
@@ -1299,13 +1100,9 @@ fdescribe('Table', () => {
         .addStringColumn({
           name: 'column:name',
           value: item => item.name,
-        }));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+        })), {
+        height: '500px',
       });
-      (fixture.nativeElement as HTMLElement).style.height = '500px';
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1318,7 +1115,7 @@ fdescribe('Table', () => {
       model.filter('ID: 5', {columnName: 'column:id'});
       await table.waitUntilStable();
       // TODO [Etienne] Should only be called once
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
       //   columnFilters: [
       //     {columnName: 'column:id', text: 'ID: 5'},
       //   ],
@@ -1329,7 +1126,7 @@ fdescribe('Table', () => {
       loader.calls.reset();
       model.filter(null, {columnName: 'column:id'});
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({columnFilters: []}));
+      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({columnFilters: []}));
       expect(await table.column({name: 'column:id'})!.values({rows: 'all'})).toEqual(generateData(100, i => `ID: ${i}`));
       expect(await table.column({name: 'column:name'})!.values({rows: 'all'})).toEqual(generateData(100, i => `Name: ${i}`));
 
@@ -1338,7 +1135,7 @@ fdescribe('Table', () => {
       model.filter('Name: 10', {columnName: 'column:name'});
       await table.waitUntilStable();
       // TODO [Etienne] Should only be called once
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
       //   columnFilters: [
       //     {columnName: 'column:name', text: 'Name: 10'},
       //   ],
@@ -1351,7 +1148,7 @@ fdescribe('Table', () => {
       model.filter('ID: 11', {columnName: 'column:id'});
       await table.waitUntilStable();
       // TODO [Etienne] Should only be called once
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
       //   columnFilters: [
       //     {columnName: 'column:name', text: 'Name: 10'},
       //     {columnName: 'column:id', text: 'ID: 11'},
@@ -1365,7 +1162,7 @@ fdescribe('Table', () => {
       model.filter('ID: 10', {columnName: 'column:id'});
       await table.waitUntilStable();
       // TODO [Etienne] Should only be called once
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
       //   columnFilters: [
       //     {columnName: 'column:name', text: 'Name: 10'},
       //     {columnName: 'column:id', text: 'ID: 10'},
@@ -1377,7 +1174,7 @@ fdescribe('Table', () => {
 
     it('should sort', async () => {
       const data = generateData(100, i => i);
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => {
         const sortCriterion = request.sortCriteria.find(criterion => criterion.columnName === 'column:1');
         const sorted = sortCriterion?.direction === 'asc' ? [...data] : [...data].reverse();
         return {
@@ -1386,19 +1183,15 @@ fdescribe('Table', () => {
         };
       });
 
-      const model = createTable<number>({
+      const {fixture, model} = createSciTableComponent<number>(() => sciTable({
         name: 'table:test',
         data: loader,
       }, table => table.addNumberColumn({
         name: 'column:1',
         value: item => item,
-      }));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      })), {
+        height: '500px',
       });
-      (fixture.nativeElement as HTMLElement).style.height = '500px';
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1407,7 +1200,7 @@ fdescribe('Table', () => {
       loader.calls.reset();
       model.sort('column:1', false);
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
         sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
       }));
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
@@ -1417,7 +1210,7 @@ fdescribe('Table', () => {
       model.sort('column:1', false);
       await table.waitUntilStable();
       // TODO [Etienne] should only be called once, not for alread loaded pages.
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
       //   sortCriteria: [{columnName: 'column:1', direction: 'desc'}],
       // }));
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`).reverse());
@@ -1428,7 +1221,7 @@ fdescribe('Table', () => {
       model.sort('column:1', false);
       await table.waitUntilStable();
       // TODO [Etienne] should only be called once, not for alread loaded pages.
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({
+      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
       //   sortCriteria: [{columnName: 'column:1', direction: 'desc'}],
       // }));
       // expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
@@ -1436,26 +1229,22 @@ fdescribe('Table', () => {
 
     it('should load data from observable', async () => {
       const data$ = new BehaviorSubject<string[]>([]);
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => data$
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): Observable<SciTableResponse<string>> => data$
         .pipe(map(data => ({
           items: data.slice(request.start, request.end),
           totalCount: data.length,
         }))),
       );
 
-      const model = createTable<string>({
+      const {fixture} = createSciTableComponent(() => sciTable<string>({
         name: 'table:test',
         data: loader,
       }, table => table.addStringColumn({
         name: 'column:1',
         value: item => item,
-      }));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      })), {
+        height: '300px',
       });
-      (fixture.nativeElement as HTMLElement).style.height = '300px';
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1480,7 +1269,7 @@ fdescribe('Table', () => {
     it('should cancel load', async () => {
       const loaded = new Array<number>();
       const onLoad$ = new Subject<void>();
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => onLoad$
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): Observable<SciTableResponse<number>> => onLoad$
         .pipe(
           take(1), // TODO [Etienne] Remove when previous fetch is canceled.
           map(() => ({
@@ -1490,19 +1279,15 @@ fdescribe('Table', () => {
           tap(() => loaded.push(request.page)),
         ));
 
-      const model = createTable<number>({
+      const {fixture} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
         bufferSize: 0,
         data: loader,
         headerVisible: false,
         filterable: false,
-      }, table => table.addNumberColumn(item => item));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '300px',
       });
-      (fixture.nativeElement as HTMLElement).style.height = '300px';
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1510,15 +1295,15 @@ fdescribe('Table', () => {
       // Continue initial loader response (so scrolling is possible).
       onLoad$.next();
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({page: 0}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({page: 0}));
 
       // Scroll one page.
       await table.scrollY({deltaY: 300});
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({page: 1}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({page: 1}));
 
       // Scroll again before loader response.
       await table.scrollY({deltaY: 300});
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining({page: 2}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({page: 2}));
 
       onLoad$.next();
       await table.waitUntilStable();
@@ -1529,25 +1314,21 @@ fdescribe('Table', () => {
 
     // TODO [marc] Fix test
     xit('should allow selection over multiple pages', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => ({
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => ({
         totalCount: 1_000,
         items: generateData(request.pageSize, i => request.start + i),
       }));
 
-      const model = createTable<number>({
+      const {fixture, model} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
         data: loader,
         headerVisible: false,
         filterable: false,
         bufferSize: 0,
-      }, table => table.addNumberColumn(item => item));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '300px',
+        designTokens: {'--sci-table-row-height': '30px'},
       });
-      (fixture.nativeElement as HTMLElement).style.height = '300px';
-      (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1564,21 +1345,17 @@ fdescribe('Table', () => {
     });
 
     it('should load and select all rows on Ctrl+a', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest) => ({
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => ({
         totalCount: 100,
         items: generateData(request.pageSize, i => request.start + i),
       }));
 
-      const model = createTable<number>({
+      const {fixture, model} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
         data: loader,
-      }, table => table.addNumberColumn(item => item));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '500px',
       });
-      (fixture.nativeElement as HTMLElement).style.height = '500px';
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1594,7 +1371,8 @@ fdescribe('Table', () => {
 
     it('should pass index to row binding function', async () => {
       const data = signal(generateData(100, i => `Row ${i}`));
-      const model = createTable({
+
+      const {fixture} = createSciTableComponent(() => sciTable({
         name: 'table:testee',
         data,
         rowBindings: [
@@ -1602,15 +1380,10 @@ fdescribe('Table', () => {
           partBinding((_item, index) => `row:spec-index-${index}`),
           classBinding((_item, index) => `spec-index-${index}`),
         ],
-      }, table => table.addStringColumn(item => item));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
+      }, table => table.addStringColumn(item => item)), {
+        height: '300px',
+        designTokens: {'--sci-table-row-height': '30px'},
       });
-
-      (fixture.nativeElement as HTMLElement).style.height = '300px';
-      (fixture.nativeElement as HTMLElement).style.setProperty('--sci-table-row-height', '30px');
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1661,18 +1434,13 @@ fdescribe('Table', () => {
     it('should bind attribute to row', async () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
 
-      const model = createTable({
+      const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
         name: 'table:testee',
         data,
         rowBindings: [
-          attributeBinding<{id: number}>(item => ({'data-spec-id': item.id})), // TODO [dwie] remove generic
+          attributeBinding(item => ({'data-spec-id': item.id})),
         ],
-      }, table => table.addNumberColumn(item => item.id));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
+      }, table => table.addNumberColumn(item => item.id)));
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1690,18 +1458,13 @@ fdescribe('Table', () => {
         [3, signal({})],
       ]);
 
-      const model = createTable({
+      const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
         name: 'table:testee',
         data,
         rowBindings: [
-          attributeBinding<{id: number}>(item => attributes.get(item.id)), // TODO [dwie] remove generic
+          attributeBinding(item => attributes.get(item.id)),
         ],
-      }, table => table.addNumberColumn(item => item.id));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
+      }, table => table.addNumberColumn(item => item.id)));
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1722,18 +1485,13 @@ fdescribe('Table', () => {
     it('should bind CSS class to row', async () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
 
-      const model = createTable({
+      const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
         name: 'table:testee',
         data,
         rowBindings: [
-          classBinding<{id: number}>(item => `spec-${item.id}`), // TODO [dwie] remove generic
+          classBinding(item => `spec-${item.id}`),
         ],
-      }, table => table.addNumberColumn(item => item.id));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
+      }, table => table.addNumberColumn(item => item.id)));
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1751,18 +1509,13 @@ fdescribe('Table', () => {
         [3, signal(undefined)],
       ]);
 
-      const model = createTable({
+      const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
         name: 'table:testee',
         data,
         rowBindings: [
-          classBinding<{id: number}>(item => cssClasses.get(item.id)), // TODO [dwie] remove generic
+          classBinding(item => cssClasses.get(item.id)),
         ],
-      }, table => table.addNumberColumn(item => item.id));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
+      }, table => table.addNumberColumn(item => item.id)));
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1783,18 +1536,13 @@ fdescribe('Table', () => {
     it('should bind part-attribute to cell', async () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
 
-      const model = createTable({
+      const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
         name: 'table:testee',
         data,
         rowBindings: [
-          partBinding<{id: number}>(item => `row:${item.id}`), // TODO [dwie] remove generic
+          partBinding(item => `row:${item.id}`),
         ],
-      }, table => table.addNumberColumn(item => item.id));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
+      }, table => table.addNumberColumn(item => item.id)));
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1812,18 +1560,13 @@ fdescribe('Table', () => {
         [3, signal(undefined)],
       ]);
 
-      const model = createTable({
+      const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
         name: 'table:testee',
         data,
         rowBindings: [
-          partBinding<{id: number}>(item => partAttributes.get(item.id)), // TODO [dwie] remove generic
+          partBinding(item => partAttributes.get(item.id)),
         ],
-      }, table => table.addNumberColumn(item => item.id));
-
-      const fixture = TestBed.createComponent(SciTableComponent, {
-        bindings: [inputBinding('table', () => model)],
-        inferTagName: true,
-      });
+      }, table => table.addNumberColumn(item => item.id)));
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
@@ -1874,7 +1617,7 @@ class TestTemplate {
     {id: 2, price: 200},
     {id: 3, price: 400},
   ]);
-  public readonly table = createTable(this._data, table => table
+  public readonly table = table('table:testee', this._data, table => table
     .addNumberColumn({
       name: 'column:id',
       header: 'ID',
@@ -1887,25 +1630,7 @@ class TestTemplate {
       template: () => ({
         template: this._cellTemplate,
       }),
-    }),
-  );
-}
-
-type TableFactoryFn<T> = (table: SciTableFactory<T>) => void;
-
-function createTable<T>(data: Signal<T[]>, factoryFn: TableFactoryFn<T>): ɵSciTable<T>;
-function createTable<T>(descriptor: SciTableDescriptor<T>, factoryFn: TableFactoryFn<T>): ɵSciTable<T>;
-function createTable<T>(
-  arg1: Signal<T[]> | SciTableDescriptor<T>,
-  arg2: TableFactoryFn<T>,
-): ɵSciTable<T> {
-  const injector = TestBed.inject(Injector);
-
-  if (typeof arg1 === 'object') {
-    return table(arg1, arg2, {injector}) as ɵSciTable<T>;
-  }
-
-  return table('table:test', arg1, arg2, {injector}) as ɵSciTable<T>;
+    })) as ɵSciTable<{id: number; price: number}>;
 }
 
 function provideNullTableStorage(): EnvironmentProviders {
@@ -1925,4 +1650,29 @@ function provideNullTableStorage(): EnvironmentProviders {
  */
 export function generateData<T>(count: number, factoryFn: (index: number) => T): T[] {
   return Array.from(Array(count), (_, index) => factoryFn(index));
+}
+
+/**
+ * Creates {@link SciTableComponent}, configuring the table using the passed callback function.
+ */
+function createSciTableComponent<T>(tableFn: () => SciTable<T>, options?: {height?: string; width?: string; designTokens?: {[name: `--${string}`]: string}}): {model: ɵSciTable<T>; fixture: ComponentFixture<SciTableComponent<unknown>>} {
+  const table = runInInjectionContext(TestBed.inject(Injector), tableFn);
+
+  // Create fixture.
+  const fixture = TestBed.createComponent(SciTableComponent, {
+    bindings: [inputBinding('table', () => table)],
+    inferTagName: true,
+  });
+
+  // Style fixture.
+  const element = fixture.nativeElement as HTMLElement;
+  element.style.height = options?.height ?? '500px';
+  element.style.width = options?.width ?? '600px';
+  element.style.border = '1px solid var(--sci-color-border)';
+  element.style.boxSizing = 'content-box';
+
+  // Set CSS variables.
+  Objects.entries(options?.designTokens ?? {}).forEach(([key, value]) => element.style.setProperty(key, value));
+
+  return {model: table as ɵSciTable<T>, fixture};
 }

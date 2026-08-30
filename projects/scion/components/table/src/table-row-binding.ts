@@ -127,4 +127,3 @@ export interface SciRowBindings {
   attributes: Signal<{[name: string]: unknown | undefined}>;
   part: Signal<`row:${string}`[]>;
 }
-
