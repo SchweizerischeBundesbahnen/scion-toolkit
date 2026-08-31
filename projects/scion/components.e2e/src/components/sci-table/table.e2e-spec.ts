@@ -79,7 +79,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await expectRow(table.row(0)).toBeAttached();
+      await expectRow(table.row({nth: 0})).toBeAttached();
       const count = await table.rows.count();
 
       await tablePage.setHeight(1500);
@@ -95,7 +95,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await expectRow(table.row(0)).toBeAttached();
+      await expectRow(table.row({nth: 0})).toBeAttached();
       const count = await table.rows.count();
 
       await tablePage.setRowHeight(50);
@@ -294,7 +294,7 @@ test.describe.only('sci-table', () => {
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       // Read the first visible price value and use it as the filter criterion.
-      const firstPrice = (await table.row(0).cell(0).textContent())!.trim();
+      const firstPrice = (await table.row({nth: 0}).cell(0).textContent())!.trim();
       await table.column({name: 'column:price'}).filter(firstPrice);
       await expectTable(table).column({name: 'column:price'}).cells.toContainText(firstPrice);
 
@@ -419,12 +419,12 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
       await table.column({name: 'column:name'}).filter('Product 1');
       await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
-      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
     });
   });
 
@@ -876,14 +876,14 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
 
-      const rowBounds = await table.row(3).bounds();
+      const rowBounds = await table.row({nth: 3}).bounds();
 
       const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
       await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter})
-      await expect(table.row(3).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.row({nth: 3}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
 
       await dragHandle.release();
-      await expect(table.row(3).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.row({nth: 3}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
     });
   });
 
@@ -1099,12 +1099,12 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
       await table.column({name: 'column:name'}).sort();
       await expectTable(table).column({name: 'column:name'}).toBeSorted();
-      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
     });
   });
 
@@ -1117,13 +1117,13 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setSelectable(false);
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeActive();
-      await expectRow(table.row(0)).not.toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeActive();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
 
       await page.keyboard.press('ArrowDown');
-      await expectRow(table.row(1)).toBeActive();
-      await expectRow(table.row(1)).not.toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeActive();
+      await expectRow(table.row({nth: 1})).not.toBeSelected();
       await expect(tablePage.selectionCount).toHaveText('0');
     });
 
@@ -1134,15 +1134,15 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setSelectable('single');
 
-      await table.row(0).click();
-      await table.row(1).click(['ControlOrMeta']);
-      await expectRow(table.row(0)).not.toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await table.row({nth: 1}).click(['ControlOrMeta']);
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
 
-      await table.row(3).click(['Shift']);
-      await expectRow(table.row(1)).not.toBeSelected();
-      await expectRow(table.row(2)).not.toBeSelected();
-      await expectRow(table.row(3)).toBeSelected();
+      await table.row({nth: 3}).click(['Shift']);
+      await expectRow(table.row({nth: 1})).not.toBeSelected();
+      await expectRow(table.row({nth: 2})).not.toBeSelected();
+      await expectRow(table.row({nth: 3})).toBeSelected();
       await expect(tablePage.selectionCount).toHaveText('1');
     });
 
@@ -1157,7 +1157,7 @@ test.describe.only('sci-table', () => {
       await page.keyboard.press('Tab'); // Table keyboard navigator
       await page.keyboard.press('ArrowDown');
 
-      await expectRow(table.row(0)).toBeActive();
+      await expectRow(table.row({nth: 0})).toBeActive();
     });
 
     test('should scroll the active row into view during keyboard navigation', async ({page}) => {
@@ -1167,17 +1167,15 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.body.focus();
-      const visibleRowCount = await waitUntilStable(() => table.rows.count());
-      for (let i = 0; i < visibleRowCount; i++) {
+      const renderedRowCount = await waitUntilStable(() => table.rows.count());
+
+      for (let i = 0; i < renderedRowCount; i++) {
         await page.keyboard.press('ArrowDown');
       }
 
-      // Subtract the buffer-1=9 from the visible row count to get the active row.
-      const activeRowIndex = visibleRowCount - 9;
-
       await expectTable(table).toHaveVerticalScroll();
-      await expectRow(table.row(activeRowIndex)).toBeActive();
-      await expect(table.row(activeRowIndex).locator).toBeInViewport({ratio: 1});
+      await expectRow(table.row({index: renderedRowCount - 1})).toBeActive();
+      await expect(table.row({index: renderedRowCount - 1}).locator).toBeInViewport({ratio: 1});
     });
 
     test('should keep the active row within keyboard navigation boundaries', async ({page}) => {
@@ -1190,17 +1188,17 @@ test.describe.only('sci-table', () => {
       await table.body.focus();
       await page.keyboard.press('ArrowUp');
       await page.keyboard.press('ArrowDown');
-      await expectRow(table.row(0)).toBeActive();
+      await expectRow(table.row({nth: 0})).toBeActive();
 
       await page.keyboard.press('ArrowUp');
-      await expectRow(table.row(0)).toBeActive();
+      await expectRow(table.row({nth: 0})).toBeActive();
 
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('ArrowDown');
-      await expectRow(table.row(2)).toBeActive();
+      await expectRow(table.row({nth: 2})).toBeActive();
 
       await page.keyboard.press('ArrowDown');
-      await expectRow(table.row(2)).toBeActive();
+      await expectRow(table.row({nth: 2})).toBeActive();
     });
 
     test('should select all rows with ctrl+a from the keyboard navigator', async ({page}) => {
@@ -1225,13 +1223,13 @@ test.describe.only('sci-table', () => {
       await table.body.focus();
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('ControlOrMeta+ArrowDown');
-      await expectRow(table.row(1)).toBeActive();
-      await expectRow(table.row(1)).not.toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeActive();
+      await expectRow(table.row({nth: 1})).not.toBeSelected();
 
       await page.keyboard.press('ControlOrMeta+Space');
 
-      await expectRow(table.row(0)).toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
       await expect(table.body).toBeFocused();
     });
 
@@ -1241,12 +1239,12 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
-      await table.row(1).click();
-      await expectRow(table.row(0)).not.toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
+      await table.row({nth: 1}).click();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
     });
 
     test('should select multiple rows with ctrl', async ({page}) => {
@@ -1255,16 +1253,16 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
-      await table.row(1).click(['ControlOrMeta']);
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 1}).click(['ControlOrMeta']);
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
-      await table.row(0).click(['ControlOrMeta']);
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(0)).not.toBeSelected();
+      await table.row({nth: 0}).click(['ControlOrMeta']);
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
     });
 
     test('should select multiple rows with shift', async ({page}) => {
@@ -1273,20 +1271,20 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
-      await table.row(3).click(['Shift']);
-      await expectRow(table.row(0)).toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(2)).toBeSelected();
-      await expectRow(table.row(3)).toBeSelected();
+      await table.row({nth: 3}).click(['Shift']);
+      await expectRow(table.row({nth: 0})).toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 2})).toBeSelected();
+      await expectRow(table.row({nth: 3})).toBeSelected();
 
-      await table.row(2).click(['ControlOrMeta']);
-      await expectRow(table.row(2)).not.toBeSelected();
-      await expectRow(table.row(0)).toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(3)).toBeSelected();
+      await table.row({nth: 2}).click(['ControlOrMeta']);
+      await expectRow(table.row({nth: 2})).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 3})).toBeSelected();
     });
 
     test('should keep selection on scroll', async ({page}) => {
@@ -1295,14 +1293,14 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
       await table.scrollTo({y: 1000});
-      await expectRow(table.row(0)).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
 
       await table.scrollTo({y: 0});
-      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
     });
 
     test('should keep selection on filter', async ({page}) => {
@@ -1311,14 +1309,14 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
       await table.column({name: 'column:name'}).filter('9999');
-      await expectRow(table.row(0)).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
 
       await table.column({name: 'column:name'}).clearFilter();
-      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
     });
 
     test('should keep selection on sort', async ({page}) => {
@@ -1327,17 +1325,17 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
       await table.column({name: 'column:name'}).sort();
 
       // Click twice to sort descending.
       await table.column({name: 'column:name'}).sort();
-      await expectRow(table.row(0)).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
 
       await table.column({name: 'column:name'}).sort();
-      await expectRow(table.row(0)).toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
     });
 
     test('should activate element with keyboard', async ({page}) => {
@@ -1346,18 +1344,18 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeActive();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeActive();
 
       await page.keyboard.press('ArrowDown');
-      await expectRow(table.row(1)).toBeActive();
+      await expectRow(table.row({nth: 1})).toBeActive();
 
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('ArrowDown');
-      await expectRow(table.row(3)).toBeActive();
+      await expectRow(table.row({nth: 3})).toBeActive();
 
       await page.keyboard.press('ArrowUp');
-      await expectRow(table.row(2)).toBeActive();
+      await expectRow(table.row({nth: 2})).toBeActive();
     });
 
     test('should select element with keyboard', async ({page}) => {
@@ -1366,41 +1364,41 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
-      await expectRow(table.row(1)).not.toBeSelected();
-      await expectRow(table.row(2)).not.toBeSelected();
-      await expectRow(table.row(3)).not.toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
+      await expectRow(table.row({nth: 1})).not.toBeSelected();
+      await expectRow(table.row({nth: 2})).not.toBeSelected();
+      await expectRow(table.row({nth: 3})).not.toBeSelected();
 
       await page.keyboard.press('ArrowDown');
-      await expectRow(table.row(0)).not.toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(2)).not.toBeSelected();
-      await expectRow(table.row(3)).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 2})).not.toBeSelected();
+      await expectRow(table.row({nth: 3})).not.toBeSelected();
 
       await page.keyboard.press('ControlOrMeta+ArrowDown');
-      await expectRow(table.row(0)).not.toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(2)).not.toBeSelected();
-      await expectRow(table.row(3)).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 2})).not.toBeSelected();
+      await expectRow(table.row({nth: 3})).not.toBeSelected();
 
       await page.keyboard.press('ControlOrMeta+Space');
-      await expectRow(table.row(0)).not.toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(2)).toBeSelected();
-      await expectRow(table.row(3)).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 2})).toBeSelected();
+      await expectRow(table.row({nth: 3})).not.toBeSelected();
 
       await page.keyboard.press('ArrowUp');
-      await expectRow(table.row(0)).not.toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(2)).not.toBeSelected();
-      await expectRow(table.row(3)).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).not.toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 2})).not.toBeSelected();
+      await expectRow(table.row({nth: 3})).not.toBeSelected();
 
       await page.keyboard.press('Shift+ArrowUp');
-      await expectRow(table.row(0)).toBeSelected();
-      await expectRow(table.row(1)).toBeSelected();
-      await expectRow(table.row(2)).not.toBeSelected();
-      await expectRow(table.row(3)).not.toBeSelected();
+      await expectRow(table.row({nth: 0})).toBeSelected();
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expectRow(table.row({nth: 2})).not.toBeSelected();
+      await expectRow(table.row({nth: 3})).not.toBeSelected();
     });
 
     test('should scroll on with active element', async ({page}) => {
@@ -1409,8 +1407,8 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(0).click();
-      await expectRow(table.row(0)).toBeSelected();
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
 
       const count = await table.rows.count();
 
@@ -1435,16 +1433,16 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 1}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 2}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
 
       await tablePage.setCustomRowStyling(true);
 
-      await expect(table.row(0).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row(1).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row(2).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
+      await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 1}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 2}).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 2}).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
     });
 
     test('should not conditionally style selected row', async ({page}) => {
@@ -1455,11 +1453,11 @@ test.describe.only('sci-table', () => {
 
       await tablePage.setCustomRowStyling(true);
 
-      await expect(table.row(2).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 2}).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
 
-      await table.row(2).click();
+      await table.row({nth: 2}).click();
 
-      await expect(table.row(2).cell(0).locator).not.toHaveAttribute('part');
+      await expect(table.row({nth: 2}).cell(0).locator).not.toHaveAttribute('part');
     });
 
     test('should conditionally style column', async ({page}) => {
@@ -1468,8 +1466,8 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
       await tablePage.addColumn({name: 'column:negative', type: 'string'});
 
-      await expect(table.row(0).cell(0).locator).toHaveAttribute('part', 'column:negative');
-      await expect(table.row(0).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
+      await expect(table.row({nth: 0}).cell(0).locator).toHaveAttribute('part', 'column:negative');
+      await expect(table.row({nth: 0}).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
     });
 
     test('should show/hide gridlines', async ({page}) => {
@@ -1483,11 +1481,11 @@ test.describe.only('sci-table', () => {
 
       // Show gridlines.
       await tablePage.showGridlines(true);
-      await expect(table.row(0).locator).toHaveCSS('border-bottom-color', 'rgb(0, 0, 255)');
+      await expect(table.row({nth: 0}).locator).toHaveCSS('border-bottom-color', 'rgb(0, 0, 255)');
 
       // Hide gridlines.
       await tablePage.showGridlines(false);
-      await expect(table.row(0).locator).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+      await expect(table.row({nth: 0}).locator).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
     });
   });
 
@@ -1500,8 +1498,8 @@ test.describe.only('sci-table', () => {
       await tablePage.setRowActions(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.row(3).hover();
-      await expect(table.row(3).rowActions).toBeVisible();
+      await table.row({nth: 3}).hover();
+      await expect(table.row({nth: 3}).rowActions).toBeVisible();
     });
 
     test('should stick row actions to the right', async ({page}) => {
@@ -1514,27 +1512,27 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await table.column({name: 'column:name'}).splitter.drag(500);
 
-      const rowBounds = await table.row(3).bounds();
+      const rowBounds = await table.row({nth: 3}).bounds();
       const tableBounds = await table.bounds();
-      const cellPadding = await table.row(3).cell(0).paddingInline();
+      const cellPadding = await table.row({nth: 3}).cell(0).paddingInline();
 
       // Expect horizontal overflow.
       await expect(table.horizontalScrollbar.locator).toBeVisible();
 
       // Hover row.
-      await table.row(3).hover();
+      await table.row({nth: 3}).hover();
 
       // Scroll to end.
       await table.scrollTo({x: 'end'});
-      await expect(table.row(3).rowActions).toBeInViewport({ratio: 1});
-      expect(fromRect(await table.row(3).rowActions.boundingBox()).right).toBe(tableBounds.right - cellPadding);
-      expect(fromRect(await table.row(3).rowActions.boundingBox()).vcenter).toBe(rowBounds.vcenter);
+      await expect(table.row({nth: 3}).rowActions).toBeInViewport({ratio: 1});
+      expect(fromRect(await table.row({nth: 3}).rowActions.boundingBox()).right).toBe(tableBounds.right - cellPadding);
+      expect(fromRect(await table.row({nth: 3}).rowActions.boundingBox()).vcenter).toBe(rowBounds.vcenter);
 
       // Scroll to start.
       await table.scrollTo({x: 'start'});
-      await expect(table.row(3).rowActions).toBeInViewport({ratio: 1});
-      expect(fromRect(await table.row(3).rowActions.boundingBox()).right).toBe(tableBounds.right - cellPadding);
-      expect(fromRect(await table.row(3).rowActions.boundingBox()).vcenter).toBe(rowBounds.vcenter);
+      await expect(table.row({nth: 3}).rowActions).toBeInViewport({ratio: 1});
+      expect(fromRect(await table.row({nth: 3}).rowActions.boundingBox()).right).toBe(tableBounds.right - cellPadding);
+      expect(fromRect(await table.row({nth: 3}).rowActions.boundingBox()).vcenter).toBe(rowBounds.vcenter);
     });
 
     test('should hide row actions while resizing', async ({page}) => {
@@ -1545,14 +1543,14 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
-      const rowBounds = await table.row(3).bounds();
+      const rowBounds = await table.row({nth: 3}).bounds();
 
       const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
       await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter})
-      await expect(table.row(3).rowActions).not.toBeAttached();
+      await expect(table.row({nth: 3}).rowActions).not.toBeAttached();
 
       await dragHandle.release();
-      await expect(table.row(3).rowActions).toBeVisible();
+      await expect(table.row({nth: 3}).rowActions).toBeVisible();
     });
 
     test('should hide row actions while scrolling', async ({page}) => {
@@ -1563,15 +1561,15 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
-      await table.row(10).hover();
-      await expect(table.row(10).rowActions).toBeVisible();
+      await table.row({nth: 10}).hover();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
 
       await page.mouse.wheel(0, 250);
       await expect.poll(() => table.scrollTop()).toBe(250);
-      await expect(table.row(10).rowActions).toBeHidden();
+      await expect(table.row({nth: 10}).rowActions).toBeHidden();
 
-      await table.row(10).hover();
-      await expect(table.row(10).rowActions).toBeVisible();
+      await table.row({nth: 10}).hover();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
     });
 
     test('should keep row actions visible when moving pointer over splitter', async ({page}) => {
@@ -1583,22 +1581,22 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
-      const rowBounds = await table.row(10).bounds();
+      const rowBounds = await table.row({nth: 10}).bounds();
 
       await page.mouse.move(rowBounds.left, rowBounds.vcenter);
-      await expect(table.row(10).rowActions).toBeVisible();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
 
-      const rowActionBounds = fromRect(await table.row(10).rowActions.boundingBox());
+      const rowActionBounds = fromRect(await table.row({nth: 10}).rowActions.boundingBox());
       await page.mouse.move(rowActionBounds.hcenter, rowActionBounds.vcenter);
-      await expect(table.row(10).rowActions).toBeVisible();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
 
       const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
       await page.mouse.move(splitterBounds.hcenter, rowBounds.vcenter);
-      await expect(table.row(10).rowActions).toBeVisible();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
 
       // Move out of splitter bounds on top.
       await page.mouse.move(splitterBounds.hcenter, splitterBounds.top - 10);
-      await expect(table.row(10).rowActions).not.toBeVisible();
+      await expect(table.row({nth: 10}).rowActions).not.toBeVisible();
     });
 
     test('should hide row actions when leaving splitter or toolbar for header', async ({page}) => {
@@ -1610,7 +1608,7 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
-      const row = table.row(10);
+      const row = table.row({nth: 10});
       await row.hover();
       await expect(row.rowActions).toBeVisible();
 
@@ -1621,7 +1619,7 @@ test.describe.only('sci-table', () => {
       await table.headers.first().hover();
       await expect(row.rowActions).toBeHidden();
 
-      await table.row(10).hover();
+      await table.row({nth: 10}).hover();
       await expect(row.rowActions).toBeVisible();
 
       await row.rowActions.hover();
@@ -1639,21 +1637,21 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.setRowActions(true);
 
-      const row = table.row(10);
+      const row = table.row({nth: 10});
       await row.hover();
       await row.rowActions.locator('button.e2e-menu-item').click();
       await expect(row.locator.locator('sci-menu')).toBeVisible();
 
-      await table.row(1).hover();
-      await expect(table.row(1).rowActions).toBeVisible();
+      await table.row({nth: 1}).hover();
+      await expect(table.row({nth: 1}).rowActions).toBeVisible();
       await expect(row.locator.locator('sci-menu')).toBeVisible();
 
-      await table.row(2).hover();
-      await expect(table.row(1).rowActions).not.toBeVisible();
-      await expect(table.row(2).rowActions).toBeVisible();
+      await table.row({nth: 2}).hover();
+      await expect(table.row({nth: 1}).rowActions).not.toBeVisible();
+      await expect(table.row({nth: 2}).rowActions).toBeVisible();
       await expect(row.locator.locator('sci-menu')).toBeVisible();
 
-      await table.row(2).click();
+      await table.row({nth: 2}).click();
       await expect(row.locator.locator('sci-menu')).not.toBeVisible();
     });
   });
@@ -1822,11 +1820,11 @@ test.describe.only('sci-table', () => {
       await expectTable(table).toHaveVerticalOverflow();
       await expectTable(table).toHaveHorizontalOverflow();
 
-      await table.row(10).hover();
-      await expect(table.row(10).rowActions).toBeVisible();
+      await table.row({nth: 10}).hover();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
 
-      const actionBounds = await table.row(10).rowActionsBounds();
-      await table.row(10).rowActions.hover();
+      const actionBounds = await table.row({nth: 10}).rowActionsBounds();
+      await table.row({nth: 10}).rowActions.hover();
       await page.mouse.move(actionBounds.hcenter, actionBounds.vcenter);
       await page.mouse.wheel(0, 250);
       await expect.poll(() => table.scrollTop()).toBe(250);

@@ -36,6 +36,18 @@ export class TablePO {
     return [...this.element.querySelectorAll<HTMLElement>('sci-table-row')].map(element => new RowPO(element));
   }
 
+  /**
+   * Locates a row by its dataset index (`index`) or rendered DOM position (`nth`), both zero-based.
+   */
+  public row(locateBy: OneOf<{index: number; nth: number}>): RowPO {
+    if (locateBy.index !== undefined) {
+      return new RowPO(this.element.querySelector<HTMLElement>(`sci-table-row[data-row-index="${locateBy.index}"]`)!);
+    }
+    else {
+      return new RowPO(this.element.querySelector<HTMLElement>(`sci-table-row:nth-of-type(${locateBy.nth + 1})`)!);
+    }
+  }
+
   public get columns(): ColumnPO[] {
     return [...this.element.querySelectorAll('sci-column')]
       .map(element => element.getAttribute('data-column') as `column:${string}`)

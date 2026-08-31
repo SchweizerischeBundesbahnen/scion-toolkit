@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
-import {partBinding, SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {attributeBinding, partBinding, provideTableRowBinding, SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -38,6 +38,12 @@ import {HttpClient} from '@angular/common/http';
     FormRoot,
     SciIconComponent,
     FieldValidationDirective,
+  ],
+  providers: [
+    provideTableRowBinding([
+      // Add row index attribute to locate rows by dataset index.
+      attributeBinding((_item, index) => ({'data-row-index': index})),
+    ]),
   ],
 })
 export default class SciTablePageComponent {

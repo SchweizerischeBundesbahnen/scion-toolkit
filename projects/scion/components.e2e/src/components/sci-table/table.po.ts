@@ -12,7 +12,7 @@ import {Locator, Mouse} from '@playwright/test';
 import {ColumnPO} from './column.po';
 import {RowPO} from './row.po';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
-import {RequireOne} from '@scion/toolkit/types';
+import {OneOf, RequireOne} from '@scion/toolkit/types';
 import {HeaderPO} from './header.po';
 
 export class TablePO {
@@ -43,8 +43,16 @@ export class TablePO {
     this.splitters = this.locator.locator('sci-column-splitters');
   }
 
-  public row(index: number): RowPO {
-    return new RowPO(this.rows.nth(index));
+  /**
+   * Locates a row by its dataset index (`index`) or rendered DOM position (`nth`), both zero-based.
+   */
+  public row(locateBy: OneOf<{index: number; nth: number}>): RowPO {
+    if (locateBy.index !== undefined) {
+      return new RowPO(this.rows.locator(`:scope[data-row-index="${locateBy.index}"]`));
+    }
+    else {
+      return new RowPO(this.rows.nth(locateBy.nth));
+    }
   }
 
   public column(locateBy: RequireOne<{name: `column:${string}`; index: number}>): ColumnPO {
