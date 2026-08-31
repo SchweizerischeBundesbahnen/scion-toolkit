@@ -134,16 +134,21 @@ export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
    */
   private computeScrollRange(): Signal<SciScrollRange> {
     return computed(() => {
-      const viewportDimension = this._viewportDimension();
+      const viewportHeight = this._viewportDimension().clientHeight - this._headerHeight();
       const itemSize = this._itemSizeDimension().offsetHeight;
       const bufferSize = this.table().bufferSize();
       const scrollTop = this._scrollTop();
-      const visibleRowCount = Math.ceil((viewportDimension.clientHeight - this._headerHeight()) / itemSize) + bufferSize * 2;
-      const firstVisible = Math.floor(scrollTop / itemSize);
-      const totalCount = this.table().totalCount() ?? Number.MAX_SAFE_INTEGER; // max value if no data loaded yet
-      const start = clamp(firstVisible - bufferSize, {min: 0, max: totalCount});
-      const end = Math.min(start + visibleRowCount, totalCount);
-      return {start, end};
+
+      const start = Math.floor(scrollTop / itemSize);
+      const viewportRowCount = Math.ceil(viewportHeight / itemSize);
+      const end = Math.min(start + viewportRowCount);
+
+      const totalCount = this.table().totalCount() ?? viewportRowCount; // fill viewport if no data loaded yet
+
+      return {
+        start: clamp(start - bufferSize, {min: 0, max: Math.max(0, totalCount - viewportRowCount)}),
+        end: clamp(end + bufferSize, {max: totalCount}),
+      };
     }, {equal: Objects.isEqual});
   }
 

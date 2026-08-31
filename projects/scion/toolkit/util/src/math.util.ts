@@ -11,8 +11,13 @@
 /**
  * Returns the value clamped to the inclusive range of min and max.
  */
-export function clamp(value: number, minmax: {min: number; max: number}): number {
-  return Math.max(minmax.min, Math.min(value, minmax.max));
+export function clamp(value: number, minmax: {min?: number; max?: number}): number {
+  const {min = -Infinity, max = Infinity} = minmax;
+  if (min > max) {
+    throw Error(`[ClampError] Min must be smaller than or equal to max [min=${min}, max=${max}]`);
+  }
+
+  return Math.min(Math.max(value, min), max);
 }
 
 /**
