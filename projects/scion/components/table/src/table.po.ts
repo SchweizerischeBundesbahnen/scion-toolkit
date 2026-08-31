@@ -24,6 +24,10 @@ export class TablePO {
     this.body = this.element.querySelector('sci-table-body')!;
   }
 
+  public get header(): HeaderPO {
+    return new HeaderPO(this.element.querySelector('sci-table-header')!);
+  }
+
   public get viewport(): HTMLElement {
     return this.element.querySelector('div.e2e-viewport')!;
   }
@@ -200,5 +204,15 @@ export class CellPO {
 
   public get value(): string {
     return this.element.textContent.trim();
+  }
+}
+
+export class HeaderPO {
+
+  constructor(public element: HTMLElement) {
+  }
+
+  public async getHeight(): Promise<number> {
+    return waitUntilStable(() => this.element.offsetHeight);
   }
 }

@@ -1365,6 +1365,74 @@ fdescribe('Table', () => {
 
       expect(model.selectedItems()).toEqual(generateData(100, i => i));
     });
+
+    it('should display all rows in range [bufferSize=0]', async () => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => {
+        return ({
+          totalCount: 11,
+          items: generateData(request.pageSize, i => request.start + i + 1),
+        });
+      });
+
+      const {fixture} = createSciTableComponent(() => sciTable<number>({
+        name: 'table:test',
+        data: loader,
+        bufferSize: 0,
+        filterable: true,
+        headerVisible: true,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '301px', // 301px and not 300px because the header has a bottom border of 1px
+        designTokens: {'--sci-table-row-height': '30px'},
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      // TODO [Etienne] Add loader expectation
+      // const viewportHeight = table.viewport.clientHeight; // 301px
+      // const headerHeight = await table.header.getHeight(); // 61px
+
+      // const expectedPageSize = (viewportHeight - headerHeight) / 30; // 8
+      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
+      //   page: 0,
+      //   pageSize: expectedPageSize,
+      //   start: 0,
+      //   end: expectedPageSize,
+      // }));
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['1', '2', '3', '4', '5', '6', '7', '8']);
+      loader.calls.reset();
+
+      // Scroll one row down.
+      await table.scrollY({deltaY: 30});
+      // TODO [Etienne] Add loader expectation
+      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
+      //   page: 1,
+      //   pageSize: expectedPageSize,
+      //   start: 8,
+      //   end: 8 + expectedPageSize,
+      // }));
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['2', '3', '4', '5', '6', '7', '8', '9']);
+      // loader.calls.reset();
+
+      // Scroll one row down.
+      await table.scrollY({deltaY: 30});
+      // expect(loader).not.toHaveBeenCalled(); // returned from cache
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['3', '4', '5', '6', '7', '8', '9', '10']);
+      // loader.calls.reset();
+
+      // Scroll one row down.
+      await table.scrollY({deltaY: 30});
+      // expect(loader).not.toHaveBeenCalled(); // returned from cache
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['4', '5', '6', '7', '8', '9', '10', '11']);
+      // loader.calls.reset();
+
+      // Scroll one row down (beyond end)
+      await table.scrollY({deltaY: 30});
+
+      // expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['4', '5', '6', '7', '8', '9', '10', '11']);
+      // loader.calls.reset();
+    });
   });
 
   describe('Row Bindings', () => {

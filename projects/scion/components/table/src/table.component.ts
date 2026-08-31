@@ -137,7 +137,7 @@ export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
       const viewportDimension = this._viewportDimension();
       const itemSize = this._itemSizeDimension().offsetHeight;
       const bufferSize = this.table().bufferSize();
-      const scrollTop = this._scrollTop() - this._headerHeight();
+      const scrollTop = this._scrollTop();
       const visibleRowCount = Math.ceil((viewportDimension.clientHeight - this._headerHeight()) / itemSize) + bufferSize * 2;
       const firstVisible = Math.floor(scrollTop / itemSize);
       const totalCount = this.table().totalCount() ?? Number.MAX_SAFE_INTEGER; // max value if no data loaded yet
