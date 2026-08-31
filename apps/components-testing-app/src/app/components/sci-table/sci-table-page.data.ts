@@ -1,8 +1,9 @@
 import {SciColumnFilter, SciColumnType, SciSortCriterion, SciTableRequest, SciTableResponse} from '@scion/components/table';
-import {linkedSignal, Service, signal, untracked} from '@angular/core';
-import {defer, Observable, of, timer} from 'rxjs';
-import {toObservable} from '@angular/core/rxjs-interop';
+import {inject, linkedSignal, Service, signal, untracked} from '@angular/core';
+import {defer, Observable, of, tap, timer} from 'rxjs';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
+import {HttpClient} from '@angular/common/http';
 
 @Service()
 export class ProductService {
@@ -15,6 +16,7 @@ export class ProductService {
   });
 
   private readonly _products$ = toObservable(this.products);
+  private readonly _httpClient = inject(HttpClient);
 
   public getProducts$(request: SciTableRequest, columnDataTypes: Map<`column:${string}`, SciColumnType>, options?: {slowDataSource?: boolean}): Observable<SciTableResponse<Product>> {
     return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
@@ -27,6 +29,18 @@ export class ProductService {
           totalCount: products.length,
         })),
       );
+  }
+
+  /**
+   * Loads products via HTTP from '/sci-table/products', until the calling injection context is destroyed.
+   */
+  public enableHttpLoader(): void {
+    this._httpClient.get<Product[]>('/sci-table/products')
+      .pipe(
+        tap({subscribe: () => this.products.set([])}),
+        takeUntilDestroyed(),
+      )
+      .subscribe(products => this.products.set(products));
   }
 }
 

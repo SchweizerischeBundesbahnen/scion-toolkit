@@ -5,11 +5,13 @@ import {waitUntilStable} from '../../../helper/testing.utils';
 import {SciTableRequest, SciTableResponse} from '@scion/components/table';
 
 /**
- * Sets the table datasource to `loader-http` and provides a mocked HTTP endpoint for end-to-end tests using the given products.
+ * Sets the table datasource to `loader-http` (or `array-http`) and installs an HTTP endpoint returning the given products.
  *
  * Missing properties on the provided partial {@link Product} items are populated with random values.
  */
-export async function provideHttpDatasource(page: Page, productLike: Partial<Product>[]): Promise<void> {
+export async function provideHttpDatasource(page: Page, productLike: Partial<Product>[], options?: {datasource?: 'array-http' | 'loader-http'}): Promise<void> {
+  const datasource = options?.datasource ?? 'loader-http';
+
   // Populate missing properties with random values.
   const products: Product[] = productLike.map((product, i) => ({
     id: product.id ?? i,
@@ -18,20 +20,26 @@ export async function provideHttpDatasource(page: Page, productLike: Partial<Pro
     inStock: product.inStock ?? Math.random() > 0.5,
   }));
 
-  // Provide HTTP mock endpoint.
+  // Install HTTP endpoint.
   await page.route('**/sci-table/products', (route, request) => {
-    const tableRequest: SciTableRequest = request.postDataJSON();
-    return route.fulfill({
-      json: {
-        items: products.slice(tableRequest.start, tableRequest.end),
-        totalCount: products.length,
-      } satisfies SciTableResponse<Product>,
-    })
+    if (datasource === 'array-http') {
+      return route.fulfill({json: products});
+    }
+    else {
+      const tableRequest: SciTableRequest = request.postDataJSON();
+      return route.fulfill({
+        json: {
+          items: products.slice(tableRequest.start, tableRequest.end),
+          totalCount: products.length,
+        } satisfies SciTableResponse<Product>,
+      });
+
+    }
   });
 
   // Select HTTP datasource.
   const tablePage = new TablePagePO(page);
-  await tablePage.setDatasource('loader-http')
+  await tablePage.setDatasource(datasource)
 
   // Wait for products to be rendered.
   const table = new TablePO(tablePage.table);

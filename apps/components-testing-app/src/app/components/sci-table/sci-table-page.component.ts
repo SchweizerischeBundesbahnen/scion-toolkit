@@ -56,7 +56,7 @@ export default class SciTablePageComponent {
   protected readonly rowCount = inject(ProductService).productCount;
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
 
-  private createTable(name: `table:${string}`, options: {datasource: 'array' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean}): SciTable<Product> {
+  private createTable(name: `table:${string}`, options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean}): SciTable<Product> {
     return table({
       name,
       headerVisible: computed(() => this.settingsForm.showHeader().value()),
@@ -70,14 +70,17 @@ export default class SciTablePageComponent {
       }),
       data: (() => {
         switch (options.datasource) {
+          case 'array':
+            return this._productService.products;
+          case 'array-http':
+            this._productService.enableHttpLoader();
+            return this._productService.products;
           case 'loader':
             return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: false});
           case 'loader-delayed':
             return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: true});
           case 'loader-http':
             return (request: SciTableRequest) => this._httpClient.post<SciTableResponse<Product>>('/sci-table/products', request);
-          default:
-            return this._productService.products;
         }
       })(),
       rowBindings: options.customRowStyling ? [
@@ -253,7 +256,7 @@ interface SettingsForm {
   showHeader: boolean;
   showGridlines: boolean;
   showRowAction: boolean;
-  datasource: 'array' | 'loader' | 'loader-delayed' | 'loader-http';
+  datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http';
   bufferSize: number;
   customRowStyling: boolean;
   rowHeight: number;

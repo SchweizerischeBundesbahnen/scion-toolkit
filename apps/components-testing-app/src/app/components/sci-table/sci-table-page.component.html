@@ -134,16 +134,22 @@
         <sci-form-field label="Datasource">
           <select [formField]="settingsForm.datasource" class="e2e-datasource">
             <option value="array">Array</option>
+            <option value="array-http">Array (HTTP)</option>
             <option value="loader">Loader</option>
             <option value="loader-delayed">Loader (Delayed)</option>
             <option value="loader-http">Loader (HTTP)</option>
           </select>
         </sci-form-field>
 
-        @if (settingsForm.datasource().value() !== 'loader-http') {
-          <sci-form-field label="Row Count">
-            <input [(ngModel)]="rowCount" type="number" class="e2e-row-count"/>
-          </sci-form-field>
+        <!-- Change of row count is only supported for non-HTTP datasources. -->
+        @switch (settingsForm.datasource().value()) {
+          @case ('array')
+          @case ('loader')
+          @case ('loader-delayed') {
+            <sci-form-field label="Row Count">
+              <input [(ngModel)]="rowCount" type="number" class="e2e-row-count"/>
+            </sci-form-field>
+          }
         }
 
         <sci-form-field label="Buffer Size">
