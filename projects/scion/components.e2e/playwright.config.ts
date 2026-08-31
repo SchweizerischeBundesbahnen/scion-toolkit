@@ -38,7 +38,7 @@ export default defineConfig({
   use: {
     browserName: 'chromium',
     headless: runHeadless,
-    viewport: {width: 1920, height: 1200},
+    viewport: runInCI || runHeadless ? {width: 1920, height: 1200} : null,
     baseURL: 'http://localhost:4200',
     launchOptions: {
       // By default, Playwright hides scrollbars in headless mode, causing problems with tests using `sci-scrollbar`, e.g., to check whether content overflows.
