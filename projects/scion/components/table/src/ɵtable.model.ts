@@ -425,24 +425,16 @@ export class ɵSciTable<T> implements SciTable<T> {
    */
   private computeRows(): Signal<SciRow<T>[]> {
     return computed(() => {
-      const pageSize = this.pageSize();
-      const rowsByIndex = this.rowsByIndex();
       const scrollRange = this.scrollRange();
-      const totalCount = this.totalCount();
       if (!scrollRange) {
         return [];
       }
 
-      // If total count is not defined yet (no page loaded) show only skeletons.
-      if (totalCount === undefined) {
-        return Array.from({length: pageSize}, (_, i) => ({index: i}));
-      }
-
-      // Cut the rowCount off at totalCount, else the user can scroll infinitely.
-      const rowCount = Math.min(scrollRange.end, totalCount) - scrollRange.start;
+      const rowsByIndex = this.rowsByIndex();
+      const rowCount = scrollRange.end - scrollRange.start;
 
       // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
-      return Array.from({length: Math.min(pageSize, rowCount, totalCount)}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {index: i});
+      return untracked(() => Array.from({length: rowCount}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {index: i}));
     });
   }
 
