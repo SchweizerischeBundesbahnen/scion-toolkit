@@ -17,7 +17,7 @@
       @for (row of table.rows(); track $index) {
         <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item)" [sciAttributes]="row.bindings?.attributes?.()"/>
       } @empty {
-        <div class="empty-state">{{('%scion.components.no_items.message' | sciText)()}}</div>
+        <span class="empty">{{('%scion.components.no_items.message' | sciText)()}}</span>
       }
     </sci-table-body>
 
