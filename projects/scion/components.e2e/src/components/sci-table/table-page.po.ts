@@ -101,6 +101,11 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-buffer-size').fill(bufferSize.toString());
   }
 
+  public async setPageSize(pageSize: number): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-page-size').fill(pageSize.toString());
+  }
+
   public async setDatasource(datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'): Promise<void> {
     await this.tabbar.locator('button.e2e-datasource').click();
     await this.properties.locator('select.e2e-datasource').selectOption(datasource);

@@ -53,6 +53,7 @@ export interface SciTableDescriptor<T> {
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
   bufferSize?: MaybeSignal<number>;
+  pageSize?: MaybeSignal<number>;
   trackBy?: (item: T) => unknown;
 }
 

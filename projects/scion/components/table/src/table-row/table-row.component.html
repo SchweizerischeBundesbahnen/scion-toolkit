@@ -3,7 +3,7 @@
   <sci-table-cell [cell]="cell" [row]="row" [isSelected]="isSelected()" #cell/>
 } @empty {
   @for (column of table().columns(); track column.name) {
-    <div class="skeleton"></div>
+    <div class="skeleton e2e-skeleton" [attr.data-column]="column.name"></div>
   }
 }
 

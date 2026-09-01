@@ -41,6 +41,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   private readonly _trackBy?: (item: T) => unknown;
 
   public readonly bufferSize: Signal<number>;
+  public readonly pageSize: Signal<number>;
   public readonly filterable: Signal<boolean>;
   public readonly headerVisible: Signal<boolean>;
   public readonly gridlinesVisible: Signal<boolean>;
@@ -57,15 +58,6 @@ export class ɵSciTable<T> implements SciTable<T> {
   private readonly _globalFilter = signal<string | null>(null);
   private readonly _selectedItems = signal(new Map<unknown, T>());
   private readonly _cache = new TableCache<T>();
-
-  public readonly pageSize = linkedSignal<SciScrollRange | undefined, number>({
-    source: () => this.scrollRange(),
-    computation: (scrollRange, previous) => {
-      const visibleRowCount = (scrollRange?.end ?? 0) - (scrollRange?.start ?? 0);
-      // PageSize should never be smaller than the minimum size (5).
-      return Math.max(visibleRowCount, previous?.value ?? 5);
-    },
-  });
 
   // Reset totalCount on criteria change, to show skeletons instead of stale data while loading.
   public readonly totalCount = linkedSignal({
@@ -98,6 +90,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T>) {
     this.name = `scion.components.${descriptor.name}`;
     this.bufferSize = coerceSignal(descriptor.bufferSize ?? 10);
+    this.pageSize = coerceSignal(descriptor.pageSize ?? 50);
     this.sortable = coerceSignal(descriptor.sortable ?? true);
     this.filterable = coerceSignal(descriptor.filterable ?? true);
     this.headerVisible = coerceSignal(descriptor.headerVisible ?? true);
@@ -141,7 +134,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     const columnFilters = this.filterCriteria();
     const globalFilter = this._globalFilter() ?? undefined;
 
-    const pages = this.pagesByRange(start, end, pageSize);
+    const pages = pagesByRange(start, end, pageSize);
     const requests = pages.map(page => {
       const response = this.loadPage({page, pageSize, columnFilters, globalFilter: globalFilter, sortCriteria});
       // Wait for the page to be loaded.
@@ -300,11 +293,12 @@ export class ɵSciTable<T> implements SciTable<T> {
       const sortCriteria = this.sortCriteria();
       const columnFilters = this.filterCriteria();
       const globalFilter = this._globalFilter() ?? undefined;
+
       if (!scrollRange) {
         return;
       }
 
-      untracked(() => this.pagesByRange(scrollRange.start, scrollRange.end, pageSize).forEach(page => {
+      untracked(() => pagesByRange(scrollRange.start, scrollRange.end, pageSize).forEach(page => {
         this.loadPage({
           pageSize,
           page,
@@ -405,15 +399,6 @@ export class ɵSciTable<T> implements SciTable<T> {
   }
 
   /**
-   * Get pages by range and pageSize. End is exclusive.
-   */
-  private pagesByRange(start: number, end: number, pageSize: number): number[] {
-    const startPage = Math.floor(start / pageSize);
-    const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
-    return rangeInclusive(startPage, endPage);
-  }
-
-  /**
    * Call trackBy function or fallback to track by object reference.
    */
   public trackBy(item: T): unknown {
@@ -481,4 +466,13 @@ export interface SciScrollRange {
   start: number;
   /** exclusive */
   end: number;
+}
+
+/**
+ * Get pages by range and pageSize. End is exclusive.
+ */
+function pagesByRange(start: number, end: number, pageSize: number): number[] {
+  const startPage = Math.floor(start / pageSize);
+  const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
+  return rangeInclusive(startPage, endPage);
 }

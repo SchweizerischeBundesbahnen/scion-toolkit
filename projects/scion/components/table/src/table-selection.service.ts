@@ -105,7 +105,7 @@ export class TableSelectionService<T> {
   }
 
   private rowCount(table: ɵSciTable<T>): number {
-    return table.totalCount() === undefined ? table.pageSize() : table.totalCount()!;
+    return table.totalCount() ?? 0;
   }
 
   private async addItemsToSelection(startIndex: number, endIndex: number): Promise<void> {

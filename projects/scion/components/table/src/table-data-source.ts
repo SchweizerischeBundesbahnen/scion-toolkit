@@ -24,7 +24,7 @@ export interface SciTableRequest {
   start: number; // Inclusive
   end: number; // Exclusive
   pageSize: number;
-  page: number;
+  page: number; // TODO [Etienne] Should page be 1-based?
   sortCriteria: SciSortCriterion[];
   columnFilters: SciColumnFilter[];
   globalFilter?: string; // TODO [etienne] still supported? I think yes, but consider renaming it to tableFilter

@@ -55,6 +55,7 @@ export default class SciTablePageComponent {
   private readonly _cellTemplate = viewChild.required<TemplateRef<Product>>('cell');
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
+  protected readonly datasourceForm: FieldTree<DatasourceForm> = this.createDatasourceForm();
   protected readonly columnForm: FieldTree<ColumnForm> = this.createColumnForm();
   protected readonly columns = signal<ColumnForm[]>([]);
 
@@ -99,7 +100,8 @@ export default class SciTablePageComponent {
         }),
       ) : undefined,
       trackBy: product => product.id,
-      bufferSize: computed(() => this.settingsForm.bufferSize().value()),
+      bufferSize: computed(() => this.datasourceForm.bufferSize().value()),
+      pageSize: computed(() => this.datasourceForm.pageSize().value()),
     }, table => this.columns().forEach(columnForm => {
       if (!columnForm.visible()) {
         return;
@@ -160,7 +162,7 @@ export default class SciTablePageComponent {
 
     effect(onCleanup => {
       const tableCount = this.settingsForm.tableCount().value();
-      const datasource = this.settingsForm.datasource().value();
+      const datasource = this.datasourceForm.datasource().value();
       const showRowActions = this.settingsForm.showRowAction().value();
       const customRowStyling = this.settingsForm.customRowStyling().value();
 
@@ -217,13 +219,20 @@ export default class SciTablePageComponent {
       showHeader: true,
       showGridlines: false,
       showRowAction: false,
-      datasource: 'array',
-      bufferSize: 10,
       customRowStyling: false,
       rowHeight: 30,
       height: 600,
       width: 600,
       tableCount: 1,
+    };
+    return form(signal(defaults));
+  }
+
+  private createDatasourceForm(): FieldTree<DatasourceForm> {
+    const defaults: DatasourceForm = {
+      datasource: 'array',
+      bufferSize: 10,
+      pageSize: 50,
     };
     return form(signal(defaults));
   }
@@ -262,13 +271,17 @@ interface SettingsForm {
   showHeader: boolean;
   showGridlines: boolean;
   showRowAction: boolean;
-  datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http';
-  bufferSize: number;
   customRowStyling: boolean;
   rowHeight: number;
   height: number;
   width: number;
   tableCount: number;
+}
+
+interface DatasourceForm {
+  datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http';
+  bufferSize: number;
+  pageSize: number;
 }
 
 function customFilter(text: string, context: SciCellContext<Product, unknown>): boolean {

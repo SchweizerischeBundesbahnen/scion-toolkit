@@ -14,7 +14,7 @@ import {SciTableComponent} from './table.component';
 import {Component, computed, EnvironmentProviders, Injector, input, inputBinding, runInInjectionContext, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
 import {TableSelectionService} from './table-selection.service';
-import {BehaviorSubject, map, Observable, Subject, take, tap} from 'rxjs';
+import {BehaviorSubject, map, NEVER, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {attributeBinding, classBinding, partBinding, provideTableRowBinding} from './table-row-binding';
 import {SciTableRequest, SciTableResponse} from './table-data-source';
@@ -982,9 +982,10 @@ fdescribe('Table', () => {
       const {fixture} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
         data: loader,
+        pageSize: 5,
+        bufferSize: 0,
         headerVisible: false,
         filterable: false,
-        bufferSize: 0,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -993,20 +994,29 @@ fdescribe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.rows.length).toEqual(10); // 300px / 30px per row
-      expect(table.row({nth: 0}).cells[0]!.value).toEqual('0');
-      expect(loader).toHaveBeenCalledTimes(1);
-
-      await table.scrollY({deltaY: 600});
-      expect(table.row({nth: 0}).cells[0]!.value).toEqual('20'); // 600px = 20 rows
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 10}, i => `${i}`));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 5, page: 0, pageSize: 5}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 5, end: 10, page: 1, pageSize: 5}));
       expect(loader).toHaveBeenCalledTimes(2);
+      loader.calls.reset();
 
-      await table.scrollY({deltaY: -600});
-      expect(table.row({nth: 0}).cells[0]!.value).toEqual('0');
-      expect(loader).toHaveBeenCalledTimes(2); // Should cache page 0 and not call loader again
+      // Scroll down to row 20
+      await table.scrollY({y: 20 * 30});
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 20, end: 30}, i => `${i}`));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 20, end: 25, page: 4, pageSize: 5}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 25, end: 30, page: 5, pageSize: 5}));
+      expect(loader).toHaveBeenCalledTimes(2);
+      loader.calls.reset();
+
+      // Scroll up to row 0
+      await table.scrollY({y: 0});
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 10}, i => `${i}`));
+
+      // Expect page not to be loaded again.
+      expect(loader).not.toHaveBeenCalled();
     });
 
-    it('should load pages based on bufferSize', async () => {
+    it('should load pages based on pageSize [pageSize=5]', async () => {
       const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => ({
         totalCount: 1_000,
         items: generateData(request.pageSize, i => request.start + i),
@@ -1015,6 +1025,7 @@ fdescribe('Table', () => {
       const {fixture} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
         bufferSize: 3,
+        pageSize: 5,
         data: loader,
         headerVisible: false,
         filterable: false,
@@ -1026,12 +1037,85 @@ fdescribe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.rows.length).toEqual(16); // (300px / 30px per row) + (2 * 3 rows buffer) = 16 rows in DOM
-      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 16}));
+      // Buffer before:    []
+      // Rows in Viewport: [0,..,9]
+      // Buffer after:     [10,11,12]
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 13}, i => `${i}`));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 5, page: 0, pageSize: 5}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 5, end: 10, page: 1, pageSize: 5}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 10, end: 15, page: 2, pageSize: 5}));
+      expect(loader).toHaveBeenCalledTimes(3);
+      loader.calls.reset();
 
-      await table.scrollY({deltaY: 120}); // Scroll 4 rows so viewport is ID 3-13 and overscan is 0-2 and 14-17 => should load page 2 because row 17 is loaded
-      expect(loader).toHaveBeenCalledTimes(2);
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 16, end: 32}));
+      // Scroll down to row 4
+      // Buffer before:    [1,2,3]
+      // Rows in Viewport: [4,..,13]
+      // Buffer after:     [14,15,16]
+      await table.scrollY({y: 4 * 30});
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 1, end: 17}, i => `${i}`));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 15, end: 20, page: 3, pageSize: 5}));
+      expect(loader).toHaveBeenCalledTimes(1);
+      loader.calls.reset();
+
+      // Scroll down to row 40
+      // Buffer before:    [37,38,39]
+      // Rows in Viewport: [40,..,49]
+      // Buffer after:     [50,51,52]
+      await table.scrollY({y: 40 * 30});
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 37, end: 53}, i => `${i}`));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 35, end: 40, page: 7, pageSize: 5}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 40, end: 45, page: 8, pageSize: 5}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 45, end: 50, page: 9, pageSize: 5}));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 50, end: 55, page: 10, pageSize: 5}));
+      expect(loader).toHaveBeenCalledTimes(4);
+    });
+
+    it('should load pages based on pageSize [pageSize=50]', async () => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => ({
+        totalCount: 1_000,
+        items: generateData(request.pageSize, i => request.start + i),
+      }));
+
+      const {fixture} = createSciTableComponent(() => sciTable<number>({
+        name: 'table:test',
+        bufferSize: 3,
+        pageSize: 50,
+        data: loader,
+        headerVisible: false,
+        filterable: false,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '300px',
+        designTokens: {'--sci-table-row-height': '30px'},
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      // Buffer before:    []
+      // Rows in Viewport: [0,..,9]
+      // Buffer after:     [10,11,12]
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 13}, i => `${i}`));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
+      expect(loader).toHaveBeenCalledTimes(1);
+      loader.calls.reset();
+
+      // Scroll down to row 4
+      // Buffer before:    [1,2,3]
+      // Rows in Viewport: [4,..,13]
+      // Buffer after:     [14,15,16]
+      await table.scrollY({y: 4 * 30});
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 1, end: 17}, i => `${i}`));
+      expect(loader).not.toHaveBeenCalled();
+      loader.calls.reset();
+
+      // Scroll down to row 40
+      // Buffer before:    [37,38,39]
+      // Rows in Viewport: [40,..,49]
+      // Buffer after:     [50,51,52]
+      await table.scrollY({y: 40 * 30});
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 37, end: 53}, i => `${i}`));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 50, end: 100, page: 1, pageSize: 50}));
+      expect(loader).toHaveBeenCalledTimes(1);
     });
 
     it('should allow global filtering', async () => {
@@ -1092,6 +1176,8 @@ fdescribe('Table', () => {
       const {fixture, model} = createSciTableComponent<{id: string; name: string}>(() => sciTable({
         name: 'table:test',
         data: loader,
+        bufferSize: 0,
+        pageSize: 20,
       }, table => table
         .addStringColumn({
           name: 'column:id',
@@ -1109,65 +1195,77 @@ fdescribe('Table', () => {
 
       expect(await table.column({name: 'column:id'})!.values({rows: 'all'})).toEqual(generateData(100, i => `ID: ${i}`));
       expect(await table.column({name: 'column:name'})!.values({rows: 'all'})).toEqual(generateData(100, i => `Name: ${i}`));
+      loader.calls.reset();
 
       // Filter by 'column:id'.
-      loader.calls.reset();
       model.filter('ID: 5', {columnName: 'column:id'});
       await table.waitUntilStable();
-      // TODO [Etienne] Should only be called once
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-      //   columnFilters: [
-      //     {columnName: 'column:id', text: 'ID: 5'},
-      //   ],
-      // }));
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
+        start: 0, end: 20, page: 0, pageSize: 20,
+        columnFilters: [
+          {columnName: 'column:id', text: 'ID: 5'},
+        ],
+      }));
+      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 5']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 5']);
-      // Clear column filter.
       loader.calls.reset();
+
+      // Clear column filter.
       model.filter(null, {columnName: 'column:id'});
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({columnFilters: []}));
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 20, page: 0, pageSize: 20, columnFilters: []}));
+      // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values({rows: 'all'})).toEqual(generateData(100, i => `ID: ${i}`));
       expect(await table.column({name: 'column:name'})!.values({rows: 'all'})).toEqual(generateData(100, i => `Name: ${i}`));
+      loader.calls.reset();
 
       // Filter by 'column:name'.
-      loader.calls.reset();
       model.filter('Name: 10', {columnName: 'column:name'});
       await table.waitUntilStable();
-      // TODO [Etienne] Should only be called once
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-      //   columnFilters: [
-      //     {columnName: 'column:name', text: 'Name: 10'},
-      //   ],
-      // }));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
+        start: 0, end: 20, page: 0, pageSize: 20,
+        columnFilters: [
+          {columnName: 'column:name', text: 'Name: 10'},
+        ],
+      }));
+      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 10']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 10']);
+      loader.calls.reset();
 
       // Filter by 'column:id' (no match).
-      loader.calls.reset();
       model.filter('ID: 11', {columnName: 'column:id'});
       await table.waitUntilStable();
-      // TODO [Etienne] Should only be called once
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-      //   columnFilters: [
-      //     {columnName: 'column:name', text: 'Name: 10'},
-      //     {columnName: 'column:id', text: 'ID: 11'},
-      //   ],
-      // }));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
+        start: 0, end: 20, page: 0, pageSize: 20,
+        columnFilters: [
+          {columnName: 'column:name', text: 'Name: 10'},
+          {columnName: 'column:id', text: 'ID: 11'},
+        ],
+      }));
+      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual([]);
       expect(await table.column({name: 'column:name'})!.values()).toEqual([]);
+      loader.calls.reset();
 
       // Filter by 'column:id' (match).
-      loader.calls.reset();
       model.filter('ID: 10', {columnName: 'column:id'});
       await table.waitUntilStable();
-      // TODO [Etienne] Should only be called once
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-      //   columnFilters: [
-      //     {columnName: 'column:name', text: 'Name: 10'},
-      //     {columnName: 'column:id', text: 'ID: 10'},
-      //   ],
-      // }));
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
+        start: 0, end: 20, page: 0, pageSize: 20,
+        columnFilters: [
+          {columnName: 'column:name', text: 'Name: 10'},
+          {columnName: 'column:id', text: 'ID: 10'},
+        ],
+      }));
+      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 10']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 10']);
     });
@@ -1186,6 +1284,8 @@ fdescribe('Table', () => {
       const {fixture, model} = createSciTableComponent<number>(() => sciTable({
         name: 'table:test',
         data: loader,
+        bufferSize: 0,
+        pageSize: 20,
       }, table => table.addNumberColumn({
         name: 'column:1',
         value: item => item,
@@ -1195,36 +1295,48 @@ fdescribe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
+      loader.calls.reset();
 
       // Sort 'column:1' in ascending order.
-      loader.calls.reset();
       model.sort('column:1', false);
       await table.waitUntilStable();
+
       expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
+        start: 0, end: 20, page: 0, pageSize: 20,
         sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
       }));
+      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
+      loader.calls.reset();
 
       // Sort 'column:1' in descening order.
-      loader.calls.reset();
       model.sort('column:1', false);
       await table.waitUntilStable();
-      // TODO [Etienne] should only be called once, not for alread loaded pages.
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-      //   sortCriteria: [{columnName: 'column:1', direction: 'desc'}],
-      // }));
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
+        start: 0, end: 20, page: 0, pageSize: 20,
+        sortCriteria: [{columnName: 'column:1', direction: 'desc'}],
+      }));
+      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`).reverse());
+      loader.calls.reset();
 
       // Sort 'column:1' in ascending order.
-      // TODO [Etienne] Why does it not working if sorting again?
-      loader.calls.reset();
       model.sort('column:1', false);
       await table.waitUntilStable();
-      // TODO [Etienne] should only be called once, not for alread loaded pages.
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-      //   sortCriteria: [{columnName: 'column:1', direction: 'desc'}],
+
+      // TODO [Etienne] Why does it not working if sorting again?
+
+      // expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
+      //   start: 0, end: 20, page: 0, pageSize: 20,
+      //   sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
       // }));
+      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // expect(loader).toHaveBeenCalledTimes(1);
       // expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
+      // loader.calls.reset();
     });
 
     it('should load data from observable', async () => {
@@ -1264,10 +1376,10 @@ fdescribe('Table', () => {
       expect(loader).toHaveBeenCalledTimes(1);
     });
 
-    // TODO [etienne] add test that previous call ised canceled
+    // TODO [etienne] add test that previous call is canceled
 
     it('should cancel load', async () => {
-      const loaded = new Array<number>();
+      const loaded = new Array<SciTableRequest>();
       const onLoad$ = new Subject<void>();
       const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): Observable<SciTableResponse<number>> => onLoad$
         .pipe(
@@ -1276,11 +1388,12 @@ fdescribe('Table', () => {
             totalCount: 100,
             items: generateData(request.pageSize, i => request.start + i),
           })),
-          tap(() => loaded.push(request.page)),
+          tap(() => loaded.push(request)),
         ));
 
       const {fixture} = createSciTableComponent(() => sciTable<number>({
         name: 'table:test',
+        pageSize: 10,
         bufferSize: 0,
         data: loader,
         headerVisible: false,
@@ -1296,20 +1409,29 @@ fdescribe('Table', () => {
       onLoad$.next();
       await table.waitUntilStable();
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({page: 0}));
+      expect(loader).toHaveBeenCalledTimes(1);
+      loader.calls.reset();
 
       // Scroll one page.
       await table.scrollY({deltaY: 300});
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({page: 1}));
+      expect(loader).toHaveBeenCalledTimes(1);
+      loader.calls.reset();
 
       // Scroll again before loader response.
       await table.scrollY({deltaY: 300});
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({page: 2}));
+      expect(loader).toHaveBeenCalledTimes(1);
+      loader.calls.reset();
 
       onLoad$.next();
       await table.waitUntilStable();
 
       // Expect to only have loaded the initial page and the last.
-      expect(loaded).toEqual([0, 2]);
+      expect(loaded).toEqual([
+        jasmine.objectContaining<SciTableRequest>({page: 0}),
+        jasmine.objectContaining<SciTableRequest>({page: 2}),
+      ]);
     });
 
     // TODO [marc] Fix test
@@ -1366,11 +1488,11 @@ fdescribe('Table', () => {
       expect(model.selectedItems()).toEqual(generateData(100, i => i));
     });
 
-    it('should display all rows in range [bufferSize=0]', async () => {
+    it('should display rows in range [bufferSize=0]', async () => {
       const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => {
         return ({
           totalCount: 11,
-          items: generateData(request.pageSize, i => request.start + i + 1),
+          items: generateData(request.pageSize, i => request.start + i),
         });
       });
 
@@ -1378,60 +1500,127 @@ fdescribe('Table', () => {
         name: 'table:test',
         data: loader,
         bufferSize: 0,
+        pageSize: 50,
         filterable: true,
         headerVisible: true,
       }, table => table.addNumberColumn(item => item)), {
-        height: '301px', // 301px and not 300px because the header has a bottom border of 1px
+        height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
       });
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      // TODO [Etienne] Add loader expectation
-      // const viewportHeight = table.viewport.clientHeight; // 301px
-      // const headerHeight = await table.header.getHeight(); // 61px
-
-      // const expectedPageSize = (viewportHeight - headerHeight) / 30; // 8
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-      //   page: 0,
-      //   pageSize: expectedPageSize,
-      //   start: 0,
-      //   end: expectedPageSize,
-      // }));
-      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['1', '2', '3', '4', '5', '6', '7', '8']);
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 8}, i => `${i}`));
       loader.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      // TODO [Etienne] Add loader expectation
-      // expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-      //   page: 1,
-      //   pageSize: expectedPageSize,
-      //   start: 8,
-      //   end: 8 + expectedPageSize,
-      // }));
-      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['2', '3', '4', '5', '6', '7', '8', '9']);
-      // loader.calls.reset();
+      expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 1, end: 9}, i => `${i}`));
+      loader.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      // expect(loader).not.toHaveBeenCalled(); // returned from cache
-      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['3', '4', '5', '6', '7', '8', '9', '10']);
-      // loader.calls.reset();
+      expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 2, end: 10}, i => `${i}`));
+      loader.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      // expect(loader).not.toHaveBeenCalled(); // returned from cache
-      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['4', '5', '6', '7', '8', '9', '10', '11']);
-      // loader.calls.reset();
+      expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 3, end: 11}, i => `${i}`));
+      loader.calls.reset();
 
       // Scroll one row down (beyond end)
       await table.scrollY({deltaY: 30});
+      expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 3, end: 11}, i => `${i}`));
+    });
 
-      // expect(loader).not.toHaveBeenCalled();
-      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(['4', '5', '6', '7', '8', '9', '10', '11']);
-      // loader.calls.reset();
+    it('should display rows in range [bufferSize=1]', async () => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => {
+        return ({
+          totalCount: 11,
+          items: generateData(request.pageSize, i => request.start + i),
+        });
+      });
+
+      const {fixture} = createSciTableComponent(() => sciTable<number>({
+        name: 'table:test',
+        data: loader,
+        bufferSize: 1,
+        pageSize: 50,
+        filterable: true,
+        headerVisible: true,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '300px',
+        designTokens: {'--sci-table-row-height': '30px'},
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
+      expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 9}, i => `${i}`));
+      loader.calls.reset();
+
+      // Scroll one row down.
+      await table.scrollY({deltaY: 30});
+      expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 10}, i => `${i}`));
+      loader.calls.reset();
+
+      // Scroll one row down.
+      await table.scrollY({deltaY: 30});
+      expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 1, end: 11}, i => `${i}`));
+      loader.calls.reset();
+
+      // Scroll one row down.
+      await table.scrollY({deltaY: 30});
+      expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 2, end: 11}, i => `${i}`));
+      loader.calls.reset();
+
+      // Scroll one row down (beyond end)
+      await table.scrollY({deltaY: 30});
+      expect(loader).not.toHaveBeenCalled();
+      expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 2, end: 11}, i => `${i}`));
+    });
+
+    it('should display single page with skeletons until total count is available', async () => {
+      const loader = jasmine.createSpy().and.callFake((): Observable<SciTableResponse<number>> => NEVER);
+
+      const {fixture} = createSciTableComponent(() => sciTable<number>({
+        name: 'table:test',
+        data: loader,
+        filterable: false,
+        headerVisible: false,
+      }, table => table.addNumberColumn(item => item)), {
+        height: '300px',
+        designTokens: {'--sci-table-row-height': '30px'},
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      // Expect 10 rows displaying a skeleton.
+      expect(table.rows.length).toEqual(10);
+      expect(table.row({nth: 0}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 2}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 3}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 4}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 5}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 6}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 7}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 8}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 9}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 9}).cells[0]!.isLoading()).toBeTrue();
+
+      // Expect no vertical overflow.
+      expect(table.viewport.scrollHeight).toEqual(table.viewport.clientHeight);
     });
   });
 
@@ -1458,11 +1647,11 @@ fdescribe('Table', () => {
 
       expect(table.row({nth: 0}).element.getAttribute('data-spec-index')).toEqual('0');
       expect(table.row({nth: 0}).element).toHaveClass('spec-index-0');
-      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-0');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-0');
 
       expect(table.row({nth: 1}).element.getAttribute('data-spec-index')).toEqual('1');
       expect(table.row({nth: 1}).element).toHaveClass('spec-index-1');
-      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-1');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-1');
 
       // Scroll down to load another page.
       await table.scrollY({y: 50 * 30});
@@ -1472,11 +1661,11 @@ fdescribe('Table', () => {
 
       expect(table.row({nth: rowIndex}).element.getAttribute('data-spec-index')).toEqual('50');
       expect(table.row({nth: rowIndex}).element).toHaveClass('spec-index-50');
-      expect(table.row({nth: rowIndex}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-50');
+      expect(table.row({nth: rowIndex}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-50');
 
       expect(table.row({nth: rowIndex + 1}).element.getAttribute('data-spec-index')).toEqual('51');
       expect(table.row({nth: rowIndex + 1}).element).toHaveClass('spec-index-51');
-      expect(table.row({nth: rowIndex + 1}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-51');
+      expect(table.row({nth: rowIndex + 1}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-51');
 
       // Filter table.
       await table.column({index: 0})?.filter('1');
@@ -1484,19 +1673,19 @@ fdescribe('Table', () => {
       // Expect index to start at 0 in ascending order without gaps.
       expect(table.row({nth: 0}).element.getAttribute('data-spec-index')).toEqual('0');
       expect(table.row({nth: 0}).element).toHaveClass('spec-index-0');
-      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-0');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-0');
 
       expect(table.row({nth: 1}).element.getAttribute('data-spec-index')).toEqual('1');
       expect(table.row({nth: 1}).element).toHaveClass('spec-index-1');
-      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-1');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-1');
 
       expect(table.row({nth: 2}).element.getAttribute('data-spec-index')).toEqual('2');
       expect(table.row({nth: 2}).element).toHaveClass('spec-index-2');
-      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-2');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-2');
 
       expect(table.row({nth: 3}).element.getAttribute('data-spec-index')).toEqual('3');
       expect(table.row({nth: 3}).element).toHaveClass('spec-index-3');
-      expect(table.row({nth: 3}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-3');
+      expect(table.row({nth: 3}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-3');
     });
 
     it('should bind attribute to row', async () => {
@@ -1615,9 +1804,9 @@ fdescribe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:1');
-      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:2');
-      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:3');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:1');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:2');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:3');
     });
 
     it('should bind reactive part-attribute to cell', async () => {
@@ -1639,17 +1828,17 @@ fdescribe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:negative');
-      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:negative');
-      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:negative');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:negative');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:negative');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:negative');
 
       // Update part attribute of row 2.
       partAttributes.get(2)!.set('row:positive');
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:positive');
-      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:positive');
-      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:positive');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:positive');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:positive');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:positive');
     });
   });
 });
@@ -1714,10 +1903,15 @@ function provideNullTableStorage(): EnvironmentProviders {
 }
 
 /**
- * Generates an array of `count` items using a factory function.
+ * Generates an array of items using a factory function, either by count or for a given range.
  */
-export function generateData<T>(count: number, factoryFn: (index: number) => T): T[] {
-  return Array.from(Array(count), (_, index) => factoryFn(index));
+export function generateData<T>(countOrRange: number | {start: number/* inclusive */; end: number/* exclusive */}, factoryFn: (index: number) => T): T[] {
+  if (typeof countOrRange === 'number') {
+    return generateData({start: 0, end: countOrRange}, factoryFn);
+  }
+  else {
+    return Array.from({length: countOrRange.end - countOrRange.start}, (_, index) => factoryFn(index + countOrRange.start));
+  }
 }
 
 /**

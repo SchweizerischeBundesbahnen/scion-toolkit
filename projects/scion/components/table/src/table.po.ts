@@ -33,7 +33,7 @@ export class TablePO {
   }
 
   public get rows(): RowPO[] {
-    return [...this.element.querySelectorAll<HTMLElement>('sci-table-row')].map(element => new RowPO(element));
+    return [...this.element.querySelectorAll<HTMLElement>('sci-table-row')].map(element => new RowPO(element, this));
   }
 
   /**
@@ -41,10 +41,10 @@ export class TablePO {
    */
   public row(locateBy: OneOf<{index: number; nth: number}>): RowPO {
     if (locateBy.index !== undefined) {
-      return new RowPO(this.element.querySelector<HTMLElement>(`sci-table-row[data-row-index="${locateBy.index}"]`)!);
+      return new RowPO(this.element.querySelector<HTMLElement>(`sci-table-row[data-row-index="${locateBy.index}"]`)!, this);
     }
     else {
-      return new RowPO(this.element.querySelector<HTMLElement>(`sci-table-row:nth-of-type(${locateBy.nth + 1})`)!);
+      return new RowPO(this.element.querySelector<HTMLElement>(`sci-table-row:nth-of-type(${locateBy.nth + 1})`)!, this);
     }
   }
 
@@ -155,29 +155,29 @@ export class ColumnPO {
       await table.scrollY({y: 0});
 
       const rows = new Array<{rowIndex: number; value: string}>();
-      rows.push(...table.rows.map(row => ({rowIndex: row.rowIndex, value: row.cells[this.index]!.value})));
+      rows.push(...table.rows.map(row => ({rowIndex: row.rowIndex, value: row.cells[this.index]!.value ?? ''})));
 
       while (table.scrollTop !== table.viewport.scrollHeight - table.viewport.clientHeight) {
-        await table.scrollY({deltaY: table.viewport.clientHeight});
-        rows.push(...table.rows.map(row => ({rowIndex: row.rowIndex, value: row.cells[this.index]!.value})));
+        await table.scrollY({deltaY: table.viewport.clientHeight - table.header.height});
+        rows.push(...table.rows.map(row => ({rowIndex: row.rowIndex, value: row.cells[this.index]!.value ?? ''})));
       }
 
       // Remove duplicate rows, caused by virtual scrolling which inserts rows both before and after the visible area.
       return Arrays.distinct(rows, entry => entry.rowIndex).map(entry => entry.value);
     }
     else {
-      return table.rows.map(row => row.cells[this.index]!.value);
+      return table.rows.map(row => row.cells[this.index]!.value ?? '');
     }
   }
 }
 
 export class RowPO {
 
-  constructor(public element: HTMLElement) {
+  constructor(public element: HTMLElement, private _table: TablePO) {
   }
 
-  public get cells(): Array<CellPO> {
-    return [...this.element.querySelectorAll<HTMLElement>('sci-table-cell')].map(element => new CellPO(element));
+  public get cells(): CellPO[] {
+    return this._table.columns.map(column => new CellPO(this.element.querySelector(`sci-table-cell[data-column="${column.name}"]`), this, column));
   }
 
   public hover(): void {
@@ -211,11 +211,15 @@ export class RowPO {
 
 export class CellPO {
 
-  constructor(public element: HTMLElement) {
+  constructor(public element: HTMLElement | null, public row: RowPO, public column: ColumnPO) {
   }
 
-  public get value(): string {
-    return this.element.textContent.trim();
+  public get value(): string | undefined {
+    return this.element?.textContent.trim();
+  }
+
+  public isLoading(): boolean {
+    return this.row.element.querySelector(`div.e2e-skeleton[data-column="${this.column.name}"]`) !== null;
   }
 }
 
@@ -224,7 +228,7 @@ export class HeaderPO {
   constructor(public element: HTMLElement) {
   }
 
-  public async getHeight(): Promise<number> {
-    return waitUntilStable(() => this.element.offsetHeight);
+  public get height(): number {
+    return this.element.offsetHeight;
   }
 }

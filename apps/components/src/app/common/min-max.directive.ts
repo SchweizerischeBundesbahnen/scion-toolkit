@@ -36,7 +36,7 @@ export class MinMaxDirective {
       .pipe(takeUntilDestroyed())
       .subscribe(() => {
         const value = +inputElement.value;
-        inputElement.value = `${clamp(value, {min: this.min() ?? value, max: this.max() ?? value})}`;
+        inputElement.value = `${clamp(value, {min: this.min(), max: this.max()})}`;
       });
   }
 }

@@ -68,7 +68,7 @@ export class SciColumnService {
 
   public resize(columnWidth: number): void {
     const state = this._resizingState()!;
-    const clampedWidth = clamp(columnWidth, {min: state.column.minWidth, max: state.column.maxWidth ?? columnWidth});
+    const clampedWidth = clamp(columnWidth, {min: state.column.minWidth, max: state.column.maxWidth});
 
     if (clampedWidth !== state.columnWidths()?.get(state.column.name)) {
       const columnWidths = this.calculateColumnWidths(state.column, clampedWidth);
@@ -130,7 +130,7 @@ export class SciColumnService {
       if (flexColumns.has(column)) {
         const ratio = column.location.width / totalFlexWidth;
         const absoluteWidth = ratio * availableFlexWidth;
-        return map.set(column.name, clamp(absoluteWidth, {min: column.minWidth, max: column.maxWidth ?? absoluteWidth}));
+        return map.set(column.name, clamp(absoluteWidth, {min: column.minWidth, max: column.maxWidth}));
       }
       return map.set(column.name, column.location.width);
     }, new Map<`column:${string}`, number>());

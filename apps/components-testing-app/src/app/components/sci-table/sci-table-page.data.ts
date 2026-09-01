@@ -35,7 +35,7 @@ export class ProductService {
    * Loads products via HTTP from '/sci-table/products', until the calling injection context is destroyed.
    */
   public enableHttpLoader(): void {
-    this._httpClient.get<Product[]>('/sci-table/products')
+    this._httpClient.post<Product[]>('/sci-table/products', undefined)
       .pipe(
         tap({subscribe: () => this.products.set([])}),
         takeUntilDestroyed(),
