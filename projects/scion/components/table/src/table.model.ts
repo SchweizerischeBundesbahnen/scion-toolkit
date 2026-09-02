@@ -18,13 +18,16 @@ export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'tem
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
 export interface SciTableDescriptor<T> {
-  data: Signal<T[]> | SciDataLoaderFn<T>; // TODO [etienne] consider renaming to datasource
+  data: Signal<T[]> | SciDataLoaderFn<T>; // TODO [egob] consider renaming to datasource
   sortable?: MaybeSignal<boolean>;
   resizable?: MaybeSignal<boolean>;
   filterable?: MaybeSignal<boolean>;
   selectable?: MaybeSignal<false | 'single' | 'multi'>;
+  // TODO [egob] Consider renaming to showHeader
   headerVisible?: MaybeSignal<boolean>;
+  // TODO [egob] Consider renaming to showGridlines
   gridlinesVisible?: MaybeSignal<boolean>;
+  // TODO [egob] Consider renaming to initialSortOrder
   sortBy?: Array<`column:${string}` | SciSortCriterion>;
   /**
    * Row actions shown at the end of a row.

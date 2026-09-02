@@ -166,7 +166,6 @@ export class ɵSciTable<T> implements SciTable<T> {
     }
 
     const items = signal<T[] | undefined>(undefined);
-    // TODO [Etienne] Cancel previous fetch
     const subscription = Observables.coerce(this._dataLoaderFn({
       start: pageStart,
       end: pageEnd,
@@ -181,7 +180,7 @@ export class ɵSciTable<T> implements SciTable<T> {
         items.set(result.items);
       },
       error: err => {
-        // TODO [etienne]: what do we do when the datasource throws an error?
+        // TODO [egob]: what do we do when the datasource throws an error?
         this._cache.deleteIfEmpty(cacheKey);
       },
     });
@@ -208,7 +207,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   /**
    * Toggles sort on a column. ASC -> DESC -> No sort
    *
-   * TODO [Etienne] No magic! Remove toggling logic
+   * TODO [egob] Revisit API, do we really want a three-state and implicit toggling logic?
    */
   public sort(columnName: `column:${string}`, multi: boolean): void {
     this.sortCriteria.update(sortCriteria => {

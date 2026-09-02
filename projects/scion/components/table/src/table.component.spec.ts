@@ -310,7 +310,7 @@ fdescribe('Table', () => {
         expect(await table.column({name: 'column:name'})!.values()).toEqual(['alpha', 'beta', 'gamma']);
       });
 
-      // TODO [etienne] Fix that global filter uses custom matcher if configured
+      // TODO [egob] Fix that global filter uses custom matcher if configured
       xit('should support global filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
@@ -1191,7 +1191,7 @@ fdescribe('Table', () => {
           {columnName: 'column:id', text: 'ID: 5'},
         ],
       }));
-      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
       // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 5']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 5']);
@@ -1216,7 +1216,7 @@ fdescribe('Table', () => {
           {columnName: 'column:name', text: 'Name: 10'},
         ],
       }));
-      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
       // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 10']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 10']);
@@ -1232,7 +1232,7 @@ fdescribe('Table', () => {
           {columnName: 'column:id', text: 'ID: 11'},
         ],
       }));
-      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
       // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual([]);
       expect(await table.column({name: 'column:name'})!.values()).toEqual([]);
@@ -1248,7 +1248,7 @@ fdescribe('Table', () => {
           {columnName: 'column:id', text: 'ID: 10'},
         ],
       }));
-      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
       // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 10']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 10']);
@@ -1288,7 +1288,7 @@ fdescribe('Table', () => {
         start: 0, end: 20, page: 0, pageSize: 20,
         sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
       }));
-      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
       expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
       loader.calls.reset();
@@ -1301,7 +1301,7 @@ fdescribe('Table', () => {
         start: 0, end: 20, page: 0, pageSize: 20,
         sortCriteria: [{columnName: 'column:1', direction: 'desc'}],
       }));
-      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
       // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`).reverse());
       loader.calls.reset();
@@ -1310,13 +1310,13 @@ fdescribe('Table', () => {
       model.sort('column:1', false);
       await table.waitUntilStable();
 
-      // TODO [Etienne] Why does it not working if sorting again?
+      // TODO [egob] Why does it not working if sorting again?
 
       // expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
       //   start: 0, end: 20, page: 0, pageSize: 20,
       //   sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
       // }));
-      // TODO [Etienne] Shouldn't this be called only once? (not for already loaded pages)
+      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
       // expect(loader).toHaveBeenCalledTimes(1);
       // expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
       // loader.calls.reset();
@@ -1357,14 +1357,14 @@ fdescribe('Table', () => {
       expect(loader).toHaveBeenCalledTimes(1);
     });
 
-    // TODO [etienne] add test that previous call is canceled
+    // TODO [egob] add test that previous call is canceled
 
     it('should cancel load', async () => {
       const loaded = new Array<SciTableRequest>();
       const onLoad$ = new Subject<void>();
       const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): Observable<SciTableResponse<number>> => onLoad$
         .pipe(
-          take(1), // TODO [Etienne] Remove when previous fetch is canceled.
+          take(1), // TODO [egob] Remove when previous fetch is canceled.
           map(() => ({
             totalCount: 100,
             items: generateData(request.pageSize, i => request.start + i),

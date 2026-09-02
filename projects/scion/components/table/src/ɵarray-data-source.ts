@@ -141,7 +141,6 @@ export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnL
     const resolvedColumns = columns();
     const items: ItemWithValues<T>[] = data().map(item => ({
       item,
-      // TODO [Etienne] Müssen wir die value function wirklich zweimal aufrufen? Hier und in `mapItemsToRow` in `ɵSciTable`?
       values: resolvedColumns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
     }));
 

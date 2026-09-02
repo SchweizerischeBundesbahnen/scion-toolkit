@@ -43,7 +43,7 @@ export class TableCellComponent<T> {
   protected readonly templateContext = this.computeTemplateContext();
   protected readonly partAttribute = this.computePartAttribute();
 
-  // TODO [Etienne] Padding is included in offset width and client width! Revisit!
+  // TODO [egob] Padding is included in offset width and client width! Revisit!
   public getWidth(): number {
     const paddingStr = getComputedStyle(this._host).paddingRight;
     // The actual column width has to include the cell padding, so the content gets enough space.

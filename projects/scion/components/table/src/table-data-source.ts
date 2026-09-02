@@ -24,10 +24,10 @@ export interface SciTableRequest {
   start: number; // Inclusive
   end: number; // Exclusive
   pageSize: number;
-  page: number; // TODO [Etienne] Should page be 1-based?
+  page: number; // TODO [egob] Should page be 1-based?
   sortCriteria: SciSortCriterion[];
   columnFilters: SciColumnFilter[];
-  globalFilter?: string; // TODO [etienne] still supported? I think yes, but consider renaming it to tableFilter
+  globalFilter?: string; // TODO [egob] still supported? I think yes, but consider renaming it to tableFilter
 }
 
 export interface SciTableResponse<T> {

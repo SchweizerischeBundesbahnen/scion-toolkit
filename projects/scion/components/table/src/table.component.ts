@@ -39,7 +39,7 @@ import {SciAttributesDirective} from '@scion/components/common';
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
     '[attr.name]': 'name()', // Public API: Enables selecting the table by name in CSS (also if the table has a dynamic name input binding)
-    // TODO [Etienne] Consider moving styles bindings to viewport component (hidden from outside)
+    // TODO [dwie] Move styles bindings to viewport component (hidden from outside)
     '[style.--ɵsci-table-scrolling]': 'table().scrolling() ? `true` : null',
     '[style.--ɵsci-table-resizing]': 'table().resizing() ? `true` : null',
     '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
@@ -53,8 +53,8 @@ import {SciAttributesDirective} from '@scion/components/common';
     TableRowComponent,
     SciTextPipe,
     SciSpinnerThrobberComponent,
-    ColumnSplittersComponent, // TODO [etienne] Should start with Sci?
-    ColumnBoundsComponent, // TODO [etienne] Should start with Sci?
+    ColumnSplittersComponent, // TODO [egob] Should start with Sci?
+    ColumnBoundsComponent, // TODO [egob] Should start with Sci?
     SciTableGridComponent,
     SciTableBodyComponent,
     SciTableHeaderComponent,
@@ -66,7 +66,7 @@ import {SciAttributesDirective} from '@scion/components/common';
     TableSelectionService,
   ],
 })
-export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
+export class SciTableComponent<T> { // TODO [egob] Is this generic really helpful?
 
   /**
    * Specifies a unique table identifier, used as the key for storing user preferences.
