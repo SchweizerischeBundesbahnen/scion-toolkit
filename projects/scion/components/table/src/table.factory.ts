@@ -14,15 +14,15 @@ import {Translatable} from '@scion/components/text';
 
 export interface SciTableFactory<T> {
   addStringColumn(value: (item: T) => string): this;
-  addStringColumn(header: Translatable, value: (item: T) => string): this;
+  addStringColumn(label: Translatable, value: (item: T) => string): this;
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
   addBooleanColumn(value: (item: T) => boolean): this;
-  addBooleanColumn(header: Translatable, value: (item: T) => boolean): this;
+  addBooleanColumn(label: Translatable, value: (item: T) => boolean): this;
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
   addNumberColumn(value: (item: T) => number): this;
-  addNumberColumn(header: Translatable, value: (item: T) => number): this;
+  addNumberColumn(label: Translatable, value: (item: T) => number): this;
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
@@ -31,7 +31,7 @@ export interface SciTableFactory<T> {
 
 export interface SciColumnDescriptor {
   name?: `column:${string}`;
-  header?: Translatable;
+  label?: Translatable;
   resizable?: boolean;
   /**
    * Preferred column size.

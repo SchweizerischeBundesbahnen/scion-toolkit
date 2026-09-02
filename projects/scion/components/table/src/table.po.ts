@@ -54,7 +54,7 @@ export class TablePO {
       .map((name, i) => new ColumnPO(name, i, this));
   }
 
-  public column(locateBy: RequireOne<{name: `column:${string}`; header: string; index: number}>): ColumnPO | undefined {
+  public column(locateBy: RequireOne<{name: `column:${string}`; label: string; index: number}>): ColumnPO | undefined {
     return this.columns.find(column => {
       if (locateBy.name !== undefined && column.name !== locateBy.name) {
         return false;
@@ -62,7 +62,7 @@ export class TablePO {
       if (locateBy.index !== undefined && column.index !== locateBy.index) {
         return false;
       }
-      if (locateBy.header !== undefined && column.header !== locateBy.header) {
+      if (locateBy.label !== undefined && column.label !== locateBy.label) {
         return false;
       }
       return true;
@@ -94,8 +94,8 @@ export class ColumnPO {
     this._headerElement = this._table.element.querySelector(`sci-column-header[data-column="${this.name}"]`);
   }
 
-  public get header(): string | undefined {
-    return this._headerElement?.querySelector('.text')?.textContent.trim();
+  public get label(): string | undefined {
+    return this._headerElement?.querySelector('span.e2e-label')?.textContent.trim();
   }
 
   public get width(): number {

@@ -321,7 +321,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       sortable: computed(() => this.sortable() && sortable),
       filterable: computed(() => this.filterable() && filterable),
       resizable: computed(() => this.resizable() && (config.resizable ?? true)),
-      header: coerceSignal(config.header ?? ''),
+      label: coerceSignal(config.label ?? ''),
       width: computed(() => {
         const userSettings = this.userSettings().columns?.find(column => column.name === columnName);
         return userSettings?.width ? `${userSettings.width}px` : config.width ?? '1fr';

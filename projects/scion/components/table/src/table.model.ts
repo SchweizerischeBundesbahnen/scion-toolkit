@@ -78,10 +78,10 @@ export interface SciCellContext<T, VALUE> {
 export interface SciColumn {
   type: SciColumnType;
   name: `column:${string}`;
+  label: Signal<string>;
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;
   resizable: Signal<boolean>;
-  header: Signal<string>;
   width: Signal<string>;
   minWidth: number;
   maxWidth: number | undefined;

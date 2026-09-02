@@ -76,7 +76,7 @@ fdescribe('Table', () => {
         const {fixture} = createSciTableComponent(() => sciTable(data, table => table
           .addNumberColumn(item => item.id)
           .addComponentColumn({
-            header: 'Value',
+            label: 'Value',
             component: () => ({
               component: TestComponent,
               bindings: [inputBinding('value', value)],
@@ -86,12 +86,12 @@ fdescribe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        expect(await table.column({header: 'Value'})!.values()).toEqual(['5']);
+        expect(await table.column({label: 'Value'})!.values()).toEqual(['5']);
 
         // Update input signal => should update inside component.
         value.set(20);
         await table.waitUntilStable();
-        expect(await table.column({header: 'Value'})!.values()).toEqual(['10']);
+        expect(await table.column({label: 'Value'})!.values()).toEqual(['10']);
       });
 
       it('should support custom template cell', async () => {
@@ -99,8 +99,8 @@ fdescribe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        expect(await table.column({header: 'ID'})!.values()).toEqual(['1', '2', '3']);
-        expect(await table.column({header: 'Price'})!.values()).toEqual(['50', '100', '200']);
+        expect(await table.column({label: 'ID'})!.values()).toEqual(['1', '2', '3']);
+        expect(await table.column({label: 'Price'})!.values()).toEqual(['50', '100', '200']);
       });
     });
 
@@ -110,7 +110,7 @@ fdescribe('Table', () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn({
           name: 'column:id',
-          header: 'ID',
+          label: 'ID',
           value: item => item.id,
         })));
 
@@ -131,7 +131,7 @@ fdescribe('Table', () => {
 
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
           name: 'column:name',
-          header: 'Name',
+          label: 'Name',
           value: item => item.name,
         })));
 
@@ -151,7 +151,7 @@ fdescribe('Table', () => {
         const data = signal([{active: true}, {active: false}, {active: true}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addBooleanColumn({
           name: 'column:active',
-          header: 'Active',
+          label: 'Active',
           value: item => item.active,
         })));
 
@@ -189,13 +189,13 @@ fdescribe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        const column = table.column({header: 'ID'})!;
+        const column = table.column({label: 'ID'})!;
 
         await column.toggleSort();
-        expect(await table.column({header: 'ID'})!.values()).toEqual(['1', '2', '3']);
+        expect(await table.column({label: 'ID'})!.values()).toEqual(['1', '2', '3']);
 
         await column.toggleSort();
-        expect(await table.column({header: 'ID'})!.values()).toEqual(['3', '2', '1']);
+        expect(await table.column({label: 'ID'})!.values()).toEqual(['3', '2', '1']);
       });
     });
 
@@ -205,7 +205,7 @@ fdescribe('Table', () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
           name: 'column:name',
-          header: 'Name',
+          label: 'Name',
           value: item => item.name,
         })));
 
@@ -233,7 +233,7 @@ fdescribe('Table', () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn({
           name: 'column:id',
-          header: 'ID',
+          label: 'ID',
           value: item => item.id,
         })));
 
@@ -253,7 +253,7 @@ fdescribe('Table', () => {
         const data = signal([{name: 'a'}, {name: 'c'}, {name: 'b'}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
           name: 'column:name',
-          header: 'Name',
+          label: 'Name',
           value: item => item.name,
         })));
 
@@ -273,7 +273,7 @@ fdescribe('Table', () => {
         const data = signal([{active: true}, {active: false}, {active: true}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addBooleanColumn({
           name: 'column:active',
-          header: 'Active',
+          label: 'Active',
           value: item => item.active,
         })));
 
@@ -293,7 +293,7 @@ fdescribe('Table', () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
           name: 'column:name',
-          header: 'Name',
+          label: 'Name',
           value: item => item.name,
           filterable: {matcher: (text, context) => context.value.length === text.length},
         })));
@@ -315,7 +315,7 @@ fdescribe('Table', () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
           name: 'column:name',
-          header: 'Name',
+          label: 'Name',
           value: item => item.name,
           filterable: {matcher: (text, context) => context.value.length === text.length},
         })));
@@ -336,13 +336,13 @@ fdescribe('Table', () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
         const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn({
           name: 'column:id',
-          header: 'ID',
+          label: 'ID',
           value: item => item.id,
         })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        const column = table.column({header: 'ID'})!;
+        const column = table.column({label: 'ID'})!;
 
         await column.filter('3');
         expect(await table.column({name: 'column:id'})!.values()).toEqual(['3']);
@@ -352,13 +352,13 @@ fdescribe('Table', () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
         const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn({
           name: 'column:id',
-          header: 'ID',
+          label: 'ID',
           value: item => item.id,
         })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        const column = table.column({header: 'ID'})!;
+        const column = table.column({label: 'ID'})!;
 
         await column.filter('invalid');
         expect(await table.column({name: 'column:id'})!.values()).toEqual(['1', '3', '2']);
@@ -368,13 +368,13 @@ fdescribe('Table', () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
           name: 'column:name',
-          header: 'Name',
+          label: 'Name',
           value: item => item.name,
         })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        const column = table.column({header: 'Name'})!;
+        const column = table.column({label: 'Name'})!;
 
         await column.filter(' beta ');
         expect(await table.column({name: 'column:name'})!.values()).toEqual(['beta']);
@@ -384,13 +384,13 @@ fdescribe('Table', () => {
         const data = signal([{name: 'Alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
           name: 'column:name',
-          header: 'Name',
+          label: 'Name',
           value: item => item.name,
         })));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        const column = table.column({header: 'Name'})!;
+        const column = table.column({label: 'Name'})!;
 
         await column.filter('ALPHA');
         expect(await table.column({name: 'column:name'})!.values()).toEqual(['Alpha']);
@@ -1843,12 +1843,12 @@ class TestTemplate {
   public readonly table = table(this._data, table => table
     .addNumberColumn({
       name: 'column:id',
-      header: 'ID',
+      label: 'ID',
       value: item => item.id,
     })
     .addTemplateColumn({
       name: 'column:price',
-      header: 'Price',
+      label: 'Price',
       sortable: {comparator: (a, b) => a.item.price - b.item.price},
       template: () => ({
         template: this._cellTemplate,

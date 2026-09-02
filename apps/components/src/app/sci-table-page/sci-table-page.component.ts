@@ -82,7 +82,7 @@ export default class SciTablePageComponent {
       if (visibleColumns.id) {
         table.addNumberColumn({
           name: 'column:id',
-          header: 'ID',
+          label: 'ID',
           value: company => +company.id,
         });
       }
@@ -91,7 +91,7 @@ export default class SciTablePageComponent {
       if (visibleColumns.code) {
         table.addNumberColumn({
           name: 'column:code',
-          header: 'Code',
+          label: 'Code',
           value: company => company.code,
         });
       }
@@ -100,7 +100,7 @@ export default class SciTablePageComponent {
       if (visibleColumns.abbreviation) {
         table.addStringColumn({
           name: 'column:abbreviation',
-          header: 'Abbreviation',
+          label: 'Abbreviation',
           value: company => company.abbreviation,
           width: '1fr',
         });
@@ -110,7 +110,7 @@ export default class SciTablePageComponent {
       if (visibleColumns.name) {
         table.addStringColumn({
           name: 'column:name',
-          header: 'Name',
+          label: 'Name',
           value: company => company.name,
           width: '1fr',
         });
@@ -120,7 +120,7 @@ export default class SciTablePageComponent {
       if (visibleColumns.railwayUndertaking) {
         table.addBooleanColumn({
           name: 'column:railwayUndertaking',
-          header: 'EVU',
+          label: 'EVU',
           value: company => company.railwayUndertaking,
         });
       }
@@ -129,7 +129,7 @@ export default class SciTablePageComponent {
       if (visibleColumns.validFrom) {
         table.addComponentColumn({
           name: 'column:validFrom',
-          header: 'Valid From',
+          label: 'Valid From',
           sortable: this.settingsForm.slowDataSource().value() ? true : {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
           filterable: this.settingsForm.slowDataSource().value() ? true : {matcher: (filterText, item) => item.item.validFrom.includes(filterText)},
           component: (company: Company) => ({
@@ -143,7 +143,7 @@ export default class SciTablePageComponent {
       if (visibleColumns.validTo) {
         table.addComponentColumn({
           name: 'column:validTo',
-          header: 'Valid To',
+          label: 'Valid To',
           filterable: this.settingsForm.slowDataSource().value() ? true : {matcher: (filterText, item) => item.item.validTo.includes(filterText)},
           sortable: this.settingsForm.slowDataSource().value() ? true : {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
           component: (company: Company) => ({

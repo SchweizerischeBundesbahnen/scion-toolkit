@@ -108,7 +108,7 @@ export default class SciTablePageComponent {
 
       const column: SciColumnDescriptor = {
         name: columnForm.name || undefined,
-        header: columnForm.header || undefined,
+        label: columnForm.label || undefined,
         width: columnForm.width || undefined,
         minWidth: columnForm.minWidth ?? undefined,
         maxWidth: columnForm.maxWidth ?? undefined,
@@ -185,7 +185,7 @@ export default class SciTablePageComponent {
         action: async form => {
           this.columns.update(columns => columns.concat({
             ...form().value(),
-            header: form.header().value() || form.name().value(),
+            label: form.label().value() || form.name().value(),
             visible: signal(true),
           }));
           this.columnForm().reset(defaults());
@@ -197,7 +197,7 @@ export default class SciTablePageComponent {
       return {
         name: 'column:',
         type: 'string',
-        header: '',
+        label: '',
         resizable: true,
         width: '',
         minWidth: null,
@@ -252,7 +252,7 @@ class CustomCellComponent {
 interface ColumnForm {
   name: `column:${string}` | '';
   type: SciColumnType;
-  header: string;
+  label: string;
   resizable: boolean;
   width: string;
   minWidth: number | null;

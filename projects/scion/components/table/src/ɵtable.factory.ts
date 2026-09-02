@@ -20,24 +20,24 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   }
 
   public addBooleanColumn(value: (item: T) => boolean): this;
-  public addBooleanColumn(header: string, value: (item: T) => boolean): this;
+  public addBooleanColumn(label: string, value: (item: T) => boolean): this;
   public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
-  public addBooleanColumn(valueHeaderDescriptor: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): this {
-    return this.addColumn('boolean', valueHeaderDescriptor, value);
+  public addBooleanColumn(valueLabelDescriptor: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): this {
+    return this.addColumn('boolean', valueLabelDescriptor, value);
   }
 
   public addStringColumn(value: (item: T) => string): this;
-  public addStringColumn(header: string, value: (item: T) => string): this;
+  public addStringColumn(label: string, value: (item: T) => string): this;
   public addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
-  public addStringColumn(valueHeaderDescriptor: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): this {
-    return this.addColumn('string', valueHeaderDescriptor, value);
+  public addStringColumn(valueLabelDescriptor: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): this {
+    return this.addColumn('string', valueLabelDescriptor, value);
   }
 
   public addNumberColumn(value: (item: T) => number): this;
-  public addNumberColumn(header: string, value: (item: T) => number): this;
+  public addNumberColumn(label: string, value: (item: T) => number): this;
   public addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
-  public addNumberColumn(valueHeaderDescriptor: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): this {
-    return this.addColumn('number', valueHeaderDescriptor, value);
+  public addNumberColumn(valueLabelDescriptor: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): this {
+    return this.addColumn('number', valueLabelDescriptor, value);
   }
 
   public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
@@ -55,15 +55,15 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this.addColumn('template', config);
   }
 
-  private addColumn(type: SciColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciColumnDescriptorLike<T>, value?: (item: T) => unknown): this {
+  private addColumn(type: SciColumnType, valueLabelDescriptor: ((item: T) => unknown) | string | SciColumnDescriptorLike<T>, value?: (item: T) => unknown): this {
     const config = (() => {
-      switch (typeof valueHeaderDescriptor) {
+      switch (typeof valueLabelDescriptor) {
         case 'string':
-          return {header: valueHeaderDescriptor, value: value!} as SciColumnDescriptorLike<T>;
+          return {label: valueLabelDescriptor, value: value!} as SciColumnDescriptorLike<T>;
         case 'function':
-          return {value: valueHeaderDescriptor} as SciColumnDescriptorLike<T>;
+          return {value: valueLabelDescriptor} as SciColumnDescriptorLike<T>;
         default:
-          return valueHeaderDescriptor;
+          return valueLabelDescriptor;
       }
     })();
 
