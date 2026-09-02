@@ -24,7 +24,7 @@ import {Router} from '@angular/router';
 @Component({
   selector: 'app-table-page',
   templateUrl: './sci-table-page.component.html',
-  styleUrls: ['./sci-table-page.component.scss'],
+  styleUrl: './sci-table-page.component.scss',
   imports: [
     SciTableComponent,
     FormsModule,
@@ -55,7 +55,6 @@ export default class SciTablePageComponent {
     const tabbar = this._tabbar;
 
     return table({
-      name: 'table:companies',
       headerVisible: computed(() => this.settingsForm.showHeader().value()),
       gridlinesVisible: computed(() => this.settingsForm.showGridlines().value()),
       sortable: computed(() => this.settingsForm.sortable().value()),
@@ -283,7 +282,7 @@ export default class SciTablePageComponent {
     this._tabbar().activateTab('settings');
   }
 
-  protected onColumnsReset(): void {
+  protected onUserSettingsReset(): void {
     sessionStorage.removeItem('scion.components.table:companies');
     void this._router.navigate(['/']).then(() => this._router.navigate(['/sci-table']));
   }

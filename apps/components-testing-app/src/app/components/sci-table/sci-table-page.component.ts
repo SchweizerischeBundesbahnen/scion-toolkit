@@ -22,7 +22,7 @@ import {HttpClient} from '@angular/common/http';
 @Component({
   selector: 'app-table-page',
   templateUrl: './sci-table-page.component.html',
-  styleUrls: ['./sci-table-page.component.scss'],
+  styleUrl: './sci-table-page.component.scss',
   host: {
     '[style.--table-page-height]': 'settingsForm.height().value() ? `${settingsForm.height().value()}px` : null',
     '[style.--table-page-width]': 'settingsForm.width().value() ? `${settingsForm.width().value()}px` : null',
@@ -63,9 +63,8 @@ export default class SciTablePageComponent {
   protected readonly rowCount = inject(ProductService).productCount;
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
 
-  private createTable(name: `table:${string}`, options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean}): SciTable<Product> {
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean}): SciTable<Product> {
     return table({
-      name,
       headerVisible: computed(() => this.settingsForm.showHeader().value()),
       gridlinesVisible: computed(() => this.settingsForm.showGridlines().value()),
       sortable: computed(() => this.settingsForm.sortable().value()),
@@ -169,7 +168,7 @@ export default class SciTablePageComponent {
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable(`table:${i}`, {datasource, showRowActions, customRowStyling}))));
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, customRowStyling}))));
       });
     });
 

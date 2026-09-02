@@ -1,6 +1,6 @@
 <main>
   @if (table(); as table) {
-    <sci-table [table]="table"/>
+    <sci-table [table]="table" name="table:companies"/>
   }
 </main>
 
@@ -41,7 +41,7 @@
           </select>
         </sci-form-field>
 
-        <button type="button" (click)="onColumnsReset()">Reset columns</button>
+        <button type="button" (click)="onUserSettingsReset()">Reset User Settings</button>
       </section>
     </ng-template>
 

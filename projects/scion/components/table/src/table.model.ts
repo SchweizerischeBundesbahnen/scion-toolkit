@@ -12,17 +12,13 @@ import {Signal, WritableSignal} from '@angular/core';
 import {SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
-import {SciTableRowBinding, SciRowBindings} from './table-row-binding';
+import {SciRowBindings, SciTableRowBinding} from './table-row-binding';
 
 export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template';
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
 export interface SciTableDescriptor<T> {
   data: Signal<T[]> | SciDataLoaderFn<T>; // TODO [etienne] consider renaming to datasource
-  /**
-   * Name of the table, used to save and restore view to localStorage.
-   */
-  name: `table:${string}`;
   sortable?: MaybeSignal<boolean>;
   resizable?: MaybeSignal<boolean>;
   filterable?: MaybeSignal<boolean>;
@@ -83,10 +79,9 @@ export interface SciColumn {
   filterable: Signal<boolean>;
   resizable: Signal<boolean>;
   header: Signal<string>;
-  width: WritableSignal<string>;
+  width: Signal<string>;
   minWidth: number;
   maxWidth: number | undefined;
-  initialWidth: string;
   resizing: WritableSignal<boolean>;
   location: {x: number; width: number};
 }

@@ -8,36 +8,26 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {assertInInjectionContext, assertNotInReactiveContext, DestroyRef, effect, inject, Injector, isSignal, runInInjectionContext, Signal} from '@angular/core';
+import {assertInInjectionContext, assertNotInReactiveContext, DestroyRef, inject, Injector, isSignal, runInInjectionContext, Signal} from '@angular/core';
 import {SciTable, SciTableDescriptor} from './table.model';
 import {SciTableFactory} from './table.factory';
-import {ɵSciTableFactory} from './ɵtable.factory';
 import {ɵSciTable} from './ɵtable.model';
 
-type TableFactoryFn<T> = (table: SciTableFactory<T>) => void;
+export type SciTableFactoryFn<T> = (table: SciTableFactory<T>) => void;
 
-export function table<T>(name: `table:${string}`, data: Signal<T[]>, factoryFn: TableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T>;
-export function table<T>(descriptor: SciTableDescriptor<T>, factoryFn: TableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T>;
-export function table<T>(arg1: `table:${string}` | SciTableDescriptor<T>, arg2: Signal<T[]> | TableFactoryFn<T>, arg3?: TableFactoryFn<T> | {injector?: Injector}, arg4?: {injector?: Injector}): SciTable<T> {
-  const options = typeof arg3 === 'object' ? arg3 : arg4;
-
+// Do not change order for better IntelliSense.
+export function table<T>(descriptor: SciTableDescriptor<T>, factoryFn: SciTableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T>;
+export function table<T>(data: Signal<T[]>, factoryFn: SciTableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T>;
+export function table<T>(dataOrDescriptor: Signal<T[]> | SciTableDescriptor<T>, factoryFn: SciTableFactoryFn<T>, options?: {injector?: Injector}): SciTable<T> {
   assertNotInReactiveContext(table, 'Call table in a non-reactive (non-tracking) context, such as within the untracked() function.');
   if (!options?.injector) {
     assertInInjectionContext(table);
   }
 
   const injector = options?.injector ?? inject(Injector);
-  const descriptor = typeof arg1 === 'object' ? arg1 : {name: arg1, data: arg2 as Signal<T[]>};
+  const descriptor = (isSignal(dataOrDescriptor) ? {data: dataOrDescriptor} : dataOrDescriptor) satisfies SciTableDescriptor<T>;
+  const sciTable = runInInjectionContext(injector, () => new ɵSciTable(factoryFn, descriptor));
+  injector.get(DestroyRef).onDestroy(() => sciTable.dispose());
 
-  const factory = new ɵSciTableFactory<T>(descriptor);
-  const factoryFn = isSignal(arg2) ? arg3 as TableFactoryFn<T> : arg2;
-
-  effect(() => {
-    factory.columns.set([]);
-    factoryFn(factory);
-  }, {injector});
-
-  const model = runInInjectionContext(injector, () => new ɵSciTable(factory, descriptor));
-  injector.get(DestroyRef).onDestroy(() => model.dispose());
-  return model;
+  return sciTable;
 }

@@ -2,7 +2,7 @@
   <div class="table-header">
     <sci-filter-field [(ngModel)]="filter" (ngModelChange)="table.filter($event)"></sci-filter-field>
   </div>
-  <sci-table [table]="table" />
+  <sci-table name="table:companies-alt" [table]="table" />
 </main>
 
 <aside class="e2e-settings">

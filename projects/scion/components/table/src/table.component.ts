@@ -38,6 +38,7 @@ import {SciAttributesDirective} from '@scion/components/common';
   styleUrls: ['./table.component.scss'],
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
+    '[attr.name]': 'name()', // Public API: Enables selecting the table by name in CSS (also if the table has a dynamic name input binding)
     // TODO [Etienne] Consider moving styles bindings to viewport component (hidden from outside)
     '[style.--ɵsci-table-scrolling]': 'table().scrolling() ? `true` : null',
     '[style.--ɵsci-table-resizing]': 'table().resizing() ? `true` : null',
@@ -67,6 +68,14 @@ import {SciAttributesDirective} from '@scion/components/common';
 })
 export class SciTableComponent<T> { // TODO [Etienne] Hilft dieser Generic?
 
+  /**
+   * Specifies a unique table identifier, used as the key for storing user preferences.
+   */
+  public readonly name = input.required<`table:${string}`>();
+
+  /**
+   * Specifies the table definition and datasource.
+   */
   public readonly table = input.required({transform: (table: SciTable<T>) => table as ɵSciTable<T>});
 
   public readonly primaryAction = output<T>();
@@ -230,7 +239,8 @@ function provideSciTable(): Provider {
     provide: ɵSCI_TABLE,
     useFactory: () => {
       const component = inject(SciTableComponent);
-      return computed(() => component.table() as ɵSciTable<unknown>);
+      effect(() => component.table().connect(component));
+      return component.table;
     },
   };
 }

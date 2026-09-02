@@ -54,14 +54,6 @@ export class SciColumnService {
   }
 
   public startResize(column: SciColumnLike): void {
-    const columns = this._table().columns();
-    const columnIndex = columns.indexOf(column);
-
-    // Lock columns to the left (permanently).
-    columns.slice(0, columnIndex).forEach(column => {
-      column.width.set(`${column.location.width}px`);
-    });
-
     column.resizing.set(true);
     this._resizingState.set({column, columnWidths: signal(undefined)});
   }
@@ -77,22 +69,32 @@ export class SciColumnService {
   }
 
   public endResize(): void {
-    const state = this._resizingState()!;
-
-    this._table().columns().forEach(column => {
-      const width = this._resizingState()!.columnWidths()!.get(column.name);
-
-      if (column.name === state.column.name) {
-        column.width.set(`${width}px`);
-      }
-      else if (column.width().endsWith('fr')) {
-        column.width.set(`${width}fr`);
-      }
-      return column;
-    });
-
-    state.column.resizing.set(false);
+    const {column, columnWidths} = this._resizingState()!;
+    this.updateUserSettings(column, columnWidths()!);
+    column.resizing.set(false);
     this._resizingState.set(undefined);
+  }
+
+  /**
+   * Updates user settings with resized column widths.
+   */
+  private updateUserSettings(resizedColumn: SciColumnLike, columnWidths: Map<`column:${string}`, number>): void {
+    const resizedColumnIndex = this._table().columns().indexOf(resizedColumn);
+    this._table().userSettings.update(userSettings => ({
+      ...userSettings,
+      columns: this._table().columns().flatMap((column, index) => {
+        const columnSettings = userSettings.columns?.find(it => it.name === column.name);
+        // Store the width of the resized column and all columns to its left.
+        if (index <= resizedColumnIndex) {
+          return {
+            ...columnSettings ?? {name: column.name},
+            width: columnWidths.get(column.name),
+          };
+        }
+
+        return columnSettings ?? [];
+      }),
+    }));
   }
 
   /**
@@ -103,24 +105,25 @@ export class SciColumnService {
   private calculateColumnWidths(columnToResize: SciColumnLike, newColumnWidth: number): Map<`column:${string}`, number> {
     const columns = this._table().columns();
     const viewportWidth = this._tableViewport.clientWidth;
+    const columnIndex = columns.indexOf(columnToResize);
 
+    // IMPORTANT:
     // Flex-sized columns already at max width do not contribute to flex space distribution.
+    // Columns to the left are permanently fixed.
 
-    // Calculate the total width occupied by fixed-sized columns.
+    // Calculate the total width occupied by fixed-sized columns, plus all columns to the left.
     const totalFixedWidth = columns
-      .filter(column => column !== columnToResize)
-      .filter(column => !column.width().endsWith('fr') || column.location.width >= (column.maxWidth ?? Infinity))
-      .reduce((sum, column) => sum + column.location.width, 0);
+      .filter((column, index) => index <= columnIndex || !column.width().endsWith('fr') || column.location.width >= (column.maxWidth ?? Infinity))
+      .reduce((sum, column) => sum + (column === columnToResize ? newColumnWidth : column.location.width), 0);
 
     // Calculate the total width occupied by flex-sized columns.
     const flexColumns = columns
-      .filter(column => column !== columnToResize)
-      .filter(column => column.width().endsWith('fr') && column.location.width < (column.maxWidth ?? Infinity))
+      .filter((column, index) => index > columnIndex && column.width().endsWith('fr') && column.location.width < (column.maxWidth ?? Infinity))
       .reduce((set, column) => set.add(column), new Set<SciColumnLike>());
     const totalFlexWidth = [...flexColumns].reduce((sum, column) => sum + column.location.width, 0);
 
     // Calculate the total viewport space available for flex-sized distribution.
-    const availableFlexWidth = Math.max(0, viewportWidth - totalFixedWidth - newColumnWidth);
+    const availableFlexWidth = Math.max(0, viewportWidth - totalFixedWidth);
 
     // Calculate the absolute width per column, distributing available flex space proportionally to the column's ratio.
     return columns.reduce((map, column) => {

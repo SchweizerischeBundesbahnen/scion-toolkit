@@ -1,6 +1,6 @@
 <main>
   @for (table of tables(); track $index) {
-    <sci-table [table]="table"/>
+    <sci-table [name]="`table:${$index}`" [table]="table"/>
   }
 </main>
 

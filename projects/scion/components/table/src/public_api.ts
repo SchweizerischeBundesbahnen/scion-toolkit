@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-export {table} from './table';
+export {table, type SciTableFactoryFn} from './table';
 export {SciTableComponent} from './table.component';
 export {type SciCellContext, type SciTable, type SciTableDescriptor, type SciRowActionFactoryFn, type SciColumnType} from './table.model';
 export {type SciTableRowBinding, classBinding, attributeBinding, partBinding, provideTableRowBinding} from './table-row-binding';

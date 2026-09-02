@@ -8,14 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciBooleanColumnDescriptor, SciColumnDescriptors, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableFactory, SciTemplateColumnDescriptor} from './table.factory';
+import {SciBooleanColumnDescriptor, SciColumnDescriptorLike, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableFactory, SciTemplateColumnDescriptor} from './table.factory';
 import {SciColumnType, SciTableDescriptor} from './table.model';
-import {isSignal, signal} from '@angular/core';
+import {isSignal} from '@angular/core';
 
 export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
-  // Columns have to be a signal, because are observed inside the table model.
-  public readonly columns = signal<(SciColumnDescriptors<T> & {type: SciColumnType})[]>([]);
+  public readonly columns = new Array<SciColumnDescriptorLike<T> & {type: SciColumnType}>();
 
   constructor(private readonly _descriptor: SciTableDescriptor<T>) {
   }
@@ -42,6 +41,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
   }
 
   public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
+    // TODO [dwie] Normalize filterable and sortable and add default matcher/comparator to all columns
     if (isSignal(this._descriptor.data) && (config.filterable === true || config.sortable === true)) {
       throw Error('[ColumnDefinitionError] Component columns cannot have a auto filter or auto sort.');
     }
@@ -55,13 +55,13 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
     return this.addColumn('template', config);
   }
 
-  private addColumn(type: SciColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciColumnDescriptors<T>, value?: (item: T) => unknown): this {
+  private addColumn(type: SciColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciColumnDescriptorLike<T>, value?: (item: T) => unknown): this {
     const config = (() => {
       switch (typeof valueHeaderDescriptor) {
         case 'string':
-          return {header: valueHeaderDescriptor, value: value!} as SciColumnDescriptors<T>;
+          return {header: valueHeaderDescriptor, value: value!} as SciColumnDescriptorLike<T>;
         case 'function':
-          return {value: valueHeaderDescriptor} as SciColumnDescriptors<T>;
+          return {value: valueHeaderDescriptor} as SciColumnDescriptorLike<T>;
         default:
           return valueHeaderDescriptor;
       }
@@ -71,7 +71,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       throw Error('[ColumnDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
     }
 
-    this.columns.update(column => [...column, {...config, type}]);
+    this.columns.push({...config, type});
     return this;
   }
 }

@@ -8,16 +8,9 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {from, isObservable, Observable, of} from 'rxjs';
+import {Observable} from 'rxjs';
 
 export type MaybeAsync<T> = T | Promise<T> | Observable<T>;
-
-export function coerceObservable<T>(input: MaybeAsync<T>): Observable<T> {
-  if (input instanceof Promise || isObservable(input)) {
-    return from(input);
-  }
-  return of(input);
-}
 
 /**
  * CSS minmax for use in a CSS grid.

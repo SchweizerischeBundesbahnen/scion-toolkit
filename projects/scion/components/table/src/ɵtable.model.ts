@@ -8,38 +8,38 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
-import {coerceObservable, rangeInclusive} from './common';
+import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
-import {SciColumnDescriptors} from './table.factory';
+import {SciColumnDescriptorLike} from './table.factory';
 import {coerceSignal} from '@scion/components/common';
 import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {skip} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBinding} from './table-row-binding';
-
-interface SciTableUserSettings {
-  columns: {name: string; width: number | undefined}[];
-}
-
-export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
+import {Observables} from '@scion/toolkit/util';
+import {SciTableComponent} from './table.component';
+import {SciTableFactoryFn} from './table';
 
 export class ɵSciTable<T> implements SciTable<T> {
 
   private readonly _tableStorage = inject(SCI_TABLE_STORAGE);
   private readonly _injector = inject(Injector);
 
-  public readonly name: `scion.components.table:${string}`;
-  public readonly columns: WritableSignal<SciColumnLike<T>[]>;
+  public readonly name = computed(() => this._tableComponent()?.name());
+  public readonly columns: Signal<SciColumnLike<T>[]>;
   public readonly rowActions?: SciRowActionFactoryFn<T>;
+
+  private readonly _tableComponent = signal<SciTableComponent<T> | undefined>(undefined);
   private readonly _rowBindings?: SciTableRowBinding<T>[];
   private readonly _dataLoaderFn: SciDataLoaderFn<T>;
   private readonly _trackBy?: (item: T) => unknown;
 
+  public readonly userSettings: WritableSignal<SciTableUserSettings>;
   public readonly bufferSize: Signal<number>;
   public readonly pageSize: Signal<number>;
   public readonly filterable: Signal<boolean>;
@@ -87,8 +87,7 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly rowsByIndex = this._cache.rowByIndex;
   public readonly rows = this.computeRows();
 
-  constructor(factory: ɵSciTableFactory<T>, descriptor: SciTableDescriptor<T>) {
-    this.name = `scion.components.${descriptor.name}`;
+  constructor(factoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>) {
     this.bufferSize = coerceSignal(descriptor.bufferSize ?? 10);
     this.pageSize = coerceSignal(descriptor.pageSize ?? 50);
     this.sortable = coerceSignal(descriptor.sortable ?? true);
@@ -97,7 +96,8 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.gridlinesVisible = coerceSignal(descriptor.gridlinesVisible ?? false);
     this.resizable = coerceSignal(descriptor.resizable ?? true);
     this.selectable = coerceSignal(descriptor.selectable ?? 'multi');
-    this.columns = this.computeColumns(factory);
+    this.userSettings = this.computeUserSettings();
+    this.columns = this.computeColumns(factoryFn, descriptor);
 
     this.rowActions = descriptor.rowActions;
     this._rowBindings = [
@@ -108,21 +108,23 @@ export class ɵSciTable<T> implements SciTable<T> {
     this._dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
 
     this.installCriteriaWatcher();
-    this.storeUserSettingsOnChange();
     this.installPageLoader();
   }
 
-  private computeColumns(factory: ɵSciTableFactory<T>): WritableSignal<SciColumnLike<T>[]> {
-    const userSettings = this.loadUserSettings();
+  /**
+   * Connects {@link SciTableComponent} to the model.
+   */
+  public connect(tableComponent: SciTableComponent<T>): void {
+    this._tableComponent.set(tableComponent);
+  }
 
-    return linkedSignal(() => {
-      const settings = userSettings();
-      // Wait for user settings to be available before calling the factory.
-      if (settings === undefined) {
-        return [];
-      }
-      return factory.columns().map((column, index) => this.initColumn(column.type, column, index, settings));
-    });
+  private computeColumns(tableFactoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>): Signal<SciColumnLike<T>[]> {
+    // TODO [dwie] Create separate injection context for each separate run (to dispose resources allocated in the reactive context)
+    return computed(() => runInInjectionContext(this._injector, () => {
+      const tableFactory = new ɵSciTableFactory<T>(descriptor);
+      tableFactoryFn(tableFactory);
+      return untracked(() => tableFactory.columns.map((column, index) => this.initColumn(column.type, column, index)));
+    }));
   }
 
   /**
@@ -165,7 +167,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
     const items = signal<T[] | undefined>(undefined);
     // TODO [Etienne] Cancel previous fetch
-    const subscription = coerceObservable(this._dataLoaderFn({
+    const subscription = Observables.coerce(this._dataLoaderFn({
       start: pageStart,
       end: pageEnd,
       pageSize,
@@ -212,7 +214,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.sortCriteria.update(sortCriteria => {
       const column = this.columns().find(column => column.name === columnName);
       if (!column) {
-        throw Error(`[NullColumnError] Column '${columnName}' not found in table '${this.name}'.`);
+        throw Error(`[NullColumnError] Column '${columnName}' not found in table '${this.name()}'.`);
       }
 
       const currentSortCriterion = sortCriteria.find(sortCriterion => sortCriterion.columnName === column.name);
@@ -241,7 +243,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
     const column = this.columns().find(column => column.name === options.columnName);
     if (!column) {
-      throw Error(`[NullColumnError] Column '${options.columnName}' not found in table '${this.name}'.`);
+      throw Error(`[NullColumnError] Column '${options.columnName}' not found in table '${this.name()}'.`);
     }
 
     this.filterCriteria.update(filterCriterion => {
@@ -260,27 +262,6 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public dispose(): void {
     this._cache.clear();
-  }
-
-  /**
-   * Write table user settings to storage.
-   */
-  private storeUserSettingsOnChange(): void {
-    effect(() => {
-      if (this.columns().every(column => column.width() === column.initialWidth)) {
-        return;
-      }
-
-      untracked(() => {
-        const userSettings: SciTableUserSettings = {
-          columns: this.columns()
-            .filter(column => column.width() !== column.initialWidth)
-            .map(column => ({name: column.name, width: Number.parseInt(column.width())})),
-        };
-
-        void this._tableStorage.store(this.name, JSON.stringify(userSettings));
-      });
-    });
   }
 
   /**
@@ -322,21 +303,16 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
-  private initColumn(type: SciColumnType, config: SciColumnDescriptors<T>, index: number, userSettings: SciTableUserSettings | undefined): SciColumnLike<T> {
-    // columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
-    const sortable = type === 'component' || type === 'template' ?
-      !!config.sortable :
-      config.sortable !== false;
+  // TODO [dwie] Consider moving into factory
+  private initColumn(type: SciColumnType, config: SciColumnDescriptorLike<T>, index: number): SciColumnLike<T> {
+    // Columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
+    const sortable = type === 'component' || type === 'template' ? !!config.sortable : config.sortable !== false;
 
-    // columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
-    const filterable = type === 'component' || type === 'template' ?
-      !!config.filterable :
-      config.filterable !== false;
+    // Columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
+    const filterable = type === 'component' || type === 'template' ? !!config.filterable : config.filterable !== false;
 
-    // Fallback to the column index as the column name
+    // Fallback to the column index as the column name.
     const columnName = config.name ?? `column:${index}`;
-    const columnUserSettings = userSettings?.columns.find(column => column.name === columnName);
-    const columnInitialWidth = config.width ?? '1fr';
     return {
       ...config,
       type,
@@ -347,10 +323,12 @@ export class ɵSciTable<T> implements SciTable<T> {
       filterable: computed(() => this.filterable() && filterable),
       resizable: computed(() => this.resizable() && (config.resizable ?? true)),
       header: coerceSignal(config.header ?? ''),
-      width: signal(columnUserSettings?.width ? `${columnUserSettings.width}px` : columnInitialWidth),
+      width: computed(() => {
+        const userSettings = this.userSettings().columns?.find(column => column.name === columnName);
+        return userSettings?.width ? `${userSettings.width}px` : config.width ?? '1fr';
+      }),
       minWidth: config.minWidth ?? 100,
       maxWidth: config.maxWidth,
-      initialWidth: columnInitialWidth,
       resizing: signal(false),
       location: {x: 0, width: 0}, // injected in `SciColumnComponent`
     } as SciColumnLike<T>;
@@ -387,15 +365,39 @@ export class ɵSciTable<T> implements SciTable<T> {
     });
   }
 
-  private loadUserSettings(): Signal<SciTableUserSettings | undefined> {
-    const settings = signal<SciTableUserSettings | undefined>(undefined);
-    Promise.resolve(this._tableStorage.load(this.name))
-      .then(serialized => settings.set(serialized ? JSON.parse(serialized) as SciTableUserSettings : {columns: []}))
-      .catch((error: unknown) => {
-        console.warn(`[SciTable] Failed to load user settings for '${this.name}' from storage.`, error);
-        return {columns: []};
-      });
-    return settings;
+  /**
+   * Creates a signal to read and write table user settings.
+   */
+  private computeUserSettings(): WritableSignal<SciTableUserSettings> {
+    // Load user settings from storage.
+    const userSettings = resource({
+      params: () => ({tableName: this.name()}),
+      loader: async ({params}) => {
+        const {tableName} = params;
+        if (!tableName) {
+          return {columns: []};
+        }
+
+        try {
+          const serialized = await this._tableStorage.load(`scion.components.${tableName}`);
+          return serialized ? JSON.parse(serialized) as SciTableUserSettings : {columns: []};
+        }
+        catch (error) {
+          console.warn(`[SciTable] Failed to load user settings for '${tableName}'.`, error);
+          return {columns: []};
+        }
+      },
+      defaultValue: {columns: []},
+    });
+
+    // Persist settings to storage.
+    effect(() => {
+      if (userSettings.status() === 'local' && this.name()) {
+        untracked(() => void this._tableStorage.store(`scion.components.${this.name()!}`, JSON.stringify(userSettings.value())));
+      }
+    });
+
+    return userSettings.value;
   }
 
   /**
@@ -476,3 +478,9 @@ function pagesByRange(start: number, end: number, pageSize: number): number[] {
   const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
   return rangeInclusive(startPage, endPage);
 }
+
+export interface SciTableUserSettings {
+  columns?: {name: string; width?: number}[];
+}
+
+export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');

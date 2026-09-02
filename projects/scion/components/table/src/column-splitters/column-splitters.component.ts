@@ -40,7 +40,7 @@ export class ColumnSplittersComponent<T> {
   }
 
   protected onResize(column: SciColumnLike<T>, event: SplitterMoveEvent): void {
-    const pointerPosition = event.position.clientPos;
+    const pointerPosition = event.position.clientPos; // TODO [dwie] Change to screen coordinates to work with microfrontends
     const columnStart = column.location.x - 1; // -1 because splitters are positioned at the end of cell content
     const newColumnWidth = pointerPosition - columnStart;
     this._columnService.resize(newColumnWidth);
