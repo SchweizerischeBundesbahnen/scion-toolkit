@@ -25,9 +25,9 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setFilterable(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await expect(table.filters).toHaveCount(0);
 
       await tablePage.setFilterable(true);
@@ -38,9 +38,9 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setSortable(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await expect(table.sortButtons).toHaveCount(0);
 
       await tablePage.setSortable(true);
@@ -51,9 +51,9 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.showHeader(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await expect(table.headers).toHaveCount(0);
 
       await tablePage.showHeader(true);
@@ -64,9 +64,9 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setResizable(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await expect(table.column({name: 'column:name'}).splitter.locator).not.toBeAttached();
 
       await tablePage.setResizable(true);
@@ -77,8 +77,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await expectRow(table.row({nth: 0})).toBeAttached();
       const count = await table.rows.count();
 
@@ -93,8 +93,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await expectRow(table.row({nth: 0})).toBeAttached();
       const count = await table.rows.count();
 
@@ -110,10 +110,9 @@ test.describe.only('sci-table', () => {
     test('should render multiple tables', async ({page}) => {
       const tablePage = new TablePagePO(page);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setTableCount(4);
-
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await expect(tablePage.table).toHaveCount(4);
 
       const table1 = new TablePO(tablePage.locator.locator('sci-table').nth(0));
@@ -274,6 +273,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       const noFilterCount = await waitUntilStable(() => table.rows.count());
@@ -290,7 +290,9 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:price', type: 'number'});
+
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       // Read the first visible price value and use it as the filter criterion.
@@ -307,6 +309,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:inStock', type: 'boolean'});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
@@ -322,6 +325,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:template', type: 'template'});
 
       const templateColumn = table.column({name: 'column:template'});
@@ -335,6 +339,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setRowCount(10_000);
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:template', type: 'template', customFilter: true});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
@@ -350,6 +355,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:component', type: 'component'});
 
       const componentColumn = table.column({name: 'column:component'});
@@ -364,6 +370,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setRowCount(10_000);
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:component', type: 'component', customFilter: true});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
@@ -380,6 +387,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setRowCount(1_000_000);
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.column({name: 'column:name'}).filter('999999');
@@ -391,6 +399,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.scrollTo({y: 1000});
@@ -405,6 +414,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setRowCount(10_000);
@@ -417,6 +427,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -490,7 +502,6 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.showHeader(false);
-      await tablePage.setFilterable(false);
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       const splitter = table.column({name: 'column:name'}).splitter;
       const dragHandle = await splitter.startDrag({location: 'table-body'});
@@ -711,8 +722,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.setWidth(600);
 
+      await tablePage.setWidth(600);
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
       await tablePage.addColumn({name: 'column:3', type: 'string', minWidth: 100});
@@ -802,8 +813,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.setWidth(600);
 
+      await tablePage.setWidth(600);
       await tablePage.addColumn({name: 'column:1', type: 'string', minWidth: 100});
       await tablePage.addColumn({name: 'column:2', type: 'string', maxWidth: 200});
       await tablePage.addColumn({name: 'column:3', type: 'string', minWidth: 100});
@@ -825,8 +836,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.setWidth(600);
 
+      await tablePage.setWidth(600);
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
       await tablePage.addColumn({name: 'column:3', type: 'string'});
@@ -846,8 +857,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.setWidth(800);
 
+      await tablePage.setWidth(800);
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
       await tablePage.addColumn({name: 'column:3', type: 'string'});
@@ -872,10 +883,9 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.setCssVariable('--sci-table-row-background-color-hover', 'rgb(0, 0, 255)');
-
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-
       const rowBounds = await table.row({nth: 3}).bounds();
 
       const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
@@ -1053,12 +1063,12 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
       await table.column({name: 'column:name'}).filter('Product 1');
       await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
 
       await table.column({name: 'column:name'}).sort();
-
       await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
       await expectTable(table).column({name: 'column:name'}).toBeSorted();
     });
@@ -1097,6 +1107,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1114,8 +1125,9 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
       await tablePage.setSelectable(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
       await expectRow(table.row({nth: 0})).toBeActive();
@@ -1131,8 +1143,9 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
       await tablePage.setSelectable('single');
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
       await table.row({nth: 1}).click(['ControlOrMeta']);
@@ -1150,6 +1163,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.sortButtons.first().focus();
@@ -1164,6 +1179,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.body.focus();
@@ -1182,6 +1198,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.setRowCount(3);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
@@ -1205,6 +1222,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.body.focus();
@@ -1218,6 +1236,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.body.focus();
@@ -1237,6 +1256,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1251,6 +1271,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1269,6 +1290,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1291,6 +1313,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1307,6 +1330,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1323,6 +1348,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1342,6 +1368,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1362,6 +1389,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1405,6 +1433,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
@@ -1431,6 +1460,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
@@ -1449,6 +1479,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.setCustomRowStyling(true);
@@ -1464,6 +1495,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:negative', type: 'string'});
 
       await expect(table.row({nth: 0}).cell(0).locator).toHaveAttribute('part', 'column:negative');
@@ -1474,6 +1506,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       // Configure gridline color.
@@ -1495,6 +1528,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.setRowActions(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
@@ -1506,6 +1540,7 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+
       await tablePage.setWidth(500);
       await tablePage.setRowActions(true);
 
@@ -2035,7 +2070,6 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.showHeader(false);
-      await tablePage.setFilterable(false);
 
       await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
@@ -2079,7 +2113,6 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await tablePage.showHeader(false);
-      await tablePage.setFilterable(false);
 
       await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
@@ -2176,8 +2209,8 @@ test.describe.only('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
-      await tablePage.setWidth(400);
 
+      await tablePage.setWidth(400);
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
 

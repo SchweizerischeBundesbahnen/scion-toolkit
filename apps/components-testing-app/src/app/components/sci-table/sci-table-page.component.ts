@@ -211,7 +211,7 @@ export default class SciTablePageComponent {
 
   private createSettingsForm(): FieldTree<SettingsForm> {
     const defaults: SettingsForm = {
-      filterable: true,
+      filterable: false,
       sortable: true,
       resizable: true,
       selectable: 'multi',

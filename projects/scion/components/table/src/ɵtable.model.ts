@@ -91,7 +91,7 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.bufferSize = coerceSignal(descriptor.bufferSize ?? 10);
     this.pageSize = coerceSignal(descriptor.pageSize ?? 50);
     this.sortable = coerceSignal(descriptor.sortable ?? true);
-    this.filterable = coerceSignal(descriptor.filterable ?? true);
+    this.filterable = coerceSignal(descriptor.filterable ?? false);
     this.headerVisible = coerceSignal(descriptor.headerVisible ?? true);
     this.gridlinesVisible = coerceSignal(descriptor.gridlinesVisible ?? false);
     this.resizable = coerceSignal(descriptor.resizable ?? true);

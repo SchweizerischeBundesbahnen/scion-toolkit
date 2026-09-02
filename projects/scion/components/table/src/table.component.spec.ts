@@ -231,7 +231,10 @@ fdescribe('Table', () => {
 
       it('should filter number column', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addNumberColumn({
           name: 'column:id',
           label: 'ID',
           value: item => item.id,
@@ -240,6 +243,7 @@ fdescribe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
+        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
         model.filter(3, {columnName: 'column:id'});
         await table.waitUntilStable();
         expect(await table.column({name: 'column:id'})!.values()).toEqual(['3']);
@@ -251,7 +255,10 @@ fdescribe('Table', () => {
 
       it('should filter string column', async () => {
         const data = signal([{name: 'a'}, {name: 'c'}, {name: 'b'}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addStringColumn({
           name: 'column:name',
           label: 'Name',
           value: item => item.name,
@@ -260,6 +267,7 @@ fdescribe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
+        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
         model.filter('c', {columnName: 'column:name'});
         await table.waitUntilStable();
         expect(await table.column({name: 'column:name'})!.values()).toEqual(['c']);
@@ -271,7 +279,10 @@ fdescribe('Table', () => {
 
       it('should filter boolean column', async () => {
         const data = signal([{active: true}, {active: false}, {active: true}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addBooleanColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addBooleanColumn({
           name: 'column:active',
           label: 'Active',
           value: item => item.active,
@@ -280,6 +291,7 @@ fdescribe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
+        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
         model.filter(true, {columnName: 'column:active'});
         await table.waitUntilStable();
         expect(await table.column({name: 'column:active'})!.values()).toEqual(['checkmark', 'checkmark']);
@@ -291,7 +303,10 @@ fdescribe('Table', () => {
 
       it('should support filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addStringColumn({
           name: 'column:name',
           label: 'Name',
           value: item => item.name,
@@ -301,6 +316,7 @@ fdescribe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
+        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
         model.filter('abcd', {columnName: 'column:name'});
         await table.waitUntilStable();
         expect(await table.column({name: 'column:name'})!.values()).toEqual(['beta']);
@@ -313,7 +329,10 @@ fdescribe('Table', () => {
       // TODO [egob] Fix that global filter uses custom matcher if configured
       xit('should support global filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
+        const {fixture, model} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addStringColumn({
           name: 'column:name',
           label: 'Name',
           value: item => item.name,
@@ -323,6 +342,7 @@ fdescribe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
+        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
         model.filter('abcd');
         await table.waitUntilStable();
         expect(await table.column({name: 'column:name'})!.values()).toEqual(['beta']);
@@ -334,7 +354,10 @@ fdescribe('Table', () => {
 
       it('should filter number with filter field', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn({
+        const {fixture} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addNumberColumn({
           name: 'column:id',
           label: 'ID',
           value: item => item.id,
@@ -350,7 +373,10 @@ fdescribe('Table', () => {
 
       it('should ignore invalid number input in filter field', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn({
+        const {fixture} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addNumberColumn({
           name: 'column:id',
           label: 'ID',
           value: item => item.id,
@@ -366,7 +392,10 @@ fdescribe('Table', () => {
 
       it('should trim filter field input', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
+        const {fixture} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addStringColumn({
           name: 'column:name',
           label: 'Name',
           value: item => item.name,
@@ -382,7 +411,10 @@ fdescribe('Table', () => {
 
       it('should filter string column case-insensitively', async () => {
         const data = signal([{name: 'Alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addStringColumn({
+        const {fixture} = createSciTableComponent(() => sciTable({
+          data,
+          filterable: true,
+        }, table => table.addStringColumn({
           name: 'column:name',
           label: 'Name',
           value: item => item.name,
@@ -788,7 +820,6 @@ fdescribe('Table', () => {
         const {fixture} = createSciTableComponent(() => sciTable({
           data,
           headerVisible: false,
-          filterable: false,
           selectable: 'single',
         }, table => table.addNumberColumn(item => item.id)), {
           height: '300px',
@@ -974,7 +1005,6 @@ fdescribe('Table', () => {
         pageSize: 5,
         bufferSize: 0,
         headerVisible: false,
-        filterable: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1016,7 +1046,6 @@ fdescribe('Table', () => {
         pageSize: 5,
         data: loader,
         headerVisible: false,
-        filterable: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1069,7 +1098,6 @@ fdescribe('Table', () => {
         pageSize: 50,
         data: loader,
         headerVisible: false,
-        filterable: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1377,7 +1405,6 @@ fdescribe('Table', () => {
         bufferSize: 0,
         data: loader,
         headerVisible: false,
-        filterable: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
       });
@@ -1424,7 +1451,6 @@ fdescribe('Table', () => {
       const {fixture, model} = createSciTableComponent(() => sciTable<number>({
         data: loader,
         headerVisible: false,
-        filterable: false,
         bufferSize: 0,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
@@ -1477,7 +1503,6 @@ fdescribe('Table', () => {
         bufferSize: 0,
         pageSize: 50,
         filterable: true,
-        headerVisible: true,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1527,7 +1552,6 @@ fdescribe('Table', () => {
         bufferSize: 1,
         pageSize: 50,
         filterable: true,
-        headerVisible: true,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1569,7 +1593,6 @@ fdescribe('Table', () => {
 
       const {fixture} = createSciTableComponent(() => sciTable<number>({
         data: loader,
-        filterable: false,
         headerVisible: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
@@ -1604,6 +1627,7 @@ fdescribe('Table', () => {
 
       const {fixture} = createSciTableComponent(() => sciTable({
         data,
+        filterable: true,
         rowBindings: [
           attributeBinding((_item, index) => ({'data-spec-index': index})),
           partBinding((_item, index) => `row:spec-index-${index}`),
