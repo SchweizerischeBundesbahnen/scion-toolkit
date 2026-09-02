@@ -102,6 +102,8 @@ $sci-table: (
   --sci-table-row-outline-color: var(--sci-color-accent),
   --sci-table-row-outline-width: var(--sci-table-border-size),
   --sci-table-row-outline-style: dotted,
+  --sci-table-row-action-background-color: var(--sci-color-background-primary),
+  --sci-table-row-action-background-color-selected: var(--sci-color-background-primary),
   --sci-table-cell-padding-inline: .5em,
   --sci-table-header-height: 30px,
   --sci-table-header-cursor: var(--sci-button-cursor),

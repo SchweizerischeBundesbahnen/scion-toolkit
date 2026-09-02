@@ -102,6 +102,8 @@ $sci-table: (
   --sci-table-row-outline-color: color-mix(in srgb, var(--sci-menu-item-background-color-hover) 97.5%, var(--sci-static-color-white)),
   --sci-table-row-outline-width: var(--sci-table-border-size),
   --sci-table-row-outline-style: dotted,
+  --sci-table-row-action-background-color: color-mix(in srgb, var(--sci-table-row-background-color-hover) 87.5%, var(--sci-static-color-white)),
+  --sci-table-row-action-background-color-selected: color-mix(in srgb, var(--sci-table-row-background-color-selected) 87.5%, var(--sci-static-color-white)),
   --sci-table-cell-padding-inline: .5em,
   --sci-table-header-height: 30px,
   --sci-table-header-cursor: var(--sci-button-cursor),

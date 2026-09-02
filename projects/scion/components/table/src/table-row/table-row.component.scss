@@ -23,6 +23,7 @@
 
   &.selected {
     background-color: var(--sci-table-row-background-color-selected);
+    --ɵsci-table-row-selected: true;
   }
 
   &.loading {
@@ -42,9 +43,19 @@
     right: var(--sci-table-cell-padding-inline); // prevent hiding vertical scrollbar
     justify-self: end;
     align-self: center;
-    background-color: var(--sci-table-background-color);
     border-radius: var(--sci-corner);
     padding: 1px;
+    background-color: var(--ɵsci-table-row-action-background-color);
+    --sci-toolbar-item-background-color-hover: color-mix(in srgb, var(--ɵsci-table-row-action-background-color) 85%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
+    --sci-toolbar-item-background-color-active: color-mix(in srgb, var(--ɵsci-table-row-action-background-color) 75%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
+
+    @container not style(--ɵsci-table-row-selected: true) {
+      --ɵsci-table-row-action-background-color: var(--sci-table-row-action-background-color);
+    }
+
+    @container style(--ɵsci-table-row-selected: true) {
+      --ɵsci-table-row-action-background-color: var(--sci-table-row-action-background-color-selected);
+    }
 
     &:empty {
       display: none;
