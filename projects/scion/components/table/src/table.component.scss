@@ -3,7 +3,6 @@
 :host {
   display: block;
   flex-direction: column;
-  background-color: var(--sci-table-background-color);
   overflow: hidden; // viewport should not grow beyond host height
   position: relative; // positioning context for scrollbars
 
