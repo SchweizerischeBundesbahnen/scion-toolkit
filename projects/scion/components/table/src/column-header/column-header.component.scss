@@ -51,7 +51,10 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-weight: bold;
+      color: var(--sci-table-header-text-color);
+      font-family: var(--sci-table-header-font-family), sans-serif;
+      font-weight: var(--sci-table-header-font-weight);
+      font-size: var(--sci-table-header-font-size);
       flex-shrink: 0;
     }
   }

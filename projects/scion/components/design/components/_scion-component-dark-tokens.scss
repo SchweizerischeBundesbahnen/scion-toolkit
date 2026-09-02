@@ -107,6 +107,10 @@ $sci-table: (
   --sci-table-header-cursor: var(--sci-button-cursor),
   --sci-table-header-background-color: var(--sci-color-background-primary),
   --sci-table-header-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-table-header-font-family: inherit,
+  --sci-table-header-font-size: 1em,
+  --sci-table-header-font-weight: 700,
+  --sci-table-header-text-color: inherit,
   --sci-table-skeleton-border-radius: var(--sci-corner),
   --sci-table-skeleton-color: var(--sci-color-skeleton),
 );
