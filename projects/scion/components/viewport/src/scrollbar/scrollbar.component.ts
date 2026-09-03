@@ -98,42 +98,50 @@ export class SciScrollbarComponent {
   /**
    * Method invoked when clicking on the scrollbar thumb.
    */
-  protected onThumbMouseDown(mousedownEvent: MouseEvent): void {
-    if (mousedownEvent.button !== 0) {
+  protected onPointerDown(pointerdownEvent: PointerEvent, handle: HTMLElement): void {
+    console.log('>>> new API');
+    if (pointerdownEvent.button !== 0) {
       return;
     }
+
+    // Pointer events continue even if the pointer moves outside the bounds of the app.
+    // Once a pointer is captured, all subsequent events associated with that pointer are fired by the app.
+    handle.setPointerCapture(pointerdownEvent.pointerId);
 
     this.scrolling.set(true);
 
     // Prevent text selection during drag.
-    mousedownEvent.preventDefault();
+    pointerdownEvent.preventDefault();
 
     // Calculate screen offset to convert screen coordinates into client coordinates, required for `sci-mousemove` events which originate from other documents (iframes).
-    const {screenOffsetX, screenOffsetY} = calculateScreenOffset(mousedownEvent);
+    // const {screenOffsetX, screenOffsetY} = calculateScreenOffset(mousedownEvent);
 
     // Memoize offset where thumb was clicked.
-    const thumbStartOffset = this.vertical() ? mousedownEvent.offsetY : mousedownEvent.offsetX;
+    const thumbStartOffset = this.vertical() ? pointerdownEvent.offsetY : pointerdownEvent.offsetX;
 
     // Stop scrolling when releasing the mouse. Handle the event in the capture phase and stop propagation to not close a potential overlay when releasing the mouse outside the overlay.
-    const mouseUp$ = race(fromEvent<MouseEvent>(this._document, 'mouseup', {capture: true, once: true}), fromEvent<MouseEvent>(this._document, 'sci-mouseup', {once: true}))
-      .pipe(tap(mouseupEvent => mouseupEvent.stopPropagation()));
+    const pointerup$ = fromEvent<PointerEvent>(handle, 'pointerup', {capture: true, once: true})
+      .pipe(tap(event => event.stopPropagation()));
 
     // Track pointer until mouse release.
-    merge(fromEvent<MouseEvent>(this._document, 'mousemove'), fromEvent<MouseEvent>(this._document, 'sci-mousemove'))
+    merge(fromEvent<PointerEvent>(handle, 'pointermove'))
       .pipe(
         subscribeIn(fn => this._zone.runOutsideAngular(fn)),
         takeUntilDestroyed(this._destroyRef),
-        takeUntil(mouseUp$),
-        finalize(() => this.scrolling.set(false)),
+        takeUntil(pointerup$),
+        finalize(() => {
+          this.scrolling.set(false);
+          handle.releasePointerCapture(pointerdownEvent.pointerId);
+        }),
       )
-      .subscribe(mousemoveEvent => {
+      .subscribe(pointermoveEvent => {
         NgZone.assertNotInAngularZone();
 
         // Prevent user agent scrolling while during drag.
-        mousemoveEvent.preventDefault();
+        pointermoveEvent.preventDefault();
 
         // Calculate new thumb position.
-        const pointerPosition = this.vertical() ? mousemoveEvent.screenY - screenOffsetY : mousemoveEvent.screenX - screenOffsetX;
+        const pointerPosition = this.vertical() ? pointermoveEvent.clientY : pointermoveEvent.clientX;
         this.scrollViewport(pointerPosition - thumbStartOffset);
       });
   }

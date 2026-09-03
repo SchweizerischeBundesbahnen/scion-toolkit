@@ -6,7 +6,7 @@
      class="thumb-handle"
      [class.vertical]="vertical()"
      [class.horizontal]="horizontal()"
-     (mousedown)="onThumbMouseDown($event)">
+     (pointerdown)="onPointerDown($event, thumb_handle)">
   <div class="thumb e2e-thumb"
        [class.vertical]="vertical()"
        [class.horizontal]="horizontal()">
