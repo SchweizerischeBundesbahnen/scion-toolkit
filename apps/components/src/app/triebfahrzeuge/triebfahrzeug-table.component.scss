@@ -1,0 +1,22 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  gap: .25em;
+
+  > sci-table {
+    flex: auto;
+
+    &::part(row\:even) {
+      background-color: light-dark(rgb(211 211 211 / 0.25), rgb(66 66 66 / 0.25));
+    }
+  }
+
+  > footer {
+    border-top: 1px solid var(--sci-color-border);
+    flex: none;
+    user-select: none;
+    text-align: end;
+    padding-top: .25em;
+  }
+}

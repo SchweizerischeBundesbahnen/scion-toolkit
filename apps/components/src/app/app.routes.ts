@@ -105,4 +105,9 @@ export const routes: Routes = [
     loadComponent: () => import('./sci-table-page-alt/sci-table-page-alt.component'),
     data: {internal: false},
   },
+  {
+    path: 'sci-table-system-demo',
+    loadComponent: () => import('./triebfahrzeuge/triebfahrzeug-table.component'),
+    data: {internal: false},
+  },
 ];
