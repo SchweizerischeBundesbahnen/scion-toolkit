@@ -14,7 +14,7 @@ import {FormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciColumnLike} from '../table.model';
 import {combineLatestWith, debounceTime} from 'rxjs';
 import {ɵSCI_TABLE} from '../ɵtable.model';
-import {SciIconComponent} from '../../../icon/src/icon.component';
+import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
   selector: 'sci-column-filter',

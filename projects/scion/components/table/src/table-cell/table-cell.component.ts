@@ -11,7 +11,7 @@
 import {Component, computed, ElementRef, inject, input, Signal, TemplateRef, viewChild} from '@angular/core';
 import {SciCellLike, SciRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
-import {SciIconComponent} from '../../../icon/src/icon.component';
+import {SciIconComponent} from '@scion/components/icon';
 import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
 

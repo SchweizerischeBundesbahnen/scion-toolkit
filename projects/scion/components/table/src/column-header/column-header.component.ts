@@ -12,7 +12,7 @@ import {Component, computed, inject, input} from '@angular/core';
 import {SciColumnLike} from '../table.model';
 import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
-import {SciIconComponent} from '../../../icon/src/icon.component';
+import {SciIconComponent} from '@scion/components/icon';
 import {SciTextPipe} from '@scion/components/text';
 
 @Component({

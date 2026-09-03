@@ -23,7 +23,7 @@ import {TableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
 import {SciTextPipe} from '@scion/components/text';
-import {SciSpinnerThrobberComponent} from '../../throbber/src/spinner-throbber/spinner-throbber.component';
+import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
@@ -52,7 +52,7 @@ import {SciAttributesDirective} from '@scion/components/common';
     TableKeyboardNavigatorDirective,
     TableRowComponent,
     SciTextPipe,
-    SciSpinnerThrobberComponent,
+    SciThrobberComponent,
     ColumnSplittersComponent, // TODO [egob] Should start with Sci?
     ColumnBoundsComponent, // TODO [egob] Should start with Sci?
     SciTableGridComponent,
