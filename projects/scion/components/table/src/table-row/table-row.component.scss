@@ -46,6 +46,7 @@
     border-radius: var(--sci-corner);
     padding: 1px;
     background-color: var(--ɵsci-table-row-action-background-color);
+    z-index: 2; // required to overlap splitters
     --sci-toolbar-item-background-color-hover: color-mix(in srgb, var(--ɵsci-table-row-action-background-color) 85%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
     --sci-toolbar-item-background-color-active: color-mix(in srgb, var(--ɵsci-table-row-action-background-color) 75%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
 

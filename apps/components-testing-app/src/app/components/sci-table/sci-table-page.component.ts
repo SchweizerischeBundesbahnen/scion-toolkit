@@ -18,6 +18,7 @@ import {SciIconComponent} from '@scion/components/icon';
 import {FieldValidationDirective} from '../field-validation.directive';
 import {Product, ProductService} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
+import {noop} from 'rxjs';
 
 @Component({
   selector: 'app-table-page',
@@ -92,12 +93,17 @@ export default class SciTablePageComponent {
       rowBindings: options.customRowStyling ? [
         partBinding(product => product.id % 3 === 0 ? 'row:negative' : undefined),
       ] : undefined,
-      rowActions: options.showRowActions ? (product, toolbar) => toolbar.addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
-        .addMenuItem({
-          label: 'Edit',
-          onSelect: () => console.log('edit', product.id),
-        }),
-      ) : undefined,
+      rowActions: options.showRowActions ? (product, toolbar) => toolbar
+        .addToolbarButton({icon: 'scion.edit', onSelect: noop})
+        .addToolbarButton({icon: 'scion.delete', onSelect: noop})
+        .addToolbarButton({icon: 'scion.pin', onSelect: noop})
+        .addToolbarButton({icon: 'scion.search', onSelect: noop})
+        .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
+          .addMenuItem({
+            label: 'Edit',
+            onSelect: () => console.log('edit', product.id),
+          }),
+        ) : undefined,
       trackBy: product => product.id,
       bufferSize: computed(() => this.datasourceForm.bufferSize().value()),
       pageSize: computed(() => this.datasourceForm.pageSize().value()),
@@ -162,7 +168,7 @@ export default class SciTablePageComponent {
     effect(onCleanup => {
       const tableCount = this.settingsForm.tableCount().value();
       const datasource = this.datasourceForm.datasource().value();
-      const showRowActions = this.settingsForm.showRowAction().value();
+      const showRowActions = this.settingsForm.showRowActions().value();
       const customRowStyling = this.settingsForm.customRowStyling().value();
 
       untracked(() => {
@@ -217,7 +223,7 @@ export default class SciTablePageComponent {
       selectable: 'multi',
       showHeader: true,
       showGridlines: false,
-      showRowAction: false,
+      showRowActions: false,
       customRowStyling: false,
       rowHeight: 30,
       height: 600,
@@ -269,7 +275,7 @@ interface SettingsForm {
   selectable: 'false' | 'single' | 'multi';
   showHeader: boolean;
   showGridlines: boolean;
-  showRowAction: boolean;
+  showRowActions: boolean;
   customRowStyling: boolean;
   rowHeight: number;
   height: number;

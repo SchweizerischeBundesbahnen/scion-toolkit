@@ -111,7 +111,7 @@ export class TablePagePO {
     await this.properties.locator('select.e2e-datasource').selectOption(datasource);
   }
 
-  public async setRowActions(checked: boolean): Promise<void> {
+  public async showRowActions(checked: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('input.e2e-row-actions').setChecked(checked);
   }

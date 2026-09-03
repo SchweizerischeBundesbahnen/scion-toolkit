@@ -991,6 +991,33 @@ test.describe.only('sci-table', () => {
       // Expect splitter not to be visible.
       await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
     });
+
+    test('should not display splitter when hovering row actions', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showRowActions(true);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '50px'});
+
+      // Hover row to display row actions.
+      await table.row({nth: 0}).hover();
+
+      // Expect row actions to display.
+      await expect(table.row({nth: 0}).rowActions).toBeVisible();
+
+      // Move mouse over splitter of column 1.
+      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+      const actionBounds = await table.row({nth: 0}).rowActionsBounds();
+      await page.mouse.move(columnSplitterBounds.hcenter, actionBounds.vcenter);
+
+      // Wait some time until idle.
+      await page.waitForTimeout(500);
+
+      // Expect column splitter not to be visible.
+      await expect(table.column({name: 'column:1'}).splitter.locator).toHaveCSS('opacity', '0');
+    });
   });
 
   test.describe('Sorting', () => {
@@ -1529,7 +1556,7 @@ test.describe.only('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.setRowActions(true);
+      await tablePage.showRowActions(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 3}).hover();
@@ -1542,7 +1569,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setWidth(500);
-      await tablePage.setRowActions(true);
+      await tablePage.showRowActions(true);
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await table.column({name: 'column:name'}).splitter.drag(500);
@@ -1576,7 +1603,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-      await tablePage.setRowActions(true);
+      await tablePage.showRowActions(true);
 
       const rowBounds = await table.row({nth: 3}).bounds();
 
@@ -1594,7 +1621,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-      await tablePage.setRowActions(true);
+      await tablePage.showRowActions(true);
 
       await table.row({nth: 10}).hover();
       await expect(table.row({nth: 10}).rowActions).toBeVisible();
@@ -1614,7 +1641,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
-      await tablePage.setRowActions(true);
+      await tablePage.showRowActions(true);
 
       const rowBounds = await table.row({nth: 10}).bounds();
 
@@ -1641,7 +1668,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
-      await tablePage.setRowActions(true);
+      await tablePage.showRowActions(true);
 
       const row = table.row({nth: 10});
       await row.hover();
@@ -1670,7 +1697,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-      await tablePage.setRowActions(true);
+      await tablePage.showRowActions(true);
 
       const row = table.row({nth: 10});
       await row.hover();
@@ -1850,7 +1877,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       await tablePage.addColumn({name: 'column:testee', type: 'string', width: '1200px'});
-      await tablePage.setRowActions(true);
+      await tablePage.showRowActions(true);
 
       await expectTable(table).toHaveVerticalOverflow();
       await expectTable(table).toHaveHorizontalOverflow();
