@@ -71,11 +71,13 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       throw Error('[ColumnDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
     }
 
-    if (config.name !== undefined && this.columns.find(c => c.name === config.name)) {
-      throw Error(`[ColumnDefinitionError] Column names have to be unique. "${config.name}" is defined more than once.`);
+    // Fallback to the column index as the column name.
+    const name = config.name ?? `column:${this.columns.length}`;
+    if (this.columns.find(column => column.name === name)) {
+      throw Error(`[ColumnDefinitionError] Column names have to be unique. "${name}" is defined more than once.`);
     }
 
-    this.columns.push({...config, type});
+    this.columns.push({...config, name, type});
     return this;
   }
 }

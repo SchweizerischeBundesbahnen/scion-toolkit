@@ -308,12 +308,10 @@ export class ɵSciTable<T> implements SciTable<T> {
     // Columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
     const filterable = type === 'component' || type === 'template' ? !!config.filterable : config.filterable !== false;
 
-    // Fallback to the column index as the column name.
-    const columnName = config.name ?? `column:${index}`;
     return {
       ...config,
       type,
-      name: columnName,
+      name: config.name,
       filter: typeof config.filterable === 'object' ? config.filterable.matcher : defaultFilter,
       sort: typeof config.sortable === 'object' ? config.sortable.comparator : defaultSort,
       sortable: computed(() => this.sortable() && sortable),
@@ -321,7 +319,7 @@ export class ɵSciTable<T> implements SciTable<T> {
       resizable: computed(() => this.resizable() && (config.resizable ?? true)),
       label: coerceSignal(config.label ?? ''),
       width: computed(() => {
-        const userSettings = this.userSettings().columns?.find(column => column.name === columnName);
+        const userSettings = this.userSettings().columns?.find(column => column.name === config.name);
         return userSettings?.width ? `${userSettings.width}px` : config.width ?? '1fr';
       }),
       minWidth: config.minWidth ?? 100,

@@ -97,6 +97,16 @@ fdescribe('Table Factory', () => {
       }));
     });
 
+    it('should not allow column with the same name as a generated column name', done => {
+      createSciTableComponent(() => table(signal([]), table => {
+        expect(() => table
+          .addStringColumn('Test', () => '')
+          .addStringColumn({name: 'column:0', value: () => ''}),
+        ).toThrowError('[ColumnDefinitionError] Column names have to be unique. "column:0" is defined more than once.');
+        done();
+      }));
+    });
+
     it('should allow multiple columns with no name', done => {
       createSciTableComponent(() => table(signal([]), table => {
         expect(() => table
