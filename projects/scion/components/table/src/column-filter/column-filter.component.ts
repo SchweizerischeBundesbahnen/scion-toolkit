@@ -12,7 +12,7 @@ import {Component, computed, debounced, inject, input, signal} from '@angular/co
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {FormsModule} from '@angular/forms';
 import {SciColumnLike} from '../table.model';
-import {combineLatestWith, debounceTime} from 'rxjs';
+import {combineLatestWith} from 'rxjs';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciIconComponent} from '@scion/components/icon';
 
@@ -33,7 +33,6 @@ export class ColumnFilterComponent<T> {
     toObservable(debounced(this.filter, 200).value).pipe(
       combineLatestWith(toObservable(this._table), toObservable(computed(() => this.column().name)), toObservable(computed(() => this.column().type))),
       takeUntilDestroyed(),
-      debounceTime(200),
     ).subscribe(([value, table, columnName, type]) => {
       const text = typeof value === 'string' ? value.trim() : value;
 

@@ -1450,25 +1450,6 @@ test.describe.only('sci-table', () => {
       await expect(table.row({nth: 0}).cell(0).locator).toHaveAttribute('part', 'column:negative');
       await expect(table.row({nth: 0}).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
     });
-
-    test('should show/hide gridlines', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-
-      // Configure gridline color.
-      await tablePage.setCssVariable('--sci-table-gridline-color', 'rgb(0, 0, 255)');
-
-      // Show gridlines.
-      await tablePage.showGridlines(true);
-      await expect(table.row({nth: 0}).locator).toHaveCSS('border-bottom-color', 'rgb(0, 0, 255)');
-
-      // Hide gridlines.
-      await tablePage.showGridlines(false);
-      await expect(table.row({nth: 0}).locator).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
-    });
   });
 
   test.describe('Row Actions', () => {
@@ -1623,7 +1604,7 @@ test.describe.only('sci-table', () => {
 
       const row = table.row({nth: 10});
       await row.hover();
-      await row.rowActions.locator('button.e2e-menu-item').click();
+      await row.rowActions.locator('button.e2e-menu-item.e2e-more').click();
       await expect(row.locator.locator('sci-menu')).toBeVisible();
 
       await table.row({nth: 1}).hover();

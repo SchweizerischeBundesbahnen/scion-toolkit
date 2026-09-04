@@ -98,7 +98,7 @@ export default class SciTablePageComponent {
         .addToolbarButton({icon: 'scion.delete', onSelect: noop})
         .addToolbarButton({icon: 'scion.pin', onSelect: noop})
         .addToolbarButton({icon: 'scion.search', onSelect: noop})
-        .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
+        .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false, cssClass: 'e2e-more'}, menu => menu
           .addMenuItem({
             label: 'Edit',
             onSelect: () => console.log('edit', product.id),
