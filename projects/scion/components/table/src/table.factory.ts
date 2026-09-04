@@ -43,10 +43,6 @@ export interface SciColumnDescriptor {
    * Min column width in px. Defaults to 100.
    */
   minWidth?: number;
-  /**
-   * Max column width in px.
-   */
-  maxWidth?: number;
 }
 
 export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {

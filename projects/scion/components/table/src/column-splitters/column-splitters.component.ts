@@ -13,7 +13,6 @@ import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitte
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciColumnLike} from '../table.model';
 import {TableRowComponent} from '../table-row/table-row.component';
-import {clamp} from '@scion/toolkit/util';
 import {SciColumnService} from '../column/column.service';
 
 export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
@@ -56,9 +55,9 @@ export class ColumnSplittersComponent<T> {
   }
 
   public async onResizeAuto(column: SciColumnLike): Promise<void> {
-    // Get the maximum cell width, bounded by the min/max width.
+    // Get the maximum cell width, bounded by the minimum width.
     const maxCellWidth = Math.max(...this.rows().map(row => row.getCellWidth(column.name)));
-    const packedWidth = clamp(maxCellWidth, {min: column.minWidth, max: column.maxWidth});
+    const packedWidth = Math.max(maxCellWidth, column.minWidth);
 
     this._columnService.startResize(column);
     this._columnService.resize(packedWidth);

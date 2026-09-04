@@ -117,7 +117,6 @@ export default class SciTablePageComponent {
         label: columnForm.label || undefined,
         width: columnForm.width || undefined,
         minWidth: columnForm.minWidth ?? undefined,
-        maxWidth: columnForm.maxWidth ?? undefined,
         resizable: columnForm.resizable,
       };
 
@@ -207,7 +206,6 @@ export default class SciTablePageComponent {
         resizable: true,
         width: '',
         minWidth: null,
-        maxWidth: null,
         customSort: false,
         customFilter: false,
         visible: signal(true),
@@ -262,7 +260,6 @@ interface ColumnForm {
   resizable: boolean;
   width: string;
   minWidth: number | null;
-  maxWidth: number | null;
   customSort: boolean;
   customFilter: boolean;
   visible: Signal<boolean>;

@@ -585,45 +585,6 @@ test.describe.only('sci-table', () => {
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10 + 10);
     });
 
-    test('should stop at max width', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px', maxWidth: 200});
-
-      await table.column({name: 'column:name'}).splitter.drag(300);
-      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
-    });
-
-    test('should ignore reverse dragging when pointer is beyond splitter bounds', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px', maxWidth: 200});
-
-      const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
-
-      // Move mouse beyond max width.
-      await dragHandle.dragTo({deltaX: 300});
-      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
-
-      // Move mouse back between min and max width.
-      await dragHandle.dragTo({deltaX: -250});
-      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(150);
-
-      // Move mouse beyond min width.
-      await dragHandle.dragTo({deltaX: -150});
-      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(100);
-
-      // Move mouse back between min and max width.
-      await dragHandle.dragTo({deltaX: 125});
-      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(125);
-
-      await dragHandle.release();
-    });
-
     test('should decrease column width', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -667,22 +628,6 @@ test.describe.only('sci-table', () => {
 
       await table.column({name: 'column:name'}).splitter.dblclick();
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBeLessThan(200);
-    });
-
-    test('should auto resize to max-width', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'column:name', type: 'string', width: '50px', minWidth: 0, maxWidth: 75});
-      await tablePage.addColumn({name: 'column:price', type: 'string'});
-
-      await table.column({name: 'column:name'}).splitter.dblclick();
-      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(75);
-
-      // Should still be able to resize after auto resize.
-      await table.column({name: 'column:name'}).splitter.drag(-25);
-      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(50);
     });
 
     test('should auto resize to min-width', async ({page}) => {
@@ -807,29 +752,6 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(250);
       await expectTable(table).not.toHaveHorizontalScroll();
       await expectTable(table).not.toHaveHorizontalOverflow();
-    });
-
-    test('should never grow columns beyond max-size', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.setWidth(600);
-      await tablePage.addColumn({name: 'column:1', type: 'string', minWidth: 100});
-      await tablePage.addColumn({name: 'column:2', type: 'string', maxWidth: 200});
-      await tablePage.addColumn({name: 'column:3', type: 'string', minWidth: 100});
-
-      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
-      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(200);
-      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(200);
-
-      // Shrink column one.
-      await table.column({name: 'column:1'}).splitter.drag(-100);
-
-      // Expect only column three to grow, since column two has a max width of 200.
-      await expect.poll(() => table.column({name: 'column:1'}).width()).toEqual(100);
-      await expect.poll(() => table.column({name: 'column:2'}).width()).toEqual(200);
-      await expect.poll(() => table.column({name: 'column:3'}).width()).toEqual(300);
     });
 
     test('should shrink table when all flexible columns shrink', async ({page}) => {

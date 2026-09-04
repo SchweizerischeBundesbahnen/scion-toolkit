@@ -82,7 +82,6 @@ export interface SciColumn {
   resizable: Signal<boolean>;
   width: Signal<string>;
   minWidth: number;
-  maxWidth: number | undefined;
   resizing: WritableSignal<boolean>;
   location: {x: number; width: number};
 }

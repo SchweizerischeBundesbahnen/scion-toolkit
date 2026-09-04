@@ -45,7 +45,7 @@ export class SciColumnService {
             return `${columnWidth}px`;
           }
           if (column.width().endsWith('fr')) {
-            return cssMinmax({min: column.minWidth, max: column.maxWidth ?? column.width()});
+            return cssMinmax({min: column.minWidth, max: column.width()});
           }
           return column.width();
         })
@@ -60,7 +60,7 @@ export class SciColumnService {
 
   public resize(columnWidth: number): void {
     const state = this._resizingState()!;
-    const clampedWidth = clamp(columnWidth, {min: state.column.minWidth, max: state.column.maxWidth});
+    const clampedWidth = clamp(columnWidth, {min: state.column.minWidth});
 
     if (clampedWidth !== state.columnWidths()?.get(state.column.name)) {
       const columnWidths = this.calculateColumnWidths(state.column, clampedWidth);
@@ -108,17 +108,16 @@ export class SciColumnService {
     const columnIndex = columns.indexOf(columnToResize);
 
     // IMPORTANT:
-    // Flex-sized columns already at max width do not contribute to flex space distribution.
     // Columns to the left are permanently fixed.
 
     // Calculate the total width occupied by fixed-sized columns, plus all columns to the left.
     const totalFixedWidth = columns
-      .filter((column, index) => index <= columnIndex || !column.width().endsWith('fr') || column.location.width >= (column.maxWidth ?? Infinity))
+      .filter((column, index) => index <= columnIndex || !column.width().endsWith('fr'))
       .reduce((sum, column) => sum + (column === columnToResize ? newColumnWidth : column.location.width), 0);
 
     // Calculate the total width occupied by flex-sized columns.
     const flexColumns = columns
-      .filter((column, index) => index > columnIndex && column.width().endsWith('fr') && column.location.width < (column.maxWidth ?? Infinity))
+      .filter((column, index) => index > columnIndex && column.width().endsWith('fr'))
       .reduce((set, column) => set.add(column), new Set<SciColumnLike>());
     const totalFlexWidth = [...flexColumns].reduce((sum, column) => sum + column.location.width, 0);
 
@@ -133,7 +132,7 @@ export class SciColumnService {
       if (flexColumns.has(column)) {
         const ratio = column.location.width / totalFlexWidth;
         const absoluteWidth = ratio * availableFlexWidth;
-        return map.set(column.name, clamp(absoluteWidth, {min: column.minWidth, max: column.maxWidth}));
+        return map.set(column.name, clamp(absoluteWidth, {min: column.minWidth}));
       }
       return map.set(column.name, column.location.width);
     }, new Map<`column:${string}`, number>());

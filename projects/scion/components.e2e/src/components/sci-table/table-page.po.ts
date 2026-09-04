@@ -141,7 +141,6 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-column-custom-filter').setChecked(!!options.customFilter);
     await this.properties.locator('input.e2e-column-width').fill(options.width ?? '');
     await this.properties.locator('input.e2e-column-min-width').fill(`${options.minWidth ?? ''}`);
-    await this.properties.locator('input.e2e-column-max-width').fill(`${options.maxWidth ?? ''}`);
     await this.properties.locator('button.e2e-column-add').click();
   }
 
@@ -161,5 +160,4 @@ export interface ColumnOptions {
   customSort?: boolean;
   width?: string;
   minWidth?: number;
-  maxWidth?: number;
 }

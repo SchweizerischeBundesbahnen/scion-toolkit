@@ -48,10 +48,6 @@
             <input [formField]="columnForm.minWidth" type="number" class="e2e-column-min-width">
           </sci-form-field>
 
-          <sci-form-field label="Max Width">
-            <input [formField]="columnForm.maxWidth" type="number" class="e2e-column-max-width">
-          </sci-form-field>
-
           <button class="e2e-column-add" type="submit" [disabled]="columnForm().invalid()">Add</button>
         </form>
 
