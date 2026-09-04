@@ -17,7 +17,7 @@ import {SciRow} from './table.model';
 @Injectable()
 export class TableSelectionService<T> {
 
-  private _table = inject(ɵSCI_TABLE) as Signal<ɵSciTable<T>>;
+  private readonly _table = inject<Signal<ɵSciTable<T>>>(ɵSCI_TABLE);
 
   public async onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();

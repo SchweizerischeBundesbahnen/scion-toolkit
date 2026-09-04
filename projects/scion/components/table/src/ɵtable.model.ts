@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
@@ -18,27 +18,28 @@ import {SciColumnDescriptorLike} from './table.factory';
 import {coerceSignal} from '@scion/components/common';
 import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
-import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {skip} from 'rxjs';
+import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {concat, fromEvent, of, skip, switchMap, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBinding} from './table-row-binding';
-import {Observables} from '@scion/toolkit/util';
-import {SciTableComponent} from './table.component';
+import {clamp, Objects, Observables} from '@scion/toolkit/util';
 import {SciTableFactoryFn} from './table';
+import {map, startWith} from 'rxjs/operators';
+import {subscribeIn} from '@scion/toolkit/operators';
 
-export class ɵSciTable<T> implements SciTable<T> {
+export class ɵSciTable<T = unknown> implements SciTable<T> {
 
   private readonly _tableStorage = inject(SCI_TABLE_STORAGE);
   private readonly _injector = inject(Injector);
 
-  public readonly name = computed(() => this._tableComponent()?.name());
+  public readonly name = signal<`table:${string}` | undefined>(undefined);
   public readonly columns: Signal<SciColumnLike<T>[]>;
   public readonly rowActions?: SciRowActionFactoryFn<T>;
 
-  private readonly _tableComponent = signal<SciTableComponent<T> | undefined>(undefined);
   private readonly _rowBindings?: SciTableRowBinding<T>[];
   private readonly _dataLoaderFn: SciDataLoaderFn<T>;
   private readonly _trackBy?: (item: T) => unknown;
 
+  public readonly tableViewRef = signal<SciTableViewRef | undefined>(undefined);
   public readonly userSettings: WritableSignal<SciTableUserSettings>;
   public readonly bufferSize: Signal<number>;
   public readonly pageSize: Signal<number>;
@@ -47,18 +48,20 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly sortable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectable: Signal<'single' | 'multi' | false>;
+  public readonly scrollTop: Signal<number>;
 
-  public readonly scrolling = signal(false);
+  public readonly scrolling: Signal<boolean>;
   public readonly resizing = computed(() => this.columns().some(column => column.resizing()));
   public readonly sortCriteria = signal<SciSortCriterion[]>([]);
   public readonly filterCriteria = signal<SciColumnFilter[]>([]);
-  public readonly scrollRange = signal<SciScrollRange | undefined>(undefined);
+  public readonly scrollRange: Signal<SciScrollRange | undefined>;
 
   private readonly _globalFilter = signal<string | null>(null);
   private readonly _selectedItems = signal(new Map<unknown, T>());
   private readonly _cache = new TableCache<T>();
 
   // Reset totalCount on criteria change, to show skeletons instead of stale data while loading.
+  // TODO [egob] Is it necessary to reset totalCount? Shouldn't it only be set by the loader? Race conditions possible?
   public readonly totalCount = linkedSignal({
     source: () => this.criteria(),
     computation: () => undefined as number | undefined,
@@ -95,6 +98,9 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.resizable = coerceSignal(descriptor.resizable ?? true);
     this.selectable = coerceSignal(descriptor.selectable ?? 'multi');
     this.userSettings = this.computeUserSettings();
+    this.scrollRange = this.computeScrollRange();
+    this.scrollTop = this.computeScrollTop();
+    this.scrolling = this.computeScrolling();
     this.columns = this.computeColumns(factoryFn, descriptor);
 
     this.rowActions = descriptor.rowActions;
@@ -112,8 +118,78 @@ export class ɵSciTable<T> implements SciTable<T> {
   /**
    * Connects {@link SciTableComponent} to the model.
    */
-  public connect(tableComponent: SciTableComponent<T>): void {
-    this._tableComponent.set(tableComponent);
+  public connect(name: `table:${string}`, viewRef: SciTableViewRef): void {
+    this.name.set(name);
+    this.tableViewRef.set(viewRef);
+  }
+
+  public disconnect(): void {
+    this.name.set(undefined);
+    this.tableViewRef.set(undefined);
+  }
+
+  /**
+   * Computes the visible row count based on the viewport size.
+   */
+  private computeScrollRange(): Signal<SciScrollRange | undefined> {
+    return computed(() => {
+      const tableViewRef = this.tableViewRef();
+      if (!tableViewRef) {
+        return undefined;
+      }
+
+      const viewportHeight = tableViewRef.viewportHeight();
+      const itemHeight = tableViewRef.itemHeight();
+      const bufferSize = this.bufferSize();
+      const scrollTop = this.scrollTop();
+
+      const start = Math.floor(scrollTop / itemHeight);
+      const viewportRowCount = Math.ceil(viewportHeight / itemHeight);
+      const end = Math.min(start + viewportRowCount);
+
+      const totalCount = this.totalCount() ?? viewportRowCount; // fill viewport if no data loaded yet
+
+      return {
+        start: clamp(start - bufferSize, {min: 0, max: Math.max(0, totalCount - viewportRowCount)}),
+        end: clamp(end + bufferSize, {max: totalCount}),
+      };
+    }, {equal: Objects.isEqual});
+  }
+
+  /**
+   * Tracks {@link HTMLElement.scrollTop} of the viewport.
+   */
+  private computeScrollTop(): Signal<number> {
+    const zone = inject(NgZone);
+
+    return rxResource({
+      defaultValue: 0,
+      params: () => this.tableViewRef()?.viewport,
+      stream: ({params: viewport}) => fromEvent(viewport, 'scroll', {passive: true})
+        .pipe(
+          map(() => viewport.scrollTop),
+          startWith(viewport.scrollTop),
+          subscribeIn(fn => zone.runOutsideAngular(fn)),
+        ),
+    }).value;
+  }
+
+  /**
+   * Tracks whether currently scrolling the viewport.
+   */
+  private computeScrolling(): Signal<boolean> {
+    const zone = inject(NgZone);
+
+    return rxResource({
+      defaultValue: false,
+      params: () => this.tableViewRef()?.viewport,
+      stream: ({params: viewport}) => fromEvent(viewport, 'scroll', {passive: true})
+        .pipe(
+          switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
+          startWith(false),
+          subscribeIn(fn => zone.runOutsideAngular(fn)),
+        ),
+    }).value;
   }
 
   private computeColumns(tableFactoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>): Signal<SciColumnLike<T>[]> {
@@ -259,6 +335,7 @@ export class ɵSciTable<T> implements SciTable<T> {
 
   public dispose(): void {
     this._cache.clear();
+    this.disconnect();
   }
 
   /**
@@ -365,13 +442,8 @@ export class ɵSciTable<T> implements SciTable<T> {
   private computeUserSettings(): WritableSignal<SciTableUserSettings> {
     // Load user settings from storage.
     const userSettings = resource({
-      params: () => ({tableName: this.name()}),
-      loader: async ({params}) => {
-        const {tableName} = params;
-        if (!tableName) {
-          return {columns: []};
-        }
-
+      params: () => this.name(),
+      loader: async ({params: tableName}) => {
         try {
           const serialized = await this._tableStorage.load(`scion.components.${tableName}`);
           return serialized ? JSON.parse(serialized) as SciTableUserSettings : {columns: []};
@@ -478,3 +550,11 @@ export interface SciTableUserSettings {
 }
 
 export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
+
+export interface SciTableViewRef {
+  viewport: HTMLElement;
+  viewportHeight: Signal<number>;
+  viewportClientHeight: Signal<number>;
+  headerHeight: Signal<number>;
+  itemHeight: Signal<number>;
+}

@@ -15,7 +15,7 @@
     <sci-table-body sciTableKeyboardNavigator tabindex="0">
       <!-- Track index to reuse the table row elements -->
       @for (row of table.rows(); track $index) {
-        <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item)" [sciAttributes]="row.bindings?.attributes()"/>
+        <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item!)" [sciAttributes]="row.bindings?.attributes()"/>
       } @empty {
         <span class="empty">{{('%scion.components.no_items.message' | sciText)()}}</span>
       }
@@ -37,4 +37,4 @@
   <sci-throbber type="spinner"/>
 }
 
-<div class="item-size" #itemSizeElement></div>
+<div class="item-size" #item_size_element></div>
