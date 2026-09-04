@@ -42,10 +42,6 @@
         grid-template-rows: 1fr; // table body
       }
 
-      @container not style(--esci-table-gridlines: true) {
-        --sci-table-gridline-color: transparent;
-      }
-
       &:focus {
         outline: none;
       }

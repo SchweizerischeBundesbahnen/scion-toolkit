@@ -95,7 +95,7 @@ $sci-menubar: (
 $sci-table: (
   --sci-table-border-color: var(--sci-color-border),
   --sci-table-border-size: 1px,
-  --sci-table-gridline-color: var(--sci-table-border-color),
+  --sci-table-gridline-color: transparent,
   --sci-table-row-height: 30px,
   --sci-table-row-background-color-hover: var(--sci-button-background-color-hover),
   --sci-table-row-background-color-selected: color-mix(in srgb, var(--sci-color-accent) 35%, var(--sci-color-gray-100)),

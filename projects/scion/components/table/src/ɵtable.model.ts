@@ -44,7 +44,6 @@ export class ɵSciTable<T> implements SciTable<T> {
   public readonly pageSize: Signal<number>;
   public readonly filterable: Signal<boolean>;
   public readonly headerVisible: Signal<boolean>;
-  public readonly gridlinesVisible: Signal<boolean>;
   public readonly sortable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectable: Signal<'single' | 'multi' | false>;
@@ -93,7 +92,6 @@ export class ɵSciTable<T> implements SciTable<T> {
     this.sortable = coerceSignal(descriptor.sortable ?? true);
     this.filterable = coerceSignal(descriptor.filterable ?? false);
     this.headerVisible = coerceSignal(descriptor.headerVisible ?? true);
-    this.gridlinesVisible = coerceSignal(descriptor.gridlinesVisible ?? false);
     this.resizable = coerceSignal(descriptor.resizable ?? true);
     this.selectable = coerceSignal(descriptor.selectable ?? 'multi');
     this.userSettings = this.computeUserSettings();
@@ -327,7 +325,6 @@ export class ɵSciTable<T> implements SciTable<T> {
         return userSettings?.width ? `${userSettings.width}px` : config.width ?? '1fr';
       }),
       minWidth: config.minWidth ?? 100,
-      maxWidth: config.maxWidth,
       resizing: signal(false),
       location: {x: 0, width: 0}, // injected in `SciColumnComponent`
     } as SciColumnLike<T>;

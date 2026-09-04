@@ -14,6 +14,9 @@ import {DecimalPipe} from '@angular/common';
     SciTableComponent,
     DecimalPipe,
   ],
+  host: {
+    '[style.--sci-table-gridline-color]': 'showGridlines() ? "var(--sci-table-border-color)" : null',
+  },
 })
 export default class TriebfahrzeugTableComponent {
 
@@ -21,9 +24,9 @@ export default class TriebfahrzeugTableComponent {
   private sortable = signal(true);
   private resizable = signal(true);
   private showHeader = signal(true);
-  private showGridlines = signal(false);
   private zebraStyle = signal(false);
   private selectable = signal<'single' | 'multi' | false>('multi');
+  protected showGridlines = signal(false);
 
   public table = this.defineTriebfahrzeugTable();
 
@@ -37,7 +40,6 @@ export default class TriebfahrzeugTableComponent {
       filterable: this.filterable,
       sortable: this.sortable,
       headerVisible: this.showHeader,
-      gridlinesVisible: this.showGridlines,
       resizable: this.resizable,
       selectable: this.selectable,
       rowBindings: [

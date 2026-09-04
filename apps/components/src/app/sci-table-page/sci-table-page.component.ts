@@ -36,6 +36,9 @@ import {Router} from '@angular/router';
     SciTabbarComponent,
     MinMaxDirective,
   ],
+  host: {
+    '[style.--sci-table-gridline-color]': 'settingsForm.showGridlines().value() ? "var(--sci-table-border-color)" : null',
+  },
 })
 export default class SciTablePageComponent {
 

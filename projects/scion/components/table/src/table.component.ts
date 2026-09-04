@@ -44,7 +44,6 @@ import {SciAttributesDirective} from '@scion/components/common';
     '[style.--ɵsci-table-resizing]': 'table().resizing() ? `true` : null',
     '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
     '[style.--ɵsci-table-virtual-scroll-offset-bottom]': '`${virtualScrollOffsetBottom()}px`',
-    '[style.--esci-table-gridlines]': 'table().gridlinesVisible() ? `true` : null',
   },
   imports: [
     SciScrollbarComponent,
