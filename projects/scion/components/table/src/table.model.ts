@@ -23,9 +23,7 @@ export interface SciTableDescriptor<T> {
   resizable?: MaybeSignal<boolean>;
   filterable?: MaybeSignal<boolean>;
   selectable?: MaybeSignal<false | 'single' | 'multi'>;
-  // TODO [egob] Consider renaming to showHeader
   headerVisible?: MaybeSignal<boolean>;
-  // TODO [egob] Consider renaming to showGridlines
   gridlinesVisible?: MaybeSignal<boolean>;
   // TODO [egob] Consider renaming to initialSortOrder
   sortBy?: Array<`column:${string}` | SciSortCriterion>;

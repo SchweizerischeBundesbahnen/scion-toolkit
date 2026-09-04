@@ -1,57 +1,60 @@
 # TODO
 
-- Fix build
+- Consider moving signal von table.component ins table model
+- Neue icons in icon font und integrieren (z.B. sort icons für spalten)
+- Filter icon in Akzent Farbe wenn Filter gesetzt
+- Call loader fn in injection context (separate context per call to release resources)
+- Enforce unique column name (challenge of auto-named rows)
+- Remove gridline config -> must be sets via --esci-table-gridlines CSS variable
+- Remove column max width
+- Provide writable signals for table settings (filterable, sortable) as public API, e.g., to create menu to show/hide column filters.
+  -> change descriptor to boolean (not MaybeSignal)
+  -> change bufferSize and pageSize to number, but do not provide on table model 
+- Unset scrollRange bei Filterung und Sortierung (sofort)
+- Gedanken über tri-state bei Sortierung (erforderlich?)
+- rename globalFilter => tableFilter
+- Analyze and fix menu group crash
+- Change default row-height to 2em.
+- Neue icons von Jonas integrieren
+- Align 'no_items' horizontal in mitte von viewport
+- Move offset host binding styles from sci-table to sci-table-grid
+- Test dass Tabelle in Workbench Microfrontend funktioniert
+- Test dass Tabelle mit RemoteDataFetcher funktioniert (Zusammenspiel)
+
+# Future Features
 - Native Focus für active Row
-- Tab order ist falsch: Da der header nach dem body in der DOM order kommt, wird der body vor dem header fokussiert, wenn man durchtabbt.
-- Der letzte splitter und die scrollbar sind bei einer 100% width table überlappend. Der splitter kann nur im header gedragged werden.
+- Multiline Headers
+- Dokumentation
+- DataLoaderFn: Add suport to return signal (besides Observable, Promise, Object)
+- Icon column
+- Cell alignment (left, right, center)
+- Workbench Integration: Selected/Active Row nur in accent Farbe wenn part/view Fokus hat
+- Animate skeletons
+- Verbindung offen halten auf Pages die nicht mehr im Viewport sind?
+    - invalidate method on table model?
+    - load wenn into viewport?
+    - analzyse
+    - Problematic: large table with frequent updates -> why should table update for rows not in viewport?
+    - Was machen wir bei einem update, delete
+    - Cancel page requests
+    - Gedanken über updatedaussehalb der aktuellen page gemacht?
+- Gedanken über public API von sort und filter (stateful?)
+- Scrollbar thumb position mismach bei zoom; Umstellung auf capturePointerPosition, dann Umwandlung auf screenX nicht erforderlich; sci-mousemove disoatcher obsolet
 
-## Tests
-- Viewport vergrössern / verkleinern
-  - Beim vergrössern sollte die PageSize grösser werden, verkleinern sollte nichts machen
-
-# Dev Fragen
-- Selection mit shift über mehrere Pages
-  - Vorschlag: Falls Pages nicht geladen sind, wird bei shift click nur das letzte Element selektiert.
-- Primary Action, Single / Double Click. Was bieten wir an? Wie benennen wir es?
-  - Vorschlag: `primaryAction` für double click / enter. Single Click wird für den Moment nicht angeboten.
-- Braucht es für die row actions eine eigene Abstraktion? (für responsive menus)
-  - Vorschlag: Nein, falls es irgendeinmal ein responsive Menu geben sollte, muss das dann halt additiv auf der API angeboten werden.
-- Wann wollen wir die Table persistieren? OnColumnChange, explizit bei z.B. onResizeEnd. Was wollen wir alles persistieren (width, sort, filter, etc.)?
+- ## Bugs
+- Filter Field Drop Down
+  - Anzeige DarkModel
+  - allenfalls sci-menu wegen alignment
 
 # UX Fragen
-- Selection mit shift über mehrere Pages
-  - Vorschlag: Falls Pages nicht geladen sind, wird bei shift click nur das letzte Element selektiert.
-- Row Actions
-  - row actions verstecken, wenn mehrere rows selektiert sind?
-  - Müssen row actions responsive sein?
-  - Sollen die row actions nur on hover kommen oder auch beim active item?
-    - Variante: Wie Intellij (Commit View) beide, hover und active item.
-- Global table actions?
-  - Kommt noch, aber nicht basis funktionalität
-- Boolean Column
-  - Boolean filter so ok?
-  - True-False values icons ok?
-- Header
-  - Sortier-Icons werden noch gebraucht.
-  - Filter icon indicator wenn gefiltert ist?
-  - Muss die header Höhe via config anpassbar sein, oder sollte die immer gleich sein? (filter / header labels)
-    - Evtl. zwei Ausprägungen (compact / normal). Nicht x verschiedene Varianten
-- Resizing
-  - Sollten zuerst die "fraction" columns kleiner werden und erst danach geschoben während dem Resizing?
-  - Kann auch in der Tabelle gedragged werden?
-  - Ist resizing auf einer row = eine Interaction mit der row, d.h sollte sie selektiert werden beim resizing?
+- Wollen wir Splitter wirklich beim Hover auf rows anzeigen? Reicht nicht Cursor? Ruhiger, Hover auf Splitter möglich 
+  -> wenn nicht, kann z-index auf toolbar entfernt werden
+
+## Tests
+- Add test that filter/sort function on model can be invoked regardless of filterable/sortable of column/table.
+- Add test that global setting for filterable/sortable are stronger than column-level filterable/sortable settings
 
 
-## Entscheidungen
-
-- selection über mehrere pages bei slow data source - ok
-- toolbar api so beibehalten - kein extra api
-- checkboxes bei select machen je nach Fall schon Sinn. evtl. mit Tree angehen
-  - Für den Moment so lassen wies ist.
-- row actions nur bei hover
-- true false All okay, icons in tabelle
-  - Übersetzung via labelprovider auf boolean column
-- beim verschieben von spalten soll alles kleiner werden bis min-width erreicht ist
-- vertikale linie bei hover anzeigen
-- Nur Spaltenbreite wird gespeichert im Moment.
-- Globaler Filter wäre cool, Marc und Etienne schauen, ob das noch möglich wäre, für den initial Release.
+> sci-table {
+   font-size: 20px;
+}

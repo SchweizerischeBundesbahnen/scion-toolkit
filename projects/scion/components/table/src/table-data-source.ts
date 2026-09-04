@@ -42,4 +42,5 @@ export interface SciTableResponse<T> {
   totalCount: number;
 }
 
+// TODO [dwie] Consider adding SciTable prefix
 export type SciDataLoaderFn<T> = (request: SciTableRequest) => MaybeAsync<SciTableResponse<T>>;
