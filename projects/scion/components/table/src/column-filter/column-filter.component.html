@@ -1,21 +1,23 @@
-<sci-icon class="filter-icon" [class.active]="query.value !== ''">scion.filter</sci-icon>
+@let empty = filter() === null || filter() === '';
+
+<sci-icon class="filter-icon" [class.active]="!empty">scion.filter</sci-icon>
 
 @switch (column().type) {
   @case ('number') {
-    <input [formControl]="query" type="number" />
+    <input [(ngModel)]="filter" type="number" />
   }
   @case ('boolean') {
-    <select [formControl]="query">
+    <select [(ngModel)]="filter">
       <option [value]="''">All</option>
       <option [value]="true">True</option>
       <option [value]="false">False</option>
     </select>
   }
   @default {
-    <input [formControl]="query" type="text" />
+    <input [(ngModel)]="filter" type="text" />
   }
 }
-@if (query.value && column().type !== 'boolean') {
+@if (!empty && column().type !== 'boolean') {
   <button class="clear e2e-clear" (click)="reset()">
     <sci-icon>scion.clear</sci-icon>
   </button>

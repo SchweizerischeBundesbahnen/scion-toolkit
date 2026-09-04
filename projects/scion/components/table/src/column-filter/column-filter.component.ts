@@ -8,9 +8,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, effect, inject, input} from '@angular/core';
+import {Component, computed, debounced, inject, input, signal} from '@angular/core';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {FormBuilder, ReactiveFormsModule} from '@angular/forms';
+import {FormsModule} from '@angular/forms';
 import {SciColumnLike} from '../table.model';
 import {combineLatestWith, debounceTime} from 'rxjs';
 import {ɵSCI_TABLE} from '../ɵtable.model';
@@ -18,7 +18,7 @@ import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
   selector: 'sci-column-filter',
-  imports: [ReactiveFormsModule, SciIconComponent],
+  imports: [SciIconComponent, FormsModule],
   templateUrl: './column-filter.component.html',
   styleUrl: './column-filter.component.scss',
 })
@@ -26,16 +26,11 @@ export class ColumnFilterComponent<T> {
 
   public readonly column = input.required<SciColumnLike<T>>();
 
-  protected readonly query = inject(FormBuilder).control<string | boolean | number>('');
+  protected readonly filter = signal<string | boolean | number | null>(null);
   private readonly _table = inject(ɵSCI_TABLE);
 
   constructor() {
-    effect(() => {
-      const filterCriterion = this._table().filterCriteria().find(fc => fc.columnName === this.column().name);
-      this.query.setValue(filterCriterion?.text ?? '', {emitEvent: false});
-    });
-
-    this.query.valueChanges.pipe(
+    toObservable(debounced(this.filter, 200).value).pipe(
       combineLatestWith(toObservable(this._table), toObservable(computed(() => this.column().name)), toObservable(computed(() => this.column().type))),
       takeUntilDestroyed(),
       debounceTime(200),
@@ -62,6 +57,6 @@ export class ColumnFilterComponent<T> {
   }
 
   protected reset(): void {
-    this.query.reset('');
+    this.filter.set(null);
   }
 }
