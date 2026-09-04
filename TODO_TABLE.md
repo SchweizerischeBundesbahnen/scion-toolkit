@@ -1,6 +1,5 @@
 # TODO
 
-- Consider moving signal von table.component ins table model
 - Neue icons in icon font und integrieren (z.B. sort icons für spalten)
 - Call loader fn in injection context (separate context per call to release resources)
 - Provide writable signals for table settings (filterable, sortable) as public API, e.g., to create menu to show/hide column filters.

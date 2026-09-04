@@ -8,14 +8,10 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, effect, ElementRef, inject, input, NgZone, output, Provider, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {Component, computed, effect, ElementRef, inject, input, output, Provider, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciTable} from './table.model';
-import {SciScrollRange, ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
-import {takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
-import {concat, fromEvent, map, mergeWith, of, switchMap, timer} from 'rxjs';
-import {subscribeIn} from '@scion/toolkit/operators';
+import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {SciScrollbarComponent} from '@scion/components/viewport';
-import {startWith} from 'rxjs/operators';
 import {dimension} from '@scion/components/dimension';
 import {TableSelectionService} from './table-selection.service';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
@@ -27,7 +23,6 @@ import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
-import {clamp, Objects} from '@scion/toolkit/util';
 import {ColumnBoundsComponent} from './column-bounds/column-bounds.component';
 import {SciTableViewportRefDirective} from './table-viewport-ref.directive';
 import {SciAttributesDirective} from '@scion/components/common';
@@ -65,7 +60,7 @@ import {SciAttributesDirective} from '@scion/components/common';
     TableSelectionService,
   ],
 })
-export class SciTableComponent<T> { // TODO [egob] Is this generic really helpful?
+export class SciTableComponent<T = unknown> {
 
   /**
    * Specifies a unique table identifier, used as the key for storing user preferences.
@@ -77,169 +72,107 @@ export class SciTableComponent<T> { // TODO [egob] Is this generic really helpfu
    */
   public readonly table = input.required({transform: (table: SciTable<T>) => table as ɵSciTable<T>});
 
+  /**
+   * Emits when the user performs a primary action on a row (double-clicking or pressing `Enter`).
+   */
   public readonly primaryAction = output<T>();
 
   private readonly _viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
   private readonly _header = viewChild(SciTableHeaderComponent, {read: ElementRef});
-  private readonly _itemSizeElement = viewChild.required<ElementRef<HTMLElement>>('itemSizeElement');
+  private readonly _itemSizeElement = viewChild.required<ElementRef<HTMLElement>>('item_size_element');
+
   protected readonly rows = viewChildren(TableRowComponent);
 
-  private readonly _headerHeight = computed(() => this.headerDimension()?.offsetHeight ?? 0);
-
-  private readonly _viewportDimension = dimension(this._viewport);
-  private readonly _viewportClientDimension = dimension(this._viewportClient);
-  private readonly _itemSizeDimension = dimension(this._itemSizeElement);
-
-  protected readonly itemSize = computed(() => this._itemSizeDimension().clientHeight);
-
-  protected readonly headerDimension = dimension(this._header);
-
+  // TODO [dwie] Move to model
   protected readonly virtualScrollOffsetTop = computed(() => {
-    return (this.table().scrollRange()?.start ?? 0) * this.itemSize();
+    const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
+    return (this.table().scrollRange()?.start ?? 0) * itemHeight;
   });
 
+  // TODO [dwie] Move to model
   protected readonly virtualScrollOffsetBottom = computed(() => {
     const rangeEnd = Math.min(this.table().scrollRange()?.end ?? 0, this.table().totalCount() ?? 0);
     const totalCount = this.table().totalCount() ?? 0;
-    return (totalCount - rangeEnd) * this.itemSize();
+    const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
+    return (totalCount - rangeEnd) * itemHeight;
   });
 
-  private readonly _scrollTop = this.computeScrollTop();
-
   constructor() {
-    this.installActiveItemWatcher();
-    this.installScrollRangeTracker();
-    this.installCriteriaListener();
-    this.installScrollListener();
+    this.connectToModel();
+    this.scrollActiveRowIntoViewport();
+    this.scrollTopOnCriteriaChange();
   }
 
-  protected onRowPrimaryAction(item?: T): void {
-    if (item) {
-      this.primaryAction.emit(item);
-    }
+  protected onRowPrimaryAction(item: T): void {
+    this.primaryAction.emit(item);
   }
 
-  /**
-   * Scrolls viewport to the top, as soon as either filter or sort criteria change
-   */
-  private installCriteriaListener(): void {
-    effect(() => {
-      this.table().criteria(); // track criteria
+  private connectToModel(): void {
+    const viewportDimension = dimension(this._viewport);
+    const viewportClientDimension = dimension(this._viewportClient);
+    const headerDimension = dimension(this._header);
+    const itemSizeDimension = dimension(this._itemSizeElement);
 
-      // as soon as the table criteria change (and on init), scroll to the top.
-      this._viewport().nativeElement.scrollTo({top: 0});
+    effect(onCleanup => {
+      const name = this.name();
+      const table = this.table();
+      const viewport = this._viewport().nativeElement;
+
+      untracked(() => {
+        table.connect(name, {
+          viewport: viewport,
+          viewportHeight: computed(() => viewportDimension().clientHeight - (headerDimension()?.offsetHeight ?? 0)),
+          viewportClientHeight: computed(() => viewportClientDimension().offsetHeight),
+          headerHeight: computed(() => headerDimension()?.offsetHeight ?? 0),
+          itemHeight: computed(() => itemSizeDimension().offsetHeight),
+        });
+        onCleanup(() => table.disconnect());
+      });
     });
   }
 
-  private installScrollRangeTracker(): void {
-    const scrollRange = this.computeScrollRange();
-    effect(() => this.table().scrollRange.set(scrollRange()));
-  }
-
   /**
-   * Computes the visible row count based on the viewport size.
+   * Scrolls the viewport to the top on filter or sort criteria change.
    */
-  private computeScrollRange(): Signal<SciScrollRange> {
-    return computed(() => {
-      const viewportHeight = this._viewportDimension().clientHeight - this._headerHeight();
-      const itemSize = this._itemSizeDimension().offsetHeight;
-      const bufferSize = this.table().bufferSize();
-      const scrollTop = this._scrollTop();
-
-      const start = Math.floor(scrollTop / itemSize);
-      const viewportRowCount = Math.ceil(viewportHeight / itemSize);
-      const end = Math.min(start + viewportRowCount);
-
-      const totalCount = this.table().totalCount() ?? viewportRowCount; // fill viewport if no data loaded yet
-
-      return {
-        start: clamp(start - bufferSize, {min: 0, max: Math.max(0, totalCount - viewportRowCount)}),
-        end: clamp(end + bufferSize, {max: totalCount}),
-      };
-    }, {equal: Objects.isEqual});
-  }
-
-  /**
-   * Tracks {@link HTMLElement.scrollTop} of the viewport.
-   */
-  private computeScrollTop(): Signal<number> {
-    const zone = inject(NgZone);
-    const viewportDimension$ = toObservable(this._viewportDimension);
-    const viewportClientDimension$ = toObservable(this._viewportClientDimension);
-
-    return toSignal(toObservable(this._viewport)
-      .pipe(
-        switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll', {passive: true})
-          .pipe(
-            mergeWith(viewportDimension$),
-            mergeWith(viewportClientDimension$),
-            startWith(undefined),
-            subscribeIn(fn => zone.runOutsideAngular(fn)),
-            map(() => viewport.nativeElement.scrollTop),
-          ),
-        ),
-      ), {initialValue: 0});
-  }
-
-  private installActiveItemWatcher(): void {
+  private scrollTopOnCriteriaChange(): void {
     effect(() => {
-      const activeIndex = this.table().activeIndex();
+      // Track filter and sort criteria.
+      this.table().criteria();
+      untracked(() => this._viewport().nativeElement.scrollTo({top: 0}));
+    });
+  }
 
-      if (activeIndex < 0) {
+  private scrollActiveRowIntoViewport(): void {
+    effect(() => {
+      const activeRowIndex = this.table().activeIndex();
+      if (activeRowIndex < 0) {
         return;
       }
 
-      untracked(() => this.scrollActiveRowIntoViewport(activeIndex));
-    });
-  }
+      untracked(() => {
+        const viewport = this._viewport().nativeElement;
+        const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
+        const viewportHeight = this.table().tableViewRef()?.viewportHeight() ?? 0;
+        const activeRowTop = activeRowIndex * itemHeight;
+        const activeRowBottom = activeRowTop + itemHeight;
+        const scrollTop = viewport.scrollTop;
+        const scrollBottom = scrollTop + viewportHeight;
 
-  /**
-   * Tracks whether currently scrolling the viewport.
-   */
-  private installScrollListener(): void {
-    const zone = inject(NgZone);
-
-    toObservable(this._viewport)
-      .pipe(
-        switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll', {passive: true}).pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))),
-        switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
-        takeUntilDestroyed(),
-      )
-      .subscribe(scrolling => {
-        this.table().scrolling.set(scrolling);
+        if (activeRowTop < scrollTop) {
+          viewport.scrollTop = activeRowTop;
+        }
+        else if (activeRowBottom > scrollBottom) {
+          viewport.scrollTop = activeRowBottom - viewportHeight;
+        }
       });
-  }
-
-  private scrollActiveRowIntoViewport(activeRowIndex: number): void {
-    const viewport = this._viewport().nativeElement;
-    const itemSize = this._itemSizeDimension().offsetHeight;
-    if (!itemSize) {
-      return;
-    }
-
-    const activeRowTop = activeRowIndex * itemSize;
-    const activeRowBottom = activeRowTop + itemSize;
-    const viewportHeight = viewport.clientHeight - this._headerHeight();
-    const viewportClientTop = viewport.scrollTop;
-    const viewportClientBottom = viewportClientTop + viewportHeight;
-
-    if (activeRowTop < viewportClientTop) {
-      viewport.scrollTop = activeRowTop;
-    }
-    else if (activeRowBottom > viewportClientBottom) {
-      viewport.scrollTop = activeRowBottom - viewportHeight;
-    }
+    });
   }
 }
 
 function provideSciTable(): Provider {
   return {
     provide: ɵSCI_TABLE,
-    useFactory: () => {
-      const component = inject(SciTableComponent);
-      effect(() => component.table().connect(component));
-      return component.table;
-    },
+    useFactory: () => inject(SciTableComponent).table,
   };
 }
