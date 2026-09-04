@@ -3,7 +3,6 @@
 - Consider moving signal von table.component ins table model
 - Neue icons in icon font und integrieren (z.B. sort icons für spalten)
 - Call loader fn in injection context (separate context per call to release resources)
-- Enforce unique column name (challenge of auto-named rows)
 - Remove gridline config -> must be sets via --esci-table-gridlines CSS variable
 - Remove column max width
 - Provide writable signals for table settings (filterable, sortable) as public API, e.g., to create menu to show/hide column filters.

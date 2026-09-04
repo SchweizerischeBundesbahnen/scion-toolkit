@@ -86,6 +86,26 @@ fdescribe('Table Factory', () => {
         done();
       }));
     });
+
+    it('should not allow multiple columns with the same name', done => {
+      createSciTableComponent(() => table(signal([]), table => {
+        expect(() => table
+          .addStringColumn({name: 'column:test', value: () => ''})
+          .addStringColumn({name: 'column:test', value: () => ''}),
+        ).toThrowError('[ColumnDefinitionError] Column names have to be unique. "column:test" is defined more than once.');
+        done();
+      }));
+    });
+
+    it('should allow multiple columns with no name', done => {
+      createSciTableComponent(() => table(signal([]), table => {
+        expect(() => table
+          .addStringColumn({value: () => ''})
+          .addStringColumn('Test', () => ''),
+        ).not.toThrow();
+        done();
+      }));
+    });
   });
 
   it('should call factory in a reactive context', async () => {
