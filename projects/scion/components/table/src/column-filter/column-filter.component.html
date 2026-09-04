@@ -1,4 +1,4 @@
-<sci-icon class="filter-icon">scion.filter</sci-icon>
+<sci-icon class="filter-icon" [class.active]="query.value !== ''">scion.filter</sci-icon>
 
 @switch (column().type) {
   @case ('number') {

@@ -14,6 +14,10 @@
 
   > sci-icon.filter-icon {
     padding-inline: .25em;
+
+    &.active {
+      color: var(--sci-color-accent);
+    }
   }
 
   > input, > select {
