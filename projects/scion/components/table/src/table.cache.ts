@@ -10,8 +10,10 @@
 
 import {computed, signal, Signal} from '@angular/core';
 import {SciRow} from './table.model';
+import {Objects} from '@scion/toolkit/util';
 
 export interface TableCacheEntry<T> {
+  // TODO [egob] Consider renaming to rows
   items: Signal<SciRow<T>[] | undefined>;
   start: number;
   end: number;
@@ -75,20 +77,16 @@ export class TableCache<T> {
     return computed(() => [...this._cache().values()]);
   }
 
-  public get rowByIndex(): Signal<Map<number, SciRow<T>>> {
-    return computed(() => {
-      const rows = new Map<number, SciRow<T>>();
+  public get rowsByIndex(): Signal<Map<number, SciRow<T>>> {
+    return computed(() => this.values()
+      .flatMap(page => page.items() ?? [])
+      .reduce((acc, row) => acc.set(row.index, row), new Map<number, SciRow<T>>()), {equal: Objects.isEqual});
+  }
 
-      for (const page of this.values()) {
-        const items = page.items();
-        if (!items) {
-          continue;
-        }
-
-        items.forEach((item, index) => rows.set(page.start + index, item));
-      }
-
-      return rows;
-    });
+  public get rowsById(): Signal<Map<unknown, SciRow<T>>> {
+    return computed(() => this.values()
+      .flatMap(page => page.items() ?? [])
+      .filter(row => row.id !== undefined)
+      .reduce((acc, row) => acc.set(row.id!, row), new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
   }
 }

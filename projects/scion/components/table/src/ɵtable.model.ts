@@ -84,11 +84,11 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), globalFilter: this._globalFilter()}));
   public readonly loading = computed(() => this._cache.values().some(entry => entry.items() === undefined));
-  public readonly activeIndex = this.computeActiveIndex();
+  public readonly activeRow: Signal<SciRow<T> | undefined>;
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
-  public readonly rowsByIndex = this._cache.rowByIndex;
+  public readonly rowsByIndex = this._cache.rowsByIndex;
   public readonly rows = this.computeRows();
 
   constructor(factoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>) {
@@ -104,6 +104,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this.scrollTop = this.computeScrollTop();
     this.scrolling = this.computeScrolling();
     this.virtualScrollOffset = this.computeVirtualScrollOffset();
+    this.activeRow = this.computeActiveRow();
     this.columns = this.computeColumns(factoryFn, descriptor);
 
     this.rowActions = descriptor.rowActions;
@@ -439,19 +440,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     } as SciColumnLike<T>;
   }
 
-  private indexById(id: unknown | undefined, rowsByIndex: Map<number, SciRow<T>>): number {
-    if (id === undefined) {
-      return -1;
-    }
-
-    for (const [index, row] of rowsByIndex) {
-      if (row.id === id) {
-        return index;
-      }
-    }
-    return -1;
-  }
-
   private mapItemsToRow(items: T[], columns: SciColumnLike<T>[], pageStart: number): SciRow<T>[] {
     return items.map((item, i) => {
       return ({
@@ -507,10 +495,19 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     return this._trackBy?.(item) ?? item;
   }
 
-  private computeActiveIndex(): Signal<number> {
+  private computeActiveRow(): Signal<SciRow<T> | undefined> {
     return computed(() => {
       const activeItem = this.activeItem();
-      return activeItem ? this.indexById(this.trackBy(activeItem), this.rowsByIndex()) : -1;
+      if (activeItem === undefined) {
+        return undefined;
+      }
+
+      const id = this.trackBy(activeItem);
+      if (id === undefined) {
+        return undefined;
+      }
+
+      return this._cache.rowsById().get(id);
     });
   }
 }
