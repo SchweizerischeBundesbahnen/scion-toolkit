@@ -34,11 +34,8 @@ import {SciAttributesDirective} from '@scion/components/common';
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
     '[attr.name]': 'name()', // Public API: Enables selecting the table by name in CSS (also if the table has a dynamic name input binding)
-    // TODO [dwie] Move styles bindings to viewport component (hidden from outside)
     '[style.--ɵsci-table-scrolling]': 'table().scrolling() ? `true` : null',
     '[style.--ɵsci-table-resizing]': 'table().resizing() ? `true` : null',
-    '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${virtualScrollOffsetTop()}px`',
-    '[style.--ɵsci-table-virtual-scroll-offset-bottom]': '`${virtualScrollOffsetBottom()}px`',
   },
   imports: [
     SciScrollbarComponent,
@@ -83,20 +80,6 @@ export class SciTableComponent<T = unknown> {
   private readonly _itemSizeElement = viewChild.required<ElementRef<HTMLElement>>('item_size_element');
 
   protected readonly rows = viewChildren(TableRowComponent);
-
-  // TODO [dwie] Move to model
-  protected readonly virtualScrollOffsetTop = computed(() => {
-    const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
-    return (this.table().scrollRange()?.start ?? 0) * itemHeight;
-  });
-
-  // TODO [dwie] Move to model
-  protected readonly virtualScrollOffsetBottom = computed(() => {
-    const rangeEnd = Math.min(this.table().scrollRange()?.end ?? 0, this.table().totalCount() ?? 0);
-    const totalCount = this.table().totalCount() ?? 0;
-    const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
-    return (totalCount - rangeEnd) * itemHeight;
-  });
 
   constructor() {
     this.connectToModel();

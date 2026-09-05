@@ -10,6 +10,7 @@
 
 import {Component, inject} from '@angular/core';
 import {SciColumnService} from './column/column.service';
+import {ɵSCI_TABLE} from './ɵtable.model';
 
 /**
  * Represents a semantic element for the table body provided as slotted content.
@@ -22,9 +23,12 @@ import {SciColumnService} from './column/column.service';
   ],
   host: {
     '[style.--ɵsci-table-columns]': 'gridTemplateColumns()',
+    '[style.--ɵsci-table-virtual-scroll-offset-top]': '`${table().virtualScrollOffset().top}px`',
+    '[style.--ɵsci-table-virtual-scroll-offset-bottom]': '`${table().virtualScrollOffset().bottom}px`',
   },
 })
 export class SciTableGridComponent {
 
+  protected readonly table = inject(ɵSCI_TABLE);
   protected readonly gridTemplateColumns = inject(SciColumnService).gridTemplateColumns;
 }

@@ -13,7 +13,6 @@
 - Change default row-height to 2em.
 - Neue icons von Jonas integrieren
 - Align 'no_items' horizontal in mitte von viewport
-- Move offset host binding styles from sci-table to sci-table-grid
 - Test dass Tabelle in Workbench Microfrontend funktioniert
 - Test dass Tabelle mit RemoteDataFetcher funktioniert (Zusammenspiel)
 
