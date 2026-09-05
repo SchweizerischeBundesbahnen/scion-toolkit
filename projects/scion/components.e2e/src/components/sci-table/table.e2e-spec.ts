@@ -807,11 +807,13 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setCssVariable('--sci-table-row-background-color-hover', 'rgb(0, 0, 255)');
-      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:name', type: 'string', minWidth: 100, width: '100px'});
       const rowBounds = await table.row({nth: 3}).bounds();
 
+      // Try to shrink the column below its minimum width. Splitter stays at its original position.
       const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
-      await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter})
+      await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter});
+      await page.waitForTimeout(250);
       await expect(table.row({nth: 3}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
 
       await dragHandle.release();
