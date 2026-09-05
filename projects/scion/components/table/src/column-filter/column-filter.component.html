@@ -1,6 +1,6 @@
-@let empty = filter() === null || filter() === '';
+@let active = filter() !== null && filter() !== '';
 
-<sci-icon class="filter-icon" [class.active]="!empty">scion.filter</sci-icon>
+<sci-icon class="filter-icon" [class.active]="active">scion.filter</sci-icon>
 
 @switch (column().type) {
   @case ('number') {
@@ -17,7 +17,7 @@
     <input [(ngModel)]="filter" type="text" />
   }
 }
-@if (!empty && column().type !== 'boolean') {
+@if (active && column().type !== 'boolean') {
   <button class="clear e2e-clear" (click)="reset()">
     <sci-icon>scion.clear</sci-icon>
   </button>
