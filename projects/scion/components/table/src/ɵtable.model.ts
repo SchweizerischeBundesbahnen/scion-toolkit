@@ -48,17 +48,19 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly sortable: Signal<boolean>;
   public readonly resizable: Signal<boolean>;
   public readonly selectable: Signal<'single' | 'multi' | false>;
+
+  public readonly scrollRange: Signal<SciScrollRange | undefined>;
   public readonly scrollTop: Signal<number>;
+  public readonly virtualScrollOffset: Signal<{top: number; bottom: number}>;
 
   public readonly scrolling: Signal<boolean>;
   public readonly resizing = computed(() => this.columns().some(column => column.resizing()));
   public readonly sortCriteria = signal<SciSortCriterion[]>([]);
   public readonly filterCriteria = signal<SciColumnFilter[]>([]);
-  public readonly scrollRange: Signal<SciScrollRange | undefined>;
 
+  private readonly _cache = new TableCache<T>();
   private readonly _globalFilter = signal<string | null>(null);
   private readonly _selectedItems = signal(new Map<unknown, T>());
-  private readonly _cache = new TableCache<T>();
 
   // Reset totalCount on criteria change, to show skeletons instead of stale data while loading.
   // TODO [egob] Is it necessary to reset totalCount? Shouldn't it only be set by the loader? Race conditions possible?
@@ -101,6 +103,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this.scrollRange = this.computeScrollRange();
     this.scrollTop = this.computeScrollTop();
     this.scrolling = this.computeScrolling();
+    this.virtualScrollOffset = this.computeVirtualScrollOffset();
     this.columns = this.computeColumns(factoryFn, descriptor);
 
     this.rowActions = descriptor.rowActions;
@@ -179,6 +182,19 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       return {
         start: clamp(start - bufferSize, {min: 0, max: Math.max(0, totalCount - viewportRowCount)}),
         end: clamp(end + bufferSize, {max: totalCount}),
+      };
+    }, {equal: Objects.isEqual});
+  }
+
+  private computeVirtualScrollOffset(): Signal<{top: number; bottom: number}> {
+    return computed(() => {
+      const itemHeight = this.tableViewRef()?.itemHeight() ?? 0;
+      const totalCount = this.totalCount() ?? 0;
+      const rangeEnd = Math.min(this.scrollRange()?.end ?? 0, this.totalCount() ?? 0);
+
+      return {
+        top: (this.scrollRange()?.start ?? 0) * itemHeight,
+        bottom: (totalCount - rangeEnd) * itemHeight,
       };
     }, {equal: Objects.isEqual});
   }
