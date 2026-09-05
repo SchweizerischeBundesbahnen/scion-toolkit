@@ -1,6 +1,6 @@
 import {Locator} from '@playwright/test';
 import {CellPO} from './cell.po';
-import {DomRect, fromRect} from '../../helper/testing.utils';
+import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
 import {RequireOne} from '@scion/toolkit/types';
 import {selectByColumn} from './column.po';
 
@@ -29,7 +29,7 @@ export class RowPO {
   }
 
   public async bounds(): Promise<DomRect> {
-    return fromRect(await this.locator.boundingBox());
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
 
   public async rowActionsBounds(): Promise<DomRect> {
