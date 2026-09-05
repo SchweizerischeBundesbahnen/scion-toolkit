@@ -128,6 +128,33 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this.tableViewRef.set(undefined);
   }
 
+  private computeColumns(tableFactoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>): Signal<SciColumnLike<T>[]> {
+    // TODO [dwie] Create separate injection context for each separate run (to dispose resources allocated in the reactive context)
+    return computed(() => runInInjectionContext(this._injector, () => {
+      const tableFactory = new ɵSciTableFactory<T>(descriptor);
+      tableFactoryFn(tableFactory);
+      return untracked(() => tableFactory.columns.map((column, index) => this.initColumn(column.type, column, index)));
+    }));
+  }
+
+  /**
+   * Computes the rows currently visible in the viewport (+buffer).
+   */
+  private computeRows(): Signal<SciRow<T>[]> {
+    return computed(() => {
+      const scrollRange = this.scrollRange();
+      if (!scrollRange) {
+        return [];
+      }
+
+      const rowsByIndex = this.rowsByIndex();
+      const rowCount = scrollRange.end - scrollRange.start;
+
+      // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
+      return untracked(() => Array.from({length: rowCount}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {index: i}));
+    });
+  }
+
   /**
    * Computes the visible row count based on the viewport size.
    */
@@ -190,15 +217,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           subscribeIn(fn => zone.runOutsideAngular(fn)),
         ),
     }).value;
-  }
-
-  private computeColumns(tableFactoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>): Signal<SciColumnLike<T>[]> {
-    // TODO [dwie] Create separate injection context for each separate run (to dispose resources allocated in the reactive context)
-    return computed(() => runInInjectionContext(this._injector, () => {
-      const tableFactory = new ɵSciTableFactory<T>(descriptor);
-      tableFactoryFn(tableFactory);
-      return untracked(() => tableFactory.columns.map((column, index) => this.initColumn(column.type, column, index)));
-    }));
   }
 
   /**
@@ -471,24 +489,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
    */
   public trackBy(item: T): unknown {
     return this._trackBy?.(item) ?? item;
-  }
-
-  /**
-   * Computes the rows currently visible in the viewport (+buffer).
-   */
-  private computeRows(): Signal<SciRow<T>[]> {
-    return computed(() => {
-      const scrollRange = this.scrollRange();
-      if (!scrollRange) {
-        return [];
-      }
-
-      const rowsByIndex = this.rowsByIndex();
-      const rowCount = scrollRange.end - scrollRange.start;
-
-      // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
-      return untracked(() => Array.from({length: rowCount}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {index: i}));
-    });
   }
 
   private computeActiveIndex(): Signal<number> {
