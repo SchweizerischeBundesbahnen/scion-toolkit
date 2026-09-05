@@ -135,7 +135,7 @@ test.describe.only('sci-table', () => {
       await table3.column({name: 'column:name'}).sort();
       await expect.poll(() => table1.column({name: 'column:name'}).sortDirection()).toEqual('asc');
       await expect.poll(() => table2.column({name: 'column:name'}).sortDirection()).toBeNull();
-      await expect.poll(() => table3.column({name: 'column:name'}).sortDirection()).toEqual('asc')
+      await expect.poll(() => table3.column({name: 'column:name'}).sortDirection()).toEqual('asc');
       await expect.poll(() => table4.column({name: 'column:name'}).sortDirection()).toBeNull();
     });
   });
@@ -561,7 +561,7 @@ test.describe.only('sci-table', () => {
       await expect(table.column({name: 'column:4'}).splitter.locator).toBeAttached();
 
       // Verify splitters to be at correct position.
-      const tableLeft = await table.bounds().then(bounds => bounds!.x) - 1; // -1 because splitters are positioned at the end of cell content
+      const tableLeft = await table.bounds().then(bounds => bounds.x) - 1; // -1 because splitters are positioned at the end of cell content
       expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100);
       expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300);
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400);
@@ -1002,11 +1002,11 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'number'});
 
-      await table.column({name: 'column:1'}).sort()
-      await table.column({name: 'column:2'}).sort({modifiers: ['ControlOrMeta']})
+      await table.column({name: 'column:1'}).sort();
+      await table.column({name: 'column:2'}).sort({modifiers: ['ControlOrMeta']});
 
-      await expect.poll(() => table.column({name: 'column:1'}).sortDirection()).toEqual('asc')
-      await expect.poll(() => table.column({name: 'column:2'}).sortDirection()).toEqual('asc')
+      await expect.poll(() => table.column({name: 'column:1'}).sortDirection()).toEqual('asc');
+      await expect.poll(() => table.column({name: 'column:2'}).sortDirection()).toEqual('asc');
     });
 
     test('should retain filter after sorting', async ({page}) => {
@@ -1513,7 +1513,7 @@ test.describe.only('sci-table', () => {
       const rowBounds = await table.row({nth: 3}).bounds();
 
       const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
-      await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter})
+      await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter});
       await expect(table.row({nth: 3}).rowActions).not.toBeAttached();
 
       await dragHandle.release();
@@ -1948,7 +1948,7 @@ test.describe.only('sci-table', () => {
       await tablePage.setRowCount(1);
       await tablePage.setWidth(500);
 
-      await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.bounds().then(bounds => bounds.width)).toEqual(500);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
@@ -1957,7 +1957,7 @@ test.describe.only('sci-table', () => {
       // Change width.
       await tablePage.setWidth(800);
 
-      await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.bounds().then(bounds => bounds.width)).toEqual(800);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
@@ -1974,7 +1974,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.bounds().then(bounds => bounds.width)).toEqual(500);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
@@ -1984,7 +1984,7 @@ test.describe.only('sci-table', () => {
       // Change width.
       await tablePage.setWidth(800);
 
-      await expect.poll(() => table.bounds().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.bounds().then(bounds => bounds.width)).toEqual(800);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
@@ -2003,7 +2003,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.showHeader(false);
 
-      await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600);
@@ -2011,25 +2011,23 @@ test.describe.only('sci-table', () => {
 
       await test.step('Show column labels', async () => {
         await tablePage.showHeader(true);
-        const headerHeight = await table.header.height();
 
-        await expect(headerHeight).toBeGreaterThan(0);
-        await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.header.height()).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
         await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
         await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
-        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - headerHeight);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - await table.header.height());
         await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
       });
 
       await test.step('Show column filters', async () => {
         await tablePage.setFilterable(true);
-        const headerHeight = await table.header.height();
 
-        await expect(headerHeight).toBeGreaterThan(0);
-        await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.header.height()).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
         await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
         await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
-        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - headerHeight);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - await table.header.height());
         await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
       });
     });
@@ -2046,7 +2044,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.showHeader(false);
 
-      await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
       await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
       await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
       await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600);
@@ -2054,25 +2052,23 @@ test.describe.only('sci-table', () => {
 
       await test.step('Show column labels', async () => {
         await tablePage.showHeader(true);
-        const headerHeight = await table.header.height();
 
-        await expect(headerHeight).toBeGreaterThan(0);
-        await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.header.height()).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
         await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
         await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
-        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - headerHeight);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - await table.header.height());
         await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
       });
 
       await test.step('Show column filters', async () => {
         await tablePage.setFilterable(true);
-        const headerHeight = await table.header.height();
 
-        await expect(headerHeight).toBeGreaterThan(0);
-        await expect.poll(() => table.bounds().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.header.height()).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
         await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
         await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
-        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - headerHeight);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - await table.header.height());
         await expect.poll(() => table.splitters.boundingBox().then(bounds => bounds!.height)).toEqual(600);
       });
     });

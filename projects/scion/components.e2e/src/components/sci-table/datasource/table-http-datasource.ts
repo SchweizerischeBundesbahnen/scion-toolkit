@@ -26,7 +26,7 @@ export async function provideHttpDatasource(page: Page, productLike: Partial<Pro
       return route.fulfill({json: products});
     }
     else {
-      const tableRequest: SciTableRequest = request.postDataJSON();
+      const tableRequest = request.postDataJSON() as SciTableRequest;
       return route.fulfill({
         json: {
           items: products.slice(tableRequest.start, tableRequest.end),
@@ -39,7 +39,7 @@ export async function provideHttpDatasource(page: Page, productLike: Partial<Pro
 
   // Select HTTP datasource.
   const tablePage = new TablePagePO(page);
-  await tablePage.setDatasource(datasource)
+  await tablePage.setDatasource(datasource);
 
   // Wait for products to be rendered.
   const table = new TablePO(tablePage.table);

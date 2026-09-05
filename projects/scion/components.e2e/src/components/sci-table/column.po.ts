@@ -59,8 +59,7 @@ export function selectByColumn(selectBy: RequireOne<{name: `column:${string}`; i
   if (selectBy.name !== undefined) {
     return `:scope[data-column="${selectBy.name}"]`;
   }
-  if (selectBy.index !== undefined) {
+  else {
     return `:scope:nth-child(${selectBy.index + 1})`;
   }
-  return ':scope';
 }

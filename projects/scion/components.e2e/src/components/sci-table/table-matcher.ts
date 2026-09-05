@@ -48,7 +48,7 @@ export function expectTable(table: TablePO): TableMatcher {
             }).toPass();
           },
         },
-      }
+      };
     },
     async toHaveVerticalOverflow(): Promise<void> {
       await expect(table.locator.locator('sci-scrollbar[direction="vscroll"].overflow')).toBeAttached();
@@ -89,7 +89,7 @@ export interface ColumnMatcher {
 
   cells: {
     toContainText(text: string): Promise<void>;
-  }
+  };
 }
 
 export interface TableMatcher {
