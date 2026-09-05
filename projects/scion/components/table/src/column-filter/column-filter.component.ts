@@ -8,13 +8,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, debounced, inject, input, signal} from '@angular/core';
-import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {Component, debounced, effect, inject, input, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SciColumnLike} from '../table.model';
-import {combineLatestWith} from 'rxjs';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciIconComponent} from '@scion/components/icon';
+import {firstValueFrom, timer} from 'rxjs';
 
 @Component({
   selector: 'sci-column-filter',
@@ -27,30 +26,34 @@ export class ColumnFilterComponent<T> {
   public readonly column = input.required<SciColumnLike<T>>();
 
   protected readonly filter = signal<string | boolean | number | null>(null);
+
   private readonly _table = inject(ɵSCI_TABLE);
 
   constructor() {
-    toObservable(debounced(this.filter, 200).value).pipe(
-      combineLatestWith(toObservable(this._table), toObservable(computed(() => this.column().name)), toObservable(computed(() => this.column().type))),
-      takeUntilDestroyed(),
-    ).subscribe(([value, table, columnName, type]) => {
-      const text = typeof value === 'string' ? value.trim() : value;
+    this.bindToModel();
+  }
+
+  private bindToModel(): void {
+    const filterDebounced = debounced(this.filter, async value => {
+      // Debounce only if not empty.
+      if (value !== null && value !== '') {
+        await firstValueFrom(timer(200));
+      }
+    });
+
+    effect(() => {
+      const text = trim(filterDebounced.value());
+      const table = this._table();
+      const column = this.column();
 
       if (text === '' || text === null) {
-        table.filter(null, {columnName});
-        return;
+        table.filter(null, {columnName: column.name});
       }
-
-      switch (type) {
-        case 'boolean':
-          table.filter(text === 'true', {columnName});
-          break;
-        case 'number':
-          table.filter(+text, {columnName});
-          break;
-        default:
-          table.filter(text, {columnName});
-          break;
+      else if (column.type === 'boolean') {
+        table.filter(text === 'true', {columnName: column.name});
+      }
+      else {
+        table.filter(text, {columnName: column.name});
       }
     });
   }
@@ -58,4 +61,8 @@ export class ColumnFilterComponent<T> {
   protected reset(): void {
     this.filter.set(null);
   }
+}
+
+function trim(value: string | number | boolean | null): string | number | boolean | null {
+  return typeof value === 'string' ? value.trim() : value;
 }
