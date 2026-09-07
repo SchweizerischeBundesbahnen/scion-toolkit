@@ -20,12 +20,7 @@ import {DecimalPipe} from '@angular/common';
 })
 export default class TriebfahrzeugTableComponent {
 
-  private filterable = signal(false);
-  private sortable = signal(true);
-  private resizable = signal(true);
-  private showHeader = signal(true);
   private zebraStyle = signal(false);
-  private selectable = signal<'single' | 'multi' | false>('multi');
   protected showGridlines = signal(false);
 
   public table = this.defineTriebfahrzeugTable();
@@ -37,11 +32,11 @@ export default class TriebfahrzeugTableComponent {
   private defineTriebfahrzeugTable(): SciTable<Triebfahrzeug> {
     return table({
       data: httpResource<Triebfahrzeug[]>(() => '/schweiz_triebfahrzeuge_10k.json', {defaultValue: []}).value,
-      filterable: this.filterable,
-      sortable: this.sortable,
-      headerVisible: this.showHeader,
-      resizable: this.resizable,
-      selectable: this.selectable,
+      filterable: false,
+      sortable: true,
+      headerVisible: true,
+      resizable: true,
+      selectable: false,
       rowBindings: [
         partBinding((_item, index) => this.zebraStyle() ? (index % 2 === 0 ? 'row:even' : 'row:odd') : undefined),
       ],
@@ -74,19 +69,19 @@ export default class TriebfahrzeugTableComponent {
   private contributeSettingsMenu(): void {
     contributeMenu('menu:toolbar.main', toolbar => toolbar
       .addGroup(group => group
-        .addMenuItem({label: 'Filterable', checked: this.filterable, onSelect: () => this.filterable.update(enabled => !enabled)})
-        .addMenuItem({label: 'Sortable', checked: this.sortable, onSelect: () => this.sortable.update(enabled => !enabled)})
-        .addMenuItem({label: 'Resizable', checked: this.resizable, onSelect: () => this.resizable.update(enabled => !enabled)}),
+        .addMenuItem({label: 'Filterable', checked: this.table.filterable, onSelect: () => this.table.filterable.update(enabled => !enabled)})
+        .addMenuItem({label: 'Sortable', checked: this.table.sortable, onSelect: () => this.table.sortable.update(enabled => !enabled)})
+        .addMenuItem({label: 'Resizable', checked: this.table.resizable, onSelect: () => this.table.resizable.update(enabled => !enabled)}),
       )
       .addGroup(group => group
-        .addMenuItem({label: 'Show Header', checked: this.showHeader, onSelect: () => this.showHeader.update(enabled => !enabled)})
+        .addMenuItem({label: 'Show Header', checked: this.table.headerVisible, onSelect: () => this.table.headerVisible.update(enabled => !enabled)})
         .addMenuItem({label: 'Show Gridlines', checked: this.showGridlines, onSelect: () => this.showGridlines.update(enabled => !enabled)})
         .addMenuItem({label: 'Zebra Style', checked: this.zebraStyle, onSelect: () => this.zebraStyle.update(enabled => !enabled)})
         .addGroup(group => group
           .addMenu({icon: 'checklist', label: 'Selection'}, menu => menu
-            .addMenuItem({label: 'Single', checked: computed(() => this.selectable() === 'single'), onSelect: () => close(() => this.selectable.set('single'))})
-            .addMenuItem({label: 'Multi', checked: computed(() => this.selectable() === 'multi'), onSelect: () => close(() => this.selectable.set('multi'))})
-            .addMenuItem({label: 'None', checked: computed(() => this.selectable() === false), onSelect: () => close(() => this.selectable.set(false))}),
+            .addMenuItem({label: 'Single', checked: computed(() => this.table.selectable() === 'single'), onSelect: () => close(() => this.table.selectable.set('single'))})
+            .addMenuItem({label: 'Multi', checked: computed(() => this.table.selectable() === 'multi'), onSelect: () => close(() => this.table.selectable.set('multi'))})
+            .addMenuItem({label: 'None', checked: computed(() => this.table.selectable() === false), onSelect: () => close(() => this.table.selectable.set(false))}),
           ),
         ),
       ),

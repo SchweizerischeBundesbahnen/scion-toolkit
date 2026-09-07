@@ -11,7 +11,6 @@ import {Component, computed, inject, Injector, signal} from '@angular/core';
 import {SciTableComponent, SciTableDescriptor, table} from '@scion/components/table';
 import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
-import {form, FormField} from '@angular/forms/signals';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 
@@ -27,30 +26,19 @@ const data = signal(new Array(100_000).fill(0).map((_, i) => ({
   imports: [
     SciTableComponent,
     FormsModule,
-    FormField,
     SciFilterFieldComponent,
   ],
 })
 export default class SciTablePageComponent {
   protected injector = inject(Injector);
 
-  protected settings = signal({
-    filterable: true,
-    sortable: true,
-    resizable: true,
-    showHeader: true,
-    selectable: 'multi',
-  });
-  protected form = form(this.settings);
-
   protected filter = signal<string | undefined>(undefined);
+  protected readonly selectable = computed(() => {
+    const selectable = this.table.selectable();
+    return selectable === false ? 'false' : selectable;
+  });
 
   protected tableConfig: Omit<SciTableDescriptor<Company>, 'data'> = {
-    headerVisible: computed(() => this.settings().showHeader),
-    sortable: computed(() => this.settings().sortable),
-    filterable: computed(() => this.settings().filterable),
-    resizable: computed(() => this.settings().resizable),
-    selectable: computed(() => this.settings().selectable === 'disabled' ? false : this.settings().selectable as 'single' | 'multi'),
     trackBy: company => company.dataId,
     rowActions: (company, toolbar) => {
       toolbar.addToolbarButton({
@@ -110,4 +98,8 @@ export default class SciTablePageComponent {
         value: company => company.name,
       });
   });
+
+  protected updateSelectable(selectable: 'multi' | 'single' | 'false'): void {
+    this.table.selectable.set(selectable === 'false' ? false : selectable);
+  }
 }

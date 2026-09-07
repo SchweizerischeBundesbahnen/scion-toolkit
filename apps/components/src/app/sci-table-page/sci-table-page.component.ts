@@ -51,6 +51,10 @@ export default class SciTablePageComponent {
 
   protected readonly table = this.computeTable();
   protected readonly rowCount = inject(CompanyService).companyCount;
+  protected readonly selectable = computed(() => {
+    const selectable = this.table()?.selectable();
+    return selectable === false ? 'false' : selectable;
+  });
 
   private createTable(options: {slowDataSource: boolean}): SciTable<Company> {
     const companyService = inject(CompanyService);
@@ -58,11 +62,6 @@ export default class SciTablePageComponent {
     const tabbar = this._tabbar;
 
     return table({
-      headerVisible: computed(() => this.settingsForm.showHeader().value()),
-      gridlinesVisible: computed(() => this.settingsForm.showGridlines().value()),
-      sortable: computed(() => this.settingsForm.sortable().value()),
-      filterable: computed(() => this.settingsForm.filterable().value()),
-      resizable: computed(() => this.settingsForm.resizable().value()),
       rowBindings: [
         partBinding((_item, index) => {
           if (this.settingsForm.showZebraStriping().value()) {
@@ -71,10 +70,6 @@ export default class SciTablePageComponent {
           return undefined;
         }),
       ],
-      selectable: computed(() => {
-        const selectable = this.settingsForm.selectable().value();
-        return selectable === 'false' ? false : selectable;
-      }),
       trackBy: company => company.id,
       data: options.slowDataSource ? request => companyService.getCompanies$(request, {slowDataSource: true}) : companyService.companies,
       rowActions: createRowActions(),
@@ -227,14 +222,9 @@ export default class SciTablePageComponent {
 
   private createSettingsForm(): FieldTree<SettingsForm> {
     const defaults: SettingsForm = {
-      filterable: false,
-      sortable: true,
-      resizable: true,
-      showHeader: true,
       showGridlines: false,
       showZebraStriping: false,
       slowDataSource: false,
-      selectable: 'multi',
       visibleColumns: {
         id: true,
         code: true,
@@ -289,6 +279,10 @@ export default class SciTablePageComponent {
     sessionStorage.removeItem('scion.components.table:companies');
     void this._router.navigate(['/']).then(() => this._router.navigate(['/sci-table']));
   }
+
+  protected updateSelectable(selectable: 'multi' | 'single' | 'false'): void {
+    this.table()?.selectable.set(selectable === 'false' ? false : selectable);
+  }
 }
 
 @Component({
@@ -302,14 +296,9 @@ class DateCellComponent {
 }
 
 interface SettingsForm {
-  filterable: boolean;
-  sortable: boolean;
-  resizable: boolean;
-  showHeader: boolean;
   showGridlines: boolean;
   showZebraStriping: boolean;
   slowDataSource: boolean;
-  selectable: 'false' | 'single' | 'multi';
   visibleColumns: {
     id: boolean;
     code: boolean;

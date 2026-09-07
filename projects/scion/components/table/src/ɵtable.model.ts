@@ -41,13 +41,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
   public readonly tableViewRef = signal<SciTableViewRef | undefined>(undefined);
   public readonly userSettings: WritableSignal<SciTableUserSettings>;
-  public readonly bufferSize: Signal<number>;
-  public readonly pageSize: Signal<number>;
-  public readonly filterable: Signal<boolean>;
-  public readonly headerVisible: Signal<boolean>;
-  public readonly sortable: Signal<boolean>;
-  public readonly resizable: Signal<boolean>;
-  public readonly selectable: Signal<'single' | 'multi' | false>;
+  public readonly bufferSize: number;
+  public readonly pageSize: number;
+  public readonly filterable: WritableSignal<boolean>;
+  public readonly headerVisible: WritableSignal<boolean>;
+  public readonly sortable: WritableSignal<boolean>;
+  public readonly resizable: WritableSignal<boolean>;
+  public readonly selectable: WritableSignal<'single' | 'multi' | false>;
 
   public readonly scrollRange: Signal<SciScrollRange | undefined>;
   public readonly scrollTop: Signal<number>;
@@ -92,13 +92,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly rows = this.computeRows();
 
   constructor(factoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>) {
-    this.bufferSize = coerceSignal(descriptor.bufferSize ?? 10);
-    this.pageSize = coerceSignal(descriptor.pageSize ?? 50);
-    this.sortable = coerceSignal(descriptor.sortable ?? true);
-    this.filterable = coerceSignal(descriptor.filterable ?? false);
-    this.headerVisible = coerceSignal(descriptor.headerVisible ?? true);
-    this.resizable = coerceSignal(descriptor.resizable ?? true);
-    this.selectable = coerceSignal(descriptor.selectable ?? 'multi');
+    this.bufferSize = descriptor.bufferSize ?? 10;
+    this.pageSize = descriptor.pageSize ?? 50;
+    this.sortable = signal(descriptor.sortable ?? true);
+    this.filterable = signal(descriptor.filterable ?? false);
+    this.headerVisible = signal(descriptor.headerVisible ?? true);
+    this.resizable = signal(descriptor.resizable ?? true);
+    this.selectable = signal(descriptor.selectable ?? 'multi');
     this.userSettings = this.computeUserSettings();
     this.scrollRange = this.computeScrollRange();
     this.scrollTop = this.computeScrollTop();
@@ -171,7 +171,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
       const viewportHeight = tableViewRef.viewportHeight();
       const itemHeight = tableViewRef.itemHeight();
-      const bufferSize = this.bufferSize();
       const scrollTop = this.scrollTop();
 
       const start = Math.floor(scrollTop / itemHeight);
@@ -181,8 +180,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       const totalCount = this.totalCount() ?? viewportRowCount; // fill viewport if no data loaded yet
 
       return {
-        start: clamp(start - bufferSize, {min: 0, max: Math.max(0, totalCount - viewportRowCount)}),
-        end: clamp(end + bufferSize, {max: totalCount}),
+        start: clamp(start - this.bufferSize, {min: 0, max: Math.max(0, totalCount - viewportRowCount)}),
+        end: clamp(end + this.bufferSize, {max: totalCount}),
       };
     }, {equal: Objects.isEqual});
   }
@@ -240,14 +239,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
    * Loads a range of rows, based on the current sort and filter criteria, into the cache.
    */
   public loadRange(start: number, end: number): Promise<void[]> {
-    const pageSize = this.pageSize();
     const sortCriteria = this.sortCriteria();
     const columnFilters = this.filterCriteria();
     const globalFilter = this._globalFilter() ?? undefined;
 
-    const pages = pagesByRange(start, end, pageSize);
+    const pages = pagesByRange(start, end, this.pageSize);
     const requests = pages.map(page => {
-      const response = this.loadPage({page, pageSize, columnFilters, globalFilter: globalFilter, sortCriteria});
+      const response = this.loadPage({page, pageSize: this.pageSize, columnFilters, globalFilter: globalFilter, sortCriteria});
       // Wait for the page to be loaded.
       return new Promise<void>(resolve => {
         const effectRef = effect(() => {
@@ -379,7 +377,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   private installPageLoader(): void {
     effect(onCleanup => {
       const scrollRange = this.scrollRange();
-      const pageSize = this.pageSize();
       const sortCriteria = this.sortCriteria();
       const columnFilters = this.filterCriteria();
       const globalFilter = this._globalFilter() ?? undefined;
@@ -388,9 +385,9 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         return;
       }
 
-      untracked(() => pagesByRange(scrollRange.start, scrollRange.end, pageSize).forEach(page => {
+      untracked(() => pagesByRange(scrollRange.start, scrollRange.end, this.pageSize).forEach(page => {
         this.loadPage({
-          pageSize,
+          pageSize: this.pageSize,
           page,
           sortCriteria,
           globalFilter,
