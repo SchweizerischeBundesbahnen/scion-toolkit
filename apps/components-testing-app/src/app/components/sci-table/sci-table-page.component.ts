@@ -64,17 +64,20 @@ export default class SciTablePageComponent {
   protected readonly rowCount = inject(ProductService).productCount;
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
 
-  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean}): SciTable<Product> {
+  constructor() {
+    this.bindTableSettings();
+  }
+
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
     return table({
-      headerVisible: computed(() => this.settingsForm.showHeader().value()),
-      gridlinesVisible: computed(() => this.settingsForm.showGridlines().value()),
-      sortable: computed(() => this.settingsForm.sortable().value()),
-      filterable: computed(() => this.settingsForm.filterable().value()),
-      resizable: computed(() => this.settingsForm.resizable().value()),
-      selectable: computed(() => {
+      headerVisible: this.settingsForm.showHeader().value(),
+      sortable: this.settingsForm.sortable().value(),
+      filterable: this.settingsForm.filterable().value(),
+      resizable: this.settingsForm.resizable().value(),
+      selectable: (() => {
         const selectable = this.settingsForm.selectable().value();
         return selectable === 'false' ? false : selectable;
-      }),
+      })(),
       data: (() => {
         switch (options.datasource) {
           case 'array':
@@ -105,8 +108,8 @@ export default class SciTablePageComponent {
           }),
         ) : undefined,
       trackBy: product => product.id,
-      bufferSize: computed(() => this.datasourceForm.bufferSize().value()),
-      pageSize: computed(() => this.datasourceForm.pageSize().value()),
+      bufferSize: options.bufferSize,
+      pageSize: options.pageSize,
     }, table => this.columns().forEach(columnForm => {
       if (!columnForm.visible()) {
         return;
@@ -169,11 +172,13 @@ export default class SciTablePageComponent {
       const datasource = this.datasourceForm.datasource().value();
       const showRowActions = this.settingsForm.showRowActions().value();
       const customRowStyling = this.settingsForm.customRowStyling().value();
+      const bufferSize = this.datasourceForm.bufferSize().value();
+      const pageSize = this.datasourceForm.pageSize().value();
 
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, customRowStyling}))));
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, customRowStyling, bufferSize, pageSize}))));
       });
     });
 
@@ -238,6 +243,20 @@ export default class SciTablePageComponent {
       pageSize: 50,
     };
     return form(signal(defaults));
+  }
+
+  private bindTableSettings(): void {
+    effect(() => {
+      this.tables().forEach(table => {
+        table.headerVisible.set(this.settingsForm.showHeader().value());
+        table.sortable.set(this.settingsForm.sortable().value());
+        table.filterable.set(this.settingsForm.filterable().value());
+        table.resizable.set(this.settingsForm.resizable().value());
+
+        const selectable = this.settingsForm.selectable().value();
+        table.selectable.set(selectable === 'false' ? false : selectable);
+      });
+    });
   }
 }
 

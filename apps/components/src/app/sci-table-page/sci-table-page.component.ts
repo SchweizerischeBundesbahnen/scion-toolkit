@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
+import {Component, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
 import {partBinding, SciRowActionFactoryFn, SciTable, SciTableComponent, SciTableFactory, table} from '@scion/components/table';
 import {Company, CompanyService} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
@@ -52,17 +52,20 @@ export default class SciTablePageComponent {
   protected readonly table = this.computeTable();
   protected readonly rowCount = inject(CompanyService).companyCount;
 
+  constructor() {
+    this.bindTableSettings();
+  }
+
   private createTable(options: {slowDataSource: boolean}): SciTable<Company> {
     const companyService = inject(CompanyService);
     const companyForm = this.companyForm;
     const tabbar = this._tabbar;
 
     return table({
-      headerVisible: computed(() => this.settingsForm.showHeader().value()),
-      gridlinesVisible: computed(() => this.settingsForm.showGridlines().value()),
-      sortable: computed(() => this.settingsForm.sortable().value()),
-      filterable: computed(() => this.settingsForm.filterable().value()),
-      resizable: computed(() => this.settingsForm.resizable().value()),
+      headerVisible: this.settingsForm.showHeader().value(),
+      sortable: this.settingsForm.sortable().value(),
+      filterable: this.settingsForm.filterable().value(),
+      resizable: this.settingsForm.resizable().value(),
       rowBindings: [
         partBinding((_item, index) => {
           if (this.settingsForm.showZebraStriping().value()) {
@@ -71,10 +74,10 @@ export default class SciTablePageComponent {
           return undefined;
         }),
       ],
-      selectable: computed(() => {
+      selectable: (() => {
         const selectable = this.settingsForm.selectable().value();
         return selectable === 'false' ? false : selectable;
-      }),
+      })(),
       trackBy: company => company.id,
       data: options.slowDataSource ? request => companyService.getCompanies$(request, {slowDataSource: true}) : companyService.companies,
       rowActions: createRowActions(),
@@ -277,6 +280,23 @@ export default class SciTablePageComponent {
           this._tabbar().activateTab('settings');
         },
       },
+    });
+  }
+
+  private bindTableSettings(): void {
+    effect(() => {
+      const table = this.table();
+      if (!table) {
+        return;
+      }
+
+      table.headerVisible.set(this.settingsForm.showHeader().value());
+      table.sortable.set(this.settingsForm.sortable().value());
+      table.filterable.set(this.settingsForm.filterable().value());
+      table.resizable.set(this.settingsForm.resizable().value());
+
+      const selectable = this.settingsForm.selectable().value();
+      table.selectable.set(selectable === 'false' ? false : selectable);
     });
   }
 

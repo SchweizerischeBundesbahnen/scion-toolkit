@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, inject, Injector, signal} from '@angular/core';
+import {Component, effect, inject, Injector, signal} from '@angular/core';
 import {SciTableComponent, SciTableDescriptor, table} from '@scion/components/table';
 import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
@@ -39,18 +39,22 @@ export default class SciTablePageComponent {
     sortable: true,
     resizable: true,
     showHeader: true,
-    selectable: 'multi',
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    selectable: 'multi' as 'multi' | 'single' | 'false',
   });
   protected form = form(this.settings);
 
   protected filter = signal<string | undefined>(undefined);
 
   protected tableConfig: Omit<SciTableDescriptor<Company>, 'data'> = {
-    headerVisible: computed(() => this.settings().showHeader),
-    sortable: computed(() => this.settings().sortable),
-    filterable: computed(() => this.settings().filterable),
-    resizable: computed(() => this.settings().resizable),
-    selectable: computed(() => this.settings().selectable === 'disabled' ? false : this.settings().selectable as 'single' | 'multi'),
+    headerVisible: this.settings().showHeader,
+    sortable: this.settings().sortable,
+    filterable: this.settings().filterable,
+    resizable: this.settings().resizable,
+    selectable: (() => {
+      const selectable = this.settings().selectable;
+      return selectable === 'false' ? false : selectable;
+    })(),
     trackBy: company => company.dataId,
     rowActions: (company, toolbar) => {
       toolbar.addToolbarButton({
@@ -110,4 +114,18 @@ export default class SciTablePageComponent {
         value: company => company.name,
       });
   });
+
+  constructor() {
+    this.bindTableSettings();
+  }
+
+  private bindTableSettings(): void {
+    effect(() => {
+      this.table.headerVisible.set(this.settings().showHeader);
+      this.table.sortable.set(this.settings().sortable);
+      this.table.filterable.set(this.settings().filterable);
+      this.table.resizable.set(this.settings().resizable);
+      this.table.selectable.set(this.settings().selectable === 'false' ? false : this.settings().selectable as 'single' | 'multi');
+    });
+  }
 }

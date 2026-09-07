@@ -1,4 +1,4 @@
-import {Component, computed, signal} from '@angular/core';
+import {Component, computed, effect, signal} from '@angular/core';
 import {partBinding, SciTable, SciTableComponent, table} from '@scion/components/table';
 import {contributeMenu, SciToolbarFactory} from '@scion/components/menu';
 import {httpResource} from '@angular/common/http';
@@ -32,16 +32,17 @@ export default class TriebfahrzeugTableComponent {
 
   constructor() {
     this.contributeSettingsMenu();
+    this.bindTableSettings();
   }
 
   private defineTriebfahrzeugTable(): SciTable<Triebfahrzeug> {
     return table({
       data: httpResource<Triebfahrzeug[]>(() => '/schweiz_triebfahrzeuge_10k.json', {defaultValue: []}).value,
-      filterable: this.filterable,
-      sortable: this.sortable,
-      headerVisible: this.showHeader,
-      resizable: this.resizable,
-      selectable: this.selectable,
+      filterable: this.filterable(),
+      sortable: this.sortable(),
+      headerVisible: this.showHeader(),
+      resizable: this.resizable(),
+      selectable: this.selectable(),
       rowBindings: [
         partBinding((_item, index) => this.zebraStyle() ? (index % 2 === 0 ? 'row:even' : 'row:odd') : undefined),
       ],
@@ -91,6 +92,16 @@ export default class TriebfahrzeugTableComponent {
         ),
       ),
     );
+  }
+
+  private bindTableSettings(): void {
+    effect(() => {
+      this.table.headerVisible.set(this.showHeader());
+      this.table.sortable.set(this.sortable());
+      this.table.filterable.set(this.filterable());
+      this.table.resizable.set(this.resizable());
+      this.table.selectable.set(this.selectable());
+    });
   }
 
   private addRowActions(_fahrzeug: Triebfahrzeug, toolbar: SciToolbarFactory): void {

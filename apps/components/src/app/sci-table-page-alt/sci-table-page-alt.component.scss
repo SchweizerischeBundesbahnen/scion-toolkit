@@ -14,7 +14,7 @@
     }
 
     > sci-table {
-      flex: 1;
+      flex: 1 1 0;
 
       &::part(red-row) {
         color: indianred;

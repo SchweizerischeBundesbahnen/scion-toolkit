@@ -2,9 +2,6 @@
 
 - Neue icons in icon font und integrieren (z.B. sort icons für spalten)
 - Call loader fn in injection context (separate context per call to release resources)
-- Provide writable signals for table settings (filterable, sortable) as public API, e.g., to create menu to show/hide column filters.
-  -> change descriptor to boolean (not MaybeSignal)
-  -> change bufferSize and pageSize to number, but do not provide on table model 
 - Unset scrollRange bei Filterung und Sortierung (sofort)
 - Gedanken über tri-state bei Sortierung (erforderlich?)
 - rename globalFilter => tableFilter

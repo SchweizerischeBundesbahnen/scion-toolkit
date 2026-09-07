@@ -19,12 +19,11 @@ export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => 
 
 export interface SciTableDescriptor<T> {
   data: Signal<T[]> | SciDataLoaderFn<T>; // TODO [egob] consider renaming to datasource
-  sortable?: MaybeSignal<boolean>;
-  resizable?: MaybeSignal<boolean>;
-  filterable?: MaybeSignal<boolean>;
-  selectable?: MaybeSignal<false | 'single' | 'multi'>;
-  headerVisible?: MaybeSignal<boolean>;
-  gridlinesVisible?: MaybeSignal<boolean>;
+  sortable?: boolean;
+  resizable?: boolean;
+  filterable?: boolean;
+  selectable?: false | 'single' | 'multi';
+  headerVisible?: boolean;
   // TODO [egob] Consider renaming to initialSortOrder
   sortBy?: Array<`column:${string}` | SciSortCriterion>;
   /**
@@ -49,8 +48,8 @@ export interface SciTableDescriptor<T> {
   /**
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
-  bufferSize?: MaybeSignal<number>;
-  pageSize?: MaybeSignal<number>;
+  bufferSize?: number;
+  pageSize?: number;
   trackBy?: (item: T) => unknown;
 }
 
@@ -64,6 +63,12 @@ export interface SciTable<T> {
    * Selected items.
    */
   readonly selectedItems: Signal<Array<T>>;
+
+  readonly filterable: WritableSignal<boolean>;
+  readonly headerVisible: WritableSignal<boolean>;
+  readonly sortable: WritableSignal<boolean>;
+  readonly resizable: WritableSignal<boolean>;
+  readonly selectable: WritableSignal<'single' | 'multi' | false>;
 
   filter(text: string | null): void;
 }
