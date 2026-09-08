@@ -153,7 +153,7 @@ export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnL
   return (request: SciTableRequest): Observable<SciTableResponse<T>> => {
     const sortHash = request.sortCriteria.map(sc => `${sc.columnName}_${sc.direction}`).join('-');
     const filterHash = request.columnFilters.map(fc => `${fc.columnName}_${fc.text}`).join('-');
-    const hash = `${sortHash}-${filterHash}-${request.globalFilter ?? ''}`;
+    const hash = `${sortHash}-${filterHash}-${request.tableFilter ?? ''}`;
 
     if (!cache().has(hash)) {
       const sortedAndFiltered$ = items$.pipe(
@@ -162,7 +162,7 @@ export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnL
           const filterCols = mapCriteria(request.columnFilters, columns);
 
           return items
-            .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.globalFilter))
+            .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.tableFilter))
             .sort((a, b) => sort(a, b, sortCols));
         }),
         shareReplay({bufferSize: 1, refCount: true}), // as soon as there are no subscribers left unsubscribe from the source.

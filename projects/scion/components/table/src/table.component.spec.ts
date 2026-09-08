@@ -1136,7 +1136,7 @@ fdescribe('Table', () => {
     it('should allow global filtering', async () => {
       const data = generateData(100, i => i);
       const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => {
-        const filtered = data.filter(item => !request.globalFilter || `${item}` === request.globalFilter);
+        const filtered = data.filter(item => !request.tableFilter || `${item}` === request.tableFilter);
         return {
           items: filtered.slice(request.start, request.end),
           totalCount: filtered.length,
@@ -1160,7 +1160,7 @@ fdescribe('Table', () => {
       model.filter('50');
       await table.waitUntilStable();
       expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
-        globalFilter: '50',
+        tableFilter: '50',
         columnFilters: [],
       }));
       expect(await table.column({name: 'column:1'})!.values()).toEqual(['50']);

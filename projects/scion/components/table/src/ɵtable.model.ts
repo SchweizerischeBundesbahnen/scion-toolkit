@@ -59,7 +59,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly filterCriteria = signal<SciColumnFilter[]>([]);
 
   private readonly _cache = new TableCache<T>();
-  private readonly _globalFilter = signal<string | null>(null);
+  private readonly _tableFilter = signal<string | null>(null);
   private readonly _selectedItems = signal(new Map<unknown, T>());
 
   // Reset totalCount on criteria change, to show skeletons instead of stale data while loading.
@@ -82,7 +82,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     computation: () => -1,
   });
 
-  public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), globalFilter: this._globalFilter()}));
+  public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), tableFilter: this._tableFilter()}));
   public readonly loading = computed(() => this._cache.values().some(entry => entry.items() === undefined));
   public readonly activeRow: Signal<SciRow<T> | undefined>;
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
@@ -241,11 +241,11 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public loadRange(start: number, end: number): Promise<void[]> {
     const sortCriteria = this.sortCriteria();
     const columnFilters = this.filterCriteria();
-    const globalFilter = this._globalFilter() ?? undefined;
+    const tableFilter = this._tableFilter() ?? undefined;
 
     const pages = pagesByRange(start, end, this.pageSize);
     const requests = pages.map(page => {
-      const response = this.loadPage({page, pageSize: this.pageSize, columnFilters, globalFilter: globalFilter, sortCriteria});
+      const response = this.loadPage({page, pageSize: this.pageSize, columnFilters, tableFilter, sortCriteria});
       // Wait for the page to be loaded.
       return new Promise<void>(resolve => {
         const effectRef = effect(() => {
@@ -264,7 +264,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   /**
    * Loads a page from the dataSource and saves it to the page cache.
    */
-  private loadPage({page, pageSize, sortCriteria, columnFilters, globalFilter}: {page: number; pageSize: number; sortCriteria: SciSortCriterion[]; columnFilters: SciColumnFilter[]; globalFilter?: string}, onCleanup?: EffectCleanupRegisterFn): Signal<SciRow<T>[] | undefined> {
+  private loadPage({page, pageSize, sortCriteria, columnFilters, tableFilter}: {page: number; pageSize: number; sortCriteria: SciSortCriterion[]; columnFilters: SciColumnFilter[]; tableFilter?: string}, onCleanup?: EffectCleanupRegisterFn): Signal<SciRow<T>[] | undefined> {
     const pageStart = page * pageSize;
     const pageEnd = pageStart + pageSize;
     const cacheKey = `${pageStart}-${pageEnd}` as const;
@@ -279,7 +279,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       pageSize,
       page,
       sortCriteria,
-      globalFilter,
+      tableFilter,
       columnFilters,
     })).subscribe({
       next: result => {
@@ -351,7 +351,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this.tableViewRef()?.scrollToTop();
 
     if (!options) {
-      this._globalFilter.set(text as string);
+      this._tableFilter.set(text as string);
       return;
     }
 
@@ -387,7 +387,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       const scrollRange = this.scrollRange();
       const sortCriteria = this.sortCriteria();
       const columnFilters = this.filterCriteria();
-      const globalFilter = this._globalFilter() ?? undefined;
+      const tableFilter = this._tableFilter() ?? undefined;
 
       if (!scrollRange) {
         return;
@@ -398,7 +398,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           pageSize: this.pageSize,
           page,
           sortCriteria,
-          globalFilter,
+          tableFilter,
           columnFilters,
         }, onCleanup);
       }));
