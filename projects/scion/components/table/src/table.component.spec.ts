@@ -1219,8 +1219,7 @@ fdescribe('Table', () => {
           {columnName: 'column:id', text: 'ID: 5'},
         ],
       }));
-      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
-      // expect(loader).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 5']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 5']);
       loader.calls.reset();
@@ -1230,7 +1229,7 @@ fdescribe('Table', () => {
       await table.waitUntilStable();
 
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 20, page: 0, pageSize: 20, columnFilters: []}));
-      // expect(loader).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values({rows: 'all'})).toEqual(generateData(100, i => `ID: ${i}`));
       expect(await table.column({name: 'column:name'})!.values({rows: 'all'})).toEqual(generateData(100, i => `Name: ${i}`));
       loader.calls.reset();
@@ -1244,8 +1243,7 @@ fdescribe('Table', () => {
           {columnName: 'column:name', text: 'Name: 10'},
         ],
       }));
-      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
-      // expect(loader).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 10']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 10']);
       loader.calls.reset();
@@ -1260,8 +1258,7 @@ fdescribe('Table', () => {
           {columnName: 'column:id', text: 'ID: 11'},
         ],
       }));
-      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
-      // expect(loader).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual([]);
       expect(await table.column({name: 'column:name'})!.values()).toEqual([]);
       loader.calls.reset();
@@ -1276,10 +1273,72 @@ fdescribe('Table', () => {
           {columnName: 'column:id', text: 'ID: 10'},
         ],
       }));
-      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
-      // expect(loader).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 10']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 10']);
+    });
+
+    it('should scroll to top on filter', async () => {
+      const data = generateData(100, i => ({id: `ID: ${i}`, name: `Name: ${i}`}));
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<{id: string; name: string}> => {
+        const filtered = data.filter(item => {
+          const idFilter = request.columnFilters.find(filter => filter.columnName === 'column:id');
+          if (idFilter && item.id !== idFilter.text) {
+            return false;
+          }
+          const nameFilter = request.columnFilters.find(filter => filter.columnName === 'column:name');
+          if (nameFilter && item.name !== nameFilter.text) {
+            return false;
+          }
+          return true;
+        });
+        return {
+          items: filtered.slice(request.start, request.end),
+          totalCount: filtered.length,
+        };
+      });
+
+      const {fixture, model} = createSciTableComponent<{id: string; name: string}>(() => sciTable({
+        data: loader,
+        bufferSize: 0,
+        pageSize: 20,
+      }, table => table
+        .addStringColumn({
+          name: 'column:id',
+          value: item => item.id,
+        })
+        .addStringColumn({
+          name: 'column:name',
+          value: item => item.name,
+        })), {
+        height: '500px',
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      await table.scrollY({deltaY: 300});
+      await table.waitUntilStable();
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 20, end: 40, page: 1, pageSize: 20}));
+      expect(await table.column({name: 'column:id'})!.values({rows: 'all'})).toEqual(generateData(100, i => `ID: ${i}`));
+      expect(await table.column({name: 'column:name'})!.values({rows: 'all'})).toEqual(generateData(100, i => `Name: ${i}`));
+      loader.calls.reset();
+
+      // Filter by 'column:id'.
+      model.filter('ID: 5', {columnName: 'column:id'});
+      await table.waitUntilStable();
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
+        start: 0, end: 20, page: 0, pageSize: 20,
+        columnFilters: [
+          {columnName: 'column:id', text: 'ID: 5'},
+        ],
+      }));
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 5']);
+      expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 5']);
+      expect(table.scrollTop).toBe(0);
+      loader.calls.reset();
     });
 
     it('should sort', async () => {
@@ -1293,7 +1352,7 @@ fdescribe('Table', () => {
         };
       });
 
-      const {fixture, model} = createSciTableComponent<number>(() => sciTable({
+      const {fixture} = createSciTableComponent<number>(() => sciTable({
         data: loader,
         bufferSize: 0,
         pageSize: 20,
@@ -1309,45 +1368,75 @@ fdescribe('Table', () => {
       loader.calls.reset();
 
       // Sort 'column:1' in ascending order.
-      model.sort('column:1', false);
+      await table.column({name: 'column:1'})!.toggleSort();
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableRequest>({
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
         start: 0, end: 20, page: 0, pageSize: 20,
         sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
       }));
-      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
       expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
       loader.calls.reset();
 
       // Sort 'column:1' in descening order.
-      model.sort('column:1', false);
+      await table.column({name: 'column:1'})!.toggleSort();
       await table.waitUntilStable();
 
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
         start: 0, end: 20, page: 0, pageSize: 20,
         sortCriteria: [{columnName: 'column:1', direction: 'desc'}],
       }));
-      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
-      // expect(loader).toHaveBeenCalledTimes(1);
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`).reverse());
       loader.calls.reset();
 
-      // Sort 'column:1' in ascending order.
-      model.sort('column:1', false);
+      // Reset sort for 'column:1'.
+      await table.column({name: 'column:1'})!.toggleSort();
+      await table.waitUntilStable();
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 0, end: 20, page: 0, pageSize: 20}));
+      expect(loader).toHaveBeenCalledTimes(1);
+    });
+
+    it('should scroll to top on sort', async () => {
+      const data = generateData(100, i => i);
+      const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => {
+        const sortCriterion = request.sortCriteria.find(criterion => criterion.columnName === 'column:1');
+        const sorted = sortCriterion?.direction === 'asc' ? [...data] : [...data].reverse();
+        return {
+          items: sorted.slice(request.start, request.end),
+          totalCount: sorted.length,
+        };
+      });
+
+      const {fixture} = createSciTableComponent<number>(() => sciTable({
+        data: loader,
+        bufferSize: 0,
+        pageSize: 20,
+      }, table => table.addNumberColumn({
+        name: 'column:1',
+        value: item => item,
+      })), {
+        height: '500px',
+      });
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      await table.scrollY({deltaY: 300});
       await table.waitUntilStable();
 
-      // TODO [egob] Why does it not working if sorting again?
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({start: 20, end: 40, page: 1, pageSize: 20}));
+      loader.calls.reset();
 
-      // expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
-      //   start: 0, end: 20, page: 0, pageSize: 20,
-      //   sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
-      // }));
-      // TODO [egob] Shouldn't this be called only once? (not for already loaded pages)
-      // expect(loader).toHaveBeenCalledTimes(1);
-      // expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
-      // loader.calls.reset();
+      // Sort 'column:1' in ascending order.
+      await table.column({name: 'column:1'})!.toggleSort();
+      await table.waitUntilStable();
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTableRequest>({
+        start: 0, end: 20, page: 0, pageSize: 20,
+        sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
+      }));
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(table.scrollTop).toBe(0);
     });
 
     it('should load data from observable', async () => {

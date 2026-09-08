@@ -84,7 +84,6 @@ export class SciTableComponent<T = unknown> {
   constructor() {
     this.connectToModel();
     this.scrollActiveRowIntoViewport();
-    this.scrollTopOnCriteriaChange();
   }
 
   protected onRowPrimaryAction(item: T): void {
@@ -109,20 +108,11 @@ export class SciTableComponent<T = unknown> {
           viewportClientHeight: computed(() => viewportClientDimension().offsetHeight),
           headerHeight: computed(() => headerDimension()?.offsetHeight ?? 0),
           itemHeight: computed(() => itemSizeDimension().offsetHeight),
+          // TODO [egob]: How should we do this, access the viewport directly from the model, or like this?
+          scrollToTop: () => viewport.scrollTo({top: 0}),
         });
         onCleanup(() => table.disconnect());
       });
-    });
-  }
-
-  /**
-   * Scrolls the viewport to the top on filter or sort criteria change.
-   */
-  private scrollTopOnCriteriaChange(): void {
-    effect(() => {
-      // Track filter and sort criteria.
-      this.table().criteria();
-      untracked(() => this._viewport().nativeElement.scrollTo({top: 0}));
     });
   }
 

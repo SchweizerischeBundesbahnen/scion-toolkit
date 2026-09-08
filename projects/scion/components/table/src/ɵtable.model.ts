@@ -317,6 +317,10 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
    * TODO [egob] Revisit API, do we really want a three-state and implicit toggling logic?
    */
   public sort(columnName: `column:${string}`, multi: boolean): void {
+    // Scroll to the top as soon as sort changes.
+    // Done here explicitly to avoid race-conditions and pages being loaded unnecessarily.
+    this.tableViewRef()?.scrollToTop();
+
     this.sortCriteria.update(sortCriteria => {
       const column = this.columns().find(column => column.name === columnName);
       if (!column) {
@@ -342,6 +346,10 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public filter(text: string | null): void;
   public filter(text: string | number | boolean | null, options: {columnName: `column:${string}`}): void;
   public filter(text: string | number | boolean | null, options?: {columnName: `column:${string}`}): void {
+    // Scroll to the top as soon as filter changes.
+    // Done here explicitly to avoid race-conditions and pages being loaded unnecessarily.
+    this.tableViewRef()?.scrollToTop();
+
     if (!options) {
       this._globalFilter.set(text as string);
       return;
@@ -567,4 +575,5 @@ export interface SciTableViewRef {
   viewportClientHeight: Signal<number>;
   headerHeight: Signal<number>;
   itemHeight: Signal<number>;
+  scrollToTop: () => void;
 }
