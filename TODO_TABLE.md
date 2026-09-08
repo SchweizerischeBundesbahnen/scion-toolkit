@@ -4,7 +4,6 @@
 - Call loader fn in injection context (separate context per call to release resources)
 - Gedanken über tri-state bei Sortierung (erforderlich?)
 - Analyze and fix menu group crash
-- Change default row-height to 2em.
 - Neue icons von Jonas integrieren
 - Align 'no_items' horizontal in mitte von viewport
 - Test dass Tabelle in Workbench Microfrontend funktioniert
