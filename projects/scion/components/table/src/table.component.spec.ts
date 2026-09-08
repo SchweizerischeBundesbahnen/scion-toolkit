@@ -326,8 +326,7 @@ fdescribe('Table', () => {
         expect(await table.column({name: 'column:name'})!.values()).toEqual(['alpha', 'beta', 'gamma']);
       });
 
-      // TODO [egob] Fix that global filter uses custom matcher if configured
-      xit('should support global filter with custom filter function', async () => {
+      it('should support global filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(() => sciTable({
           data,

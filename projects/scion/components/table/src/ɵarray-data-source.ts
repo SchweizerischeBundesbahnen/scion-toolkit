@@ -15,45 +15,39 @@ import {coerceSignal} from '@scion/components/common';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map, Observable, shareReplay} from 'rxjs';
 
-type MappedCriterion<T, CRIT extends {columnName: string}> = CRIT & {
+type Criterion = SciSortCriterion | SciColumnFilter;
+type MappedCriterion<T, CRIT extends Criterion = Criterion> = CRIT & {
   column: SciColumnLike<T>;
-  columnIndex: number;
 };
 
-interface ItemWithValues<T> {
-  item: T;
-  values: Array<string | number | boolean | undefined>;
+interface MappedCell<T> {
+  column: SciColumnLike<T>;
+  value: string | number | boolean | undefined;
 }
 
-function mapCriteria<T, CRIT extends {columnName: string}>(criteria: CRIT[], columns: SciColumnLike<T>[]): MappedCriterion<T, CRIT>[] {
+interface MappedRow<T> {
+  item: T;
+  cells: Map<`column:${string}`, MappedCell<T>>;
+}
+
+function mapCriteria<T, CRIT extends Criterion>(criteria: CRIT[], columns: SciColumnLike<T>[]): MappedCriterion<T, CRIT>[] {
   return criteria.map(sc => {
-    const columnIndex = columns.findIndex(c => sc.columnName === c.name);
+    const column = columns.find(c => sc.columnName === c.name);
 
     return ({
       ...sc,
-      columnIndex,
-      column: columns[columnIndex],
+      column,
     });
-  }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.columnIndex >= 0);
+  }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.column !== undefined);
 }
 
-function globalFilter<T>(row: ItemWithValues<T>, filter?: string): boolean {
+function globalFilter<T>(row: MappedRow<T>, filter?: string): boolean {
   if (!filter?.trim()) {
     return true;
   }
 
-  for (const value of row.values) {
-    const result = (() => {
-      switch (typeof value) {
-        case 'string':
-          return value.trim().toLocaleLowerCase().includes(filter.toLocaleLowerCase());
-        case 'boolean':
-        case 'number':
-          return value.toString().includes(filter.toLocaleLowerCase());
-        default:
-          return false;
-      }
-    })();
+  for (const column of row.cells.values()) {
+    const result = columnFilter(row, [{text: filter, columnName: column.column.name, column: column.column}]);
 
     // If any value includes the filter, it matches the filter.
     if (result) {
@@ -64,13 +58,13 @@ function globalFilter<T>(row: ItemWithValues<T>, filter?: string): boolean {
   return false;
 }
 
-function columnFilter<T>(row: ItemWithValues<T>, filterCriteria: MappedCriterion<T, SciColumnFilter>[]): boolean {
+function columnFilter<T>(row: MappedRow<T>, filterCriteria: MappedCriterion<T, SciColumnFilter>[]): boolean {
   if (filterCriteria.length === 0) {
     return true;
   }
 
   for (const criterion of filterCriteria) {
-    const value = row.values[criterion.columnIndex];
+    const value = row.cells.get(criterion.columnName)?.value;
 
     const filter = (() => {
       switch (criterion.column.type) {
@@ -97,14 +91,14 @@ function columnFilter<T>(row: ItemWithValues<T>, filterCriteria: MappedCriterion
   return true;
 }
 
-function sort<T>(a: ItemWithValues<T>, b: ItemWithValues<T>, sortCriteria: MappedCriterion<T, SciSortCriterion>[]): number {
+function sort<T>(a: MappedRow<T>, b: MappedRow<T>, sortCriteria: MappedCriterion<T, SciSortCriterion>[]): number {
   if (sortCriteria.length === 0) {
     return 0;
   }
 
   for (const criterion of sortCriteria) {
-    const aValue = a.values[criterion.columnIndex];
-    const bValue = b.values[criterion.columnIndex];
+    const aValue = a.cells.get(criterion.columnName)?.value;
+    const bValue = b.cells.get(criterion.columnName)?.value;
 
     const sort = (() => {
       switch (criterion.column.type) {
@@ -134,14 +128,17 @@ function sort<T>(a: ItemWithValues<T>, b: ItemWithValues<T>, sortCriteria: Mappe
 export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnLike<T>[]>): SciDataLoaderFn<T> {
   const cache = linkedSignal({
     source: () => ({data: data(), columns: columns()}),
-    computation: () => new Map<string, Observable<ItemWithValues<T>[]>>(),
+    computation: () => new Map<string, Observable<MappedRow<T>[]>>(),
   });
 
   const items$ = toObservable(computed(() => {
     const resolvedColumns = columns();
-    const items: ItemWithValues<T>[] = data().map(item => ({
+    const items: MappedRow<T>[] = data().map(item => ({
       item,
-      values: resolvedColumns.map(column => column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined),
+      cells: resolvedColumns.reduce((acc, column) => acc.set(column.name, {
+        column,
+        value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined,
+      }), new Map<`column:${string}`, MappedCell<T>>()),
     }));
 
     return {
@@ -171,7 +168,7 @@ export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnL
       // Only store one item in the cache.
       // The cache is used for scrolling and multipage selection.
       // It caches the data based on the current filter and sort.
-      cache.set(new Map<string, Observable<ItemWithValues<T>[]>>().set(hash, sortedAndFiltered$));
+      cache.set(new Map<string, Observable<MappedRow<T>[]>>().set(hash, sortedAndFiltered$));
     }
 
     return cache().get(hash)!.pipe(
