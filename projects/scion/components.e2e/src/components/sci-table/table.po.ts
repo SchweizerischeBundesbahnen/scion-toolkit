@@ -28,6 +28,7 @@ export class TablePO {
   public readonly verticalScrollbar: ScrollbarPO;
   public readonly horizontalScrollbar: ScrollbarPO;
   public readonly splitters: Locator;
+  public readonly noDataMessage: Locator;
 
   constructor(public readonly locator: Locator) {
     this.viewport = this.locator.locator('div.e2e-viewport');
@@ -41,6 +42,7 @@ export class TablePO {
     this.verticalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="vscroll"]'));
     this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
     this.splitters = this.locator.locator('sci-column-splitters');
+    this.noDataMessage = this.locator.locator('span.e2e-no-data');
   }
 
   /**
@@ -62,7 +64,10 @@ export class TablePO {
   /**
    * Returns the bounding box without borders (content-box).
    */
-  public async bounds(): Promise<DomRect> {
+  public async bounds(options?: {box?: 'content' | 'border'}): Promise<DomRect> {
+    if (options?.box === 'border') {
+      return waitUntilStable(async () => fromRect(await this.locator.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
+    }
     return waitUntilStable(async () => fromRect(await this.locator.evaluate(element => {
       const {x, y} = element.getBoundingClientRect();
       return new DOMRect(x + element.clientLeft, y + element.clientTop, element.clientWidth, element.clientHeight);

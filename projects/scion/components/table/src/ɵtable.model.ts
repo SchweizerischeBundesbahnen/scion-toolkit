@@ -393,15 +393,23 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         return;
       }
 
-      untracked(() => pagesByRange(scrollRange.start, scrollRange.end, this.pageSize).forEach(page => {
-        this.loadPage({
+      untracked(() => {
+        const pages = pagesByRange(scrollRange.start, scrollRange.end, this.pageSize);
+
+        // Fallback to load the initial page. Otherwise, if the table grows with its content,
+        // no data would ever load because the scroll range remains 0.
+        if (!pages.length) {
+          pages.push(0);
+        }
+
+        pages.forEach(page => this.loadPage({
           pageSize: this.pageSize,
           page,
           sortCriteria,
           tableFilter,
           columnFilters,
-        }, onCleanup);
-      }));
+        }, onCleanup));
+      });
     });
   }
 
@@ -567,7 +575,7 @@ export interface SciTableUserSettings {
   columns?: {name: string; width?: number}[];
 }
 
-export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable<unknown>>>('ɵSciTable');
+export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable>>('ɵSciTable');
 
 export interface SciTableViewRef {
   viewport: HTMLElement;

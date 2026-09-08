@@ -25,8 +25,11 @@ import {noop} from 'rxjs';
   templateUrl: './sci-table-page.component.html',
   styleUrl: './sci-table-page.component.scss',
   host: {
-    '[style.--table-page-height]': 'settingsForm.height().value() ? `${settingsForm.height().value()}px` : null',
-    '[style.--table-page-width]': 'settingsForm.width().value() ? `${settingsForm.width().value()}px` : null',
+    '[style.--table-height]': 'layoutForm.tableHeight().value() !== null ? `${layoutForm.tableHeight().value()}px` : null',
+    '[style.--table-max-height]': 'layoutForm.tableMaxHeight().value() !== null ? `${layoutForm.tableMaxHeight().value()}px` : null',
+    '[style.--table-width]': 'layoutForm.tableWidth().value() !== null ? `${layoutForm.tableWidth().value()}px` : null',
+    '[style.--table-grow-to-breakpoint]': 'layoutForm.tableGrowToBreakpoint().value() ? `true` : null',
+    '[style.--table-page-height]': 'layoutForm.pageHeight().value() !== null ? `${layoutForm.pageHeight().value()}px` : null',
     '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() ? `${settingsForm.rowHeight().value()}px` : null',
   },
   imports: [
@@ -57,6 +60,7 @@ export default class SciTablePageComponent {
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
   protected readonly datasourceForm: FieldTree<DatasourceForm> = this.createDatasourceForm();
+  protected readonly layoutForm: FieldTree<LayoutForm> = this.createLayoutForm();
   protected readonly columnForm: FieldTree<ColumnForm> = this.createColumnForm();
   protected readonly columns = signal<ColumnForm[]>([]);
 
@@ -219,7 +223,7 @@ export default class SciTablePageComponent {
   }
 
   private createSettingsForm(): FieldTree<SettingsForm> {
-    const defaults: SettingsForm = {
+    return form(signal<SettingsForm>({
       filterable: false,
       sortable: true,
       resizable: true,
@@ -229,20 +233,26 @@ export default class SciTablePageComponent {
       showRowActions: false,
       customRowStyling: false,
       rowHeight: 30,
-      height: 600,
-      width: 600,
       tableCount: 1,
-    };
-    return form(signal(defaults));
+    }));
   }
 
   private createDatasourceForm(): FieldTree<DatasourceForm> {
-    const defaults: DatasourceForm = {
+    return form(signal<DatasourceForm>({
       datasource: 'array',
       bufferSize: 10,
       pageSize: 50,
-    };
-    return form(signal(defaults));
+    }));
+  }
+
+  private createLayoutForm(): FieldTree<LayoutForm> {
+    return form(signal<LayoutForm>({
+      tableHeight: null,
+      tableMaxHeight: null,
+      tableWidth: null,
+      tableGrowToBreakpoint: false,
+      pageHeight: null,
+    }));
   }
 
   private bindTableSettings(): void {
@@ -294,8 +304,6 @@ interface SettingsForm {
   showRowActions: boolean;
   customRowStyling: boolean;
   rowHeight: number;
-  height: number;
-  width: number;
   tableCount: number;
 }
 
@@ -303,6 +311,14 @@ interface DatasourceForm {
   datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http';
   bufferSize: number;
   pageSize: number;
+}
+
+interface LayoutForm {
+  tableHeight: number | null;
+  tableMaxHeight: number | null;
+  tableWidth: number | null;
+  tableGrowToBreakpoint: boolean;
+  pageHeight: number | null;
 }
 
 function customFilter(text: string, context: SciCellContext<Product, unknown>): boolean {

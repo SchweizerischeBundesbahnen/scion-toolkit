@@ -112,18 +112,10 @@
         <sci-form-field label="Row Height">
           <input [formField]="settingsForm.rowHeight" type="number" class="e2e-row-height"/>
         </sci-form-field>
-
-        <sci-form-field label="Table Width">
-          <input [formField]="settingsForm.width" type="number" class="e2e-width"/>
-        </sci-form-field>
-
-        <sci-form-field label="Table Height">
-          <input [formField]="settingsForm.height" type="number" class="e2e-height"/>
-        </sci-form-field>
       </form>
     </ng-template>
 
-    <!-- Date Source -->
+    <!-- Data Source -->
     <ng-template sciTab label="Datasource" cssClass="e2e-datasource">
       <section>
 
@@ -156,6 +148,31 @@
           <input [formField]="datasourceForm.pageSize" type="number" class="e2e-page-size"/>
         </sci-form-field>
       </section>
+    </ng-template>
+
+    <!-- Layout -->
+    <ng-template sciTab label="Layout" cssClass="e2e-layout">
+      <form>
+        <sci-form-field label="Height">
+          <input [formField]="layoutForm.tableHeight" type="number" class="e2e-table-height"/>
+        </sci-form-field>
+
+        <sci-form-field label="Width">
+          <input [formField]="layoutForm.tableWidth" type="number" class="e2e-table-width"/>
+        </sci-form-field>
+
+        <sci-form-field label="Max Height">
+          <input [formField]="layoutForm.tableMaxHeight" type="number" class="e2e-table-max-height"/>
+        </sci-form-field>
+
+        <sci-form-field label="Page Height">
+          <input [formField]="layoutForm.pageHeight" type="number" class="e2e-page-height"/>
+        </sci-form-field>
+
+        <sci-form-field label="Grow To Breakpoint">
+          <input [formField]="layoutForm.tableGrowToBreakpoint" type="checkbox" class="e2e-grow-to-breakpoint"/>
+        </sci-form-field>
+      </form>
     </ng-template>
   </sci-tabbar>
 

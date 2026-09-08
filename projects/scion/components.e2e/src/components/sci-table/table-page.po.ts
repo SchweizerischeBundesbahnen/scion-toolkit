@@ -76,14 +76,29 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-show-gridlines').setChecked(showGridlines);
   }
 
-  public async setHeight(height: number): Promise<void> {
-    await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-height').fill(height.toString());
+  public async setHeight(height: number | null): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-table-height').fill(`${height ?? ''}`);
   }
 
-  public async setWidth(width: number): Promise<void> {
-    await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-width').fill(width.toString());
+  public async setWidth(width: number | null): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-table-width').fill(`${width ?? ''}`);
+  }
+
+  public async setMaxHeight(maxHeight: number | null): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-table-max-height').fill(`${maxHeight ?? ''}`);
+  }
+
+  public async setGrowToBreakpoint(growToBreakpoint: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-grow-to-breakpoint').setChecked(growToBreakpoint);
+  }
+
+  public async setPageHeight(height: number | null): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-page-height').fill(`${height ?? ''}`);
   }
 
   public async setRowHeight(rowHeight: number): Promise<void> {

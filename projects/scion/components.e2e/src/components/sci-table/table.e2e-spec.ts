@@ -2158,5 +2158,127 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
       await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(100);
     });
+
+    test('should grow to breakpoint', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setRowCount(0);
+      await tablePage.setRowHeight(30);
+      await tablePage.showHeader(false);
+
+      // Configure table to grow with its content to a breakpoint.
+      await tablePage.setGrowToBreakpoint(true);
+
+      await test.step('Table without breakpoint', async () => {
+        await tablePage.setRowCount(0);
+
+        // Re-create table with above settings to simulate initial load without height.
+        await tablePage.setTableCount(0);
+        await tablePage.setTableCount(1);
+
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        await tablePage.setRowCount(100);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(3000);
+        await expectTable(table).not.toHaveVerticalOverflow();
+      });
+
+      await test.step('Table with breakpoint at 600px', async () => {
+        await tablePage.setMaxHeight(600);
+        await tablePage.setRowCount(0);
+
+        // Re-create table with above settings to simulate initial load without height.
+        await tablePage.setTableCount(0);
+        await tablePage.setTableCount(1);
+
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        await tablePage.setRowCount(100);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
+        await expectTable(table).toHaveVerticalOverflow();
+      });
+
+      await test.step('Table with breakpoint in parent container at 500px', async () => {
+        await tablePage.setPageHeight(500);
+        await tablePage.setMaxHeight(null);
+        await tablePage.setRowCount(0);
+
+        // Re-create table with above settings to simulate initial load without height.
+        await tablePage.setTableCount(0);
+        await tablePage.setTableCount(1);
+
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        await tablePage.setRowCount(100);
+        await expect.poll(() => table.bounds({box: 'border'}).then(bounds => bounds.height)).toEqual(500);
+        await expectTable(table).toHaveVerticalOverflow();
+      });
+    });
+
+    test('should overflow at layout breakpoint', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setPageHeight(500);
+      await expect.poll(() => table.bounds({box: 'border'}).then(bounds => bounds.height)).toEqual(500);
+      await expectTable(table).toHaveVerticalOverflow();
+    });
+
+    test('should overflow at table height', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setHeight(500);
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(500);
+      await expectTable(table).toHaveVerticalOverflow();
+    });
+
+    test('should overflow at table max height', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setMaxHeight(500);
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(500);
+      await expectTable(table).toHaveVerticalOverflow();
+    });
   });
 });

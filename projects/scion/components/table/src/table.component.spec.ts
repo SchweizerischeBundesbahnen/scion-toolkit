@@ -1940,7 +1940,7 @@ class TestComponent {
     SciTableComponent,
   ],
   template: `
-    <sci-table name="table:testee" [table]="table"></sci-table>
+    <sci-table name="table:testee" [table]="table"/>
     <ng-template let-product #cell>
       {{product.price / 2}}
     </ng-template>

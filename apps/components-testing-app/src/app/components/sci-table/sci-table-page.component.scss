@@ -1,27 +1,36 @@
 :host {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 350px;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1em;
+  height: var(--table-page-height);
 
   > main {
     display: flex;
     flex-direction: column;
     gap: 1em;
     flex: 1 1 0;
-    overflow: hidden; // to not overlay detail panel if table has fixed width
+    overflow-x: hidden; // to not overlay detail panel if table has fixed width
 
     > sci-table {
       flex: 1 1 0;
       border: 1px solid var(--sci-color-border);
       box-sizing: content-box;
 
-      @container style(--table-page-height) {
+      @container style(--table-height) {
         flex: none;
-        height: var(--table-page-height);
+        height: var(--table-height);
       }
 
-      @container style(--table-page-width) {
-        width: var(--table-page-width);
+      @container style(--table-max-height) {
+        max-height: var(--table-max-height);
+      }
+
+      @container style(--table-width) {
+        width: var(--table-width);
+      }
+
+      @container style(--table-grow-to-breakpoint: true) {
+        flex: 0 1 min-content;
       }
 
       &::part(row\:negative),

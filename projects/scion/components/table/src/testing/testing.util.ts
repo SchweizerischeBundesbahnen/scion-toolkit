@@ -22,7 +22,7 @@ import {Objects} from '@scion/toolkit/util';
 /**
  * Creates {@link SciTableComponent}, configuring the table using the passed callback function.
  */
-export function createSciTableComponent<T>(tableFn: () => SciTable<T>, options?: {name?: `table:${string}`; height?: string; width?: string; designTokens?: {[name: `--${string}`]: string}}): {model: ɵSciTable<T>; fixture: ComponentFixture<SciTableComponent<unknown>>} {
+export function createSciTableComponent<T>(tableFn: () => SciTable<T>, options?: {name?: `table:${string}`; height?: string; width?: string; designTokens?: {[name: `--${string}`]: string}}): {model: ɵSciTable<T>; fixture: ComponentFixture<SciTableComponent>} {
   const table = runInInjectionContext(TestBed.inject(Injector), tableFn);
 
   // Create fixture.

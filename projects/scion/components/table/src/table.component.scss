@@ -2,7 +2,6 @@
 
 :host {
   display: block;
-  flex-direction: column;
   overflow: hidden; // viewport should not grow beyond host height
   position: relative; // positioning context for scrollbars
 
@@ -74,11 +73,12 @@
         padding-top: var(--ɵsci-table-virtual-scroll-offset-top);
         padding-bottom: var(--ɵsci-table-virtual-scroll-offset-bottom);
 
-        > span.empty {
+        > span.no-data {
           grid-column: 1 / -1;
-          text-align: center;
-          padding: 1em;
+          justify-self: center;
+          align-self: center;
           user-select: none;
+          white-space: nowrap;
           color: var(--sci-color-text-subtle);
         }
       }
