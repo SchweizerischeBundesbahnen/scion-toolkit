@@ -53,7 +53,7 @@ export class CompanyService {
     return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
       .pipe(
         switchMap(() => this._companies$),
-        map(companies => Companies.filter(companies, request.columnFilters, request.globalFilter)),
+        map(companies => Companies.filter(companies, request.columnFilters, request.tableFilter)),
         map(companies => Companies.sort(companies, request.sortCriteria)),
         map(companies => ({
           items: companies.slice(request.start, request.end),
@@ -115,7 +115,7 @@ export namespace Companies {
     });
   }
 
-  export function filter(companies: Company[], filterCriteria: SciColumnFilter[], globalFilter?: string): Company[] {
+  export function filter(companies: Company[], filterCriteria: SciColumnFilter[], tableFilter?: string): Company[] {
     let copy = [...companies];
     for (const filterCriterion of filterCriteria) {
       const filterText = `${filterCriterion.text}`.toLocaleLowerCase();
@@ -141,9 +141,9 @@ export namespace Companies {
       });
     }
 
-    if (globalFilter) {
+    if (tableFilter) {
       copy = copy.filter(company => {
-        return Object.values(company).some(value => `${value}`.toLocaleLowerCase().includes(globalFilter.toLocaleLowerCase()));
+        return Object.values(company).some(value => `${value}`.toLocaleLowerCase().includes(tableFilter.toLocaleLowerCase()));
       });
     }
 

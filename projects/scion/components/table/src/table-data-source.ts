@@ -27,7 +27,7 @@ export interface SciTableRequest {
   page: number; // TODO [egob] Should page be 1-based?
   sortCriteria: SciSortCriterion[];
   columnFilters: SciColumnFilter[];
-  globalFilter?: string; // TODO [egob] still supported? I think yes, but consider renaming it to tableFilter
+  tableFilter?: string;
 }
 
 export interface SciTableResponse<T> {

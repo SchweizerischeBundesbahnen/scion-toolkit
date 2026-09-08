@@ -22,7 +22,7 @@ export class ProductService {
     return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
       .pipe(
         switchMap(() => this._products$),
-        map(products => Products.filter(products, request.columnFilters, request.globalFilter, columnDataTypes)),
+        map(products => Products.filter(products, request.columnFilters, request.tableFilter, columnDataTypes)),
         map(products => Products.sort(products, request.sortCriteria, columnDataTypes)),
         map(products => ({
           items: products.slice(request.start, request.end),
@@ -87,7 +87,7 @@ export namespace Products {
     });
   }
 
-  export function filter(companies: Product[], filterCriteria: SciColumnFilter[], globalFilter: string | undefined, columnDataTypes: Map<`column:${string}`, SciColumnType>): Product[] {
+  export function filter(companies: Product[], filterCriteria: SciColumnFilter[], tableFilter: string | undefined, columnDataTypes: Map<`column:${string}`, SciColumnType>): Product[] {
     let copy = [...companies];
     for (const filterCriterion of filterCriteria) {
       const filterText = `${filterCriterion.text}`.toLocaleLowerCase();
@@ -105,9 +105,9 @@ export namespace Products {
       });
     }
 
-    if (globalFilter) {
+    if (tableFilter) {
       copy = copy.filter(company => {
-        return Object.values(company).some(value => `${value}`.toLocaleLowerCase().includes(globalFilter.toLocaleLowerCase()));
+        return Object.values(company).some(value => `${value}`.toLocaleLowerCase().includes(tableFilter.toLocaleLowerCase()));
       });
     }
 

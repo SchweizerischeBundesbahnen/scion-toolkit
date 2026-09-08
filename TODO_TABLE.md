@@ -3,7 +3,6 @@
 - Neue icons in icon font und integrieren (z.B. sort icons für spalten)
 - Call loader fn in injection context (separate context per call to release resources)
 - Gedanken über tri-state bei Sortierung (erforderlich?)
-- rename globalFilter => tableFilter
 - Analyze and fix menu group crash
 - Change default row-height to 2em.
 - Neue icons von Jonas integrieren
