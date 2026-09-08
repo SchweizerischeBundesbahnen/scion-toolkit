@@ -13,8 +13,7 @@ import {SciRow} from './table.model';
 import {Objects} from '@scion/toolkit/util';
 
 export interface TableCacheEntry<T> {
-  // TODO [egob] Consider renaming to rows
-  items: Signal<SciRow<T>[] | undefined>;
+  rows: Signal<SciRow<T>[] | undefined>;
   start: number;
   end: number;
   dispose: () => void;
@@ -55,7 +54,7 @@ export class TableCache<T> {
       const cacheCopy = new Map(cache);
 
       const existing = cacheCopy.get(key);
-      if (existing && existing.items() === undefined) {
+      if (existing && existing.rows() === undefined) {
         cacheCopy.delete(key);
         existing.dispose();
       }
@@ -79,14 +78,14 @@ export class TableCache<T> {
 
   public get rowsByIndex(): Signal<Map<number, SciRow<T>>> {
     return computed(() => this.values()
-      .flatMap(page => page.items() ?? [])
+      .flatMap(page => page.rows() ?? [])
       .reduce((acc, row) => acc.set(row.index, row), new Map<number, SciRow<T>>()), {equal: Objects.isEqual});
   }
 
   public get rowsById(): Signal<Map<unknown, SciRow<T>>> {
     return computed(() => this.values()
-      .flatMap(page => page.items() ?? [])
+      .flatMap(page => page.rows() ?? [])
       .filter(row => row.id !== undefined)
-      .reduce((acc, row) => acc.set(row.id!, row), new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
+      .reduce((acc, row) => acc.set(row.id, row), new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
   }
 }

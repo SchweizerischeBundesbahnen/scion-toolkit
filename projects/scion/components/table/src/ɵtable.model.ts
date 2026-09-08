@@ -83,7 +83,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   });
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), tableFilter: this._tableFilter()}));
-  public readonly loading = computed(() => this._cache.values().some(entry => entry.items() === undefined));
+  public readonly loading = computed(() => this._cache.values().some(entry => entry.rows() === undefined));
   public readonly activeRow: Signal<SciRow<T> | undefined>;
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
@@ -269,7 +269,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     const pageEnd = pageStart + pageSize;
     const cacheKey = `${pageStart}-${pageEnd}` as const;
     if (this._cache.has(cacheKey)) {
-      return this._cache.get(cacheKey)!.items;
+      return this._cache.get(cacheKey)!.rows;
     }
 
     const items = signal<T[] | undefined>(undefined);
@@ -293,7 +293,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     });
 
     const cacheEntry: TableCacheEntry<T> = {
-      items: computed(() => {
+      rows: computed(() => {
         const resolved = items();
         const columns = this.columns();
         return untracked(() => resolved ? this.mapItemsToRow(resolved, columns, pageStart) : undefined);
@@ -308,7 +308,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       this._cache.deleteIfEmpty(cacheKey);
     });
 
-    return cacheEntry.items;
+    return cacheEntry.rows;
   }
 
   /**
