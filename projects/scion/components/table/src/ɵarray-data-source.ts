@@ -15,6 +15,61 @@ import {coerceSignal} from '@scion/components/common';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map, Observable, shareReplay} from 'rxjs';
 
+export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnLike<T>[]>): SciDataLoaderFn<T> {
+  const cache = linkedSignal({
+    source: () => ({data: data(), columns: columns()}),
+    computation: () => new Map<string, Observable<MappedRow<T>[]>>(),
+  });
+
+  const items$ = toObservable(computed(() => {
+    const resolvedColumns = columns();
+    const items: MappedRow<T>[] = data().map(item => ({
+      item,
+      cells: resolvedColumns.reduce((acc, column) => acc.set(column.name, {
+        column,
+        value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined,
+      }), new Map<`column:${string}`, MappedCell<T>>()),
+    }));
+
+    return {
+      items,
+      columns: resolvedColumns,
+    };
+  }));
+
+  return (request: SciTableRequest): Observable<SciTableResponse<T>> => {
+    const sortHash = request.sortCriteria.map(sc => `${sc.columnName}_${sc.direction}`).join('-');
+    const filterHash = request.columnFilters.map(fc => `${fc.columnName}_${fc.text}`).join('-');
+    const hash = `${sortHash}-${filterHash}-${request.tableFilter ?? ''}`;
+
+    if (!cache().has(hash)) {
+      const sortedAndFiltered$ = items$.pipe(
+        map(({items, columns}) => {
+          const sortCols = mapCriteria(request.sortCriteria, columns);
+          const filterCols = mapCriteria(request.columnFilters, columns);
+
+          return items
+            .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.tableFilter))
+            .sort((a, b) => sort(a, b, sortCols));
+        }),
+        shareReplay({bufferSize: 1, refCount: true}), // as soon as there are no subscribers left unsubscribe from the source.
+      );
+
+      // Only store one item in the cache.
+      // The cache is used for scrolling and multipage selection.
+      // It caches the data based on the current filter and sort.
+      cache.set(new Map<string, Observable<MappedRow<T>[]>>().set(hash, sortedAndFiltered$));
+    }
+
+    return cache().get(hash)!.pipe(
+      map(items => ({
+        totalCount: items.length,
+        items: items.slice(request.start, request.end).map(i => i.item),
+      })),
+    );
+  };
+}
+
 type Criterion = SciSortCriterion | SciColumnFilter;
 type MappedCriterion<T, CRIT extends Criterion = Criterion> = CRIT & {
   column: SciColumnLike<T>;
@@ -123,59 +178,4 @@ function sort<T>(a: MappedRow<T>, b: MappedRow<T>, sortCriteria: MappedCriterion
   }
 
   return 0;
-}
-
-export function arrayDataSource<T>(data: Signal<T[]>, columns: Signal<SciColumnLike<T>[]>): SciDataLoaderFn<T> {
-  const cache = linkedSignal({
-    source: () => ({data: data(), columns: columns()}),
-    computation: () => new Map<string, Observable<MappedRow<T>[]>>(),
-  });
-
-  const items$ = toObservable(computed(() => {
-    const resolvedColumns = columns();
-    const items: MappedRow<T>[] = data().map(item => ({
-      item,
-      cells: resolvedColumns.reduce((acc, column) => acc.set(column.name, {
-        column,
-        value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined,
-      }), new Map<`column:${string}`, MappedCell<T>>()),
-    }));
-
-    return {
-      items,
-      columns: resolvedColumns,
-    };
-  }));
-
-  return (request: SciTableRequest): Observable<SciTableResponse<T>> => {
-    const sortHash = request.sortCriteria.map(sc => `${sc.columnName}_${sc.direction}`).join('-');
-    const filterHash = request.columnFilters.map(fc => `${fc.columnName}_${fc.text}`).join('-');
-    const hash = `${sortHash}-${filterHash}-${request.tableFilter ?? ''}`;
-
-    if (!cache().has(hash)) {
-      const sortedAndFiltered$ = items$.pipe(
-        map(({items, columns}) => {
-          const sortCols = mapCriteria(request.sortCriteria, columns);
-          const filterCols = mapCriteria(request.columnFilters, columns);
-
-          return items
-            .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.tableFilter))
-            .sort((a, b) => sort(a, b, sortCols));
-        }),
-        shareReplay({bufferSize: 1, refCount: true}), // as soon as there are no subscribers left unsubscribe from the source.
-      );
-
-      // Only store one item in the cache.
-      // The cache is used for scrolling and multipage selection.
-      // It caches the data based on the current filter and sort.
-      cache.set(new Map<string, Observable<MappedRow<T>[]>>().set(hash, sortedAndFiltered$));
-    }
-
-    return cache().get(hash)!.pipe(
-      map(items => ({
-        totalCount: items.length,
-        items: items.slice(request.start, request.end).map(i => i.item),
-      })),
-    );
-  };
 }

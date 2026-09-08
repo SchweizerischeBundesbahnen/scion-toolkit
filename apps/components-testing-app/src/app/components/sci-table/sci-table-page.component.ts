@@ -74,14 +74,6 @@ export default class SciTablePageComponent {
 
   private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
     return table({
-      headerVisible: this.settingsForm.showHeader().value(),
-      sortable: this.settingsForm.sortable().value(),
-      filterable: this.settingsForm.filterable().value(),
-      resizable: this.settingsForm.resizable().value(),
-      selectable: (() => {
-        const selectable = this.settingsForm.selectable().value();
-        return selectable === 'false' ? false : selectable;
-      })(),
       data: (() => {
         switch (options.datasource) {
           case 'array':

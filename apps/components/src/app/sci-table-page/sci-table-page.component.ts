@@ -62,6 +62,7 @@ export default class SciTablePageComponent {
     const tabbar = this._tabbar;
 
     return table({
+      data: options.slowDataSource ? request => companyService.getCompanies$(request, {slowDataSource: true}) : companyService.companies,
       rowBindings: [
         partBinding((_item, index) => {
           if (this.settingsForm.showZebraStriping().value()) {
@@ -71,7 +72,6 @@ export default class SciTablePageComponent {
         }),
       ],
       trackBy: company => company.id,
-      data: options.slowDataSource ? request => companyService.getCompanies$(request, {slowDataSource: true}) : companyService.companies,
       rowActions: createRowActions(),
     }, (table: SciTableFactory<Company>) => {
       const visibleColumns = this.settingsForm.visibleColumns().value();
