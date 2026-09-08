@@ -8,6 +8,9 @@
 - Align 'no_items' horizontal in mitte von viewport
 - Test dass Tabelle in Workbench Microfrontend funktioniert
 - Test dass Tabelle mit RemoteDataFetcher funktioniert (Zusammenspiel)
+- Table Header
+  - only use button if sortable
+  - --sci-table-header-height CSS variable should only apply to headers, not filters
 
 # Future Features
 - Native Focus für active Row

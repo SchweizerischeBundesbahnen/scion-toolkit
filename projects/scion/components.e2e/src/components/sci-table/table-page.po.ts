@@ -101,6 +101,11 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-page-height').fill(`${height ?? ''}`);
   }
 
+  public async setHeaderHeight(headerHeight: number): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-header-height').fill(headerHeight.toString());
+  }
+
   public async setRowHeight(rowHeight: number): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('input.e2e-row-height').fill(rowHeight.toString());

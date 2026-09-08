@@ -1,3 +1,6 @@
+<!--TODO [egob] -->
+<!-- - only use buttons if sortable  -->
+<!-- - header height CSS variable (--sci-table-header-height) should only apply to headers, not filters  -->
 @if (table().headerVisible()) {
   <button class="column-sort e2e-column-sort"
           [tabIndex]="column().sortable() ? 0 : -1"

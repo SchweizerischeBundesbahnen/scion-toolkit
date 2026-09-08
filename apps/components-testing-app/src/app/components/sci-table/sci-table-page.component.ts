@@ -30,7 +30,8 @@ import {noop} from 'rxjs';
     '[style.--table-width]': 'layoutForm.tableWidth().value() !== null ? `${layoutForm.tableWidth().value()}px` : null',
     '[style.--table-grow-to-breakpoint]': 'layoutForm.tableGrowToBreakpoint().value() ? `true` : null',
     '[style.--table-page-height]': 'layoutForm.pageHeight().value() !== null ? `${layoutForm.pageHeight().value()}px` : null',
-    '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() ? `${settingsForm.rowHeight().value()}px` : null',
+    '[style.--sci-table-header-height]': 'settingsForm.headerHeight().value() !== null ? `${settingsForm.headerHeight().value()}px` : null',
+    '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() !== null ? `${settingsForm.rowHeight().value()}px` : null',
   },
   imports: [
     SciTableComponent,
@@ -224,6 +225,7 @@ export default class SciTablePageComponent {
       showGridlines: false,
       showRowActions: false,
       customRowStyling: false,
+      headerHeight: 30,
       rowHeight: 30,
       tableCount: 1,
     }));
@@ -295,7 +297,8 @@ interface SettingsForm {
   showGridlines: boolean;
   showRowActions: boolean;
   customRowStyling: boolean;
-  rowHeight: number;
+  headerHeight: number | null;
+  rowHeight: number | null;
   tableCount: number;
 }
 
