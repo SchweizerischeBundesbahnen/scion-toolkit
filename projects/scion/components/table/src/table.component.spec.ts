@@ -822,6 +822,7 @@ fdescribe('Table', () => {
           selectable: 'single',
         }, table => table.addNumberColumn(item => item.id)), {
           height: '300px',
+          designTokens: {'--sci-table-row-height': '30px'},
         });
 
         const table = new TablePO(fixture);
@@ -1495,6 +1496,7 @@ fdescribe('Table', () => {
         headerVisible: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
+        designTokens: {'--sci-table-row-height': '30px'},
       });
 
       const table = new TablePO(fixture);
