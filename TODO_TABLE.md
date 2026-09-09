@@ -10,6 +10,7 @@
 - Table Header
   - only use button if sortable
   - --sci-table-header-height CSS variable should only apply to headers, not filters
+- Render cell without additional DIV
 
 # Future Features
 - Native Focus für active Row
@@ -30,6 +31,7 @@
     - Gedanken über updatedaussehalb der aktuellen page gemacht?
 - Gedanken über public API von sort und filter (stateful?)
 - Scrollbar thumb position mismach bei zoom; Umstellung auf capturePointerPosition, dann Umwandlung auf screenX nicht erforderlich; sci-mousemove disoatcher obsolet
+- Option to configure the format for number column
 
 - ## Bugs
 - Filter Field Drop Down
