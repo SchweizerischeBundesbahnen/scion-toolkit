@@ -1,5 +1,5 @@
 import {Locator} from '@playwright/test';
-import {fromRect, waitUntilStable} from '../../helper/testing.utils';
+import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
 import {ColumnSplitterPO, TablePO} from './table.po';
 import {RequireOne} from '@scion/toolkit/types';
 
@@ -23,6 +23,10 @@ export class ColumnPO {
 
   public async width(): Promise<number> {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()).width);
+  }
+
+  public async bounds(): Promise<DomRect> {
+    return waitUntilStable(async () => fromRect(await this.locator.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
 
   public async sort(options?: {modifiers?: Array<'Alt' | 'Control' | 'ControlOrMeta' | 'Meta' | 'Shift'>}): Promise<void> {

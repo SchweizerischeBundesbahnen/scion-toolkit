@@ -17,7 +17,7 @@
       @for (row of table.rows(); track $index) {
         <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item!)" [sciAttributes]="row.bindings?.attributes()"/>
       } @empty {
-        <span class="no-data e2e-no-data">{{('%scion.components.no_items.message' | sciText)()}}</span>
+        <span class="no-rows e2e-no-rows">{{('%scion.components.no_items.message' | sciText)()}}</span>
       }
     </sci-table-body>
 
@@ -29,7 +29,7 @@
   </sci-table-grid>
 </div>
 
-<!--Scrollbars-->
+<!-- Scrollbars -->
 <sci-scrollbar direction="hscroll" [viewport]="viewport"/>
 <sci-scrollbar direction="vscroll" [viewport]="viewport"/>
 

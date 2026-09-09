@@ -28,7 +28,7 @@ export class TablePO {
   public readonly verticalScrollbar: ScrollbarPO;
   public readonly horizontalScrollbar: ScrollbarPO;
   public readonly splitters: Locator;
-  public readonly noDataMessage: Locator;
+  public readonly noRowsMessage: Locator;
 
   constructor(public readonly locator: Locator) {
     this.viewport = this.locator.locator('div.e2e-viewport');
@@ -42,7 +42,7 @@ export class TablePO {
     this.verticalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="vscroll"]'));
     this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
     this.splitters = this.locator.locator('sci-column-splitters');
-    this.noDataMessage = this.locator.locator('span.e2e-no-data');
+    this.noRowsMessage = this.locator.locator('span.e2e-no-rows');
   }
 
   /**

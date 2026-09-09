@@ -5,7 +5,6 @@
 - Gedanken über tri-state bei Sortierung (erforderlich?)
 - Analyze and fix menu group crash
 - Neue icons von Jonas integrieren
-- Align 'no_items' horizontal in mitte von viewport
 - Test dass Tabelle in Workbench Microfrontend funktioniert
 - Test dass Tabelle mit RemoteDataFetcher funktioniert (Zusammenspiel)
 - Table Header

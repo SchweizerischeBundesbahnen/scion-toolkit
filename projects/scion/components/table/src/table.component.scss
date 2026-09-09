@@ -13,6 +13,8 @@
     scrollbar-width: none;
     isolation: isolate; // Scope z-indices to this component so subsequent DOM elements naturally render on top of the table.
     box-sizing: border-box; // must not be set on sci-table level for the application to control box sizing if setting a table border.
+    container-name: sci-table-viewport;
+    container-type: scroll-state;
 
     // Indicate if table toolbar is not visible.
     &:not(:has(sci-table-header)) {
@@ -73,13 +75,22 @@
         padding-top: var(--ɵsci-table-virtual-scroll-offset-top);
         padding-bottom: var(--ɵsci-table-virtual-scroll-offset-bottom);
 
-        > span.no-data {
+        > span.no-rows {
           grid-column: 1 / -1;
           justify-self: center;
-          align-self: center;
+          display: grid;
+          place-content: center;
           user-select: none;
           white-space: nowrap;
           color: var(--sci-color-text-subtle);
+
+          // Stick message to the viewport if the viewport overflows horizontally.
+          @container sci-table-viewport scroll-state(scrollable: inline) {
+            position: sticky;
+            left: 50%;
+            right: 50%;
+            width: 0; // required to horizontally center the message
+          }
         }
       }
 

@@ -15,7 +15,9 @@ import {TablePO} from './table.po';
 import {expectTable} from './table-matcher';
 import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
-import {generateData, provideHttpDatasource} from './datasource/table-http-datasource';
+import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
+import {firstValueFrom, Subject} from 'rxjs';
+import {SciTableResponse} from '@scion/components/table';
 
 test.describe.only('sci-table', () => {
 
@@ -407,20 +409,6 @@ test.describe.only('sci-table', () => {
 
       await table.column({name: 'column:name'}).filter('999');
       await expect.poll(() => table.scrollTop()).toBe(0);
-    });
-
-    test('should show empty state', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.setFilterable(true);
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-
-      await tablePage.setRowCount(10_000);
-      await table.column({name: 'column:name'}).filter('abc');
-      await expect(table.rows).toHaveCount(0);
-      await expect(table.locator).toContainText('No items found.');
     });
 
     test('should retain selection on filtering', async ({page}) => {
@@ -2279,6 +2267,152 @@ test.describe.only('sci-table', () => {
       await tablePage.setMaxHeight(500);
       await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(500);
       await expectTable(table).toHaveVerticalOverflow();
+    });
+  });
+
+  test.describe('No Items Found', () => {
+
+    test(`should display 'No Items Found' if no rows`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:testee', type: 'string'});
+
+      await tablePage.setRowCount(10);
+      await expect(table.locator).not.toContainText('No items found.');
+
+      await tablePage.setRowCount(0);
+      await expect(table.locator).toContainText('No items found.');
+
+      await tablePage.setRowCount(10);
+      await expect(table.locator).not.toContainText('No items found.');
+
+      await table.column({name: 'column:testee'}).filter('does not exist');
+      await expect(table.locator).toContainText('No items found.');
+    });
+
+    test(`should horizontally center 'No Items Found' in viewport`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(0);
+      await tablePage.setWidth(600);
+      await tablePage.setRowHeight(30);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '1200px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '1200px'});
+
+      // Expect horizontal overflow.
+      await expectTable(table).toHaveHorizontalOverflow();
+      const tableBounds = await table.bounds();
+
+      // Scroll to the start.
+      await table.scrollTo({x: 'start'});
+      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+
+      // Scroll to the end.
+      await table.scrollTo({x: 'end'});
+      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+    });
+
+    test(`should horizontally center 'No Items Found' in table-body if no overflow`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(0);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+
+      // Expect no horizontal overflow.
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      const tableBounds = await table.bounds();
+      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+
+      // Shrink column so the table does not fill the viewport.
+      await table.column({name: 'column:1'}).splitter.drag(-300);
+
+      // Expect 'No Items Found' message to be horizontally centered within the column.
+      const columnBounds = await table.column({name: 'column:1'}).bounds();
+      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(columnBounds.hcenter);
+    });
+
+    test(`should vertically center 'No Items Found' in first row`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(0);
+      await tablePage.setRowHeight(50);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+
+      const tableBounds = await table.bounds();
+      const headerBounds = await table.header.bounds();
+
+      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).vcenter).toEqual(headerBounds.bottom + 25); // 25 = half row height
+    });
+
+    test(`should not display 'No Items Found' until loaded initial data`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setHeight(300);
+      await tablePage.setRowHeight(30);
+      await tablePage.setHeaderHeight(30);
+
+      // Install HTTP endpoint that blocks the initial load.
+      const onLoad$ = new Subject<void>();
+      await page.route('**/sci-table/products', async route => {
+        await firstValueFrom(onLoad$);
+        await route.fulfill({json: {items: [], totalCount: 0} satisfies SciTableResponse<Product>});
+      });
+
+      await tablePage.addColumn({name: 'column:testee', type: 'string'});
+      await tablePage.setDatasource('loader-http');
+      await waitUntilStable(() => table.rows.count());
+
+      // Expect skeletons to display, but not 'No Items Found'.
+      await expect(table.locator).not.toContainText('No items found.');
+      await expect(table.body.locator('div.e2e-skeleton')).toHaveCount(9);
+
+      // Continue initial load.
+      onLoad$.next();
+
+      // Expect 'No Items Found' to display, but not skeletons.
+      await expect(table.locator).toContainText('No items found.');
+      await expect(table.body.locator('div.e2e-skeleton')).toHaveCount(0);
+    });
+
+    test(`should display 'No Items Found' if table grows with its content`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setRowCount(0);
+      await tablePage.setRowHeight(30);
+      await tablePage.showHeader(false);
+
+      // Configure table to grow with its content.
+      await tablePage.setGrowToBreakpoint(true);
+
+      // Expect table to grow with "No Items Found" message.
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
     });
   });
 });
