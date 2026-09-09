@@ -54,13 +54,12 @@ export class ColumnSplittersComponent<T> {
     }
   }
 
-  public async onResizeAuto(column: SciColumnLike): Promise<void> {
-    // Get the maximum cell width, bounded by the minimum width.
-    const maxCellWidth = Math.max(...this.rows().map(row => row.getCellWidth(column.name)));
-    const packedWidth = Math.max(maxCellWidth, column.minWidth);
-
+  /**
+   * Resizes the column to its preferred size.
+   */
+  protected onPack(column: SciColumnLike): void {
     this._columnService.startResize(column);
-    this._columnService.resize(packedWidth);
+    this._columnService.resize('min-content');
     this._columnService.endResize();
   }
 

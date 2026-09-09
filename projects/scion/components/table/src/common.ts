@@ -13,15 +13,6 @@ import {Observable} from 'rxjs';
 export type MaybeAsync<T> = T | Promise<T> | Observable<T>;
 
 /**
- * CSS minmax for use in a CSS grid.
- */
-export function cssMinmax(minmax: {min: number; max: number | string}): string {
-  const min = `${minmax.min}px`;
-  const max = typeof minmax.max === 'number' ? `${minmax.max}px` : minmax.max;
-  return `minmax(${min}, ${max})`;
-}
-
-/**
  * Creates a range of integers starting at `start` and ending at `end` (including `end`).
  */
 export function rangeInclusive(start: number, end: number): number[] {

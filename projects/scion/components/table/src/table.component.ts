@@ -24,7 +24,6 @@ import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
 import {ColumnBoundsComponent} from './column-bounds/column-bounds.component';
-import {SciTableViewportRefDirective} from './table-viewport-ref.directive';
 import {SciAttributesDirective} from '@scion/components/common';
 
 @Component({
@@ -49,7 +48,6 @@ import {SciAttributesDirective} from '@scion/components/common';
     SciTableGridComponent,
     SciTableBodyComponent,
     SciTableHeaderComponent,
-    SciTableViewportRefDirective,
     SciAttributesDirective,
   ],
   providers: [

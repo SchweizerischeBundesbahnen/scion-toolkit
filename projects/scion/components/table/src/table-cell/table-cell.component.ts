@@ -8,12 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, ElementRef, inject, input, Signal, TemplateRef, viewChild} from '@angular/core';
+import {Component, computed, input, Signal, TemplateRef} from '@angular/core';
 import {SciCellLike, SciRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
-import {SciIconComponent} from '@scion/components/icon';
 import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
+import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
   selector: 'sci-table-cell',
@@ -36,20 +36,9 @@ export class TableCellComponent<T> {
   public readonly row = input.required<SciRow<T>>();
   public readonly isSelected = input<boolean>();
 
-  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
-  private readonly _cellElement = viewChild.required<ElementRef<HTMLDivElement>>('cellElement');
-
   protected readonly template = this.computeTemplate();
   protected readonly templateContext = this.computeTemplateContext();
   protected readonly partAttribute = this.computePartAttribute();
-
-  public getWidth(): number {
-    const paddingStr = getComputedStyle(this._host).paddingRight;
-    // The actual column width has to include the cell padding, so the content gets enough space.
-    const padding = Number.parseFloat(paddingStr); // cut unit
-    const width = Math.ceil(this._cellElement().nativeElement.offsetWidth);
-    return isNaN(padding) ? width : padding * 2 + width;
-  }
 
   private computeTemplate(): Signal<TemplateRef<unknown> | null> {
     return computed(() => {

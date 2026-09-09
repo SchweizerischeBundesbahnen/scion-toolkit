@@ -11,7 +11,7 @@
   - only use button if sortable
   - --sci-table-header-height CSS variable should only apply to headers, not filters
 - Render cell without additional DIV
-
+- 
 # Future Features
 - Native Focus für active Row
 - Multiline Headers

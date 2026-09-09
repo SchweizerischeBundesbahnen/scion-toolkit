@@ -622,7 +622,7 @@ test.describe.only('sci-table', () => {
       await expectTable(table).toHaveHorizontalOverflow();
     });
 
-    test('should auto resize', async ({page}) => {
+    test('should pack column', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -634,7 +634,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBeLessThan(200);
     });
 
-    test('should auto resize to min-width', async ({page}) => {
+    test('should pack column to min-width', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -645,7 +645,7 @@ test.describe.only('sci-table', () => {
       await table.column({name: 'column:name'}).splitter.dblclick();
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(400);
 
-      // Should still be able to resize after auto resize.
+      // Should still be able to resize after pack.
       await table.column({name: 'column:name'}).splitter.drag(25);
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(425);
     });

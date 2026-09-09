@@ -1,22 +1,17 @@
-@let _cell = cell();
-<div class="cell" #cellElement>
-  @switch (_cell.type) {
-    @case ('template') {
-      <ng-template *ngTemplateOutlet="template(); context: templateContext()"/>
-    }
-    @case ('component') {
-      <ng-container *sciComponentOutlet="_cell.component"/>
-    }
-    @case ('boolean') {
-      @let value = _cell.value();
-      @if (value) {
-        <sci-icon class="checkbox">scion.checkmark</sci-icon>
-      } @else {
-        <sci-icon class="checkbox">scion.clear</sci-icon>
-      }
-    }
-    @default {
-      {{_cell.value()}}
-    }
+@let cell = this.cell();
+
+@switch (cell.type) {
+  @case ('template') {
+    <ng-template *ngTemplateOutlet="template(); context: templateContext()"/>
   }
-</div>
+  @case ('component') {
+    <ng-container *sciComponentOutlet="cell.component"/>
+  }
+  @case ('boolean') {
+    <!-- TODO [dwie] Use another ligature for icon scion.clear -->
+    <sci-icon class="checkbox">{{cell.value() ? 'scion.checkmark' : 'scion.clear'}}</sci-icon>
+  }
+  @default {
+    {{cell.value()}}
+  }
+}

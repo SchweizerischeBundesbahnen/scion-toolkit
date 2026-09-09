@@ -9,17 +9,15 @@
  */
 
 import {SciColumnLike} from '../table.model';
-import {computed, inject, Injectable, Signal, signal, WritableSignal} from '@angular/core';
+import {afterNextRender, computed, inject, Injectable, Injector, Signal, signal, WritableSignal} from '@angular/core';
 import {clamp} from '@scion/toolkit/util';
 import {ɵSCI_TABLE} from '../ɵtable.model';
-import {SciTableViewportRefDirective} from '../table-viewport-ref.directive';
-import {cssMinmax} from '../common';
 
 @Injectable()
 export class SciColumnService {
 
   private readonly _table = inject(ɵSCI_TABLE);
-  private readonly _tableViewport = inject(SciTableViewportRefDirective).viewport;
+  private readonly _injector = inject(Injector);
 
   /**
    * State while resizing a column.
@@ -40,14 +38,14 @@ export class SciColumnService {
     return computed(() => {
       return this._table().columns()
         .map(column => {
-          const columnWidth = this._resizingState()?.columnWidths()?.get(column.name);
-          if (columnWidth !== undefined) {
-            return `${columnWidth}px`;
+          const width = this._resizingState()?.columnWidths()?.get(column.name) ?? column.width();
+          if (typeof width === 'number') {
+            return `${width}px`;
           }
-          if (column.width().endsWith('fr')) {
-            return cssMinmax({min: column.minWidth, max: column.width()});
+          if (width.endsWith('fr')) {
+            return cssMinmax({min: column.minWidth, max: width});
           }
-          return column.width();
+          return width;
         })
         .join(' ');
     });
@@ -58,9 +56,9 @@ export class SciColumnService {
     this._resizingState.set({column, columnWidths: signal(undefined)});
   }
 
-  public resize(columnWidth: number): void {
+  public resize(columnWidth: number | 'min-content'): void {
     const state = this._resizingState()!;
-    const clampedWidth = clamp(columnWidth, {min: state.column.minWidth});
+    const clampedWidth = typeof columnWidth === 'number' ? clamp(columnWidth, {min: state.column.minWidth}) : columnWidth;
 
     if (clampedWidth !== state.columnWidths()?.get(state.column.name)) {
       const columnWidths = this.calculateColumnWidths(state.column, clampedWidth);
@@ -69,16 +67,20 @@ export class SciColumnService {
   }
 
   public endResize(): void {
-    const {column, columnWidths} = this._resizingState()!;
-    this.updateUserSettings(column, columnWidths()!);
-    column.resizing.set(false);
-    this._resizingState.set(undefined);
+    const {column} = this._resizingState()!;
+
+    // Run on next render to update user settings with effective column widths read from the DOM.
+    afterNextRender(() => {
+      this.updateUserSettings(column);
+      column.resizing.set(false);
+      this._resizingState.set(undefined);
+    }, {injector: this._injector});
   }
 
   /**
-   * Updates user settings with resized column widths.
+   * Updates user settings with current column widths.
    */
-  private updateUserSettings(resizedColumn: SciColumnLike, columnWidths: Map<`column:${string}`, number>): void {
+  private updateUserSettings(resizedColumn: SciColumnLike): void {
     const resizedColumnIndex = this._table().columns().indexOf(resizedColumn);
     this._table().userSettings.update(userSettings => ({
       ...userSettings,
@@ -88,7 +90,7 @@ export class SciColumnService {
         if (index <= resizedColumnIndex) {
           return {
             ...columnSettings ?? {name: column.name},
-            width: columnWidths.get(column.name),
+            width: column.location.width,
           };
         }
 
@@ -100,42 +102,21 @@ export class SciColumnService {
   /**
    * Calculates absolute column widths based on the resized column's new width.
    *
-   * Remaining viewport space is distributed proportionally among flex-sized (`fr`) columns using their current width ratio.
+   * Any remaining viewport space is distributed proportionally among flex-sized columns using their current width ratio.
    */
-  private calculateColumnWidths(columnToResize: SciColumnLike, newColumnWidth: number): Map<`column:${string}`, number> {
+  private calculateColumnWidths(columnToResize: SciColumnLike, newColumnWidth: number | 'min-content'): Map<`column:${string}`, number | 'min-content'> {
     const columns = this._table().columns();
-    const viewportWidth = this._tableViewport.clientWidth;
     const columnIndex = columns.indexOf(columnToResize);
 
-    // IMPORTANT:
-    // Columns to the left are permanently fixed.
-
-    // Calculate the total width occupied by fixed-sized columns, plus all columns to the left.
-    const totalFixedWidth = columns
-      .filter((column, index) => index <= columnIndex || !column.width().endsWith('fr'))
-      .reduce((sum, column) => sum + (column === columnToResize ? newColumnWidth : column.location.width), 0);
-
-    // Calculate the total width occupied by flex-sized columns.
-    const flexColumns = columns
-      .filter((column, index) => index > columnIndex && column.width().endsWith('fr'))
-      .reduce((set, column) => set.add(column), new Set<SciColumnLike>());
-    const totalFlexWidth = [...flexColumns].reduce((sum, column) => sum + column.location.width, 0);
-
-    // Calculate the total viewport space available for flex-sized distribution.
-    const availableFlexWidth = Math.max(0, viewportWidth - totalFixedWidth);
-
-    // Calculate the absolute width per column, distributing available flex space proportionally to the column's ratio.
-    return columns.reduce((map, column) => {
-      if (column === columnToResize) {
+    return columns.reduce((map, column, index) => {
+      if (index < columnIndex) {
+        return map.set(column.name, column.location.width); // columns to the left are fixed
+      }
+      if (index === columnIndex) {
         return map.set(column.name, newColumnWidth);
       }
-      if (flexColumns.has(column)) {
-        const ratio = column.location.width / totalFlexWidth;
-        const absoluteWidth = ratio * availableFlexWidth;
-        return map.set(column.name, clamp(absoluteWidth, {min: column.minWidth}));
-      }
-      return map.set(column.name, column.location.width);
-    }, new Map<`column:${string}`, number>());
+      return map;
+    }, new Map<`column:${string}`, number | 'min-content'>());
   }
 }
 
@@ -148,7 +129,16 @@ interface ColumnResizingState {
    */
   column: SciColumnLike;
   /**
-   * Map of column names to their current pixel widths.
+   * Map of column names to their pixel widths.
    */
-  columnWidths: WritableSignal<Map<`column:${string}`, number> | undefined>;
+  columnWidths: WritableSignal<Map<`column:${string}`, number | 'min-content'> | undefined>;
+}
+
+/**
+ * Creates a minmax() CSS function with the given min/max for use in a CSS grid.
+ */
+function cssMinmax(minmax: {min: number; max: number | string}): string {
+  const min = `${minmax.min}px`;
+  const max = typeof minmax.max === 'number' ? `${minmax.max}px` : minmax.max;
+  return `minmax(${min}, ${max})`;
 }

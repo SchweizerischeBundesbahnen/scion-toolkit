@@ -16,6 +16,7 @@ import {SciColumn} from '../table.model';
   template: '',
   host: {
     '[attr.data-column]': 'column().name',
+    '[style.min-width.px]': 'column().minWidth', // required when resizing the column to its preferred size to not drop below min-width.
   },
 })
 export class SciColumnComponent {
