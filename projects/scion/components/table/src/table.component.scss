@@ -99,7 +99,7 @@
         z-index: 1; // required to overlap the table header, allowing resizing columns in the table header
       }
 
-      > sci-column-bounds {
+      > sci-virtual-columns {
         grid-column: 1/-1;
       }
     }

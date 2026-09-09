@@ -24,9 +24,8 @@
     <!-- Column splitters -->
     <sci-column-splitters [rows]="rows()"/>
 
-    <!-- Column Bounds -->
-    <!-- TODO [dwie] Rename to <sci-virtual-columns/>-->
-    <sci-column-bounds/>
+    <!-- Render an invisible virtual column per grid column to read current widths and set minimum widths. -->
+    <sci-virtual-columns/>
   </sci-table-grid>
 </div>
 

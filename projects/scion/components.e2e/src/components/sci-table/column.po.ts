@@ -13,7 +13,7 @@ export class ColumnPO {
   public readonly sortButton: Locator;
 
   constructor(table: TablePO, locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
-    this.locator = table.locator.locator('sci-column-bounds sci-column').locator(selectByColumn(locateBy));
+    this.locator = table.locator.locator('sci-virtual-columns sci-column').locator(selectByColumn(locateBy));
     this.header = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
     this.splitter = new ColumnSplitterPO(table.locator.locator('sci-column-splitters sci-splitter').locator(selectByColumn(locateBy)), table);
     this.filterField = this.header.locator('sci-column-filter');

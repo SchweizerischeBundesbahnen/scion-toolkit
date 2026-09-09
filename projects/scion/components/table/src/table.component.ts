@@ -23,13 +23,13 @@ import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
-import {ColumnBoundsComponent} from './column-bounds/column-bounds.component';
+import {VirtualColumnsComponent} from './virtual-columns/virtual-columns.component';
 import {SciAttributesDirective} from '@scion/components/common';
 
 @Component({
   selector: 'sci-table',
   templateUrl: './table.component.html',
-  styleUrls: ['./table.component.scss'],
+  styleUrl: './table.component.scss',
   encapsulation: ViewEncapsulation.ShadowDom,
   host: {
     '[attr.name]': 'name()', // Public API: Enables selecting the table by name in CSS (also if the table has a dynamic name input binding)
@@ -44,7 +44,7 @@ import {SciAttributesDirective} from '@scion/components/common';
     SciTextPipe,
     SciThrobberComponent,
     ColumnSplittersComponent, // TODO [egob] Should start with Sci?
-    ColumnBoundsComponent, // TODO [egob] Should start with Sci?
+    VirtualColumnsComponent, // TODO [egob] Should start with Sci?
     SciTableGridComponent,
     SciTableBodyComponent,
     SciTableHeaderComponent,

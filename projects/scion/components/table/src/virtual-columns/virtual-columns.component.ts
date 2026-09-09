@@ -13,14 +13,14 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciColumnComponent} from '../column/column.component';
 
 @Component({
-  selector: 'sci-column-bounds',
-  templateUrl: './column-bounds.component.html',
-  styleUrl: './column-bounds.component.scss',
+  selector: 'sci-virtual-columns',
+  templateUrl: './virtual-columns.component.html',
+  styleUrl: './virtual-columns.component.scss',
   imports: [
     SciColumnComponent,
   ],
 })
-export class ColumnBoundsComponent {
+export class VirtualColumnsComponent {
 
   protected readonly table = inject(ɵSCI_TABLE);
 }
