@@ -29,7 +29,7 @@
 
     > sci-table-grid {
       display: grid;
-      grid-template-columns: var(--ɵsci-table-columns, 100%) 0; // last column used for row actions
+      grid-template-columns: var(--ɵsci-table-columns, 100%) 0; // last column used for row action toolbar
       grid-auto-rows: min-content;
       grid-template-rows:
         min-content // table header
