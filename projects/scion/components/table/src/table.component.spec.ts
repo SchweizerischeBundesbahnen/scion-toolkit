@@ -35,6 +35,19 @@ fdescribe('Table', () => {
     });
   });
 
+  describe('Miscellaneous', () => {
+
+    /**
+     * Tests that the application becomes stable if using <sci-table>, i.e., that resources used by the table finish loading.
+     */
+    it('should become stable', async () => {
+      const data = signal([1, 2, 3]);
+
+      const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn(item => item)));
+      await expectAsync(fixture.whenStable()).toBeResolved();
+    });
+  });
+
   describe('Array Data Source', () => {
 
     it('should update table on data change', async () => {
