@@ -326,10 +326,10 @@ describe('Text Provider', () => {
       ],
     });
 
-    const text1 = text(undefined, {injector: TestBed.inject(Injector)});
+    const text1 = text(undefined as string | undefined, {injector: TestBed.inject(Injector)});
     expect(text1()).toBeUndefined();
 
-    const text2 = text(signal(undefined), {injector: TestBed.inject(Injector)});
+    const text2 = text(signal(undefined as string | undefined), {injector: TestBed.inject(Injector)});
     expect(text2()).toBeUndefined();
   });
 

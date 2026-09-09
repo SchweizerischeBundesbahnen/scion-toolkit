@@ -37,10 +37,10 @@ export default class SciMenuPageComponent {
 
     const moveTo = signal<string | undefined>(undefined);
 
-contributeMenu('menu:contextmenu', menu => menu
-  .addMenuItem({icon: 'content_copy', label: 'Copy', onSelect: () => console.log('Copy')})
-  .addMenuItem({icon: 'content_paste', label: 'Paste', onSelect: () => console.log('Paste')}),
-);
+    contributeMenu('menu:contextmenu', menu => menu
+      .addMenuItem({icon: 'content_copy', label: 'Copy', onSelect: () => console.log('Copy')})
+      .addMenuItem({icon: 'content_paste', label: 'Paste', onSelect: () => console.log('Paste')}),
+    );
 
     contributeMenu('menu:contextmenu', menu => menu
       .addGroup(group => group
