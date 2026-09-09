@@ -831,7 +831,7 @@ fdescribe('Table', () => {
         const data = signal(new Array(100).fill(0).map((_, i) => ({id: i})));
         const {fixture} = createSciTableComponent(() => sciTable({
           data,
-          headerVisible: false,
+          showHeader: false,
           selectable: 'single',
         }, table => table.addNumberColumn(item => item.id)), {
           height: '300px',
@@ -1017,7 +1017,7 @@ fdescribe('Table', () => {
         data: loader,
         pageSize: 5,
         bufferSize: 0,
-        headerVisible: false,
+        showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1058,7 +1058,7 @@ fdescribe('Table', () => {
         bufferSize: 3,
         pageSize: 5,
         data: loader,
-        headerVisible: false,
+        showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1110,7 +1110,7 @@ fdescribe('Table', () => {
         bufferSize: 3,
         pageSize: 50,
         data: loader,
-        headerVisible: false,
+        showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1506,7 +1506,7 @@ fdescribe('Table', () => {
         pageSize: 10,
         bufferSize: 0,
         data: loader,
-        headerVisible: false,
+        showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},
@@ -1553,7 +1553,7 @@ fdescribe('Table', () => {
 
       const {fixture, model} = createSciTableComponent(() => sciTable<number>({
         data: loader,
-        headerVisible: false,
+        showHeader: false,
         bufferSize: 0,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
@@ -1696,7 +1696,7 @@ fdescribe('Table', () => {
 
       const {fixture} = createSciTableComponent(() => sciTable<number>({
         data: loader,
-        headerVisible: false,
+        showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
         designTokens: {'--sci-table-row-height': '30px'},

@@ -62,6 +62,22 @@ test.describe.only('sci-table', () => {
       await expect(table.headers).toHaveCount(1);
     });
 
+    test('should wrap header', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', label: 'A long column header', type: 'string', width: '100px'});
+      const headerHeight = await table.header.height();
+
+      await tablePage.wrapHeader(true);
+      await expect.poll(() => table.header.height()).toBeGreaterThan(headerHeight);
+
+      await table.column({name: 'column:name'}).splitter.drag(300);
+
+      await expect.poll(() => table.header.height()).toBe(headerHeight);
+    });
+
     test('should disable resize', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -2372,7 +2388,6 @@ test.describe.only('sci-table', () => {
 
       await tablePage.setHeight(300);
       await tablePage.setRowHeight(30);
-      await tablePage.setHeaderHeight(30);
 
       // Install HTTP endpoint that blocks the initial load.
       const onLoad$ = new Subject<void>();

@@ -26,6 +26,7 @@ import {SciTextPipe} from '@scion/components/text';
   styleUrl: './column-header.component.scss',
   host: {
     '[class.filterable]': 'table().filterable()',
+    '[class.show-header]': 'table().showHeader()',
     '[attr.data-column]': 'column().name',
   },
 })

@@ -93,6 +93,10 @@
           <input [formField]="settingsForm.showHeader" type="checkbox" class="e2e-show-header"/>
         </sci-form-field>
 
+        <sci-form-field label="Wrap Header">
+          <input [formField]="settingsForm.wrapHeader" type="checkbox" class="e2e-wrap-header"/>
+        </sci-form-field>
+
         <sci-form-field label="Show Gridlines">
           <input [formField]="settingsForm.showGridlines" type="checkbox" class="e2e-show-gridlines"/>
         </sci-form-field>
@@ -107,10 +111,6 @@
 
         <sci-form-field label="Table Count">
           <input [formField]="settingsForm.tableCount" type="number" class="e2e-table-count"/>
-        </sci-form-field>
-
-        <sci-form-field label="Header Height">
-          <input [formField]="settingsForm.headerHeight" type="number" class="e2e-header-height"/>
         </sci-form-field>
 
         <sci-form-field label="Row Height">

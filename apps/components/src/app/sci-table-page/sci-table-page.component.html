@@ -21,7 +21,11 @@
         </sci-form-field>
 
         <sci-form-field label="Show Header">
-          <input [(ngModel)]="table.headerVisible" type="checkbox"/>
+          <input [(ngModel)]="table.showHeader" type="checkbox"/>
+        </sci-form-field>
+
+        <sci-form-field label="Wrap Header">
+          <input [(ngModel)]="table.wrapHeader" type="checkbox"/>
         </sci-form-field>
 
         <sci-form-field label="Show Gridlines">

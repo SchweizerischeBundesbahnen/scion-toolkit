@@ -1,14 +1,13 @@
 <!--TODO [egob] -->
 <!-- - only use buttons if sortable  -->
-<!-- - header height CSS variable (--sci-table-header-height) should only apply to headers, not filters  -->
-@if (table().headerVisible()) {
+@if (table().showHeader()) {
   <button class="column-sort e2e-column-sort"
           [tabIndex]="column().sortable() ? 0 : -1"
           [attr.data-sort]="columnSort()"
           [class.sortable]="column().sortable()"
           [title]="(column().label() | sciText)()"
           (click)="onSort($event)">
-    <span class="label e2e-label">{{(column().label() | sciText)()}}</span>
+    <span class="label e2e-label" [class.wrap-header]="table().wrapHeader()">{{(column().label() | sciText)()}}</span>
     @if (column().sortable()) {
       @switch (columnSort()) {
         @case ('asc') {

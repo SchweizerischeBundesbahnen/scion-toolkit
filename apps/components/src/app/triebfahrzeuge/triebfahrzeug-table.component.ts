@@ -69,7 +69,8 @@ export default class TriebfahrzeugTableComponent {
         .addMenuItem({label: 'Resizable', checked: this.table.resizable, onSelect: () => this.table.resizable.update(enabled => !enabled)}),
       )
       .addGroup(group => group
-        .addMenuItem({label: 'Show Header', checked: this.table.headerVisible, onSelect: () => this.table.headerVisible.update(enabled => !enabled)})
+        .addMenuItem({label: 'Show Header', checked: this.table.showHeader, onSelect: () => this.table.showHeader.update(enabled => !enabled)})
+        .addMenuItem({label: 'Wrap Header', checked: this.table.wrapHeader, onSelect: () => this.table.wrapHeader.update(enabled => !enabled)})
         .addMenuItem({label: 'Show Gridlines', checked: this.showGridlines, onSelect: () => this.showGridlines.update(enabled => !enabled)})
         .addMenuItem({label: 'Zebra Style', checked: this.zebraStyle, onSelect: () => this.zebraStyle.update(enabled => !enabled)})
         .addGroup(group => group

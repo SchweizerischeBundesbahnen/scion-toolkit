@@ -44,7 +44,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly bufferSize: number;
   public readonly pageSize: number;
   public readonly filterable: WritableSignal<boolean>;
-  public readonly headerVisible: WritableSignal<boolean>;
+  public readonly showHeader: WritableSignal<boolean>;
+  public readonly wrapHeader: WritableSignal<boolean>;
   public readonly sortable: WritableSignal<boolean>;
   public readonly resizable: WritableSignal<boolean>;
   public readonly selectable: WritableSignal<'single' | 'multi' | false>;
@@ -96,7 +97,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this.pageSize = descriptor.pageSize ?? 50;
     this.sortable = signal(descriptor.sortable ?? true);
     this.filterable = signal(descriptor.filterable ?? false);
-    this.headerVisible = signal(descriptor.headerVisible ?? true);
+    this.showHeader = signal(descriptor.showHeader ?? true);
+    this.wrapHeader = signal(descriptor.wrapHeader ?? false);
     this.resizable = signal(descriptor.resizable ?? true);
     this.selectable = signal(descriptor.selectable ?? 'multi');
     this.userSettings = this.computeUserSettings();

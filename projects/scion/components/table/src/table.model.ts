@@ -23,7 +23,11 @@ export interface SciTableDescriptor<T> {
   resizable?: boolean;
   filterable?: boolean;
   selectable?: false | 'single' | 'multi';
-  headerVisible?: boolean;
+  showHeader?: boolean;
+  /**
+   * Defaults to false.
+   */
+  wrapHeader?: boolean;
   // TODO [egob] Consider renaming to initialSortOrder
   sortBy?: Array<`column:${string}` | SciSortCriterion>;
   /**
@@ -65,7 +69,8 @@ export interface SciTable<T> {
   readonly selectedItems: Signal<Array<T>>;
 
   readonly filterable: WritableSignal<boolean>;
-  readonly headerVisible: WritableSignal<boolean>;
+  readonly showHeader: WritableSignal<boolean>;
+  readonly wrapHeader: WritableSignal<boolean>;
   readonly sortable: WritableSignal<boolean>;
   readonly resizable: WritableSignal<boolean>;
   readonly selectable: WritableSignal<'single' | 'multi' | false>;

@@ -18,7 +18,7 @@
 
     // Indicate if table toolbar is not visible.
     &:not(:has(sci-table-header)) {
-      --ɵsci-table-header-visible: false;
+      --ɵsci-table-show-header: false;
     }
 
     // Indicates active scrolling OR holding the scrollbar thumb pressed (i.e., user stopped moving while still pressing the thumb).
@@ -39,7 +39,7 @@
       min-width: 100%;
       min-height: 100%;
 
-      @container style(--ɵsci-table-header-visible: false) {
+      @container style(--ɵsci-table-show-header: false) {
         grid-template-rows: 1fr; // table body
       }
 
@@ -62,7 +62,7 @@
         anchor-name: --sci-table-body;
         grid-row: 2; // The sci-column-splitters positioning requires all grid items to be positioned.
         outline: none; // tabindex set for keyboard navigation
-        @container style(--ɵsci-table-header-visible: false) {
+        @container style(--ɵsci-table-show-header: false) {
           grid-row: 1;
         }
         display: grid;

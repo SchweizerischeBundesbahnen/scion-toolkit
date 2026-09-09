@@ -71,6 +71,11 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-show-header').setChecked(showHeader);
   }
 
+  public async wrapHeader(wrapHeader: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-wrap-header').setChecked(wrapHeader);
+  }
+
   public async showGridlines(showGridlines: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('input.e2e-show-gridlines').setChecked(showGridlines);
@@ -99,11 +104,6 @@ export class TablePagePO {
   public async setPageHeight(height: number | null): Promise<void> {
     await this.tabbar.locator('button.e2e-layout').click();
     await this.properties.locator('input.e2e-page-height').fill(`${height ?? ''}`);
-  }
-
-  public async setHeaderHeight(headerHeight: number): Promise<void> {
-    await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-header-height').fill(headerHeight.toString());
   }
 
   public async setRowHeight(rowHeight: number): Promise<void> {
