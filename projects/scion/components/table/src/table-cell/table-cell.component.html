@@ -1,8 +1,8 @@
 @let _cell = cell();
-<div class="cell" [class.selected]="isSelected()" #cellElement>
+<div class="cell" #cellElement>
   @switch (_cell.type) {
     @case ('template') {
-      <ng-template *ngTemplateOutlet="template(); context: templateContext()" />
+      <ng-template *ngTemplateOutlet="template(); context: templateContext()"/>
     }
     @case ('component') {
       <ng-container *sciComponentOutlet="_cell.component"/>
