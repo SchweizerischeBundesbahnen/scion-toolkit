@@ -141,7 +141,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     return computed(() => runInInjectionContext(this._injector, () => {
       const tableFactory = new ɵSciTableFactory<T>(descriptor);
       tableFactoryFn(tableFactory);
-      return untracked(() => tableFactory.columns.map((column, index) => this.initColumn(column.type, column, index)));
+      return untracked(() => tableFactory.columns.map(column => this.initColumn(column.type, column)));
     }));
   }
 
@@ -438,7 +438,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   }
 
   // TODO [dwie] Consider moving into factory
-  private initColumn(type: SciColumnType, config: SciColumnDescriptorLike<T>, index: number): SciColumnLike<T> {
+  private initColumn(type: SciColumnType, config: SciColumnDescriptorLike<T>): SciColumnLike<T> {
     // Columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
     const sortable = type === 'component' || type === 'template' ? !!config.sortable : config.sortable !== false;
 
@@ -454,6 +454,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       sortable: computed(() => this.sortable() && sortable),
       filterable: computed(() => this.filterable() && filterable),
       resizable: computed(() => this.resizable() && (config.resizable ?? true)),
+      padding: 'padding' in config ? (config.padding ?? true) : true,
       label: coerceSignal(config.label ?? ''),
       width: computed(() => {
         const userSettings = this.userSettings().columns?.find(column => column.name === config.name);
@@ -477,7 +478,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           component: column.type === 'component' ? column.component(item) : undefined,
           template: column.type === 'template' ? column.template(item) : undefined,
           type: column.type,
-          columnName: column.name,
+          column,
         } as SciCellLike)),
       });
     });

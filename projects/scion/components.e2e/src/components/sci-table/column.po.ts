@@ -1,7 +1,8 @@
 import {Locator} from '@playwright/test';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
 import {ColumnSplitterPO, TablePO} from './table.po';
-import {RequireOne} from '@scion/toolkit/types';
+import {OneOf, RequireOne} from '@scion/toolkit/types';
+import {CellPO} from './cell.po';
 
 export class ColumnPO {
 
@@ -12,13 +13,18 @@ export class ColumnPO {
   public readonly cells: Locator;
   public readonly sortButton: Locator;
 
-  constructor(table: TablePO, locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
+  constructor(public table: TablePO, public locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
     this.locator = table.locator.locator('sci-virtual-columns sci-column').locator(selectByColumn(locateBy));
     this.header = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
     this.splitter = new ColumnSplitterPO(table.locator.locator('sci-column-splitters sci-splitter').locator(selectByColumn(locateBy)), table);
     this.filterField = this.header.locator('sci-column-filter');
     this.sortButton = this.header.locator('button.e2e-column-sort');
     this.cells = table.rows.locator('sci-table-cell').locator(selectByColumn(locateBy));
+  }
+
+  public cell(locateBy: OneOf<{index: number; nth: number}>): CellPO {
+    const row = this.table.row(locateBy);
+    return new CellPO(row.locator.locator('sci-table-cell').locator(selectByColumn(this.locateBy)), row, this);
   }
 
   public async width(): Promise<number> {

@@ -1,15 +1,22 @@
 :host {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: inline-grid; // fits content to the cell
   position: relative; // positioning context for cell content
+  padding-inline: var(--sci-table-cell-padding-inline);
 
-  &[data-type="number"] {
-    text-align: right;
+  // Enable ellipsis on number and string columns.
+  &:is([data-type="string"], [data-type="number"]) {
+    display: inline; // ellipsis is only supported on block or inline-block elements
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  // TODO [dwie] Add padding to all columns
-  &:not([data-type="template"], [data-type="component"]) {
-    padding-inline: var(--sci-table-cell-padding-inline);
+  &[data-type="number"] {
+    text-align: end;
+  }
+
+  &[data-padding="false"] {
+    padding: 0;
+    align-self: stretch;
   }
 }

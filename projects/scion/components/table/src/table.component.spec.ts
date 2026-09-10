@@ -9,8 +9,7 @@
  */
 
 import {TestBed} from '@angular/core/testing';
-import {table, table as sciTable} from './table';
-import {SciTableComponent} from './table.component';
+import {table as sciTable} from './table';
 import {Component, computed, EnvironmentProviders, input, inputBinding, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
 import {TableSelectionService} from './table-selection.service';
@@ -18,7 +17,6 @@ import {BehaviorSubject, map, NEVER, Observable, Subject, take, tap} from 'rxjs'
 import {provideTableStorage} from './table-storage';
 import {attributeBinding, classBinding, partBinding, provideTableRowBinding} from './table-row-binding';
 import {SciTableRequest, SciTableResponse} from './table-data-source';
-import {ɵSciTable} from './ɵtable.model';
 import {createSciTableComponent} from './testing/testing.util';
 
 fdescribe('Table', () => {
@@ -83,37 +81,123 @@ fdescribe('Table', () => {
 
     describe('Columns', () => {
 
-      it('should support custom component cell', async () => {
-        const value = signal(10);
-        const data = signal([{id: 1}]);
-        const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-          .addNumberColumn(item => item.id)
-          .addComponentColumn({
-            label: 'Value',
-            component: () => ({
-              component: TestComponent,
-              bindings: [inputBinding('value', value)],
-            }),
-          })),
-        );
+      describe('Component Column', () => {
 
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        expect(await table.column({label: 'Value'})!.values()).toEqual(['5']);
+        it('should render custom component column', async () => {
+          const data = signal(['1', '2', '3']);
+          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+            .addComponentColumn({
+              name: 'column:component',
+              component: item => ({
+                component: CustomColumnComponent,
+                bindings: [inputBinding('value', () => item)],
+              }),
+            })),
+          );
 
-        // Update input signal => should update inside component.
-        value.set(20);
-        await table.waitUntilStable();
-        expect(await table.column({label: 'Value'})!.values()).toEqual(['10']);
+          const table = new TablePO(fixture);
+          await table.waitUntilStable();
+          expect(await table.column({name: 'column:component'})!.values()).toEqual(['1', '2', '3']);
+        });
       });
 
-      it('should support custom template cell', async () => {
-        const fixture = TestBed.createComponent(TestTemplate);
+      describe('Template Column', () => {
 
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        expect(await table.column({label: 'ID'})!.values()).toEqual(['1', '2', '3']);
-        expect(await table.column({label: 'Price'})!.values()).toEqual(['50', '100', '200']);
+        it('should render custom template column', async () => {
+          const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+          const data = signal([1, 2, 3]);
+          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+            .addTemplateColumn({
+              name: 'column:template',
+              // TODO [egob] Wollen wir hier eine Convenience anbieten?
+              template: () => ({template}),
+            })),
+          );
+
+          const table = new TablePO(fixture);
+          await table.waitUntilStable();
+          expect(await table.column({name: 'column:template'})?.values()).toEqual(['1', '2', '3']);
+        });
+
+        it('should pass context to template', async () => {
+          const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+          const data = signal([1, 2, 3]);
+          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+            .addTemplateColumn({
+              name: 'column:template',
+              template: item => ({
+                template: template,
+                context: {context: `[context="${item}"]`},
+              }),
+            })),
+          );
+
+          const table = new TablePO(fixture);
+          await table.waitUntilStable();
+          expect(await table.column({name: 'column:template'})!.values()).toEqual([
+            '1 [context="1"]',
+            '2 [context="2"]',
+            '3 [context="3"]',
+          ]);
+        });
+
+        it('should pass context to template as signal', async () => {
+          const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+          const context = signal('a');
+
+          const data = signal([1, 2, 3]);
+          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+            .addTemplateColumn({
+              name: 'column:template',
+              template: item => ({
+                template: template,
+                context: {
+                  context: computed(() => `[context="${context()}", item="${item}"]`),
+                },
+              }),
+            })),
+          );
+
+          const table = new TablePO(fixture);
+          await table.waitUntilStable();
+          expect(await table.column({name: 'column:template'})!.values()).toEqual([
+            '1 [context="a", item="1"]',
+            '2 [context="a", item="2"]',
+            '3 [context="a", item="3"]',
+          ]);
+
+          // Change context signal.
+          context.set('b');
+          await table.waitUntilStable();
+          expect(await table.column({name: 'column:template'})!.values()).toEqual([
+            '1 [context="b", item="1"]',
+            '2 [context="b", item="2"]',
+            '3 [context="b", item="3"]',
+          ]);
+        });
+
+        it('should not fail if context value is undefined', async () => {
+          const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+          const data = signal([1, 2, 3]);
+          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+            .addTemplateColumn({
+              name: 'column:template',
+              template: () => ({
+                template: template,
+                context: {
+                  context: undefined,
+                },
+              }),
+            })),
+          );
+
+          const table = new TablePO(fixture);
+          await table.waitUntilStable();
+          expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
+        });
       });
     });
 
@@ -181,20 +265,34 @@ fdescribe('Table', () => {
       });
 
       it('should sort custom template column', async () => {
-        const fixture = TestBed.createComponent(TestTemplate);
+        const templateFixture = TestBed.createComponent(CustomColumnTemplateProviderComponent);
+
+        const data = signal([1, 2, 3]);
+        const {fixture, model} = createSciTableComponent(() => sciTable(data, table => table
+          .addTemplateColumn({
+            name: 'column:template',
+            // TODO [egob] Wollen wir hier eine Convenience anbieten?
+            template: () => ({
+              template: templateFixture.componentInstance.template(),
+            }),
+            sortable: {comparator: (a, b) => a.item - b.item},
+          })),
+        );
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:price'})!.values()).toEqual(['50', '100', '200']);
+        expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
 
-        fixture.componentInstance.table.sort('column:price', false);
+        model.sort('column:template', false);
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:price'})!.values()).toEqual(['50', '100', '200']);
+        expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
 
-        fixture.componentInstance.table.sort('column:price', false);
+        model.sort('column:template', false);
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:price'})!.values()).toEqual(['200', '100', '50']);
+        expect(await table.column({name: 'column:template'})!.values()).toEqual(['3', '2', '1']);
       });
+
+      // TODO [egob] Add test: 'should sort custom component column'
 
       it('should sort with header click', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
@@ -263,6 +361,9 @@ fdescribe('Table', () => {
         await column.filter('');
         expect(await column.values()).toEqual(['1', '3', '2']);
       });
+
+      // TODO [egob] Add test: 'should filter custom template column'
+      // TODO [egob] Add test: 'should filter custom component column'
 
       it('should filter string column', async () => {
         const data = signal([{name: 'a'}, {name: 'c'}, {name: 'b'}]);
@@ -1506,50 +1607,23 @@ fdescribe('Table', () => {
 });
 
 @Component({
-  selector: 'spec-test-cell',
-  template: `
-    {{half()}}
-  `,
+  selector: 'spec-custom-column',
+  template: `{{value()}}`,
 })
-class TestComponent {
+class CustomColumnComponent {
   public readonly value = input.required<number>();
-  protected readonly half = computed(() => this.value() / 2);
 }
 
 @Component({
-  selector: 'spec-test-template',
-  imports: [
-    SciTableComponent,
-  ],
+  selector: 'spec-custom-column-template-provider',
   template: `
-    <sci-table name="table:testee" [table]="table"/>
-    <ng-template let-product #cell>
-      {{product.price / 2}}
+    <ng-template let-item let-context="context">
+      {{item}} {{context}}
     </ng-template>
   `,
 })
-class TestTemplate {
-
-  private readonly _cellTemplate = viewChild.required<TemplateRef<unknown>>('cell');
-  private readonly _data = signal([
-    {id: 1, price: 100},
-    {id: 2, price: 200},
-    {id: 3, price: 400},
-  ]);
-  public readonly table = table(this._data, table => table
-    .addNumberColumn({
-      name: 'column:id',
-      label: 'ID',
-      value: item => item.id,
-    })
-    .addTemplateColumn({
-      name: 'column:price',
-      label: 'Price',
-      sortable: {comparator: (a, b) => a.item.price - b.item.price},
-      template: () => ({
-        template: this._cellTemplate,
-      }),
-    })) as ɵSciTable<{id: number; price: number}>;
+class CustomColumnTemplateProviderComponent {
+  public readonly template = viewChild.required<TemplateRef<unknown>>(TemplateRef);
 }
 
 function provideNullTableStorage(): EnvironmentProviders {

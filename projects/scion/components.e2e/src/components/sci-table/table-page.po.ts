@@ -157,14 +157,19 @@ export class TablePagePO {
 
   public async addColumn(options: ColumnOptions): Promise<void> {
     await this.tabbar.locator('button.e2e-columns').click();
-    await this.properties.locator('input.e2e-column-name').fill(options.name);
-    await this.properties.locator('input.e2e-column-label').fill(options.label ?? options.name);
-    await this.properties.locator('select.e2e-column-type').selectOption(options.type);
+    await this.properties.locator('input.e2e-name').fill(options.name);
+    await this.properties.locator('input.e2e-label').fill(options.label ?? options.name);
+    await this.properties.locator('select.e2e-type').selectOption(options.type);
     await this.properties.locator('input.e2e-resizable').setChecked(options.resizable ?? true);
-    await this.properties.locator('input.e2e-column-custom-sort').setChecked(!!options.customSort);
-    await this.properties.locator('input.e2e-column-custom-filter').setChecked(!!options.customFilter);
-    await this.properties.locator('input.e2e-column-width').fill(options.width ?? '');
-    await this.properties.locator('input.e2e-column-min-width').fill(`${options.minWidth ?? ''}`);
+    await this.properties.locator('input.e2e-custom-sort').setChecked(!!options.customSort);
+    await this.properties.locator('input.e2e-custom-filter').setChecked(!!options.customFilter);
+    await this.properties.locator('input.e2e-width').fill(options.width ?? '');
+    await this.properties.locator('input.e2e-min-width').fill(`${options.minWidth ?? ''}`);
+
+    if (options.padding !== undefined) {
+      await this.properties.locator('input.e2e-padding').setChecked(options.padding);
+    }
+
     await this.properties.locator('button.e2e-column-add').click();
   }
 
@@ -184,4 +189,5 @@ export interface ColumnOptions {
   customSort?: boolean;
   width?: string;
   minWidth?: number;
+  padding?: boolean;
 }

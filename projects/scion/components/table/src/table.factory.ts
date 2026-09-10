@@ -14,18 +14,25 @@ import {Translatable} from '@scion/components/text';
 
 export interface SciTableFactory<T> {
   addStringColumn(value: (item: T) => string): this;
+
   addStringColumn(label: Translatable, value: (item: T) => string): this;
+
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
   addBooleanColumn(value: (item: T) => boolean): this;
+
   addBooleanColumn(label: Translatable, value: (item: T) => boolean): this;
+
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
   addNumberColumn(value: (item: T) => number): this;
+
   addNumberColumn(label: Translatable, value: (item: T) => number): this;
+
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
+
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
 }
 
@@ -55,6 +62,12 @@ export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, void>) => boolean};
+  /**
+   * Controls whether cell padding is applied. Set to `false` to let content fill the entire cell (render to cell bounds).
+   *
+   * Defaults to `true`.
+   */
+  padding?: boolean;
 }
 
 export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
@@ -67,6 +80,12 @@ export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, void>) => boolean};
+  /**
+   * Controls whether cell padding is applied. Set to `false` to let content fill the entire cell (render to cell bounds).
+   *
+   * Defaults to `true`.
+   */
+  padding?: boolean;
 }
 
 export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
@@ -104,4 +123,5 @@ export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
    */
   filterable?: boolean;
 }
+
 export type SciColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;

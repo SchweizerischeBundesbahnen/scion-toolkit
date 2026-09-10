@@ -12,7 +12,7 @@ import {Component, computed, input, Signal, TemplateRef} from '@angular/core';
 import {SciCellLike, SciRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
-import {Arrays} from '@scion/toolkit/util';
+import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
@@ -20,8 +20,9 @@ import {SciIconComponent} from '@scion/components/icon';
   templateUrl: './table-cell.component.html',
   styleUrl: './table-cell.component.scss',
   host: {
-    '[attr.data-type]': 'cell().type',
-    '[attr.data-column]': 'cell().columnName',
+    '[attr.data-type]': 'cell().column.type',
+    '[attr.data-column]': 'cell().column.name',
+    '[attr.data-padding]': '!cell().column.padding ? false : null',
     '[attr.part]': 'isSelected() ? null : partAttribute()', // prevent styling selected rows
   },
   imports: [
@@ -63,7 +64,10 @@ export class TableCellComponent<T> {
 
       return {
         $implicit: item,
-        ...Object.entries(cell.template.context ?? {}).reduce((obj, [key, value]) => ({...obj, [key]: coerceSignal(value)()}), {}),
+        ...Objects.entries(cell.template.context ?? {}).reduce((context, [key, value]) => ({
+          ...context,
+          [key]: coerceSignal(value)?.(), // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+        }), {}),
       };
     });
   }
@@ -72,7 +76,7 @@ export class TableCellComponent<T> {
     return computed(() => {
       return [
         ...Arrays.coerce(this.row().bindings?.part()),
-        this.cell().columnName,
+        this.cell().column.name,
       ].join(' ');
     });
   }

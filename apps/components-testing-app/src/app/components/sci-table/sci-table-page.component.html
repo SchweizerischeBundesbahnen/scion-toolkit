@@ -11,15 +11,15 @@
       <div class="columns">
         <form [formRoot]="columnForm" class="add-column" autocomplete="off">
           <sci-form-field label="Name">
-            <input [formField]="$any(columnForm.name)" class="e2e-column-name" placeholder="column:<string>" appFieldValidation>
+            <input [formField]="$any(columnForm.name)" class="e2e-name" placeholder="column:<string>" appFieldValidation>
           </sci-form-field>
 
           <sci-form-field label="Label">
-            <input [formField]="columnForm.label" class="e2e-column-label" appFieldValidation>
+            <input [formField]="columnForm.label" class="e2e-label" appFieldValidation>
           </sci-form-field>
 
           <sci-form-field label="Column Type">
-            <select [formField]="columnForm.type" class="e2e-column-type" appFieldValidation>
+            <select [formField]="columnForm.type" class="e2e-type" appFieldValidation>
               <option value="string">String</option>
               <option value="number">Number</option>
               <option value="boolean">Boolean</option>
@@ -32,20 +32,26 @@
             <input [formField]="columnForm.resizable" type="checkbox" class="e2e-resizable"/>
           </sci-form-field>
 
+          @if (columnForm.type().value() === 'component' || columnForm.type().value() === 'template') {
+            <sci-form-field label="Padding">
+              <input [formField]="columnForm.padding" type="checkbox" class="e2e-padding"/>
+            </sci-form-field>
+          }
+
           <sci-form-field label="Custom Sort">
-            <input [formField]="columnForm.customSort" type="checkbox" class="e2e-column-custom-sort">
+            <input [formField]="columnForm.customSort" type="checkbox" class="e2e-custom-sort">
           </sci-form-field>
 
           <sci-form-field label="Custom Filter">
-            <input [formField]="columnForm.customFilter" type="checkbox" class="e2e-column-custom-filter">
+            <input [formField]="columnForm.customFilter" type="checkbox" class="e2e-custom-filter">
           </sci-form-field>
 
           <sci-form-field label="Width">
-            <input [formField]="columnForm.width" class="e2e-column-width">
+            <input [formField]="columnForm.width" class="e2e-width">
           </sci-form-field>
 
           <sci-form-field label="Min Width">
-            <input [formField]="columnForm.minWidth" type="number" class="e2e-column-min-width">
+            <input [formField]="columnForm.minWidth" type="number" class="e2e-min-width">
           </sci-form-field>
 
           <button class="e2e-column-add" type="submit" [disabled]="columnForm().invalid()">Add</button>
@@ -199,8 +205,6 @@
   </section>
 </aside>
 
-<ng-template let-product #cell>
-  <sci-icon class="custom-cell" [class.up]="product.price > 500" [class.down]="product.price <= 500">
-    {{product.price > 500 ? 'trending_up' : 'trending_down'}}
-  </sci-icon>
+<ng-template let-product #custom_column_template>
+  <app-custom-column [product]="product"/>
 </ng-template>

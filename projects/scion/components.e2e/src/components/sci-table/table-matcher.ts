@@ -43,7 +43,7 @@ export function expectTable(table: TablePO): TableMatcher {
               for (const row of await table.rows.all()) {
                 // Do not use web first assertion since we already opted out with `.all()`
                 // This prevents waiting for the 5s timeout in the first try
-                await expect(new RowPO(row).cell(locateBy).textContent()).resolves.toContain(text);
+                await expect(new RowPO(table, row).cell(locateBy).textContent()).resolves.toContain(text);
               }
             }).toPass();
           },

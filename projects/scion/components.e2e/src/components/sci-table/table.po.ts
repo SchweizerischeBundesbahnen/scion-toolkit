@@ -50,10 +50,10 @@ export class TablePO {
    */
   public row(locateBy: OneOf<{index: number; nth: number}>): RowPO {
     if (locateBy.index !== undefined) {
-      return new RowPO(this.rows.locator(`:scope[data-row-index="${locateBy.index}"]`));
+      return new RowPO(this, this.rows.locator(`:scope[data-row-index="${locateBy.index}"]`));
     }
     else {
-      return new RowPO(this.rows.nth(locateBy.nth));
+      return new RowPO(this, this.rows.nth(locateBy.nth));
     }
   }
 
@@ -114,9 +114,9 @@ export class ColumnSplitterPO {
    *
    * Use `options` to control where to grab the splitter.
    */
-  public async drag(distance: number, options?: {location: 'table-header' | 'table-body'}): Promise<void> {
+  public async drag(distance: CoordinateOrDelta, options?: {location: 'table-header' | 'table-body'}): Promise<void> {
     const dragHandle = await this.startDrag(options);
-    await dragHandle.dragTo({deltaX: distance});
+    await dragHandle.dragTo(distance);
     await dragHandle.release();
   }
 

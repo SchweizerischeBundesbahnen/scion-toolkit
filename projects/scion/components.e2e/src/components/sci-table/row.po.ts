@@ -3,20 +3,23 @@ import {CellPO} from './cell.po';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
 import {RequireOne} from '@scion/toolkit/types';
 import {selectByColumn} from './column.po';
+import {TablePO} from './table.po';
 
 export class RowPO {
+
   public rowActions: Locator;
 
-  constructor(public locator: Locator) {
+  constructor(public table: TablePO, public locator: Locator) {
     this.rowActions = this.locator.locator('sci-toolbar');
   }
 
   public cell(columnName: `column:${string}`): CellPO;
   public cell(columnIndex: number): CellPO;
   public cell(locateBy: RequireOne<{name: `column:${string}`; index: number}>): CellPO;
-  public cell(column: `column:${string}` | number | RequireOne<{name: `column:${string}`; index: number}>): CellPO {
-    const locateBy = typeof column === 'number' ? {index: column} : typeof column === 'string' ? {name: column} : column;
-    return new CellPO(this.locator.locator('sci-table-cell').locator(selectByColumn(locateBy)));
+  public cell(locateByLike: `column:${string}` | number | RequireOne<{name: `column:${string}`; index: number}>): CellPO {
+    const locateBy = typeof locateByLike === 'number' ? {index: locateByLike} : typeof locateByLike === 'string' ? {name: locateByLike} : locateByLike;
+    const column = this.table.column(locateBy);
+    return new CellPO(this.locator.locator('sci-table-cell').locator(selectByColumn(locateBy)), this, column);
   }
 
   public async click(modifiers?: Array<'Alt' | 'Control' | 'ControlOrMeta' | 'Meta' | 'Shift'>): Promise<void> {

@@ -1,5 +1,5 @@
 @let row = this.row();
-@for (cell of row.cells; track cell.columnName) {
+@for (cell of row.cells; track cell.column.name) {
   <sci-table-cell [cell]="cell" [row]="row" [isSelected]="isSelected()" #cell/>
 } @empty {
   @for (column of table().columns(); track column.name) {

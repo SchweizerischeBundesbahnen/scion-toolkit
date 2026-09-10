@@ -90,6 +90,7 @@ export interface SciColumn {
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;
   resizable: Signal<boolean>;
+  padding: boolean;
   width: Signal<string>;
   minWidth: number;
   resizing: WritableSignal<boolean>;
@@ -144,36 +145,33 @@ export interface SciRow<T> {
   bindings?: SciRowBindings;
 }
 
-/**
- * Mapped cell, used as display state.
- */
-export interface SciCell {
-  type: SciColumnType;
-  columnName: `column:${string}`;
-}
-
-export interface SciStringCell extends SciCell {
+export interface SciStringCell {
   type: 'string';
+  column: SciColumnLike;
   value: Signal<string>;
 }
 
-export interface SciNumberCell extends SciCell {
+export interface SciNumberCell {
   type: 'number';
+  column: SciColumnLike;
   value: Signal<number>;
 }
 
-export interface SciBooleanCell extends SciCell {
+export interface SciBooleanCell {
   type: 'boolean';
+  column: SciColumnLike;
   value: Signal<boolean>;
 }
 
-export interface SciComponentCell extends SciCell {
+export interface SciComponentCell {
   type: 'component';
+  column: SciColumnLike;
   component: SciComponentDescriptor;
 }
 
-export interface SciTemplateCell extends SciCell {
+export interface SciTemplateCell {
   type: 'template';
+  column: SciColumnLike;
   template: SciTemplateDescriptor;
 }
 

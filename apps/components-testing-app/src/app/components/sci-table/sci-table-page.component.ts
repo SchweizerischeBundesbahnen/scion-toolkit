@@ -7,19 +7,19 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
+import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
 import {attributeBinding, partBinding, provideTableRowBinding, SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {createDestroyableInjector} from '@scion/components/common';
-import {SciIconComponent} from '@scion/components/icon';
 import {FieldValidationDirective} from '../field-validation.directive';
 import {Product, ProductService} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
-import {SciViewportComponent} from '@scion/components/viewport';
 import {noop} from 'rxjs';
+import {CustomColumnComponent} from './custom-column.component';
+import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
   selector: 'app-table-page',
@@ -41,8 +41,8 @@ import {noop} from 'rxjs';
     SciTabDirective,
     SciTabbarComponent,
     FormRoot,
-    SciIconComponent,
     FieldValidationDirective,
+    CustomColumnComponent,
     SciViewportComponent,
   ],
   providers: [
@@ -58,7 +58,7 @@ export default class SciTablePageComponent {
   private readonly _productService = inject(ProductService);
   private readonly _httpClient = inject(HttpClient);
 
-  private readonly _cellTemplate = viewChild.required<TemplateRef<Product>>('cell');
+  private readonly _customColumnTemplate = viewChild.required<TemplateRef<Product>>('custom_column_template');
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
   protected readonly datasourceForm: FieldTree<DatasourceForm> = this.createDatasourceForm();
@@ -149,7 +149,13 @@ export default class SciTablePageComponent {
             ...column,
             filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
             sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
-            component: product => ({component: CustomCellComponent, bindings: [inputBinding('product', () => product)]}),
+            padding: columnForm.padding,
+            component: product => ({
+              component: CustomColumnComponent,
+              bindings: [
+                inputBinding('product', () => product),
+              ],
+            }),
           });
           break;
         case 'template':
@@ -157,7 +163,10 @@ export default class SciTablePageComponent {
             ...column,
             filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
             sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
-            template: () => ({template: this._cellTemplate}),
+            padding: columnForm.padding,
+            template: () => ({
+              template: this._customColumnTemplate,
+            }),
           });
           break;
       }
@@ -209,6 +218,7 @@ export default class SciTablePageComponent {
         type: 'string',
         label: '',
         resizable: true,
+        padding: true,
         width: '',
         minWidth: null,
         customSort: false,
@@ -268,28 +278,17 @@ export default class SciTablePageComponent {
   }
 }
 
-@Component({
-  selector: 'app-custom-cell',
-  template: `
-    <sci-icon class="custom-cell up">{{product().inStock ? 'add' : 'close'}}</sci-icon>`,
-  imports: [
-    SciIconComponent,
-  ],
-})
-class CustomCellComponent {
-  protected readonly product = input.required<Product>();
-}
-
 interface ColumnForm {
   name: `column:${string}` | '';
   type: SciColumnType;
   label: string;
   resizable: boolean;
+  padding: boolean;
   width: string;
   minWidth: number | null;
   customSort: boolean;
   customFilter: boolean;
-  visible: Signal<boolean>;
+  visible: WritableSignal<boolean>;
 }
 
 interface SettingsForm {

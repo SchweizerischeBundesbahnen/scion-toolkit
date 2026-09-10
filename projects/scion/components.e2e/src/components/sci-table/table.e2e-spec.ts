@@ -18,6 +18,7 @@ import {fromRect, hasDefaultStackingLevel, waitUntilAngularStable, waitUntilStab
 import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
 import {firstValueFrom, Subject} from 'rxjs';
 import {SciTableResponse} from '@scion/components/table';
+import {CustomColumnPO} from './custom-column.po';
 
 test.describe.only('sci-table', () => {
 
@@ -73,7 +74,7 @@ test.describe.only('sci-table', () => {
       await tablePage.wrapHeader(true);
       await expect.poll(() => table.header.height()).toBeGreaterThan(headerHeight);
 
-      await table.column({name: 'column:name'}).splitter.drag(300);
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: 300});
 
       await expect.poll(() => table.header.height()).toBe(headerHeight);
     });
@@ -160,49 +161,451 @@ test.describe.only('sci-table', () => {
 
   test.describe('Columns', () => {
 
-    test('should add string column', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
+    test.describe('String column', () => {
 
-      await tablePage.addColumn({name: 'column:testee', type: 'string'});
-      await expect(table.column({name: 'column:testee'}).header).toBeVisible();
+      test('should add string column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+        await expect(table.column({name: 'column:string'}).header).toBeVisible();
+      });
+
+      test('should center text vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+        const cell = table.row({nth: 0}).cell('column:string');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.height).toBeLessThan(rowBounds.height);
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+        const cell = table.row({nth: 0}).cell('column:string');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align text to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+        const cell = table.row({nth: 0}).cell('column:string');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should have ellipsis on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await provideHttpDatasource(page, [{name: 'This is a long product name'}]);
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+        const cell = table.row({nth: 0}).cell('column:string');
+        await expect(cell.locator).not.toHaveEllipsis();
+
+        await cell.column.splitter.drag({deltaX: -500});
+        await expect(cell.locator).toHaveEllipsis();
+      });
     });
 
-    test('should add number column', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
+    test.describe('Number column', () => {
 
-      await tablePage.addColumn({name: 'column:testee', type: 'number'});
-      await expect(table.column({name: 'column:testee'}).header).toBeVisible();
+      test('should add number column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+        await expect(table.column({name: 'column:number'}).header).toBeVisible();
+      });
+
+      test('should center text vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+
+        const cell = table.row({nth: 0}).cell('column:number');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.height).toBeLessThan(rowBounds.height);
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+
+        const cell = table.row({nth: 0}).cell('column:number');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align text to the right', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+
+        const cell = table.row({nth: 0}).cell('column:number');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('end');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should have ellipsis on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await provideHttpDatasource(page, [{price: 1111111111111111}]);
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+        const cell = table.row({nth: 0}).cell('column:number');
+        await expect(cell.locator).not.toHaveEllipsis();
+
+        await cell.column.splitter.drag({deltaX: -500});
+        await expect(cell.locator).toHaveEllipsis();
+      });
     });
 
-    test('should add boolean column', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
+    test.describe('Boolean column', () => {
 
-      await tablePage.addColumn({name: 'column:testee', type: 'boolean'});
-      await expect(table.column({name: 'column:testee'}).header).toBeVisible();
+      test('should add boolean column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+        await expect(table.column({name: 'column:boolean'}).header).toBeVisible();
+      });
+
+      test('should center checkmark vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+        const cell = table.row({nth: 0}).cell('column:boolean');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.height).toBeLessThan(rowBounds.height);
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+        const cell = table.row({nth: 0}).cell('column:boolean');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align checkmark to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+        const cell = table.row({nth: 0}).cell('column:boolean');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
     });
 
-    test('should add template column', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
+    test.describe('Template column', () => {
 
-      await tablePage.addColumn({name: 'column:testee', type: 'template'});
-      await expect(table.column({name: 'column:testee'}).header).toBeVisible();
+      test('should add template column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+        await expect(table.column({name: 'column:template'}).header).toBeVisible();
+      });
+
+      test('should center template vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.height).toBeLessThan(rowBounds.height);
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should fill cell if no padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template', padding: false});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.paddingInline()).toBe(0);
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should align cell content to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should pack template column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+        await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(600);
+
+        // Set explicit template width.
+        const cell = table.row({nth: 0}).cell('column:template');
+        const template = new CustomColumnPO(cell);
+        await template.setWidth(300);
+
+        await table.column({name: 'column:template'}).splitter.dblclick();
+        await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(10 + 300 + 10);
+      });
+
+      test('should pack template column that is filling the cell', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.addColumn({name: 'column:template', type: 'template', padding: false});
+        await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(600);
+
+        // Set explicit template width.
+        const cell = table.row({nth: 0}).cell('column:template');
+        const template = new CustomColumnPO(cell);
+        await template.setWidth(300);
+
+        await table.column({name: 'column:template'}).splitter.dblclick();
+        await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(300);
+      });
+
+      test('should have cell as positioning context', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.setRowCount(1);
+        await tablePage.addColumn({name: 'column:template', type: 'template', padding: false});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        const template = new CustomColumnPO(cell);
+        await template.setPositionAbsolute({top: 0, right: 0, bottom: 0, left: 0});
+
+        const templateBounds = await template.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(templateBounds.height).toEqual(rowBounds.height);
+        expect(templateBounds.width).toEqual(columnBounds.width);
+      });
     });
 
-    test('should add component column', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
+    test.describe('Component column', () => {
 
-      await tablePage.addColumn({name: 'column:testee', type: 'component'});
-      await expect(table.column({name: 'column:testee'}).header).toBeVisible();
+      test('should add component column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+        await expect(table.column({name: 'column:component'}).header).toBeVisible();
+      });
+
+      test('should center component vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.height).toBeLessThan(rowBounds.height);
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should fill cell if no padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component', padding: false});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.paddingInline()).toBe(0);
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should align cell content to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should pack component column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+        await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(600);
+
+        // Set explicit component width.
+        const cell = table.row({nth: 0}).cell('column:component');
+        const component = new CustomColumnPO(cell);
+        await component.setWidth(300);
+
+        await table.column({name: 'column:component'}).splitter.dblclick();
+        await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(10 + 300 + 10);
+      });
+
+      test('should pack component column that is filling the cell', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.addColumn({name: 'column:component', type: 'component', padding: false});
+        await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(600);
+
+        // Set explicit component width.
+        const cell = table.row({nth: 0}).cell('column:component');
+        const component = new CustomColumnPO(cell);
+        await component.setWidth(300);
+
+        await table.column({name: 'column:component'}).splitter.dblclick();
+        await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(300);
+      });
+
+      test('should have cell as positioning context', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.setRowCount(1);
+        await tablePage.addColumn({name: 'column:component', type: 'component', padding: false});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        const component = new CustomColumnPO(cell);
+        await component.setPositionAbsolute({top: 0, right: 0, bottom: 0, left: 0});
+
+        const componentBounds = await component.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(componentBounds.height).toEqual(rowBounds.height);
+        expect(componentBounds.width).toEqual(columnBounds.width);
+      });
     });
 
     test('should add a lot of columns', async ({page}) => {
@@ -536,11 +939,11 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
       await tablePage.addColumn({name: 'column:testee', type: 'string', width: '200px'});
 
-      await table.column({name: 'column:name'}).splitter.drag(-50);
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: -50});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(150);
       await expect.poll(() => table.column({name: 'column:testee'}).width()).toBe(200);
 
-      await table.column({name: 'column:testee'}).splitter.drag(50);
+      await table.column({name: 'column:testee'}).splitter.drag({deltaX: 50});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(150);
       await expect.poll(() => table.column({name: 'column:testee'}).width()).toBe(250);
     });
@@ -571,19 +974,19 @@ test.describe.only('sci-table', () => {
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400);
 
       // Resize 'column:1'.
-      await table.column({name: 'column:1'}).splitter.drag(10);
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: 10});
       expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
       expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10);
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10);
 
       // Resize 'column:3'.
-      await table.column({name: 'column:3'}).splitter.drag(10);
+      await table.column({name: 'column:3'}).splitter.drag({deltaX: 10});
       expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
       expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10 + 10);
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10);
 
       // Resize 'column:4'.
-      await table.column({name: 'column:4'}).splitter.drag(10);
+      await table.column({name: 'column:4'}).splitter.drag({deltaX: 10});
       expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
       expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10 + 10);
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10 + 10);
@@ -596,7 +999,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
 
-      await table.column({name: 'column:name'}).splitter.drag(-100);
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: -100});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(100);
     });
 
@@ -607,7 +1010,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px', minWidth: 100});
 
-      await table.column({name: 'column:name'}).splitter.drag(-300);
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: -300});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(100);
     });
 
@@ -618,7 +1021,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
 
-      await table.column({name: 'column:name'}).splitter.drag(page.viewportSize()?.width ?? 0);
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: page.viewportSize()!.width});
       await expectTable(table).toHaveHorizontalOverflow();
     });
 
@@ -646,7 +1049,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(400);
 
       // Should still be able to resize after pack.
-      await table.column({name: 'column:name'}).splitter.drag(25);
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: 25});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(425);
     });
 
@@ -658,7 +1061,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.column({name: 'column:name'}).splitter.drag(-100);
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: -100});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(500);
 
       await tablePage.reload({tableStorage: true});
@@ -682,7 +1085,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(200);
 
       // Grow column two. Columns to the left should stay the same, to the right should shrink to min width and push out.
-      await table.column({name: 'column:2'}).splitter.drag(600);
+      await table.column({name: 'column:2'}).splitter.drag({deltaX: 600});
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
       await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(800);
       await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(100);
@@ -768,9 +1171,9 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:2', type: 'string'});
       await tablePage.addColumn({name: 'column:3', type: 'string'});
 
-      await table.column({name: 'column:1'}).splitter.drag(-100);
-      await table.column({name: 'column:2'}).splitter.drag(-100);
-      await table.column({name: 'column:3'}).splitter.drag(-100);
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: -100});
+      await table.column({name: 'column:2'}).splitter.drag({deltaX: -100});
+      await table.column({name: 'column:3'}).splitter.drag({deltaX: -100});
 
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
       await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(150);
@@ -792,13 +1195,13 @@ test.describe.only('sci-table', () => {
 
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
 
-      await table.column({name: 'column:3'}).splitter.drag(600);
+      await table.column({name: 'column:3'}).splitter.drag({deltaX: 600});
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
       await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(200);
       await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(800);
       await expect.poll(() => table.column({name: 'column:4'}).width()).toBe(100);
 
-      await table.column({name: 'column:1'}).splitter.drag(100);
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: 100});
       await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(300);
       await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(200);
       await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(800);
@@ -3359,7 +3762,7 @@ test.describe.only('sci-table', () => {
       await tablePage.showRowActions(true);
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-      await table.column({name: 'column:name'}).splitter.drag(500);
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: 500});
 
       const rowBounds = await table.row({nth: 3}).bounds();
       const tableBounds = await table.bounds();
@@ -4232,7 +4635,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
 
       // Shrink column so the table does not fill the viewport.
-      await table.column({name: 'column:1'}).splitter.drag(-300);
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: -300});
 
       // Expect 'No Items Found' message to be horizontally centered within the column.
       const columnBounds = await table.column({name: 'column:1'}).bounds();
