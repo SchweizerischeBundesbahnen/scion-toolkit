@@ -1,14 +1,11 @@
-<!--TODO [egob] -->
-<!-- - only use buttons if sortable  -->
 @if (table().showHeader()) {
-  <button class="column-sort e2e-column-sort"
-          [tabIndex]="column().sortable() ? 0 : -1"
-          [attr.data-sort]="columnSort()"
-          [class.sortable]="column().sortable()"
-          [title]="(column().label() | sciText)()"
-          (click)="onSort($event)">
-    <span class="label e2e-label" [class.wrap-header]="table().wrapHeader()">{{(column().label() | sciText)()}}</span>
-    @if (column().sortable()) {
+  @let label = (column().label() | sciText)();
+  @if (column().sortable()) {
+    <button class="column-header column-sort e2e-column-sort"
+            [attr.data-sort]="columnSort()"
+            [title]="label"
+            (click)="onSort($event)">
+      <span class="label e2e-label" [class.wrap-header]="table().wrapHeader()">{{label}}</span>
       @switch (columnSort()) {
         @case ('asc') {
           <sci-icon>scion.chevron_up</sci-icon>
@@ -23,8 +20,12 @@
           </span>
         }
       }
-    }
-  </button>
+    </button>
+  } @else {
+    <div class="column-header" [title]="label">
+      <span class="label e2e-label" [class.wrap-header]="table().wrapHeader()">{{label}}</span>
+    </div>
+  }
 }
 
 @if (column().filterable()) {

@@ -7,9 +7,6 @@
 - Neue icons von Jonas integrieren
 - Test dass Tabelle in Workbench Microfrontend funktioniert
 - Test dass Tabelle mit RemoteDataFetcher funktioniert (Zusammenspiel)
-- Table Header
-  - only use button if sortable
-  - --sci-table-header-height CSS variable should only apply to headers, not filters
 - Render cell without additional DIV
 - 
 # Future Features

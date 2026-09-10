@@ -16,7 +16,7 @@
     }
   }
 
-  > button.column-sort {
+  > .column-header {
     all: unset;
     box-sizing: border-box;
     padding: .125em .5em;
@@ -26,7 +26,7 @@
     align-items: center;
     gap: .5em;
 
-    &.sortable {
+    &.column-sort {
       cursor: var(--sci-table-header-cursor);
 
       > span.sort {
