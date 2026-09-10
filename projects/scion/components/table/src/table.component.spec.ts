@@ -33,16 +33,209 @@ fdescribe('Table', () => {
     });
   });
 
-  describe('Miscellaneous', () => {
+  describe('Columns', () => {
 
-    /**
-     * Tests that the application becomes stable if using <sci-table>, i.e., that resources used by the table finish loading.
-     */
-    it('should become stable', async () => {
-      const data = signal([1, 2, 3]);
+    describe('Component Column', () => {
 
-      const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn(item => item)));
-      await expectAsync(fixture.whenStable()).toBeResolved();
+      it('should render custom component column', async () => {
+        const data = signal(['1', '2', '3']);
+        const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+          .addComponentColumn({
+            name: 'column:component',
+            component: item => ({
+              component: CustomColumnComponent,
+              bindings: [inputBinding('value', () => item)],
+            }),
+          })),
+        );
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:component'})!.values()).toEqual(['1', '2', '3']);
+      });
+    });
+
+    describe('Template Column', () => {
+
+      it('should render custom template column', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+          .addTemplateColumn({
+            name: 'column:template',
+            // TODO [egob] Wollen wir hier eine Convenience anbieten?
+            template: () => ({template}),
+          })),
+        );
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})?.values()).toEqual(['1', '2', '3']);
+      });
+
+      it('should pass context to template', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+          .addTemplateColumn({
+            name: 'column:template',
+            template: item => ({
+              template: template,
+              context: {context: `[context="${item}"]`},
+            }),
+          })),
+        );
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})!.values()).toEqual([
+          '1 [context="1"]',
+          '2 [context="2"]',
+          '3 [context="3"]',
+        ]);
+      });
+
+      it('should pass context to template as signal', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+        const context = signal('a');
+
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+          .addTemplateColumn({
+            name: 'column:template',
+            template: item => ({
+              template: template,
+              context: {
+                context: computed(() => `[context="${context()}", item="${item}"]`),
+              },
+            }),
+          })),
+        );
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})!.values()).toEqual([
+          '1 [context="a", item="1"]',
+          '2 [context="a", item="2"]',
+          '3 [context="a", item="3"]',
+        ]);
+
+        // Change context signal.
+        context.set('b');
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})!.values()).toEqual([
+          '1 [context="b", item="1"]',
+          '2 [context="b", item="2"]',
+          '3 [context="b", item="3"]',
+        ]);
+      });
+
+      it('should not fail if context value is undefined', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+          .addTemplateColumn({
+            name: 'column:template',
+            template: () => ({
+              template: template,
+              context: {
+                context: undefined,
+              },
+            }),
+          })),
+        );
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
+      });
+    });
+  });
+
+  describe('Column Resize', () => {
+
+    it('should pack column', async () => {
+      const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
+      const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+        .addNumberColumn(item => item.id)
+        .addStringColumn(item => item.name),
+      ), {width: '400px'});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.columns[0]!.width).toBe(200);
+      expect(table.columns[1]!.width).toBe(200);
+
+      await table.column({index: 1})!.pack();
+      expect(table.columns[0]!.width).toBe(200);
+      expect(table.columns[1]!.width).toBe(100);
+
+      await table.column({index: 0})!.pack();
+      expect(table.columns[0]!.width).toBe(100);
+      expect(table.columns[1]!.width).toBe(100);
+    });
+
+    it('should store column widths to storage', async () => {
+      const storeFn = jasmine.createSpy();
+
+      TestBed.configureTestingModule({
+        providers: [
+          provideTableStorage(class {
+            public load(): null {
+              return null;
+            }
+
+            public store(key: string, value: string): void {
+              storeFn(key, value);
+            }
+          }),
+        ],
+      });
+
+      const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
+      const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+        .addNumberColumn(item => item.id)
+        .addStringColumn(item => item.name),
+      ), {name: 'table:testee', width: '400px'});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      await table.column({index: 0})!.pack();
+
+      expect(storeFn).toHaveBeenCalledWith('scion.components.table:testee', '{"columns":[{"name":"column:0","width":100}]}');
+    });
+
+    it('should load column widths from storage', async () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideTableStorage(class {
+            public load(key: string): string {
+              return key === 'scion.components.table:testee' ? JSON.stringify({columns: [{name: 'column:0', width: 100}, {name: 'column:1'}]}) : '';
+            }
+
+            public store(): void {
+              // NOOP
+            }
+          }),
+        ],
+      });
+
+      const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
+      const {fixture} = createSciTableComponent(() => sciTable(data, table => table
+        .addNumberColumn(item => item.id)
+        .addStringColumn(item => item.name),
+      ), {name: 'table:testee', width: '400px'});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.columns[0]!.width).toBe(100);
+      expect(table.columns[1]!.width).toBe(300);
     });
   });
 
@@ -77,128 +270,6 @@ fdescribe('Table', () => {
       columns.update(c => c.concat(['name']));
       await table.waitUntilStable();
       expect(table.columns).toHaveSize(2);
-    });
-
-    describe('Columns', () => {
-
-      describe('Component Column', () => {
-
-        it('should render custom component column', async () => {
-          const data = signal(['1', '2', '3']);
-          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-            .addComponentColumn({
-              name: 'column:component',
-              component: item => ({
-                component: CustomColumnComponent,
-                bindings: [inputBinding('value', () => item)],
-              }),
-            })),
-          );
-
-          const table = new TablePO(fixture);
-          await table.waitUntilStable();
-          expect(await table.column({name: 'column:component'})!.values()).toEqual(['1', '2', '3']);
-        });
-      });
-
-      describe('Template Column', () => {
-
-        it('should render custom template column', async () => {
-          const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-
-          const data = signal([1, 2, 3]);
-          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-            .addTemplateColumn({
-              name: 'column:template',
-              // TODO [egob] Wollen wir hier eine Convenience anbieten?
-              template: () => ({template}),
-            })),
-          );
-
-          const table = new TablePO(fixture);
-          await table.waitUntilStable();
-          expect(await table.column({name: 'column:template'})?.values()).toEqual(['1', '2', '3']);
-        });
-
-        it('should pass context to template', async () => {
-          const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-
-          const data = signal([1, 2, 3]);
-          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-            .addTemplateColumn({
-              name: 'column:template',
-              template: item => ({
-                template: template,
-                context: {context: `[context="${item}"]`},
-              }),
-            })),
-          );
-
-          const table = new TablePO(fixture);
-          await table.waitUntilStable();
-          expect(await table.column({name: 'column:template'})!.values()).toEqual([
-            '1 [context="1"]',
-            '2 [context="2"]',
-            '3 [context="3"]',
-          ]);
-        });
-
-        it('should pass context to template as signal', async () => {
-          const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-          const context = signal('a');
-
-          const data = signal([1, 2, 3]);
-          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-            .addTemplateColumn({
-              name: 'column:template',
-              template: item => ({
-                template: template,
-                context: {
-                  context: computed(() => `[context="${context()}", item="${item}"]`),
-                },
-              }),
-            })),
-          );
-
-          const table = new TablePO(fixture);
-          await table.waitUntilStable();
-          expect(await table.column({name: 'column:template'})!.values()).toEqual([
-            '1 [context="a", item="1"]',
-            '2 [context="a", item="2"]',
-            '3 [context="a", item="3"]',
-          ]);
-
-          // Change context signal.
-          context.set('b');
-          await table.waitUntilStable();
-          expect(await table.column({name: 'column:template'})!.values()).toEqual([
-            '1 [context="b", item="1"]',
-            '2 [context="b", item="2"]',
-            '3 [context="b", item="3"]',
-          ]);
-        });
-
-        it('should not fail if context value is undefined', async () => {
-          const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-
-          const data = signal([1, 2, 3]);
-          const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-            .addTemplateColumn({
-              name: 'column:template',
-              template: () => ({
-                template: template,
-                context: {
-                  context: undefined,
-                },
-              }),
-            })),
-          );
-
-          const table = new TablePO(fixture);
-          await table.waitUntilStable();
-          expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
-        });
-      });
     });
 
     describe('Sorting', () => {
@@ -535,147 +606,7 @@ fdescribe('Table', () => {
     });
   });
 
-  describe('Row Actions', () => {
-
-    it('should trigger primary action on dbl click', async () => {
-      const onPrimaryAction = jasmine.createSpy();
-      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn(item => item.id)));
-      fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-      table.row({nth: 1}).dblClick();
-
-      expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
-    });
-
-    it('should trigger primary action on enter', async () => {
-      const onPrimaryAction = jasmine.createSpy();
-      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn(item => item.id)));
-
-      fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-      table.row({nth: 1}).enter();
-
-      expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
-    });
-
-    it('should show actions', async () => {
-      const onSelect = jasmine.createSpy();
-      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const {fixture} = createSciTableComponent(() => sciTable({
-        data,
-        rowActions: (item, toolbar) => {
-          toolbar.addToolbarButton({
-            icon: 'delete',
-            cssClass: 'testee',
-            onSelect: () => {
-              onSelect(item);
-            },
-          });
-        },
-      }, table => table.addNumberColumn(item => item.id)));
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-      table.row({nth: 1}).hover();
-      await table.waitUntilStable();
-      table.row({nth: 1}).rowAction({cssClass: 'testee'}).click();
-      await table.waitUntilStable();
-
-      expect(onSelect).toHaveBeenCalledOnceWith({id: 2});
-    });
-  });
-
-  describe('Resize', () => {
-
-    it('should pack column', async () => {
-      const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
-      const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-        .addNumberColumn(item => item.id)
-        .addStringColumn(item => item.name),
-      ), {width: '400px'});
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-
-      expect(table.columns[0]!.width).toBe(200);
-      expect(table.columns[1]!.width).toBe(200);
-
-      await table.column({index: 1})!.pack();
-      expect(table.columns[0]!.width).toBe(200);
-      expect(table.columns[1]!.width).toBe(100);
-
-      await table.column({index: 0})!.pack();
-      expect(table.columns[0]!.width).toBe(100);
-      expect(table.columns[1]!.width).toBe(100);
-    });
-
-    it('should store column widths to storage', async () => {
-      const storeFn = jasmine.createSpy();
-
-      TestBed.configureTestingModule({
-        providers: [
-          provideTableStorage(class {
-            public load(): null {
-              return null;
-            }
-
-            public store(key: string, value: string): void {
-              storeFn(key, value);
-            }
-          }),
-        ],
-      });
-
-      const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
-      const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-        .addNumberColumn(item => item.id)
-        .addStringColumn(item => item.name),
-      ), {name: 'table:testee', width: '400px'});
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-
-      await table.column({index: 0})!.pack();
-
-      expect(storeFn).toHaveBeenCalledWith('scion.components.table:testee', '{"columns":[{"name":"column:0","width":100}]}');
-    });
-
-    it('should load column widths from storage', async () => {
-      TestBed.configureTestingModule({
-        providers: [
-          provideTableStorage(class {
-            public load(key: string): string {
-              return key === 'scion.components.table:testee' ? JSON.stringify({columns: [{name: 'column:0', width: 100}, {name: 'column:1'}]}) : '';
-            }
-
-            public store(): void {
-              // NOOP
-            }
-          }),
-        ],
-      });
-
-      const data = signal([{id: 1, name: 'test-1'}, {id: 2, name: 'test-2'}, {id: 3, name: 'test-2'}]);
-      const {fixture} = createSciTableComponent(() => sciTable(data, table => table
-        .addNumberColumn(item => item.id)
-        .addStringColumn(item => item.name),
-      ), {name: 'table:testee', width: '400px'});
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-
-      expect(table.columns[0]!.width).toBe(100);
-      expect(table.columns[1]!.width).toBe(300);
-    });
-  });
-
-  describe('Custom Data Source', () => {
+  describe('Pageable Data Source', () => {
 
     it('should cache pages', async () => {
       const loader = jasmine.createSpy().and.callFake((request: SciTableRequest): SciTableResponse<number> => ({
@@ -1393,6 +1324,62 @@ fdescribe('Table', () => {
     });
   });
 
+  describe('Row Actions', () => {
+
+    it('should trigger primary action on dbl click', async () => {
+      const onPrimaryAction = jasmine.createSpy();
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+      const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn(item => item.id)));
+      fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      table.row({nth: 1}).dblClick();
+
+      expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
+    });
+
+    it('should trigger primary action on enter', async () => {
+      const onPrimaryAction = jasmine.createSpy();
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+      const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn(item => item.id)));
+
+      fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      table.row({nth: 1}).enter();
+
+      expect(onPrimaryAction).toHaveBeenCalledWith({id: 2});
+    });
+
+    it('should show actions', async () => {
+      const onSelect = jasmine.createSpy();
+      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
+      const {fixture} = createSciTableComponent(() => sciTable({
+        data,
+        rowActions: (item, toolbar) => {
+          toolbar.addToolbarButton({
+            icon: 'delete',
+            cssClass: 'testee',
+            onSelect: () => {
+              onSelect(item);
+            },
+          });
+        },
+      }, table => table.addNumberColumn(item => item.id)));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      table.row({nth: 1}).hover();
+      await table.waitUntilStable();
+      table.row({nth: 1}).rowAction({cssClass: 'testee'}).click();
+      await table.waitUntilStable();
+
+      expect(onSelect).toHaveBeenCalledOnceWith({id: 2});
+    });
+  });
+
   describe('Row Bindings', () => {
 
     it('should pass index to row binding function', async () => {
@@ -1602,6 +1589,19 @@ fdescribe('Table', () => {
       expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:positive');
       expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:positive');
       expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:positive');
+    });
+  });
+
+  describe('Miscellaneous', () => {
+
+    /**
+     * Tests that the application becomes stable if using <sci-table>, i.e., that resources used by the table finish loading.
+     */
+    it('should become stable', async () => {
+      const data = signal([1, 2, 3]);
+
+      const {fixture} = createSciTableComponent(() => sciTable(data, table => table.addNumberColumn(item => item)));
+      await expectAsync(fixture.whenStable()).toBeResolved();
     });
   });
 });
