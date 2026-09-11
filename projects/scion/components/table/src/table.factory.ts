@@ -27,6 +27,8 @@ export interface SciTableFactory<T> {
 
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
+
+  addColumn(descriptor: SciMagicColumnDescriptor<T>): this;
 }
 
 export interface SciColumnDescriptor {
@@ -43,6 +45,18 @@ export interface SciColumnDescriptor {
    * Min column width in px. Defaults to 100.
    */
   minWidth?: number;
+}
+
+export interface SciMagicColumnDescriptor<T> extends SciColumnDescriptor {
+  value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
+  /**
+   * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
+   */
+  sortable?: boolean | {comparator: (a: SciCellContext<T, void>, b: SciCellContext<T, unknown>) => number};
+  /**
+   * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
+   */
+  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, unknown>) => boolean};
 }
 
 export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {

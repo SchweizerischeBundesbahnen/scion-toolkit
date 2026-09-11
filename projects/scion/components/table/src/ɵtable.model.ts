@@ -10,7 +10,7 @@
 
 import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
-import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
+import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciPageableTableDatasourceDescriptor, SciRow, SciRowActionFactoryFn, SciTable, SciTableDatasource, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
@@ -115,7 +115,18 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       ...inject<SciTableRowBinding<T>[]>(SCI_TABLE_ROW_BINDING, {optional: true}) ?? [],
     ];
     this._trackBy = descriptor.trackBy;
+
     this._dataLoaderFn = isSignal(descriptor.data) ? arrayDataSource(descriptor.data, this.columns) : descriptor.data;
+
+    // if (isSignal(descriptor.datasource)) {
+    //   this._datasource = arrayDataSource(descriptor.datasource, this.columns);
+    // }
+    // else if (descriptor.datasource instanceof SciTableDatasource) {
+    //   this._datasource = arrayDataSource(descriptor.datasource.data, this.columns);
+    // }
+    // else {
+    //   this._datasource = descriptor.datasource;
+    // }
 
     this.installCriteriaWatcher();
     this.installPageLoader();
