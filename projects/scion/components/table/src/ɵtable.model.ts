@@ -15,11 +15,11 @@ import {ɵSciTableFactory} from './ɵtable.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciColumnDescriptorLike} from './table.factory';
-import {coerceSignal} from '@scion/components/common';
+import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
 import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {concat, fromEvent, of, skip, switchMap, timer} from 'rxjs';
+import {catchError, concat, fromEvent, of, skip, switchMap, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBinding} from './table-row-binding';
 import {clamp, Objects, Observables} from '@scion/toolkit/util';
 import {SciTableFactoryFn} from './table';
@@ -85,12 +85,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   });
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), tableFilter: this._tableFilter()}));
-  public readonly loading = computed(() => this._cache.values().some(entry => entry.rows() === undefined));
+  public readonly loading = computed(() => this._cache.values().some(entry => entry.resource.isLoading()));
   public readonly activeRow: Signal<SciRow<T> | undefined>;
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
   public readonly rowsByIndex = this._cache.rowsByIndex;
+  public readonly error = this._cache.error;
   public readonly rows = this.computeRows();
 
   constructor(factoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>) {
@@ -280,47 +281,61 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     const pageStart = page * pageSize;
     const pageEnd = pageStart + pageSize;
     const cacheKey = `${pageStart}-${pageEnd}` as const;
+
     if (this._cache.has(cacheKey)) {
-      return this._cache.get(cacheKey)!.rows;
+      return this._cache.get(cacheKey)!.resource.value;
     }
 
-    const items = signal<T[] | undefined>(undefined);
-    const subscription = Observables.coerce(this._dataLoaderFn({
-      start: pageStart,
-      end: pageEnd,
-      pageSize,
-      page,
-      sortCriteria,
-      tableFilter,
-      columnFilters,
-    })).subscribe({
-      next: result => {
-        this.totalCount.set(result.totalCount);
-        items.set(result.items);
-      },
-      error: err => {
-        // TODO [egob]: what do we do when the datasource throws an error?
-        this._cache.deleteIfEmpty(cacheKey);
-      },
+    const injector = createDestroyableInjector({parent: this._injector});
+    const rows = runInInjectionContext(injector, () => {
+      const data = this._dataLoaderFn({
+        start: pageStart,
+        end: pageEnd,
+        pageSize,
+        page,
+        sortCriteria,
+        tableFilter,
+        columnFilters,
+      });
+      const result = rxResource({
+        stream: () => Observables.coerce(data).pipe(
+          catchError(error => {
+            // reset the totalCount on error, to display error message properly.
+            this.totalCount.set(0);
+            throw error;
+          }),
+        ),
+      });
+
+      const rows = resource({
+        params: ({chain}) => ({items: chain(result)?.items, columns: this.columns()}),
+        loader: async ({params}) => this.mapItemsToRow(params.items ?? [], params.columns, pageStart),
+      });
+
+      effect(() => {
+        // Only set the totalCount, once the derived resource is resolved.
+        // Else the initial page is reloaded, because the scrollRange changes before the resource is resolved.
+        if (rows.status() === 'resolved') {
+          this.totalCount.set(result.value()?.totalCount);
+        }
+      });
+
+      return rows;
     });
 
     const cacheEntry: TableCacheEntry<T> = {
-      rows: computed(() => {
-        const resolved = items();
-        const columns = this.columns();
-        return untracked(() => resolved ? this.mapItemsToRow(resolved, columns, pageStart) : undefined);
-      }),
-      dispose: () => subscription.unsubscribe(),
+      resource: rows,
+      dispose: () => injector.destroy(),
       start: pageStart,
       end: pageEnd,
     };
 
     this._cache.set(cacheKey, cacheEntry);
     onCleanup?.(() => {
-      this._cache.deleteIfEmpty(cacheKey);
+      this._cache.deleteIfLoading(cacheKey);
     });
 
-    return cacheEntry.rows;
+    return rows.value;
   }
 
   /**
@@ -384,6 +399,11 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
   public updateSelectedItems(updateFn: (ids: Map<unknown, T>) => Map<unknown, T>): void {
     this._selectedItems.update(updateFn);
+  }
+
+  public reset(): void {
+    this._cache.clear();
+    this.totalCount.set(undefined);
   }
 
   public dispose(): void {

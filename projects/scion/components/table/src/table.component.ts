@@ -27,6 +27,7 @@ import {VirtualColumnsComponent} from './virtual-columns/virtual-columns.compone
 import {SciAttributesDirective} from '@scion/components/common';
 import {ColumnFilterComponent} from './column-filter/column-filter.component';
 import {NgTemplateOutlet} from '@angular/common';
+import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
   selector: 'sci-table',
@@ -53,6 +54,7 @@ import {NgTemplateOutlet} from '@angular/common';
     SciThrobberComponent,
     VirtualColumnsComponent,
     NgTemplateOutlet,
+    SciIconComponent,
   ],
   providers: [
     provideSciTable(),
@@ -90,6 +92,10 @@ export class SciTableComponent<T = unknown> {
 
   protected onRowPrimaryAction(item: T): void {
     this.primaryAction.emit(item);
+  }
+
+  protected onRefresh(): void {
+    this.table().reset();
   }
 
   private connectToModel(): void {

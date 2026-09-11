@@ -8,12 +8,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, signal, Signal} from '@angular/core';
+import {computed, ResourceRef, signal, Signal} from '@angular/core';
 import {SciRow} from './table.model';
 import {Objects} from '@scion/toolkit/util';
 
 export interface TableCacheEntry<T> {
-  rows: Signal<SciRow<T>[] | undefined>;
+  resource: ResourceRef<SciRow<T>[] | undefined>;
   start: number;
   end: number;
   dispose: () => void;
@@ -23,6 +23,8 @@ type TableCacheKey = `${number}-${number}`;
 
 export class TableCache<T> {
   private readonly _cache = signal(new Map<TableCacheKey, TableCacheEntry<T>>());
+
+  public readonly error = computed(() => this.values().find(entry => entry.resource.error())?.resource.error());
 
   public has(key: TableCacheKey): boolean {
     return this._cache().has(key);
@@ -49,12 +51,12 @@ export class TableCache<T> {
   /**
    * Deletes page from cache, but only if it has no items loaded.
    */
-  public deleteIfEmpty(key: TableCacheKey): void {
+  public deleteIfLoading(key: TableCacheKey): void {
     this._cache.update(cache => {
       const cacheCopy = new Map(cache);
 
       const existing = cacheCopy.get(key);
-      if (existing && existing.rows() === undefined) {
+      if (existing?.resource.isLoading()) {
         cacheCopy.delete(key);
         existing.dispose();
       }
@@ -78,14 +80,13 @@ export class TableCache<T> {
 
   public get rowsByIndex(): Signal<Map<number, SciRow<T>>> {
     return computed(() => this.values()
-      .flatMap(page => page.rows() ?? [])
+      .flatMap(page => page.resource.value() ?? [])
       .reduce((acc, row) => acc.set(row.index, row), new Map<number, SciRow<T>>()), {equal: Objects.isEqual});
   }
 
   public get rowsById(): Signal<Map<unknown, SciRow<T>>> {
     return computed(() => this.values()
-      .flatMap(page => page.rows() ?? [])
-      .filter(row => row.id !== undefined)
-      .reduce((acc, row) => acc.set(row.id, row), new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
+      .flatMap(page => page.resource.value() ?? [])
+      .reduce((acc, row) => row.id !== undefined ? acc.set(row.id, row) : acc, new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
   }
 }

@@ -9,11 +9,20 @@
 
     <!-- Table body -->
     <sci-table-body sciTableKeyboardNavigator tabindex="0">
-      <!-- Track index to reuse the table row elements -->
-      @for (row of table.rows(); track $index) {
-        <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item!)" [sciAttributes]="row.bindings?.attributes()"/>
-      } @empty {
-        <span class="no-rows e2e-no-rows">{{('%scion.components.no_items.message' | sciText)()}}</span>
+      @if (table.error()) {
+        <div class="error e2e-error">
+          <button (click)="onRefresh()">
+            <sci-icon>refresh</sci-icon>
+          </button>
+          <span>Error occurred.</span>
+        </div>
+      } @else {
+        <!-- Track index to reuse the table row elements -->
+        @for (row of table.rows(); track $index) {
+          <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item!)" [sciAttributes]="row.bindings?.attributes()"/>
+        } @empty {
+          <span class="no-rows e2e-no-rows">{{('%scion.components.no_items.message' | sciText)()}}</span>
+        }
       }
 
       <!-- Render active row outline separately to preserve row border-radius within block selection. -->

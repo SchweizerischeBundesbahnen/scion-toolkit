@@ -1,3 +1,4 @@
+@use '@scion/components/common';
 @use '@scion/components/scrollbar' as sci-scrollbar;
 
 :host {
@@ -135,7 +136,7 @@
           pointer-events: none;
         }
 
-        > span.no-rows {
+        > span.no-rows, > div.error {
           grid-column: 1 / -1;
           justify-self: center;
           display: grid;
@@ -150,6 +151,17 @@
             left: 50%;
             right: 50%;
             width: 0; // required to horizontally center the message
+          }
+        }
+
+        > div.error {
+          grid-template-columns: min-content min-content;
+          grid-gap: .25em;
+
+          > button {
+            @include common.icon-button-element-states() {
+              padding: 1px;
+            }
           }
         }
       }
