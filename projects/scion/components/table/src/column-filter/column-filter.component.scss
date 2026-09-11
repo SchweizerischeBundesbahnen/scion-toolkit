@@ -1,35 +1,36 @@
 @use '@scion/components/common';
 
 :host {
-  position: relative;
   display: flex;
+  gap: .5em;
   align-items: center;
-  border: 1px solid transparent;
-  background-color: var(--sci-color-background-input);
-  padding: .25em;
+  padding-inline: var(--sci-table-cell-padding-inline);
+  border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
+
+  outline: var(--sci-table-border-size) solid transparent;
+  outline-offset: -1px; // offset by -1px to merge the filter's outline with the header separators and column splitters
+  transition: outline-color ease-in-out .15s, color ease-in-out .15s;
 
   &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
-    border-color: var(--sci-color-accent);
+    outline-color: var(--sci-color-accent);
   }
 
-  > sci-icon.filter-icon {
-    padding-inline: .25em;
-
-    &.active {
-      color: var(--sci-color-accent);
-    }
+  > sci-icon.filter.active {
+    color: var(--sci-color-accent);
   }
 
   > input, > select {
     all: unset;
-    flex: 1;
+    flex: auto;
     width: 0;
     min-width: 0;
-    transition: border-color ease-in-out .15s, color ease-in-out .15s;
-    background-color: transparent;
     color: var(--sci-color-text);
     appearance: auto;
     box-sizing: border-box;
+
+    > option {
+      background: var(--sci-color-background-elevation);
+    }
   }
 
   > button.clear {

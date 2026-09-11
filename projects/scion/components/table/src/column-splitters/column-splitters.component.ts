@@ -12,7 +12,7 @@ import {Component, inject, input, signal} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciColumnLike} from '../table.model';
-import {TableRowComponent} from '../table-row/table-row.component';
+import {SciTableRowComponent} from '../table-row/table-row.component';
 import {SciColumnService} from '../column/column.service';
 
 export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
@@ -27,7 +27,7 @@ export const TABLE_SPLITTERS_SELECTOR = 'sci-column-splitters';
 })
 export class ColumnSplittersComponent<T> {
 
-  public readonly rows = input.required<readonly TableRowComponent<unknown>[]>();
+  public readonly rows = input.required<readonly SciTableRowComponent<unknown>[]>();
 
   protected readonly table = inject(ɵSCI_TABLE);
 

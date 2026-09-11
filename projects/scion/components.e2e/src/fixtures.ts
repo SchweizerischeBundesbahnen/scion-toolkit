@@ -7,6 +7,7 @@ import {ConsoleLogs} from './console-logs';
 import {expect, test as playwrightTest} from '@playwright/test';
 import {toBeBetween} from './helper/to-be-between.matcher';
 import {toHaveEllipsis} from './helper/to-have-ellipsis.matcher';
+import {toBeStrictEmpty} from './helper/to-be-strict-empty.matcher';
 
 export interface TestFixtures {
   /**
@@ -30,6 +31,11 @@ declare global {
        * Tests whether text overflows displaying ellipsis.
        */
       toHaveEllipsis(): Promise<R>;
+
+      /**
+       * Like Playwrights `toBeEmpty`, but additionally checks that the element has no child elements.
+       */
+      toBeStrictEmpty(): Promise<R>;
     }
   }
 }
@@ -37,6 +43,7 @@ declare global {
 expect.extend({
   toBeBetween,
   toHaveEllipsis,
+  toBeStrictEmpty,
 });
 
 export const test = playwrightTest.extend<TestFixtures>({

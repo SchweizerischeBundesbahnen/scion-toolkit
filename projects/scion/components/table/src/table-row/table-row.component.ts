@@ -38,7 +38,7 @@ import {UUID} from '@scion/toolkit/uuid';
     '(mouseleave)': 'onMouseLeave($event)',
   },
 })
-export class TableRowComponent<T> {
+export class SciTableRowComponent<T> {
 
   public readonly row = input.required<SciRow<T>>();
 

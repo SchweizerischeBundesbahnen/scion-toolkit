@@ -10,24 +10,22 @@
 
 import {Component, computed, inject, input} from '@angular/core';
 import {SciColumnLike} from '../table.model';
-import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciIconComponent} from '@scion/components/icon';
-import {SciTextPipe} from '@scion/components/text';
+import {text} from '@scion/components/text';
+import {NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'sci-column-header',
   imports: [
-    ColumnFilterComponent,
     SciIconComponent,
-    SciTextPipe,
+    NgTemplateOutlet,
   ],
   templateUrl: './column-header.component.html',
   styleUrl: './column-header.component.scss',
   host: {
-    '[class.filterable]': 'table().filterable()',
-    '[class.show-header]': 'table().showHeader()',
     '[attr.data-column]': 'column().name',
+    '[attr.title]': 'label()',
   },
 })
 export class ColumnHeaderComponent<T> {
@@ -35,13 +33,10 @@ export class ColumnHeaderComponent<T> {
   public readonly column = input.required<SciColumnLike<T>>();
 
   protected readonly table = inject(ɵSCI_TABLE);
-
-  protected readonly columnSort = computed(() => this.table().sortCriteria().find(s => s.columnName === this.column().name)?.direction);
+  protected readonly label = text(computed(() => this.column().label()));
+  protected readonly sortDirection = computed(() => this.table().sortCriteria().find(criteria => criteria.columnName === this.column().name)?.direction);
 
   protected onSort(event: PointerEvent): void {
-    if (!this.column().sortable()) {
-      return;
-    }
     this.table().sort(this.column().name, event.ctrlKey || event.metaKey);
   }
 }

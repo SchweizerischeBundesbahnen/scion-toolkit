@@ -20,6 +20,10 @@ import {firstValueFrom, timer} from 'rxjs';
   imports: [SciIconComponent, FormsModule],
   templateUrl: './column-filter.component.html',
   styleUrl: './column-filter.component.scss',
+  host: {
+    '[attr.data-column]': 'column().name',
+    '[attr.data-disabled]': `!column().filterable() ? '' : null`,
+  },
 })
 export class ColumnFilterComponent<T> {
 

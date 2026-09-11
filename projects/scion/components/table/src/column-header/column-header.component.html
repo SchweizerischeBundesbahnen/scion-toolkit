@@ -1,35 +1,27 @@
-@if (table().showHeader()) {
-  @let label = (column().label() | sciText)();
-  @if (column().sortable()) {
-    <button class="column-header column-sort e2e-column-sort"
-            [attr.data-sort]="columnSort()"
-            [title]="label"
-            (click)="onSort($event)">
-      <span class="label e2e-label" [class.wrap-header]="table().wrapHeader()">{{label}}</span>
-      @switch (columnSort()) {
-        @case ('asc') {
-          <sci-icon>scion.chevron_up</sci-icon>
-        }
-        @case ('desc') {
-          <sci-icon>scion.chevron_down</sci-icon>
-        }
-        @default {
-          <span class="sort">
-            <sci-icon>scion.chevron_up</sci-icon>
-            <sci-icon>scion.chevron_down</sci-icon>
-          </span>
-        }
+@if (column().sortable()) {
+  <button class="sort e2e-sort"
+          [attr.data-sort-direction]="sortDirection()"
+          (click)="onSort($event)">
+    <!-- Label -->
+    <ng-container *ngTemplateOutlet="label_template"/>
+
+    <!-- Sort Indicator -->
+    @switch (sortDirection()) {
+      @case ('asc') {
+        <sci-icon>scion.chevron_up</sci-icon>
       }
-    </button>
-  } @else {
-    <div class="column-header" [title]="label">
-      <span class="label e2e-label" [class.wrap-header]="table().wrapHeader()">{{label}}</span>
-    </div>
-  }
+      @case ('desc') {
+        <sci-icon>scion.chevron_down</sci-icon>
+      }
+      @default {
+        <sci-icon class="no-sort">scion.expand_all</sci-icon>
+      }
+    }
+  </button>
+} @else {
+  <ng-container *ngTemplateOutlet="label_template"/>
 }
 
-@if (column().filterable()) {
-  <sci-column-filter [column]="column()"/>
-} @else if (table().filterable()) {
-  <div></div>
-}
+<ng-template #label_template>
+  <span class="label e2e-label" [class.wrap]="table().wrapHeader()">{{label()}}</span>
+</ng-template>

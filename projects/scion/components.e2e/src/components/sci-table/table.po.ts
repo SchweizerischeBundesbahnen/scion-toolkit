@@ -34,11 +34,11 @@ export class TablePO {
     this.viewport = this.locator.locator('div.e2e-viewport');
     this.grid = this.locator.locator('sci-table-grid');
     this.header = new HeaderPO(this.locator.locator('sci-table-header'));
-    this.headers = this.locator.locator('sci-column-header button.e2e-column-sort');
+    this.headers = this.locator.locator('sci-column-header button.e2e-sort');
     this.body = this.locator.locator('sci-table-body');
     this.rows = this.locator.locator('sci-table-row');
     this.filters = this.locator.locator('sci-column-filter');
-    this.sortButtons = this.locator.locator('button.e2e-column-sort');
+    this.sortButtons = this.locator.locator('button.e2e-sort');
     this.verticalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="vscroll"]'));
     this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
     this.splitters = this.locator.locator('sci-column-splitters');

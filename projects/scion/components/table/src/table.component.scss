@@ -16,9 +16,14 @@
     container-name: sci-table-viewport;
     container-type: scroll-state;
 
-    // Indicate if table toolbar is not visible.
-    &:not(:has(sci-table-header)) {
-      --ɵsci-table-show-header: false;
+    // Indicate if table header is visible.
+    &:has(sci-table-header) {
+      --ɵsci-table-header-visible: true;
+    }
+
+    // Indicate if column headers are visible.
+    &:has(sci-table-header > sci-column-header) {
+      --ɵsci-column-header-visible: true;
     }
 
     // Indicates active scrolling OR holding the scrollbar thumb pressed (i.e., user stopped moving while still pressing the thumb).
@@ -34,12 +39,11 @@
       grid-template-rows:
         min-content // table header
         1fr; // table body
-      // Fill viewport by default, shrinking columns to minimums before overflowing horizontally.
-      width: min-content;
+      width: min-content; // Fill viewport by default, shrinking columns to minimums before overflowing horizontally.
       min-width: 100%;
       min-height: 100%;
 
-      @container style(--ɵsci-table-show-header: false) {
+      @container not style(--ɵsci-table-header-visible: true) {
         grid-template-rows: 1fr; // table body
       }
 
@@ -50,19 +54,41 @@
       > sci-table-header {
         z-index: 1; // required to overlap the table body when sticking on top.
         grid-row: 1; // The sci-column-splitters positioning requires all grid items to be positioned.
+        background-color: var(--sci-table-header-background-color);
+        user-select: none;
         display: grid;
         grid-template-columns: subgrid;
         grid-column: 1 / -1;
+        grid-auto-rows: var(--sci-table-row-height);
+        @container style(--ɵsci-column-header-visible: true) {
+          grid-template-rows: minmax(var(--sci-table-row-height), auto); // flexible row height to support header wrapping
+        }
+
+        // Stick header to the top of the viewport.
         position: sticky;
         top: 0;
-        background-color: var(--sci-table-header-background-color);
+
+        // Force column filters to start a new row.
+        > sci-column-filter:first-of-type {
+          grid-column: 1;
+        }
+
+        // Offset column filters by -1px to merge the filter's top outline with the header's bottom line.
+        > sci-column-header ~ sci-column-filter {
+          margin-top: -1px;
+        }
+
+        // Prevent hovering header while resizing.
+        @container (style(--ɵsci-table-resizing: true)) {
+          pointer-events: none;
+        }
       }
 
       > sci-table-body {
         anchor-name: --sci-table-body;
         grid-row: 2; // The sci-column-splitters positioning requires all grid items to be positioned.
         outline: none; // tabindex set for keyboard navigation
-        @container style(--ɵsci-table-show-header: false) {
+        @container not style(--ɵsci-table-header-visible: true) {
           grid-row: 1;
         }
         display: grid;

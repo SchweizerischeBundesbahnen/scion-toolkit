@@ -169,7 +169,7 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:string', type: 'string'});
-        await expect(table.column({name: 'column:string'}).header).toBeVisible();
+        await expect(table.column({name: 'column:string'}).columnHeader).toBeVisible();
       });
 
       test('should center text vertically', async ({page}) => {
@@ -238,7 +238,7 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:number', type: 'number'});
-        await expect(table.column({name: 'column:number'}).header).toBeVisible();
+        await expect(table.column({name: 'column:number'}).columnHeader).toBeVisible();
       });
 
       test('should center text vertically', async ({page}) => {
@@ -307,7 +307,7 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
-        await expect(table.column({name: 'column:boolean'}).header).toBeVisible();
+        await expect(table.column({name: 'column:boolean'}).columnHeader).toBeVisible();
       });
 
       test('should center checkmark vertically', async ({page}) => {
@@ -360,7 +360,7 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:template', type: 'template'});
-        await expect(table.column({name: 'column:template'}).header).toBeVisible();
+        await expect(table.column({name: 'column:template'}).columnHeader).toBeVisible();
       });
 
       test('should center template vertically', async ({page}) => {
@@ -488,7 +488,7 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:component', type: 'component'});
-        await expect(table.column({name: 'column:component'}).header).toBeVisible();
+        await expect(table.column({name: 'column:component'}).columnHeader).toBeVisible();
       });
 
       test('should center component vertically', async ({page}) => {
@@ -620,13 +620,13 @@ test.describe.only('sci-table', () => {
       await expectTable(table).toHaveColumnCount(20);
       await expectTable(table).toHaveHorizontalOverflow();
 
-      const col19 = table.column({index: 19});
+      const column19 = table.column({index: 19});
 
-      await expect(col19.header).not.toBeInViewport();
+      await expect(column19.columnHeader).not.toBeInViewport();
       await table.scrollTo({x: 'end'});
-      await expect(col19.header).toBeInViewport();
+      await expect(column19.columnHeader).toBeInViewport();
       await table.scrollTo({x: 'start'});
-      await expect(col19.header).not.toBeInViewport();
+      await expect(column19.columnHeader).not.toBeInViewport();
     });
 
     test('should add and remove columns', async ({page}) => {
@@ -639,51 +639,51 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:3', type: 'string'});
 
       await expectTable(table).toHaveColumnCount(3);
-      await expect(table.column({name: 'column:1'}).header).toBeVisible();
-      await expect(table.column({name: 'column:2'}).header).toBeVisible();
-      await expect(table.column({name: 'column:3'}).header).toBeVisible();
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
 
       // Hide column 2.
       await tablePage.setColumnVisible('column:2', false);
       await expectTable(table).toHaveColumnCount(2);
-      await expect(table.column({name: 'column:1'}).header).toBeVisible();
-      await expect(table.column({name: 'column:2'}).header).not.toBeAttached();
-      await expect(table.column({name: 'column:3'}).header).toBeVisible();
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
 
       // Hide column 3.
       await tablePage.setColumnVisible('column:3', false);
       await expectTable(table).toHaveColumnCount(1);
-      await expect(table.column({name: 'column:1'}).header).toBeVisible();
-      await expect(table.column({name: 'column:2'}).header).not.toBeAttached();
-      await expect(table.column({name: 'column:3'}).header).not.toBeAttached();
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
 
       // Hide column 1.
       await tablePage.setColumnVisible('column:1', false);
       await expectTable(table).toHaveColumnCount(0);
-      await expect(table.column({name: 'column:1'}).header).not.toBeAttached();
-      await expect(table.column({name: 'column:2'}).header).not.toBeAttached();
-      await expect(table.column({name: 'column:3'}).header).not.toBeAttached();
+      await expect(table.column({name: 'column:1'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
 
       // Show column 2.
       await tablePage.setColumnVisible('column:2', true);
       await expectTable(table).toHaveColumnCount(1);
-      await expect(table.column({name: 'column:1'}).header).not.toBeAttached();
-      await expect(table.column({name: 'column:2'}).header).toBeVisible();
-      await expect(table.column({name: 'column:3'}).header).not.toBeAttached();
+      await expect(table.column({name: 'column:1'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
 
       // Show column 1.
       await tablePage.setColumnVisible('column:1', true);
       await expectTable(table).toHaveColumnCount(2);
-      await expect(table.column({name: 'column:1'}).header).toBeVisible();
-      await expect(table.column({name: 'column:2'}).header).toBeVisible();
-      await expect(table.column({name: 'column:3'}).header).not.toBeAttached();
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
 
       // Show column 3.
       await tablePage.setColumnVisible('column:3', true);
       await expectTable(table).toHaveColumnCount(3);
-      await expect(table.column({name: 'column:1'}).header).toBeVisible();
-      await expect(table.column({name: 'column:2'}).header).toBeVisible();
-      await expect(table.column({name: 'column:3'}).header).toBeVisible();
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
     });
   });
 
@@ -731,13 +731,13 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setFilterable(true);
-      await tablePage.addColumn({name: 'column:inStock', type: 'boolean'});
+      await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
-      await table.column({name: 'column:inStock'}).filter('false');
-      await expectTable(table).column({name: 'column:inStock'}).cells.toContainText('clear');
+      await table.column({name: 'column:boolean'}).filter('false');
+      await expectTable(table).column({name: 'column:boolean'}).cells.toContainText('clear');
 
-      await table.column({name: 'column:inStock'}).filter('');
+      await table.column({name: 'column:boolean'}).filter('');
       await expect(table.rows).toHaveCount(noFilterCount);
     });
 
@@ -750,8 +750,9 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:template', type: 'template'});
 
       const templateColumn = table.column({name: 'column:template'});
-      await expect(templateColumn.header).toBeAttached();
-      await expect(templateColumn.filterField).not.toBeAttached();
+      await expect(templateColumn.columnHeader).toBeAttached();
+      await expect(templateColumn.columnFilter).toHaveAttribute('data-disabled');
+      await expect(templateColumn.columnFilter).toBeStrictEmpty();
     });
 
     test('should filter template column with custom filter', async ({page}) => {
@@ -780,9 +781,9 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:component', type: 'component'});
 
       const componentColumn = table.column({name: 'column:component'});
-
-      await expect(componentColumn.header).toBeAttached();
-      await expect(componentColumn.filterField).not.toBeAttached();
+      await expect(componentColumn.columnHeader).toBeAttached();
+      await expect(componentColumn.columnFilter).toHaveAttribute('data-disabled');
+      await expect(componentColumn.columnFilter).toBeStrictEmpty();
     });
 
     test('should filter component column with custom filter', async ({page}) => {

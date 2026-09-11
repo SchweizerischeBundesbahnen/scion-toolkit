@@ -15,7 +15,7 @@ import {SciScrollbarComponent} from '@scion/components/viewport';
 import {dimension} from '@scion/components/dimension';
 import {TableSelectionService} from './table-selection.service';
 import {ColumnHeaderComponent} from './column-header/column-header.component';
-import {TableRowComponent} from './table-row/table-row.component';
+import {SciTableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
 import {SciTextPipe} from '@scion/components/text';
@@ -25,6 +25,8 @@ import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
 import {VirtualColumnsComponent} from './virtual-columns/virtual-columns.component';
 import {SciAttributesDirective} from '@scion/components/common';
+import {ColumnFilterComponent} from './column-filter/column-filter.component';
+import {NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'sci-table',
@@ -37,18 +39,20 @@ import {SciAttributesDirective} from '@scion/components/common';
     '[style.--ɵsci-table-resizing]': 'table().resizing() ? `true` : null',
   },
   imports: [
-    SciScrollbarComponent,
-    ColumnHeaderComponent,
-    TableKeyboardNavigatorDirective,
-    TableRowComponent,
-    SciTextPipe,
-    SciThrobberComponent,
-    ColumnSplittersComponent, // TODO [egob] Should start with Sci?
-    VirtualColumnsComponent, // TODO [egob] Should start with Sci?
+    SciTableHeaderComponent,
     SciTableGridComponent,
     SciTableBodyComponent,
-    SciTableHeaderComponent,
+    SciTableRowComponent,
+    ColumnHeaderComponent,
+    ColumnFilterComponent,
+    ColumnSplittersComponent, // TODO [egob] Should start with Sci?
     SciAttributesDirective,
+    SciScrollbarComponent,
+    TableKeyboardNavigatorDirective,
+    SciTextPipe,
+    SciThrobberComponent,
+    VirtualColumnsComponent,
+    NgTemplateOutlet,
   ],
   providers: [
     provideSciTable(),
@@ -77,7 +81,7 @@ export class SciTableComponent<T = unknown> {
   private readonly _header = viewChild(SciTableHeaderComponent, {read: ElementRef});
   private readonly _itemSizeElement = viewChild.required<ElementRef<HTMLElement>>('item_size_element');
 
-  protected readonly rows = viewChildren(TableRowComponent);
+  protected readonly rows = viewChildren(SciTableRowComponent);
 
   constructor() {
     this.connectToModel();

@@ -3,12 +3,8 @@
 <div class="viewport e2e-viewport" #viewport>
   <sci-table-grid>
     <!-- Table header -->
-    @if (table.filterable() || table.showHeader()) {
-      <sci-table-header>
-        @for (column of table.columns(); track column.name) {
-          <sci-column-header [column]="column"/>
-        }
-      </sci-table-header>
+    @if (table.showHeader() || table.filterable()) {
+      <ng-container *ngTemplateOutlet="table_header_template"/>
     }
 
     <!-- Table body -->
@@ -38,3 +34,19 @@
 }
 
 <div class="item-size" #item_size_element></div>
+
+<!-- Renders the table header. -->
+<ng-template #table_header_template>
+  <sci-table-header>
+    @if (table.showHeader()) {
+      @for (column of table.columns(); track column.name) {
+        <sci-column-header [column]="column"/>
+      }
+    }
+    @if (table.filterable()) {
+      @for (column of table.columns(); track column.name) {
+        <sci-column-filter [column]="column"/>
+      }
+    }
+  </sci-table-header>
+</ng-template>

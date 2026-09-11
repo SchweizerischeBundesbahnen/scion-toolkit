@@ -87,15 +87,17 @@ export class TablePO {
 export class ColumnPO {
 
   private readonly _columnElement: HTMLElement;
-  private readonly _headerElement: HTMLElement | null;
+  private readonly _columnFilterElement: HTMLElement | null;
+  private readonly _columnHeaderElement: HTMLElement | null;
 
   constructor(public name: `column:${string}`, public index: number, private _table: TablePO) {
     this._columnElement = this._table.element.querySelector(`sci-column[data-column="${this.name}"]`)!;
-    this._headerElement = this._table.element.querySelector(`sci-column-header[data-column="${this.name}"]`);
+    this._columnHeaderElement = this._table.element.querySelector(`sci-column-header[data-column="${this.name}"]`);
+    this._columnFilterElement = this._table.element.querySelector(`sci-column-filter[data-column="${this.name}"]`);
   }
 
   public get label(): string | undefined {
-    return this._headerElement?.querySelector('span.e2e-label')?.textContent.trim();
+    return this._columnHeaderElement?.querySelector('span.e2e-label')?.textContent.trim();
   }
 
   public get width(): number {
@@ -107,21 +109,21 @@ export class ColumnPO {
   }
 
   public async toggleSort(): Promise<void> {
-    if (!this._headerElement) {
+    if (!this._columnHeaderElement) {
       throw Error('[PageObjectError] Table without header cannot be sorted.');
     }
 
-    const sortButton: HTMLElement = this._headerElement.querySelector('.e2e-column-sort')!;
+    const sortButton: HTMLElement = this._columnHeaderElement.querySelector('button.e2e-sort')!;
     sortButton.click();
     await this._table.waitUntilStable();
   }
 
   public async filter(text: string): Promise<void> {
-    if (!this._headerElement) {
+    if (!this._columnFilterElement) {
       throw Error('[PageObjectError] Table without header cannot be filtered.');
     }
-    const filterInput: HTMLInputElement | null = this._headerElement.querySelector('sci-column-filter input');
-    const filterSelect: HTMLSelectElement | null = this._headerElement.querySelector('sci-column-filter select');
+    const filterInput: HTMLInputElement | null = this._columnFilterElement.querySelector('input');
+    const filterSelect: HTMLSelectElement | null = this._columnFilterElement.querySelector('select');
 
     if (filterInput) {
       filterInput.value = text;

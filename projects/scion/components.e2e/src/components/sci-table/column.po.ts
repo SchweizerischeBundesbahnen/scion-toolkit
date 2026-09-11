@@ -7,18 +7,18 @@ import {CellPO} from './cell.po';
 export class ColumnPO {
 
   public readonly locator: Locator;
-  public readonly filterField: Locator;
   public readonly splitter: ColumnSplitterPO;
-  public readonly header: Locator;
+  public readonly columnHeader: Locator;
+  public readonly columnFilter: Locator;
   public readonly cells: Locator;
   public readonly sortButton: Locator;
 
   constructor(public table: TablePO, public locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
     this.locator = table.locator.locator('sci-virtual-columns sci-column').locator(selectByColumn(locateBy));
-    this.header = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
+    this.columnHeader = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
+    this.columnFilter = table.locator.locator('sci-column-filter').locator(selectByColumn(locateBy));
+    this.sortButton = this.columnHeader.locator('button.e2e-sort');
     this.splitter = new ColumnSplitterPO(table.locator.locator('sci-column-splitters sci-splitter').locator(selectByColumn(locateBy)), table);
-    this.filterField = this.header.locator('sci-column-filter');
-    this.sortButton = this.header.locator('button.e2e-column-sort');
     this.cells = table.rows.locator('sci-table-cell').locator(selectByColumn(locateBy));
   }
 
@@ -40,12 +40,12 @@ export class ColumnPO {
   }
 
   public async clearFilter(): Promise<void> {
-    await this.header.locator('button.e2e-clear').click();
+    await this.columnFilter.locator('button.e2e-clear').click();
   }
 
   public async filter(value: string): Promise<void> {
-    const input = this.filterField.locator('input');
-    const select = this.filterField.locator('select');
+    const input = this.columnFilter.locator('input');
+    const select = this.columnFilter.locator('select');
 
     await Promise.race([input.waitFor({state: 'visible'}), select.waitFor({state: 'visible'})]);
 
@@ -58,7 +58,7 @@ export class ColumnPO {
   }
 
   public async sortDirection(): Promise<'asc' | 'desc' | null> {
-    return (await this.sortButton.getAttribute('data-sort')) as 'asc' | 'desc' | null;
+    return (await this.sortButton.getAttribute('data-sort-direction')) as 'asc' | 'desc' | null;
   }
 }
 
@@ -70,6 +70,6 @@ export function selectByColumn(selectBy: RequireOne<{name: `column:${string}`; i
     return `:scope[data-column="${selectBy.name}"]`;
   }
   else {
-    return `:scope:nth-child(${selectBy.index + 1})`;
+    return `:scope:nth-of-type(${selectBy.index + 1})`;
   }
 }
