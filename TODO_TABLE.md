@@ -7,7 +7,6 @@
 - Neue icons von Jonas integrieren
 - Test dass Tabelle in Workbench Microfrontend funktioniert
 - Test dass Tabelle mit RemoteDataFetcher funktioniert (Zusammenspiel)
-- Render cell without additional DIV
 - 
 # Future Features
 - Native Focus für active Row

@@ -244,7 +244,7 @@ fdescribe('Table', () => {
 
       it('should filter number column', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable({
+        const {fixture} = createSciTableComponent(() => sciTable({
           data,
           filterable: true,
         }, table => table.addNumberColumn({
@@ -255,20 +255,18 @@ fdescribe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
+        const column = table.column({name: 'column:id'})!;
 
-        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
-        model.filter(3, {columnName: 'column:id'});
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:id'})!.values()).toEqual(['3']);
+        await column.filter('3');
+        expect(await column.values()).toEqual(['3']);
 
-        model.filter(null, {columnName: 'column:id'});
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:id'})!.values()).toEqual(['1', '3', '2']);
+        await column.filter('');
+        expect(await column.values()).toEqual(['1', '3', '2']);
       });
 
       it('should filter string column', async () => {
         const data = signal([{name: 'a'}, {name: 'c'}, {name: 'b'}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable({
+        const {fixture} = createSciTableComponent(() => sciTable({
           data,
           filterable: true,
         }, table => table.addStringColumn({
@@ -279,20 +277,18 @@ fdescribe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
+        const column = table.column({name: 'column:name'})!;
 
-        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
-        model.filter('c', {columnName: 'column:name'});
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['c']);
+        await column.filter('c');
+        expect(await column.values()).toEqual(['c']);
 
-        model.filter(null, {columnName: 'column:name'});
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['a', 'c', 'b']);
+        await column.filter('');
+        expect(await column.values()).toEqual(['a', 'c', 'b']);
       });
 
       it('should filter boolean column', async () => {
         const data = signal([{active: true}, {active: false}, {active: true}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable({
+        const {fixture} = createSciTableComponent(() => sciTable({
           data,
           filterable: true,
         }, table => table.addBooleanColumn({
@@ -303,20 +299,18 @@ fdescribe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
+        const column = table.column({name: 'column:active'})!;
 
-        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
-        model.filter(true, {columnName: 'column:active'});
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:active'})!.values()).toEqual(['checkmark', 'checkmark']);
+        await column.filter('true');
+        expect(await column.values()).toEqual(['checkmark', 'checkmark']);
 
-        model.filter(null, {columnName: 'column:active'});
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:active'})!.values()).toEqual(['checkmark', 'clear', 'checkmark']);
+        await column.filter('');
+        expect(await column.values()).toEqual(['checkmark', 'clear', 'checkmark']);
       });
 
       it('should support filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const {fixture, model} = createSciTableComponent(() => sciTable({
+        const {fixture} = createSciTableComponent(() => sciTable({
           data,
           filterable: true,
         }, table => table.addStringColumn({
@@ -328,15 +322,13 @@ fdescribe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
+        const column = table.column({name: 'column:name'})!;
 
-        // TODO [egob] Do not set filter vial model, but via column; see 'should filter number with filter field'
-        model.filter('abcd', {columnName: 'column:name'});
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['beta']);
+        await column.filter('abcd');
+        expect(await column.values()).toEqual(['beta']);
 
-        model.filter(null, {columnName: 'column:name'});
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['alpha', 'beta', 'gamma']);
+        await column.filter('');
+        expect(await column.values()).toEqual(['alpha', 'beta', 'gamma']);
       });
 
       it('should support global filter with custom filter function', async () => {

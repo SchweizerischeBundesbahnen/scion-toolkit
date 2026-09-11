@@ -106,7 +106,6 @@ export class SciTableComponent<T = unknown> {
           viewportClientHeight: computed(() => viewportClientDimension().offsetHeight),
           headerHeight: computed(() => headerDimension()?.offsetHeight ?? 0),
           itemHeight: computed(() => itemSizeDimension().offsetHeight),
-          // TODO [egob]: How should we do this, access the viewport directly from the model, or like this?
           scrollToTop: () => viewport.scrollTo({top: 0}),
         });
         onCleanup(() => table.disconnect());
