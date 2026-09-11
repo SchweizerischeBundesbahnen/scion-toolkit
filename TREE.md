@@ -1,5 +1,4 @@
 ```ts
-import {MaybeObservable} from '@scion/toolkit/types';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 
 // interface TreeNode<T> {
@@ -25,7 +24,7 @@ const data = [
     children: [
       {id: 'B'},
       {id: 'C'},
-    ]
+    ],
   },
   {
     id: 'D',
@@ -34,19 +33,47 @@ const data = [
         id: 'E',
         children: [
           {id: 'F'},
-        ]
-      }
-    ]
-  }
+        ],
+      },
+    ],
+  },
 ]
 
 table({
-  data: {
+    data: {
+      items: signal(data),
+      loadChildren: item => item.children,
+      hasChildren: item => item.children.length > 0,
+    },
+  }, table => {
+    table.addNumberColumn({
+      label: 'id',
+      value: item => item.id,
+    });
+    table.addNumberColumn({
+      label: 'id',
+      value: item => item.id,
+    });
+  },
+)
+
+
+// Simple Api?
+table({
     items: signal(data),
     loadChildren: item => item.children,
-    hasChildren: item => item.children.length > 0
+    hasChildren: item => item.children.length > 0,
+  }, table => {
+    table.addNumberColumn({
+      label: 'id',
+      value: item => item.id,
+    });
+    table.addNumberColumn({
+      label: 'name',
+      value: item => item.name,
+    });
   },
-})
+)
 
 interface BaseTreeDescriptor {
   data: SciTreeData<T>;
@@ -79,26 +106,39 @@ function tree(treeDescriptor: StringTreeDescriptor | ComponentTreeDescriptor | T
   }, table => {
     if (treeDescriptor.component) {
       table.addComponentColumn(treeDescriptor.component)
-    } else if (treeDescriptor.template) {
+    }
+    else if (treeDescriptor.template) {
       table.addTemplateColumn(treeDescriptor.template)
-    } else if (treeDescriptor.value) {
+    }
+    else if (treeDescriptor.value) {
       table.addStringColumn(treeDescriptor.value)
-    } else {
+    }
+    else {
       throw Error('not allowed');
     }
   })
 }
 
-
 tree({
-  value: item => item.name,
-  data: {
-    items: signal(data),
-    loadChildren: item => item.children,
-    hasChildren: item => item.children.length > 0
-  },
-  filterable: true,
+  label: item => item.name,
+  header: string,
+  sort: (a: SciCellContext<T, string>, b: SciCellContext<T, string>) => number,
+  filter: (text: string, context: SciCellContext<T, string>) => boolean,
+  sortable?: boolean | {comparator: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number},
+  filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, void>) => boolean},
+  datasource: treeDatasource(data, {
+    getChildren: item => item.children,
+    hasChildren: item => item.children.length > 0,
+  })
+},
 })
+
+
+export interface SciNodeContext<T, LABEL> {
+  item: T;
+  label: LABEL;
+}
+
 ```
 
 # Fragen

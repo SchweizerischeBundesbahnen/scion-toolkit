@@ -8,17 +8,104 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Signal, WritableSignal} from '@angular/core';
-import {SciDataLoaderFn, SciSortCriterion} from './table-data-source';
+import {signal, Signal, WritableSignal} from '@angular/core';
+import {SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciRowBindings, SciTableRowBinding} from './table-row-binding';
+import {MaybeAsync} from './common';
+import {table} from './table';
 
 export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template';
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
+// interface SciTreeData<T> {
+//   items: Signal<T[]> | SciDataLoaderFn<T>;
+//   loadChildren: (item: T) => MaybeAsync<T>;
+//   hasChildren: (item: T) => boolean;
+// }
+
+class SciTableDatasource {
+}
+
+class SciTreeDatasource {
+}
+
+{
+  const data = signal([]);
+
+  // Array Table
+  table(data, table => table);
+
+  table({
+      datasource: data,
+    },
+    table => table);
+
+  table({
+      datasource: provideTableDatasource(data),
+    },
+    table => table);
+
+  // Table Paged
+  table({
+      datasource: providePageableTableDatasource({
+        getItems: request => ({items: [], totalCount: 10}),
+      }),
+    },
+    table => table);
+
+  // Table Tree (not paged, but maybe async)
+  table({
+    datasource: provideTreeDatasource(data, {
+      getChildren: item => item.children,
+      hasChildren: item => item.children.length > 0,
+    }),
+  }, table => table);
+
+  // Table Tree (paged)
+  table({
+      datasource: providePageableTreeDatasource({
+        getItems: request => ({items: [], totalCount: 10}),
+        getChildren: (item, request) => ({items: [], totalCount: 10}),
+        hasChildren: item => item.children.length > 0,
+      }),
+    },
+    table => table);
+}
+
+export function provideTableDatasource(data: Signal<unknown[]>): SciTableDatasource {
+}
+
+export function provideTreeDatasource(data: Signal<unknown[]>, children: ChildProvider): SciTreeDatasource {
+}
+
+export function providePageableTableDatasource(datasource: SciPageableTableDatasource): SciTableDatasource {
+}
+
+export function providePageableTreeDatasource(datasource: SciPageableTreeDatasource): SciTreeDatasource {
+}
+
+interface ChildProvider {
+  getChildren(item: unknown): MaybeAsync<unknown[]>;
+
+  hasChildren?(item: unknown): MaybeAsync<boolean>;
+}
+
+interface SciPageableTableDatasource {
+  getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<unknown>>;
+}
+
+interface SciPageableTreeDatasource {
+  getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<unknown>>;
+
+  getChildren(item: unknown, request: SciTableRequest): MaybeAsync<SciTableResponse<unknown>>;
+
+  hasChildren?(item: unknown): MaybeAsync<boolean>;
+}
+
 export interface SciTableDescriptor<T> {
-  data: Signal<T[]> | SciDataLoaderFn<T>; // TODO [egob] consider renaming to datasource
+  datasource: SciDatasource<T>; // TODO [egob] consider renaming to datasource
   sortable?: boolean;
   resizable?: boolean;
   filterable?: boolean;
