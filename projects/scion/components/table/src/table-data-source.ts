@@ -30,6 +30,7 @@ export interface SciTableRequest {
   tableFilter?: string;
 }
 
+// TODO SciTablePageResponse?
 export interface SciTableResponse<T> {
   /**
    * Items of the requested page.
