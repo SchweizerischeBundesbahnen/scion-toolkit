@@ -21,8 +21,10 @@
   }
 
   > sci-splitter {
-    --sci-splitter-background-color: var(--sci-table-border-color);
-    --sci-splitter-background-color-hover: var(--sci-table-border-color);;
+    --sci-splitter-background-color: transparent;
+    --sci-splitter-background-color-hover: var(--sci-table-border-color);
+    --sci-splitter-opacity-hover: .5;
+    --sci-splitter-opacity-active: .5;
     --sci-splitter-size-hover: var(--sci-table-border-size);
     --sci-splitter-size: var(--sci-table-border-size);
     justify-self: end; // place at the end of cell content
