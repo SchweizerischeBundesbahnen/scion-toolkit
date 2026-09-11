@@ -75,7 +75,7 @@ table({
   },
 )
 
-interface BaseTreeDescriptor {
+interface TreeDescriptor {
   data: SciTreeData<T>;
   filterable?: boolean;
   selectable?: false | 'single' | 'multi';
@@ -86,15 +86,15 @@ interface BaseTreeDescriptor {
   trackBy?: (item: T) => unknown;
 }
 
-interface StringTreeDescriptor extends BaseTreeDescriptor {
+interface StringTreeDescriptor extends TreeDescriptor {
   value: (item: T) => string;
 }
 
-interface ComponentTreeDescriptor extends BaseTreeDescriptor {
+interface ComponentTreeDescriptor extends TreeDescriptor {
   component: (item: T) => SciComponentDescriptor;
 }
 
-interface TemplateTreeDescriptor extends BaseTreeDescriptor {
+interface TemplateTreeDescriptor extends TreeDescriptor {
   template: (item: T) => SciTemplateDescriptor;
 }
 
@@ -122,8 +122,6 @@ function tree(treeDescriptor: StringTreeDescriptor | ComponentTreeDescriptor | T
 tree({
   label: item => item.name,
   header: string,
-  sort: (a: SciCellContext<T, string>, b: SciCellContext<T, string>) => number,
-  filter: (text: string, context: SciCellContext<T, string>) => boolean,
   sortable?: boolean | {comparator: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number},
   filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, void>) => boolean},
   datasource: treeDatasource(data, {
@@ -139,6 +137,51 @@ export interface SciNodeContext<T, LABEL> {
   label: LABEL;
 }
 
+
+
+// Table & Hierarchical Table Examples
+{
+  const data = signal([]);
+
+  // Array Table
+  table(data, table => table);
+
+  table({
+      datasource: data,
+    },
+    table => table);
+
+  table({
+      datasource: provideTableDatasource(data),
+    },
+    table => table);
+
+  // Table Paged
+  table({
+      datasource: providePageableTableDatasource({
+        getItems: request => ({items: [], totalCount: 10}),
+      }),
+    },
+    table => table);
+
+  // Table Tree (not paged, but maybe async)
+  table({
+    datasource: provideTreeDatasource(data, {
+      getChildren: item => item.children,
+      hasChildren: item => item.children.length > 0,
+    }),
+  }, table => table);
+
+  // Table Tree (paged)
+  table({
+      datasource: providePageableTreeDatasource({
+        getItems: request => ({items: [], totalCount: 10}),
+        getChildren: (item, request) => ({items: [], totalCount: 10}),
+        hasChildren: item => item.children.length > 0,
+      }),
+    },
+    table => table);
+}
 ```
 
 # Fragen
