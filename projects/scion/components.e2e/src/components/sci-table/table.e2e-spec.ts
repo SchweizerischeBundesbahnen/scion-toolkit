@@ -1853,7 +1853,7 @@ test.describe('sci-table', () => {
 
           await table.row({nth: 0}).click();
           await page.keyboard.press('Shift+ArrowDown');
-          await expect(tablePage.selection).toHaveText('0 1')
+          await expect(tablePage.selection).toHaveText('0 1');
 
           await table.row({nth: 3}).click();
           await expect(tablePage.selection).toHaveText('3');
@@ -1870,7 +1870,7 @@ test.describe('sci-table', () => {
           await table.row({nth: 0}).click();
           await page.keyboard.press('Shift+ArrowDown');
           await page.keyboard.press('Shift+ArrowDown');
-          await expect(tablePage.selection).toHaveText('0 1 2')
+          await expect(tablePage.selection).toHaveText('0 1 2');
 
           await table.row({nth: 1}).click();
           await expect(tablePage.selection).toHaveText('1');
@@ -1970,7 +1970,7 @@ test.describe('sci-table', () => {
 
           await table.row({nth: 0}).click();
           await page.keyboard.press('Shift+ArrowDown');
-          await expect(tablePage.selection).toHaveText('0 1')
+          await expect(tablePage.selection).toHaveText('0 1');
 
           await page.keyboard.press('ControlOrMeta+ArrowDown');
           await page.keyboard.press('Space');
@@ -1988,7 +1988,7 @@ test.describe('sci-table', () => {
           await table.row({nth: 0}).click();
           await page.keyboard.press('Shift+ArrowDown');
           await page.keyboard.press('Shift+ArrowDown');
-          await expect(tablePage.selection).toHaveText('0 1 2')
+          await expect(tablePage.selection).toHaveText('0 1 2');
 
           await page.keyboard.press('ControlOrMeta+ArrowUp');
           await page.keyboard.press('Space');
@@ -2104,10 +2104,10 @@ test.describe('sci-table', () => {
           await expect(tablePage.selection).toHaveText('2');
 
           await page.keyboard.press('Shift+ArrowUp');
-          await expect(tablePage.selection).toHaveText('1 2')
+          await expect(tablePage.selection).toHaveText('1 2');
 
           await page.keyboard.press('Shift+ArrowUp');
-          await expect(tablePage.selection).toHaveText('0 1 2')
+          await expect(tablePage.selection).toHaveText('0 1 2');
         });
 
         test('should shrink selection on Shift+ArrowDown at start of block', async ({page}) => {
@@ -2122,14 +2122,14 @@ test.describe('sci-table', () => {
           await expect(tablePage.selection).toHaveText('2');
 
           await page.keyboard.press('Shift+ArrowUp');
-          await expect(tablePage.selection).toHaveText('1 2')
+          await expect(tablePage.selection).toHaveText('1 2');
 
           await page.keyboard.press('Shift+ArrowUp');
-          await expect(tablePage.selection).toHaveText('0 1 2')
+          await expect(tablePage.selection).toHaveText('0 1 2');
 
           // Press Shift+ArrowDown at block start
           await page.keyboard.press('Shift+ArrowDown');
-          await expect(tablePage.selection).toHaveText('1 2')
+          await expect(tablePage.selection).toHaveText('1 2');
 
           await page.keyboard.press('Shift+ArrowDown');
           await expect(tablePage.selection).toHaveText('2');
@@ -2147,14 +2147,14 @@ test.describe('sci-table', () => {
           await expect(tablePage.selection).toHaveText('0');
 
           await page.keyboard.press('Shift+ArrowDown');
-          await expect(tablePage.selection).toHaveText('0 1')
+          await expect(tablePage.selection).toHaveText('0 1');
 
           await page.keyboard.press('Shift+ArrowDown');
-          await expect(tablePage.selection).toHaveText('0 1 2')
+          await expect(tablePage.selection).toHaveText('0 1 2');
 
           // Press Shift+ArrowUp at block end
           await page.keyboard.press('Shift+ArrowUp');
-          await expect(tablePage.selection).toHaveText('0 1')
+          await expect(tablePage.selection).toHaveText('0 1');
 
           await page.keyboard.press('Shift+ArrowUp');
           await expect(tablePage.selection).toHaveText('0');

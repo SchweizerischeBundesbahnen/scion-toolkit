@@ -435,7 +435,7 @@ export class TableSelectionService<T> {
     return selectedIds.has(previousItemId) && !selectedIds.has(nextItemId);
   }
 
-  private async loadMissingItems(startIndex: number, endIndex: number) {
+  private async loadMissingItems(startIndex: number, endIndex: number): Promise<void> {
     const table = this._table();
     const indices = rangeInclusive(startIndex, endIndex + 1);
     const rows = indices.map(i => table.rowsByIndex().get(i));
