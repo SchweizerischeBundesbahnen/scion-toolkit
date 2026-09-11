@@ -19,7 +19,7 @@ import {generateData, Product, provideHttpDatasource} from './datasource/table-h
 import {firstValueFrom, Subject} from 'rxjs';
 import {SciTableResponse} from '@scion/components/table';
 
-test.describe('sci-table', () => {
+test.describe.only('sci-table', () => {
 
   test.describe('Table Configuration', () => {
 
