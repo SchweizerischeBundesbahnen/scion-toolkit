@@ -14,6 +14,8 @@ import {Objects} from '@scion/toolkit/util';
 
 export interface TableCacheEntry<T> {
   rows: Signal<SciRow<T>[] | undefined>;
+  error: Signal<Error | undefined>;
+  isLoading: Signal<boolean>;
   start: number;
   end: number;
   dispose: () => void;
@@ -49,12 +51,12 @@ export class TableCache<T> {
   /**
    * Deletes page from cache, but only if it has no items loaded.
    */
-  public deleteIfEmpty(key: TableCacheKey): void {
+  public deleteIfLoading(key: TableCacheKey): void {
     this._cache.update(cache => {
       const cacheCopy = new Map(cache);
 
       const existing = cacheCopy.get(key);
-      if (existing && existing.rows() === undefined) {
+      if (existing?.isLoading()) {
         cacheCopy.delete(key);
         existing.dispose();
       }
@@ -85,7 +87,16 @@ export class TableCache<T> {
   public get rowsById(): Signal<Map<unknown, SciRow<T>>> {
     return computed(() => this.values()
       .flatMap(page => page.rows() ?? [])
-      .filter(row => row.id !== undefined)
-      .reduce((acc, row) => acc.set(row.id, row), new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
+      .reduce((acc, row) => {
+        if (row.id) {
+          acc.set(row.id, row);
+        }
+        return acc;
+      }, new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
+  }
+
+  public get error(): Signal<Error | undefined> {
+    return computed(() => this.values()
+      .find(entry => entry.error())?.error());
   }
 }

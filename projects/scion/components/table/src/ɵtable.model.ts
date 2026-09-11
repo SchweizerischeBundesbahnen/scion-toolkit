@@ -15,11 +15,11 @@ import {ɵSciTableFactory} from './ɵtable.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciColumnDescriptorLike} from './table.factory';
-import {coerceSignal} from '@scion/components/common';
+import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
 import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {concat, fromEvent, of, skip, switchMap, timer} from 'rxjs';
+import {concat, fromEvent, of, skip, switchMap, tap, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBinding} from './table-row-binding';
 import {clamp, Objects, Observables} from '@scion/toolkit/util';
 import {SciTableFactoryFn} from './table';
@@ -84,12 +84,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   });
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), tableFilter: this._tableFilter()}));
-  public readonly loading = computed(() => this._cache.values().some(entry => entry.rows() === undefined));
+  public readonly loading = computed(() => this._cache.values().some(entry => entry.isLoading()));
   public readonly activeRow: Signal<SciRow<T> | undefined>;
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
   public readonly rowsByIndex = this._cache.rowsByIndex;
+  public readonly error = this._cache.error;
   public readonly rows = this.computeRows();
 
   constructor(factoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>) {
@@ -194,6 +195,10 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       const totalCount = this.totalCount() ?? 0;
       const rangeEnd = Math.min(this.scrollRange()?.end ?? 0, this.totalCount() ?? 0);
 
+      if (this.error()) {
+        return {top: 0, bottom: 0};
+      }
+
       return {
         top: (this.scrollRange()?.start ?? 0) * itemHeight,
         bottom: (totalCount - rangeEnd) * itemHeight,
@@ -274,40 +279,44 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       return this._cache.get(cacheKey)!.rows;
     }
 
-    const items = signal<T[] | undefined>(undefined);
-    const subscription = Observables.coerce(this._dataLoaderFn({
-      start: pageStart,
-      end: pageEnd,
-      pageSize,
-      page,
-      sortCriteria,
-      tableFilter,
-      columnFilters,
-    })).subscribe({
-      next: result => {
-        this.totalCount.set(result.totalCount);
-        items.set(result.items);
-      },
-      error: err => {
-        // TODO [egob]: what do we do when the datasource throws an error?
-        this._cache.deleteIfEmpty(cacheKey);
-      },
+    const injector = createDestroyableInjector({parent: this._injector});
+    const resource = runInInjectionContext(injector, () => {
+      const data = this._dataLoaderFn({
+        start: pageStart,
+        end: pageEnd,
+        pageSize,
+        page,
+        sortCriteria,
+        tableFilter,
+        columnFilters,
+      });
+      return rxResource({
+        stream: () => Observables.coerce(data).pipe(
+          tap(result => this.totalCount.set(result.totalCount)),
+          map(result => result.items),
+        ),
+      });
     });
 
     const cacheEntry: TableCacheEntry<T> = {
+      error: resource.error,
+      isLoading: resource.isLoading,
       rows: computed(() => {
-        const resolved = items();
+        const resolved = resource.value();
         const columns = this.columns();
         return untracked(() => resolved ? this.mapItemsToRow(resolved, columns, pageStart) : undefined);
       }),
-      dispose: () => subscription.unsubscribe(),
+      dispose: () => {
+        resource.destroy();
+        injector.destroy();
+      },
       start: pageStart,
       end: pageEnd,
     };
 
     this._cache.set(cacheKey, cacheEntry);
     onCleanup?.(() => {
-      this._cache.deleteIfEmpty(cacheKey);
+      this._cache.deleteIfLoading(cacheKey);
     });
 
     return cacheEntry.rows;

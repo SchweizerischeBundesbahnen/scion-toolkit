@@ -62,7 +62,7 @@ export default class SciTablePageComponent {
     const tabbar = this._tabbar;
 
     return table({
-      data: options.slowDataSource ? request => companyService.getCompanies$(request, {slowDataSource: true}) : companyService.companies,
+      data: options.slowDataSource ? request => inject(CompanyService).getCompanies$(request, {slowDataSource: true}) : companyService.companies,
       rowBindings: [
         partBinding((_item, index) => {
           if (this.settingsForm.showZebraStriping().value()) {

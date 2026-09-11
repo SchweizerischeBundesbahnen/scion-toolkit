@@ -1,6 +1,6 @@
 import {SciColumnFilter, SciSortCriterion, SciTableRequest, SciTableResponse} from '@scion/components/table';
 import {linkedSignal, Service, signal, untracked} from '@angular/core';
-import {defer, Observable, of, timer} from 'rxjs';
+import {defer, Observable, of, throwError, timer} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 
@@ -52,7 +52,12 @@ export class CompanyService {
   public getCompanies$(request: SciTableRequest, options?: {slowDataSource?: boolean}): Observable<SciTableResponse<Company>> {
     return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
       .pipe(
-        switchMap(() => this._companies$),
+        switchMap(() => {
+          if (request.page !== 1) {
+            return this._companies$;
+          }
+          return throwError(() => new Error('ERROR'));
+        }),
         map(companies => Companies.filter(companies, request.columnFilters, request.tableFilter)),
         map(companies => Companies.sort(companies, request.sortCriteria)),
         map(companies => ({

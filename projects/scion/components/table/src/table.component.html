@@ -13,11 +13,15 @@
 
     <!-- Table body -->
     <sci-table-body sciTableKeyboardNavigator tabindex="0">
-      <!-- Track index to reuse the table row elements -->
-      @for (row of table.rows(); track $index) {
-        <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item!)" [sciAttributes]="row.bindings?.attributes()"/>
-      } @empty {
-        <span class="no-rows e2e-no-rows">{{('%scion.components.no_items.message' | sciText)()}}</span>
+      @if (table.error()) {
+        <span class="no-rows e2e-no-rows">Error occurred.</span>
+      } @else {
+        <!-- Track index to reuse the table row elements -->
+        @for (row of table.rows(); track $index) {
+          <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item!)" [sciAttributes]="row.bindings?.attributes()"/>
+        } @empty {
+          <span class="no-rows e2e-no-rows">{{('%scion.components.no_items.message' | sciText)()}}</span>
+        }
       }
     </sci-table-body>
 
