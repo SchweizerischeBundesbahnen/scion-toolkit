@@ -5,11 +5,9 @@
   gap: .5em;
   align-items: center;
   padding-inline: var(--sci-table-cell-padding-inline);
-  border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
-
   outline: var(--sci-table-border-size) solid transparent;
-  outline-offset: -1px; // offset by -1px to merge the filter's outline with the header separators and column splitters
   transition: outline-color ease-in-out .15s, color ease-in-out .15s;
+  margin: 1px 1px 0 1px; // offset by 1px to merge the filter's outline with the header separator and column splitters
 
   &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
     outline-color: var(--sci-color-accent);

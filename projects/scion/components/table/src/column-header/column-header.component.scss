@@ -1,7 +1,6 @@
 :host {
   display: grid;
   align-items: center;
-  border-bottom: var(--sci-table-border-size) solid var(--sci-table-border-color);
 
   &:not(:has(button.sort)) {
     padding-inline: var(--sci-table-cell-padding-inline);
