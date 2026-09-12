@@ -1,156 +1,156 @@
 @if (table(); as table) {
-<main>
+  <main>
     <sci-table [table]="table" name="table:companies"/>
-</main>
+  </main>
 
-<aside>
-  <sci-tabbar>
-    <!-- Settings -->
-    <ng-template sciTab label="Settings" name="settings">
-      <section>
-        <sci-form-field label="Filterable">
-          <input [(ngModel)]="table.filterable" type="checkbox"/>
-        </sci-form-field>
+  <aside>
+    <sci-tabbar>
+      <!-- Settings -->
+      <ng-template sciTab label="Settings" name="settings">
+        <section>
+          <sci-form-field label="Filterable">
+            <input [(ngModel)]="table.filterable" type="checkbox"/>
+          </sci-form-field>
 
-        <sci-form-field label="Sortable">
-          <input [(ngModel)]="table.sortable" type="checkbox"/>
-        </sci-form-field>
+          <sci-form-field label="Sortable">
+            <input [(ngModel)]="table.sortable" type="checkbox"/>
+          </sci-form-field>
 
-        <sci-form-field label="Resizable">
-          <input [(ngModel)]="table.resizable" type="checkbox"/>
-        </sci-form-field>
+          <sci-form-field label="Resizable">
+            <input [(ngModel)]="table.resizable" type="checkbox"/>
+          </sci-form-field>
 
-        <sci-form-field label="Show Header">
-          <input [(ngModel)]="table.showHeader" type="checkbox"/>
-        </sci-form-field>
+          <sci-form-field label="Show Header">
+            <input [(ngModel)]="table.showHeader" type="checkbox"/>
+          </sci-form-field>
 
-        <sci-form-field label="Wrap Header">
-          <input [(ngModel)]="table.wrapHeader" type="checkbox"/>
-        </sci-form-field>
+          <sci-form-field label="Wrap Header">
+            <input [(ngModel)]="table.wrapHeader" type="checkbox"/>
+          </sci-form-field>
 
-        <sci-form-field label="Show Gridlines">
-          <input [formField]="settingsForm.showGridlines" type="checkbox"/>
-        </sci-form-field>
+          <sci-form-field label="Show Gridlines">
+            <input [formField]="settingsForm.showGridlines" type="checkbox"/>
+          </sci-form-field>
 
-        <sci-form-field label="Zebra Striped Rows">
-          <input [formField]="settingsForm.showZebraStriping" type="checkbox"/>
-        </sci-form-field>
+          <sci-form-field label="Zebra Striped Rows">
+            <input [formField]="settingsForm.showZebraStriping" type="checkbox"/>
+          </sci-form-field>
 
-        <sci-form-field label="Selectable">
-          <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)">
-            <option value="multi">Multi</option>
-            <option value="single">Single</option>
-            <option value="false">False</option>
-          </select>
-        </sci-form-field>
+          <sci-form-field label="Selectable">
+            <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)">
+              <option value="multi">Multi</option>
+              <option value="single">Single</option>
+              <option value="false">False</option>
+            </select>
+          </sci-form-field>
 
-        <button type="button" (click)="onUserSettingsReset()">Reset User Settings</button>
-      </section>
-    </ng-template>
+          <button type="button" (click)="onUserSettingsReset()">Reset User Settings</button>
+        </section>
+      </ng-template>
 
-    <!-- Data Source -->
-    <ng-template sciTab label="Datasource">
-      <section>
-        <sci-form-field label="Row Count">
-          <input [(ngModel)]="rowCount" appMinMax min="0" max="100000" type="number"/>
-        </sci-form-field>
+      <!-- Data Source -->
+      <ng-template sciTab label="Datasource">
+        <section>
+          <sci-form-field label="Row Count">
+            <input [(ngModel)]="rowCount" appMinMax min="0" max="100000" type="number"/>
+          </sci-form-field>
 
-        <sci-form-field label="Slow Datasource">
-          <input [formField]="settingsForm.slowDataSource" type="checkbox"/>
-        </sci-form-field>
-      </section>
-    </ng-template>
+          <sci-form-field label="Slow Datasource">
+            <input [formField]="settingsForm.slowDataSource" type="checkbox"/>
+          </sci-form-field>
+        </section>
+      </ng-template>
 
-    <!-- Visible Columns -->
-    <ng-template sciTab label="Visible Columns">
-      <section>
-        <sci-form-field label="ID">
-          <input [formField]="settingsForm.visibleColumns.id" type="checkbox"/>
-        </sci-form-field>
-
-        <sci-form-field label="Code">
-          <input [formField]="settingsForm.visibleColumns.code" type="checkbox"/>
-        </sci-form-field>
-
-        <sci-form-field label="Abbreviation">
-          <input [formField]="settingsForm.visibleColumns.abbreviation" type="checkbox"/>
-        </sci-form-field>
-
-        <sci-form-field label="Name">
-          <input [formField]="settingsForm.visibleColumns.name" type="checkbox"/>
-        </sci-form-field>
-
-        <sci-form-field label="EVU">
-          <input [formField]="settingsForm.visibleColumns.railwayUndertaking" type="checkbox"/>
-        </sci-form-field>
-
-        <sci-form-field label="Valid From">
-          <input [formField]="settingsForm.visibleColumns.validFrom" type="checkbox"/>
-        </sci-form-field>
-
-        <sci-form-field label="Valid To">
-          <input [formField]="settingsForm.visibleColumns.validTo" type="checkbox"/>
-        </sci-form-field>
-      </section>
-    </ng-template>
-
-    <!-- Company Editor -->
-    @if (companyForm.id().value()) {
-      <ng-template sciTab label="Edit Company" name="company-editor">
-        <form [formRoot]="companyForm">
+      <!-- Visible Columns -->
+      <ng-template sciTab label="Visible Columns">
+        <section>
           <sci-form-field label="ID">
-            <input [formField]="companyForm.id" appFieldValidation/>
+            <input [formField]="settingsForm.visibleColumns.id" type="checkbox"/>
           </sci-form-field>
 
           <sci-form-field label="Code">
-            <input [formField]="companyForm.code" type="number" appFieldValidation/>
+            <input [formField]="settingsForm.visibleColumns.code" type="checkbox"/>
           </sci-form-field>
 
           <sci-form-field label="Abbreviation">
-            <input [formField]="companyForm.abbreviation" appFieldValidation/>
+            <input [formField]="settingsForm.visibleColumns.abbreviation" type="checkbox"/>
           </sci-form-field>
 
           <sci-form-field label="Name">
-            <input [formField]="companyForm.name" appFieldValidation/>
+            <input [formField]="settingsForm.visibleColumns.name" type="checkbox"/>
           </sci-form-field>
 
           <sci-form-field label="EVU">
-            <input [formField]="companyForm.railwayUndertaking" type="checkbox" appFieldValidation/>
+            <input [formField]="settingsForm.visibleColumns.railwayUndertaking" type="checkbox"/>
           </sci-form-field>
 
           <sci-form-field label="Valid From">
-            <input [formField]="companyForm.validFrom" appFieldValidation/>
+            <input [formField]="settingsForm.visibleColumns.validFrom" type="checkbox"/>
           </sci-form-field>
 
           <sci-form-field label="Valid To">
-            <input [formField]="companyForm.validTo" appFieldValidation/>
+            <input [formField]="settingsForm.visibleColumns.validTo" type="checkbox"/>
           </sci-form-field>
-
-          <div class="button-bar">
-            <button type="submit" [disabled]="companyForm().invalid()">Update</button>
-            <button type="button" (click)="onCompanyFormCancel()">Cancel</button>
-          </div>
-        </form>
+        </section>
       </ng-template>
-    }
-  </sci-tabbar>
 
-  <section class="table-state">
-    <header>Table State</header>
+      <!-- Company Editor -->
+      @if (companyForm.id().value()) {
+        <ng-template sciTab label="Edit Company" name="company-editor">
+          <form [formRoot]="companyForm">
+            <sci-form-field label="ID">
+              <input [formField]="companyForm.id" appFieldValidation/>
+            </sci-form-field>
 
-    <sci-form-field label="Active Id">
-      {{table.activeItem()?.id ?? '-'}}
-    </sci-form-field>
+            <sci-form-field label="Code">
+              <input [formField]="companyForm.code" type="number" appFieldValidation/>
+            </sci-form-field>
 
-    <sci-form-field label="Selection Count">
-      {{table.selectedItems().length}}
-    </sci-form-field>
+            <sci-form-field label="Abbreviation">
+              <input [formField]="companyForm.abbreviation" appFieldValidation/>
+            </sci-form-field>
 
-    <sci-form-field label="Selection">
-      <sci-viewport>
-        {{selection()}}
-      </sci-viewport>
-    </sci-form-field>
-  </section>
-</aside>
+            <sci-form-field label="Name">
+              <input [formField]="companyForm.name" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="EVU">
+              <input [formField]="companyForm.railwayUndertaking" type="checkbox" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="Valid From">
+              <input [formField]="companyForm.validFrom" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="Valid To">
+              <input [formField]="companyForm.validTo" appFieldValidation/>
+            </sci-form-field>
+
+            <div class="button-bar">
+              <button type="submit" [disabled]="companyForm().invalid()">Update</button>
+              <button type="button" (click)="onCompanyFormCancel()">Cancel</button>
+            </div>
+          </form>
+        </ng-template>
+      }
+    </sci-tabbar>
+
+    <section class="table-state">
+      <header #header>Table State</header>
+
+      <sci-form-field label="Active Id">
+        {{table.activeItem()?.id ?? '-'}}
+      </sci-form-field>
+
+      <sci-form-field label="Selection Count">
+        {{table.selectedItems().length}}
+      </sci-form-field>
+
+      <sci-form-field label="Selection" [style.max-width.px]="header.clientWidth"> <!-- Prevent viewport from grabbing available space. -->
+        <sci-viewport>
+          {{selection()}}
+        </sci-viewport>
+      </sci-form-field>
+    </section>
+  </aside>
 }
