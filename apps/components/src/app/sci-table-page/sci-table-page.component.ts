@@ -170,7 +170,7 @@ export default class SciTablePageComponent {
           onSelect: () => companyService.deleteCompany(company.id),
         })
         .addToolbarButton({
-          icon: 'content_copy',
+          icon: 'scion.copy',
           onSelect: () => companyService.addCompany(company),
         })
         .addToolbarMenu({
@@ -187,7 +187,7 @@ export default class SciTablePageComponent {
           })
           .addMenuItem({
             label: 'Copy',
-            icon: 'content_copy',
+            icon: 'scion.copy',
             onSelect: () => companyService.addCompany(company),
           })
           .addMenu({label: 'More'}, menu => menu

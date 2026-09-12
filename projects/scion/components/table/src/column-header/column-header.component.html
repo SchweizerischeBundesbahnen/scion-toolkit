@@ -8,13 +8,13 @@
     <!-- Sort Indicator -->
     @switch (sortDirection()) {
       @case ('asc') {
-        <sci-icon>scion.chevron_up</sci-icon>
+        <sci-icon>scion.sort_asc</sci-icon>
       }
       @case ('desc') {
-        <sci-icon>scion.chevron_down</sci-icon>
+        <sci-icon>scion.sort_desc</sci-icon>
       }
       @default {
-        <sci-icon class="no-sort">scion.expand_all</sci-icon>
+        <sci-icon class="no-sort">scion.sort_indicator</sci-icon>
       }
     }
   </button>

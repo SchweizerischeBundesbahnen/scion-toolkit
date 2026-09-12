@@ -18,14 +18,18 @@ The following steps explain how to manage the icon font.
 8.  Zip the font files to '/resources/scion-icons/scion-icons.zip' (referenced in SCION Icons Documentation).
 9.  Go to 'Manage projects' and download the font definition file 'scion-icons.json' into the folder '/resources/scion-icons'
 10. Increment the version in the variable '$version' in 'projects/scion/components/design/icons/_scion-icon-font.scss' to support cache busting
-11. Purge jsDelivr CDN cache:
+11. Update icon names and descriptions in the following files:
+  - projects/scion/components/icon/src/scion-icon-provider.ts
+  - projects/scion/components/icon/src/icon.provider.ts
+  - docs/site/scion-icons.md
+12. Purge jsDelivr CDN cache:
     - Go to https://www.jsdelivr.com/tools/purge
     - Enter the URLs:
       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.woff
       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.ttf
       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.svg
       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.zip
-12. Icons are available from the CDN at: https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons
+13. Icons are available from the CDN at: https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons
 
 
 ---------------------------------
@@ -40,3 +44,15 @@ Change the font directory in styles.scss:
   )
 );
 ```
+
+Alternatively, test directly from a git branch via jsDelivr CDN:
+
+```scss
+@use '@scion/components' with (
+  $icon-font: (
+    directory: 'https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/xxx/resources/scion-icons',
+  )
+);
+```
+
+Also update the Content Security Policy (CSP) in angular.json to allow loading the font from the CDN matching your branch: `https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/xxx/`

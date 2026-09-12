@@ -99,28 +99,53 @@ Example of including the Material icon font in the global `styles.scss`:
 ### Built-In Icons
 SCION has the following built-in icons:
 
-| Icon Key              | Usage                                              |
-|-----------------------|----------------------------------------------------|
-| scion.add             | Add or create new item                             |
-| scion.checkmark       | Checked state indicator of an option               |
-| scion.chevron_down    | Expand a section or tree node, or open a menu      |
-| scion.chevron_left    | Collapse or expand a side panel                    |
-| scion.chevron_right   | Collapse or expand a side panel, or open a submenu |
-| scion.chevron_up      | Collapse a section or tree node                    |
-| scion.clear           | Clear content in input fields                      |
-| scion.close           | Close a view, dialog, or notification              |
-| scion.collapse_all    | Collapse all tree nodes                            |
-| scion.delete          | Delete selected item or data                       |
-| scion.dirty           | Indicate unsaved changes                           |
-| scion.edit            | Enter edit mode                                    |
-| scion.expand_all      | Expand all tree nodes                              |
-| scion.filter          | Open or apply a filter                             |
-| scion.minimize        | Minimize a panel                                   |
-| scion.more_horizontal | Show options menu horizontally                     |
-| scion.more_vertical   | Show options menu vertically                       |
-| scion.pin             | Pin or unpin an element                            |
-| scion.remove          | Remove item from a list or selection               |
-| scion.search          | Trigger or indicate search function                |
+| Icon Key                | Usage                                              |
+|-------------------------|----------------------------------------------------|
+| scion.add               | Add or create a new item                           |
+| scion.add_large         | Add or create a new item (larger)                  |
+| scion.bin               | Trash                                              |
+| scion.checkmark         | Indicate a selected or completed item              |
+| scion.checkmark_small   | Indicate a selected or completed item (small)      |
+| scion.chevron_down      | Expand a section, tree node, or open a menu        |
+| scion.chevron_left      | Collapse or expand a side panel                    |
+| scion.chevron_right     | Collapse or expand a side panel, or open a submenu |
+| scion.chevron_up        | Collapse a section or tree node                    |
+| scion.clear             | Clear text from an input field                     |
+| scion.clear_large       | Clear text from an input field (large)             |
+| scion.close             | Close a view, dialog, or notification              |
+| scion.close_large       | Close a view, dialog, or notification (large)      |
+| scion.collapse_all      | Collapse all tree nodes                            |
+| scion.copy              | Copy content to clipboard                          |
+| scion.delete            | Permanently delete an item                         |
+| scion.dirty             | Indicate unsaved changes                           |
+| scion.drag_indicator    | Drag to reorder or move an item                    |
+| scion.duplicate         | Create a copy of an item                           |
+| scion.edit              | Switch to edit mode                                |
+| scion.envelope          | Message                                            |
+| scion.envelope_open     | Read message                                       |
+| scion.expand_all        | Expand all tree nodes                              |
+| scion.external_link     | Open link in a new tab or window                   |
+| scion.filter            | Change filter criteria                             |
+| scion.folder            | Directory                                          |
+| scion.help              | Help, support, or documentation                    |
+| scion.magnifier         | Magnifier                                          |
+| scion.minimize          | Minimize a panel                                   |
+| scion.more_horizontal   | Show options menu horizontally                     |
+| scion.more_vertical     | Show options menu vertically                       |
+| scion.paste             | Paste content from clipboard                       |
+| scion.pen               | Pen                                                |
+| scion.pin               | Pin or unpin an element                            |
+| scion.placeholder_frame | Image placeholder                                  |
+| scion.placeholder_image | Generic placeholder                                |
+| scion.remove            | Remove item from a list or selection               |
+| scion.reset             | Reset to default values                            |
+| scion.search            | Search for content                                 |
+| scion.sort_asc          | Sort items in ascending order (A-Z, 0-9)           |
+| scion.sort_by           | Change sort order or filter criteria               |
+| scion.sort_desc         | Sort items in descending order (Z-A, 9-0)          |
+| scion.sort_indicator    | Sort direction status                              |
+| scion.user              | User profile or account settings                   |
+| scion.user_pen          | Edit user profile details                          |
 
 > [!NOTE]
 > The application can register an icon provider to replace built-in SCION icons.

@@ -114,6 +114,7 @@
               <div class="content">
                 <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
                 <sci-icon class="chevron">scion.chevron_right</sci-icon>
+<!--                <sci-icon class="chevron">chevron_right</sci-icon>-->
               </div>
             </button>
           }
@@ -141,6 +142,7 @@
 <ng-template #icon_template let-menuItem>
   @if (menuItem.checked !== undefined) {
     <sci-icon>{{menuItem.checked() ? 'scion.checkmark' : undefined}}</sci-icon>
+<!--    <sci-icon>{{menuItem.checked() ? 'check' : undefined}}</sci-icon>-->
   } @else if (menuItem.iconLigature) {
     <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
   } @else if (menuItem.iconComponent) {
