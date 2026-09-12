@@ -15,6 +15,11 @@
       } @empty {
         <span class="no-rows e2e-no-rows">{{('%scion.components.no_items.message' | sciText)()}}</span>
       }
+
+      <!-- Render active row outline separately to preserve row border-radius within block selection. -->
+      @if (table.activeRow()) {
+        <div class="active-row-outline"></div>
+      }
     </sci-table-body>
 
     <!-- Column splitters -->

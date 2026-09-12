@@ -39,6 +39,7 @@ export function createSciTableComponent<T>(tableFn: () => SciTable<T>, options?:
   element.style.height = options?.height ?? '500px';
   element.style.width = options?.width ?? '600px';
   element.style.border = '1px solid var(--sci-color-border)';
+  element.style.borderRadius = 'var(--sci-corner)';
   element.style.boxSizing = 'content-box';
 
   // Set CSS variables.

@@ -7,19 +7,13 @@
   user-select: none; // has to be disabled because of selection
   border-bottom: var(--sci-table-border-size) solid var(--sci-table-gridline-color);
 
-  &.hover {
-    background-color: var(--sci-table-row-background-color-hover);
-  }
-
   // TODO Disable pointer events while scrolling and resizing, ensuring mouseenter event is fired AND stable UI
   @container (style(--ɵsci-table-scrolling: true)) or (style(--ɵsci-table-resizing: true)) {
     pointer-events: none;
   }
 
-  &.active {
-    border-bottom-color: transparent;
-    outline: var(--sci-table-row-outline-width) var(--sci-table-row-outline-style) var(--sci-table-row-outline-color);
-    outline-offset: -1px;
+  &.hover {
+    background-color: var(--sci-table-row-background-color-hover);
   }
 
   &.selected {
