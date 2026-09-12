@@ -70,7 +70,18 @@ export class TablePO {
     }
     return waitUntilStable(async () => fromRect(await this.locator.evaluate(element => {
       const {x, y} = element.getBoundingClientRect();
-      return new DOMRect(x + element.clientLeft, y + element.clientTop, element.clientWidth, element.clientHeight);
+      const computedStyle = getComputedStyle(element);
+      const paddingTop = Number.parseFloat(computedStyle.paddingTop);
+      const paddingRight = Number.parseFloat(computedStyle.paddingRight);
+      const paddingBottom = Number.parseFloat(computedStyle.paddingBottom);
+      const paddingLeft = Number.parseFloat(computedStyle.paddingLeft);
+
+      return new DOMRect(
+        x + element.clientLeft + paddingLeft,
+        y + element.clientTop + paddingTop,
+        element.clientWidth - paddingLeft - paddingRight,
+        element.clientHeight - paddingTop - paddingBottom,
+      );
     })), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
 

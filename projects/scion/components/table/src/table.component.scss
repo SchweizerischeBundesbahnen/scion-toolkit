@@ -3,11 +3,11 @@
 :host {
   display: block;
   overflow: hidden; // viewport should not grow beyond host height
-  position: relative; // positioning context for scrollbars
 
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
   > div.viewport {
+    position: relative; // stacking context for the active row outline to not overflow the viewport and align with the active row if scrolled
     height: 100%;
     overflow: auto;
     scrollbar-width: none;
@@ -15,7 +15,7 @@
     box-sizing: border-box; // must not be set on sci-table level for the application to control box sizing if setting a table border.
     container-name: sci-table-viewport;
     container-type: scroll-state;
-    position: relative; // stacking context for the active row outline to not overflow the viewport and align with the active row if scrolled
+    anchor-name: --sci-table-viewport;
 
     // Indicate if table header is visible.
     &:has(sci-table-header) {
@@ -166,12 +166,20 @@
   }
 
   > sci-scrollbar {
-    @include sci-scrollbar.scrollbar-position();
+    position: absolute;
 
-    // Align vertical below the table header, if any.
+    // Position vertical scrollbar to the right of the viewport, below the table header.
     &[direction="vscroll"] {
       top: calc(anchor(--sci-table-body top) + 2px);
-      right: 2px; // reserve some space for the resize splitter of the last column
+      right: calc(anchor(--sci-table-viewport right) + 2px); // Reserve space for the last column's resize splitter
+      bottom: calc(anchor(--sci-table-viewport bottom) + 2px);
+    }
+
+    // Position horizontal scrollbar at the bottom of the viewport.
+    &[direction="hscroll"] {
+      left: calc(anchor(--sci-table-viewport left) + 2px);
+      bottom: calc(anchor(--sci-table-viewport bottom) + 1px);
+      right: calc(anchor(--sci-table-viewport right) + 2px);
     }
 
     // Prevent hovering scrollbar while resizing a column.
