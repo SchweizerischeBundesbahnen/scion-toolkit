@@ -8,6 +8,7 @@
   outline: var(--sci-table-border-size) solid transparent;
   transition: outline-color ease-in-out .15s, color ease-in-out .15s;
   margin: 1px 1px 0 1px; // offset by 1px to merge the filter's outline with the header separator and column splitters
+  border-radius: var(--sci-corner);
 
   &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
     outline-color: var(--sci-color-accent);
