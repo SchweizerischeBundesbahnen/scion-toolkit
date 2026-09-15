@@ -68,7 +68,7 @@ export class SciToolbarGroupComponent {
   public readonly popoverViewContainerRef = input.required<ViewContainerRef>();
 
   /**
-   * Indicates whether a menu is opened in this or any child group.
+   * Indicates whether any menu within this toolbar group is currently open.
    */
   public readonly toolbarMenuOpen = this.computeToolbarMenuOpen();
 
@@ -187,7 +187,7 @@ export class SciToolbarGroupComponent {
   }
 
   /**
-   * Computes whether a menu is open in this group or child group.
+   * Computes whether any menu within this toolbar group is currently open.
    */
   private computeToolbarMenuOpen(): Signal<boolean> {
     // Do not return `computed` signal to prevent illegal access to required component inputs until Angular has completed the initialization of this component,

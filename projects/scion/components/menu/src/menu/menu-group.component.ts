@@ -17,7 +17,7 @@ import {SciMenuGroup} from '../menu.model';
  */
 @Component({
   selector: 'sci-menu-group',
-  template: '',
+  template: '', // Template provided by `SciMenuComponent`.
 })
 export class SciMenuGroupComponent {
 

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, effect, ElementRef, inject, Injector, input, untracked, viewChild, ViewContainerRef} from '@angular/core';
+import {ApplicationRef, Component, computed, createComponent, DestroyRef, effect, ElementRef, EnvironmentInjector, inject, Injector, input, inputBinding, untracked, ViewContainerRef} from '@angular/core';
 import {SciToolbarGroupComponent} from './toolbar-group.component';
 import {ɵinstallMenuAccelerators, ɵSciMenuAcceleratorOptions} from '../menu-accelerators';
 import {ɵSciMenuService} from '../ɵmenu.service';
@@ -124,11 +124,7 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from '../menu-environme
  */
 @Component({
   selector: 'sci-toolbar',
-  templateUrl: './toolbar.component.html',
-  styleUrl: './toolbar.component.scss',
-  imports: [
-    SciToolbarGroupComponent,
-  ],
+  template: '', // Template provided by `SciToolbarGroupComponent`; see `attachVirtualToolbarGroup()`.
   host: {
     '[attr.name]': 'name()', // Public API: Enables selecting the toolbar by name in CSS (also if the toolbar has a dynamic name input binding)
   },
@@ -190,21 +186,46 @@ export class SciToolbarComponent {
   public readonly popoverViewContainerRef = input<ViewContainerRef>(inject(ViewContainerRef));
 
   /**
-   * Indicates whether a menu is opened in this or any child group.
+   * Indicates whether any menu within the toolbar is currently open.
    *
-   * TODO should it be internal?
+   * @internal
    */
-  public readonly toolbarMenuOpen = computed(() => this._toolbarGroupComponent()?.toolbarMenuOpen() ?? false);
+  public readonly toolbarMenuOpen = computed(() => this._virtualToolbarGroupComponent.toolbarMenuOpen());
 
   private readonly _environmentContext = injectMenuContext();
   private readonly _context = computed(() => new Map([...this._environmentContext(), ...this.context() ?? new Map()]));
+  private readonly _virtualToolbarGroupComponent: SciToolbarGroupComponent;
 
   protected readonly menuItems = inject(ɵSciMenuService).menuItems(this.name, this._context);
 
-  private readonly _toolbarGroupComponent = viewChild(SciToolbarGroupComponent);
-
   constructor() {
+    this._virtualToolbarGroupComponent = this.attachVirtualToolbarGroup();
     this.installAccelerators();
+  }
+
+  /**
+   * Creates and attaches a {@link SciToolbarGroupComponent} using this component as host,
+   * rendering top-level toolbar items and groups as direct children inside `<sci-toolbar/>`.
+   */
+  private attachVirtualToolbarGroup(): SciToolbarGroupComponent {
+    const componentRef = createComponent(SciToolbarGroupComponent, {
+      elementInjector: inject(Injector),
+      environmentInjector: inject(EnvironmentInjector),
+      hostElement: inject(ElementRef).nativeElement as HTMLElement,
+      bindings: [
+        inputBinding('menuItems', this.menuItems),
+        inputBinding('orientation', this.orientation),
+        inputBinding('popoverViewContainerRef', this.popoverViewContainerRef),
+      ],
+    });
+
+    // Attach component to Angular component tree for change detection.
+    inject(ApplicationRef).attachView(componentRef.hostView);
+
+    // Destroy component when host is destroyed.
+    inject(DestroyRef).onDestroy(() => componentRef.destroy());
+
+    return componentRef.instance;
   }
 
   /**

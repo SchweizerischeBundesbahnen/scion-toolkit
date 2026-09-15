@@ -195,10 +195,17 @@
     right: 0.25em;
   }
 
-  > div.item-size { // div to read row item size via sciDimension.
-    height: var(--sci-table-row-height);
+  > div.synthetic {
     position: absolute;
     pointer-events: none;
     visibility: hidden;
+
+    &.item-size {
+      height: var(--sci-table-row-height);
+    }
+
+    &.cell-padding {
+      width: var(--sci-table-cell-padding-inline);
+    }
   }
 }

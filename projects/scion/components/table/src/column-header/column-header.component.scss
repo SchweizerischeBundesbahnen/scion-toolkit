@@ -3,7 +3,7 @@
   align-items: center;
 
   &:not(:has(button.sort)) {
-    padding-inline: var(--sci-table-cell-padding-inline);
+    padding-inline: var(--ɵsci-table-cell-padding-inline);
   }
 
   &:is(:focus-visible, :hover) {
@@ -16,7 +16,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: .5em;
-    padding-inline: var(--sci-table-cell-padding-inline);
+    padding-inline: var(--ɵsci-table-cell-padding-inline);
     cursor: var(--sci-table-header-cursor);
     align-self: stretch;
 

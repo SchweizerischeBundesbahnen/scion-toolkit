@@ -1,7 +1,7 @@
 :host {
   display: inline-grid; // fits content to the cell
   position: relative; // positioning context for cell content
-  padding-inline: var(--sci-table-cell-padding-inline);
+  padding-inline: var(--ɵsci-table-cell-padding-inline);
 
   // Enable ellipsis on number and string columns.
   &:is([data-type="string"], [data-type="number"]) {

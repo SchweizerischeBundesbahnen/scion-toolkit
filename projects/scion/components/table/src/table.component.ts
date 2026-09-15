@@ -79,9 +79,11 @@ export class SciTableComponent<T = unknown> {
   private readonly _viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
   private readonly _header = viewChild(SciTableHeaderComponent, {read: ElementRef});
-  private readonly _itemSizeElement = viewChild.required<ElementRef<HTMLElement>>('item_size_element');
+  private readonly _itemSizeSyntheticElement = viewChild.required<ElementRef<HTMLElement>>('item_size_synthetic_element');
+  private readonly _cellPaddingSyntheticElement = viewChild.required<ElementRef<HTMLElement>>('cell_padding_synthetic_element');
 
   protected readonly rows = viewChildren(SciTableRowComponent);
+  protected readonly cellPadding = dimension(this._cellPaddingSyntheticElement);
 
   constructor() {
     this.connectToModel();
@@ -96,7 +98,7 @@ export class SciTableComponent<T = unknown> {
     const viewportDimension = dimension(this._viewport);
     const viewportClientDimension = dimension(this._viewportClient);
     const headerDimension = dimension(this._header);
-    const itemSizeDimension = dimension(this._itemSizeElement);
+    const itemSizeDimension = dimension(this._itemSizeSyntheticElement);
 
     effect(onCleanup => {
       const name = this.name();

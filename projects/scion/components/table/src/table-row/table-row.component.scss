@@ -35,7 +35,7 @@
 
   > sci-toolbar.row-actions {
     position: sticky;
-    right: var(--sci-table-cell-padding-inline); // prevent hiding vertical scrollbar
+    right: var(--ɵsci-table-cell-padding-inline); // prevent hiding vertical scrollbar
     justify-self: end;
     align-self: center;
     border-radius: var(--sci-corner);
