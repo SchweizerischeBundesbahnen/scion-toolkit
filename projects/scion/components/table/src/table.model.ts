@@ -16,7 +16,7 @@ import {SciRowBindings, SciTableRowBinding} from './table-row-binding';
 import {MaybeAsync} from './common';
 import {Observable} from 'rxjs';
 
-export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template';
+export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template' | 'dynamic';
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
 export interface SciTableDescriptor<T> {
@@ -92,7 +92,6 @@ export interface SciColumn {
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;
   resizable: Signal<boolean>;
-  padding: boolean;
   width: Signal<string>;
   minWidth: number;
   resizing: WritableSignal<boolean>;
@@ -125,6 +124,7 @@ export interface SciComponentColumn<T> extends SciColumn {
   component: (item: T) => SciComponentDescriptor;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
+  padding: boolean;
 }
 
 export interface SciTemplateColumn<T> extends SciColumn {
@@ -132,9 +132,18 @@ export interface SciTemplateColumn<T> extends SciColumn {
   template: (item: T) => SciTemplateDescriptor;
   sort: (a: SciCellContext<T, void>, b: SciCellContext<T, void>) => number;
   filter: (text: string, context: SciCellContext<T, void>) => boolean;
+  padding: boolean;
 }
 
-export type SciColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
+export interface SciDynamicColumn<T> extends SciColumn {
+  type: 'dynamic';
+  value: (item: T) => MaybeSignal<string> | MaybeSignal<number> | MaybeSignal<boolean> | SciComponentDescriptor | SciTemplateDescriptor;
+  sort: (a: SciCellContext<T, unknown>, b: SciCellContext<T, unknown>) => number;
+  filter: (text: string, context: SciCellContext<T, unknown>) => boolean;
+  padding: (item: T) => boolean;
+}
+
+export type SciColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T> | SciDynamicColumn<T>;
 
 /**
  * Mapped row, used as display state.
@@ -153,30 +162,35 @@ export interface SciStringCell {
   type: 'string';
   column: SciColumnLike;
   value: Signal<string>;
+  padding: boolean;
 }
 
 export interface SciNumberCell {
   type: 'number';
   column: SciColumnLike;
   value: Signal<number>;
+  padding: boolean;
 }
 
 export interface SciBooleanCell {
   type: 'boolean';
   column: SciColumnLike;
   value: Signal<boolean>;
+  padding: boolean;
 }
 
 export interface SciComponentCell {
   type: 'component';
   column: SciColumnLike;
   component: SciComponentDescriptor;
+  padding: boolean;
 }
 
 export interface SciTemplateCell {
   type: 'template';
   column: SciColumnLike;
   template: SciTemplateDescriptor;
+  padding: boolean;
 }
 
 export type SciCellLike = SciStringCell | SciNumberCell | SciBooleanCell | SciComponentCell | SciTemplateCell;

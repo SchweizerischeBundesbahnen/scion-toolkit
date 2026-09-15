@@ -34,9 +34,15 @@ export interface SciTableFactory<T> {
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
+
+  addColumn(value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this;
+
+  addColumn(label: Translatable, value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this;
+
+  addColumn(descriptor: SciColumnDescriptor<T>): this;
 }
 
-export interface SciColumnDescriptor {
+export interface SciTableColumnDescriptor {
   name?: `column:${string}`;
   label?: Translatable;
   resizable?: boolean;
@@ -52,19 +58,25 @@ export interface SciColumnDescriptor {
   minWidth?: number;
 }
 
-export interface SciMagicColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciColumnDescriptor<T> extends SciTableColumnDescriptor {
   value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
    */
-  sortable?: boolean | {comparator: (a: SciCellContext<T, void>, b: SciCellContext<T, unknown>) => number};
+  sortable?: boolean | {comparator: (a: SciCellContext<T, void | string | number | boolean>, b: SciCellContext<T, unknown>) => number};
   /**
    * Toggle filtering, optionally provide custom filter function. Defaults to default filter based on column type.
    */
   filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, unknown>) => boolean};
+  /**
+   * Controls whether cell padding is applied. Set to `false` to let content fill the entire cell (render to cell bounds).
+   *
+   * Defaults to `true`.
+   */
+  padding?: (item: T) => boolean;
 }
 
-export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciComponentColumnDescriptor<T> extends SciTableColumnDescriptor {
   component: (item: T) => SciComponentDescriptor;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -82,7 +94,7 @@ export interface SciComponentColumnDescriptor<T> extends SciColumnDescriptor {
   padding?: boolean;
 }
 
-export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor {
   template: (item: T) => SciTemplateDescriptor;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -100,7 +112,7 @@ export interface SciTemplateColumnDescriptor<T> extends SciColumnDescriptor {
   padding?: boolean;
 }
 
-export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
   value: (item: T) => MaybeSignal<string>;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -112,7 +124,7 @@ export interface SciStringColumnDescriptor<T> extends SciColumnDescriptor {
   filterable?: boolean | {matcher: (text: string, context: SciCellContext<T, string>) => boolean};
 }
 
-export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
   value: (item: T) => MaybeSignal<number>;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -124,7 +136,7 @@ export interface SciNumberColumnDescriptor<T> extends SciColumnDescriptor {
   filterable?: boolean;
 }
 
-export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
+export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor {
   value: (item: T) => MaybeSignal<boolean>;
   /**
    * Toggle sorting, optionally provide custom sort function. Defaults to default sort based on column type.
@@ -136,4 +148,4 @@ export interface SciBooleanColumnDescriptor<T> extends SciColumnDescriptor {
   filterable?: boolean;
 }
 
-export type SciColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+export type SciColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T> | SciColumnDescriptor<T>;
