@@ -1,7 +1,10 @@
+@use '@scion/components/common';
+
 :host {
   display: inline-grid; // fits content to the cell
   position: relative; // positioning context for cell content
-  padding-inline: var(--ɵsci-table-cell-padding-inline);
+  padding-left: calc(var(--ɵsci-table-cell-padding-inline) + 2em * attr(data-level type(<number>), 0));
+  padding-right: var(--ɵsci-table-cell-padding-inline);
 
   // Enable ellipsis on number and string columns.
   &:is([data-type="string"], [data-type="number"]) {
@@ -18,5 +21,19 @@
   &[data-padding="false"] {
     padding: 0;
     align-self: stretch;
+  }
+
+  &:has(button.toggle-children) {
+    display: flex;
+    gap: .25em;
+    align-items: center;
+
+    > button.toggle-children {
+      @include common.icon-button-element-states() {
+        border-radius: var(--sci-corner);
+        background-color: var(--ɵsci-table-row-action-background-color);
+        padding: 1px;
+      }
+    }
   }
 }

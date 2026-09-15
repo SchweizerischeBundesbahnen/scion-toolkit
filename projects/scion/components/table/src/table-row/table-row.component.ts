@@ -73,7 +73,7 @@ export class SciTableRowComponent<T> {
     if (this.loading()) {
       return;
     }
-    void this._selectionService.onRowClick(this.row().index, event);
+    void this._selectionService.onRowClick(this.row().index(), event);
   }
 
   protected onRowDblClick(): void {
@@ -84,7 +84,7 @@ export class SciTableRowComponent<T> {
   }
 
   protected onMouseEnter(): void {
-    this.table().hoveredIndex.set(this.row().index);
+    this.table().hoveredIndex.set(this.row().index());
   }
 
   protected onMouseLeave(event: MouseEvent): void {

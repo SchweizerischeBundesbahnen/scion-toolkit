@@ -42,14 +42,14 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
 
   public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
     // TODO [dwie] Normalize filterable and sortable and add default matcher/comparator to all columns
-    if (isSignal(this._descriptor.data) && (config.filterable === true || config.sortable === true)) {
+    if (isSignal(this._descriptor.datasource) && (config.filterable === true || config.sortable === true)) {
       throw Error('[ColumnDefinitionError] Component columns cannot have a auto filter or auto sort.');
     }
     return this.addColumn('component', config);
   }
 
   public addTemplateColumn(config: SciTemplateColumnDescriptor<T>): this {
-    if (isSignal(this._descriptor.data) && (config.filterable === true || config.sortable === true)) {
+    if (isSignal(this._descriptor.datasource) && (config.filterable === true || config.sortable === true)) {
       throw Error('[ColumnDefinitionError] Template columns cannot have a auto filter or auto sort.');
     }
     return this.addColumn('template', config);
@@ -67,7 +67,7 @@ export class ɵSciTableFactory<T> implements SciTableFactory<T> {
       }
     })();
 
-    if (!isSignal(this._descriptor.data) && (typeof config.sortable === 'object' || typeof config.filterable === 'object')) {
+    if (!isSignal(this._descriptor.datasource) && (typeof config.sortable === 'object' || typeof config.filterable === 'object')) {
       throw Error('[ColumnDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
     }
 

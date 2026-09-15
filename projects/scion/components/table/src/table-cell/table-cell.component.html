@@ -1,5 +1,16 @@
 @let cell = this.cell();
 
+
+@if (index() === 0 && (row().hasChildren | async)) {
+  <button class="toggle-children" (click)="toggleChildren()">
+    @if (isExpanded()) {
+      <sci-icon>scion.chevron_down</sci-icon>
+    } @else {
+      <sci-icon>scion.chevron_right</sci-icon>
+    }
+  </button>
+}
+
 @switch (cell.type) {
   @case ('template') {
     <ng-template *ngTemplateOutlet="template(); context: templateContext()"/>

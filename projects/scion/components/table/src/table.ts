@@ -25,7 +25,7 @@ export function table<T>(dataOrDescriptor: Signal<T[]> | SciTableDescriptor<T>, 
   }
 
   const injector = options?.injector ?? inject(Injector);
-  const descriptor = (isSignal(dataOrDescriptor) ? {data: dataOrDescriptor} : dataOrDescriptor) satisfies SciTableDescriptor<T>;
+  const descriptor = (isSignal(dataOrDescriptor) ? {datasource: dataOrDescriptor} : dataOrDescriptor) satisfies SciTableDescriptor<T>;
   const sciTable = runInInjectionContext(injector, () => new ɵSciTable(factoryFn, descriptor));
   injector.get(DestroyRef).onDestroy(() => sciTable.dispose());
 

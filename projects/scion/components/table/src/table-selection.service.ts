@@ -24,7 +24,7 @@ export class TableSelectionService<T> {
     const rowsByIndex = table.rowsByIndex();
     const row = rowsByIndex.get(index);
     const item = rowsByIndex.get(index)?.item;
-    const previousFocusedIndex = table.activeRow()?.index ?? -1;
+    const previousFocusedIndex = table.activeRow()?.index() ?? -1;
 
     table.activeItem.set(item);
 
@@ -55,7 +55,7 @@ export class TableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const activeIndex = this._table().activeRow()?.index() ?? -1;
 
     if (activeIndex <= 0) {
       return;
@@ -93,7 +93,7 @@ export class TableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const activeIndex = this._table().activeRow()?.index() ?? -1;
     const endIndex = Math.min(activeIndex + 1, table.totalCount()! - 1);
 
     if (endIndex === activeIndex) {
@@ -131,7 +131,7 @@ export class TableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const activeIndex = this._table().activeRow()?.index() ?? -1;
 
     if (activeIndex === 0) {
       return;
@@ -169,7 +169,7 @@ export class TableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const activeIndex = this._table().activeRow()?.index() ?? -1;
     const endIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.totalCount()! - 1);
 
     if (endIndex === activeIndex) {
@@ -207,7 +207,7 @@ export class TableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const activeIndex = this._table().activeRow()?.index() ?? -1;
 
     if (activeIndex <= 0) {
       return;
@@ -245,7 +245,7 @@ export class TableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const activeIndex = this._table().activeRow()?.index() ?? -1;
 
     const endIndex = table.totalCount()! - 1;
 

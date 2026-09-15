@@ -8,12 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, input, Signal, TemplateRef} from '@angular/core';
+import {Component, computed, inject, input, Signal, TemplateRef} from '@angular/core';
 import {SciCellLike, SciRow} from '../table.model';
-import {NgTemplateOutlet} from '@angular/common';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
+import {ɵSCI_TABLE} from '../ɵtable.model';
 
 @Component({
   selector: 'sci-table-cell',
@@ -24,11 +25,13 @@ import {SciIconComponent} from '@scion/components/icon';
     '[attr.data-column]': 'cell().column.name',
     '[attr.data-padding]': '!cell().column.padding ? false : null',
     '[attr.part]': 'isSelected() ? null : partAttribute()', // prevent styling selected rows
+    '[attr.data-level]': 'index() === 0 ? row().level : 0',
   },
   imports: [
     NgTemplateOutlet,
     SciIconComponent,
     SciComponentOutletDirective,
+    AsyncPipe,
   ],
 })
 export class TableCellComponent<T> {
@@ -36,10 +39,14 @@ export class TableCellComponent<T> {
   public readonly cell = input.required<SciCellLike>();
   public readonly row = input.required<SciRow<T>>();
   public readonly isSelected = input<boolean>();
+  public readonly index = input<number>();
+
+  private readonly _table = inject(ɵSCI_TABLE);
 
   protected readonly template = this.computeTemplate();
   protected readonly templateContext = this.computeTemplateContext();
   protected readonly partAttribute = this.computePartAttribute();
+  protected readonly isExpanded = computed(() => this.row().expanded());
 
   private computeTemplate(): Signal<TemplateRef<unknown> | null> {
     return computed(() => {
@@ -79,5 +86,9 @@ export class TableCellComponent<T> {
         this.cell().column.name,
       ].join(' ');
     });
+  }
+
+  protected toggleChildren(): void {
+    this._table().toggleTreeItem(this.row());
   }
 }

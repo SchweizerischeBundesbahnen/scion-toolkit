@@ -20,6 +20,7 @@ import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
+import {providePageableTableDatasource} from '../../../../../projects/scion/components/table/src/table.model';
 import {SciViewportComponent} from '@scion/components/viewport';
 
 @Component({
@@ -65,7 +66,9 @@ export default class SciTablePageComponent {
     const tabbar = this._tabbar;
 
     return table({
-      data: options.slowDataSource ? request => companyService.getCompanies$(request, {slowDataSource: true}) : companyService.companies,
+      datasource: options.slowDataSource ?
+        providePageableTableDatasource(request => companyService.getCompanies$(request, {slowDataSource: true})) :
+        companyService.companies,
       rowBindings: [
         partBinding((_item, index) => {
           if (this.settingsForm.showZebraStriping().value()) {

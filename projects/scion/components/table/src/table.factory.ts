@@ -34,8 +34,6 @@ export interface SciTableFactory<T> {
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
-
-  addColumn(descriptor: SciMagicColumnDescriptor<T>): this;
 }
 
 export interface SciColumnDescriptor {
