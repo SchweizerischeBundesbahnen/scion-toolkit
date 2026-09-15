@@ -3,10 +3,17 @@
   --ɵsci-toolbar-item-padding-inline: calc(.5 * var(--sci-toolbar-item-size));
   --ɵsci-toolbar-item-padding-block: calc(.125 * var(--sci-toolbar-item-size));
   --ɵsci-toolbar-font-size: calc(.8125 * var(--sci-toolbar-item-size));
+  --ɵsci-toolbar-item-border-size: 1px;
   font-size: var(--sci-toolbar-font-size, var(--ɵsci-toolbar-font-size));
 
   display: flex;
   gap: 2px;
+
+  // Ensure minimal toolbar height.
+  &[name] {
+    min-height: calc(var(--sci-toolbar-item-size) + 2 * var(--ɵsci-toolbar-item-padding-block) + 2 * var(--ɵsci-toolbar-item-border-size));
+    box-sizing: content-box;
+  }
 
   &[data-orientation="vertical"] {
     flex-direction: column;
@@ -77,7 +84,7 @@
 
     // Render border around control.
     > sci-toolbar-control {
-      border: 1px solid var(--sci-color-border);
+      border: var(--ɵsci-toolbar-item-border-size) solid var(--sci-color-border);
       border-radius: var(--sci-toolbar-item-border-radius);
       overflow: hidden; // Prevent overflow, forcing clipping child elements, including border-radius.
 
@@ -104,7 +111,7 @@
     text-wrap: nowrap;
     padding: var(--ɵsci-toolbar-item-padding-block) var(--ɵsci-toolbar-item-padding-inline);
     border-radius: var(--sci-toolbar-item-border-radius);
-    border: 1px solid transparent; // transparent border if not checked
+    border: var(--ɵsci-toolbar-item-border-size) solid transparent; // transparent border if not checked
     color: var(--sci-toolbar-item-text-color);
     user-select: none;
     cursor: var(--sci-toolbar-item-cursor);
