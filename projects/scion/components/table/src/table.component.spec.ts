@@ -13,11 +13,11 @@ import {table as sciTable} from './table';
 import {Component, computed, EnvironmentProviders, input, inputBinding, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
 import {TableSelectionService} from './table-selection.service';
-import {BehaviorSubject, map, NEVER, Observable, Subject, take, tap} from 'rxjs';
+import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {attributeBinding, classBinding, partBinding, provideTableRowBinding} from './table-row-binding';
 import {SciTableRequest, SciTableResponse} from './table-data-source';
-import {createSciTableComponent} from './testing/testing.util';
+import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
 
 fdescribe('Table', () => {
 
@@ -1377,6 +1377,59 @@ fdescribe('Table', () => {
       await table.waitUntilStable();
 
       expect(onSelect).toHaveBeenCalledOnceWith({id: 2});
+    });
+
+    /**
+     * Regression where closing a menu with groups removed application styles.
+     *
+     * Angular removed application styles only if used inside `sci-table`, likely due to Shadow DOM.
+     */
+    it('should not remove styles when closing menu with groups', async () => {
+      const data = signal([{id: '1'}, {id: '2'}, {id: '3'}]);
+      const {fixture} = createSciTableComponent(() => sciTable({
+        data,
+        rowActions: (_item, toolbar) => toolbar
+          .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false, cssClass: 'testee'}, menu => menu
+            .addGroup(group => group.addMenuItem({
+              icon: 'scion.folder',
+              label: 'Menu item 1',
+              cssClass: 'testee',
+              onSelect: noop,
+            }))
+            .addGroup(group => group.addMenuItem({
+              icon: 'scion.folder',
+              label: 'Menu item 2',
+              onSelect: noop,
+            })),
+          ),
+      }, table => table
+        .addStringColumn(item => item.id)
+        .addStringColumn(item => item.id)
+        .addStringColumn(item => item.id)), {width: '600px'});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      // Hover row to display row actions.
+      const row = table.row({nth: 1});
+      row.hover();
+      await table.waitUntilStable();
+
+      // Open menu.
+      row.rowAction({cssClass: 'testee'}).click();
+      expect(await waitUntilStable(() => row.element.querySelector('sci-menu.testee'))).not.toBeNull();
+
+      // Close the menu.
+      const menuItemn = row.element.querySelector<HTMLElement>('sci-menu.testee button.e2e-menu-item.testee')!;
+      menuItemn.click();
+
+      // Expect menu to be closed.
+      expect(await waitUntilStable(() => row.element.querySelector('sci-menu.testee'))).toBeNull();
+
+      // Expect correct rendering of columns, verifying that styles have not been removed.
+      expect(table.column({index: 0})!.width).toBe(200);
+      expect(table.column({index: 1})!.width).toBe(200);
+      expect(table.column({index: 2})!.width).toBe(200);
     });
   });
 

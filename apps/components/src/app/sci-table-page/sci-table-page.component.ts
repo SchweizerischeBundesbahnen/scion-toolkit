@@ -169,41 +169,43 @@ export default class SciTablePageComponent {
           accelerator: {key: 'delete'},
           onSelect: () => companyService.deleteCompany(company.id),
         })
-        .addToolbarButton({
-          icon: 'content_copy',
-          onSelect: () => companyService.addCompany(company),
-        })
         .addToolbarMenu({
           icon: 'scion.more_vertical',
           visualMenuIndicator: false,
         }, menu => menu
-          .addMenuItem({
-            icon: 'scion.edit',
-            label: 'Edit',
-            onSelect: () => {
-              companyForm().reset(company);
-              requestAnimationFrame(() => tabbar().activateTab('company-editor'));
-            },
-          })
-          .addMenuItem({
-            label: 'Copy',
-            icon: 'content_copy',
-            onSelect: () => companyService.addCompany(company),
-          })
-          .addMenu({label: 'More'}, menu => menu
+          .addGroup(group => group
             .addMenuItem({
-              label: 'Copy to...',
-              onSelect: () => console.log('copy', company),
+              icon: 'scion.edit',
+              label: 'Edit',
+              onSelect: () => {
+                companyForm().reset(company);
+                requestAnimationFrame(() => tabbar().activateTab('company-editor'));
+              },
             })
             .addMenuItem({
-              label: 'Move to...',
-              onSelect: () => console.log('move', company),
-            })
-            .addMenuItem({
-              label: 'Info...',
-              onSelect: () => console.log('info', company),
+              label: 'Duplicate',
+              icon: 'content_copy',
+              onSelect: () => companyService.addCompany(company),
             }),
-          ));
+          )
+          .addGroup(group => group
+            .addMenu({label: 'More'}, menu => menu
+              .addMenuItem({
+                icon: 'share',
+                label: 'Share',
+                onSelect: () => console.log('share', company),
+              })
+              .addMenuItem({
+                icon: 'download',
+                label: 'Download',
+                onSelect: () => console.log('download', company),
+              })
+              .addMenuItem({
+                icon: 'print',
+                label: 'Print',
+                onSelect: () => console.log('print', company),
+              }),
+            )));
     }
   }
 

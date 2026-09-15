@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {ApplicationRef, Component, computed, createComponent, effect, ElementRef, EnvironmentInjector, inject, Injector, input, inputBinding, untracked} from '@angular/core';
+import {ApplicationRef, Component, computed, createComponent, DestroyRef, ElementRef, EnvironmentInjector, inject, Injector, input, inputBinding} from '@angular/core';
 import {provideMenuComponentRole, SciMenuComponent, SciMenuGroupConfig} from './menu.component';
 import {SciMenuGroup} from '../menu.model';
 
@@ -27,39 +27,32 @@ export class SciMenuGroupComponent {
   public readonly cssClass = input<string[]>();
 
   constructor() {
-    const elementInjector = inject(Injector);
-    const environmentInjector = inject(EnvironmentInjector);
-    const hostElement = inject(ElementRef).nativeElement as HTMLElement;
-    const applicationRef = inject(ApplicationRef);
+    const menuComponent = createComponent(SciMenuComponent, {
+      elementInjector: inject(Injector),
+      environmentInjector: inject(EnvironmentInjector),
+      hostElement: inject(ElementRef).nativeElement as HTMLElement,
+      bindings: [
+        inputBinding('menuItems', computed(() => this.group().children)),
+        inputBinding('disabled', this.disabled),
+        inputBinding('cssClass', this.cssClass),
+        inputBinding('glyphArea', this.glyphArea),
+        inputBinding('group', computed((): SciMenuGroupConfig => ({
+          label: this.group().label?.(),
+          collapsible: !!this.group().collapsible,
+          collapsed: this.group().collapsible?.collapsed ?? false,
+          hideGlyphArea: this.group().glyphArea === false,
+          actions: this.group().actions ?? [],
+        }))),
+      ],
+      directives: [
+        provideMenuComponentRole('group'),
+      ],
+    });
 
-    effect(onCleanup => untracked(() => {
-      const componentRef = createComponent(SciMenuComponent, {
-        elementInjector,
-        environmentInjector,
-        hostElement,
-        bindings: [
-          inputBinding('menuItems', computed(() => this.group().children)),
-          inputBinding('disabled', this.disabled),
-          inputBinding('cssClass', this.cssClass),
-          inputBinding('group', computed((): SciMenuGroupConfig => ({
-            label: this.group().label?.(),
-            collapsible: !!this.group().collapsible,
-            collapsed: this.group().collapsible?.collapsed ?? false,
-            hideGlyphArea: this.group().glyphArea === false,
-            actions: this.group().actions ?? [],
-          }))),
-          inputBinding('glyphArea', this.glyphArea),
-        ],
-        directives: [
-          provideMenuComponentRole('group')],
-      });
+    // Attach component to Angular component tree for change detection.
+    inject(ApplicationRef).attachView(menuComponent.hostView);
 
-      // Attach component to Angular component tree for change detection.
-      applicationRef.attachView(componentRef.hostView);
-      componentRef.changeDetectorRef.detectChanges();
-
-      // Destroy component when host is destroyed.
-      onCleanup(() => componentRef.destroy());
-    }));
+    // Destroy component when host is destroyed.
+    inject(DestroyRef).onDestroy(() => menuComponent.destroy());
   }
 }
