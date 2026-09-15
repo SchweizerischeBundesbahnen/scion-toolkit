@@ -14,14 +14,13 @@ import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciRowBindings, SciTableRowBinding} from './table-row-binding';
 import {MaybeAsync} from './common';
+import {Observable} from 'rxjs';
 
 export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template';
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
 export interface SciTableDescriptor<T> {
-  // datasource: Signal<T[]> | SciTableDatasource<T> | SciTreeDatasource | SciPageableTableDatasource<T> | SciPageableTreeDatasource;
-  // datasource: Signal<T[]> | SciTableDatasource<T> | SciPageableTableDatasource<T>;
-  data: Signal<T[]> | SciDataLoaderFn<T>;
+  datasource: Signal<T[]> | SciTableDatasource<T> | SciPageableTableDatasource<T> | SciTreeDatasource<T> | SciPageableTreeDatasource<T>;
   sortable?: boolean;
   resizable?: boolean;
   filterable?: boolean;
@@ -141,11 +140,14 @@ export type SciColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T>
  * Mapped row, used as display state.
  */
 export interface SciRow<T> {
-  index: number;
+  index: Signal<number>;
+  level: number;
+  expanded: WritableSignal<boolean>;
   item?: T;
   id?: unknown;
   cells?: SciCellLike[];
   bindings?: SciRowBindings;
+  hasChildren?: Observable<boolean>;
 }
 
 export interface SciStringCell {
@@ -186,46 +188,54 @@ export class SciTableDatasource<T> {
   }
 }
 
-export class SciTreeDatasource {
+export class SciTreeDatasource<T> {
+
+  constructor(public root: Signal<T[]>, public children: ChildProvider<T>) {
+  }
 }
 
 export class SciPageableTableDatasource<T> {
 
+  constructor(public data: SciDataLoaderFn<T>) {
+  }
 }
 
-export class SciPageableTreeDatasource {
+export class SciPageableTreeDatasource<T> {
+
+  constructor(public root: SciDataLoaderFn<T>, public children: PageableChildProvider<T>) {
+  }
 }
 
 export function provideTableDatasource<T>(data: Signal<T[]>): SciTableDatasource<T> {
-  return new SciTableDatasource<T>(data);
+  return new SciTableDatasource(data);
 }
 
-export function provideTreeDatasource(data: Signal<unknown[]>, children: ChildProvider): SciTreeDatasource {
-  return new SciTreeDatasource();
+export function provideTreeDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciTreeDatasource<T> {
+  return new SciTreeDatasource(root, children);
 }
 
-export function providePageableTableDatasource<T>(descriptor: SciPageableTableDatasourceDescriptor<T>): SciPageableTableDatasource<T> {
-  return new SciPageableTableDatasource();
+export function providePageableTableDatasource<T>(loader: SciDataLoaderFn<T>): SciPageableTableDatasource<T> {
+  return new SciPageableTableDatasource(loader);
 }
 
-export function providePageableTreeDatasource(descriptor: SciPageableTreeDatasourceDescriptor): SciPageableTreeDatasource {
-  return new SciPageableTreeDatasource();
+export function providePageableTreeDatasource<T>(loader: SciDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableTreeDatasource<T> {
+  return new SciPageableTreeDatasource(loader, children);
 }
 
-interface ChildProvider {
-  getChildren(item: unknown): MaybeAsync<unknown[]>;
+export interface ChildProvider<T = unknown> {
+  getChildren(item: T): T[];
+  hasChildren(item: T): boolean;
+}
 
-  hasChildren(item: unknown): MaybeAsync<boolean>;
+export interface PageableChildProvider<T> {
+  getChildren(item: T, request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
+  hasChildren(item: T, request: Pick<SciTableRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
 }
 
 export interface SciPageableTableDatasourceDescriptor<T> {
   getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
 }
 
-interface SciPageableTreeDatasourceDescriptor {
-  getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<unknown>>;
-
-  getChildren(item: unknown, request: SciTableRequest): MaybeAsync<SciTableResponse<unknown>>;
-
-  hasChildren(item: unknown): MaybeAsync<boolean>;
+export interface SciPageableTreeDatasourceDescriptor<T> {
+  getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
 }

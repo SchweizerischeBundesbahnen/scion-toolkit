@@ -13,8 +13,9 @@ import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
+import {provideTreeDatasource} from '../../../../../projects/scion/components/table/src/table.model';
 
-const data = signal(new Array(100_000).fill(0).map((_, i) => ({
+const data = signal(new Array(companies.length).fill(0).map((_, i) => ({
   ...companies[i % companies.length]!,
   dataId: UUID.randomUUID(),
 })));
@@ -38,7 +39,7 @@ export default class SciTablePageComponent {
     return selectable === false ? 'false' : selectable;
   });
 
-  protected tableConfig: Omit<SciTableDescriptor<Company>, 'data'> = {
+  protected tableConfig: Omit<SciTableDescriptor<Company>, 'datasource'> = {
     trackBy: company => company.dataId,
     rowActions: (company, toolbar) => {
       toolbar.addToolbarButton({
@@ -89,7 +90,13 @@ export default class SciTablePageComponent {
   };
 
   protected table = table({
-    data,
+    datasource: provideTreeDatasource(computed(() => data().filter(item => item.parent === undefined)), {
+      getChildren: item => {
+        console.log(item);
+        return data().filter(i => i.parent === item.code);
+      },
+      hasChildren: item => data().some(i => i.parent === item.code),
+    }),
     ...this.tableConfig,
   }, table => {
     table

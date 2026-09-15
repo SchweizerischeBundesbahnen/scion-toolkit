@@ -31,7 +31,7 @@ export default class TriebfahrzeugTableComponent {
 
   private defineTriebfahrzeugTable(): SciTable<Triebfahrzeug> {
     return table({
-      data: httpResource<Triebfahrzeug[]>(() => '/schweiz_triebfahrzeuge_10k.json', {defaultValue: []}).value,
+      datasource: httpResource<Triebfahrzeug[]>(() => '/schweiz_triebfahrzeuge_10k.json', {defaultValue: []}).value,
       rowBindings: [
         partBinding((_item, index) => this.zebraStyle() ? (index % 2 === 0 ? 'row:even' : 'row:odd') : undefined),
       ],

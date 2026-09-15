@@ -8,28 +8,28 @@
 <aside class="e2e-settings">
   <form>
     <label>
-      <input [(ngModel)]="table.filterable" type="checkbox" />
+      <input [(ngModel)]="table.filterable" name="filterable" type="checkbox" />
       Filterable
     </label>
 
     <label>
-      <input [(ngModel)]="table.sortable" type="checkbox" />
+      <input [(ngModel)]="table.sortable" name="sortable" type="checkbox" />
       Sortable
     </label>
 
     <label>
-      <input [(ngModel)]="table.resizable" type="checkbox" />
+      <input [(ngModel)]="table.resizable" name="resizable" type="checkbox" />
       Resizable
     </label>
 
     <label>
-      <input [(ngModel)]="table.showHeader" type="checkbox" />
+      <input [(ngModel)]="table.showHeader" name="showHeader" type="checkbox" />
       Show Header
     </label>
 
     <label>
       Selection
-      <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)">
+      <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)" name="selection">
         <option value="multi">Multi</option>
         <option value="single">Single</option>
         <option value="false">Disabled</option>

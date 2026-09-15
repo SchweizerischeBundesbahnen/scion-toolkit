@@ -1,6 +1,7 @@
 export interface Company {
   dataId: string;
   code: number;
+  parent?: number;
   abbreviation: string;
   name: string;
   railwayUndertaking: boolean;
@@ -39,6 +40,7 @@ export const companies: Company[] = [
   {
     'dataId': '6958181a-a34e-409d-b348-b7485874bd8e',
     'code': 3706,
+    'parent': 3208,
     'abbreviation': 'HRDE',
     'name': 'Hector Rail Gmbh',
     'railwayUndertaking': true,
@@ -75,6 +77,7 @@ export const companies: Company[] = [
   {
     'dataId': 'b637173d-f3b8-4166-bc07-1b21f2180238',
     'code': 2180,
+    'parent': 1080,
     'abbreviation': 'DBCDE',
     'name': 'DB Cargo AG',
     'railwayUndertaking': true,
@@ -84,6 +87,7 @@ export const companies: Company[] = [
   {
     'dataId': '5d7ee8dc-df32-4589-88db-48d204f7bd77',
     'code': 2585,
+    'parent': 2185,
     'abbreviation': 'SBBCINT',
     'name': 'SBB Cargo International',
     'railwayUndertaking': true,
@@ -93,6 +97,7 @@ export const companies: Company[] = [
   {
     'dataId': 'c97f0197-2fef-420e-b2b8-aff17a48ee4e',
     'code': 3096,
+    'parent': 2180,
     'abbreviation': 'DBCCH',
     'name': 'DB Cargo Schweiz GmbH',
     'railwayUndertaking': true,
@@ -138,6 +143,7 @@ export const companies: Company[] = [
   {
     'dataId': '2b58abc0-e7cb-4d78-b406-e7d243fe3d1f',
     'code': 5184,
+    'parent': 85,
     'abbreviation': 'SBB Infrastruktur Baulogistik',
     'name': 'Schweizerische Bundesbahnen SBB Infrastruktur Baulogistik',
     'railwayUndertaking': true,
@@ -183,6 +189,7 @@ export const companies: Company[] = [
   {
     'dataId': '1690a260-0f7e-4f3f-814a-9daa5cb7b14f',
     'code': 2380,
+    'parent': 2180,
     'abbreviation': 'DBCIT',
     'name': 'DB Cargo Italia Srl',
     'railwayUndertaking': true,
@@ -192,6 +199,7 @@ export const companies: Company[] = [
   {
     'dataId': 'b299f9a3-bbe3-43c9-b2d6-c7fe948fc7b8',
     'code': 5271,
+    'parent': 3718,
     'abbreviation': 'MDWBE',
     'name': 'Medway Belgium NV',
     'railwayUndertaking': true,
@@ -273,6 +281,7 @@ export const companies: Company[] = [
   {
     'dataId': 'bf590599-9f25-4390-8e27-4b2fca7313e8',
     'code': 3423,
+    'parent': 3203,
     'abbreviation': 'CROBE',
     'name': 'CROSSRAIL BENELUX NV',
     'railwayUndertaking': true,
@@ -300,6 +309,7 @@ export const companies: Company[] = [
   {
     'dataId': '0698a5e8-69d5-4b45-9f46-0fbfbb818a2f',
     'code': 5186,
+    'parent': 85,
     'abbreviation': 'SBB Infrastruktur PathOrderTool',
     'name': 'Schweizerische Bundesbahnen SBB Infrastruktur',
     'railwayUndertaking': false,
@@ -336,6 +346,7 @@ export const companies: Company[] = [
   {
     'dataId': '818c4b55-2176-4ce9-afd4-4bb898bea202',
     'code': 3552,
+    'parent': 3308,
     'abbreviation': 'TX L GmbH',
     'name': 'TX Logistik Schweiz GmbH',
     'railwayUndertaking': true,
@@ -354,6 +365,7 @@ export const companies: Company[] = [
   {
     'dataId': '0bc5a826-5173-4800-a87b-103cac0f191f',
     'code': 3090,
+    'parent': 4034,
     'abbreviation': 'HU',
     'name': 'HU Hupac SpA',
     'railwayUndertaking': true,
@@ -390,6 +402,7 @@ export const companies: Company[] = [
   {
     'dataId': 'ac432f03-ac43-430e-8ec3-4d6a699173f1',
     'code': 3449,
+    'parent': 3308,
     'abbreviation': 'TXL Italia',
     'name': 'TX Logistik Transalpine GmbH – Sede secondaria italiana',
     'railwayUndertaking': true,
@@ -516,6 +529,7 @@ export const companies: Company[] = [
   {
     'dataId': '7d8b0ae9-683b-4fda-9682-a1c00db3db1a',
     'code': 2385,
+    'parent': 2185,
     'abbreviation': 'SBBCD',
     'name': 'SBB Cargo Deutschland GmbH',
     'railwayUndertaking': true,
@@ -534,6 +548,7 @@ export const companies: Company[] = [
   {
     'dataId': '7e4f8efd-a2c1-410f-b37d-ff1f52026d27',
     'code': 3609,
+    'parent': 2180,
     'abbreviation': 'DB Cargo Belgium',
     'name': 'DB Cargo Belgium BVBA',
     'railwayUndertaking': true,
@@ -732,6 +747,7 @@ export const companies: Company[] = [
   {
     'dataId': '2c13f27f-c0c7-4639-a0fe-9799666abd96',
     'code': 2485,
+    'parent': 2185,
     'abbreviation': 'SBBCI',
     'name': 'SBB Cargo Italia',
     'railwayUndertaking': true,
@@ -741,6 +757,7 @@ export const companies: Company[] = [
   {
     'dataId': '95cba601-938c-4e46-a7c4-13309bbc2c30',
     'code': 3127,
+    'parent': 5003,
     'abbreviation': 'HSL',
     'name': 'HSL Logistik GmbH',
     'railwayUndertaking': true,
@@ -768,6 +785,7 @@ export const companies: Company[] = [
   {
     'dataId': 'cf4761e4-6bb5-437e-9c17-a9afb79336f7',
     'code': 3221,
+    'parent': 3203,
     'abbreviation': 'CRO',
     'name': 'Crossrail Italia Srl',
     'railwayUndertaking': true,
@@ -858,6 +876,7 @@ export const companies: Company[] = [
   {
     'dataId': 'eb40542f-aa1b-4637-963d-2fe6ddb39243',
     'code': 5234,
+    'parent': 5495,
     'abbreviation': 'TPF INFRA',
     'name': 'Transports publics fribourgeois TPF INFRA SA',
     'railwayUndertaking': false,
@@ -867,6 +886,7 @@ export const companies: Company[] = [
   {
     'dataId': '35f3691e-ff8f-4da5-8ce3-613f81694c6f',
     'code': 5459,
+    'parent': 5460,
     'abbreviation': 'SOB I-TI',
     'name': 'Schweizerische Südostbahn AG, Infrastrukturmanager',
     'railwayUndertaking': false,
@@ -876,6 +896,7 @@ export const companies: Company[] = [
   {
     'dataId': '16790772-004b-4fed-a5c6-2e2fd6fcd1e6',
     'code': 5460,
+    'parent': 5458,
     'abbreviation': 'SOB I',
     'name': 'Schweizerische Südostbahn AG, Infrastruktur',
     'railwayUndertaking': true,
@@ -903,6 +924,7 @@ export const companies: Company[] = [
   {
     'dataId': 'fa647dd4-ee72-4dd8-92a3-5dbad4534829',
     'code': 9997,
+    'parent': 9998,
     'abbreviation': 'TEST3',
     'name': 'Mounties',
     'railwayUndertaking': false,
