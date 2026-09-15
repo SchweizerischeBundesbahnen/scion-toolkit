@@ -21,9 +21,9 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
   templateUrl: './table-cell.component.html',
   styleUrl: './table-cell.component.scss',
   host: {
-    '[attr.data-type]': 'cell().column.type',
+    '[attr.data-type]': 'cell().type',
     '[attr.data-column]': 'cell().column.name',
-    '[attr.data-padding]': '!cell().column.padding ? false : null',
+    '[attr.data-padding]': '!cell().padding ? false : null',
     '[attr.part]': 'isSelected() ? null : partAttribute()', // prevent styling selected rows
     '[attr.data-level]': 'index() === 0 ? row().level : 0',
   },

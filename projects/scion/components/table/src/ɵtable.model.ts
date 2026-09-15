@@ -544,13 +544,68 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         hasChildren: coerce(this._childProvider?.hasChildren(item, {columnFilters: this.filterCriteria(), tableFilter: this._tableFilter() ?? undefined}) ?? false),
         childrenCache: previousRow?.childrenCache ?? new TableCache<T>(),
         bindings: coerceTableRowBindings(this._rowBindings ?? [], item, pageStart + i),
-        cells: columns.map(column => ({
-          value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
-          component: column.type === 'component' ? column.component(item) : undefined,
-          template: column.type === 'template' ? column.template(item) : undefined,
-          type: column.type,
-          column,
-        } as SciCellLike)),
+        cells: columns.map(column => {
+          if (column.type === 'dynamic') {
+            const value = column.value(item);
+            const valueSignal = coerceSignal(column.value(item));
+            const valueType = valueSignal();
+            const isComponent = typeof value === 'object' && 'component' in value;
+            const isTemplate = typeof value === 'object' && 'template' in value;
+
+            if (isComponent) {
+              return ({
+                value: undefined,
+                component: value,
+                type: 'component',
+                padding: column.padding(item),
+                column,
+              } as SciCellLike);
+            }
+            else if (isTemplate) {
+              return ({
+                value: undefined,
+                template: value,
+                type: 'template',
+                padding: column.padding(item),
+                column,
+              } as SciCellLike);
+            }
+            else if (typeof valueType === 'string') {
+              return ({
+                value: valueSignal,
+                type: 'string',
+                padding: column.padding(item),
+                column,
+              } as SciCellLike);
+            }
+            else if (typeof valueType === 'number') {
+              return ({
+                value: valueSignal,
+                type: 'number',
+                padding: column.padding(item),
+                column,
+              } as SciCellLike);
+            }
+            else {
+              return ({
+                value: valueSignal,
+                type: 'boolean',
+                padding: column.padding(item),
+                column,
+              } as SciCellLike);
+            }
+          }
+          else {
+            return ({
+              value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
+              component: column.type === 'component' ? column.component(item) : undefined,
+              template: column.type === 'template' ? column.template(item) : undefined,
+              type: column.type,
+              padding: column.type !== 'component' && column.type !== 'template' ? true : column.padding,
+              column,
+            } as SciCellLike);
+          }
+        }),
       };
       previousRows.set(id, row);
       return row;

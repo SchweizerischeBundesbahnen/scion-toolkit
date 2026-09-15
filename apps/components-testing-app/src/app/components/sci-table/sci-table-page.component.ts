@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {attributeBinding, partBinding, provideTableRowBinding, SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {attributeBinding, partBinding, provideTableRowBinding, SciCellContext, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -20,6 +20,7 @@ import {HttpClient} from '@angular/common/http';
 import {noop} from 'rxjs';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
+import {SciTableColumnDescriptor} from '../../../../../../projects/scion/components/table/src/table.factory';
 
 @Component({
   selector: 'app-table-page',
@@ -115,7 +116,7 @@ export default class SciTablePageComponent {
         return;
       }
 
-      const column: SciColumnDescriptor = {
+      const column: SciTableColumnDescriptor = {
         name: columnForm.name || undefined,
         label: columnForm.label || undefined,
         width: columnForm.width || undefined,
@@ -167,6 +168,14 @@ export default class SciTablePageComponent {
             template: () => ({
               template: this._customColumnTemplate,
             }),
+          });
+          break;
+        case 'dynamic':
+          table.addColumn({
+            ...column,
+            value: product => product.price,
+            padding: item => item.price > 100,
+            // value: product => Math.random() > .3 ? Math.random() > .5 ? product.price : product.name : product.inStock,
           });
           break;
       }
