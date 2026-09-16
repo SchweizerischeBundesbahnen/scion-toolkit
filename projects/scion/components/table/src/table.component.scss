@@ -60,7 +60,7 @@
         user-select: none;
         display: grid;
         grid-template-columns: subgrid;
-        grid-column: 1 / -1;
+        grid-column: 1/-1;
         grid-auto-rows: var(--sci-table-row-height);
         @container style(--ɵsci-column-header-visible: true) {
           grid-template-rows: minmax(var(--sci-table-row-height), auto); // flexible row height to support header wrapping
@@ -81,7 +81,7 @@
         }
 
         &:empty {
-          display: none;
+          display: none; // do not display header if no columns
         }
       }
 
@@ -94,7 +94,7 @@
         }
         display: grid;
         grid-template-columns: subgrid;
-        grid-column: 1 / -1;
+        grid-column: 1/-1;
         grid-auto-rows: var(--sci-table-row-height);
 
         // TODO Document
@@ -136,7 +136,7 @@
         }
 
         > span.no-rows {
-          grid-column: 1 / -1;
+          grid-column: 1/-1;
           justify-self: center;
           display: grid;
           place-content: center;
@@ -155,7 +155,7 @@
       }
 
       > sci-column-splitters {
-        grid-area: 1 / 1 / -1 / -1; // Overlay should fill the whole table grid.
+        grid-area: 1/1/-1/-1; // Overlay should fill the whole table grid.
         z-index: 1; // required to overlap the table header, allowing resizing columns in the table header
       }
 
