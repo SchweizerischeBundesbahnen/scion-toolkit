@@ -140,7 +140,6 @@ export type SciColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T>
  * Mapped row, used as display state.
  */
 export interface SciRow<T> {
-  index: Signal<number>;
   level: number;
   expanded: WritableSignal<boolean>;
   item?: T;
