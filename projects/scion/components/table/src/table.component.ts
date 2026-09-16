@@ -130,7 +130,9 @@ export class SciTableComponent<T = unknown> {
         const viewport = this._viewport().nativeElement;
         const viewportHeight = this.table().tableViewRef()?.viewportHeight() ?? 0;
         const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
-        const activeRowTop = activeRow.index() * itemHeight;
+        const activeIndex = this.table().rowIndexById().get(this.table().activeRow()?.id) ?? -1;
+
+        const activeRowTop = activeIndex * itemHeight;
         const activeRowBottom = activeRowTop + itemHeight;
         const scrollTop = viewport.scrollTop;
         const scrollBottom = scrollTop + viewportHeight;

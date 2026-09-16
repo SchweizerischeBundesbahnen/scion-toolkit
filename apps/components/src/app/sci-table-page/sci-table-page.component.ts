@@ -220,8 +220,8 @@ export default class SciTablePageComponent {
 
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
-        onCleanup(() => injector.destroy());
         table.set(runInInjectionContext(injector, () => this.createTable({slowDataSource})));
+        onCleanup(() => injector.destroy());
       });
     });
 
