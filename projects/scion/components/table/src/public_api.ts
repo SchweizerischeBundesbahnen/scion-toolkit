@@ -10,8 +10,9 @@
 
 export {table, type SciTableFactoryFn} from './table';
 export {SciTableComponent} from './table.component';
-export {type SciCellContext, type SciTable, type SciTableDescriptor, type SciRowActionFactoryFn, type SciColumnType} from './table.model';
+export {type SciTable, type SciCellContext, type SciTableDescriptor, type SciRowActionFactoryFn, type SciColumnType, provideTableDatasource, provideTreeDatasource, providePageableTableDatasource, providePageableTreeDatasource, SciTreeDatasource, SciPageableTreeDatasource} from './table.model';
+export {ɵSciTable} from './ɵtable.model';
 export {type SciTableRowBinding, classBinding, attributeBinding, partBinding, provideTableRowBinding} from './table-row-binding';
 export {type SciDataLoaderFn, type SciTableResponse, type SciTableRequest, type SciColumnFilter, type SciSortCriterion} from './table-data-source';
-export {type SciTableFactory, type SciColumnDescriptor, type SciStringColumnDescriptor, type SciNumberColumnDescriptor, type SciBooleanColumnDescriptor, type SciComponentColumnDescriptor, type SciTemplateColumnDescriptor} from './table.factory';
+export {type SciTableFactory, type SciTableColumnDescriptor, type SciColumnDescriptor, type SciStringColumnDescriptor, type SciNumberColumnDescriptor, type SciBooleanColumnDescriptor, type SciComponentColumnDescriptor, type SciTemplateColumnDescriptor} from './table.factory';
 export {type SciTableStorage, provideTableStorage} from './table-storage';

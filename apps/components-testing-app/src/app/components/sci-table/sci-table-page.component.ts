@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {attributeBinding, partBinding, provideTableRowBinding, SciCellContext, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
+import {attributeBinding, partBinding, providePageableTableDatasource, provideTableRowBinding, SciCellContext, SciColumnType, SciTable, SciTableColumnDescriptor, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -20,7 +20,6 @@ import {HttpClient} from '@angular/common/http';
 import {noop} from 'rxjs';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
-import {SciTableColumnDescriptor} from '../../../../../../projects/scion/components/table/src/table.factory';
 
 @Component({
   selector: 'app-table-page',
@@ -87,11 +86,11 @@ export default class SciTablePageComponent {
             this._productService.enableHttpLoader();
             return this._productService.products;
           case 'loader':
-            return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: false});
+            return providePageableTableDatasource((request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: false}));
           case 'loader-delayed':
-            return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: true});
+            return providePageableTableDatasource((request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: true}));
           case 'loader-http':
-            return (request: SciTableRequest) => this._httpClient.post<SciTableResponse<Product>>('/sci-table/products', request);
+            return providePageableTableDatasource((request: SciTableRequest) => this._httpClient.post<SciTableResponse<Product>>('/sci-table/products', request));
         }
       })(),
       rowBindings: options.customRowStyling ? [
