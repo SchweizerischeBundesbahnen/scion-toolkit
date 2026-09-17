@@ -23,7 +23,7 @@ export interface TableCacheRow<T> extends SciRow<T> {
   childrenCache: TableCache<T>;
 }
 
-export interface TablePageRequirement<T> {
+export interface TablePage<T> {
   cache: TableCache<T>;
   parent?: TableCacheRow<T>;
   page: number;
@@ -34,10 +34,13 @@ type ID = unknown;
 
 export class TableCache<T> {
   private readonly _pages = signal(new Map<TableCacheKey, TableCacheEntry<T>>());
-  private readonly _totalCount = signal<number | undefined>(undefined);
+  private readonly _directChildrenCount = signal<number | undefined>(undefined);
 
+  /**
+   * Count of all nodes in the tree.
+   */
   public readonly totalCount: Signal<number | undefined> = computed((): number | undefined => {
-    const totalCount = this._totalCount();
+    const totalCount = this._directChildrenCount();
     if (totalCount === undefined) {
       return undefined;
     }
@@ -80,97 +83,52 @@ export class TableCache<T> {
   }
 
   public setTotalCount(totalCount: number): void {
-    this._totalCount.set(totalCount);
+    this._directChildrenCount.set(totalCount);
   }
 
   /**
-   * Traverses the tree to find pages which need to be loaded for the current scroll range.
-   * Required pages are added to the requirements Array.
+   * Traverses the tree to find pages which need to be loaded based on the current scroll range.
    */
-  private internalPageRequirements(indexOffset: number, start: number, end: number, pageSize: number, requirements: TablePageRequirement<T>[], parent?: TableCacheRow<T>): number {
-    const totalCount = this._totalCount();
+  public findPagesToLoad(start: number, end: number, pageSize: number): TablePage<T>[] {
+    const pagesToLoad: TablePage<T>[] = [];
 
-    if (totalCount === undefined) {
-      // Always load root rows, if totalCount is not yet defined.
-      if (!parent || indexOffset < end) {
-        // Load first page.
-        requirements.push({parent, cache: this, page: 0});
+    const findPages = (cache: TableCache<T>, indexOffset: number, parent?: TableCacheRow<T>): number => {
+      const directChildrenCount = cache._directChildrenCount();
+
+      if (directChildrenCount === undefined) {
+        // Always load root rows, if directChildrenCount is not yet defined.
+        if (!parent || indexOffset < end) {
+          // Load first page.
+          pagesToLoad.push({parent, cache, page: 0});
+        }
+        return indexOffset;
       }
-      return indexOffset;
-    }
 
-    const rowsByLocalIndex = this.rowsByLocalIndex();
-    const newPages = new Set<number>();
+      const rowsByLocalIndex = cache.rowsByLocalIndex();
+      const localPagesToLoad = new Set<number>();
 
-    // loop through rows, while not yet reaching the end of the request.
-    for (let localIndex = 0; localIndex < totalCount && indexOffset < end; localIndex++, indexOffset++) {
-      const row = rowsByLocalIndex.get(localIndex);
-      if (!row) {
-        const page = Math.floor(localIndex / pageSize);
-        // Only add pages which are not already in the requirements / newPages.
-        if (indexOffset >= start && !newPages.has(page) && !this.hasPage(page, pageSize)) {
-          requirements.push({parent, cache: this, page});
-          newPages.add(page);
+      // loop through rows, while not yet reaching the end of the request.
+      for (let localIndex = 0; localIndex < directChildrenCount && indexOffset < end; localIndex++, indexOffset++) {
+        const row = rowsByLocalIndex.get(localIndex);
+        if (!row) {
+          const page = Math.floor(localIndex / pageSize);
+          // Only add pages which are not already in the pagesToLoad / localPagesToLoad.
+          if (indexOffset >= start && !localPagesToLoad.has(page)) {
+            pagesToLoad.push({parent, cache, page});
+            localPagesToLoad.add(page);
+          }
+        }
+        else if (row.expanded()) {
+          // Subtract one from new offset, since it's increased in the loop.
+          indexOffset = findPages(row.childrenCache, indexOffset + 1, row) - 1;
         }
       }
-      else if (row.expanded()) {
-        // Subtract one from new offset, since it's increased in the loop.
-        indexOffset = row.childrenCache.internalPageRequirements(indexOffset + 1, start, end, pageSize, requirements, row) - 1;
-      }
-    }
 
-    return indexOffset;
-  }
+      return indexOffset;
+    };
 
-  /**
-   * Finds pages which need to be loaded based on the current scroll range.
-   */
-  public findPagesToLoad(start: number, end: number, pageSize: number): TablePageRequirement<T>[] {
-    const requirements: TablePageRequirement<T>[] = [];
-    this.internalPageRequirements(0, start, end, pageSize, requirements);
-    console.log(start, end, pageSize, requirements);
-    return requirements;
-
-    // const requiredPages = new Map<TableCache<T>, Set<number>>();
-    //
-    // const addRequirement = (cache: TableCache<T>, page: number, parent?: TableCacheRow<T>): void => {
-    //   const pages = requiredPages.get(cache) ?? new Set<number>();
-    //   if (pages.has(page) || cache.hasPage(page, pageSize)) {
-    //     return;
-    //   }
-    //   pages.add(page);
-    //   requiredPages.set(cache, pages);
-    //   requirements.push({cache, parent, page});
-    // };
-    //
-    // const visit = (cache: TableCache<T>, offset: number, parent?: TableCacheRow<T>): number => {
-    //   const totalCount = cache._totalCount();
-    //   if (totalCount === undefined) {
-    //     if (!parent || offset < end) {
-    //       addRequirement(cache, 0, parent);
-    //     }
-    //     return offset;
-    //   }
-    //
-    //   const rowsByLocalIndex = cache.rowsByLocalIndex();
-    //   for (let localIndex = 0; localIndex < totalCount && offset < end; localIndex++, offset++) {
-    //     const row = rowsByLocalIndex.get(localIndex);
-    //     if (!row) {
-    //       if (offset >= start) {
-    //         addRequirement(cache, Math.floor(localIndex / pageSize), parent);
-    //       }
-    //       continue;
-    //     }
-    //
-    //     if (row.expanded()) {
-    //       offset = visit(row.children, offset + 1, row) - 1;
-    //     }
-    //   }
-    //   return offset;
-    // };
-    //
-    // visit(this, 0);
-    // return requirements;
+    findPages(this, 0);
+    return pagesToLoad;
   }
 
   /**
@@ -197,7 +155,7 @@ export class TableCache<T> {
       }
       return new Map();
     });
-    this._totalCount.set(undefined);
+    this._directChildrenCount.set(undefined);
   }
 
   public get values(): Signal<Array<TableCacheEntry<T>>> {
@@ -208,27 +166,27 @@ export class TableCache<T> {
     entry.dispose();
   }
 
-  private projectRows(rowsByIndex: Map<number, SciRow<T>> = new Map<number, SciRow<T>>(), offset: number = 0): {offset: number; rowsByIndex: Map<number, SciRow<T>>} {
-    const totalCount = this._totalCount() ?? 0;
+  private projectRows(rowsByIndex: Map<number, SciRow<T>> = new Map<number, SciRow<T>>(), indexOffset: number = 0): {indexOffset: number; rowsByIndex: Map<number, SciRow<T>>} {
+    const totalCount = this._directChildrenCount() ?? 0;
     const rowsByLocalIndex = this.rowsByLocalIndex();
 
     // Loop over rows with the given offset.
-    for (let localIndex = 0; localIndex < totalCount; localIndex++, offset++) {
+    for (let localIndex = 0; localIndex < totalCount; localIndex++, indexOffset++) {
       const row = rowsByLocalIndex.get(localIndex);
       if (!row) {
         continue;
       }
 
-      rowsByIndex.set(offset, row);
+      rowsByIndex.set(indexOffset, row);
       if (row.expanded()) {
         // `projectRows` adds the child rows directly into the map.
-        const childRows = row.childrenCache.projectRows(rowsByIndex, offset + 1);
+        const childRows = row.childrenCache.projectRows(rowsByIndex, indexOffset + 1);
         // Subtract one from new offset, since it's increased in the loop.
-        offset = childRows.offset - 1;
+        indexOffset = childRows.indexOffset - 1;
       }
     }
 
-    return {rowsByIndex, offset};
+    return {rowsByIndex, indexOffset};
   }
 
   private rowsByLocalIndex(): Map<number, TableCacheRow<T>> {
@@ -237,10 +195,5 @@ export class TableCache<T> {
         page.rows()?.forEach((row, index) => rowsByIndex.set(page.start + index, row));
         return rowsByIndex;
       }, new Map<number, TableCacheRow<T>>());
-  }
-
-  private hasPage(page: number, pageSize: number): boolean {
-    const start = page * pageSize;
-    return this.has(`${start}-${start + pageSize}`);
   }
 }

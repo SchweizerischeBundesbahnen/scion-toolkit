@@ -89,6 +89,6 @@ export class TableCellComponent<T> {
   }
 
   protected toggleChildren(): void {
-    this._table().toggleTreeItem(this.row());
+    this.row().expanded.update(expanded => !expanded);
   }
 }
