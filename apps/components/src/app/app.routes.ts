@@ -101,6 +101,11 @@ export const routes: Routes = [
     data: {internal: false},
   },
   {
+    path: 'sci-tree',
+    loadComponent: () => import('./sci-tree-page/sci-tree-page.component'),
+    data: {internal: false},
+  },
+  {
     path: 'sci-table-alt',
     loadComponent: () => import('./sci-table-page-alt/sci-table-page-alt.component'),
     data: {internal: false},

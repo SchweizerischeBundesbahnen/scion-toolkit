@@ -557,7 +557,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
                 value: undefined,
                 component: value,
                 type: 'component',
-                padding: column.padding(item),
+                // padding: column.padding(item),
+                padding: true,
                 column,
               } as SciCellLike);
             }
@@ -566,7 +567,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
                 value: undefined,
                 template: value,
                 type: 'template',
-                padding: column.padding(item),
+                // padding: column.padding(item),
+                padding: true,
                 column,
               } as SciCellLike);
             }
@@ -574,7 +576,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
               return ({
                 value: valueSignal,
                 type: 'string',
-                padding: column.padding(item),
+                // padding: column.padding(item),
+                padding: true,
                 column,
               } as SciCellLike);
             }
@@ -582,7 +585,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
               return ({
                 value: valueSignal,
                 type: 'number',
-                padding: column.padding(item),
+                // padding: column.padding(item),
+                padding: true,
                 column,
               } as SciCellLike);
             }
@@ -590,7 +594,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
               return ({
                 value: valueSignal,
                 type: 'boolean',
-                padding: column.padding(item),
+                // padding: column.padding(item),
+                padding: true,
                 column,
               } as SciCellLike);
             }
