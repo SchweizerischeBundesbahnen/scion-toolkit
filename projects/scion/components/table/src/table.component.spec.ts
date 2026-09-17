@@ -18,6 +18,7 @@ import {provideTableStorage} from './table-storage';
 import {attributeBinding, classBinding, partBinding, provideTableRowBinding} from './table-row-binding';
 import {SciTableRequest, SciTableResponse} from './table-data-source';
 import {createSciTableComponent} from './testing/testing.util';
+import {providePageableTableDatasource} from './table.model';
 
 fdescribe('Table', () => {
 
@@ -414,7 +415,7 @@ fdescribe('Table', () => {
       it('should filter number column', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
         const {fixture} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addNumberColumn({
           name: 'column:id',
@@ -439,7 +440,7 @@ fdescribe('Table', () => {
       it('should filter string column', async () => {
         const data = signal([{name: 'a'}, {name: 'c'}, {name: 'b'}]);
         const {fixture} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addStringColumn({
           name: 'column:name',
@@ -461,7 +462,7 @@ fdescribe('Table', () => {
       it('should filter boolean column', async () => {
         const data = signal([{active: true}, {active: false}, {active: true}]);
         const {fixture} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addBooleanColumn({
           name: 'column:active',
@@ -483,7 +484,7 @@ fdescribe('Table', () => {
       it('should support filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addStringColumn({
           name: 'column:name',
@@ -506,7 +507,7 @@ fdescribe('Table', () => {
       it('should support global filter with custom filter function', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addStringColumn({
           name: 'column:name',
@@ -531,7 +532,7 @@ fdescribe('Table', () => {
       it('should filter number with filter field', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
         const {fixture} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addNumberColumn({
           name: 'column:id',
@@ -550,7 +551,7 @@ fdescribe('Table', () => {
       it('should ignore invalid number input in filter field', async () => {
         const data = signal([{id: 1}, {id: 3}, {id: 2}]);
         const {fixture} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addNumberColumn({
           name: 'column:id',
@@ -569,7 +570,7 @@ fdescribe('Table', () => {
       it('should trim filter field input', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addStringColumn({
           name: 'column:name',
@@ -588,7 +589,7 @@ fdescribe('Table', () => {
       it('should filter string column case-insensitively', async () => {
         const data = signal([{name: 'Alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture} = createSciTableComponent(() => sciTable({
-          data,
+          datasource: data,
           filterable: true,
         }, table => table.addStringColumn({
           name: 'column:name',
@@ -615,7 +616,7 @@ fdescribe('Table', () => {
       }));
 
       const {fixture} = createSciTableComponent(() => sciTable<number>({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         pageSize: 5,
         bufferSize: 0,
         showHeader: false,
@@ -658,7 +659,7 @@ fdescribe('Table', () => {
       const {fixture} = createSciTableComponent(() => sciTable<number>({
         bufferSize: 3,
         pageSize: 5,
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
@@ -710,7 +711,7 @@ fdescribe('Table', () => {
       const {fixture} = createSciTableComponent(() => sciTable<number>({
         bufferSize: 3,
         pageSize: 50,
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
@@ -757,7 +758,7 @@ fdescribe('Table', () => {
         };
       });
 
-      const {fixture, model} = createSciTableComponent(() => sciTable<number>({data: loader}, table => table
+      const {fixture, model} = createSciTableComponent(() => sciTable<number>({datasource: providePageableTableDatasource(loader)}, table => table
         .addNumberColumn({
           name: 'column:1',
           value: item => item,
@@ -801,7 +802,7 @@ fdescribe('Table', () => {
       });
 
       const {fixture, model} = createSciTableComponent<{id: string; name: string}>(() => sciTable({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         bufferSize: 0,
         pageSize: 20,
       }, table => table
@@ -913,7 +914,7 @@ fdescribe('Table', () => {
       });
 
       const {fixture, model} = createSciTableComponent<{id: string; name: string}>(() => sciTable({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         bufferSize: 0,
         pageSize: 20,
       }, table => table
@@ -967,7 +968,7 @@ fdescribe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent<number>(() => sciTable({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         bufferSize: 0,
         pageSize: 20,
       }, table => table.addNumberColumn({
@@ -1023,7 +1024,7 @@ fdescribe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent<number>(() => sciTable({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         bufferSize: 0,
         pageSize: 20,
       }, table => table.addNumberColumn({
@@ -1062,7 +1063,7 @@ fdescribe('Table', () => {
         }))),
       );
 
-      const {fixture} = createSciTableComponent(() => sciTable<string>({data: loader}, table => table
+      const {fixture} = createSciTableComponent(() => sciTable<string>({datasource: providePageableTableDatasource(loader)}, table => table
         .addStringColumn({
           name: 'column:1',
           value: item => item,
@@ -1106,7 +1107,7 @@ fdescribe('Table', () => {
       const {fixture} = createSciTableComponent(() => sciTable<number>({
         pageSize: 10,
         bufferSize: 0,
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
@@ -1153,7 +1154,7 @@ fdescribe('Table', () => {
       }));
 
       const {fixture, model} = createSciTableComponent(() => sciTable<number>({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         showHeader: false,
         bufferSize: 0,
       }, table => table.addNumberColumn(item => item)), {
@@ -1181,7 +1182,7 @@ fdescribe('Table', () => {
         items: generateData(request.pageSize, i => request.start + i),
       }));
 
-      const {fixture, model} = createSciTableComponent(() => sciTable<number>({data: loader}, table => table
+      const {fixture, model} = createSciTableComponent(() => sciTable<number>({datasource: providePageableTableDatasource(loader)}, table => table
         .addNumberColumn(item => item),
       ), {height: '500px'});
 
@@ -1203,7 +1204,7 @@ fdescribe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent(() => sciTable<number>({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         bufferSize: 0,
         pageSize: 50,
         filterable: true,
@@ -1252,7 +1253,7 @@ fdescribe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent(() => sciTable<number>({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         bufferSize: 1,
         pageSize: 50,
         filterable: true,
@@ -1296,7 +1297,7 @@ fdescribe('Table', () => {
       const loader = jasmine.createSpy().and.callFake((): Observable<SciTableResponse<number>> => NEVER);
 
       const {fixture} = createSciTableComponent(() => sciTable<number>({
-        data: loader,
+        datasource: providePageableTableDatasource(loader),
         showHeader: false,
       }, table => table.addNumberColumn(item => item)), {
         height: '300px',
@@ -1357,7 +1358,7 @@ fdescribe('Table', () => {
       const onSelect = jasmine.createSpy();
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
       const {fixture} = createSciTableComponent(() => sciTable({
-        data,
+        datasource: data,
         rowActions: (item, toolbar) => {
           toolbar.addToolbarButton({
             icon: 'delete',
@@ -1386,7 +1387,7 @@ fdescribe('Table', () => {
       const data = signal(generateData(100, i => `Row ${i}`));
 
       const {fixture} = createSciTableComponent(() => sciTable({
-        data,
+        datasource: data,
         filterable: true,
         rowBindings: [
           attributeBinding((_item, index) => ({'data-spec-index': index})),
@@ -1448,7 +1449,7 @@ fdescribe('Table', () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
 
       const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
-        data,
+        datasource: data,
         rowBindings: [
           attributeBinding(item => ({'data-spec-id': item.id})),
         ],
@@ -1471,7 +1472,7 @@ fdescribe('Table', () => {
       ]);
 
       const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
-        data,
+        datasource: data,
         rowBindings: [
           attributeBinding(item => attributes.get(item.id)),
         ],
@@ -1497,7 +1498,7 @@ fdescribe('Table', () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
 
       const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
-        data,
+        datasource: data,
         rowBindings: [
           classBinding(item => `spec-${item.id}`),
         ],
@@ -1520,7 +1521,7 @@ fdescribe('Table', () => {
       ]);
 
       const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
-        data,
+        datasource: data,
         rowBindings: [
           classBinding(item => cssClasses.get(item.id)),
         ],
@@ -1546,7 +1547,7 @@ fdescribe('Table', () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
 
       const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
-        data,
+        datasource: data,
         rowBindings: [
           partBinding(item => `row:${item.id}`),
         ],
@@ -1569,7 +1570,7 @@ fdescribe('Table', () => {
       ]);
 
       const {fixture} = createSciTableComponent<{id: number}>(() => sciTable({
-        data,
+        datasource: data,
         rowBindings: [
           partBinding(item => partAttributes.get(item.id)),
         ],

@@ -29,6 +29,9 @@
     align-items: center;
 
     > button.toggle-children {
+      --sci-button-background-color-hover: transparent;
+      --sci-button-background-color-active: transparent;
+
       @include common.icon-button-element-states() {
         border-radius: var(--sci-corner);
         background-color: var(--ɵsci-table-row-action-background-color);

@@ -20,7 +20,7 @@ export function tree<T>(descriptor: SciTreeDescriptor<T>, options?: {injector?: 
 
   const injector = options?.injector ?? inject(Injector);
   const tableDescriptor: SciTableDescriptor<T> = {
-    data: signal([]),
+    datasource: signal([]),
     filterable: !!descriptor.filterable,
     sortable: !!descriptor.sortable,
     resizable: false,

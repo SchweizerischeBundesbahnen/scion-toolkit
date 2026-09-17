@@ -2,7 +2,7 @@ import {SciRowActionFactoryFn, SciTableRowBinding} from '@scion/components/table
 import {SciPageableTreeDatasource, SciTreeDatasource} from './table.model';
 
 export interface SciTreeDescriptor<T> {
-  datasource: SciTreeDatasource | SciPageableTreeDatasource;
+  datasource: SciTreeDatasource<T> | SciPageableTreeDatasource<T>;
   // label: (item: unknown) => string | SciComponentDescriptor | SciTemplateDescriptor;
   label: (item: unknown) => string;
   header?: string;

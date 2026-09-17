@@ -78,7 +78,7 @@ export default class SciTablePageComponent {
 
   private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
     return table({
-      data: (() => {
+      datasource: (() => {
         switch (options.datasource) {
           case 'array':
             return this._productService.products;

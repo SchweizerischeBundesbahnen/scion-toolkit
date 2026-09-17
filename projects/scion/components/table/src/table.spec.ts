@@ -13,8 +13,9 @@ import {effect, Injector, signal} from '@angular/core';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {createSciTableComponent} from './testing/testing.util';
 import {table} from './table';
+import {providePageableTableDatasource} from './table.model';
 
-fdescribe('Table Factory', () => {
+describe('Table Factory', () => {
   describe('validation', () => {
     it('should throw error if not called in injection context', () => {
       expect(() => table(signal([]), table => table)).toThrowError(/NG0203:/i);
@@ -28,7 +29,7 @@ fdescribe('Table Factory', () => {
     });
 
     it('should not allow loader function with custom sort', done => {
-      createSciTableComponent(() => table({data: () => ({totalCount: 0, items: []})}, table => {
+      createSciTableComponent(() => table({datasource: providePageableTableDatasource(() => ({totalCount: 0, items: []}))}, table => {
         expect(() => table.addStringColumn({
           value: () => 'test',
           sortable: {comparator: () => 0},
@@ -38,7 +39,7 @@ fdescribe('Table Factory', () => {
     });
 
     it('should not allow loader function with custom filter', done => {
-      createSciTableComponent(() => table({data: () => ({totalCount: 0, items: []})}, table => {
+      createSciTableComponent(() => table({datasource: providePageableTableDatasource(() => ({totalCount: 0, items: []}))}, table => {
         expect(() => table.addStringColumn({
           value: () => 'test',
           filterable: {matcher: () => true},

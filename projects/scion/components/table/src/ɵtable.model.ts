@@ -17,7 +17,7 @@ import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciColumnDescriptorLike} from './table.factory';
 import {coerceSignal} from '@scion/components/common';
 import {arrayDataSource} from './ɵarray-data-source';
-import {TableCache, TableCacheEntry, TableCacheRow, TablePageRequirement} from './table.cache';
+import {TableCache, TableCacheEntry, TableCacheRow} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {concat, fromEvent, of, skip, switchMap, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBinding} from './table-row-binding';
@@ -433,18 +433,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this._selectedItems.update(updateFn);
   }
 
-  public toggleTreeItem(row: SciRow<T>): void {
-    const cachedRow = this._cache.rowsById().get(row.id);
-    if (!cachedRow) {
-      return;
-    }
-
-    cachedRow.expanded.update(expanded => !expanded);
-    // if (cachedRow.expanded()) {
-    //   this.loadChildPage(cachedRow, 0);
-    // }
-  }
-
   private loadChildPage(parent: TableCacheRow<T>, page: number): void {
     if (!this._childDataLoaderFn) {
       return;
@@ -481,24 +469,25 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         return;
       }
 
-      const requirements = this._cache.findPagesToLoad(scrollRange.start, scrollRange.end, this.pageSize);
-      untracked(() => requirements.forEach(requirement => this.loadRequiredPage(requirement, {sortCriteria, columnFilters, tableFilter})));
-    });
-  }
+      // Add 1 to end of the range to make sure children of the last row are loaded if it's expanded.
+      const pages = this._cache.findPagesToLoad(scrollRange.start, scrollRange.end + 1, this.pageSize);
+      untracked(() => pages.forEach(page => {
+        if (page.parent) {
+          this.loadChildPage(page.parent, page.page);
+          return;
+        }
 
-  private loadRequiredPage(requirement: TablePageRequirement<T>, criteria: {sortCriteria: SciSortCriterion[]; columnFilters: SciColumnFilter[]; tableFilter?: string}): void {
-    if (requirement.parent) {
-      this.loadChildPage(requirement.parent, requirement.page);
-      return;
-    }
-
-    this.loadPage({
-      cache: requirement.cache,
-      loader: this._dataLoaderFn,
-      pageSize: this.pageSize,
-      page: requirement.page,
-      level: 0,
-      ...criteria,
+        this.loadPage({
+          cache: page.cache,
+          loader: this._dataLoaderFn,
+          pageSize: this.pageSize,
+          page: page.page,
+          level: 0,
+          sortCriteria,
+          columnFilters,
+          tableFilter,
+        });
+      }));
     });
   }
 
