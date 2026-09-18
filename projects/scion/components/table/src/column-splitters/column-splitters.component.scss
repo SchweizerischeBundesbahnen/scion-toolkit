@@ -19,7 +19,6 @@
     justify-self: end;
     pointer-events: auto;
 
-
     // Render splitter handles as column header dividers (splitters still span full viewport height).
     @container style(--ɵsci-table-header-column-divider-visible: true) {
       --sci-splitter-cross-axis-start: .5em;
