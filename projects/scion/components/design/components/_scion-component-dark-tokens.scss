@@ -103,7 +103,7 @@ $sci-table: (
   --sci-table-row-height: 2em,
   --sci-table-row-background-color-hover: var(--sci-color-gray-100),
   --sci-table-row-background-color-selected: color-mix(in srgb, var(--sci-color-accent) 35%, var(--sci-color-gray-100)),
-  --sci-table-row-border-radius: var(--sci-corner),
+  --sci-table-row-border-radius: var(--sci-corner-small),
   --sci-table-row-outline-color: var(--sci-color-accent),
   --sci-table-row-outline-width: var(--sci-table-border-size),
   --sci-table-row-outline-style: dotted,
