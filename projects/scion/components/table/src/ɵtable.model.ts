@@ -593,8 +593,11 @@ export const ɵSCI_TABLE = new InjectionToken<Signal<ɵSciTable>>('ɵSciTable');
 export interface SciTableViewRef {
   viewport: HTMLElement;
   viewportHeight: Signal<number>;
+  viewportWidth: Signal<number>;
   viewportClientHeight: Signal<number>;
+  viewportClientWidth: Signal<number>;
   headerHeight: Signal<number>;
+  cellPadding: Signal<number>;
   itemHeight: Signal<number>;
   scrollToTop: () => void;
 }

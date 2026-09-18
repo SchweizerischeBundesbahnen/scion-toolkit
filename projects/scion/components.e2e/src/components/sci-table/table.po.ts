@@ -32,7 +32,7 @@ export class TablePO {
   public readonly noRowsMessage: Locator;
 
   constructor(public readonly locator: Locator) {
-    this.viewport = this.locator.locator('div.e2e-viewport');
+    this.viewport = this.locator.locator('sci-table-viewport');
     this.grid = this.locator.locator('sci-table-grid');
     this.header = new HeaderPO(this.locator.locator('sci-table-header'));
     this.headers = this.locator.locator('sci-column-header button.e2e-sort');
@@ -118,11 +118,18 @@ export class TablePO {
 
 export class ColumnSplitterPO {
 
+  public readonly handle: Locator;
+
   constructor(public readonly locator: Locator, private _table: TablePO) {
+    this.handle = locator.locator('div.e2e-handle');
   }
 
   public async bounds(): Promise<DomRect> {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
+  }
+
+  public async handleBounds(): Promise<DomRect> {
+    return waitUntilStable(async () => fromRect(await this.handle.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
 
   /**
@@ -137,19 +144,29 @@ export class ColumnSplitterPO {
   }
 
   /**
-   * Starts dragging the splitter.
+   * Hovers the splitter.
    *
-   * Use `options` to control where to grab the splitter.
-   *
-   * Use the returned drag handle to continue the drag operation.
+   * Use `options` to control where to hover the splitter. Defaults to `table-body`.
    */
-  public async startDrag(options?: {location: 'table-header' | 'table-body'}): Promise<DrageHandlePO> {
+  public async hover(options?: {location?: 'table-header' | 'table-body'}): Promise<{x: number; y: number}> {
     const splitterBounds = await this.bounds();
     const x = splitterBounds.left;
     const y = Math.floor(fromRect(await (options?.location === 'table-header' ? this._table.header.locator : this._table.viewport).boundingBox()).vcenter);
-    const page = this.locator.page();
+    await this.locator.page().mouse.move(x, y, {steps: 1});
+    return {x, y};
+  }
 
-    await page.mouse.move(x, y, {steps: 1});
+  /**
+   * Starts dragging the splitter.
+   *
+   * Use `options` to control where to grab the splitter. Defaults to `table-body`.
+   *
+   * Use the returned drag handle to continue the drag operation.
+   */
+  public async startDrag(options?: {location?: 'table-header' | 'table-body'}): Promise<DrageHandlePO> {
+    const {x, y} = await this.hover({location: options?.location});
+
+    const page = this.locator.page();
     await page.mouse.down();
 
     return new DrageHandlePO(page.mouse, {x, y});
@@ -157,6 +174,40 @@ export class ColumnSplitterPO {
 
   public async dblclick(): Promise<void> {
     await this.locator.dblclick();
+  }
+
+  /**
+   * Determines the current display mode of the splitter.
+   *
+   * @returns `column-header-divider` if rendered as a column header divider while spanning the full table viewport height for resizing the column.
+   * @returns `column-splitter` if rendered as a column splitter spanning the full table viewport height.
+   * @returns `hidden` if the splitter is not visible.
+   */
+  public async getDisplayMode(): Promise<'column-header-divider' | 'column-splitter' | 'hidden'> {
+    if (!await this.handle.isVisible()) {
+      return 'hidden';
+    }
+
+    // Ensure splitter spans the full table viewport height.
+    const splitterBounds = await this.bounds();
+    const tableViewportBounds = fromRect(await this._table.viewport.boundingBox());
+    if (tableViewportBounds.height !== splitterBounds.height) {
+      throw Error('[PageObjectError] Splitter expected to span full table viewport height.');
+    }
+
+    // Check if rendered as column header divider.
+    const tableHeaderBounds = await this._table.header.locator.isVisible() ? await this._table.header.bounds() : null;
+    const splitterHandleBounds = await this.handleBounds();
+    if (tableHeaderBounds && splitterHandleBounds.top > tableHeaderBounds.top && splitterHandleBounds.bottom < tableHeaderBounds.bottom) {
+      return 'column-header-divider';
+    }
+
+    // Check if rendered as full column splitter.
+    if (splitterHandleBounds.height >= tableViewportBounds.height - (tableHeaderBounds?.height ?? 0)) {
+      return 'column-splitter';
+    }
+
+    throw Error('[PageObjectError] Cannot determine column splitter display mode.');
   }
 }
 

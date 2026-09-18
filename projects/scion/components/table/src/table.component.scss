@@ -6,15 +6,14 @@
 
   @include sci-scrollbar.scrollbar-hide-when-inactive();
 
-  > div.viewport {
+  > sci-table-viewport {
+    display: block; // required to set height
     position: relative; // stacking context for the active row outline to not overflow the viewport and align with the active row if scrolled
     height: 100%;
     overflow: auto;
     scrollbar-width: none;
     isolation: isolate; // Scope z-indices to this component so subsequent DOM elements naturally render on top of the table.
     box-sizing: border-box; // must not be set on sci-table level for the application to control box sizing if setting a table border.
-    container-name: sci-table-viewport;
-    container-type: scroll-state;
     anchor-name: --sci-table-viewport;
 
     // Indicate if table header is visible.
@@ -41,7 +40,7 @@
         min-content // table header
         1fr; // table body
       width: min-content; // Fill viewport by default, shrinking columns to minimums before overflowing horizontally.
-      min-width: 100%;
+      min-width: 100%; // Never shrink below viewport width to distribute free space to flex columns.
       min-height: 100%;
 
       @container not style(--ɵsci-table-header-visible: true) {
@@ -76,7 +75,7 @@
         }
 
         // Prevent hovering header while resizing.
-        @container (style(--ɵsci-table-resizing: true)) {
+        @container style(--ɵsci-table-resizing: true) {
           pointer-events: none;
         }
 
@@ -149,8 +148,8 @@
           white-space: nowrap;
           color: var(--sci-color-text-subtle);
 
-          // Stick message to the viewport if the viewport overflows horizontally.
-          @container sci-table-viewport scroll-state(scrollable: inline) {
+          // Stick message to the viewport if the viewport overflows horizontally. Do not use container scroll-state CSS query as not supported by Firefox.
+          @container style(--ɵsci-table-viewport-client-width > --ɵsci-table-viewport-width) {
             position: sticky;
             left: 50%;
             right: 50%;
@@ -161,7 +160,10 @@
 
       > sci-column-splitters {
         grid-area: 1/1/-1/-1; // Overlay should fill the whole table grid.
-        z-index: 1; // required to overlap the table header, allowing resizing columns in the table header
+        z-index: 1; // Required to overlap the table header, allowing resizing columns in the table header.
+        position: sticky; // Stick column header dividers to the top of the viewport.
+        top: 0;
+        max-height: var(--ɵsci-table-viewport-height); // Required to stick to the top of the viewport. Uses `max-height` instead of `height` so the table can shrink with its content.
       }
 
       > sci-virtual-columns {

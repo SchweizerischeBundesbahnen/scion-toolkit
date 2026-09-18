@@ -29,7 +29,7 @@ export class TablePO {
   }
 
   public get viewport(): HTMLElement {
-    return this.element.querySelector('div.e2e-viewport')!;
+    return this.element.querySelector('sci-table-viewport')!;
   }
 
   public get rows(): RowPO[] {

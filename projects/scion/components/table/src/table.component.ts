@@ -20,6 +20,7 @@ import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
 import {SciTextPipe} from '@scion/components/text';
 import {SciThrobberComponent} from '@scion/components/throbber';
+import {SciTableViewportComponent} from './table-viewport.component';
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
@@ -39,6 +40,7 @@ import {NgTemplateOutlet} from '@angular/common';
     '[style.--ɵsci-table-resizing]': 'table().resizing() ? `true` : null',
   },
   imports: [
+    SciTableViewportComponent,
     SciTableHeaderComponent,
     SciTableGridComponent,
     SciTableBodyComponent,
@@ -76,14 +78,14 @@ export class SciTableComponent<T = unknown> {
    */
   public readonly primaryAction = output<T>();
 
-  private readonly _viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
+  private readonly _viewport = viewChild.required(SciTableViewportComponent, {read: ElementRef});
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
-  private readonly _header = viewChild(SciTableHeaderComponent, {read: ElementRef});
+  private readonly _tableHeader = viewChild(SciTableHeaderComponent, {read: ElementRef});
+  private readonly _tableBody = viewChild.required(SciTableBodyComponent, {read: ElementRef});
   private readonly _itemSizeSyntheticElement = viewChild.required<ElementRef<HTMLElement>>('item_size_synthetic_element');
   private readonly _cellPaddingSyntheticElement = viewChild.required<ElementRef<HTMLElement>>('cell_padding_synthetic_element');
 
   protected readonly rows = viewChildren(SciTableRowComponent);
-  protected readonly cellPadding = dimension(this._cellPaddingSyntheticElement);
 
   constructor() {
     this.connectToModel();
@@ -97,20 +99,25 @@ export class SciTableComponent<T = unknown> {
   private connectToModel(): void {
     const viewportDimension = dimension(this._viewport);
     const viewportClientDimension = dimension(this._viewportClient);
-    const headerDimension = dimension(this._header);
+    const tableHeaderDimension = dimension(this._tableHeader);
+    const tableBodyDimension = dimension(this._tableBody);
+    const cellPadding = dimension(this._cellPaddingSyntheticElement);
     const itemSizeDimension = dimension(this._itemSizeSyntheticElement);
 
     effect(onCleanup => {
       const name = this.name();
       const table = this.table();
-      const viewport = this._viewport().nativeElement;
+      const viewport = this._viewport().nativeElement as HTMLElement;
 
       untracked(() => {
         table.connect(name, {
           viewport: viewport,
-          viewportHeight: computed(() => viewportDimension().clientHeight - (headerDimension()?.offsetHeight ?? 0)),
+          viewportHeight: computed(() => viewportDimension().clientHeight - (tableHeaderDimension()?.offsetHeight ?? 0)),
+          viewportWidth: computed(() => viewportDimension().clientWidth),
           viewportClientHeight: computed(() => viewportClientDimension().offsetHeight),
-          headerHeight: computed(() => headerDimension()?.offsetHeight ?? 0),
+          viewportClientWidth: computed(() => tableBodyDimension().offsetWidth), // Use `table-body` instead of `table-grid` because `table-grid` has `min-width: 100%`, thus never shrinking below viewport width.
+          cellPadding: computed(() => cellPadding().clientWidth),
+          headerHeight: computed(() => tableHeaderDimension()?.offsetHeight ?? 0),
           itemHeight: computed(() => itemSizeDimension().offsetHeight),
           scrollToTop: () => viewport.scrollTo({top: 0}),
         });
@@ -127,7 +134,7 @@ export class SciTableComponent<T = unknown> {
       }
 
       untracked(() => {
-        const viewport = this._viewport().nativeElement;
+        const viewport = this._viewport().nativeElement as HTMLElement;
         const viewportHeight = this.table().tableViewRef()?.viewportHeight() ?? 0;
         const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
         const activeRowTop = activeRow.index * itemHeight;

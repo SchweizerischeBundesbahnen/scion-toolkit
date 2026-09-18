@@ -884,7 +884,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       const splitter = table.column({name: 'column:name'}).splitter;
-      const dragHandle = await splitter.startDrag({location: 'table-body'});
+      const dragHandle = await splitter.startDrag();
 
       await dragHandle.dragTo({deltaX: 100});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
@@ -912,7 +912,7 @@ test.describe.only('sci-table', () => {
       await tablePage.showHeader(false);
       await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
       const splitter = table.column({name: 'column:name'}).splitter;
-      const dragHandle = await splitter.startDrag({location: 'table-body'});
+      const dragHandle = await splitter.startDrag();
 
       await dragHandle.dragTo({deltaX: 100});
       await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
@@ -1231,28 +1231,131 @@ test.describe.only('sci-table', () => {
 
   test.describe('Splitters', () => {
 
-    test('should display splitter on hover', async ({page}) => {
+    test('should display splitter on hover (table with column headers)', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.showHeader(true);
+      await tablePage.setFilterable(false);
+
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
 
-      const scrollbarBounds = await table.verticalScrollbar.bounds();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
 
-      // Move mouse beside slitter splitter of column 1.
-      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
-      await page.mouse.move(columnSplitterBounds.hcenter + 10, scrollbarBounds.vcenter);
+    test('should display splitter on hover (table with column headers and filters)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
 
-      // Expect splitter not to be visible.
-      await expect(table.column({name: 'column:1'}).splitter.locator).toHaveCSS('opacity', '0');
+      await tablePage.showHeader(true);
+      await tablePage.setFilterable(true);
 
-      // Move mouse over splitter of column 1.
-      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
 
-      // Expect splitter to be visible.
-      await expect(table.column({name: 'column:1'}).splitter.locator).toHaveCSS('opacity', '1');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should display splitter on hover (table with column filters)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(false);
+      await tablePage.setFilterable(true);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should display splitter on hover (table without column headers and filters)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(false);
+      await tablePage.setFilterable(false);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should hide column header dividers if configured', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setCssVariable('--sci-table-header-column-divider', 'hidden');
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+      await table.column({name: 'column:2'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-splitter');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+      await table.column({name: 'column:3'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should stick column header dividers to the top', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setRowCount(1_000);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      // Expect column header dividers to stick to the top.
+      await expect(async () => {
+        const tableHeaderBounds = await table.header.bounds();
+        const splitterHandleBounds = await table.column({name: 'column:1'}).splitter.handleBounds();
+        expect(splitterHandleBounds.top).toBeGreaterThan(tableHeaderBounds.top);
+        expect(splitterHandleBounds.bottom).toBeLessThan(tableHeaderBounds.bottom);
+      }).toPass();
+
+      // Scroll to the end.
+      await table.scrollTo({y: 'end'});
+
+      // Expect column header dividers to stick to the top.
+      await expect(async () => {
+        const tableHeaderBounds = await table.header.bounds();
+        const splitterHandleBounds = await table.column({name: 'column:1'}).splitter.handleBounds();
+        expect(splitterHandleBounds.top).toBeGreaterThan(tableHeaderBounds.top);
+        expect(splitterHandleBounds.bottom).toBeLessThan(tableHeaderBounds.bottom);
+      }).toPass();
     });
 
     /**
@@ -1265,29 +1368,32 @@ test.describe.only('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
-
-      const scrollbarBounds = await table.verticalScrollbar.bounds();
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
 
       // Click scrollbar thumb.
       await table.verticalScrollbar.thumb.locator.hover();
       await page.mouse.down();
 
-      // Move mouse over splitter of column 1.
-      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
-      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+      // Hover splitter of column 1.
+      await table.column({name: 'column:1'}).splitter.hover();
 
       // Wait some time to simulate no active scrolling, but still not completed scrolling.
       await page.waitForTimeout(1000);
 
       // Expect splitter not to be visible.
-      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
 
-      // Move mouse over splitter of column 2.
-      const columnSplitterBounds2 = await table.column({name: 'column:2'}).splitter.bounds();
-      await page.mouse.move(columnSplitterBounds2.hcenter, scrollbarBounds.vcenter);
+      // Hover splitter of column 2.
+      await table.column({name: 'column:2'}).splitter.hover();
 
       // Expect splitter not to be visible.
-      await expect(table.column({name: 'column:2'}).splitter.locator).not.toBeVisible();
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+
+      // Hover splitter of column 3.
+      await table.column({name: 'column:3'}).splitter.hover();
+
+      // Expect splitter not to be visible.
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden'); // hidden because last column
     });
 
     test('should not display splitter when scrolling via scrollbar', async ({page}) => {
@@ -1304,24 +1410,23 @@ test.describe.only('sci-table', () => {
       await table.verticalScrollbar.thumb.locator.hover();
       await page.mouse.down();
 
-      // Move mouse over splitter of column 1.
-      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
-      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+      // Hover splitter of column 1.
+      await table.column({name: 'column:1'}).splitter.hover();
 
       // Expect splitter not to be visible.
-      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
 
       // Scroll viewport to the end.
-      void page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.bottom); // do not await scrolling
+      void page.mouse.move(scrollbarBounds.hcenter, scrollbarBounds.bottom); // do not await scrolling
 
       // Expect splitter not to be visible.
-      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
 
       // Expect viewport to be scrolled.
       await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
 
       // Expect splitter not to be visible.
-      await expect(table.column({name: 'column:1'}).splitter.locator).not.toBeVisible();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
     });
 
     test('should not display splitter when hovering row actions', async ({page}) => {
@@ -1339,7 +1444,7 @@ test.describe.only('sci-table', () => {
       // Expect row actions to display.
       await expect(table.row({nth: 0}).rowActions).toBeVisible();
 
-      // Move mouse over splitter of column 1.
+      // Hover splitter of column 1.
       const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
       const actionBounds = await table.row({nth: 0}).rowActionsBounds();
       await page.mouse.move(columnSplitterBounds.hcenter, actionBounds.vcenter);
@@ -1348,7 +1453,69 @@ test.describe.only('sci-table', () => {
       await page.waitForTimeout(500);
 
       // Expect column splitter not to be visible.
-      await expect(table.column({name: 'column:1'}).splitter.locator).toHaveCSS('opacity', '0');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+    });
+
+    test('should hide last splitter if at table edge', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:3', type: 'string', width: '200px'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+      await test.step('Hover last column splitter', async () => {
+        await table.column({name: 'column:3'}).splitter.hover();
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+      });
+
+      await test.step('Move last column into viewport by shrinking column 1', async () => {
+        await table.column({name: 'column:1'}).splitter.drag({deltaX: -100});
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+
+        await table.column({name: 'column:3'}).splitter.hover();
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      });
+
+      await test.step('Move last column to viewport edge by growing column 1', async () => {
+        await table.column({name: 'column:1'}).splitter.drag({deltaX: 100});
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+        await expectTable(table).not.toHaveHorizontalOverflow();
+
+        await table.column({name: 'column:3'}).splitter.hover();
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+      });
+
+      await test.step('Move last column out of viewport', async () => {
+        await table.column({name: 'column:1'}).splitter.drag({deltaX: 100});
+        await expectTable(table).toHaveHorizontalOverflow();
+
+        await table.scrollTo({x: 'end'});
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+        await table.column({name: 'column:3'}).splitter.hover();
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+      });
     });
   });
 
@@ -4006,14 +4173,14 @@ test.describe.only('sci-table', () => {
       await expect(table.horizontalScrollbar.locator).toBeVisible();
 
       // Expect column splitter not to be visible.
-      await expect(columnSplitter.locator).toHaveCSS('opacity', '0');
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-header-divider');
 
       // Move mouse over column splitter.
       const tableBounds = await table.bounds();
       await page.mouse.move(columnSplitterBounds.hcenter, tableBounds.vcenter);
 
       // Expect column splitter to be visible.
-      await expect(columnSplitter.locator).toHaveCSS('opacity', '1');
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-splitter');
 
       // Capture scrollbar thumb height in non-hovered state.
       const thumbHeight = await table.horizontalScrollbar.thumb.height();
@@ -4023,7 +4190,7 @@ test.describe.only('sci-table', () => {
       await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
 
       // Expect scrollbar to overlap the column splitter.
-      await expect(columnSplitter.locator).toHaveCSS('opacity', '0');
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-header-divider');
       await expect.poll(() => table.horizontalScrollbar.thumb.height()).toBeGreaterThan(thumbHeight);
 
       // Move mouse to the start of the scrollbar.
@@ -4033,7 +4200,7 @@ test.describe.only('sci-table', () => {
       await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
 
       // Expect scrollbar to overlap the column splitter.
-      await expect(columnSplitter.locator).toHaveCSS('opacity', '0');
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-header-divider');
       await expect.poll(() => table.horizontalScrollbar.thumb.height()).toBeGreaterThan(thumbHeight);
 
       // Scroll the viewport.
@@ -4068,7 +4235,7 @@ test.describe.only('sci-table', () => {
       await page.mouse.move(columnSplitterBounds.hcenter, tableBounds.vcenter);
 
       // Expect column splitter to be visible.
-      await expect(columnSplitter.locator).toHaveCSS('opacity', '1');
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-splitter');
 
       // Capture scrollbar thumb height in non-hovered state.
       const thumbHeight = await table.horizontalScrollbar.thumb.height();
@@ -4081,7 +4248,7 @@ test.describe.only('sci-table', () => {
       await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
 
       // Expect splitter to be visible and scrollbar not hovered.
-      await expect(columnSplitter.locator).toHaveCSS('opacity', '1');
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-splitter');
       await expect.poll(() => table.horizontalScrollbar.thumb.height()).toEqual(thumbHeight);
 
       // Move mouse 10px to the right along the scrollbar.
@@ -4171,19 +4338,15 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
       await tablePage.addColumn({name: 'column:2', type: 'string', width: '1200px'});
 
-      const splitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
-      const viewportBounds = await table.bounds();
-
       await expectTable(table).toHaveVerticalOverflow();
       await expectTable(table).toHaveHorizontalOverflow();
 
-      await page.mouse.move(splitterBounds.hcenter, viewportBounds.vcenter);
-      await expect(table.column({name: 'column:1'}).splitter.locator).toBeVisible();
-
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
       await page.mouse.wheel(0, 250);
 
       await expect.poll(() => table.scrollTop()).toBe(250);
-      await expect(table.column({name: 'column:1'}).splitter.locator).toBeVisible();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
       await expect.poll(() => table.scrollLeft()).toBe(0);
     });
 
@@ -4520,7 +4683,7 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(100);
     });
 
-    test('should grow to breakpoint', async ({page}) => {
+    test('should grow to breakpoint and shrink to content height', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -4543,17 +4706,34 @@ test.describe.only('sci-table', () => {
 
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
 
+        // Grow to 1 row.
         await tablePage.setRowCount(1);
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
         await expectTable(table).not.toHaveVerticalOverflow();
 
+        // Grow to 10 rows.
         await tablePage.setRowCount(10);
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
         await expectTable(table).not.toHaveVerticalOverflow();
 
+        // Grow to 100 rows.
         await tablePage.setRowCount(100);
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(3000);
         await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 0 rows.
+        await tablePage.setRowCount(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
       });
 
       await test.step('Table with breakpoint at 600px', async () => {
@@ -4567,17 +4747,35 @@ test.describe.only('sci-table', () => {
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
         await expectTable(table).not.toHaveVerticalOverflow();
 
+        // Grow to 1 row.
         await tablePage.setRowCount(1);
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
         await expectTable(table).not.toHaveVerticalOverflow();
 
+        // Grow to 10 rows.
         await tablePage.setRowCount(10);
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
         await expectTable(table).not.toHaveVerticalOverflow();
 
+        // Grow to 100 rows.
         await tablePage.setRowCount(100);
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
         await expectTable(table).toHaveVerticalOverflow();
+
+        // Shrink to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 0 rows.
+        await tablePage.setRowCount(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expectTable(table).not.toHaveVerticalOverflow();
       });
 
       await test.step('Table with breakpoint in parent container at 500px', async () => {
@@ -4592,17 +4790,35 @@ test.describe.only('sci-table', () => {
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
         await expectTable(table).not.toHaveVerticalOverflow();
 
+        // Grow to 1 row.
         await tablePage.setRowCount(1);
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
         await expectTable(table).not.toHaveVerticalOverflow();
 
+        // Grow to 10 rows.
         await tablePage.setRowCount(10);
         await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
         await expectTable(table).not.toHaveVerticalOverflow();
 
+        // Grow to 100 rows.
         await tablePage.setRowCount(100);
         await expect.poll(() => table.bounds({box: 'border'}).then(bounds => bounds.height)).toEqual(500);
         await expectTable(table).toHaveVerticalOverflow();
+
+        // Shrink to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 0 rows.
+        await tablePage.setRowCount(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expectTable(table).not.toHaveVerticalOverflow();
       });
     });
 

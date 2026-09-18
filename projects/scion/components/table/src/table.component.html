@@ -1,7 +1,7 @@
 @let table = this.table();
 
-<div class="viewport e2e-viewport" #viewport>
-  <sci-table-grid [style.--ɵsci-table-cell-padding-inline]="`${cellPadding().clientWidth}px`">
+<sci-table-viewport #viewport>
+  <sci-table-grid>
     <!-- Table header -->
     @if (table.showHeader() || table.filterable()) {
       <ng-container *ngTemplateOutlet="table_header_template"/>
@@ -28,11 +28,11 @@
     <!-- Render an invisible virtual column per grid column to read current widths and set minimum widths. -->
     <sci-virtual-columns/>
   </sci-table-grid>
-</div>
+</sci-table-viewport>
 
 <!-- Scrollbars -->
-<sci-scrollbar direction="hscroll" [viewport]="viewport"/>
-<sci-scrollbar direction="vscroll" [viewport]="viewport"/>
+<sci-scrollbar direction="hscroll" [viewport]="viewport.host"/>
+<sci-scrollbar direction="vscroll" [viewport]="viewport.host"/>
 
 @if (table.loading()) {
   <sci-throbber type="spinner"/>
