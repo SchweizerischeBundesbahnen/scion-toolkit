@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, debounced, effect, inject, input, signal} from '@angular/core';
+import {Component, debounced, effect, ElementRef, inject, input, signal, viewChild} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SciColumnLike} from '../table.model';
 import {ɵSCI_TABLE} from '../ɵtable.model';
@@ -30,11 +30,20 @@ export class ColumnFilterComponent<T> {
   public readonly column = input.required<SciColumnLike<T>>();
 
   protected readonly filter = signal<string | boolean | number | null>(null);
+  protected readonly input = viewChild.required<ElementRef<HTMLElement>>('input');
 
   private readonly _table = inject(ɵSCI_TABLE);
 
   constructor() {
     this.bindToModel();
+  }
+
+  protected onFilterClick(): void {
+    this.input().nativeElement.focus();
+  }
+
+  protected onReset(): void {
+    this.filter.set(null);
   }
 
   private bindToModel(): void {
@@ -60,10 +69,6 @@ export class ColumnFilterComponent<T> {
         table.filter(text, {columnName: column.name});
       }
     });
-  }
-
-  protected reset(): void {
-    this.filter.set(null);
   }
 }
 

@@ -12,12 +12,14 @@ export class ColumnPO {
   public readonly columnFilter: Locator;
   public readonly cells: Locator;
   public readonly sortButton: Locator;
+  public readonly filterIcon: Locator;
 
   constructor(public table: TablePO, public locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
     this.locator = table.locator.locator('sci-virtual-columns sci-column').locator(selectByColumn(locateBy));
     this.columnHeader = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
     this.columnFilter = table.locator.locator('sci-column-filter').locator(selectByColumn(locateBy));
     this.sortButton = this.columnHeader.locator('button.e2e-sort');
+    this.filterIcon = this.columnFilter.locator('sci-icon.e2e-filter');
     this.splitter = new ColumnSplitterPO(table.locator.locator('sci-column-splitters sci-splitter').locator(selectByColumn(locateBy)), table);
     this.cells = table.rows.locator('sci-table-cell').locator(selectByColumn(locateBy));
   }

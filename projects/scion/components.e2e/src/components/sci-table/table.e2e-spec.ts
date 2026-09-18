@@ -846,6 +846,18 @@ test.describe.only('sci-table', () => {
       await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
       await expectRow(table.row({nth: 0})).toBeSelected();
     });
+
+    test('should focus filter field when clicking filter icon', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.column({name: 'column:name'}).filterIcon.click();
+      await expect(table.column({name: 'column:name'}).columnFilter.locator('input')).toBeFocused();
+    });
   });
 
   test.describe('Resizing', () => {
