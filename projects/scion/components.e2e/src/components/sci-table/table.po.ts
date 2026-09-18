@@ -28,6 +28,7 @@ export class TablePO {
   public readonly verticalScrollbar: ScrollbarPO;
   public readonly horizontalScrollbar: ScrollbarPO;
   public readonly splitters: Locator;
+  public readonly activeRowOutline: Locator;
   public readonly noRowsMessage: Locator;
 
   constructor(public readonly locator: Locator) {
@@ -42,18 +43,22 @@ export class TablePO {
     this.verticalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="vscroll"]'));
     this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
     this.splitters = this.locator.locator('sci-column-splitters');
+    this.activeRowOutline = this.locator.locator('div.e2e-active-row-outline');
     this.noRowsMessage = this.locator.locator('span.e2e-no-rows');
   }
 
   /**
    * Locates a row by its dataset index (`index`) or rendered DOM position (`nth`), both zero-based.
    */
-  public row(locateBy: OneOf<{index: number; nth: number}>): RowPO {
+  public row(locateBy: OneOf<{index: number; nth: number; active: true}>): RowPO {
     if (locateBy.index !== undefined) {
       return new RowPO(this, this.rows.locator(`:scope[data-row-index="${locateBy.index}"]`));
     }
-    else {
+    if (locateBy.nth !== undefined) {
       return new RowPO(this, this.rows.nth(locateBy.nth));
+    }
+    else {
+      return new RowPO(this, this.rows.locator(`:scope[data-active]`));
     }
   }
 

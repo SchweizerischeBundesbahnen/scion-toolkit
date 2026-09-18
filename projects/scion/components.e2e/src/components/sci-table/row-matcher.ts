@@ -4,7 +4,7 @@ import {RowPO} from './row.po';
 export function expectRow(row: RowPO): RowMatcher {
   return {
     async toBeActive(): Promise<void> {
-      await expect(row.locator).toContainClass('active');
+      await expect(row.locator).toHaveAttribute('data-active');
     },
     async toBeAttached(): Promise<void> {
       await expect(row.locator).toBeAttached();
@@ -17,7 +17,7 @@ export function expectRow(row: RowPO): RowMatcher {
         await expect(row.locator).not.toContainClass('selected');
       },
       async toBeActive(): Promise<void> {
-        await expect(row.locator).not.toContainClass('active');
+        await expect(row.locator).not.toHaveAttribute('data-active');
       },
     },
   };

@@ -26,7 +26,7 @@ import {UUID} from '@scion/toolkit/uuid';
     SciToolbarComponent,
   ],
   host: {
-    '[class.active]': 'isActive()',
+    '[attr.data-active]': `isActive() ? '' : null`,
     '[class.selected]': 'isSelected()',
     '[class.loading]': 'loading()',
     '[class.hover]': 'isHovered()',

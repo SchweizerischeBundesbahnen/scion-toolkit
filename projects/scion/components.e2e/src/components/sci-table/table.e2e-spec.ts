@@ -3709,6 +3709,63 @@ test.describe.only('sci-table', () => {
     });
   });
 
+  test.describe('Active Row', () => {
+
+    test('should remove outline of active row if scrolled out of viewport', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setHeight(300);
+      await provideHttpDatasource(page, generateData(1000, i => ({id: i, name: `${i}`})), {datasource: 'array-http'});
+      await tablePage.addColumn({name: 'column:index', type: 'string'});
+
+      // Activate last row.
+      await table.scrollTo({y: 'end'});
+
+      await table.row({index: 999}).click();
+      await expect(tablePage.activeItemId).toHaveText('999');
+      await expect(table.row({active: true}).locator).toBeVisible();
+      await expect(table.activeRowOutline).toBeVisible();
+
+      // Scroll to the top.
+      await table.scrollTo({y: 'start'});
+      await expect(tablePage.activeItemId).toHaveText('999');
+      await expect(table.row({active: true}).locator).not.toBeAttached();
+      await expect(table.activeRowOutline).not.toBeVisible();
+
+      // Scroll to the bottom.
+      await table.scrollTo({y: 'end'});
+      await expect(tablePage.activeItemId).toHaveText('999');
+      await expect(table.row({active: true}).locator).toBeVisible();
+      await expect(table.activeRowOutline).toBeVisible();
+
+      // Scroll to the top.
+      await table.scrollTo({y: 'start'});
+      await expect(tablePage.activeItemId).toHaveText('999');
+      await expect(table.row({active: true}).locator).not.toBeAttached();
+      await expect(table.activeRowOutline).not.toBeVisible();
+    });
+
+    test('should render outline around active row', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setHeight(300);
+      await provideHttpDatasource(page, generateData(1000, i => ({id: i, name: `${i}`})), {datasource: 'array-http'});
+      await tablePage.addColumn({name: 'column:index', type: 'string'});
+
+      await table.row({index: 5}).click();
+      await expect(tablePage.activeItemId).toHaveText('5');
+      await expect.poll(() => table.activeRowOutline.boundingBox()).toEqual(await table.row({index: 5}).locator.boundingBox());
+
+      await table.row({index: 8}).click();
+      await expect(tablePage.activeItemId).toHaveText('8');
+      await expect.poll(() => table.activeRowOutline.boundingBox()).toEqual(await table.row({index: 8}).locator.boundingBox());
+    });
+  });
+
   test.describe('Styling', () => {
 
     test('should conditionally style row', async ({page}) => {

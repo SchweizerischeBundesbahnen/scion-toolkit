@@ -97,7 +97,7 @@
         grid-column: 1/-1;
         grid-auto-rows: var(--sci-table-row-height);
 
-        // TODO Document
+        // TODO [dwie] Add documentation that padding is used for virtuall scrolling -> not margin, not transform
         // Set padding (not margin) to contribute to the "real" height
         padding-top: var(--ɵsci-table-virtual-scroll-offset-top);
         padding-bottom: var(--ɵsci-table-virtual-scroll-offset-bottom);
@@ -120,7 +120,7 @@
         }
 
         // Position active row outline element over the active row.
-        > sci-table-row.active {
+        > sci-table-row[data-active] {
           anchor-name: --sci-table-active-row;
         }
 
@@ -133,6 +133,11 @@
           border: var(--sci-table-row-outline-width) var(--sci-table-row-outline-style) var(--sci-table-row-outline-color);
           border-radius: var(--sci-table-row-border-radius);
           pointer-events: none;
+        }
+
+        // Hide active row outline if scrolled out of viewport.
+        &:not(:has(sci-table-row[data-active])) > div.active-row-outline {
+          display: none;
         }
 
         > span.no-rows {
