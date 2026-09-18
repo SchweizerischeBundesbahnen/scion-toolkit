@@ -41,8 +41,10 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
  * - --sci-splitter-size: Sets the size of the splitter along the main axis.
  * - --sci-splitter-size-hover: Sets the size of the splitter along the main axis when hovering it.
  * - --sci-splitter-touch-target-size: Sets the touch target size to move the splitter (accessibility).
- * - --sci-splitter-cross-axis-size: Sets the splitter size along the cross axis.
- * - --sci-splitter-border-radius: Sets the border radius of the splitter.
+ * - --sci-splitter-cross-axis-size: Sets the splitter size along the cross-axis. Defaults to `100%`.
+ * - --sci-splitter-cross-axis-start: Sets the splitter's start position. Defaults to `auto`.
+ * - --sci-splitter-cross-axis-end: Sets the splitter's end position. Defaults to `auto`. Requires `--sci-splitter-cross-axis-size: auto`.
+ * - --sci-splitter-border-radius: Sets the border radius of the splitter. Defaults to 0.
  * - --sci-splitter-opacity-active: Sets the opacity of the splitter while the user moves the splitter.
  * - --sci-splitter-opacity-hover: Sets the opacity of the splitter when hovering it.
  *

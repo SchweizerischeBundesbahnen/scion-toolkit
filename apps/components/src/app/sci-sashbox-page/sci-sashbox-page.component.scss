@@ -6,22 +6,20 @@
     flex: auto;
     display: grid;
 
-    > sci-sashbox {
-      section.sash {
-        display: grid;
-        place-content: center;
+    > sci-sashbox section.sash {
+      display: grid;
+      place-content: center;
 
-        &.sash-1 {
-          background-color: #ff4d26;
-        }
+      &.sash-1 {
+        background-color: #ff4d26;
+      }
 
-        &.sash-2 {
-          background-color: #307eb7;
-        }
+      &.sash-2 {
+        background-color: #307eb7;
+      }
 
-        &.sash-3 {
-          background-color: #ffa21a;
-        }
+      &.sash-3 {
+        background-color: #ffa21a;
       }
     }
   }

@@ -56,8 +56,10 @@ import {clamp} from '@scion/toolkit/util';
  * - --sci-sashbox-splitter-size: Sets the size of the splitter along the main axis.
  * - --sci-sashbox-splitter-size-hover: Sets the size of the splitter along the main axis when hovering it.
  * - --sci-sashbox-splitter-touch-target-size: Sets the touch target size to move the splitter (accessibility).
- * - --sci-sashbox-splitter-cross-axis-size: Sets the splitter size along the cross axis.
- * - --sci-sashbox-splitter-border-radius: Sets the border radius of the splitter.
+ * - --sci-sashbox-splitter-cross-axis-size: Sets the splitter size along the cross-axis. Defaults to `100%`.
+ * - --sci-sashbox-splitter-cross-axis-start: Sets the splitter's start position. Defaults to `auto`.
+ * - --sci-sashbox-splitter-cross-axis-end: Sets the splitter's end position. Defaults to `auto`. Requires `--sci-sashbox-splitter-cross-axis-size: auto`.
+ * - --sci-sashbox-splitter-border-radius: Sets the border radius of the splitter. Defaults to 0.
  * - --sci-sashbox-splitter-opacity-active: Sets the opacity of the splitter while the user moves the splitter.
  * - --sci-sashbox-splitter-opacity-hover: Sets the opacity of the splitter when hovering it.
  *
