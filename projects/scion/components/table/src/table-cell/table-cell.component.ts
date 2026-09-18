@@ -88,7 +88,8 @@ export class TableCellComponent<T> {
     });
   }
 
-  protected toggleChildren(): void {
+  protected toggleChildren(event: PointerEvent): void {
+    event.stopPropagation(); // Stop propagation to not select or activate row.
     this.row().expanded.update(expanded => !expanded);
   }
 }
