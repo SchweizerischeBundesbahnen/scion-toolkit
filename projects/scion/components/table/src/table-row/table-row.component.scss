@@ -34,7 +34,8 @@
 
   > sci-toolbar.row-actions {
     position: sticky;
-    right: var(--ɵsci-table-cell-padding-inline); // prevent hiding vertical scrollbar
+    right: 0;
+    transform: translateX(calc(-1 * var(--ɵsci-table-cell-padding-inline))); // Prevent hiding vertical scrollbar. Uses `translateX` instead of `right` to maintain the padding on horizontal overflow.
     justify-self: end;
     align-self: center;
     border-radius: var(--sci-corner);
