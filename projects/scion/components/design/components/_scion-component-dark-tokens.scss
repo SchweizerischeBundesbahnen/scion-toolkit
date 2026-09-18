@@ -112,7 +112,7 @@ $sci-table: (
   --sci-table-cell-padding-inline: .5em,
   --sci-table-header-cursor: var(--sci-button-cursor),
   --sci-table-header-background-color: var(--sci-color-background-primary),
-  --sci-table-header-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-table-header-background-color-hover: var(--sci-table-row-background-color-hover),
   --sci-table-header-font-family: inherit,
   --sci-table-header-font-size: 1em,
   --sci-table-header-font-weight: 700,
