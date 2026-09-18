@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
-import {attributeBinding, provideTableRowBinding, provideTreeDatasource} from '@scion/components/table';
+import {attributeBinding, provideTableRowBinding} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -18,7 +18,7 @@ import {Product, ProductService} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
-import {SciTree, SciTreeComponent, SciTreeNodeContext, tree} from '@scion/components/tree';
+import {provideTreeDatasource, SciTree, SciTreeComponent, SciTreeNodeContext, tree} from '@scion/components/tree';
 import {noop} from 'rxjs';
 
 @Component({

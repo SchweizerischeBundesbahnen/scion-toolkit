@@ -9,5 +9,7 @@
  */
 
 export {tree} from './tree';
-export {type SciTree, type SciTreeDescriptor, type SciTreeNodeContext} from './tree.model';
 export {SciTreeComponent} from './tree.component';
+export {type SciTree, type SciTreeDescriptor, type SciTreeNodeContext, provideTreeDatasource, providePageableTreeDatasource} from './tree.model';
+
+export {type ChildProvider, type PageableChildProvider} from '../../table/src/public_api';

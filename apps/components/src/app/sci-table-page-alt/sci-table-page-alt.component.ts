@@ -8,12 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, inject, Injector, signal} from '@angular/core';
-import {SciTableComponent, SciTableDescriptor, table} from '@scion/components/table';
+import {provideHierarchicalTableDatasource, SciTableComponent, SciTableDescriptor, table} from '@scion/components/table';
 import {companies, Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
-import {provideTreeDatasource} from '../../../../../projects/scion/components/table/src/table.model';
 
 const data = signal(new Array(companies.length).fill(0).map((_, i) => ({
   ...companies[i % companies.length]!,
@@ -90,7 +89,7 @@ export default class SciTablePageComponent {
   };
 
   protected table = table({
-    datasource: provideTreeDatasource(computed(() => data().filter(item => item.parent === undefined)), {
+    datasource: provideHierarchicalTableDatasource(computed(() => data().filter(item => item.parent === undefined)), {
       getChildren: item => {
         console.log(item);
         return data().filter(i => i.parent === item.code);

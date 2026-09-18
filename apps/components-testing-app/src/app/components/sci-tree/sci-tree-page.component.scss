@@ -1,6 +1,6 @@
 :host {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 1em;
   height: var(--tree-page-height);
 

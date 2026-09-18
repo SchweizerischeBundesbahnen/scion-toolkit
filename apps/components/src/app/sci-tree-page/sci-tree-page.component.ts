@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, runInInjectionContext, Signal, signal, untracked} from '@angular/core';
-import {provideTreeDatasource} from '@scion/components/table';
-import {SciTree, SciTreeComponent, tree} from '@scion/components/tree';
+import {provideHierarchicalTableDatasource} from '@scion/components/table';
+import {provideTreeDatasource, SciTree, SciTreeComponent, tree} from '@scion/components/tree';
 import {Company} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField} from '@angular/forms/signals';

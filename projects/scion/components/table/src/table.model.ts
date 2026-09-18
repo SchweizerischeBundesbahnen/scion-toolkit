@@ -20,7 +20,7 @@ export type SciColumnType = 'string' | 'number' | 'boolean' | 'component' | 'tem
 export type SciRowActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;
 
 export interface SciTableDescriptor<T> {
-  datasource: Signal<T[]> | SciTableDatasource<T> | SciPageableTableDatasource<T> | SciTreeDatasource<T> | SciPageableTreeDatasource<T>;
+  datasource: Signal<T[]> | SciTableDatasource<T> | SciPageableTableDatasource<T> | SciHierarchicalTableDatasource<T> | SciPageableHierarchicalTableDatasource<T>;
   sortable?: boolean;
   resizable?: boolean;
   filterable?: boolean;
@@ -201,7 +201,7 @@ export class SciTableDatasource<T> {
   }
 }
 
-export class SciTreeDatasource<T> {
+export class SciHierarchicalTableDatasource<T> {
 
   constructor(public root: Signal<T[]>, public children: ChildProvider<T>) {
   }
@@ -213,7 +213,7 @@ export class SciPageableTableDatasource<T> {
   }
 }
 
-export class SciPageableTreeDatasource<T> {
+export class SciPageableHierarchicalTableDatasource<T> {
 
   constructor(public root: SciDataLoaderFn<T>, public children: PageableChildProvider<T>) {
   }
@@ -223,16 +223,16 @@ export function provideTableDatasource<T>(data: Signal<T[]>): SciTableDatasource
   return new SciTableDatasource(data);
 }
 
-export function provideTreeDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciTreeDatasource<T> {
-  return new SciTreeDatasource(root, children);
+export function provideHierarchicalTableDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciHierarchicalTableDatasource<T> {
+  return new SciHierarchicalTableDatasource(root, children);
 }
 
 export function providePageableTableDatasource<T>(loader: SciDataLoaderFn<T>): SciPageableTableDatasource<T> {
   return new SciPageableTableDatasource(loader);
 }
 
-export function providePageableTreeDatasource<T>(loader: SciDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableTreeDatasource<T> {
-  return new SciPageableTreeDatasource(loader, children);
+export function providePageableHierarchicalTableDatasource<T>(loader: SciDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableHierarchicalTableDatasource<T> {
+  return new SciPageableHierarchicalTableDatasource(loader, children);
 }
 
 export interface ChildProvider<T = unknown> {

@@ -10,7 +10,7 @@
 
 import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
-import {ChildProvider, PageableChildProvider, SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciPageableTableDatasource, SciPageableTreeDatasource, SciRow, SciRowActionFactoryFn, SciTable, SciTableDatasource, SciTableDescriptor, SciTreeDatasource} from './table.model';
+import {ChildProvider, PageableChildProvider, SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciPageableTableDatasource, SciPageableHierarchicalTableDatasource, SciRow, SciRowActionFactoryFn, SciTable, SciTableDatasource, SciTableDescriptor, SciHierarchicalTableDatasource} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {MaybeAsync, rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
@@ -126,7 +126,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     else if (descriptor.datasource instanceof SciPageableTableDatasource) {
       this._dataLoaderFn = descriptor.datasource.data;
     }
-    else if (descriptor.datasource instanceof SciTreeDatasource) {
+    else if (descriptor.datasource instanceof SciHierarchicalTableDatasource) {
       this._dataLoaderFn = arrayDataSource(descriptor.datasource.root, this.columns);
       const childProvider: ChildProvider<T> = descriptor.datasource.children;
       this._childProvider = childProvider;
@@ -138,7 +138,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         };
       };
     }
-    else if (descriptor.datasource instanceof SciPageableTreeDatasource) {
+    else if (descriptor.datasource instanceof SciPageableHierarchicalTableDatasource) {
       this._dataLoaderFn = descriptor.datasource.root;
       const childProvider: PageableChildProvider<T> = descriptor.datasource.children;
       this._childProvider = childProvider;
