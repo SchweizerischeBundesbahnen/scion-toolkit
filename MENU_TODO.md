@@ -1,9 +1,9 @@
 1. Before publish:
    - Change JSDelivr URL in '_scion-icon-font.scss' and 'angular.json'; See TODO [FINAL]  
      - From:
-       https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/
-     - To:
        https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/592/
+     - To:
+       https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/
 
 
 

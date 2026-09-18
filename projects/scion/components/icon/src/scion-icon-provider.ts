@@ -18,37 +18,11 @@ import {SciComponentDescriptor} from '@scion/components/common';
  * Register this provider as the last icon provider, enabling replacement of built-in SCION icons.
  */
 export const scionIconProvider: SciIconProviderFn = (icon: string): SciComponentDescriptor | undefined => {
-  const ligature = scionIcons[icon];
+  const ligature = icon.startsWith('scion.') ? icon.substring('scion.'.length) : undefined;
   if (ligature) {
     return {component: SciInternalIconComponent, bindings: [inputBinding('ligature', () => ligature)]};
   }
   return undefined;
-};
-
-/**
- * Maps icons to ligatures of the SCION icon font.
- */
-const scionIcons: {[icon: string]: string} = {
-  'scion.add': 'add',
-  'scion.checkmark': 'checkmark',
-  'scion.chevron_down': 'chevron_down',
-  'scion.chevron_left': 'chevron_left',
-  'scion.chevron_right': 'chevron_right',
-  'scion.chevron_up': 'chevron_up',
-  'scion.clear': 'clear',
-  'scion.close': 'close',
-  'scion.collapse_all': 'collapse_all',
-  'scion.delete': 'delete',
-  'scion.dirty': 'dirty',
-  'scion.edit': 'edit',
-  'scion.expand_all': 'expand_all',
-  'scion.filter': 'filter',
-  'scion.minimize': 'minimize',
-  'scion.more_horizontal': 'more_horizontal',
-  'scion.more_vertical': 'more_vertical',
-  'scion.pin': 'pin',
-  'scion.remove': 'remove',
-  'scion.search': 'search',
 };
 
 /**

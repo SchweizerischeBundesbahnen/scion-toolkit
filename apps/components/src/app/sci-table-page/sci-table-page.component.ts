@@ -184,7 +184,7 @@ export default class SciTablePageComponent {
             })
             .addMenuItem({
               label: 'Duplicate',
-              icon: 'content_copy',
+              icon: 'scion.duplicate',
               onSelect: () => companyService.addCompany(company),
             }),
           )

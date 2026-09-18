@@ -126,9 +126,7 @@
         }
       }
     } @empty {
-      <!-- TODO [Angular 23] Replace with optional chaining operator once the Angular compiler no longer logs the NG8107 false-positive warning. -->
-      <!-- @let message = filter?.notFoundMessage?.() ?? '%scion.components.no_items.message'; -->
-      @let message = (filter && filter.notFoundMessage?.()) ?? '%scion.components.no_items.message';
+      @let message = filter?.notFoundMessage?.() ?? '%scion.components.no_items.message';
       <div class="message no-items e2e-no-items">{{(message | sciText)()}}</div>
     }
   </ng-template>

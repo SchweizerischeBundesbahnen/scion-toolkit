@@ -38,8 +38,8 @@ export default class SciMenuPageComponent {
     const moveTo = signal<string | undefined>(undefined);
 
     contributeMenu('menu:contextmenu', menu => menu
-      .addMenuItem({icon: 'content_copy', label: 'Copy', onSelect: () => console.log('Copy')})
-      .addMenuItem({icon: 'content_paste', label: 'Paste', onSelect: () => console.log('Paste')}),
+      .addMenuItem({icon: 'scion.copy', label: 'Copy', onSelect: () => console.log('Copy')})
+      .addMenuItem({icon: 'scion.paste', label: 'Paste', onSelect: () => console.log('Paste')}),
     );
 
     contributeMenu('menu:contextmenu', menu => menu
@@ -51,13 +51,13 @@ export default class SciMenuPageComponent {
           onSelect: () => console.log('Cut'),
         })
         .addMenuItem({
-          icon: 'content_copy',
+          icon: 'scion.copy',
           label: 'Copy',
           accelerator: {ctrl: true, key: 'C'},
           onSelect: () => console.log('Copy'),
         })
         .addMenuItem({
-          icon: 'content_paste',
+          icon: 'scion.paste',
           label: 'Paste',
           accelerator: {ctrl: true, key: 'V'},
           onSelect: () => console.log('Paste'),

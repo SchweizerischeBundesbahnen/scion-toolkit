@@ -109,6 +109,10 @@
       --ɵsci-menu-item-hover: true;
     }
 
+    > sci-icon {
+      --sci-icon-size: calc(.875 * var(--sci-icon-size));
+    }
+
     > div.content {
       display: flex;
       gap: var(--ɵsci-menu-item-gap-inline);
@@ -275,6 +279,11 @@
 
     &.menu > div.content > sci-icon.chevron {
       transform: translateX(var(--ɵsci-menu-item-chevron-x-offset)); // shift submenu chevron slightly to the right for better visual alignment
+      --sci-icon-size: calc(.875 * var(--sci-icon-size));
+    }
+
+    &.menu-item.checked > sci-icon:first-child {
+      --sci-icon-size: calc(.875 * var(--sci-icon-size));
     }
 
     // Ensure icon component has the same size as regular icons.
