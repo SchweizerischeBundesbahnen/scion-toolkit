@@ -11,16 +11,33 @@
     pointer-events: none;
   }
 
-  &.hover {
+  &[data-hovered] {
     background-color: var(--sci-table-row-background-color-hover);
   }
 
-  &.selected {
+  &[data-selected] {
     background-color: var(--sci-table-row-background-color-selected);
     --ɵsci-table-row-selected: true;
   }
 
-  &.loading {
+  // Render round corners on hovered row unless selected.
+  &[data-hovered]:not([data-selected]) {
+    border-radius: var(--sci-table-row-border-radius);
+  }
+
+  // Render round top corners at the start of a block selection.
+  &:is(:first-child, :not([data-selected]) + sci-table-row)[data-selected] {
+    border-top-left-radius: var(--sci-table-row-border-radius);
+    border-top-right-radius: var(--sci-table-row-border-radius);
+  }
+
+  // Render round bottom corners at the end of a block selection.
+  &[data-selected]:not(:has(+ sci-table-row[data-selected])) {
+    border-bottom-left-radius: var(--sci-table-row-border-radius);
+    border-bottom-right-radius: var(--sci-table-row-border-radius);
+  }
+
+  &:has(> div.skeleton) {
     pointer-events: none;
     align-items: center;
 

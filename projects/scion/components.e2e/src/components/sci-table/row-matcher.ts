@@ -10,11 +10,11 @@ export function expectRow(row: RowPO): RowMatcher {
       await expect(row.locator).toBeAttached();
     },
     async toBeSelected(): Promise<void> {
-      await expect(row.locator).toContainClass('selected');
+      await expect(row.locator).toHaveAttribute('data-selected');
     },
     not: {
       async toBeSelected(): Promise<void> {
-        await expect(row.locator).not.toContainClass('selected');
+        await expect(row.locator).not.toHaveAttribute('data-selected');
       },
       async toBeActive(): Promise<void> {
         await expect(row.locator).not.toHaveAttribute('data-active');

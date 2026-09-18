@@ -143,6 +143,10 @@ export interface SciRow<T> {
   id?: unknown;
   cells?: SciCellLike[];
   bindings?: SciRowBindings;
+  loading: boolean;
+  active: Signal<boolean>;
+  selected: Signal<boolean>;
+  hovered: Signal<boolean>;
 }
 
 export interface SciStringCell {

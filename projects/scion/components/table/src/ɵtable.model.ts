@@ -159,8 +159,18 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       const rowCount = scrollRange.end - scrollRange.start;
 
       // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
-      return untracked(() => Array.from({length: rowCount}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? {index: i}));
+      return untracked(() => Array.from({length: rowCount}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? createSyntheticRow(i)));
     });
+
+    function createSyntheticRow(index: number): SciRow<T> {
+      return {
+        index,
+        loading: true,
+        active: signal(false).asReadonly(),
+        selected: signal(false).asReadonly(),
+        hovered: signal(false).asReadonly(),
+      };
+    }
   }
 
   /**
@@ -468,10 +478,17 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
   private mapItemsToRow(items: T[], columns: SciColumnLike<T>[], pageStart: number): SciRow<T>[] {
     return items.map((item, i) => {
-      return ({
-        id: this.trackBy(item),
-        index: pageStart + i,
-        item: item,
+      const id = this.trackBy(item);
+      const index = pageStart + i;
+
+      return {
+        id,
+        index,
+        item,
+        loading: false,
+        active: computed(() => item === this.activeItem()),
+        selected: computed(() => this.selectedIds().has(id)),
+        hovered: computed(() => this.hoveredRow()?.index === index),
         bindings: coerceTableRowBindings(this._rowBindings ?? [], item, pageStart + i),
         cells: columns.map(column => ({
           value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
@@ -480,7 +497,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           type: column.type,
           column,
         } as SciCellLike)),
-      });
+      };
     });
   }
 

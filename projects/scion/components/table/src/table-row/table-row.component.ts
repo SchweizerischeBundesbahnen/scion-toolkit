@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, inject, input, output, viewChild, viewChildren} from '@angular/core';
+import {Component, inject, input, output, viewChild} from '@angular/core';
 import {SciRow} from '../table.model';
 import {TableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
@@ -26,68 +26,58 @@ import {UUID} from '@scion/toolkit/uuid';
     SciToolbarComponent,
   ],
   host: {
-    '[attr.data-active]': `isActive() ? '' : null`,
-    '[class.selected]': 'isSelected()',
-    '[class.loading]': 'loading()',
-    '[class.hover]': 'isHovered()',
+    '[attr.data-active]': `row().active() ? '' : null`,
+    '[attr.data-selected]': `row().selected() ? '' : null`,
+    '[attr.data-hovered]': `row().hovered() ? '' : null`,
     '[class]': 'row().bindings?.cssClass?.()',
     '(click)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick()',
     '(keydown.enter)': 'onRowEnter()',
-    '(mouseenter)': 'onMouseEnter()',
-    '(mouseleave)': 'onMouseLeave($event)',
+    '(mouseenter)': 'onRowMouseEnter()',
+    '(mouseleave)': 'onRowMouseLeave($event)',
   },
 })
 export class SciTableRowComponent<T> {
 
   public readonly row = input.required<SciRow<T>>();
-
   public readonly primaryAction = output<void>();
 
-  private readonly _selectionService = inject(TableSelectionService);
   protected readonly table = inject(ɵSCI_TABLE);
-  protected readonly cells = viewChildren(TableCellComponent);
-
-  protected readonly item = computed(() => this.row().item);
-  protected readonly id = computed(() => this.row().id);
-  protected readonly loading = computed(() => this.item() === undefined); // Rows are initialized with an undefined item, before data is loaded
-  protected readonly isActive = computed(() => this.item() !== undefined && this.item() === this.table().activeItem());
-  protected readonly isSelected = computed(() => this.table().selectedIds().has(this.id()));
-  protected readonly isHovered = computed(() => this.table().hoveredRow() === this.row());
   protected readonly rowActionToolbar = viewChild(SciToolbarComponent);
-
   protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
+
+  private readonly _selectionService = inject(TableSelectionService);
 
   constructor() {
     this.contributeRowActions();
   }
 
   protected onRowEnter(): void {
-    if (this.loading()) {
+    if (this.row().loading) {
       return;
     }
     this.primaryAction.emit();
   }
 
   protected onRowClick(event: PointerEvent): void {
-    if (this.loading()) {
+    if (this.row().loading) {
       return;
     }
     void this._selectionService.onRowClick(this.row().index, event);
   }
 
   protected onRowDblClick(): void {
-    if (this.loading()) {
+    if (this.row().loading) {
       return;
     }
     this.primaryAction.emit();
   }
 
-  protected onMouseEnter(): void {
+  protected onRowMouseEnter(): void {
     this.table().hoveredIndex.set(this.row().index);
   }
 
-  protected onMouseLeave(event: MouseEvent): void {
+  protected onRowMouseLeave(event: MouseEvent): void {
     const next = event.relatedTarget;
     // Do not unset hovered row when hovering a column resize splitter.
     if (next instanceof Element && next.closest(TABLE_SPLITTERS_SELECTOR)) {
@@ -99,7 +89,7 @@ export class SciTableRowComponent<T> {
 
   protected onActionToolbarClick(event: PointerEvent): void {
     event.stopPropagation(); // prevent selecting the row
-    this.table().activeItem.set(this.item());
+    this.table().activeItem.set(this.row().item);
   }
 
   private contributeRowActions(): void {

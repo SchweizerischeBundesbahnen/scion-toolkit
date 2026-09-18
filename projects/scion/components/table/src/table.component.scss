@@ -80,28 +80,11 @@
 
         > sci-table-row {
           grid-column: 1/-1;
-        }
 
-        // Render round top corners at the start of a block selection.
-        > sci-table-row:is(:first-child, :not(.selected) + sci-table-row).selected {
-          border-top-left-radius: var(--sci-table-row-border-radius);
-          border-top-right-radius: var(--sci-table-row-border-radius);
-        }
-
-        // Render round bottom corners at the end of a block selection.
-        > sci-table-row.selected:not(:has(+ sci-table-row.selected)) {
-          border-bottom-left-radius: var(--sci-table-row-border-radius);
-          border-bottom-right-radius: var(--sci-table-row-border-radius);
-        }
-
-        // Render round corners on hovered row unless selected.
-        sci-table-row.hover:not(.selected) {
-          border-radius: var(--sci-table-row-border-radius);
-        }
-
-        // Position active row outline element over the active row.
-        > sci-table-row[data-active] {
-          anchor-name: --sci-table-active-row;
+          // Position active row outline element over the active row.
+          &[data-active] {
+            anchor-name: --sci-table-active-row;
+          }
         }
 
         > div.active-row-outline {
@@ -179,8 +162,8 @@
   > sci-throbber {
     --sci-throbber-size: 1.5em;
     position: absolute;
-    top: 0.25em;
-    right: 0.25em;
+    top: calc(anchor(--sci-table-viewport top) + .25em);
+    right: calc(anchor(--sci-table-viewport right) + .25em);
   }
 
   > div.synthetic {

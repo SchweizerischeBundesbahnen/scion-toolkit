@@ -23,7 +23,7 @@ import {SciIconComponent} from '@scion/components/icon';
     '[attr.data-type]': 'cell().column.type',
     '[attr.data-column]': 'cell().column.name',
     '[attr.data-padding]': '!cell().column.padding ? false : null',
-    '[attr.part]': 'isSelected() ? null : partAttribute()', // prevent styling selected rows
+    '[attr.part]': 'row().selected() ? null : partAttribute()', // prevent styling selected rows
   },
   imports: [
     NgTemplateOutlet,
@@ -35,7 +35,6 @@ export class TableCellComponent<T> {
 
   public readonly cell = input.required<SciCellLike>();
   public readonly row = input.required<SciRow<T>>();
-  public readonly isSelected = input<boolean>();
 
   protected readonly template = this.computeTemplate();
   protected readonly templateContext = this.computeTemplateContext();
