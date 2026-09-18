@@ -14,7 +14,6 @@ import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {SciScrollbarComponent} from '@scion/components/viewport';
 import {dimension} from '@scion/components/dimension';
 import {TableSelectionService} from './table-selection.service';
-import {ColumnHeaderComponent} from './column-header/column-header.component';
 import {SciTableRowComponent} from './table-row/table-row.component';
 import {TableKeyboardNavigatorDirective} from './keyboard-navigator.directive';
 import {ColumnSplittersComponent} from './column-splitters/column-splitters.component';
@@ -26,8 +25,6 @@ import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
 import {VirtualColumnsComponent} from './virtual-columns/virtual-columns.component';
 import {SciAttributesDirective} from '@scion/components/common';
-import {ColumnFilterComponent} from './column-filter/column-filter.component';
-import {NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'sci-table',
@@ -45,8 +42,6 @@ import {NgTemplateOutlet} from '@angular/common';
     SciTableGridComponent,
     SciTableBodyComponent,
     SciTableRowComponent,
-    ColumnHeaderComponent,
-    ColumnFilterComponent,
     ColumnSplittersComponent, // TODO [egob] Should start with Sci?
     SciAttributesDirective,
     SciScrollbarComponent,
@@ -54,7 +49,6 @@ import {NgTemplateOutlet} from '@angular/common';
     SciTextPipe,
     SciThrobberComponent,
     VirtualColumnsComponent,
-    NgTemplateOutlet,
   ],
   providers: [
     provideSciTable(),

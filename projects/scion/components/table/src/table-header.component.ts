@@ -8,19 +8,26 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
+import {ɵSCI_TABLE} from './ɵtable.model';
+import {ColumnHeaderComponent} from './column-header/column-header.component';
+import {ColumnFilterComponent} from './column-filter/column-filter.component';
 
-/**
- * Represents a semantic element for the table header provided as slotted content.
- */
 @Component({
   selector: 'sci-table-header',
-  template: '<ng-content/>',
+  templateUrl: './table-header.component.html',
+  styleUrl: './table-header.component.scss',
   host: {
     '(wheel)': 'onMouseWheel($event)',
   },
+  imports: [
+    ColumnHeaderComponent,
+    ColumnFilterComponent,
+  ],
 })
 export class SciTableHeaderComponent {
+
+  protected readonly table = inject(ɵSCI_TABLE);
 
   protected onMouseWheel(event: WheelEvent): void {
     // Prevent vertical scrolling on header, but not horizontal scrolling.
