@@ -3547,11 +3547,31 @@ test.describe.only('sci-table', () => {
 
     test.describe('Buffer Size Zero', () => {
 
+      test('should select on Shift+Click', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.showHeader(false);
+        await tablePage.setFilterable(false);
+        await tablePage.setBufferSize(0);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(40);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({index: 0}).click();
+        await expect(tablePage.selection).toHaveText('0');
+
+        await table.scrollTo({y: 'end'});
+        await table.row({index: 9}).click(['Shift']);
+        await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8 9');
+      });
+
       test('should select on ArrowDown / ArrowUp', async ({page}) => {
         const tablePage = new TablePagePO(page);
         const table = new TablePO(tablePage.table);
         await tablePage.navigate();
-        await tablePage.setSelectable('single');
         await tablePage.showHeader(false);
         await tablePage.setFilterable(false);
         await tablePage.setBufferSize(0);
@@ -3601,7 +3621,6 @@ test.describe.only('sci-table', () => {
         const tablePage = new TablePagePO(page);
         const table = new TablePO(tablePage.table);
         await tablePage.navigate();
-        await tablePage.setSelectable('single');
         await tablePage.showHeader(false);
         await tablePage.setFilterable(false);
         await tablePage.setBufferSize(0);
@@ -3645,7 +3664,6 @@ test.describe.only('sci-table', () => {
         const tablePage = new TablePagePO(page);
         const table = new TablePO(tablePage.table);
         await tablePage.navigate();
-        await tablePage.setSelectable('single');
         await tablePage.showHeader(false);
         await tablePage.setFilterable(false);
         await tablePage.setBufferSize(0);
