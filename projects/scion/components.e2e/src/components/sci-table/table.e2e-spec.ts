@@ -19,6 +19,7 @@ import {generateData, Product, provideHttpDatasource} from './datasource/table-h
 import {firstValueFrom, Subject} from 'rxjs';
 import {SciTableResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
+import {BooleanColumnPO} from './boolean-column.po';
 
 test.describe.only('sci-table', () => {
 
@@ -178,13 +179,14 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:string', type: 'string'});
+        await tablePage.setRowHeight(30);
 
         const cell = table.row({nth: 0}).cell('column:string');
         const cellBounds = await cell.bounds();
         const rowBounds = await cell.row.bounds();
 
-        expect(cellBounds.height).toBeLessThan(rowBounds.height);
         expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
       });
 
       test('should have horizontal padding', async ({page}) => {
@@ -228,6 +230,22 @@ test.describe.only('sci-table', () => {
         await cell.column.splitter.drag({deltaX: -500});
         await expect(cell.locator).toHaveEllipsis();
       });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+        const cell = table.row({nth: 0}).cell('column:string');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
     });
 
     test.describe('Number column', () => {
@@ -247,13 +265,14 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:number', type: 'number'});
+        await tablePage.setRowHeight(30);
 
         const cell = table.row({nth: 0}).cell('column:number');
         const cellBounds = await cell.bounds();
         const rowBounds = await cell.row.bounds();
 
-        expect(cellBounds.height).toBeLessThan(rowBounds.height);
         expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
       });
 
       test('should have horizontal padding', async ({page}) => {
@@ -297,6 +316,22 @@ test.describe.only('sci-table', () => {
         await cell.column.splitter.drag({deltaX: -500});
         await expect(cell.locator).toHaveEllipsis();
       });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+
+        const cell = table.row({nth: 0}).cell('column:number');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
     });
 
     test.describe('Boolean column', () => {
@@ -319,10 +354,10 @@ test.describe.only('sci-table', () => {
 
         const cell = table.row({nth: 0}).cell('column:boolean');
         const cellBounds = await cell.bounds();
-        const rowBounds = await cell.row.bounds();
+        const checkmarkBounds = await new BooleanColumnPO(cell).bounds();
 
-        expect(cellBounds.height).toBeLessThan(rowBounds.height);
-        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        expect(checkmarkBounds.vcenter).toEqual(cellBounds.vcenter);
+        expect(checkmarkBounds.height).toBeLessThan(cellBounds.height);
       });
 
       test('should have horizontal padding', async ({page}) => {
@@ -336,7 +371,7 @@ test.describe.only('sci-table', () => {
         await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
       });
 
-      test('should align checkmark to the left', async ({page}) => {
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
         const tablePage = new TablePagePO(page);
         const table = new TablePO(tablePage.table);
         await tablePage.navigate();
@@ -345,9 +380,10 @@ test.describe.only('sci-table', () => {
 
         const cell = table.row({nth: 0}).cell('column:boolean');
         const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
         const columnBounds = await cell.column.bounds();
 
-        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.height).toEqual(rowBounds.height);
         expect(cellBounds.width).toEqual(columnBounds.width);
       });
     });
@@ -372,10 +408,10 @@ test.describe.only('sci-table', () => {
 
         const cell = table.row({nth: 0}).cell('column:template');
         const cellBounds = await cell.bounds();
-        const rowBounds = await cell.row.bounds();
+        const templateBounds = await new CustomColumnPO(cell).bounds();
 
-        expect(cellBounds.height).toBeLessThan(rowBounds.height);
-        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        expect(templateBounds.vcenter).toEqual(cellBounds.vcenter);
+        expect(templateBounds.height).toBeLessThan(cellBounds.height);
       });
 
       test('should have horizontal padding', async ({page}) => {
@@ -387,23 +423,6 @@ test.describe.only('sci-table', () => {
 
         const cell = table.row({nth: 0}).cell('column:template');
         await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
-      });
-
-      test('should fill cell if no padding', async ({page}) => {
-        const tablePage = new TablePagePO(page);
-        const table = new TablePO(tablePage.table);
-        await tablePage.navigate();
-
-        await tablePage.addColumn({name: 'column:template', type: 'template', padding: false});
-
-        const cell = table.row({nth: 0}).cell('column:template');
-        const cellBounds = await cell.bounds();
-        const rowBounds = await cell.row.bounds();
-        const columnBounds = await cell.column.bounds();
-
-        await expect.poll(() => cell.paddingInline()).toBe(0);
-        expect(cellBounds.height).toEqual(rowBounds.height);
-        expect(cellBounds.width).toEqual(columnBounds.width);
       });
 
       test('should align cell content to the left', async ({page}) => {
@@ -478,6 +497,48 @@ test.describe.only('sci-table', () => {
         expect(templateBounds.height).toEqual(rowBounds.height);
         expect(templateBounds.width).toEqual(columnBounds.width);
       });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
+
+        await tablePage.addColumn({name: 'column:template-padding', type: 'template', padding: true});
+        await tablePage.addColumn({name: 'column:template-no-padding', type: 'template', padding: false});
+
+        await test.step('column with cell padding', async () => {
+          const cell = table.row({nth: 0}).cell('column:template-padding');
+          const cellBounds = await cell.bounds();
+          const rowBounds = await cell.row.bounds();
+          const columnBounds = await cell.column.bounds();
+          const templateBounds = await new CustomColumnPO(cell).bounds();
+
+          expect(cellBounds.height).toEqual(rowBounds.height); // required for custom cell styling
+          expect(cellBounds.width).toEqual(columnBounds.width); // required for custom cell styling
+          await expect.poll(() => cell.paddingInline()).toBe(10);
+
+          expect(templateBounds.vcenter).toEqual(cellBounds.vcenter);
+          expect(templateBounds.height).toBeLessThan(cellBounds.height);
+          expect(templateBounds.width).toEqual(cellBounds.width - 20);
+        });
+
+        await test.step('column without padding', async () => {
+          const cell = table.row({nth: 0}).cell('column:template-no-padding');
+          const cellBounds = await cell.bounds();
+          const rowBounds = await cell.row.bounds();
+          const columnBounds = await cell.column.bounds();
+          const templateBounds = await new CustomColumnPO(cell).bounds();
+
+          expect(cellBounds.height).toEqual(rowBounds.height); // required for custom cell styling
+          expect(cellBounds.width).toEqual(columnBounds.width); // required for custom cell styling
+          await expect.poll(() => cell.paddingInline()).toBe(0);
+
+          expect(templateBounds.height).toEqual(cellBounds.height);
+          expect(templateBounds.width).toEqual(cellBounds.width);
+        });
+      });
     });
 
     test.describe('Component column', () => {
@@ -500,10 +561,10 @@ test.describe.only('sci-table', () => {
 
         const cell = table.row({nth: 0}).cell('column:component');
         const cellBounds = await cell.bounds();
-        const rowBounds = await cell.row.bounds();
+        const componentBounds = await new CustomColumnPO(cell).bounds();
 
-        expect(cellBounds.height).toBeLessThan(rowBounds.height);
-        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        expect(componentBounds.vcenter).toEqual(cellBounds.vcenter);
+        expect(componentBounds.height).toBeLessThan(cellBounds.height);
       });
 
       test('should have horizontal padding', async ({page}) => {
@@ -515,23 +576,6 @@ test.describe.only('sci-table', () => {
 
         const cell = table.row({nth: 0}).cell('column:component');
         await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
-      });
-
-      test('should fill cell if no padding', async ({page}) => {
-        const tablePage = new TablePagePO(page);
-        const table = new TablePO(tablePage.table);
-        await tablePage.navigate();
-
-        await tablePage.addColumn({name: 'column:component', type: 'component', padding: false});
-
-        const cell = table.row({nth: 0}).cell('column:component');
-        const cellBounds = await cell.bounds();
-        const rowBounds = await cell.row.bounds();
-        const columnBounds = await cell.column.bounds();
-
-        await expect.poll(() => cell.paddingInline()).toBe(0);
-        expect(cellBounds.height).toEqual(rowBounds.height);
-        expect(cellBounds.width).toEqual(columnBounds.width);
       });
 
       test('should align cell content to the left', async ({page}) => {
@@ -605,6 +649,48 @@ test.describe.only('sci-table', () => {
 
         expect(componentBounds.height).toEqual(rowBounds.height);
         expect(componentBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
+
+        await tablePage.addColumn({name: 'column:component-padding', type: 'component', padding: true});
+        await tablePage.addColumn({name: 'column:component-no-padding', type: 'component', padding: false});
+
+        await test.step('column with cell padding', async () => {
+          const cell = table.row({nth: 0}).cell('column:component-padding');
+          const cellBounds = await cell.bounds();
+          const rowBounds = await cell.row.bounds();
+          const columnBounds = await cell.column.bounds();
+          const componentBounds = await new CustomColumnPO(cell).bounds();
+
+          expect(cellBounds.height).toEqual(rowBounds.height); // required for custom cell styling
+          expect(cellBounds.width).toEqual(columnBounds.width); // required for custom cell styling
+          await expect.poll(() => cell.paddingInline()).toBe(10);
+
+          expect(componentBounds.vcenter).toEqual(cellBounds.vcenter);
+          expect(componentBounds.height).toBeLessThan(cellBounds.height);
+          expect(componentBounds.width).toEqual(cellBounds.width - 20);
+        });
+
+        await test.step('column without padding', async () => {
+          const cell = table.row({nth: 0}).cell('column:component-no-padding');
+          const cellBounds = await cell.bounds();
+          const rowBounds = await cell.row.bounds();
+          const columnBounds = await cell.column.bounds();
+          const componentBounds = await new CustomColumnPO(cell).bounds();
+
+          expect(cellBounds.height).toEqual(rowBounds.height); // required for custom cell styling
+          expect(cellBounds.width).toEqual(columnBounds.width); // required for custom cell styling
+          await expect.poll(() => cell.paddingInline()).toBe(0);
+
+          expect(componentBounds.height).toEqual(cellBounds.height);
+          expect(componentBounds.width).toEqual(cellBounds.width);
+        });
       });
     });
 

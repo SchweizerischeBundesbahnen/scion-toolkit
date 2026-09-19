@@ -1,7 +1,8 @@
 :host {
-  display: inline-grid; // fits content to the cell
+  display: inline-grid; // fit content to the cell
   position: relative; // positioning context for cell content
   padding-inline: var(--ɵsci-table-cell-padding-inline);
+  align-items: center; // center custom cell content vertically
 
   // Enable ellipsis on number and string columns.
   &:is([data-type="string"], [data-type="number"]) {
@@ -9,6 +10,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: var(--ɵsci-table-row-height); // required to center text vertically
   }
 
   &[data-type="number"] {
@@ -17,6 +19,6 @@
 
   &[data-padding="false"] {
     padding: 0;
-    align-self: stretch;
+    align-items: stretch; // fill entire cell vertically
   }
 }

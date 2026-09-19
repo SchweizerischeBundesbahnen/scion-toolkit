@@ -2,8 +2,8 @@
   display: inline-grid;
   grid-template-columns: subgrid;
   grid-auto-rows: var(--sci-table-row-height);
-  align-items: center;
-  user-select: none; // has to be disabled because of selection
+  align-items: stretch; // stretch cell to enable row styling via `::part()` selector
+  user-select: none; // disabled required by selection // TODO [Marc] really required?
   border-bottom: var(--sci-table-border-size) solid var(--sci-table-gridline-color);
 
   // TODO Disable pointer events while scrolling and resizing, ensuring mouseenter event is fired AND stable UI

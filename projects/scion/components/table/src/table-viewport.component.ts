@@ -24,6 +24,7 @@ import {ɵSCI_TABLE} from './ɵtable.model';
     '[style.--ɵsci-table-viewport-client-height]': '`${table().tableViewRef()?.viewportClientHeight() ?? 0}px`',
     '[style.--ɵsci-table-header-height]': '`${table().tableViewRef()?.headerHeight() ?? 0}px`',
     '[style.--ɵsci-table-cell-padding-inline]': '`${table().tableViewRef()?.cellPadding() ?? 0}px`',
+    '[style.--ɵsci-table-row-height]': '`${table().tableViewRef()?.itemHeight() ?? 0}px`',
   },
 })
 export class SciTableViewportComponent {

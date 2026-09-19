@@ -20,6 +20,10 @@ export class CellPO {
     return this.locator.evaluate(cell => getComputedStyle(cell).textAlign as 'start' | 'end' | 'center' | 'justify');
   }
 
+  public lineHeight(): Promise<string> {
+    return this.locator.evaluate(cell => getComputedStyle(cell).lineHeight);
+  }
+
   public async bounds(): Promise<DomRect> {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
