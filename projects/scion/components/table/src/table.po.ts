@@ -118,20 +118,24 @@ export class ColumnPO {
     await this._table.waitUntilStable();
   }
 
-  public async filter(text: string): Promise<void> {
+  public async filter(value: string | number | boolean | null): Promise<void> {
     if (!this._columnFilterElement) {
       throw Error('[PageObjectError] Table without header cannot be filtered.');
     }
-    const filterInput: HTMLInputElement | null = this._columnFilterElement.querySelector('input');
-    const filterSelect: HTMLSelectElement | null = this._columnFilterElement.querySelector('select');
 
-    if (filterInput) {
-      filterInput.value = text;
-      filterInput.dispatchEvent(new Event('input'));
+    if (value === null) {
+      this._columnFilterElement.querySelector<HTMLButtonElement>('button.e2e-clear')!.click();
     }
-    else if (filterSelect) {
-      filterSelect.value = text;
-      filterSelect.dispatchEvent(new Event('change'));
+    else if (typeof value === 'boolean') {
+      // TODO [dwie] Replace with menu API
+      this._columnFilterElement.querySelector<HTMLButtonElement>('input[type="button"]')!.click();
+      const menu = (await waitUntilStable(() => this._table.element.querySelector<HTMLElement>('sci-menu')))!;
+      menu.querySelector<HTMLButtonElement>(`button[data-option="${value}"]`)!.click();
+    }
+    else {
+      const filterInput = this._columnFilterElement.querySelector<HTMLInputElement>('input')!;
+      filterInput.value = `${value}`;
+      filterInput.dispatchEvent(new Event('input'));
     }
 
     // Wait for debounce.

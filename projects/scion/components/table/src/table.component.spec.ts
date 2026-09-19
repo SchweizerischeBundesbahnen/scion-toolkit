@@ -473,10 +473,10 @@ fdescribe('Table', () => {
         await table.waitUntilStable();
         const column = table.column({name: 'column:active'})!;
 
-        await column.filter('true');
+        await column.filter(true);
         expect(await column.values()).toEqual(['checkmark', 'checkmark']);
 
-        await column.filter('');
+        await column.filter(null);
         expect(await column.values()).toEqual(['checkmark', 'clear', 'checkmark']);
       });
 

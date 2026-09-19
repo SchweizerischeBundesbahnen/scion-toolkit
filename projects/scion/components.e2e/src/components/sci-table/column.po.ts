@@ -13,6 +13,7 @@ export class ColumnPO {
   public readonly cells: Locator;
   public readonly sortButton: Locator;
   public readonly filterIcon: Locator;
+  public readonly filterInput: Locator;
 
   constructor(public table: TablePO, public locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
     this.locator = table.locator.locator('sci-virtual-columns sci-column').locator(selectByColumn(locateBy));
@@ -20,6 +21,7 @@ export class ColumnPO {
     this.columnFilter = table.locator.locator('sci-column-filter').locator(selectByColumn(locateBy));
     this.sortButton = this.columnHeader.locator('button.e2e-sort');
     this.filterIcon = this.columnFilter.locator('sci-icon.e2e-filter');
+    this.filterInput = this.columnFilter.locator('input');
     this.splitter = new ColumnSplitterPO(table.locator.locator('sci-column-splitters sci-splitter').locator(selectByColumn(locateBy)), table);
     this.cells = table.rows.locator('sci-table-cell').locator(selectByColumn(locateBy));
   }
@@ -45,17 +47,14 @@ export class ColumnPO {
     await this.columnFilter.locator('button.e2e-clear').click();
   }
 
-  public async filter(value: string): Promise<void> {
-    const input = this.columnFilter.locator('input');
-    const select = this.columnFilter.locator('select');
-
-    await Promise.race([input.waitFor({state: 'visible'}), select.waitFor({state: 'visible'})]);
-
-    if (await input.isVisible()) {
-      await input.fill(value);
+  public async filter(value: string | number | boolean): Promise<void> {
+    if (typeof value === 'boolean') {
+      await this.columnFilter.locator('input[type="button"]').click();
+      await this.table.locator.locator('sci-menu').waitFor({state: 'visible'});
+      await this.table.locator.locator(`sci-menu button[data-option="${value}"]`).click();
     }
     else {
-      await select.selectOption(value);
+      await this.columnFilter.locator('input').fill(`${value}`);
     }
   }
 

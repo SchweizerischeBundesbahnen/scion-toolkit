@@ -820,10 +820,10 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
-      await table.column({name: 'column:boolean'}).filter('false');
+      await table.column({name: 'column:boolean'}).filter(false);
       await expectTable(table).column({name: 'column:boolean'}).cells.toContainText('clear');
 
-      await table.column({name: 'column:boolean'}).filter('');
+      await table.column({name: 'column:boolean'}).clearFilter();
       await expect(table.rows).toHaveCount(noFilterCount);
     });
 
@@ -942,7 +942,35 @@ test.describe.only('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.column({name: 'column:name'}).filterIcon.click();
-      await expect(table.column({name: 'column:name'}).columnFilter.locator('input')).toBeFocused();
+      await expect(table.column({name: 'column:name'}).filterInput).toBeFocused();
+    });
+
+    test('should focus filter field when clicking reset', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.column({name: 'column:name'}).filter('filter');
+      await table.column({name: 'column:name'}).clearFilter();
+      await expect(table.column({name: 'column:name'}).filterInput).toBeFocused();
+    });
+
+    test('should focus filter field after selecting boolean option', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+      await table.column({name: 'column:boolean'}).filter(true);
+      await expect(table.column({name: 'column:boolean'}).filterInput).toBeFocused();
+
+      await table.column({name: 'column:boolean'}).filter(false);
+      await expect(table.column({name: 'column:boolean'}).filterInput).toBeFocused();
     });
   });
 

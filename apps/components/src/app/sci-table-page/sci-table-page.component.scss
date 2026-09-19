@@ -11,7 +11,7 @@
       flex: 1 1 0;
       border: 1px solid var(--sci-color-border);
       border-radius: var(--sci-corner-small);
-      --sci-table-header-background-color: var(--sci-color-gray-100);
+      --sci-table-header-background-color: light-dark(var(--sci-color-gray-100), var(--sci-color-gray-75));
     }
 
     > sci-table::part(row\:even) {

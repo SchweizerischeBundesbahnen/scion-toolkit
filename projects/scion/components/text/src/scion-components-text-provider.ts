@@ -49,9 +49,11 @@ import {SciTextProviderFn} from './text.provider';
  * ```
  */
 const texts: Record<string, string> = {
+  'scion.components.clear.tooltip': 'Clear',
+  'scion.components.no.value': 'No',
   'scion.components.no_items.message': 'No items found.',
   'scion.components.type_to_filter.action': 'Type to filter',
-  'scion.components.clear.tooltip': 'Clear',
+  'scion.components.yes.value': 'Yes',
 };
 
 /**
