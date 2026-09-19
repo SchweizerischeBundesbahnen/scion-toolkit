@@ -28,22 +28,32 @@
             </select>
           </sci-form-field>
 
+          @if (columnForm.type().value() === 'component') {
+            <sci-form-field label="Component">
+              <select [formField]="columnForm.extras.component" class="e2e-component" appFieldValidation>
+                <option value="component:custom-column">custom-column</option>
+                <option value="component:custom-input-column">custom-input-column</option>
+                <option value="component:custom-button-column">custom-button-column</option>
+              </select>
+            </sci-form-field>
+          }
+
           <sci-form-field label="Resizable">
             <input [formField]="columnForm.resizable" type="checkbox" class="e2e-resizable"/>
           </sci-form-field>
 
           @if (columnForm.type().value() === 'component' || columnForm.type().value() === 'template') {
             <sci-form-field label="Padding">
-              <input [formField]="columnForm.padding" type="checkbox" class="e2e-padding"/>
+              <input [formField]="columnForm.extras.padding" type="checkbox" class="e2e-padding"/>
             </sci-form-field>
           }
 
           <sci-form-field label="Custom Sort">
-            <input [formField]="columnForm.customSort" type="checkbox" class="e2e-custom-sort">
+            <input [formField]="columnForm.extras.customSort" type="checkbox" class="e2e-custom-sort">
           </sci-form-field>
 
           <sci-form-field label="Custom Filter">
-            <input [formField]="columnForm.customFilter" type="checkbox" class="e2e-custom-filter">
+            <input [formField]="columnForm.extras.customFilter" type="checkbox" class="e2e-custom-filter">
           </sci-form-field>
 
           <sci-form-field label="Width">

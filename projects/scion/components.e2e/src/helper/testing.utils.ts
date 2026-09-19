@@ -126,3 +126,11 @@ export function hasDefaultStackingLevel(locator: Locator): Promise<boolean> {
     }
   });
 }
+
+/**
+ * Sets the caret or selection range inside an input field.
+ */
+export async function setCaret(locator: Locator, range: {start: number; end?: number}): Promise<void> {
+  await locator.focus();
+  await locator.evaluate((input: HTMLInputElement, {start, end}) => input.setSelectionRange(start, end ?? start + 1), range);
+}

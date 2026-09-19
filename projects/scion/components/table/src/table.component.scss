@@ -47,10 +47,6 @@
         grid-template-rows: 1fr; // table body
       }
 
-      &:focus {
-        outline: none;
-      }
-
       > sci-table-header {
         z-index: 1; // required to overlap the table body when sticking on top.
         grid-row: 1; // The sci-column-splitters positioning requires all grid items to be positioned.
@@ -64,7 +60,6 @@
       > sci-table-body {
         anchor-name: --sci-table-body;
         grid-row: 2; // The sci-column-splitters positioning requires all grid items to be positioned.
-        outline: none; // tabindex set for keyboard navigation
         @container not style(--ɵsci-table-header-visible: true) {
           grid-row: 1;
         }
@@ -72,6 +67,7 @@
         grid-template-columns: subgrid;
         grid-column: 1/-1;
         grid-auto-rows: var(--sci-table-row-height);
+        outline: none; // tabindex required for keyboard navigation
 
         // TODO [dwie] Add documentation that padding is used for virtuall scrolling -> not margin, not transform
         // Set padding (not margin) to contribute to the "real" height

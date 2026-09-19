@@ -14,12 +14,14 @@ import {expect} from '@playwright/test';
 import {TablePO} from './table.po';
 import {expectTable} from './table-matcher';
 import {expectRow} from './row-matcher';
-import {fromRect, hasDefaultStackingLevel, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
+import {fromRect, hasDefaultStackingLevel, setCaret, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
 import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
 import {firstValueFrom, Subject} from 'rxjs';
 import {SciTableResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
 import {BooleanColumnPO} from './boolean-column.po';
+import {CustomInputColumnPO} from './custom-input-column.po';
+import {CustomButtonColumnPO} from './custom-button-column.po';
 
 test.describe.only('sci-table', () => {
 
@@ -465,7 +467,7 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.setWidth(600);
-        await tablePage.addColumn({name: 'column:template', type: 'template', padding: false});
+        await tablePage.addColumn({name: 'column:template', type: 'template', extras: {padding: false}});
         await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(600);
 
         // Set explicit template width.
@@ -484,7 +486,7 @@ test.describe.only('sci-table', () => {
 
         await tablePage.setWidth(600);
         await tablePage.setRowCount(1);
-        await tablePage.addColumn({name: 'column:template', type: 'template', padding: false});
+        await tablePage.addColumn({name: 'column:template', type: 'template', extras: {padding: false}});
 
         const cell = table.row({nth: 0}).cell('column:template');
         const template = new CustomColumnPO(cell);
@@ -505,8 +507,8 @@ test.describe.only('sci-table', () => {
 
         await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
 
-        await tablePage.addColumn({name: 'column:template-padding', type: 'template', padding: true});
-        await tablePage.addColumn({name: 'column:template-no-padding', type: 'template', padding: false});
+        await tablePage.addColumn({name: 'column:template-padding', type: 'template', extras: {padding: true}});
+        await tablePage.addColumn({name: 'column:template-no-padding', type: 'template', extras: {padding: false}});
 
         await test.step('column with cell padding', async () => {
           const cell = table.row({nth: 0}).cell('column:template-padding');
@@ -618,7 +620,7 @@ test.describe.only('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.setWidth(600);
-        await tablePage.addColumn({name: 'column:component', type: 'component', padding: false});
+        await tablePage.addColumn({name: 'column:component', type: 'component', extras: {padding: false}});
         await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(600);
 
         // Set explicit component width.
@@ -637,7 +639,7 @@ test.describe.only('sci-table', () => {
 
         await tablePage.setWidth(600);
         await tablePage.setRowCount(1);
-        await tablePage.addColumn({name: 'column:component', type: 'component', padding: false});
+        await tablePage.addColumn({name: 'column:component', type: 'component', extras: {padding: false}});
 
         const cell = table.row({nth: 0}).cell('column:component');
         const component = new CustomColumnPO(cell);
@@ -658,8 +660,8 @@ test.describe.only('sci-table', () => {
 
         await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
 
-        await tablePage.addColumn({name: 'column:component-padding', type: 'component', padding: true});
-        await tablePage.addColumn({name: 'column:component-no-padding', type: 'component', padding: false});
+        await tablePage.addColumn({name: 'column:component-padding', type: 'component', extras: {padding: true}});
+        await tablePage.addColumn({name: 'column:component-no-padding', type: 'component', extras: {padding: false}});
 
         await test.step('column with cell padding', async () => {
           const cell = table.row({nth: 0}).cell('column:component-padding');
@@ -848,7 +850,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.setRowCount(10_000);
       await tablePage.setFilterable(true);
-      await tablePage.addColumn({name: 'column:template', type: 'template', customFilter: true});
+      await tablePage.addColumn({name: 'column:template', type: 'template', extras: {customFilter: true}});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       await table.column({name: 'column:template'}).filter('Product 9999');
@@ -879,7 +881,7 @@ test.describe.only('sci-table', () => {
 
       await tablePage.setRowCount(10_000);
       await tablePage.setFilterable(true);
-      await tablePage.addColumn({name: 'column:component', type: 'component', customFilter: true});
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {customFilter: true}});
       const noFilterCount = await waitUntilStable(() => table.rows.count());
 
       await table.column({name: 'column:component'}).filter('Product 9999');
@@ -1936,6 +1938,130 @@ test.describe.only('sci-table', () => {
       await expect.poll(() => table.scrollTop()).toBe(0);
     });
 
+    test('should not prevent native keystrokes (Home, End, Ctrl+A, ...) in inputs of custom column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {component: 'component:custom-input-column'}});
+
+      const cell = table.row({nth: 0}).cell('column:component');
+      const component = new CustomInputColumnPO(cell);
+
+      await test.step('Pressing End', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('End');
+        await expect(component.input).toHaveTextSelection({start: 10, end: 10});
+      });
+
+      await test.step('Pressing Home', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 10});
+
+        await page.keyboard.press('Home');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 0});
+      });
+
+      await test.step('Pressing Shift+End', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('Shift+End');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 10});
+      });
+
+      await test.step('Pressing Shift+Home', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 10});
+
+        await page.keyboard.press('Shift+Home');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 10});
+      });
+
+      await test.step('Pressing ArrowRight', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('ArrowRight');
+        await expect(component.input).toHaveTextSelection({start: 1, end: 1});
+      });
+
+      await test.step('Pressing ArrowLeft', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 10});
+
+        await page.keyboard.press('ArrowLeft');
+        await expect(component.input).toHaveTextSelection({start: 9, end: 9});
+      });
+
+      await test.step('Pressing Ctrl+ArrowRight', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('ControlOrMeta+ArrowRight');
+        await expect(component.input).toHaveTextSelection({start: 10, end: 10});
+      });
+
+      await test.step('Pressing Ctrl+ArrowLeft', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 10});
+
+        await page.keyboard.press('ControlOrMeta+ArrowLeft');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 0});
+      });
+
+      await test.step('Pressing Ctrl+A', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('ControlOrMeta+A');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 10});
+      });
+
+      await test.step('Pressing Space', async () => {
+        await component.input.clear();
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('A');
+        await page.keyboard.press('Space');
+        await page.keyboard.press('B');
+        await expect(component.input).toHaveValue('A B');
+      });
+    });
+
+    test('should not prevent native keystrokes (Home, End, Ctrl+A, ...) in buttons of custom column', async ({page, consoleLogs}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {component: 'component:custom-button-column'}});
+
+      const cell = table.row({nth: 0}).cell('column:component');
+      const component = new CustomButtonColumnPO(cell);
+
+      await test.step('Pressing Space', async () => {
+        await component.button.focus();
+        await page.keyboard.press('Space');
+
+        await expect.poll(() => consoleLogs.get()).toContain('[CustomButtonColumnComponent] Button clicked');
+        await expectRow(table.row({nth: 0})).toBeSelected();
+        consoleLogs.clear();
+
+        await page.keyboard.press('ControlOrMeta+Space');
+        await expect.poll(() => consoleLogs.get()).toContain('[CustomButtonColumnComponent] Button clicked');
+        await expectRow(table.row({nth: 0})).not.toBeSelected();
+        consoleLogs.clear();
+
+        await page.keyboard.press('ControlOrMeta+Space');
+        await expect.poll(() => consoleLogs.get()).toContain('[CustomButtonColumnComponent] Button clicked');
+        await expectRow(table.row({nth: 0})).toBeSelected();
+      });
+
+      // TODO [dwie] add test that selection keystrokes like Ctrl+A, ArrowDown, ...are working on button.
+    });
+
     test.describe('Single Selection', () => {
 
       test.describe('Click', () => {
@@ -1998,6 +2124,9 @@ test.describe.only('sci-table', () => {
 
           await page.keyboard.press('Space');
           await expect(tablePage.selection).toHaveText('1');
+
+          // Expect viewport not to be scrolled, i.e., default was prevented.
+          await expect.poll(() => table.scrollTop()).toBe(0);
         });
 
         test('should toggle selection on ControlOrMeta+Space', async ({page}) => {
@@ -2030,6 +2159,9 @@ test.describe.only('sci-table', () => {
           await page.keyboard.press('ControlOrMeta+Space');
           await expect(tablePage.selection).toHaveText('1');
           await expect(tablePage.activeItemId).toHaveText('1');
+
+          // Expect viewport not to be scrolled, i.e., default was prevented.
+          await expect.poll(() => table.scrollTop()).toBe(0);
         });
       });
 

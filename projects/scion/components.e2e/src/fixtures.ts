@@ -8,6 +8,8 @@ import {expect, test as playwrightTest} from '@playwright/test';
 import {toBeBetween} from './helper/to-be-between.matcher';
 import {toHaveEllipsis} from './helper/to-have-ellipsis.matcher';
 import {toBeStrictEmpty} from './helper/to-be-strict-empty.matcher';
+import {toHaveTextSelection} from './helper/to-have-selection.matcher';
+import {RequireOne} from '@scion/toolkit/types';
 
 export interface TestFixtures {
   /**
@@ -36,6 +38,11 @@ declare global {
        * Like Playwrights `toBeEmpty`, but additionally checks that the element has no child elements.
        */
       toBeStrictEmpty(): Promise<R>;
+
+      /**
+       * Tests an input element to have the expected text selection.
+       */
+      toHaveTextSelection(selection: RequireOne<{start: number; end: number}>): Promise<R>;
     }
   }
 }
@@ -44,6 +51,7 @@ expect.extend({
   toBeBetween,
   toHaveEllipsis,
   toBeStrictEmpty,
+  toHaveTextSelection,
 });
 
 export const test = playwrightTest.extend<TestFixtures>({

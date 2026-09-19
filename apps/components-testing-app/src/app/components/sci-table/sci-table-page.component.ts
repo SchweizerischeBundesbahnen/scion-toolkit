@@ -10,7 +10,7 @@
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
 import {attributeBinding, partBinding, provideTableRowBinding, SciCellContext, SciColumnDescriptor, SciColumnType, SciTable, SciTableComponent, SciTableRequest, SciTableResponse, table} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
-import {FieldTree, form, FormField, FormRoot, pattern, required} from '@angular/forms/signals';
+import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {createDestroyableInjector} from '@scion/components/common';
@@ -20,6 +20,8 @@ import {HttpClient} from '@angular/common/http';
 import {noop} from 'rxjs';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
+import {CustomInputColumnComponent} from './custom-input-column.component';
+import {CustomButtonColumnComponent} from './custom-button-column.component';
 
 @Component({
   selector: 'app-table-page',
@@ -127,8 +129,8 @@ export default class SciTablePageComponent {
         case 'string':
           table.addStringColumn({
             ...column,
-            filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
-            sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
+            filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
+            sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
             value: product => product.name,
           });
           break;
@@ -147,23 +149,31 @@ export default class SciTablePageComponent {
         case 'component':
           table.addComponentColumn({
             ...column,
-            filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
-            sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
-            padding: columnForm.padding,
-            component: product => ({
-              component: CustomColumnComponent,
-              bindings: [
-                inputBinding('product', () => product),
-              ],
-            }),
+            filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
+            sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
+            padding: columnForm.extras.padding,
+            component: product => {
+              switch (columnForm.extras.component) {
+                case 'component:custom-input-column':
+                  return ({component: CustomInputColumnComponent});
+                case 'component:custom-button-column':
+                  return ({component: CustomButtonColumnComponent});
+                default:
+                case 'component:custom-column':
+                  return {
+                    component: CustomColumnComponent,
+                    bindings: [inputBinding('product', () => product)],
+                  };
+              }
+            },
           });
           break;
         case 'template':
           table.addTemplateColumn({
             ...column,
-            filterable: columnForm.customFilter ? {matcher: customFilter} : undefined,
-            sortable: columnForm.customSort ? {comparator: customComparator} : undefined,
-            padding: columnForm.padding,
+            filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
+            sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
+            padding: columnForm.extras.padding,
             template: () => ({
               template: this._customColumnTemplate,
             }),
@@ -199,6 +209,8 @@ export default class SciTablePageComponent {
       pattern(column.name, /column:.+/);
       required(column.name);
       required(column.type);
+      required(column.extras.component);
+      hidden(column.extras.component, {when: ({valueOf}) => valueOf(column.type) !== 'component'});
     }, {
       submission: {
         action: async form => {
@@ -218,12 +230,15 @@ export default class SciTablePageComponent {
         type: 'string',
         label: '',
         resizable: true,
-        padding: true,
         width: '',
         minWidth: null,
-        customSort: false,
-        customFilter: false,
         visible: signal(true),
+        extras: {
+          component: 'component:custom-column',
+          padding: true,
+          customSort: false,
+          customFilter: false,
+        },
       };
     }
   }
@@ -283,12 +298,15 @@ interface ColumnForm {
   type: SciColumnType;
   label: string;
   resizable: boolean;
-  padding: boolean;
   width: string;
   minWidth: number | null;
-  customSort: boolean;
-  customFilter: boolean;
   visible: WritableSignal<boolean>;
+  extras: {
+    component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';
+    padding: boolean;
+    customSort: boolean;
+    customFilter: boolean;
+  };
 }
 
 interface SettingsForm {
