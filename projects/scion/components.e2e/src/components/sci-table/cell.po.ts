@@ -13,7 +13,7 @@ export class CellPO {
   }
 
   public paddingInline(): Promise<number> {
-    return this.locator.evaluate(cell => Number.parseFloat(getComputedStyle(cell).paddingLeft));
+    return this.locator.evaluate(cell => Number.parseFloat(getComputedStyle(cell).borderLeft));
   }
 
   public textAlign(): Promise<'start' | 'end' | 'center' | 'justify'> {
