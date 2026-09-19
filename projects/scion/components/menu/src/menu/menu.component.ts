@@ -267,6 +267,7 @@ export class SciMenuComponent {
           attributes: menuItem.attributes,
           submenu: true,
           align: 'horizontal',
+          offset: {x: 1},
         });
 
         // Close when opening another submenu.

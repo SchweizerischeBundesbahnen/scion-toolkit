@@ -228,6 +228,12 @@ export interface SciMenuOptions {
    */
   align?: 'vertical' | 'horizontal';
   /**
+   * Sets the distance (in pixels) between the menu and its anchor element along the X and Y axes.
+   *
+   * By default, the menu is aligned flush with the anchor.
+   */
+  offset?: {x?: number; y?: number};
+  /**
    * Controls where to insert the menu popover into the DOM.
    *
    * By default, the menu popover is inserted after the anchor element, or appended to the HTML body if using a coordinate anchor.

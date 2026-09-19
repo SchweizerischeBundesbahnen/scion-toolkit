@@ -147,6 +147,7 @@ export class SciToolbarGroupComponent {
 
       const {menuItem, element} = this.activeMenuItem()!;
       const menu = menuItem.menu!;
+      const align = this.orientation() === 'horizontal' ? 'vertical' : 'horizontal';
 
       untracked(() => {
         const menuRef = menuService.open(menu.children, {
@@ -159,7 +160,11 @@ export class SciToolbarGroupComponent {
           maxHeight: menu.maxHeight,
           cssClass: menuItem.cssClass,
           attributes: menuItem.attributes,
-          align: this.orientation() === 'horizontal' ? 'vertical' : 'horizontal',
+          offset: {
+            x: align === 'horizontal' ? 1 : 0,
+            y: align === 'vertical' ? 1 : 0,
+          },
+          align,
         });
 
         // Close when opening another menu.

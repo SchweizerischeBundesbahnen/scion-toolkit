@@ -124,6 +124,7 @@ export class SciMenubarComponent {
           cssClass: menuItem.cssClass,
           attributes: menuItem.attributes,
           align: 'vertical',
+          offset: {y: 1},
         });
 
         // Close when opening another menu.

@@ -96,7 +96,7 @@ export class SciMenuOpener {
 
     // Bind popover to anchor.
     const popoverElement = componentRef.location.nativeElement as HTMLElement;
-    this.bindPopoverToAnchor({popoverElement, anchorElement, align});
+    this.bindPopoverToAnchor({popoverElement, anchorElement, align, offset: options.offset});
 
     // Destroy component when closing the popover.
     popoverElement.addEventListener('toggle', (event: ToggleEvent): void => {
@@ -117,7 +117,7 @@ export class SciMenuOpener {
   /**
    * Positions the popover relative to the anchor element.
    */
-  private bindPopoverToAnchor(binding: {popoverElement: HTMLElement; anchorElement: HTMLElement; align: 'vertical' | 'horizontal'}): void {
+  private bindPopoverToAnchor(binding: {popoverElement: HTMLElement; anchorElement: HTMLElement; align: 'vertical' | 'horizontal'; offset?: {x?: number; y?: number}}): void {
     const {popoverElement, anchorElement, align} = binding;
     const popoverId = `scimenu-${UUID.randomUUID().substring(0, 8)}`;
 
@@ -141,16 +141,16 @@ export class SciMenuOpener {
       setStyles(popoverElement, {
         'position-anchor': `--${popoverId}`,
         'position-try-fallbacks': 'flip-inline, flip-block, flip-inline flip-block',
-        'top': `calc(anchor(top) - var(--ɵsci-menu-padding-block))`,
-        'left': 'calc(anchor(right) + 1px)',
+        'top': `calc(anchor(top) - var(--ɵsci-menu-padding-block) + ${binding.offset?.y ?? 0}px)`,
+        'left': `calc(anchor(right) + ${binding.offset?.x ?? 0}px)`,
       });
     }
     else {
       setStyles(popoverElement, {
         'position-anchor': `--${popoverId}`,
         'position-try-fallbacks': 'flip-block',
-        'top': 'calc(anchor(bottom) + 1px)',
-        'left': 'min(anchor(left), calc(100% - var(--ɵsci-menu-width)))', // `calc(100% - var(--ɵsci-menu-width))` prevents pushing the popover out of the page viewport on the right
+        'top': `calc(anchor(bottom) + ${binding.offset?.y ?? 0}px)`,
+        'left': `min(calc(anchor(left) + ${binding.offset?.x ?? 0}px), calc(100% - var(--ɵsci-menu-width)))`, // `calc(100% - var(--ɵsci-menu-width))` prevents pushing the popover out of the page viewport on the right
       });
     }
 
