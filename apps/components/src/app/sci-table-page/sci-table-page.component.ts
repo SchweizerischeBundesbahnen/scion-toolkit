@@ -131,8 +131,8 @@ export default class SciTablePageComponent {
         table.addComponentColumn({
           name: 'column:validFrom',
           label: 'Valid From',
-          sortable: this.settingsForm.slowDataSource().value() ? true : {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
-          filterable: this.settingsForm.slowDataSource().value() ? true : {matcher: (filterText, item) => item.item.validFrom.includes(filterText)},
+          sortable: untracked(() => this.settingsForm.slowDataSource().value()) ? true : {comparator: (a, b) => new Date(a.item.validFrom).getTime() - new Date(b.item.validFrom).getTime()},
+          filterable: untracked(() => this.settingsForm.slowDataSource().value()) ? true : {matcher: (filterText, item) => item.item.validFrom.includes(filterText)},
           component: (company: Company) => ({
             component: DateCellComponent,
             bindings: [inputBinding('date', () => new Date(company.validFrom))],
@@ -145,8 +145,8 @@ export default class SciTablePageComponent {
         table.addComponentColumn({
           name: 'column:validTo',
           label: 'Valid To',
-          filterable: this.settingsForm.slowDataSource().value() ? true : {matcher: (filterText, item) => item.item.validTo.includes(filterText)},
-          sortable: this.settingsForm.slowDataSource().value() ? true : {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
+          filterable: untracked(() => this.settingsForm.slowDataSource().value()) ? true : {matcher: (filterText, item) => item.item.validTo.includes(filterText)},
+          sortable: untracked(() => this.settingsForm.slowDataSource().value()) ? true : {comparator: (a, b) => new Date(a.item.validTo).getTime() - new Date(b.item.validTo).getTime()},
           component: (company: Company) => ({
             component: DateCellComponent,
             bindings: [inputBinding('date', () => new Date(company.validTo))],
