@@ -25,6 +25,7 @@ import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header.component';
 import {VirtualColumnsComponent} from './virtual-columns/virtual-columns.component';
 import {SciAttributesDirective} from '@scion/components/common';
+import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
   selector: 'sci-table',
@@ -49,6 +50,7 @@ import {SciAttributesDirective} from '@scion/components/common';
     SciTextPipe,
     SciThrobberComponent,
     VirtualColumnsComponent,
+    SciIconComponent,
   ],
   providers: [
     provideSciTable(),
@@ -88,6 +90,10 @@ export class SciTableComponent<T = unknown> {
 
   protected onRowPrimaryAction(item: T): void {
     this.primaryAction.emit(item);
+  }
+
+  protected onRefresh(): void {
+    this.table().reset();
   }
 
   private connectToModel(): void {
