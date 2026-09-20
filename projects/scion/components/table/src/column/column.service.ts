@@ -47,7 +47,7 @@ export class SciColumnService {
           }
           return width;
         })
-        .join(' ');
+        .join(' ') || '100%'; // fill full width if no column
     });
   }
 

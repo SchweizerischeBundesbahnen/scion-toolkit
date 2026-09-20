@@ -35,7 +35,7 @@
 
     > sci-table-grid {
       display: grid;
-      grid-template-columns: var(--ɵsci-table-columns, 100%) 0; // last column used for row action toolbar
+      grid-template-columns: var(--ɵsci-table-columns, repeat(auto-fit, 0)) 0; // Last column reserved for action toolbar; `repeat(auto-fit, 0)` prevents flicker (oversized column header dividers) until `--ɵsci-table-columns` is set.
       grid-auto-rows: min-content;
       grid-template-rows:
         min-content // table header
