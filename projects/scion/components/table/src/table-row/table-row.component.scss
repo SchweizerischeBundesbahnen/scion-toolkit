@@ -1,3 +1,5 @@
+@use '@scion/components/common';
+
 :host {
   display: inline-grid;
   grid-template-columns: subgrid;
@@ -42,10 +44,9 @@
     align-items: center;
 
     > div.skeleton {
-      border-radius: var(--sci-table-skeleton-border-radius);
-      background-color: var(--sci-table-skeleton-color);
+      @include common.skeleton();
       height: 1em;
-      margin-inline: .5em;
+      margin-inline: var(--ɵsci-table-cell-padding-inline);
     }
   }
 

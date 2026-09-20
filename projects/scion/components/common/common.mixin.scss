@@ -37,3 +37,31 @@
 
   @content;
 }
+
+@mixin skeleton($border-radius: var(--sci-corner-small)) {
+  display: inline-block;
+  position: relative; // positioning anchor for ::after pseudo element
+  overflow: hidden;
+  border-radius: $border-radius;
+  background-color: var(--sci-color-skeleton-subtle);
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      to right,
+      transparent 0,
+      color-mix(in srgb, light-dark(var(--sci-static-color-white), var(--sci-static-color-black)) 30%, transparent) 50%,
+      transparent
+    );
+    animation: shimmer 2s infinite;
+    content: '';
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+}
