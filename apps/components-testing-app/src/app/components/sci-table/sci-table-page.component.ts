@@ -53,6 +53,7 @@ import {CustomButtonColumnComponent} from './custom-button-column.component';
     '[style.--table-page-height]': 'layoutForm.pageHeight().value() !== null ? `${layoutForm.pageHeight().value()}px` : null',
     '[style.--sci-table-header-height]': 'settingsForm.headerHeight().value() !== null ? `${settingsForm.headerHeight().value()}px` : null',
     '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() !== null ? `${settingsForm.rowHeight().value()}px` : null',
+    '[style.--sci-table-gridline-color]': 'settingsForm.showGridlines().value() ? "var(--sci-table-border-color)" : null',
   },
 })
 export default class SciTablePageComponent {
