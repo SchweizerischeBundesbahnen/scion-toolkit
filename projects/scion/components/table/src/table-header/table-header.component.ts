@@ -9,9 +9,9 @@
  */
 
 import {Component, inject} from '@angular/core';
-import {ɵSCI_TABLE} from './ɵtable.model';
-import {ColumnHeaderComponent} from './column-header/column-header.component';
-import {ColumnFilterComponent} from './column-filter/column-filter.component';
+import {ɵSCI_TABLE} from '../ɵtable.model';
+import {ColumnHeaderComponent} from '../column-header/column-header.component';
+import {ColumnFilterComponent} from '../column-filter/column-filter.component';
 
 @Component({
   selector: 'sci-table-header',

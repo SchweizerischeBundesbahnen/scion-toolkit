@@ -22,7 +22,7 @@ import {SciThrobberComponent} from '@scion/components/throbber';
 import {SciTableViewportComponent} from './table-viewport.component';
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
-import {SciTableHeaderComponent} from './table-header.component';
+import {SciTableHeaderComponent} from './table-header/table-header.component';
 import {VirtualColumnsComponent} from './virtual-columns/virtual-columns.component';
 import {SciAttributesDirective} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
