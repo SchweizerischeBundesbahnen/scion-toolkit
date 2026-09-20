@@ -156,10 +156,10 @@
   }
 
   > sci-throbber {
-    --sci-throbber-size: 1.5em;
+    --sci-throbber-size: 16px;
     position: absolute;
-    top: calc(anchor(--sci-table-viewport top) + .25em);
-    right: calc(anchor(--sci-table-viewport right) + .25em);
+    top: calc(anchor(--sci-table-viewport top) + .5em);
+    right: calc(anchor(--sci-table-viewport right) + .5em);
   }
 
   > div.synthetic {
