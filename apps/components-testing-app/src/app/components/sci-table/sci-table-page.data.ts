@@ -1,6 +1,6 @@
 import {SciColumnFilter, SciColumnType, SciSortCriterion, SciTableRequest, SciTableResponse} from '@scion/components/table';
-import {inject, linkedSignal, Service, signal, untracked} from '@angular/core';
-import {defer, Observable, of, tap, timer} from 'rxjs';
+import {effect, inject, Injector, linkedSignal, Service, Signal, signal, untracked} from '@angular/core';
+import {defer, mergeWith, NEVER, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
@@ -18,9 +18,10 @@ export class ProductService {
   private readonly _products$ = toObservable(this.products);
   private readonly _httpClient = inject(HttpClient);
 
-  public getProducts$(request: SciTableRequest, columnDataTypes: Map<`column:${string}`, SciColumnType>, options?: {slowDataSource?: boolean}): Observable<SciTableResponse<Product>> {
+  public getProducts$(request: SciTableRequest, columnDataTypes: Map<`column:${string}`, SciColumnType>, options?: {slowDataSource?: boolean; simulateError?: Signal<boolean>}): Observable<SciTableResponse<Product>> {
     return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
       .pipe(
+        mergeWith(simulateError$(options?.simulateError)),
         switchMap(() => this._products$),
         map(products => Products.filter(products, request.columnFilters, request.tableFilter, columnDataTypes)),
         map(products => Products.sort(products, request.sortCriteria, columnDataTypes)),
@@ -113,4 +114,22 @@ export namespace Products {
 
     return copy;
   }
+}
+
+export function simulateError$(simulateError: Signal<boolean> | undefined, options?: {injector?: Injector}): Observable<never> {
+  const injector = options?.injector ?? inject(Injector);
+
+  if (!simulateError) {
+    return NEVER;
+  }
+
+  return new Observable<never>(observer => {
+    const effectRef = effect(() => {
+      if (simulateError()) {
+        observer.error(new Error('[DatasourceError]'));
+      }
+    }, {injector});
+
+    return () => effectRef.destroy();
+  });
 }

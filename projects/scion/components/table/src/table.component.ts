@@ -49,8 +49,8 @@ import {SciIconComponent} from '@scion/components/icon';
     TableKeyboardNavigatorDirective,
     SciTextPipe,
     SciThrobberComponent,
-    VirtualColumnsComponent,
     SciIconComponent,
+    VirtualColumnsComponent,
   ],
   providers: [
     provideSciTable(),
@@ -92,7 +92,7 @@ export class SciTableComponent<T = unknown> {
     this.primaryAction.emit(item);
   }
 
-  protected onRefresh(): void {
+  protected onRetry(): void {
     this.table().reset();
   }
 

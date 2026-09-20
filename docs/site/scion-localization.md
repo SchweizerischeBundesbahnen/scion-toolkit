@@ -107,13 +107,15 @@ Translation: {{text()}}
 ### Built-In Texts
 SCION Components use the following built-in texts:
 
-| Translation Key                        | Text            |
-|----------------------------------------|-----------------|
-| scion.components.clear.tooltip         | Clear           |
-| scion.components.no.value              | No              |
-| scion.components.no_items.message      | No items found. |
-| scion.components.type_to_filter.action | Type to filter  |
-| scion.components.yes.value             | Yes             |
+| Translation Key                           | Text              |
+|-------------------------------------------|-------------------|
+| scion.components.clear.tooltip            | Clear             |
+| scion.components.datasource_error.message | Data unavailable. |
+| scion.components.no.value                 | No                |
+| scion.components.no_items.message         | No items found.   |
+| scion.components.retry.label              | Retry             |
+| scion.components.type_to_filter.action    | Type to filter    |
+| scion.components.yes.value                | Yes               |
 
 > [!TIP]
 > Applications using the SCION Workbench also include workbench-related texts. Built-in workbench texts start with the `scion.workbench.` prefix. Refer to the [workbench documentation][link-scion-workbench-texts] for details.

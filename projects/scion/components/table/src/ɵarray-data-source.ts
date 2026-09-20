@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciDataLoaderFn, SciColumnFilter, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
+import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
 import {SciColumnLike} from './table.model';
 import {computed, linkedSignal, Signal} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';

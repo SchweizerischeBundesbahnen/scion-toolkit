@@ -15,9 +15,9 @@ import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {createDestroyableInjector} from '@scion/components/common';
 import {FieldValidationDirective} from '../field-validation.directive';
-import {Product, ProductService} from './sci-table-page.data';
+import {Product, ProductService, simulateError$} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
-import {noop} from 'rxjs';
+import {mergeWith, noop} from 'rxjs';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';
@@ -90,11 +90,11 @@ export default class SciTablePageComponent {
             this._productService.enableHttpLoader();
             return this._productService.products;
           case 'loader':
-            return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: false});
+            return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: false, simulateError: this.datasourceForm.simulateError().value});
           case 'loader-delayed':
-            return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: true});
+            return (request: SciTableRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDataSource: true, simulateError: this.datasourceForm.simulateError().value});
           case 'loader-http':
-            return (request: SciTableRequest) => this._httpClient.post<SciTableResponse<Product>>('/sci-table/products', request);
+            return (request: SciTableRequest) => this._httpClient.post<SciTableResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value)));
         }
       })(),
       rowBindings: options.customRowStyling ? [
@@ -267,6 +267,7 @@ export default class SciTablePageComponent {
       datasource: 'array',
       bufferSize: 10,
       pageSize: 50,
+      simulateError: false,
     }));
   }
 
@@ -331,6 +332,7 @@ interface DatasourceForm {
   datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http';
   bufferSize: number;
   pageSize: number;
+  simulateError: boolean;
 }
 
 interface LayoutForm {

@@ -100,33 +100,41 @@
           display: none;
         }
 
-        > span.no-rows, > div.error {
+        > span.message {
           grid-column: 1/-1;
+          grid-row: auto / span 2;
           justify-self: center;
-          display: grid;
-          place-content: center;
+          align-self: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1em;
           user-select: none;
           white-space: nowrap;
           color: var(--sci-color-text-subtle);
+
+          &:has(button.action) {
+            grid-row: auto / span 4;
+          }
+
+          > button.action {
+            @include common.icon-button-element-states() {
+              border: 1px solid var(--sci-color-border);
+              padding: .25em 1em;
+            }
+          }
 
           // Stick message to the viewport if the viewport overflows horizontally. Do not use container scroll-state CSS query as not supported by Firefox.
           @container style(--ɵsci-table-viewport-client-width > --ɵsci-table-viewport-width) {
             position: sticky;
             left: 50%;
             right: 50%;
-            width: 0; // required to horizontally center the message
+            width: 0; // Required to horizontally center the message.
           }
         }
 
-        > div.error {
-          grid-template-columns: min-content min-content;
-          grid-gap: .25em;
-
-          > button {
-            @include common.icon-button-element-states() {
-              padding: 1px;
-            }
-          }
+        &:has(> span.message) {
+          z-index: 2; // Required to overlap the colum splitters.
         }
       }
 

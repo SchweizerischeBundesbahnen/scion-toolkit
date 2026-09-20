@@ -160,6 +160,11 @@ export class TablePagePO {
     await this.properties.locator(`input.e2e-column-visibility[data-column="${column}"]`).setChecked(visible);
   }
 
+  public async simulateDatasourceError(simulateError: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-simulate-error').setChecked(simulateError);
+  }
+
   public async addColumn(options: ColumnOptions): Promise<void> {
     await this.tabbar.locator('button.e2e-columns').click();
     await this.properties.locator('input.e2e-name').fill(options.name);

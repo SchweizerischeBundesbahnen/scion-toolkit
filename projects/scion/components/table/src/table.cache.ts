@@ -13,7 +13,7 @@ import {SciRow} from './table.model';
 import {Objects} from '@scion/toolkit/util';
 
 export interface TableCacheEntry<T> {
-  resource: ResourceRef<SciRow<T>[] | undefined>;
+  rows: ResourceRef<SciRow<T>[]>;
   start: number;
   end: number;
   dispose: () => void;
@@ -22,9 +22,20 @@ export interface TableCacheEntry<T> {
 type TableCacheKey = `${number}-${number}`;
 
 export class TableCache<T> {
+
   private readonly _cache = signal(new Map<TableCacheKey, TableCacheEntry<T>>());
 
-  public readonly error = computed(() => this.values().find(entry => entry.resource.error())?.resource.error());
+  public readonly loading: Signal<boolean> = computed(() => this.values().some(entry => entry.rows.isLoading()));
+  public readonly error: Signal<Error | undefined> = computed(() => this.values().find(entry => entry.rows.error())?.rows.error());
+  public readonly values: Signal<TableCacheEntry<T>[]> = computed(() => [...this._cache().values()]);
+
+  public readonly rowsByIndex: Signal<Map<number, SciRow<T>>> = computed(() => this.values()
+    .flatMap(page => page.rows.value())
+    .reduce((acc, row) => acc.set(row.index, row), new Map<number, SciRow<T>>()), {equal: Objects.isEqual});
+
+  public readonly rowsById: Signal<Map<unknown, SciRow<T>>> = computed(() => this.values()
+    .flatMap(page => page.rows.value())
+    .reduce((acc, row) => row.id !== undefined ? acc.set(row.id, row) : acc, new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
 
   public has(key: TableCacheKey): boolean {
     return this._cache().has(key);
@@ -49,18 +60,18 @@ export class TableCache<T> {
   }
 
   /**
-   * Deletes page from cache, but only if it has no items loaded.
+   * Deletes the specified page from the cache, but only if still loading.
    */
   public deleteIfLoading(key: TableCacheKey): void {
+    const cacheEntry = this._cache().get(key);
+    if (!cacheEntry?.rows.isLoading()) {
+      return;
+    }
+
     this._cache.update(cache => {
       const cacheCopy = new Map(cache);
-
-      const existing = cacheCopy.get(key);
-      if (existing?.resource.isLoading()) {
-        cacheCopy.delete(key);
-        existing.dispose();
-      }
-
+      cacheCopy.delete(key);
+      cacheEntry.dispose();
       return cacheCopy;
     });
   }
@@ -72,21 +83,5 @@ export class TableCache<T> {
       }
       return new Map();
     });
-  }
-
-  public get values(): Signal<Array<TableCacheEntry<T>>> {
-    return computed(() => [...this._cache().values()]);
-  }
-
-  public get rowsByIndex(): Signal<Map<number, SciRow<T>>> {
-    return computed(() => this.values()
-      .flatMap(page => page.resource.value() ?? [])
-      .reduce((acc, row) => acc.set(row.index, row), new Map<number, SciRow<T>>()), {equal: Objects.isEqual});
-  }
-
-  public get rowsById(): Signal<Map<unknown, SciRow<T>>> {
-    return computed(() => this.values()
-      .flatMap(page => page.resource.value() ?? [])
-      .reduce((acc, row) => row.id !== undefined ? acc.set(row.id, row) : acc, new Map<unknown, SciRow<T>>()), {equal: Objects.isEqual});
   }
 }

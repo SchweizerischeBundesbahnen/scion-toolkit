@@ -9,20 +9,23 @@
 
     <!-- Table body -->
     <sci-table-body sciTableKeyboardNavigator>
-      @if (table.error()) {
-        <div class="error e2e-error">
-          <button (click)="onRefresh()">
-            <sci-icon>refresh</sci-icon>
-          </button>
-          <span>Error occurred.</span>
-        </div>
-      } @else {
+      @if (!table.error()) {
         <!-- Track index to reuse the table row elements -->
         @for (row of table.rows(); track $index) {
           <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction(row.item!)" [sciAttributes]="row.bindings?.attributes()"/>
         } @empty {
-          <span class="no-rows e2e-no-rows">{{('%scion.components.no_items.message' | sciText)()}}</span>
+          <span class="message e2e-no-data">{{('%scion.components.no_items.message' | sciText)()}}</span>
         }
+      } @else {
+        <span class="message e2e-datasource">
+          {{('%scion.components.datasource_error.message' | sciText)()}}
+
+          <button (click)="onRetry()" class="action e2e-datasource-retry">
+            <!-- TODO [dwie] Replace with SCION icon -->
+            <sci-icon>refresh</sci-icon>
+            <span>{{('%scion.components.retry.label' | sciText)()}}</span>
+          </button>
+        </span>
       }
 
       <!-- Render active row outline separately to preserve row border-radius within block selection. -->

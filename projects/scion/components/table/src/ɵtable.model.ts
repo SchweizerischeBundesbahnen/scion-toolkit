@@ -8,22 +8,22 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, effect, EffectCleanupRegisterFn, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciColumnDescriptorLike} from './table.factory';
-import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
+import {coerceSignal, createDestroyableInjector, toLazyObservable} from '@scion/components/common';
 import {arrayDataSource} from './ɵarray-data-source';
 import {TableCache, TableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {catchError, concat, fromEvent, of, skip, switchMap, timer} from 'rxjs';
+import {concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, switchMap, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBinding} from './table-row-binding';
-import {clamp, Objects, Observables} from '@scion/toolkit/util';
+import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {SciTableFactoryFn} from './table';
-import {map, startWith} from 'rxjs/operators';
+import {first, map, startWith} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
 
 export class ɵSciTable<T = unknown> implements SciTable<T> {
@@ -85,13 +85,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   });
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), tableFilter: this._tableFilter()}));
-  public readonly loading = computed(() => this._cache.values().some(entry => entry.resource.isLoading()));
+  public readonly loading = this._cache.loading;
+  public readonly error = this._cache.error;
   public readonly activeRow: Signal<SciRow<T> | undefined>;
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
   public readonly rowsByIndex = this._cache.rowsByIndex;
-  public readonly error = this._cache.error;
   public readonly rows = this.computeRows();
 
   constructor(factoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>) {
@@ -261,91 +261,97 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   /**
    * Loads a range of rows, based on the current sort and filter criteria, into the cache.
    */
-  public loadRange(start: number, end: number): Promise<void[]> {
+  public async loadRange(start: number, end: number): Promise<void> {
     const sortCriteria = this.sortCriteria();
     const columnFilters = this.filterCriteria();
     const tableFilter = this._tableFilter() ?? undefined;
 
+    // Calculate pages based on row indices and page size.
     const pages = pagesByRange(start, end, this.pageSize);
-    const requests = pages.map(page => {
-      const response = this.loadPage({page, pageSize: this.pageSize, columnFilters, tableFilter, sortCriteria});
-      // Wait for the page to be loaded.
-      return new Promise<void>(resolve => {
-        const effectRef = effect(() => {
-          const items = response();
-          if (items) {
-            resolve();
-            effectRef.destroy();
-          }
-        }, {injector: this._injector});
-      });
-    });
+    if (!pages) {
+      return;
+    }
 
-    return Promise.all(requests);
+    // Load pages and wait until completed loading.
+    await Promise.all(pages
+      .map(page => this.loadPage({page, pageSize: this.pageSize, columnFilters, tableFilter, sortCriteria}))
+      .map(page => firstValueFrom(toLazyObservable(page.loading, {injector: this._injector}).pipe(first(loading => !loading), defaultIfEmpty(true)))));
   }
 
   /**
-   * Loads a page from the dataSource and saves it to the page cache.
+   * Loads the requested page from the cache or datasource and returns its loading state with a cancelation handler.
    */
-  private loadPage({page, pageSize, sortCriteria, columnFilters, tableFilter}: {page: number; pageSize: number; sortCriteria: SciSortCriterion[]; columnFilters: SciColumnFilter[]; tableFilter?: string}, onCleanup?: EffectCleanupRegisterFn): Signal<SciRow<T>[] | undefined> {
+  private loadPage({page, pageSize, sortCriteria, columnFilters, tableFilter}: {page: number; pageSize: number; sortCriteria: SciSortCriterion[]; columnFilters: SciColumnFilter[]; tableFilter?: string}): {loading: Signal<boolean>; cancel: () => void} {
     const pageStart = page * pageSize;
     const pageEnd = pageStart + pageSize;
     const cacheKey = `${pageStart}-${pageEnd}` as const;
 
     if (this._cache.has(cacheKey)) {
-      return this._cache.get(cacheKey)!.resource.value;
+      return {
+        loading: this._cache.get(cacheKey)!.rows.isLoading,
+        cancel: () => this._cache.deleteIfLoading(cacheKey),
+      };
     }
 
-    const injector = createDestroyableInjector({parent: this._injector});
-    const rows = runInInjectionContext(injector, () => {
-      const data = this._dataLoaderFn({
-        start: pageStart,
-        end: pageEnd,
-        pageSize,
-        page,
-        sortCriteria,
-        tableFilter,
-        columnFilters,
-      });
-      const result = rxResource({
-        stream: () => Observables.coerce(data).pipe(
-          catchError(error => {
-            // reset the totalCount on error, to display error message properly.
-            this.totalCount.set(0);
-            throw error;
-          }),
-        ),
-      });
-
-      const rows = resource({
-        params: ({chain}) => ({items: chain(result)?.items, columns: this.columns()}),
-        loader: async ({params}) => this.mapItemsToRow(params.items ?? [], params.columns, pageStart),
-      });
-
-      effect(() => {
-        // Only set the totalCount, once the derived resource is resolved.
-        // Else the initial page is reloaded, because the scrollRange changes before the resource is resolved.
-        if (rows.status() === 'resolved') {
-          this.totalCount.set(result.value()?.totalCount);
-        }
-      });
-
-      return rows;
-    });
-
+    const cacheEntryInjector = createDestroyableInjector({parent: this._injector});
     const cacheEntry: TableCacheEntry<T> = {
-      resource: rows,
-      dispose: () => injector.destroy(),
+      rows: runInInjectionContext(cacheEntryInjector, () => {
+        // Fetch data.
+        const tableResponse$ = runSafe(
+          () => Observables.coerce(this._dataLoaderFn({
+            start: pageStart,
+            end: pageEnd,
+            pageSize,
+            page,
+            sortCriteria,
+            tableFilter,
+            columnFilters,
+          })),
+          error => throwError(() => error));
+
+        // Create a resource to track loading and error states.
+        const tableResponse = rxResource({stream: () => tableResponse$});
+
+        // Create a derived resource mapping the response to rows. Must be done in a separate resource to not fetch data anew on column change.
+        const rows = resource({
+          params: ({chain}) => {
+            const items = chain(tableResponse)?.items;
+            return items && {items, columns: this.columns()};
+          },
+          loader: async ({params}) => this.mapItemsToRow(params.items, params.columns, pageStart),
+          defaultValue: [],
+        });
+
+        // Synchronize total row count based on resource state.
+        effect(() => {
+          switch (rows.status()) {
+            case 'resolved': {
+              // Update count only after rows resolve to prevent premature scroll invalidation.
+              this.totalCount.set(tableResponse.value()?.totalCount);
+              break;
+            }
+            case 'error': {
+              console.error(rows.error()!.cause);
+              // Reset count to scroll to the top so the user sees the error.
+              this.totalCount.set(0);
+              break;
+            }
+          }
+        });
+
+        return rows;
+      }),
+      dispose: () => cacheEntryInjector.destroy(),
       start: pageStart,
       end: pageEnd,
     };
 
     this._cache.set(cacheKey, cacheEntry);
-    onCleanup?.(() => {
-      this._cache.deleteIfLoading(cacheKey);
-    });
 
-    return rows.value;
+    return {
+      loading: cacheEntry.rows.isLoading,
+      cancel: () => this._cache.deleteIfLoading(cacheKey),
+    };
   }
 
   /**
@@ -436,21 +442,20 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       }
 
       untracked(() => {
-        const pages = pagesByRange(scrollRange.start, scrollRange.end, this.pageSize);
-
-        // Fallback to load the initial page. Otherwise, if the table grows with its content,
+        // Fall back to load the initial page if range is empty. Otherwise, if the table grows with its content,
         // no data would ever load because the scroll range remains 0.
-        if (!pages.length) {
-          pages.push(0);
-        }
+        const pages = pagesByRange(scrollRange.start, scrollRange.end, this.pageSize) ?? [0];
 
-        pages.forEach(page => this.loadPage({
-          pageSize: this.pageSize,
-          page,
-          sortCriteria,
-          tableFilter,
-          columnFilters,
-        }, onCleanup));
+        pages.forEach(page => {
+          const pageRef = this.loadPage({
+            pageSize: this.pageSize,
+            page,
+            sortCriteria,
+            tableFilter,
+            columnFilters,
+          });
+          onCleanup(() => pageRef.cancel());
+        });
       });
     });
   }
@@ -613,12 +618,13 @@ export interface SciScrollRange {
 }
 
 /**
- * Get pages by range and pageSize. End is exclusive.
+ * Gets pages by range and page size, or `null` if empty. End is exclusive.
  */
-function pagesByRange(start: number, end: number, pageSize: number): number[] {
+function pagesByRange(start: number, end: number, pageSize: number): number[] | null {
   const startPage = Math.floor(start / pageSize);
   const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
-  return rangeInclusive(startPage, endPage);
+  const pages = rangeInclusive(startPage, endPage);
+  return pages.length ? pages : null;
 }
 
 export interface SciTableUserSettings {

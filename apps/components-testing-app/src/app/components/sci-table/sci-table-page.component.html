@@ -171,6 +171,16 @@
         <sci-form-field label="Page Size">
           <input [formField]="datasourceForm.pageSize" type="number" class="e2e-page-size"/>
         </sci-form-field>
+
+        @switch (datasourceForm.datasource().value()) {
+          @case ('loader')
+          @case ('loader-delayed')
+          @case ('loader-http') {
+            <sci-form-field label="Simulate Error">
+              <input [formField]="datasourceForm.simulateError" type="checkbox" class="e2e-simulate-error"/>
+            </sci-form-field>
+          }
+        }
       </section>
     </ng-template>
 

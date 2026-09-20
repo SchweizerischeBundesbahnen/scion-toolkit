@@ -4962,7 +4962,7 @@ test.describe.only('sci-table', () => {
         await tablePage.setTableCount(0);
         await tablePage.setTableCount(1);
 
-        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
 
         // Grow to 1 row.
         await tablePage.setRowCount(1);
@@ -4991,7 +4991,7 @@ test.describe.only('sci-table', () => {
 
         // Shrink to 0 rows.
         await tablePage.setRowCount(0);
-        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
       });
 
       await test.step('Table with breakpoint at 600px', async () => {
@@ -5002,7 +5002,7 @@ test.describe.only('sci-table', () => {
         await tablePage.setTableCount(0);
         await tablePage.setTableCount(1);
 
-        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
         await expectTable(table).not.toHaveVerticalOverflow();
 
         // Grow to 1 row.
@@ -5032,7 +5032,7 @@ test.describe.only('sci-table', () => {
 
         // Shrink to 0 rows.
         await tablePage.setRowCount(0);
-        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
         await expectTable(table).not.toHaveVerticalOverflow();
       });
 
@@ -5045,7 +5045,7 @@ test.describe.only('sci-table', () => {
         await tablePage.setTableCount(0);
         await tablePage.setTableCount(1);
 
-        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
         await expectTable(table).not.toHaveVerticalOverflow();
 
         // Grow to 1 row.
@@ -5075,7 +5075,7 @@ test.describe.only('sci-table', () => {
 
         // Shrink to 0 rows.
         await tablePage.setRowCount(0);
-        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
         await expectTable(table).not.toHaveVerticalOverflow();
       });
     });
@@ -5158,13 +5158,13 @@ test.describe.only('sci-table', () => {
 
       // Scroll to the start.
       await table.scrollTo({x: 'start'});
-      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
-      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
 
       // Scroll to the end.
       await table.scrollTo({x: 'end'});
-      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
-      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
     });
 
     test(`should horizontally center 'No Items Found' in table-body if no overflow`, async ({page}) => {
@@ -5181,16 +5181,16 @@ test.describe.only('sci-table', () => {
       await expectTable(table).not.toHaveHorizontalOverflow();
 
       const tableBounds = await table.bounds();
-      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
-      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
 
       // Shrink column so the table does not fill the viewport.
       await table.column({name: 'column:1'}).splitter.drag({deltaX: -300});
 
       // Expect 'No Items Found' message to be horizontally centered within the column.
       const columnBounds = await table.column({name: 'column:1'}).bounds();
-      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
-      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(columnBounds.hcenter);
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toEqual(columnBounds.hcenter);
     });
 
     test(`should vertically center 'No Items Found' in first row`, async ({page}) => {
@@ -5207,9 +5207,9 @@ test.describe.only('sci-table', () => {
       const tableBounds = await table.bounds();
       const headerBounds = await table.header.bounds();
 
-      await expect(table.noRowsMessage).toBeInViewport({ratio: 1});
-      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
-      await expect.poll(async () => fromRect(await table.noRowsMessage.boundingBox()).vcenter).toEqual(headerBounds.bottom + 25); // 25 = half row height
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).vcenter).toEqual(headerBounds.bottom + 2 * 25); // 25 = half row height
     });
 
     test(`should not display 'No Items Found' until loaded initial data`, async ({page}) => {
@@ -5259,7 +5259,108 @@ test.describe.only('sci-table', () => {
       await tablePage.setGrowToBreakpoint(true);
 
       // Expect table to grow with "No Items Found" message.
-      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30); // "No Items Found" message
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
+    });
+  });
+
+  test.describe('Datasource Error', () => {
+
+    test(`should display 'Data Unavailable' on datasource error`, async ({page, consoleLogs}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setDatasource('loader');
+      await tablePage.addColumn({name: 'column:testee', type: 'string'});
+
+      await tablePage.setRowCount(10);
+      await expect(table.locator).not.toContainText('Data unavailable.');
+      await expect(table.rows).toHaveCount(10);
+
+      await tablePage.simulateDatasourceError(true);
+      await expect(table.locator).toContainText('Data unavailable.');
+      await expect(table.rows).toHaveCount(0);
+
+      await tablePage.simulateDatasourceError(false);
+      await table.retry();
+      await expect(table.locator).not.toContainText('Data unavailable.');
+      await expect(table.rows).toHaveCount(10);
+
+      await expect.poll(() => consoleLogs.get({severity: 'error'})).toContainEqual(expect.stringContaining('[DatasourceError]'));
+    });
+
+    test(`should horizontally center 'Data Unavailable' in viewport`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setDatasource('loader');
+      await tablePage.simulateDatasourceError(true);
+      await tablePage.setWidth(600);
+      await tablePage.setRowHeight(30);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '1200px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '1200px'});
+
+      // Expect horizontal overflow.
+      await expectTable(table).toHaveHorizontalOverflow();
+      const tableBounds = await table.bounds();
+
+      // Scroll to the start.
+      await table.scrollTo({x: 'start'});
+      await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+
+      // Scroll to the end.
+      await table.scrollTo({x: 'end'});
+      await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+    });
+
+    test(`should horizontally center 'Data Unavailable' in table-body if no overflow`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setDatasource('loader');
+      await tablePage.simulateDatasourceError(true);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+
+      // Expect no horizontal overflow.
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      const tableBounds = await table.bounds();
+      await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toEqual(tableBounds.hcenter);
+
+      // Shrink column so the table does not fill the viewport.
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: -300});
+
+      // Expect 'Data Unavailable' message to be horizontally centered within the column.
+      const columnBounds = await table.column({name: 'column:1'}).bounds();
+      await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toEqual(columnBounds.hcenter);
+    });
+
+    test(`should display 'Data Unavailable' if table grows with its content`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setDatasource('loader');
+      await tablePage.simulateDatasourceError(true);
+      await tablePage.setRowHeight(30);
+      await tablePage.showHeader(false);
+
+      // Configure table to grow with its content.
+      await tablePage.setGrowToBreakpoint(true);
+
+      // Expect table to grow with "Data Unavailable" message.
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(4 * 30); // "Data Unavailable" message
     });
   });
 });

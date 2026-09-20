@@ -29,7 +29,10 @@ export class TablePO {
   public readonly horizontalScrollbar: ScrollbarPO;
   public readonly splitters: Locator;
   public readonly activeRowOutline: Locator;
-  public readonly noRowsMessage: Locator;
+  public readonly message: {
+    noData: Locator;
+    datasourceError: Locator;
+  };
 
   constructor(public readonly locator: Locator) {
     this.viewport = this.locator.locator('sci-table-viewport');
@@ -44,7 +47,10 @@ export class TablePO {
     this.horizontalScrollbar = new ScrollbarPO(this.locator.locator('sci-scrollbar[direction="hscroll"]'));
     this.splitters = this.locator.locator('sci-column-splitters');
     this.activeRowOutline = this.locator.locator('div.e2e-active-row-outline');
-    this.noRowsMessage = this.locator.locator('span.e2e-no-rows');
+    this.message = {
+      noData: this.locator.locator('span.e2e-no-data'),
+      datasourceError: this.locator.locator('span.e2e-datasource'),
+    };
   }
 
   /**
@@ -113,6 +119,10 @@ export class TablePO {
 
   public async scrollWidth(): Promise<number> {
     return waitUntilStable(async () => this.viewport.evaluate(viewport => viewport.scrollWidth));
+  }
+
+  public async retry(): Promise<void> {
+    await this.body.locator('button.e2e-datasource-retry').click();
   }
 }
 

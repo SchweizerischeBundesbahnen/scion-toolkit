@@ -9,14 +9,14 @@
  */
 
 import {TestBed} from '@angular/core/testing';
-import {table as sciTable} from './table';
-import {Component, computed, EnvironmentProviders, input, inputBinding, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
+import {table, table as sciTable} from './table';
+import {assertNotInReactiveContext, Component, computed, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
 import {TableSelectionService} from './table-selection.service';
 import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {attributeBinding, classBinding, partBinding, provideTableRowBinding} from './table-row-binding';
-import {SciTableRequest, SciTableResponse} from './table-data-source';
+import {SciDataLoaderFn, SciTableRequest, SciTableResponse} from './table-data-source';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
 
 fdescribe('Table', () => {
@@ -1321,6 +1321,62 @@ fdescribe('Table', () => {
 
       // Expect no vertical overflow.
       expect(table.viewport.scrollHeight).toEqual(table.viewport.clientHeight);
+    });
+
+    it('should call data loader function in injection context', async () => {
+      let injector: Injector | undefined;
+
+      const {fixture} = createSciTableComponent(() => table({
+        data: () => {
+          injector = inject(Injector);
+          return {items: [1, 2, 3], totalCount: 3};
+        },
+      }, table => table));
+
+      await fixture.whenStable();
+      expect(injector).toBeDefined();
+    });
+
+    it('should not call data loader function in reactive context', async () => {
+      const loaderFn: SciDataLoaderFn<any> = () => {
+        assertNotInReactiveContext(loaderFn);
+        return {items: [1, 2, 3], totalCount: 3};
+      };
+
+      const {fixture, model} = createSciTableComponent(() => table({data: loaderFn}, table => table));
+
+      await fixture.whenStable();
+      expect(model.error()).toBeUndefined();
+    });
+
+    it('should destroy previous data loader function injection context', async () => {
+      const destroyRefs = new Array<DestroyRef>();
+
+      const {fixture, model} = createSciTableComponent(() => table({
+        data: () => {
+          destroyRefs.push(inject(DestroyRef));
+          return {items: [1, 2, 3], totalCount: 3};
+        },
+      }, table => table));
+
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(1);
+      expect(destroyRefs[0]!.destroyed).toBeFalse();
+
+      // Force reload of page 1.
+      model.filter('reload 1');
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(2);
+      expect(destroyRefs[0]!.destroyed).toBeTrue();
+      expect(destroyRefs[1]!.destroyed).toBeFalse();
+
+      // Force reload of page 2.
+      model.filter('reload 2');
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(3);
+      expect(destroyRefs[0]!.destroyed).toBeTrue();
+      expect(destroyRefs[1]!.destroyed).toBeTrue();
+      expect(destroyRefs[2]!.destroyed).toBeFalse();
     });
   });
 
