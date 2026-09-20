@@ -27,14 +27,6 @@ import {CustomButtonColumnComponent} from './custom-button-column.component';
   selector: 'app-table-page',
   templateUrl: './sci-table-page.component.html',
   styleUrl: './sci-table-page.component.scss',
-  host: {
-    '[style.--table-height]': 'layoutForm.tableHeight().value() !== null ? `${layoutForm.tableHeight().value()}px` : null',
-    '[style.--table-max-height]': 'layoutForm.tableMaxHeight().value() !== null ? `${layoutForm.tableMaxHeight().value()}px` : null',
-    '[style.--table-width]': 'layoutForm.tableWidth().value() !== null ? `${layoutForm.tableWidth().value()}px` : null',
-    '[style.--table-grow-to-breakpoint]': 'layoutForm.tableGrowToBreakpoint().value() ? `true` : null',
-    '[style.--table-page-height]': 'layoutForm.pageHeight().value() !== null ? `${layoutForm.pageHeight().value()}px` : null',
-    '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() !== null ? `${settingsForm.rowHeight().value()}px` : null',
-  },
   imports: [
     SciTableComponent,
     FormsModule,
@@ -53,6 +45,15 @@ import {CustomButtonColumnComponent} from './custom-button-column.component';
       attributeBinding((_item, index) => ({'data-row-index': index})),
     ]),
   ],
+  host: {
+    '[style.--table-height]': 'layoutForm.tableHeight().value() !== null ? `${layoutForm.tableHeight().value()}px` : null',
+    '[style.--table-max-height]': 'layoutForm.tableMaxHeight().value() !== null ? `${layoutForm.tableMaxHeight().value()}px` : null',
+    '[style.--table-width]': 'layoutForm.tableWidth().value() !== null ? `${layoutForm.tableWidth().value()}px` : null',
+    '[style.--table-grow-to-breakpoint]': 'layoutForm.tableGrowToBreakpoint().value() ? `true` : null',
+    '[style.--table-page-height]': 'layoutForm.pageHeight().value() !== null ? `${layoutForm.pageHeight().value()}px` : null',
+    '[style.--sci-table-header-height]': 'settingsForm.headerHeight().value() !== null ? `${settingsForm.headerHeight().value()}px` : null',
+    '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() !== null ? `${settingsForm.rowHeight().value()}px` : null',
+  },
 })
 export default class SciTablePageComponent {
 
@@ -254,6 +255,7 @@ export default class SciTablePageComponent {
       showGridlines: false,
       showRowActions: false,
       customRowStyling: false,
+      headerHeight: 30,
       rowHeight: 30,
       tableCount: 1,
     }));
@@ -319,6 +321,7 @@ interface SettingsForm {
   showGridlines: boolean;
   showRowActions: boolean;
   customRowStyling: boolean;
+  headerHeight: number | null;
   rowHeight: number | null;
   tableCount: number;
 }

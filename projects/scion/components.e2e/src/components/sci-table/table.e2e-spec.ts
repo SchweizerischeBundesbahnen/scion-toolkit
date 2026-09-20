@@ -5218,6 +5218,7 @@ test.describe.only('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setHeight(300);
+      await tablePage.setHeaderHeight(30);
       await tablePage.setRowHeight(30);
 
       // Install HTTP endpoint that blocks the initial load.
