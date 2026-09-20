@@ -9,7 +9,7 @@
  */
 
 import {TestBed} from '@angular/core/testing';
-import {effect, Injector, signal} from '@angular/core';
+import {DestroyRef, effect, inject, Injector, signal} from '@angular/core';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {createSciTableComponent} from './testing/testing.util';
 import {table} from './table';
@@ -118,7 +118,7 @@ fdescribe('Table Factory', () => {
     });
   });
 
-  it('should call factory in a reactive context', async () => {
+  it('should call factory function in reactive context', async () => {
     const flag = signal(false);
     const {fixture, model} = createSciTableComponent(() => table(signal([]), table => {
       if (flag()) {
@@ -133,5 +133,45 @@ fdescribe('Table Factory', () => {
     flag.set(true);
     await fixture.whenStable();
     expect(model.columns()).toHaveSize(2);
+  });
+
+  it('should call factory function in injection context', async () => {
+    let injector: Injector | undefined;
+
+    const {fixture} = createSciTableComponent(() => table(signal([]), () => {
+      injector = inject(Injector);
+    }));
+
+    await fixture.whenStable();
+    expect(injector).toBeDefined();
+  });
+
+  it('should destroy previous factory function injection context', async () => {
+    const destroyRefs = new Array<DestroyRef>();
+    const flag = signal(false);
+
+    const {fixture} = createSciTableComponent(() => table(signal([]), () => {
+      flag();
+      destroyRefs.push(inject(DestroyRef));
+    }));
+
+    await fixture.whenStable();
+    expect(destroyRefs).toHaveSize(1);
+    expect(destroyRefs[0]!.destroyed).toBeFalse();
+
+    // Invalidate reactive context.
+    flag.set(true);
+    await fixture.whenStable();
+    expect(destroyRefs).toHaveSize(2);
+    expect(destroyRefs[0]!.destroyed).toBeTrue();
+    expect(destroyRefs[1]!.destroyed).toBeFalse();
+
+    // Invalidate reactive context.
+    flag.set(false);
+    await fixture.whenStable();
+    expect(destroyRefs).toHaveSize(3);
+    expect(destroyRefs[0]!.destroyed).toBeTrue();
+    expect(destroyRefs[1]!.destroyed).toBeTrue();
+    expect(destroyRefs[2]!.destroyed).toBeFalse();
   });
 });

@@ -1,6 +1,5 @@
 # TODO
 
-- Call loader fn in injection context (separate context per call to release resources)
 - Test dass Tabelle in Workbench Microfrontend funktioniert
 - Test dass Tabelle mit RemoteDataFetcher funktioniert (Zusammenspiel)
 - 

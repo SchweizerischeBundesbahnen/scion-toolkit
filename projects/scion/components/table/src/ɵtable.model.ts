@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion} from './table-data-source';
 import {SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciRow, SciRowActionFactoryFn, SciTable, SciTableDescriptor} from './table.model';
 import {ɵSciTableFactory} from './ɵtable.factory';
@@ -138,12 +138,19 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   }
 
   private computeColumns(tableFactoryFn: SciTableFactoryFn<T>, descriptor: SciTableDescriptor<T>): Signal<SciColumnLike<T>[]> {
-    // TODO [dwie] Create separate injection context for each separate run (to dispose resources allocated in the reactive context)
-    return computed(() => runInInjectionContext(this._injector, () => {
-      const tableFactory = new ɵSciTableFactory<T>(descriptor);
-      tableFactoryFn(tableFactory);
-      return untracked(() => tableFactory.columns.map(column => this.initColumn(column.type, column)));
-    }));
+    // Create separate injection context per factory invocation to clean up allocated resources, like RxJS subscriptions.
+    let injector: DestroyableInjector | undefined;
+
+    return computed(() => {
+      injector?.destroy();
+      injector = createDestroyableInjector({parent: this._injector});
+
+      return runInInjectionContext(injector, () => {
+        const tableFactory = new ɵSciTableFactory<T>(descriptor);
+        tableFactoryFn(tableFactory);
+        return untracked(() => tableFactory.columns.map(column => this.initColumn(column.type, column)));
+      });
+    });
   }
 
   /**
