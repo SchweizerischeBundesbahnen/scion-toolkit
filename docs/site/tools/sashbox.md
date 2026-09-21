@@ -152,7 +152,16 @@ To customize the default look of SCION components or support different themes, c
  Sets the touch target size to move the splitter (accessibility).
 
 - `--sci-sashbox-splitter-cross-axis-size:`\
- Sets the splitter size along the cross axis.
+ Sets the splitter size along the cross-axis.
+
+- `--sci-sashbox-splitter-cross-axis-size:`\
+  Sets the splitter size along the cross-axis. Defaults to `100%`.
+
+- `--sci-sashbox-splitter-cross-axis-start:`\
+ Sets the splitter's start position. Defaults to `auto`.
+
+- `--sci-sashbox-splitter-cross-axis-end:`\
+ Sets the splitter's end position. Defaults to `auto`. Requires `--sci-sashbox-splitter-cross-axis-size: auto`.
 
 - `--sci-sashbox-splitter-border-radius:`\
  Sets the border radius of the splitter.

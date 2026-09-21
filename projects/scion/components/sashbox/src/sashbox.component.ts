@@ -8,12 +8,13 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {afterNextRender, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked, ChangeDetectionStrategy} from '@angular/core';
+import {afterNextRender, ChangeDetectionStrategy, Component, contentChildren, effect, ElementRef, inject, input, IterableDiffers, NgZone, output, Signal, signal, untracked} from '@angular/core';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {SciSashDirective} from './sash.directive';
 import {SciSashBoxAccessor} from './sashbox-accessor';
 import {SciElementRefDirective} from './element-ref.directive';
 import {SashComponent} from './sash/sash.component';
+import {clamp} from '@scion/toolkit/util';
 
 /**
  * The <sci-sashbox> is like a CSS flexbox container that lays out its content children (sashes) in a row (which is by default)
@@ -55,8 +56,10 @@ import {SashComponent} from './sash/sash.component';
  * - --sci-sashbox-splitter-size: Sets the size of the splitter along the main axis.
  * - --sci-sashbox-splitter-size-hover: Sets the size of the splitter along the main axis when hovering it.
  * - --sci-sashbox-splitter-touch-target-size: Sets the touch target size to move the splitter (accessibility).
- * - --sci-sashbox-splitter-cross-axis-size: Sets the splitter size along the cross axis.
- * - --sci-sashbox-splitter-border-radius: Sets the border radius of the splitter.
+ * - --sci-sashbox-splitter-cross-axis-size: Sets the splitter size along the cross-axis. Defaults to `100%`.
+ * - --sci-sashbox-splitter-cross-axis-start: Sets the splitter's start position. Defaults to `auto`.
+ * - --sci-sashbox-splitter-cross-axis-end: Sets the splitter's end position. Defaults to `auto`. Requires `--sci-sashbox-splitter-cross-axis-size: auto`.
+ * - --sci-sashbox-splitter-border-radius: Sets the border radius of the splitter. Defaults to 0.
  * - --sci-sashbox-splitter-opacity-active: Sets the opacity of the splitter while the user moves the splitter.
  * - --sci-sashbox-splitter-opacity-hover: Sets the opacity of the splitter when hovering it.
  *
@@ -204,8 +207,8 @@ export class SciSashboxComponent {
     const sashMinSize1 = sash1.minSize() ? this.toPixel(sash1.minSize()!) : 0;
     const sashMinSize2 = sash2.minSize() ? this.toPixel(sash2.minSize()!) : 0;
 
-    const newSashSize1 = between(Math.round(sashSize1 + distance), {min: sashMinSize1, max: sashSize1 + sashSize2 - sashMinSize2});
-    const newSashSize2 = between(Math.round(sashSize2 - distance), {min: sashMinSize2, max: sashSize1 + sashSize2 - sashMinSize1});
+    const newSashSize1 = clamp(Math.round(sashSize1 + distance), {min: sashMinSize1, max: sashSize1 + sashSize2 - sashMinSize2});
+    const newSashSize2 = clamp(Math.round(sashSize2 - distance), {min: sashMinSize2, max: sashSize1 + sashSize2 - sashMinSize1});
 
     // Set the new computed sash sizes.
     sash1.updateFlexProperties({flexBasis: `${newSashSize1}px`});
@@ -293,10 +296,6 @@ export class SciSashboxComponent {
 
     return sashes;
   }
-}
-
-function between(value: number, minmax: {min: number; max: number}): number {
-  return Math.min(minmax.max, Math.max(minmax.min, value));
 }
 
 /**

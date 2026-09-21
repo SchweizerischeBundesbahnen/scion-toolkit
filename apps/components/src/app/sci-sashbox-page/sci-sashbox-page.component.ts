@@ -49,6 +49,8 @@ export default class SciSashboxPageComponent {
       '--sci-sashbox-splitter-size-hover': this._formBuilder.control(''),
       '--sci-sashbox-splitter-touch-target-size': this._formBuilder.control(''),
       '--sci-sashbox-splitter-cross-axis-size': this._formBuilder.control(''),
+      '--sci-sashbox-splitter-cross-axis-start': this._formBuilder.control(''),
+      '--sci-sashbox-splitter-cross-axis-end': this._formBuilder.control(''),
       '--sci-sashbox-splitter-border-radius': this._formBuilder.control(''),
       '--sci-sashbox-splitter-opacity-active': this._formBuilder.control(''),
       '--sci-sashbox-splitter-opacity-hover': this._formBuilder.control(''),

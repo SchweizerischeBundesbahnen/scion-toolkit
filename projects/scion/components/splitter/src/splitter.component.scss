@@ -1,69 +1,69 @@
 :host {
   display: grid; // stretch the touch-target
   position: relative; // positioning context for 'touch-target'
-  background-color: var(--sci-splitter-background-color);
-  border-radius: var(--sci-splitter-border-radius);
-  place-items: center; // center the touch-target
-  align-self: center;
+  place-items: center; // center the touch-target horizontally
+
+  &:is(:hover, .moving) {
+    --ɵsci-splitter-hover: true;
+  }
+
+  &:active {
+    --ɵsci-splitter-active: true;
+  }
+
+  &.vertical {
+    --ɵsci-splitter-orientation: vertical;
+    width: var(--sci-splitter-size);
+  }
+
+  &.horizontal {
+    --ɵsci-splitter-orientation: horizontal;
+    height: var(--sci-splitter-size);
+  }
 
   > div.touch-target {
     position: absolute; // out of the document flow
     display: grid; // stretch the handle
     place-items: center; // center the handle
-    pointer-events: auto; // ensure interactable
+
+    @container style(--ɵsci-splitter-orientation: vertical) {
+      width: var(--sci-splitter-touch-target-size);
+      height: 100%;
+    }
+
+    @container style(--ɵsci-splitter-orientation: horizontal) {
+      width: 100%;
+      height: var(--sci-splitter-touch-target-size);
+    }
 
     > div.handle {
       position: absolute; // out of the document flow
       background-color: var(--sci-splitter-background-color);
       border-radius: var(--sci-splitter-border-radius);
-      opacity: var(--sci-splitter-opacity-hover);
-      transition-property: width, height;
-      transition-timing-function: ease-in;
-      transition-duration: 75ms;
-    }
-  }
+      outline: calc((var(--sci-splitter-size-hover) - var(--sci-splitter-size)) / 2) solid transparent;
+      transition: outline-color ease-out 125ms;
 
-  &.vertical {
-    width: var(--sci-splitter-size);
-    height: var(--sci-splitter-cross-axis-size);
-
-    > div.touch-target {
-      width: var(--sci-splitter-touch-target-size);
-      height: 100%;
-
-      > div.handle {
+      @container style(--ɵsci-splitter-orientation: vertical) {
+        top: var(--sci-splitter-cross-axis-start);
+        height: var(--sci-splitter-cross-axis-size);
+        bottom: var(--sci-splitter-cross-axis-end);
         width: var(--sci-splitter-size);
-        height: 100%;
       }
-    }
-  }
 
-  &.horizontal {
-    height: var(--sci-splitter-size);
-    width: var(--sci-splitter-cross-axis-size);
-
-    > div.touch-target {
-      width: 100%;
-      height: var(--sci-splitter-touch-target-size);
-
-      > div.handle {
-        width: 100%;
+      @container style(--ɵsci-splitter-orientation: horizontal) {
+        left: var(--sci-splitter-cross-axis-start);
+        width: var(--sci-splitter-cross-axis-size);
+        right: var(--sci-splitter-cross-axis-end);
         height: var(--sci-splitter-size);
       }
+
+      @container style(--ɵsci-splitter-hover: true) {
+        outline-color: rgb(from var(--sci-splitter-background-color-hover) r g b / var(--sci-splitter-opacity-hover));
+      }
+
+      @container style(--ɵsci-splitter-active: true) {
+        outline-color: rgb(from var(--sci-splitter-background-color-hover) r g b / var(--sci-splitter-opacity-active));
+      }
     }
-  }
-
-  > div.touch-target:active > div.handle {
-    opacity: var(--sci-splitter-opacity-active);
-  }
-
-  &.vertical.moving > div.touch-target > div.handle, &.vertical > div.touch-target:hover > div.handle {
-    background-color: var(--sci-splitter-background-color-hover);
-    width: var(--sci-splitter-size-hover);
-  }
-
-  &.horizontal.moving > div.touch-target > div.handle, &.horizontal > div.touch-target:hover > div.handle {
-    background-color: var(--sci-splitter-background-color-hover);
-    height: var(--sci-splitter-size-hover);
   }
 }
