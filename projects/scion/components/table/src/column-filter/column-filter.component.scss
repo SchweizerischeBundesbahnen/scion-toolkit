@@ -38,6 +38,13 @@
     color: var(--sci-color-text);
     appearance: auto;
     box-sizing: border-box;
+
+    // Remove native steppers in Chromium and Safari.
+    &[type="number"]::-webkit-outer-spin-button,
+    &[type="number"]::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
   }
 
   > button.clear {
