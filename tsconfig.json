@@ -50,6 +50,9 @@
     //      "@scion/components/viewport": [
     //        "./projects/scion/components/viewport/src/public_api"
     //      ],
+    //      "@scion/components/icon": [
+    //        "./projects/scion/components/icon/src/public_api"
+    //      ],
     //      "@scion/toolkit/bean-manager": [
     //        "./projects/scion/toolkit/bean-manager/src/public_api"
     //      ],

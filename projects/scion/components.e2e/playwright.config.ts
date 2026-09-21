@@ -10,21 +10,33 @@
 
 import {defineConfig} from '@playwright/test';
 
-const runInCI = !!process.env.CI;
-const runHeadless = !!process.env.HEADLESS;
+const runInCI = !!process.env['CI'];
+const runHeadless = !!process.env['HEADLESS'];
 
 export default defineConfig({
   forbidOnly: runInCI,
   fullyParallel: true,
-  webServer: {
-    command: runInCI ? 'npm run components-testing-app:dist-serve' : 'npm run components-testing-app:serve',
-    port: 4200,
-    reuseExistingServer: !runInCI,
-  },
+  webServer: [
+    {
+      command: runInCI ? 'npm run components-testing-app:dist-serve' : 'npm run components-testing-app:serve',
+      port: 4200,
+      reuseExistingServer: !runInCI,
+    },
+    {
+      command: runInCI ? 'npm run components-testing-app:icon-basehref:dist-serve' : 'npm run components-testing-app:icon-basehref:serve',
+      port: 4300,
+      reuseExistingServer: !runInCI,
+    },
+    {
+      command: runInCI ? 'npm run components-testing-app:icon-basehref-webpack:dist-serve' : 'npm run components-testing-app:icon-basehref-webpack:serve',
+      port: 4400,
+      reuseExistingServer: !runInCI,
+    },
+  ],
   use: {
     browserName: 'chromium',
     headless: runHeadless,
-    viewport: {width: 1920, height: 1200},
+    viewport: runInCI || runHeadless ? {width: 1920, height: 1200} : null,
     baseURL: 'http://localhost:4200',
     launchOptions: {
       // By default, Playwright hides scrollbars in headless mode, causing problems with tests using `sci-scrollbar`, e.g., to check whether content overflows.

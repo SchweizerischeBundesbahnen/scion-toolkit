@@ -1,0 +1,7 @@
+// TODO [Angular 23] remove this file and build targets `components-testing-app:build-icon-basehref-webpack` and `components-testing-app:serve-icon-basehref-webpack` when `@angular-devkit/build-angular:browser` builder is deprecated
+@use '@scion/components' with (
+  $icon-font: (
+    directory: '^scion-icons'
+  )
+);
+@use './styles';
