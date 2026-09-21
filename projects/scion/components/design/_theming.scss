@@ -47,7 +47,8 @@
     @error 'No themes provided to "@scion/components" SCSS module. Provide a map of themes with token mappings. Refer to the documentation for an example.';
   }
 
-  $void: -warn-if-color-scheme-token-missing($themes);
+  $void: -warn-if-color-scheme-missing($themes);
+  $themes: -add-color-scheme-token($themes);
   $themes: -add-theme-name-token($themes);
 
   @layer sci-theme {
@@ -58,7 +59,7 @@
 
 /**
  * Augments the provided themes with the provided built-in themes, matching the themes by name or, if there is no match, by light or dark color scheme.
- * The color scheme of a theme is determined by evaluating the "color-scheme" token.
+ * The color scheme of a theme is determined by evaluating the "color-scheme" CSS property.
  *
  * @param {map} $themes - map of themes to be augmented with tokens of the built-in themes.
  * @param {map} $built-in-themes - map of built-in themes.
@@ -71,7 +72,7 @@
       $themes: map.set($themes, $theme, map.merge($built-in-theme, $tokens));
     }
     @else {
-      $void: -warn-if-color-scheme-token-missing(($theme: $tokens));
+      $void: -warn-if-color-scheme-missing(($theme: $tokens));
 
       @if -is-dark-theme($tokens) {
         $dark-theme: -get-dark-theme($built-in-themes);
@@ -87,14 +88,28 @@
 }
 
 /**
- * Adds each theme the token 'sci-theme' with its name.
+ * Adds each theme the token '--sci-theme' with its name.
  *
  * @param {map} $themes - map of themes with token mappings.
- * @return {map} Themes with the token 'sci-theme' added to each theme.
+ * @return {map} Themes with the token '--sci-theme' added to each theme.
  */
 @function -add-theme-name-token($themes) {
   @each $theme, $tokens in $themes {
     $themes: map.set($themes, $theme, map.merge((--sci-theme: $theme), $tokens));
+  }
+  @return $themes;
+}
+
+/**
+ * Adds each theme the token '--sci-color-theme' based on the 'color-scheme' CSS property.
+ *
+ * @param {map} $themes - map of themes with token mappings.
+ * @return {map} Themes with the token '--sci-color-theme' added to each theme.
+ */
+@function -add-color-scheme-token($themes) {
+  @each $theme, $tokens in $themes {
+    $color-scheme: map.get($tokens, 'color-scheme');
+    $themes: map.set($themes, $theme, map.merge((--sci-color-theme: $color-scheme), $tokens));
   }
   @return $themes;
 }
@@ -125,7 +140,7 @@
 /**
  * Selects a theme based on the user's OS color scheme preference, but ony if no theme is set on the root HTML element.
  *
- * The color scheme of a theme is determined by evaluating the "color-scheme" token.
+ * The color scheme of a theme is determined by evaluating the "color-scheme" CSS property.
  *
  * @param {map} $themes - A map of themes with token mappings.
  */
@@ -177,7 +192,7 @@
 }
 
 /**
- * Returns `true` for a theme with a color-scheme token 'dark'.
+ * Returns `true` for a theme with a color-scheme 'dark'.
  *
  * @param {map} $tokens - Token mappings of a theme.
  * @return {boolean} `true` if dark theme, otherwise `false`.
@@ -218,12 +233,12 @@
 }
 
 /**
- * Logs a warning if the 'color-scheme' design token is missing.
+ * Logs a warning if 'color-scheme' CSS property is missing.
  */
-@function -warn-if-color-scheme-token-missing($themes) {
+@function -warn-if-color-scheme-missing($themes) {
   @each $theme, $tokens in $themes {
     @if (not map.has-key($tokens, 'color-scheme')) {
-      @warn 'Missing required token "color-scheme" in theme "#{$theme}". Add the token "color-scheme" to the theme "#{$theme}". For a dark theme, add the token "color-scheme: dark". For a light theme, add the token "color-scheme: light".';
+      @warn 'Missing required "color-scheme" in theme "#{$theme}". Add "color-scheme" to the theme "#{$theme}". For a dark theme, add "color-scheme: dark". For a light theme, add "color-scheme: light".';
     }
   }
   @return null;
