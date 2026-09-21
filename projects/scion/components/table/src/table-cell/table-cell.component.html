@@ -1,0 +1,17 @@
+@let cell = this.cell();
+
+@switch (cell.type) {
+  @case ('template') {
+    <ng-template *ngTemplateOutlet="template(); context: templateContext()"/>
+  }
+  @case ('component') {
+    <ng-container *sciComponentOutlet="cell.component"/>
+  }
+  @case ('boolean') {
+    <!-- TODO [dwi] Use another ligature for icon scion.clear -->
+    <sci-icon class="checkbox">{{cell.value() ? 'scion.checkmark' : 'scion.clear'}}</sci-icon>
+  }
+  @default {
+    {{cell.value()}}
+  }
+}

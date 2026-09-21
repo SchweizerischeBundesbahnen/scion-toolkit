@@ -1,0 +1,54 @@
+@let table = this.table();
+
+<sci-table-viewport #viewport>
+  <sci-table-grid>
+    <!-- Table header -->
+    @if (table.showHeader() || table.filterable()) {
+      <sci-table-header/>
+    }
+
+    <!-- Table body -->
+    <sci-table-body sciTableKeyboardNavigator>
+      @if (!table.error()) {
+        <!-- Track index to reuse the table row elements -->
+        @for (row of table.rows(); track $index) {
+          <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction($event)" [sciAttributes]="row.bindings?.attributes()"/>
+        } @empty {
+          <span class="message e2e-no-data">{{('%scion.components.no_items.message' | sciText)()}}</span>
+        }
+      } @else {
+        <span class="message e2e-datasource">
+          {{('%scion.components.datasource_error.message' | sciText)()}}
+
+          <button (click)="onRetry()" class="action e2e-datasource-retry">
+            <!-- TODO [dwi] Replace with SCION icon -->
+            <sci-icon>refresh</sci-icon>
+            <span>{{('%scion.components.retry.label' | sciText)()}}</span>
+          </button>
+        </span>
+      }
+
+      <!-- Render active row outline separately to preserve row border-radius within block selection. -->
+      @if (table.activeRow()) {
+        <div class="active-row-outline e2e-active-row-outline"></div>
+      }
+    </sci-table-body>
+
+    <!-- Render column splitters. -->
+    <sci-table-columns [rows]="rows()"/>
+  </sci-table-grid>
+</sci-table-viewport>
+
+<!-- Scrollbars -->
+<sci-scrollbar direction="hscroll" [viewport]="viewport.host"/>
+<sci-scrollbar direction="vscroll" [viewport]="viewport.host"/>
+
+@if (table.loading()) {
+  <sci-throbber type="spinner"/>
+}
+
+<!-- Synthetic element to compute the absolute pixel value of the `--sci-table-row-height`, relative to the table's font size if em-based. -->
+<div class="synthetic item-size" #item_size_synthetic_element></div>
+
+<!-- Synthetic element to compute the absolute pixel value of the `--sci-table-cell-padding-inline`, relative to the table's font size if em-based. -->
+<div class="synthetic cell-padding" #cell_padding_synthetic_element></div>

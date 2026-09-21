@@ -96,6 +96,30 @@ $sci-menubar: (
   --sci-menubar-item-background-color-active: var(--sci-button-background-color-active),
   --sci-menubar-item-outline-width: var(--sci-button-outline-width),
 );
+
+$sci-table: (
+  --sci-table-gridline-color: transparent,
+  --sci-table-header-height: 2em,
+  --sci-table-header-cursor: var(--sci-button-cursor),
+  --sci-table-header-background-color: var(--sci-color-background-primary),
+  --sci-table-header-background-color-hover: var(--sci-table-row-background-color-hover),
+  --sci-table-header-font-family: inherit,
+  --sci-table-header-font-size: 1em,
+  --sci-table-header-font-weight: 700,
+  --sci-table-header-text-color: inherit,
+  --sci-table-header-column-divider: visible,
+  --sci-table-row-height: 2em,
+  --sci-table-row-background-color-hover: color-mix(in srgb, var(--sci-color-gray-200) 60%, var(--sci-static-color-white)),
+  --sci-table-row-background-color-selected: var(--sci-color-background-accent),
+  --sci-table-row-border-radius: var(--sci-corner-small),
+  --sci-table-row-outline-color: var(--sci-color-accent),
+  --sci-table-row-outline-width: 1px,
+  --sci-table-row-outline-style: dotted,
+  --sci-table-row-action-background-color: var(--sci-color-background-primary),
+  --sci-table-row-action-background-color-selected: var(--sci-color-background-primary),
+  --sci-table-cell-padding-inline: .5em,
+);
+
 $sci-button: (
   --sci-button-cursor: default,
   --sci-button-background-color-hover: color-mix(in srgb, var(--sci-color-gray-200) 95%, var(--sci-static-color-white)),
@@ -124,5 +148,6 @@ $tokens: sci-theming.map-merge(
   $sci-menubar,
   $sci-toolbar,
   $sci-button,
+  $sci-table,
   $sci-skeleton,
 );

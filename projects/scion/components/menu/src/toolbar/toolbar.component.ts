@@ -191,7 +191,7 @@ export class SciToolbarComponent {
   /**
    * Indicates whether any menu within the toolbar is currently open.
    *
-   * @internal
+   * TODO [dwi][API] How to name that metod? Cannot be internal because used by table.
    */
   public readonly menuOpen = computed(() => this._virtualToolbarGroupComponent.menuOpen());
 

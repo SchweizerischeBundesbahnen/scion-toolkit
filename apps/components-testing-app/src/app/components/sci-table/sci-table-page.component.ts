@@ -1,0 +1,360 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ *  SPDX-License-Identifier: EPL-2.0
+ */
+import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
+import {provideTableRowBinding, SciTable, SciTableCellContext, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
+import {FormsModule} from '@angular/forms';
+import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
+import {SciFormFieldComponent} from '@scion/components.internal/form-field';
+import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
+import {createDestroyableInjector} from '@scion/components/common';
+import {FieldValidationDirective} from '../field-validation.directive';
+import {Product, ProductService, simulateError$} from './sci-table-page.data';
+import {HttpClient} from '@angular/common/http';
+import {mergeWith, noop} from 'rxjs';
+import {CustomColumnComponent} from './custom-column.component';
+import {SciViewportComponent} from '@scion/components/viewport';
+import {CustomInputColumnComponent} from './custom-input-column.component';
+import {CustomButtonColumnComponent} from './custom-button-column.component';
+
+@Component({
+  selector: 'app-table-page',
+  templateUrl: './sci-table-page.component.html',
+  styleUrl: './sci-table-page.component.scss',
+  imports: [
+    SciTableComponent,
+    FormsModule,
+    FormField,
+    SciFormFieldComponent,
+    SciTabDirective,
+    SciTabbarComponent,
+    FormRoot,
+    FieldValidationDirective,
+    CustomColumnComponent,
+    SciViewportComponent,
+  ],
+  providers: [
+    provideTableRowBinding((bindings, _item, index) => {
+      // Add row index attribute to locate rows by dataset index.
+      bindings.addAttributeBinding('data-row-index', index);
+    }),
+  ],
+  host: {
+    '[style.--table-height]': 'layoutForm.tableHeight().value() !== null ? `${layoutForm.tableHeight().value()}px` : null',
+    '[style.--table-max-height]': 'layoutForm.tableMaxHeight().value() !== null ? `${layoutForm.tableMaxHeight().value()}px` : null',
+    '[style.--table-width]': 'layoutForm.tableWidth().value() !== null ? `${layoutForm.tableWidth().value()}px` : null',
+    '[style.--table-grow-to-breakpoint]': 'layoutForm.tableGrowToBreakpoint().value() ? `true` : null',
+    '[style.--table-page-height]': 'layoutForm.pageHeight().value() !== null ? `${layoutForm.pageHeight().value()}px` : null',
+    '[style.--sci-table-header-height]': 'settingsForm.headerHeight().value() !== null ? `${settingsForm.headerHeight().value()}px` : null',
+    '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() !== null ? `${settingsForm.rowHeight().value()}px` : null',
+    '[style.--sci-table-gridline-color]': 'settingsForm.showGridlines().value() ? "var(--sci-color-border)" : null',
+  },
+})
+export default class SciTablePageComponent {
+
+  private readonly _injector = inject(Injector);
+  private readonly _productService = inject(ProductService);
+  private readonly _httpClient = inject(HttpClient);
+
+  private readonly _customColumnTemplate = viewChild.required<TemplateRef<Product>>('custom_column_template');
+
+  protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
+  protected readonly datasourceForm: FieldTree<DatasourceForm> = this.createDatasourceForm();
+  protected readonly layoutForm: FieldTree<LayoutForm> = this.createLayoutForm();
+  protected readonly columnForm: FieldTree<ColumnForm> = this.createColumnForm();
+  protected readonly columns = signal<ColumnForm[]>([]);
+
+  protected readonly tables = this.computeTables();
+  protected readonly rowCount = inject(ProductService).productCount;
+  protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem()?.id);
+  protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
+  protected readonly selection = computed(() => this.tables()[0]?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+
+  constructor() {
+    this.bindTableSettings();
+  }
+
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
+    return table({
+      ɵdatasource: (() => {
+        switch (options.datasource) {
+          case 'array':
+            return this._productService.products;
+          case 'array-http':
+            this._productService.enableHttpLoader();
+            return this._productService.products;
+          case 'loader':
+            return (request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value});
+          case 'loader-delayed':
+            return (request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value});
+          case 'loader-http':
+            return (request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value)));
+        }
+      })(),
+      datasource: ɵillegaldatasource(),
+      rowBindings: (bindings, product) => {
+        if (options.customRowStyling) {
+          bindings.addPartBinding(product.id % 3 === 0 ? 'row:negative' : undefined);
+        }
+      },
+      rowActions: options.showRowActions ? (toolbar, product) => toolbar
+        .addToolbarButton({icon: 'scion.edit', onSelect: noop})
+        .addToolbarButton({icon: 'scion.delete', onSelect: noop})
+        .addToolbarButton({icon: 'scion.pin', onSelect: noop})
+        .addToolbarButton({icon: 'scion.search', onSelect: noop})
+        .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false, cssClass: 'e2e-more'}, menu => menu
+          .addMenuItem({
+            label: 'Edit',
+            onSelect: () => console.log('edit', product.id),
+          }),
+        ) : undefined,
+      trackBy: product => product.id,
+      bufferSize: options.bufferSize,
+      pageSize: options.pageSize,
+      columns: table => this.columns().forEach(columnForm => {
+        if (!columnForm.visible()) {
+          return;
+        }
+
+        const column: SciTableColumnDescriptor = {
+          name: columnForm.name || undefined,
+          header: columnForm.header || undefined,
+          width: columnForm.width || undefined,
+          minWidth: columnForm.minWidth ?? undefined,
+          resizable: columnForm.resizable,
+        };
+
+        switch (columnForm.type) {
+          case 'string':
+            table.addStringColumn({
+              ...column,
+              filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
+              sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
+              value: product => product.name,
+            });
+            break;
+          case 'number':
+            table.addNumberColumn({
+              ...column,
+              value: product => product.price,
+            });
+            break;
+          case 'boolean':
+            table.addBooleanColumn({
+              ...column,
+              value: product => product.inStock,
+            });
+            break;
+          case 'component':
+            table.addComponentColumn({
+              ...column,
+              filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
+              sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
+              padding: columnForm.extras.padding,
+              component: product => {
+                switch (columnForm.extras.component) {
+                  case 'component:custom-input-column':
+                    return ({component: CustomInputColumnComponent});
+                  case 'component:custom-button-column':
+                    return ({component: CustomButtonColumnComponent});
+                  default:
+                  case 'component:custom-column':
+                    return {
+                      component: CustomColumnComponent,
+                      bindings: [inputBinding('product', () => product)],
+                    };
+                }
+              },
+            });
+            break;
+          case 'template':
+            table.addTemplateColumn({
+              ...column,
+              filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
+              sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
+              padding: columnForm.extras.padding,
+              template: () => ({
+                template: this._customColumnTemplate,
+              }),
+            });
+            break;
+        }
+      }),
+    });
+  }
+
+  private computeTables(): Signal<SciTable<Product>[]> {
+    const tables = signal<SciTable<Product>[]>([]);
+
+    effect(onCleanup => {
+      const tableCount = this.settingsForm.tableCount().value();
+      const datasource = this.datasourceForm.datasource().value();
+      const showRowActions = this.settingsForm.showRowActions().value();
+      const customRowStyling = this.settingsForm.customRowStyling().value();
+      const bufferSize = this.datasourceForm.bufferSize().value();
+      const pageSize = this.datasourceForm.pageSize().value();
+
+      untracked(() => {
+        const injector = createDestroyableInjector({parent: this._injector});
+        onCleanup(() => injector.destroy());
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, customRowStyling, bufferSize, pageSize}))));
+      });
+    });
+
+    return tables;
+  }
+
+  private createColumnForm(): FieldTree<ColumnForm> {
+    return form(signal<ColumnForm>(defaults()), column => {
+      pattern(column.name, /column:.+/);
+      required(column.name);
+      required(column.type);
+      required(column.extras.component);
+      hidden(column.extras.component, {when: ({valueOf}) => valueOf(column.type) !== 'component'});
+    }, {
+      submission: {
+        action: async form => {
+          this.columns.update(columns => columns.concat({
+            ...form().value(),
+            header: form.header().value() || form.name().value(),
+            visible: signal(true),
+          }));
+          this.columnForm().reset(defaults());
+        },
+      },
+    });
+
+    function defaults(): ColumnForm {
+      return {
+        name: 'column:',
+        type: 'string',
+        header: '',
+        resizable: true,
+        width: '',
+        minWidth: null,
+        visible: signal(true),
+        extras: {
+          component: 'component:custom-column',
+          padding: true,
+          customSort: false,
+          customFilter: false,
+        },
+      };
+    }
+  }
+
+  private createSettingsForm(): FieldTree<SettingsForm> {
+    return form(signal<SettingsForm>({
+      filterable: false,
+      sortable: true,
+      resizable: true,
+      selectable: 'multi',
+      showHeader: true,
+      wrapHeader: false,
+      showGridlines: false,
+      showRowActions: false,
+      customRowStyling: false,
+      headerHeight: 30,
+      rowHeight: 30,
+      tableCount: 1,
+    }));
+  }
+
+  private createDatasourceForm(): FieldTree<DatasourceForm> {
+    return form(signal<DatasourceForm>({
+      datasource: 'array',
+      bufferSize: 10,
+      pageSize: 50,
+      simulateError: false,
+    }));
+  }
+
+  private createLayoutForm(): FieldTree<LayoutForm> {
+    return form(signal<LayoutForm>({
+      tableHeight: null,
+      tableMaxHeight: null,
+      tableWidth: null,
+      tableGrowToBreakpoint: false,
+      pageHeight: null,
+    }));
+  }
+
+  private bindTableSettings(): void {
+    effect(() => {
+      this.tables().forEach(table => {
+        table.showHeader.set(this.settingsForm.showHeader().value());
+        table.wrapHeader.set(this.settingsForm.wrapHeader().value());
+        table.sortable.set(this.settingsForm.sortable().value());
+        table.filterable.set(this.settingsForm.filterable().value());
+        table.resizable.set(this.settingsForm.resizable().value());
+
+        const selectable = this.settingsForm.selectable().value();
+        table.selectable.set(selectable === 'false' ? false : selectable);
+      });
+    });
+  }
+}
+
+interface ColumnForm {
+  name: `column:${string}` | '';
+  type: SciTableColumnType;
+  header: string;
+  resizable: boolean;
+  width: string;
+  minWidth: number | null;
+  visible: WritableSignal<boolean>;
+  extras: {
+    component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';
+    padding: boolean;
+    customSort: boolean;
+    customFilter: boolean;
+  };
+}
+
+interface SettingsForm {
+  filterable: boolean;
+  sortable: boolean;
+  resizable: boolean;
+  selectable: 'false' | 'single' | 'multi';
+  showHeader: boolean;
+  wrapHeader: boolean;
+  showGridlines: boolean;
+  showRowActions: boolean;
+  customRowStyling: boolean;
+  headerHeight: number | null;
+  rowHeight: number | null;
+  tableCount: number;
+}
+
+interface DatasourceForm {
+  datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http';
+  bufferSize: number;
+  pageSize: number;
+  simulateError: boolean;
+}
+
+interface LayoutForm {
+  tableHeight: number | null;
+  tableMaxHeight: number | null;
+  tableWidth: number | null;
+  tableGrowToBreakpoint: boolean;
+  pageHeight: number | null;
+}
+
+function customFilter(text: string, context: SciTableCellContext<Product, unknown>): boolean {
+  return context.item.name.includes(text);
+}
+
+function customComparator(a: SciTableCellContext<Product, unknown>, b: SciTableCellContext<Product, unknown>): number {
+  return a.item.id - b.item.id;
+}
+
+function columnDataTypes(columns: ColumnForm[]): Map<`column:${string}`, ColumnForm['type']> {
+  return columns.reduce((map, column) => map.set(column.name as `column:${string}`, column.type), new Map<`column:${string}`, ColumnForm['type']>());
+}

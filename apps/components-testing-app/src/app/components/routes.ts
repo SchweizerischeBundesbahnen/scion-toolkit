@@ -31,4 +31,8 @@ export default [
     path: 'sci-icon',
     loadChildren: () => import('./sci-icon/routes'),
   },
+  {
+    path: 'sci-table',
+    loadChildren: () => import('./sci-table/routes'),
+  },
 ] satisfies Routes;

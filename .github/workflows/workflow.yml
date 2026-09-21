@@ -189,8 +189,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        shardIndex: [ 1 ]
-        shardTotal: [ 1 ]
+        shardIndex: [ 1, 2, 3, 4 ]
+        shardTotal: [ 4 ]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6

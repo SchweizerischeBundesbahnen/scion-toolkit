@@ -1,0 +1,17 @@
+@let row = this.row();
+@for (cell of row.cells; track cell.column.name) {
+  <sci-table-cell [cell]="cell" [row]="row"/>
+} @empty {
+  @for (column of table().columns(); track column.name) {
+    <div class="skeleton e2e-skeleton" [attr.data-column]="column.name"></div>
+  }
+}
+
+@let hasRowActions = !!table().rowActions;
+@let isRowHovered = table().hoveredRow() === row;
+@let isRowActionMenuOpen = rowActionToolbar()?.menuOpen();
+
+@if (hasRowActions && (isRowHovered || isRowActionMenuOpen)) {
+  <!--eslint-disable-next-line @angular-eslint/template/click-events-have-key-events,@angular-eslint/template/interactive-supports-focus -->
+  <sci-toolbar [name]="rowActionsToolbarName" (click)="onActionToolbarClick($event)" class="row-actions"/>
+}

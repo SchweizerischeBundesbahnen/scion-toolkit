@@ -8,7 +8,7 @@ $theme: sci-theming.map-merge(scion-static-colors.$tokens, scion-light-colors.$t
   // Use for highlighting calls to action and emphasizing important information or key messages.
   --sci-color-accent: var(--sci-color-blue-900),
   --sci-color-accent-inverse: var(--sci-static-color-white),
-  --sci-color-background-accent: var(--sci-color-blue-100),
+  --sci-color-background-accent: var(--sci-color-blue-200),
   // Use as positive semantic color to indicate success, positive states and completed tasks.
   --sci-color-positive: var(--sci-color-green-900),
   --sci-color-positive-inverse: var(--sci-static-color-white),

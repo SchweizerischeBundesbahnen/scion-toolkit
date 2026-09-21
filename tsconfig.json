@@ -41,6 +41,9 @@
     //      "@scion/components/menu": [
     //        "./projects/scion/components/menu/src/public_api"
     //      ],
+    //      "@scion/components/table": [
+    //        "./projects/scion/components/table/src/public_api"
+    //      ],
     //      "@scion/components/dimension": [
     //        "./projects/scion/components/dimension/src/public_api"
     //      ],

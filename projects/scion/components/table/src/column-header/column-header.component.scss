@@ -1,0 +1,49 @@
+:host {
+  display: grid;
+  align-items: center;
+
+  &:not(:has(button.sort)) {
+    padding-inline: var(--ɵsci-table-cell-padding-inline);
+  }
+
+  &:is(:focus-visible, :hover) {
+    --ɵsci-table-column-header-hover: true;
+  }
+
+  > button.sort {
+    all: unset;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .5em;
+    padding-inline: var(--ɵsci-table-cell-padding-inline);
+    cursor: var(--sci-table-header-cursor);
+    align-self: stretch;
+
+    > sci-icon.no-sort {
+      @container not style(--ɵsci-table-column-header-hover: true) {
+        visibility: hidden;
+      }
+    }
+
+    @container style(--ɵsci-table-column-header-hover: true) {
+      background-color: var(--sci-table-header-background-color-hover);
+    }
+  }
+
+  span.header {
+    display: inline; // ellipsis is only supported on block or inline-block elements
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sci-table-header-text-color);
+    font-family: var(--sci-table-header-font-family), sans-serif;
+    font-weight: var(--sci-table-header-font-weight);
+    font-size: var(--sci-table-header-font-size);
+    padding-block: .25em;
+
+    &.wrap {
+      white-space: wrap
+    }
+  }
+}

@@ -1,0 +1,12 @@
+@let table = this.table();
+
+@if (table.showHeader()) {
+  @for (column of table.columns(); track column.name) {
+    <sci-column-header [column]="column"/>
+  }
+}
+@if (table.filterable()) {
+  @for (column of table.columns(); track column.name) {
+    <sci-column-filter [column]="column"/>
+  }
+}

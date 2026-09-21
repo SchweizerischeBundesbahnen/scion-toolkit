@@ -1,0 +1,78 @@
+@use '@scion/components/common';
+
+:host {
+  display: inline-grid;
+  grid-template-columns: subgrid;
+  grid-auto-rows: var(--sci-table-row-height);
+  align-items: stretch; // stretch cell to enable row styling via `::part()` selector
+  user-select: none; // disabled required by selection // TODO [mmu] really required?
+  border-bottom: var(--ɵsci-table-border-size) solid var(--sci-table-gridline-color);
+
+  &[data-hovered] {
+    background-color: var(--sci-table-row-background-color-hover);
+  }
+
+  &[data-selected] {
+    background-color: var(--sci-table-row-background-color-selected);
+    --ɵsci-table-row-selected: true;
+  }
+
+  // Render round corners on hovered row unless selected.
+  &[data-hovered]:not([data-selected]) {
+    border-radius: var(--sci-table-row-border-radius);
+  }
+
+  // Render round top corners at the start of a block selection.
+  &:is(:first-child, :not([data-selected]) + sci-table-row)[data-selected] {
+    border-top-left-radius: var(--sci-table-row-border-radius);
+    border-top-right-radius: var(--sci-table-row-border-radius);
+  }
+
+  // Render round bottom corners at the end of a block selection.
+  &[data-selected]:not(:has(+ sci-table-row[data-selected])) {
+    border-bottom-left-radius: var(--sci-table-row-border-radius);
+    border-bottom-right-radius: var(--sci-table-row-border-radius);
+  }
+
+  // Prevent row hover flicker while scrolling or resizing.
+  @container (style(--ɵsci-table-scrolling: true)) or (style(--ɵsci-table-resizing: true)) {
+    pointer-events: none;
+  }
+
+  &:has(> div.skeleton) {
+    pointer-events: none;
+    align-items: center;
+
+    > div.skeleton {
+      @include common.skeleton();
+      height: 1em;
+      margin-inline: var(--ɵsci-table-cell-padding-inline);
+    }
+  }
+
+  > sci-toolbar.row-actions {
+    position: sticky;
+    right: 0;
+    transform: translateX(calc(-1 * var(--ɵsci-table-cell-padding-inline))); // Prevent hiding vertical scrollbar. Uses `translateX` instead of `right` to maintain the padding on horizontal overflow.
+    justify-self: end;
+    align-self: center;
+    border-radius: var(--sci-corner);
+    padding: 1px;
+    background-color: var(--ɵsci-table-row-action-background-color);
+    z-index: 2; // required to overlap splitters
+    --sci-toolbar-item-background-color-hover: color-mix(in srgb, var(--ɵsci-table-row-action-background-color) 85%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
+    --sci-toolbar-item-background-color-active: color-mix(in srgb, var(--ɵsci-table-row-action-background-color) 75%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
+
+    @container not style(--ɵsci-table-row-selected: true) {
+      --ɵsci-table-row-action-background-color: var(--sci-table-row-action-background-color);
+    }
+
+    @container style(--ɵsci-table-row-selected: true) {
+      --ɵsci-table-row-action-background-color: var(--sci-table-row-action-background-color-selected);
+    }
+
+    &:empty {
+      display: none;
+    }
+  }
+}
