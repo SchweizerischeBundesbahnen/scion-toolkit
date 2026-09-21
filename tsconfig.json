@@ -38,6 +38,9 @@
     //      "@scion/components/common": [
     //        "./projects/scion/components/common/src/public_api"
     //      ],
+    //      "@scion/components/menu": [
+    //        "./projects/scion/components/menu/src/public_api"
+    //      ],
     //      "@scion/components/dimension": [
     //        "./projects/scion/components/dimension/src/public_api"
     //      ],

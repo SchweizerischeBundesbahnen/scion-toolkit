@@ -1,0 +1,47 @@
+/**
+ * Displays ellipsis when text overflows.
+ */
+@mixin ellipsis-on-overflow {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/**
+ * Styles a menu item or group header button.
+ */
+@mixin button {
+  all: unset;
+  text-wrap: nowrap;
+  padding: var(--ɵsci-menu-item-padding-block) var(--ɵsci-menu-item-padding-inline);
+  border-radius: var(--sci-menu-item-border-radius);
+  user-select: none;
+  cursor: var(--sci-menu-item-cursor);
+  color: var(--sci-menu-item-text-color);
+  min-height: var(--ɵsci-menu-item-min-height);
+  box-sizing: content-box;
+
+  // Prevent hovering button while scrolling.
+  @container not style(--ɵsci-menu-scrolling: true) {
+    &:hover:where(:not(:disabled)) {
+      background-color: var(--sci-menu-item-background-color-hover);
+    }
+  }
+
+  // Guard active state with focus state to prevent styling the button when pressing an action toolbar item.
+  &:active:where(:not(:disabled)):focus {
+    background-color: var(--sci-menu-item-background-color-active);
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: var(--sci-menu-item-outline-width) solid var(--sci-color-accent);
+  }
+
+  &:disabled {
+    color: var(--sci-menu-item-text-color-disabled);
+  }
+}

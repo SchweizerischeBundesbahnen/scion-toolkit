@@ -43,6 +43,59 @@ $sci-sashbox: (
   --sci-sashbox-splitter-opacity-hover: var(--sci-splitter-opacity-hover), // opacity of the splitter when hovering it
 );
 
+$sci-menu: (
+  --sci-menu-font-size: initial, // based on --sci-menu-item-size
+  --sci-menu-border-radius: var(--sci-corner),
+  --sci-menu-min-width: 15em,
+  --sci-menu-submenu-min-width: 10em,
+  --sci-menu-item-size: var(--sci-button-icon-size),
+  --sci-menu-item-cursor: var(--sci-button-cursor),
+  --sci-menu-item-text-color: var(--sci-button-text-color),
+  --sci-menu-item-text-color-disabled: var(--sci-button-text-color-disabled),
+  --sci-menu-item-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-menu-item-background-color-active: var(--sci-button-background-color-active),
+  --sci-menu-item-border-radius: var(--sci-button-border-radius),
+  --sci-menu-item-outline-width: var(--sci-button-outline-width),
+  --sci-menu-item-accelerator-text-color: var(--sci-color-text-subtlest),
+  --sci-menu-item-active-indicator-size: 3px,
+  --sci-menu-item-active-indicator-background-color: var(--sci-color-accent),
+  --sci-menu-item-active-indicator-border-radius: var(--sci-corner-small),
+  --sci-menu-group-header-font-family: inherit,
+  --sci-menu-group-header-font-size: .95em,
+  --sci-menu-group-header-font-weight: 500,
+  --sci-menu-group-header-text-color: var(--sci-color-text-subtlest),
+  --sci-menu-filter-outline-width: var(--sci-button-outline-width),
+  --sci-menu-filter-outline-radius: var(--sci-corner-small),
+);
+
+$sci-toolbar: (
+  --sci-toolbar-font-size: initial, // based on --sci-toolbar-item-size
+  --sci-toolbar-item-size: var(--sci-button-icon-size),
+  --sci-toolbar-item-cursor: var(--sci-button-cursor),
+  --sci-toolbar-item-text-color: var(--sci-button-text-color),
+  --sci-toolbar-item-text-color-disabled: var(--sci-button-text-color-disabled),
+  --sci-toolbar-item-background-color: transparent,
+  --sci-toolbar-item-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-toolbar-item-background-color-active: var(--sci-button-background-color-active),
+  --sci-toolbar-item-background-color-checked: color-mix(in srgb, var(--sci-color-gray-200) 65%, var(--sci-static-color-white)),
+  --sci-toolbar-item-border-radius: var(--sci-button-border-radius),
+  --sci-toolbar-item-border-color-hover: transparent,
+  --sci-toolbar-item-border-color-checked: var(--sci-color-border),
+  --sci-toolbar-item-outline-width: var(--sci-button-outline-width),
+  --sci-toolbar-item-menu-indicator-color: var(--sci-color-text-subtle),
+  --sci-toolbar-item-menu-indicator-color-disabled: var(--sci-color-gray-500),
+  --sci-toolbar-item-menu-indicator-size: 3px,
+);
+
+$sci-menubar: (
+  --sci-menubar-font-size: initial, // based on --sci-menubar-item-size
+  --sci-menubar-item-size: var(--sci-button-icon-size),
+  --sci-menubar-item-cursor: var(--sci-button-cursor),
+  --sci-menubar-item-border-radius: var(--sci-button-border-radius),
+  --sci-menubar-item-background-color-hover: var(--sci-button-background-color-hover),
+  --sci-menubar-item-background-color-active: var(--sci-button-background-color-active),
+  --sci-menubar-item-outline-width: var(--sci-button-outline-width),
+);
 $sci-button: (
   --sci-button-cursor: default,
   --sci-button-background-color-hover: color-mix(in srgb, var(--sci-color-gray-200) 95%, var(--sci-static-color-white)),
@@ -67,6 +120,9 @@ $tokens: sci-theming.map-merge(
   $sci-throbber,
   $sci-splitter,
   $sci-sashbox,
+  $sci-menu,
+  $sci-menubar,
+  $sci-toolbar,
   $sci-button,
   $sci-skeleton,
 );

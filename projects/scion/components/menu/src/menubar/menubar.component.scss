@@ -1,0 +1,41 @@
+:host {
+  --ɵsci-menubar-item-padding-inline: calc(.5 * var(--sci-menubar-item-size));
+  --ɵsci-menubar-item-padding-block: calc(.25 * var(--sci-menubar-item-size));
+  --ɵsci-menubar-font-size: calc(.8125 * var(--sci-menubar-item-size));
+  font-size: var(--sci-menubar-font-size, var(--ɵsci-menubar-font-size));
+
+  display: flex;
+
+  > button:is(.menu-item, #sci-reset) {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    text-wrap: nowrap;
+    padding-block: var(--ɵsci-menubar-item-padding-block);
+    padding-inline: var(--ɵsci-menubar-item-padding-inline);
+    border-radius: var(--sci-menubar-item-border-radius);
+    user-select: none;
+    overflow: hidden;
+    cursor: var(--sci-menubar-item-cursor);
+
+    &:hover {
+      background-color: var(--sci-menubar-item-background-color-hover);
+    }
+
+    &:active {
+      background-color: var(--sci-menubar-item-background-color-active);
+    }
+
+    &:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: var(--sci-menubar-item-outline-width) solid var(--sci-color-accent);
+    }
+
+    &.open {
+      background-color: var(--sci-menubar-item-background-color-hover);
+    }
+  }
+}
