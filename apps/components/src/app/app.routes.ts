@@ -21,6 +21,11 @@ export const routes: Routes = [
     data: {internal: false},
   },
   {
+    path: 'sci-menu',
+    loadComponent: () => import('./sci-menu-page/sci-menu-page.component'),
+    data: {internal: false},
+  },
+  {
     path: 'sci-viewport',
     loadComponent: () => import('./sci-viewport-page/sci-viewport-page.component'),
     data: {internal: false},
