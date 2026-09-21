@@ -8,10 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {assertInInjectionContext, assertNotInReactiveContext, computed, effect, ElementRef, inject, Injector, isSignal, NgZone, signal, Signal, untracked} from '@angular/core';
+import {assertNotInReactiveContext, computed, effect, ElementRef, inject, Injector, isSignal, NgZone, signal, Signal, untracked} from '@angular/core';
 import {coerceElement} from '@angular/cdk/coercion';
 import {fromBoundingClientRect$} from '@scion/toolkit/observable';
 import {subscribeIn} from '@scion/toolkit/operators';
+import {assertInInjectionContext} from '@scion/components/common';
 
 /**
  * Creates a signal observing the bounding box of an element.
@@ -34,7 +35,7 @@ export function boundingClientRect(elementLike: HTMLElement | ElementRef<HTMLEle
 export function boundingClientRect(elementLike: HTMLElement | ElementRef<HTMLElement> | Signal<HTMLElement | ElementRef<HTMLElement> | undefined>, options?: {injector?: Injector}): Signal<DOMRect | undefined> {
   assertNotInReactiveContext(boundingClientRect, 'Invoking `boundingClientRect` causes new subscriptions every time. Move `boundingClientRect` outside of the reactive context and read the signal value where needed.');
   if (!options?.injector) {
-    assertInInjectionContext(boundingClientRect);
+    assertInInjectionContext(boundingClientRect, 'Must be called within an injection context, or an explicit `Injector` passed via options. Stops tracking the bounding box when the injection context is destroyed.');
   }
 
   const injector = options?.injector ?? inject(Injector);
