@@ -4,32 +4,22 @@
 
   > main {
     flex: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
+    display: grid;
 
-    > h1 {
-      flex: none;
-    }
+    > sci-sashbox section.sash {
+      display: grid;
+      place-content: center;
 
-    > sci-sashbox {
-      flex: 1 1 0;
+      &.sash-1 {
+        background-color: #ff4d26;
+      }
 
-      section.sash {
-        display: grid;
-        place-content: center;
+      &.sash-2 {
+        background-color: #307eb7;
+      }
 
-        &.sash-1 {
-          background-color: #ff4d26;
-        }
-
-        &.sash-2 {
-          background-color: #307eb7;
-        }
-
-        &.sash-3 {
-          background-color: #ffa21a;
-        }
+      &.sash-3 {
+        background-color: #ffa21a;
       }
     }
   }
