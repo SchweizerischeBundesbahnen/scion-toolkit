@@ -1,0 +1,13 @@
+:host {
+  display: flex;
+  flex-direction: column;
+
+  > div.context-menu {
+    align-self: center;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    padding: 2em;
+    background-color: var(--sci-color-gray-100);
+    cursor: default;
+  }
+}
