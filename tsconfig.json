@@ -56,6 +56,9 @@
     //      "@scion/components/icon": [
     //        "./projects/scion/components/icon/src/public_api"
     //      ],
+    //      "@scion/toolkit/types": [
+    //        "./projects/scion/toolkit/types/src/public_api"
+    //      ],
     //      "@scion/toolkit/bean-manager": [
     //        "./projects/scion/toolkit/bean-manager/src/public_api"
     //      ],
