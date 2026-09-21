@@ -9,7 +9,7 @@
  */
 
 import {SciMenuOptions, SciMenuRef, SciMenuService} from './menu.service';
-import {computed, inject, Injectable, Injector, Provider, Signal} from '@angular/core';
+import {computed, inject, Injectable, Injector, Signal} from '@angular/core';
 import {SciMenuItemLike} from './menu.model';
 import {Disposable} from '@scion/toolkit/types';
 import {SciMenuContribution, SciMenuContributionLocationLike, SciMenuContributionOptions, SciMenuFactoryFnLike} from './menu-contribution.model';
@@ -102,14 +102,4 @@ function interceptMenuRegistry(menuRegistry: SciMenuRegistry): SciMenuRegistry {
     closeMenus: () => adapter.closeMenus ? adapter.closeMenus(next) : next.closeMenus(),
     accelerators: context => adapter.accelerators ? adapter.accelerators(context, next) : next.accelerators(context),
   }), menuRegistry);
-}
-
-/**
- * Provides {@link SciMenuService} for dependency injection.
- */
-export function provideMenuService(): Provider[] {
-  return [
-    ɵSciMenuService,
-    {provide: SciMenuService, useExisting: ɵSciMenuService},
-  ];
 }
