@@ -3,6 +3,8 @@ import {take, timeout} from 'rxjs/operators';
 
 /**
  * Allows capturing emissions of an Observable.
+ *
+ * @docs-private Not public API. For internal use only.
  */
 export class ObserveCaptor<T = any, R = T> implements Observer<T> {
 

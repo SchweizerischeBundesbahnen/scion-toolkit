@@ -20,3 +20,6 @@ export {Objects} from './objects.util';
 export {Dictionaries, type Dictionary} from './dictionaries.util';
 export {Maps, type PredicateFn} from './maps.util';
 export {Observables} from './observables.util';
+export {prune} from './prune.util';
+export {runSafe} from './safe-runner.util';
+export {clamp, isBetween} from './math.util';

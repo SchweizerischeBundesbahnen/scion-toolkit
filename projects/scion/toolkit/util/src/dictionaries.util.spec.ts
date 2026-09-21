@@ -56,29 +56,29 @@ describe('Dictionaries', () => {
 
     it('should remove undefined entries (resulting dictionary is empty)', () => {
       const dictionary = {firstname: undefined, lastname: undefined};
-      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual({});
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual({}); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should remove undefined entries (resulting dictionary contains entries)', () => {
       // Use explicit typing to test the correct signature.
       const given: Record<string, string | undefined> = {firstname: 'John', lastname: undefined};
-      const actual: Record<string, string> = Dictionaries.withoutUndefinedEntries(given);
+      const actual: Record<string, string> = Dictionaries.withoutUndefinedEntries(given); // eslint-disable-line @typescript-eslint/no-deprecated
       expect(actual).toEqual({firstname: 'John'});
     });
 
     it('should not alter dictionary without undefined entries', () => {
       const dictionary = {firstname: 'John', lastname: 'Smith'};
-      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary);
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should not alter empty dictionary', () => {
       const dictionary = {};
-      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary);
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary); // eslint-disable-line @typescript-eslint/no-deprecated
     });
 
     it('should not alter dictionary containing `null` entries', () => {
       const dictionary = {firstname: null, lastname: null};
-      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary);
+      expect(Dictionaries.withoutUndefinedEntries(dictionary)).toEqual(dictionary); // eslint-disable-line @typescript-eslint/no-deprecated
     });
   });
 });
