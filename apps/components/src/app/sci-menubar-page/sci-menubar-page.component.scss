@@ -1,0 +1,10 @@
+:host {
+  display: flex;
+  flex-direction: column;
+
+  > sci-menubar {
+    background-color: var(--sci-color-gray-100);
+    border: 1px solid var(--sci-color-border);
+    padding: .125em .25em;
+  }
+}
