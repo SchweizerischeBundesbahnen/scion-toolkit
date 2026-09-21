@@ -9,6 +9,8 @@
                [style.--sci-sashbox-splitter-size-hover]="formGroup.controls.styling.controls['--sci-sashbox-splitter-size-hover'].value"
                [style.--sci-sashbox-splitter-touch-target-size]="formGroup.controls.styling.controls['--sci-sashbox-splitter-touch-target-size'].value"
                [style.--sci-sashbox-splitter-cross-axis-size]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-size'].value"
+               [style.--sci-sashbox-splitter-cross-axis-start]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-start'].value"
+               [style.--sci-sashbox-splitter-cross-axis-end]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-end'].value"
                [style.--sci-sashbox-splitter-border-radius]="formGroup.controls.styling.controls['--sci-sashbox-splitter-border-radius'].value"
                [style.--sci-sashbox-splitter-opacity-active]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-active'].value"
                [style.--sci-sashbox-splitter-opacity-hover]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-hover'].value"
@@ -80,6 +82,12 @@
         </sci-form-field>
         <sci-form-field label="--sci-sashbox-splitter-cross-axis-size" direction="column">
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-size']">
+        </sci-form-field>
+        <sci-form-field label="--sci-sashbox-splitter-cross-axis-start" direction="column">
+          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-start']">
+        </sci-form-field>
+        <sci-form-field label="--sci-sashbox-splitter-cross-axis-end" direction="column">
+          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-end']">
         </sci-form-field>
         <sci-form-field label="--sci-sashbox-splitter-border-radius" direction="column">
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-border-radius']">

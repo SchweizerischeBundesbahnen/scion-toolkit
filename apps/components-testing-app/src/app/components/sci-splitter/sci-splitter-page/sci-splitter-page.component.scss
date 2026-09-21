@@ -7,6 +7,10 @@
 
     > sci-splitter {
       position: relative;
+
+      &.vertical {
+        height: 100%;
+      }
     }
   }
 
