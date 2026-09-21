@@ -12,7 +12,7 @@ import {ElementRef, inject, Injector, Provider, runInInjectionContext} from '@an
 import {MaybeSignal} from '@scion/components/common';
 import {SCI_MENU_ACCELERATOR_TARGET_PROVIDER, SCI_MENU_ACCELERATOR_TARGET_PROVIDERS, SCI_MENU_CONTEXT_PROVIDER, SCI_MENU_CONTEXT_PROVIDERS, SCI_MENU_INJECTION_CONTEXT_PROVIDER, SCI_MENU_INJECTION_CONTEXT_PROVIDERS} from './menu-environment-providers';
 import {MaybeArray} from '@scion/toolkit/types';
-import {provideMenuService} from '../ɵmenu.service';
+import {provideMenuService} from '../menu-service.provider';
 
 /**
  * Registers a {@link SciMenuContextProviderFn} to provide context to menu locations and contributions.
