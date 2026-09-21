@@ -54,12 +54,19 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: [
-      process.env.HEADLESS ? 'HeadlessChrome' : 'Chrome',
+      process.env.HEADLESS ? 'ScionChromeHeadless' : 'ScionChrome',
     ],
     customLaunchers: {
-      HeadlessChrome: {
+      ScionChromeHeadless: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox'],
+        flags: [
+          '--no-sandbox',
+          '--window-size=1920,1200',
+        ],
+      },
+      ScionChrome: {
+        base: 'Chrome',
+        flags: ['--window-size=1920,1200'],
       },
     },
   });
