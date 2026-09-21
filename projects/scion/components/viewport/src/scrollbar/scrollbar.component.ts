@@ -10,10 +10,11 @@
 
 import {Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, NgZone, signal, untracked, viewChild} from '@angular/core';
 import {concatWith, exhaustMap, finalize, fromEvent, merge, mergeWith, Observable, of, race, tap, timer} from 'rxjs';
-import {debounceTime, map, startWith, switchMap, takeUntil, withLatestFrom} from 'rxjs/operators';
+import {map, startWith, switchMap, takeUntil, withLatestFrom} from 'rxjs/operators';
 import {fromMutation$, fromResize$} from '@scion/toolkit/observable';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {clamp, isBetween} from '@scion/toolkit/util';
 
 /**
  * Renders a vertical or horizontal scrollbar.
@@ -53,17 +54,6 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   },
 })
 export class SciScrollbarComponent {
-
-  /**
-   * Timeout for debouncing viewport resize events that trigger the scroll position computation.
-   *
-   * Debouncing is particularly important in the context of Angular animations, since they continuously
-   * trigger resize events. Debouncing prevents the scrollbar from flickering, for example, when the user
-   * expands a panel that contains a viewport.
-   *
-   * @internal
-   */
-  public static readonly VIEWPORT_RESIZE_DEBOUNCE_TIME = 50;
 
   /**
    * Specifies the direction of the scrollbar. Defaults to a vertical scrollbar.
@@ -214,11 +204,13 @@ export class SciScrollbarComponent {
       untracked(() => {
         const subscription = viewportScroll$(viewport)
           .pipe(
-            mergeWith(viewportSize$(viewport, {debounceTime: SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME})),
-            mergeWith(viewportClientSize$(viewport, {debounceTime: SciScrollbarComponent.VIEWPORT_RESIZE_DEBOUNCE_TIME})),
+            mergeWith(viewportSize$(viewport)),
+            mergeWith(viewportClientSize$(viewport)),
             subscribeIn(fn => this._zone.runOutsideAngular(fn)),
           )
-          .subscribe(() => this.renderScrollPosition());
+          .subscribe(() => {
+            this.renderScrollPosition();
+          });
         onCleanup(() => subscription.unsubscribe());
       });
     });
@@ -324,21 +316,14 @@ function viewportScroll$(viewport: HTMLElement): Observable<void> {
 /**
  * Emits on subscription, and then each time the size of the viewport changes.
  */
-function viewportSize$(viewport: HTMLElement, options: {debounceTime: number}): Observable<void> {
-  return fromResize$(viewport)
-    .pipe(
-      // Debouncing is particularly important in the context of Angular animations, since they continuously
-      // trigger resize events. Debouncing prevents the scrollbar from flickering, for example, when the user
-      // expands a panel that contains a viewport.
-      debounceTime(options.debounceTime),
-      map(() => undefined),
-    );
+function viewportSize$(viewport: HTMLElement): Observable<void> {
+  return fromResize$(viewport).pipe(map(() => undefined));
 }
 
 /**
  * Emits on subscription, and then each time the size or style property of the viewport client changes.
  */
-function viewportClientSize$(viewport: HTMLElement, options: {debounceTime: number}): Observable<void> {
+function viewportClientSize$(viewport: HTMLElement): Observable<void> {
   return children$(viewport)
     .pipe(
       switchMap(children => merge(...children.map(child => merge(
@@ -347,10 +332,6 @@ function viewportClientSize$(viewport: HTMLElement, options: {debounceTime: numb
         // e.g., `scale` or `translate` used by some virtual scroll implementations
         fromMutation$(child, {subtree: false, childList: false, attributeFilter: ['style']})),
       ))),
-      // Debouncing is particularly important in the context of Angular animations, since they continuously
-      // trigger resize events. Debouncing prevents the scrollbar from flickering, for example, when the user
-      // expands a panel that contains a viewport.
-      debounceTime(options.debounceTime),
       map(() => undefined),
     );
 }
@@ -368,20 +349,6 @@ function children$(element: HTMLElement): Observable<HTMLElement[]> {
         // Filter HTML elements.
         .filter((child: Element): child is HTMLElement => child instanceof HTMLElement)),
     );
-}
-
-/**
- * Returns the value clamped to the inclusive range of min and max.
- */
-function clamp(value: number, minmax: {min: number; max: number}): number {
-  return Math.max(minmax.min, Math.min(value, minmax.max));
-}
-
-/**
- * Returns whether the value is between the specified range (inclusive).
- */
-function isBetween(value: number, range: {from: number; to: number}): boolean {
-  return value >= range.from && value <= range.to;
 }
 
 /**
