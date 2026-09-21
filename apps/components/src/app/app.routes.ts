@@ -11,6 +11,11 @@ import {Routes} from '@angular/router';
 
 export const routes: Routes = [
   {
+    path: 'sci-table',
+    loadComponent: () => import('./sci-table-page/sci-table-page.component'),
+    data: {internal: false},
+  },
+  {
     path: 'sci-toolbar',
     loadComponent: () => import('./sci-toolbar-page/sci-toolbar-page.component'),
     data: {internal: false},

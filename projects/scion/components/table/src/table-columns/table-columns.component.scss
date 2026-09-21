@@ -1,0 +1,75 @@
+:host {
+  display: grid;
+  grid-template-columns: subgrid;
+  overflow-x: clip; // Prevent splitter touch targets from creating horizontal scroll overflow.
+  pointer-events: none;
+
+  // Indicate if column header dividers are visible.
+  @container (style(--sci-table-header-column-divider: visible)) and (style(--ɵsci-table-header-visible: true)) {
+    --ɵsci-table-header-column-divider-visible: true;
+  }
+
+  // Indicate if hovering a splitter.
+  &:has(> sci-splitter:hover) {
+    --ɵsci-column-splitter-hover: true;
+  }
+
+  // Overlap splitter and column in row 1 to share full row height.
+  > sci-splitter, > sci-table-column {
+    grid-row: 1;
+  }
+
+  > sci-splitter {
+    --sci-splitter-size: var(--ɵsci-table-border-size);
+    --sci-splitter-size-hover: var(--ɵsci-table-border-size);
+    --sci-splitter-cross-axis-size: 0;
+    --sci-splitter-background-color: var(--ɵsci-table-border-color);
+
+    // Place splitters at the end of cell content and enable interaction with splitters.
+    justify-self: end;
+    pointer-events: auto;
+
+    // Render splitter handles as column header dividers (splitters still span full viewport height).
+    @container style(--ɵsci-table-header-column-divider-visible: true) {
+      --sci-splitter-cross-axis-start: .5em;
+      --sci-splitter-cross-axis-size: calc(var(--ɵsci-table-header-height) - 2 * var(--sci-splitter-cross-axis-start));
+
+      // Hide the divider if at viewport edge.
+      &:last-of-type:not(.resizing):not(:hover) {
+        @container style(--ɵsci-table-viewport-client-width >= --ɵsci-table-viewport-width) {
+          --sci-splitter-cross-axis-size: 0;
+        }
+      }
+    }
+
+    // Expand splitter handle to full viewport height on hover or resize.
+    &:is(:hover, .resizing) {
+      --sci-splitter-background-color: rgb(from var(--ɵsci-table-border-color) r g b / .5); // subtler color
+      --sci-splitter-cross-axis-size: 100%;
+
+      // Expand divider down to the viewport bottom.
+      @container style(--ɵsci-table-header-column-divider-visible: true) {
+        --sci-splitter-cross-axis-size: auto;
+        --sci-splitter-cross-axis-end: 0;
+      }
+    }
+
+    // Prevent hovering other splitters during resize.
+    @container style(--ɵsci-table-resizing: true) {
+      &:not(.resizing) {
+        pointer-events: none;
+      }
+    }
+
+    // Disable splitters while scrolling, except:
+    // - When resizing (shrinking off-screen columns triggers auto-scroll, which would break the drag).
+    // - When scrolling via mouse wheel while hovering over a splitter.
+    @container (style(--ɵsci-table-scrolling: true)) and (not style(--ɵsci-table-resizing: true)) and (not style(--ɵsci-column-splitter-hover: true)) {
+      pointer-events: none;
+    }
+  }
+
+  > sci-table-column {
+    height: 0;
+  }
+}

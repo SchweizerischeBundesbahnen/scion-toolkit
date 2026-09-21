@@ -1,0 +1,20 @@
+<!-- Render a resize splitter per resizable column. -->
+@for (column of table().columns(); track column.name; let i = $index) {
+  @if (column.resizable()) {
+    <sci-splitter orientation="vertical"
+                  [class.resizing]="column.resizing()"
+                  [attr.data-column]="column.name"
+                  [style.grid-column]="i + 1"
+                  (start)="onResizeStart(column)"
+                  (move)="onResize(column, $event)"
+                  (end)="onResizeEnd()"
+                  (reset)="onPack(column)"
+                  (mouseenter)="onMouseEnter()"
+                  (mouseleave)="onMouseLeave()"/>
+  }
+}
+
+<!-- Render an invisible synthetic column per column to read current widths and set minimum widths. -->
+@for (column of table().columns(); track column.name; let i = $index) {
+  <sci-table-column [column]="column" [style.grid-column]="i + 1"/>
+}

@@ -1,0 +1,55 @@
+@use '@scion/components/common';
+
+:host {
+  display: flex;
+  gap: .5em;
+  align-items: center;
+  padding-inline: var(--ɵsci-table-cell-padding-inline);
+  border-bottom: var(--ɵsci-table-border-size) solid transparent;
+  margin-bottom: -1px; // offset by -1px to merge the filter's bottom outline with the table header separator
+  transition: border-bottom-color ease-in-out .15s, color ease-in-out .15s;
+
+  &:focus-within:not(:disabled):not(:has(input:disabled)) {
+    border-bottom-color: var(--sci-color-accent);
+  }
+
+  > sci-icon.filter.active {
+    color: var(--sci-color-accent);
+  }
+
+  > sci-icon.chevron {
+    --sci-icon-size: var(--sci-button-icon-size);
+  }
+
+  &:has(input[type="button"]) {
+    cursor: var(--sci-button-cursor);
+
+    &:has(button.clear) > sci-icon.chevron {
+      display: none;
+    }
+  }
+
+  > input {
+    all: unset;
+    flex: auto;
+    align-self: stretch;
+    width: 0;
+    min-width: 0;
+    color: var(--sci-color-text);
+    appearance: auto;
+    box-sizing: border-box;
+
+    // Remove native steppers in Chromium and Safari.
+    &[type="number"]::-webkit-outer-spin-button,
+    &[type="number"]::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+  }
+
+  > button.clear {
+    @include common.icon-button-element-states() {
+      padding: 1px;
+    }
+  }
+}

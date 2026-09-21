@@ -8,7 +8,7 @@
 The NPM sub-module `@scion/components/sashbox` provides an Angular sashbox component for splitting content into multiple parts, so-called sashes. The user can resize the sashes by moving the splitter between the sashes. 
 
 ***
-Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of the sashbox component in our internal test application.
+Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of the sashbox component.
 ***
 
 <!--- INSTALLATION AND USAGE --->

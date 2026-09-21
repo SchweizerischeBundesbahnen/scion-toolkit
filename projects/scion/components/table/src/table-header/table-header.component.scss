@@ -1,0 +1,26 @@
+:host {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-auto-rows: var(--sci-table-header-height);
+  background-color: var(--sci-table-header-background-color);
+  border-bottom: var(--ɵsci-table-border-size) solid var(--ɵsci-table-border-color);
+  user-select: none;
+
+  @container style(--ɵsci-column-header-visible: true) {
+    grid-template-rows: minmax(var(--sci-table-header-height), auto); // flexible row height to support header wrapping
+  }
+
+  // Force column filters to start a new row.
+  > sci-column-filter:first-of-type {
+    grid-column: 1;
+  }
+
+  // Prevent hovering header while resizing.
+  @container style(--ɵsci-table-resizing: true) {
+    pointer-events: none;
+  }
+
+  &:empty {
+    display: none; // do not display header if no columns
+  }
+}

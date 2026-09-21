@@ -1,0 +1,197 @@
+@use '@scion/components/common';
+@use '@scion/components/scrollbar' as sci-scrollbar;
+
+:host {
+  display: block;
+  overflow: hidden; // viewport should not grow beyond host height
+
+  --ɵsci-table-border-size: 1px;
+  --ɵsci-table-border-color: var(--sci-color-border);
+
+  @include sci-scrollbar.scrollbar-hide-when-inactive();
+
+  > sci-table-viewport {
+    display: block; // required to set height
+    position: relative; // stacking context for the active row outline to not overflow the viewport and align with the active row if scrolled
+    height: 100%;
+    overflow: auto;
+    scrollbar-width: none;
+    isolation: isolate; // Scope z-indices to this component so subsequent DOM elements naturally render on top of the table.
+    box-sizing: border-box; // must not be set on sci-table level for the application to control box sizing if setting a table border.
+    anchor-name: --sci-table-viewport;
+
+    // Indicate if table header is visible.
+    &:has(sci-table-header) {
+      --ɵsci-table-header-visible: true;
+    }
+
+    // Indicate if column headers are visible.
+    &:has(sci-table-header > sci-column-header) {
+      --ɵsci-column-header-visible: true;
+    }
+
+    // Indicates active scrolling OR holding the scrollbar thumb pressed (i.e., user stopped moving while still pressing the thumb).
+    // Note: This CSS variable is also set via host binding in `SciTableComponent` to support mousewheel scrolling.
+    &:has(~ sci-scrollbar.scrolling) {
+      --ɵsci-table-scrolling: true;
+    }
+
+    > sci-table-grid {
+      display: grid;
+      grid-template-columns: var(--ɵsci-table-columns, repeat(auto-fit, 0)) 0; // Last column reserved for action toolbar; `repeat(auto-fit, 0)` prevents flicker (oversized column header dividers) until `--ɵsci-table-columns` is set.
+      grid-auto-rows: min-content;
+      grid-template-rows:
+        min-content // table header
+        1fr; // table body
+      width: min-content; // Fill viewport by default, shrinking columns to minimums before overflowing horizontally.
+      min-width: 100%; // Never shrink below viewport width to distribute free space to flex columns.
+      min-height: 100%;
+
+      @container not style(--ɵsci-table-header-visible: true) {
+        grid-template-rows: 1fr; // table body
+      }
+
+      > sci-table-header {
+        z-index: 1; // required to overlap the table body when sticking on top.
+        grid-row: 1; // The sci-table-columns positioning requires all grid items to be positioned.
+        grid-column: 1/-1;
+
+        // Stick header to the top of the viewport.
+        position: sticky;
+        top: 0;
+      }
+
+      > sci-table-body {
+        anchor-name: --sci-table-body;
+        grid-row: 2; // The sci-table-columns positioning requires all grid items to be positioned.
+        @container not style(--ɵsci-table-header-visible: true) {
+          grid-row: 1;
+        }
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1/-1;
+        grid-auto-rows: var(--sci-table-row-height);
+        outline: none; // tabindex required for keyboard navigation
+
+        // TODO [dwi] Add documentation that padding is used for virtuall scrolling -> not margin, not transform
+        // Set padding (not margin) to contribute to the "real" height
+        padding-top: var(--ɵsci-table-virtual-scroll-offset-top);
+        padding-bottom: var(--ɵsci-table-virtual-scroll-offset-bottom);
+
+        > sci-table-row {
+          grid-column: 1/-1;
+
+          // Position active row outline element over the active row.
+          &[data-active] {
+            anchor-name: --sci-table-active-row;
+          }
+        }
+
+        > div.active-row-outline {
+          position: absolute;
+          top: anchor(--sci-table-active-row top);
+          right: anchor(--sci-table-active-row right);
+          bottom: anchor(--sci-table-active-row bottom);
+          left: anchor(--sci-table-active-row left);
+          border: var(--sci-table-row-outline-width) var(--sci-table-row-outline-style) var(--sci-table-row-outline-color);
+          border-radius: var(--sci-table-row-border-radius);
+          pointer-events: none;
+        }
+
+        // Hide active row outline if scrolled out of viewport.
+        &:not(:has(sci-table-row[data-active])) > div.active-row-outline {
+          display: none;
+        }
+
+        > span.message {
+          grid-column: 1/-1;
+          grid-row: auto / span 2;
+          justify-self: center;
+          align-self: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1em;
+          user-select: none;
+          white-space: nowrap;
+          color: var(--sci-color-text-subtle);
+
+          &:has(button.action) {
+            grid-row: auto / span 4;
+          }
+
+          > button.action {
+            @include common.icon-button-element-states() {
+              border: 1px solid var(--sci-color-border);
+              padding: .25em 1em;
+            }
+          }
+
+          // Stick message to the viewport if the viewport overflows horizontally. Do not use container scroll-state CSS query as not supported by Firefox.
+          @container style(--ɵsci-table-viewport-client-width > --ɵsci-table-viewport-width) {
+            position: sticky;
+            left: 50%;
+            right: 50%;
+            width: 0; // Required to horizontally center the message.
+          }
+        }
+
+        &:has(> span.message) {
+          z-index: 2; // Required to overlap the colum splitters.
+        }
+      }
+
+      > sci-table-columns {
+        grid-area: 1/1/-1/-1; // Overlay should fill the whole table grid.
+        z-index: 1; // Required to overlap the table header, allowing resizing columns in the table header.
+        position: sticky; // Stick column header dividers to the top of the viewport.
+        top: 0;
+        max-height: var(--ɵsci-table-viewport-height); // Required to stick to the top of the viewport. Uses `max-height` instead of `height` so the table can shrink with its content.
+      }
+    }
+  }
+
+  > sci-scrollbar {
+    position: absolute;
+
+    // Position vertical scrollbar to the right of the viewport, below the table header.
+    &[direction="vscroll"] {
+      top: calc(anchor(--sci-table-body top) + 2px);
+      right: calc(anchor(--sci-table-viewport right) + 2px); // Reserve space for the last column's resize splitter
+      bottom: calc(anchor(--sci-table-viewport bottom) + 2px);
+    }
+
+    // Position horizontal scrollbar at the bottom of the viewport.
+    &[direction="hscroll"] {
+      left: calc(anchor(--sci-table-viewport left) + 2px);
+      bottom: calc(anchor(--sci-table-viewport bottom) + 1px);
+      right: calc(anchor(--sci-table-viewport right) + 2px);
+    }
+
+    // Prevent hovering scrollbar while resizing a column.
+    @container style(--ɵsci-table-resizing: true) {
+      pointer-events: none;
+    }
+  }
+
+  > sci-throbber {
+    --sci-throbber-size: 16px;
+    position: absolute;
+    top: calc(anchor(--sci-table-viewport top) + .5em);
+    right: calc(anchor(--sci-table-viewport right) + .5em);
+  }
+
+  > div.synthetic {
+    position: absolute;
+    pointer-events: none;
+    visibility: hidden;
+
+    &.item-size {
+      height: var(--sci-table-row-height);
+    }
+
+    &.cell-padding {
+      width: var(--sci-table-cell-padding-inline);
+    }
+  }
+}

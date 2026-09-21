@@ -1,0 +1,93 @@
+:host {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1em;
+  height: var(--table-page-height);
+
+  > main {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    flex: 1 1 0;
+    overflow-x: hidden; // to not overlay detail panel if table has fixed width
+
+    > sci-table {
+      flex: 1 1 0;
+      border: 1px solid var(--sci-color-border);
+      border-radius: var(--sci-corner);
+      padding: var(--sci-corner);
+      box-sizing: content-box;
+
+      @container style(--table-height) {
+        flex: none;
+        height: var(--table-height);
+      }
+
+      @container style(--table-max-height) {
+        max-height: var(--table-max-height);
+      }
+
+      @container style(--table-width) {
+        width: var(--table-width);
+      }
+
+      @container style(--table-grow-to-breakpoint: true) {
+        flex: 0 1 min-content;
+      }
+
+      &::part(row\:negative),
+      &::part(column\:negative) {
+        background-color: rgba(255, 0, 0, 0.2);
+      }
+    }
+  }
+
+  > aside {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1em;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+    padding: 1em;
+
+    > sci-tabbar {
+      section, form {
+        display: flex;
+        flex-direction: column;
+        gap: .5em;
+      }
+
+      div.columns {
+        display: flex;
+        flex-direction: column;
+        gap: 2em;
+      }
+
+      header {
+        margin-bottom: 1em;
+        font-weight: bold;
+      }
+    }
+
+    > section.table-state {
+      display: flex;
+      flex-direction: column;
+      gap: .5em;
+      border: 1px solid var(--sci-color-border);
+      border-radius: var(--sci-corner);
+      padding: 1em;
+      background-color: var(--sci-color-background-primary);
+
+      > header {
+        margin-bottom: 1em;
+        font-weight: bold;
+      }
+
+      sci-viewport {
+        max-height: 100px;
+      }
+    }
+  }
+}

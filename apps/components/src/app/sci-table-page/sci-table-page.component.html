@@ -1,0 +1,216 @@
+@if (table(); as table) {
+  <main>
+    <sci-table [table]="table" name="table:vehicles"/>
+  </main>
+
+  <aside>
+    <sci-tabbar>
+      <!-- Settings -->
+      <ng-template sciTab label="Settings" name="settings">
+        <section>
+          <sci-form-field label="Filterable">
+            <input [(ngModel)]="table.filterable" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Sortable">
+            <input [(ngModel)]="table.sortable" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Resizable">
+            <input [(ngModel)]="table.resizable" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Show Header">
+            <input [(ngModel)]="table.showHeader" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Wrap Header">
+            <input [(ngModel)]="table.wrapHeader" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Show Gridlines">
+            <input [formField]="settingsForm.showGridlines" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Zebra Striped Rows">
+            <input [formField]="settingsForm.showZebraStriping" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Selectable">
+            <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)">
+              <option value="multi">Multi</option>
+              <option value="single">Single</option>
+              <option value="false">False</option>
+            </select>
+          </sci-form-field>
+
+          <button type="button" (click)="onUserSettingsReset()">Reset User Settings</button>
+        </section>
+      </ng-template>
+
+      <!-- Data Source -->
+      <ng-template sciTab label="Datasource">
+        <section>
+          <sci-form-field label="Row Count">
+            <input [(ngModel)]="rowCount" appMinMax min="0" max="10000" type="number"/>
+          </sci-form-field>
+
+          <sci-form-field label="Slow Datasource">
+            <input [formField]="settingsForm.slowDatasource" type="checkbox"/>
+          </sci-form-field>
+        </section>
+      </ng-template>
+
+      <!-- Visible Columns -->
+      <ng-template sciTab label="Visible Columns">
+        <section>
+          <sci-form-field label="ID">
+            <input [formField]="settingsForm.visibleColumns.id" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Vehicle ID">
+            <input [formField]="settingsForm.visibleColumns.vehicleId" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Class / Series">
+            <input [formField]="settingsForm.visibleColumns.classType" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="RU / Operator">
+            <input [formField]="settingsForm.visibleColumns.operator" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Depot / Maintenance">
+            <input [formField]="settingsForm.visibleColumns.depot" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Status">
+            <input [formField]="settingsForm.visibleColumns.status" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Train Protection">
+            <input [formField]="settingsForm.visibleColumns.tps" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Operating Hours (h)">
+            <input [formField]="settingsForm.visibleColumns.operatingHours" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Mileage (km)">
+            <input [formField]="settingsForm.visibleColumns.mileage" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Max Speed (km/h)">
+            <input [formField]="settingsForm.visibleColumns.maxSpeed" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Service Weight (t)">
+            <input [formField]="settingsForm.visibleColumns.serviceWeight" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Seats">
+            <input [formField]="settingsForm.visibleColumns.seatingCapacity" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Year Built">
+            <input [formField]="settingsForm.visibleColumns.buildYear" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Operational">
+            <input [formField]="settingsForm.visibleColumns.isOperational" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Wi-Fi">
+            <input [formField]="settingsForm.visibleColumns.hasWifi" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Multi-System">
+            <input [formField]="settingsForm.visibleColumns.isMultiSystem" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="TPS Active">
+            <input [formField]="settingsForm.visibleColumns.isTpsActive" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Overhaul Due">
+            <input [formField]="settingsForm.visibleColumns.isOverhaulDue" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Narrow Gauge">
+            <input [formField]="settingsForm.visibleColumns.isNarrowGauge" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Last R2 Expiry">
+            <input [formField]="settingsForm.visibleColumns.lastR2Expiry" type="checkbox"/>
+          </sci-form-field>
+
+          <sci-form-field label="Next Revision">
+            <input [formField]="settingsForm.visibleColumns.nextRevision" type="checkbox"/>
+          </sci-form-field>
+        </section>
+      </ng-template>
+
+      <!-- Vehicle Editor -->
+      @if (vehicleForm.id().value()) {
+        <ng-template sciTab label="Edit Vehicle" name="vehicle-editor">
+          <form [formRoot]="vehicleForm">
+            <sci-form-field label="ID">
+              <input [formField]="vehicleForm.id" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="Vehicle ID">
+              <input [formField]="vehicleForm.vehicleId" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="Class / Series">
+              <input [formField]="vehicleForm.classType" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="RU / Operator">
+              <input [formField]="vehicleForm.operator" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="Train Protection">
+              <input [formField]="vehicleForm.tps" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="Operating Hours (h)">
+              <input [formField]="vehicleForm.operatingHours" type="number" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="Mileage (km)">
+              <input [formField]="vehicleForm.mileageKm" type="number" appFieldValidation/>
+            </sci-form-field>
+
+            <sci-form-field label="Max Speed (km/h)">
+              <input [formField]="vehicleForm.maxSpeedKmh" type="number" appFieldValidation/>
+            </sci-form-field>
+
+            <div class="button-bar">
+              <button type="submit" [disabled]="vehicleForm().invalid()">Update</button>
+              <button type="button" (click)="onVehicleFormCancel()">Cancel</button>
+            </div>
+          </form>
+        </ng-template>
+      }
+    </sci-tabbar>
+
+    <section class="table-state">
+      <header #header>Table State</header>
+
+      <sci-form-field label="Active Id">
+        {{table.activeItem()?.id ?? '-'}}
+      </sci-form-field>
+
+      <sci-form-field label="Selection Count">
+        {{table.selectedItems().length}}
+      </sci-form-field>
+
+      <sci-form-field label="Selection" [style.max-width.px]="header.clientWidth"> <!-- Prevent viewport from grabbing available space. -->
+        <sci-viewport>
+          {{selection()}}
+        </sci-viewport>
+      </sci-form-field>
+    </section>
+  </aside>
+}

@@ -10,7 +10,7 @@ The NPM sub-module `@scion/components/viewport` provides an Angular viewport com
 By default, slotted content is added to a CSS grid layout with a single column, filling remaining space vertically and horizontally. Using the `::part(content)` pseudo element selector, you can configure the grid container or apply a different layout, such as a flex or flow layout. See section "*Layouting the viewport's slotted content*" for more information.
 
 ***
-Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of the viewport component in our internal test application.
+Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of the viewport component and supported features.
 ***
 
 <!--- INSTALLATION AND USAGE --->

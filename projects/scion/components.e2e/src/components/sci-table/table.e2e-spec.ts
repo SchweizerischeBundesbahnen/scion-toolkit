@@ -1,0 +1,5372 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
+import {test} from '../../fixtures';
+import {TablePagePO} from './table-page.po';
+import {expect} from '@playwright/test';
+import {TablePO} from './table.po';
+import {expectTable} from './table-matcher';
+import {expectRow} from './row-matcher';
+import {fromRect, hasDefaultStackingLevel, setCaret, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
+import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
+import {firstValueFrom, Subject} from 'rxjs';
+import {SciTablePageResponse} from '@scion/components/table';
+import {CustomColumnPO} from './custom-column.po';
+import {BooleanColumnPO} from './boolean-column.po';
+import {CustomInputColumnPO} from './custom-input-column.po';
+import {CustomButtonColumnPO} from './custom-button-column.po';
+
+test.describe('sci-table', () => {
+
+  test.describe('Table Configuration', () => {
+
+    test('should disable filters', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expect(table.filters).toHaveCount(0);
+
+      await tablePage.setFilterable(true);
+      await expect(table.filters).toHaveCount(1);
+    });
+
+    test('should disable sort', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setSortable(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expect(table.sortButtons).toHaveCount(0);
+
+      await tablePage.setSortable(true);
+      await expect(table.sortButtons).toHaveCount(1);
+    });
+
+    test('should hide header', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expect(table.headers).toHaveCount(0);
+
+      await tablePage.showHeader(true);
+      await expect(table.headers).toHaveCount(1);
+    });
+
+    test('should wrap header', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', header: 'A long column header', type: 'string', width: '100px'});
+      const headerHeight = await table.header.height();
+
+      await tablePage.wrapHeader(true);
+      await expect.poll(() => table.header.height()).toBeGreaterThan(headerHeight);
+
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: 300});
+
+      await expect.poll(() => table.header.height()).toBe(headerHeight);
+    });
+
+    test('should disable resize', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setResizable(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expect(table.column({name: 'column:name'}).splitter.locator).not.toBeAttached();
+
+      await tablePage.setResizable(true);
+      await expect(table.column({name: 'column:name'}).splitter.locator).toBeAttached();
+    });
+
+    test('should adapt to container size', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expectRow(table.row({nth: 0})).toBeAttached();
+      const count = await table.rows.count();
+
+      await tablePage.setHeight(1500);
+      await expect.poll(() => table.rows.count()).toBeGreaterThan(count);
+
+      await tablePage.setHeight(200);
+      await expect.poll(() => table.rows.count()).toBeLessThan(count);
+    });
+
+    test('should be able to set item size', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expectRow(table.row({nth: 0})).toBeAttached();
+      const count = await table.rows.count();
+
+      await tablePage.setRowHeight(50);
+      await expect.poll(() => table.rows.first().boundingBox().then(b => b?.height)).toBe(50);
+      await expect.poll(() => table.rows.count()).toBeLessThan(count);
+
+      await tablePage.setRowHeight(20);
+      await expect.poll(() => table.rows.first().boundingBox().then(b => b?.height)).toBe(20);
+      await expect.poll(() => table.rows.count()).toBeGreaterThan(count);
+    });
+
+    test('should render multiple tables', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      await tablePage.navigate();
+
+      await tablePage.setTableCount(4);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expect(tablePage.table).toHaveCount(4);
+
+      const table1 = new TablePO(tablePage.locator.locator('sci-table').nth(0));
+      const table2 = new TablePO(tablePage.locator.locator('sci-table').nth(1));
+      const table3 = new TablePO(tablePage.locator.locator('sci-table').nth(2));
+      const table4 = new TablePO(tablePage.locator.locator('sci-table').nth(3));
+
+      await expectTable(table1).toHaveColumnCount(1);
+      await expectTable(table2).toHaveColumnCount(1);
+      await expectTable(table3).toHaveColumnCount(1);
+      await expectTable(table4).toHaveColumnCount(1);
+
+      // Verify no interference when interacting with a table.
+      await table1.column({name: 'column:name'}).sort();
+      await expect.poll(() => table1.column({name: 'column:name'}).sortDirection()).toEqual('asc');
+      await expect.poll(() => table2.column({name: 'column:name'}).sortDirection()).toBeNull();
+      await expect.poll(() => table3.column({name: 'column:name'}).sortDirection()).toBeNull();
+      await expect.poll(() => table4.column({name: 'column:name'}).sortDirection()).toBeNull();
+
+      await table3.column({name: 'column:name'}).sort();
+      await expect.poll(() => table1.column({name: 'column:name'}).sortDirection()).toEqual('asc');
+      await expect.poll(() => table2.column({name: 'column:name'}).sortDirection()).toBeNull();
+      await expect.poll(() => table3.column({name: 'column:name'}).sortDirection()).toEqual('asc');
+      await expect.poll(() => table4.column({name: 'column:name'}).sortDirection()).toBeNull();
+    });
+  });
+
+  test.describe('Columns', () => {
+
+    test.describe('String column', () => {
+
+      test('should add string column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+        await expect(table.column({name: 'column:string'}).columnHeader).toBeVisible();
+      });
+
+      test('should center text vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+        await tablePage.setRowHeight(30);
+
+        const cell = table.row({nth: 0}).cell('column:string');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+        const cell = table.row({nth: 0}).cell('column:string');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align text to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+        const cell = table.row({nth: 0}).cell('column:string');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should have ellipsis on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await provideHttpDatasource(page, [{name: 'This is a long product name'}]);
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+        const cell = table.row({nth: 0}).cell('column:string');
+        await expect(cell.locator).not.toHaveEllipsis();
+
+        await cell.column.splitter.drag({deltaX: -500});
+        await expect(cell.locator).toHaveEllipsis();
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+        const cell = table.row({nth: 0}).cell('column:string');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+    });
+
+    test.describe('Number column', () => {
+
+      test('should add number column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+        await expect(table.column({name: 'column:number'}).columnHeader).toBeVisible();
+      });
+
+      test('should center text vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+        await tablePage.setRowHeight(30);
+
+        const cell = table.row({nth: 0}).cell('column:number');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+
+        const cell = table.row({nth: 0}).cell('column:number');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align text to the right', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+
+        const cell = table.row({nth: 0}).cell('column:number');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('end');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should have ellipsis on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await provideHttpDatasource(page, [{price: 1111111111111111}]);
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+        const cell = table.row({nth: 0}).cell('column:number');
+        await expect(cell.locator).not.toHaveEllipsis();
+
+        await cell.column.splitter.drag({deltaX: -500});
+        await expect(cell.locator).toHaveEllipsis();
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:number', type: 'number'});
+
+        const cell = table.row({nth: 0}).cell('column:number');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+    });
+
+    test.describe('Boolean column', () => {
+
+      test('should add boolean column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+        await expect(table.column({name: 'column:boolean'}).columnHeader).toBeVisible();
+      });
+
+      test('should center checkmark vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+        const cell = table.row({nth: 0}).cell('column:boolean');
+        const cellBounds = await cell.bounds();
+        const checkmarkBounds = await new BooleanColumnPO(cell).bounds();
+
+        expect(checkmarkBounds.vcenter).toEqual(cellBounds.vcenter);
+        expect(checkmarkBounds.height).toBeLessThan(cellBounds.height);
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+        const cell = table.row({nth: 0}).cell('column:boolean');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+        const cell = table.row({nth: 0}).cell('column:boolean');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+    });
+
+    test.describe('Template column', () => {
+
+      test('should add template column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+        await expect(table.column({name: 'column:template'}).columnHeader).toBeVisible();
+      });
+
+      test('should center template vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        const cellBounds = await cell.bounds();
+        const templateBounds = await new CustomColumnPO(cell).bounds();
+
+        expect(templateBounds.vcenter).toEqual(cellBounds.vcenter);
+        expect(templateBounds.height).toBeLessThan(cellBounds.height);
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align cell content to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should pack template column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
+        await tablePage.addColumn({name: 'column:template', type: 'template'});
+        await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(600);
+
+        // Set explicit template width.
+        const cell = table.row({nth: 0}).cell('column:template');
+        const template = new CustomColumnPO(cell);
+        await template.setWidth(300);
+
+        await table.column({name: 'column:template'}).splitter.dblclick();
+        await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(10 + 300 + 10);
+      });
+
+      test('should pack template column that is filling the cell', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.addColumn({name: 'column:template', type: 'template', extras: {padding: false}});
+        await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(600);
+
+        // Set explicit template width.
+        const cell = table.row({nth: 0}).cell('column:template');
+        const template = new CustomColumnPO(cell);
+        await template.setWidth(300);
+
+        await table.column({name: 'column:template'}).splitter.dblclick();
+        await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(300);
+      });
+
+      test('should have cell as positioning context', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.setRowCount(1);
+        await tablePage.addColumn({name: 'column:template', type: 'template', extras: {padding: false}});
+
+        const cell = table.row({nth: 0}).cell('column:template');
+        const template = new CustomColumnPO(cell);
+        await template.setPositionAbsolute({top: 0, right: 0, bottom: 0, left: 0});
+
+        const templateBounds = await template.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(templateBounds.height).toEqual(rowBounds.height);
+        expect(templateBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
+
+        await tablePage.addColumn({name: 'column:template-padding', type: 'template', extras: {padding: true}});
+        await tablePage.addColumn({name: 'column:template-no-padding', type: 'template', extras: {padding: false}});
+
+        await test.step('column with cell padding', async () => {
+          const cell = table.row({nth: 0}).cell('column:template-padding');
+          const cellBounds = await cell.bounds();
+          const rowBounds = await cell.row.bounds();
+          const columnBounds = await cell.column.bounds();
+          const templateBounds = await new CustomColumnPO(cell).bounds();
+
+          expect(cellBounds.height).toEqual(rowBounds.height); // required for custom cell styling
+          expect(cellBounds.width).toEqual(columnBounds.width); // required for custom cell styling
+          await expect.poll(() => cell.paddingInline()).toBe(10);
+
+          expect(templateBounds.vcenter).toEqual(cellBounds.vcenter);
+          expect(templateBounds.height).toBeLessThan(cellBounds.height);
+          expect(templateBounds.width).toEqual(cellBounds.width - 20);
+        });
+
+        await test.step('column without padding', async () => {
+          const cell = table.row({nth: 0}).cell('column:template-no-padding');
+          const cellBounds = await cell.bounds();
+          const rowBounds = await cell.row.bounds();
+          const columnBounds = await cell.column.bounds();
+          const templateBounds = await new CustomColumnPO(cell).bounds();
+
+          expect(cellBounds.height).toEqual(rowBounds.height); // required for custom cell styling
+          expect(cellBounds.width).toEqual(columnBounds.width); // required for custom cell styling
+          await expect.poll(() => cell.paddingInline()).toBe(0);
+
+          expect(templateBounds.height).toEqual(cellBounds.height);
+          expect(templateBounds.width).toEqual(cellBounds.width);
+        });
+      });
+    });
+
+    test.describe('Component column', () => {
+
+      test('should add component column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+        await expect(table.column({name: 'column:component'}).columnHeader).toBeVisible();
+      });
+
+      test('should center component vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        const cellBounds = await cell.bounds();
+        const componentBounds = await new CustomColumnPO(cell).bounds();
+
+        expect(componentBounds.vcenter).toEqual(cellBounds.vcenter);
+        expect(componentBounds.height).toBeLessThan(cellBounds.height);
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align cell content to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should pack component column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
+        await tablePage.addColumn({name: 'column:component', type: 'component'});
+        await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(600);
+
+        // Set explicit component width.
+        const cell = table.row({nth: 0}).cell('column:component');
+        const component = new CustomColumnPO(cell);
+        await component.setWidth(300);
+
+        await table.column({name: 'column:component'}).splitter.dblclick();
+        await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(10 + 300 + 10);
+      });
+
+      test('should pack component column that is filling the cell', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.addColumn({name: 'column:component', type: 'component', extras: {padding: false}});
+        await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(600);
+
+        // Set explicit component width.
+        const cell = table.row({nth: 0}).cell('column:component');
+        const component = new CustomColumnPO(cell);
+        await component.setWidth(300);
+
+        await table.column({name: 'column:component'}).splitter.dblclick();
+        await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(300);
+      });
+
+      test('should have cell as positioning context', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.setRowCount(1);
+        await tablePage.addColumn({name: 'column:component', type: 'component', extras: {padding: false}});
+
+        const cell = table.row({nth: 0}).cell('column:component');
+        const component = new CustomColumnPO(cell);
+        await component.setPositionAbsolute({top: 0, right: 0, bottom: 0, left: 0});
+
+        const componentBounds = await component.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(componentBounds.height).toEqual(rowBounds.height);
+        expect(componentBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
+
+        await tablePage.addColumn({name: 'column:component-padding', type: 'component', extras: {padding: true}});
+        await tablePage.addColumn({name: 'column:component-no-padding', type: 'component', extras: {padding: false}});
+
+        await test.step('column with cell padding', async () => {
+          const cell = table.row({nth: 0}).cell('column:component-padding');
+          const cellBounds = await cell.bounds();
+          const rowBounds = await cell.row.bounds();
+          const columnBounds = await cell.column.bounds();
+          const componentBounds = await new CustomColumnPO(cell).bounds();
+
+          expect(cellBounds.height).toEqual(rowBounds.height); // required for custom cell styling
+          expect(cellBounds.width).toEqual(columnBounds.width); // required for custom cell styling
+          await expect.poll(() => cell.paddingInline()).toBe(10);
+
+          expect(componentBounds.vcenter).toEqual(cellBounds.vcenter);
+          expect(componentBounds.height).toBeLessThan(cellBounds.height);
+          expect(componentBounds.width).toEqual(cellBounds.width - 20);
+        });
+
+        await test.step('column without padding', async () => {
+          const cell = table.row({nth: 0}).cell('column:component-no-padding');
+          const cellBounds = await cell.bounds();
+          const rowBounds = await cell.row.bounds();
+          const columnBounds = await cell.column.bounds();
+          const componentBounds = await new CustomColumnPO(cell).bounds();
+
+          expect(cellBounds.height).toEqual(rowBounds.height); // required for custom cell styling
+          expect(cellBounds.width).toEqual(columnBounds.width); // required for custom cell styling
+          await expect.poll(() => cell.paddingInline()).toBe(0);
+
+          expect(componentBounds.height).toEqual(cellBounds.height);
+          expect(componentBounds.width).toEqual(cellBounds.width);
+        });
+      });
+    });
+
+    test('should add a lot of columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      for (let i = 0; i < 20; i++) {
+        await tablePage.addColumn({name: `column:${i}`, type: 'string'});
+      }
+
+      await expectTable(table).toHaveColumnCount(20);
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      const column19 = table.column({index: 19});
+
+      await expect(column19.columnHeader).not.toBeInViewport();
+      await table.scrollTo({x: 'end'});
+      await expect(column19.columnHeader).toBeInViewport();
+      await table.scrollTo({x: 'start'});
+      await expect(column19.columnHeader).not.toBeInViewport();
+    });
+
+    test('should add and remove columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+
+      await expectTable(table).toHaveColumnCount(3);
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
+
+      // Hide column 2.
+      await tablePage.setColumnVisible('column:2', false);
+      await expectTable(table).toHaveColumnCount(2);
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
+
+      // Hide column 3.
+      await tablePage.setColumnVisible('column:3', false);
+      await expectTable(table).toHaveColumnCount(1);
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
+
+      // Hide column 1.
+      await tablePage.setColumnVisible('column:1', false);
+      await expectTable(table).toHaveColumnCount(0);
+      await expect(table.column({name: 'column:1'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
+
+      // Show column 2.
+      await tablePage.setColumnVisible('column:2', true);
+      await expectTable(table).toHaveColumnCount(1);
+      await expect(table.column({name: 'column:1'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
+
+      // Show column 1.
+      await tablePage.setColumnVisible('column:1', true);
+      await expectTable(table).toHaveColumnCount(2);
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
+
+      // Show column 3.
+      await tablePage.setColumnVisible('column:3', true);
+      await expectTable(table).toHaveColumnCount(3);
+      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
+    });
+  });
+
+  test.describe('Filtering', () => {
+
+    test('should filter string column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await provideHttpDatasource(page, generateData(20, i => ({name: `Product ${i % 4}`})), {datasource: 'array-http'});
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.column({name: 'column:name'}).filter('Product 1');
+      await expect(table.rows).toHaveCount(5);
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+
+      await table.column({name: 'column:name'}).clearFilter();
+      await expect(table.rows).toHaveCount(20);
+    });
+
+    test('should filter number column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await provideHttpDatasource(page, generateData(20, i => ({price: i % 4})), {datasource: 'array-http'});
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:price', type: 'number'});
+
+      await table.column({name: 'column:price'}).filter(2);
+      await expect(table.rows).toHaveCount(5);
+      await expectTable(table).column({name: 'column:price'}).cells.toContainText('2');
+
+      await table.column({name: 'column:price'}).clearFilter();
+      await expect(table.rows).toHaveCount(20);
+    });
+
+    test('should filter boolean column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await provideHttpDatasource(page, generateData(20, i => ({inStock: i % 4 !== 0})), {datasource: 'array-http'});
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+      await table.column({name: 'column:boolean'}).filter(false);
+      await expect(table.rows).toHaveCount(5);
+      await expectTable(table).column({name: 'column:boolean'}).cells.toContainText('clear');
+
+      await table.column({name: 'column:boolean'}).clearFilter();
+      await expect(table.rows).toHaveCount(20);
+    });
+
+    test('should not filter template column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:template', type: 'template'});
+
+      const templateColumn = table.column({name: 'column:template'});
+      await expect(templateColumn.columnHeader).toBeAttached();
+      await expect(templateColumn.columnFilter).toHaveAttribute('data-disabled');
+      await expect(templateColumn.columnFilter).toBeStrictEmpty();
+    });
+
+    test('should filter template column with custom filter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await provideHttpDatasource(page, generateData(20, i => ({name: `Product ${i % 4}`})), {datasource: 'array-http'});
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.addColumn({name: 'column:template', type: 'template', extras: {customFilter: true}});
+
+      await table.column({name: 'column:template'}).filter('Product 1');
+      await expect(table.rows).toHaveCount(5);
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+
+      await table.column({name: 'column:template'}).clearFilter();
+      await expect(table.rows).toHaveCount(20);
+    });
+
+    test('should not filter component column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:component', type: 'component'});
+
+      const componentColumn = table.column({name: 'column:component'});
+      await expect(componentColumn.columnHeader).toBeAttached();
+      await expect(componentColumn.columnFilter).toHaveAttribute('data-disabled');
+      await expect(componentColumn.columnFilter).toBeStrictEmpty();
+    });
+
+    test('should filter component column with custom filter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await provideHttpDatasource(page, generateData(20, i => ({name: `Product ${i % 4}`})), {datasource: 'array-http'});
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {customFilter: true}});
+
+      await table.column({name: 'column:component'}).filter('Product 1');
+      await expect(table.rows).toHaveCount(5);
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+
+      await table.column({name: 'column:component'}).clearFilter();
+      await expect(table.rows).toHaveCount(20);
+    });
+
+    test('should filter large amount of data', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1_000_000);
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.column({name: 'column:name'}).filter('999999');
+      await expect(table.rows).toHaveCount(1);
+    });
+
+    test('should reset scroll position to top when applying filter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.scrollTo({y: 1000});
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      await table.column({name: 'column:name'}).filter('999');
+      await expect.poll(() => table.scrollTop()).toBe(0);
+    });
+
+    test('should retain selection on filtering', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
+
+      await table.column({name: 'column:name'}).filter('Product 1');
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+      await expectRow(table.row({nth: 0})).toBeSelected();
+    });
+
+    test('should focus filter field when clicking filter icon', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.column({name: 'column:name'}).filterIcon.click();
+      await expect(table.column({name: 'column:name'}).filterInput).toBeFocused();
+    });
+
+    test('should focus filter field when clicking reset', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.column({name: 'column:name'}).filter('filter');
+      await table.column({name: 'column:name'}).clearFilter();
+      await expect(table.column({name: 'column:name'}).filterInput).toBeFocused();
+    });
+
+    test('should focus filter field after selecting boolean option', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+      await table.column({name: 'column:boolean'}).filter(true);
+      await expect(table.column({name: 'column:boolean'}).filterInput).toBeFocused();
+
+      await table.column({name: 'column:boolean'}).filter(false);
+      await expect(table.column({name: 'column:boolean'}).filterInput).toBeFocused();
+    });
+  });
+
+  test.describe('Resizing', () => {
+
+    test('should resize column by moving splitter between column headers', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      const splitter = table.column({name: 'column:name'}).splitter;
+      const dragHandle = await splitter.startDrag({location: 'table-header'});
+
+      await dragHandle.dragTo({deltaX: 100});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
+
+      await dragHandle.dragTo({deltaX: 50});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(250);
+
+      await dragHandle.dragTo({deltaX: -20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(230);
+
+      await dragHandle.dragTo({deltaX: 50});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
+
+      await dragHandle.release();
+
+      await page.mouse.move(0, 0, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
+    });
+
+    test('should resize column by moving splitter between column cells (table with header)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      const splitter = table.column({name: 'column:name'}).splitter;
+      const dragHandle = await splitter.startDrag();
+
+      await dragHandle.dragTo({deltaX: 100});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
+
+      await dragHandle.dragTo({deltaX: 50});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(250);
+
+      await dragHandle.dragTo({deltaX: -20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(230);
+
+      await dragHandle.dragTo({deltaX: 50});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
+
+      await dragHandle.release();
+
+      await page.mouse.move(0, 0, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
+    });
+
+    test('should resize column by moving splitter between column cells (table without header)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(false);
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      const splitter = table.column({name: 'column:name'}).splitter;
+      const dragHandle = await splitter.startDrag();
+
+      await dragHandle.dragTo({deltaX: 100});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(200);
+
+      await dragHandle.dragTo({deltaX: 50});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(250);
+
+      await dragHandle.dragTo({deltaX: -20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(230);
+
+      await dragHandle.dragTo({deltaX: 50});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
+
+      await dragHandle.release();
+
+      await page.mouse.move(0, 0, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(280);
+    });
+
+    test('should resize multiple columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '200px'});
+
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: -50});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(150);
+      await expect.poll(() => table.column({name: 'column:testee'}).width()).toBe(200);
+
+      await table.column({name: 'column:testee'}).splitter.drag({deltaX: 50});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(150);
+      await expect.poll(() => table.column({name: 'column:testee'}).width()).toBe(250);
+    });
+
+    test('should render splitter at correct position', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      // Add resizable column.
+      await tablePage.addColumn({name: 'column:1', type: 'string', resizable: true, width: '100px'});
+      // Add non-resizable column.
+      await tablePage.addColumn({name: 'column:2', type: 'string', resizable: false, width: '100px'});
+      // Add resizable column.
+      await tablePage.addColumn({name: 'column:3', type: 'string', resizable: true, width: '100px'});
+      // Add resizable column.
+      await tablePage.addColumn({name: 'column:4', type: 'string', resizable: true, width: '100px'});
+
+      await expect(table.column({name: 'column:1'}).splitter.locator).toBeAttached();
+      await expect(table.column({name: 'column:2'}).splitter.locator).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).splitter.locator).toBeAttached();
+      await expect(table.column({name: 'column:4'}).splitter.locator).toBeAttached();
+
+      // Verify splitters to be at correct position.
+      const tableLeft = await table.bounds().then(bounds => bounds.x) - 1; // -1 because splitters are positioned at the end of cell content
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400);
+
+      // Resize 'column:1'.
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: 10});
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10);
+
+      // Resize 'column:3'.
+      await table.column({name: 'column:3'}).splitter.drag({deltaX: 10});
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10 + 10);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10);
+
+      // Resize 'column:4'.
+      await table.column({name: 'column:4'}).splitter.drag({deltaX: 10});
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10 + 10);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10 + 10);
+    });
+
+    test('should decrease column width', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
+
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: -100});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(100);
+    });
+
+    test('should stop at min width', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px', minWidth: 100});
+
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: -300});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(100);
+    });
+
+    test('should allow to overflow while resizing', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
+
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: page.viewportSize()!.width});
+      await expectTable(table).toHaveHorizontalOverflow();
+    });
+
+    test('should pack column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:price', type: 'string'});
+
+      await table.column({name: 'column:name'}).splitter.dblclick();
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBeLessThan(200);
+    });
+
+    test('should pack column to min-width', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '600px', minWidth: 400});
+      await tablePage.addColumn({name: 'column:price', type: 'string'});
+
+      await table.column({name: 'column:name'}).splitter.dblclick();
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(400);
+
+      // Should still be able to resize after pack.
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: 25});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(425);
+    });
+
+    test('should save sizes between reloads', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate({tableStorage: true});
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: -100});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(500);
+
+      await tablePage.reload({tableStorage: true});
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toBe(500);
+    });
+
+    test('should push out flexible columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string', minWidth: 100});
+
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(200);
+
+      // Grow column two. Columns to the left should stay the same, to the right should shrink to min width and push out.
+      await table.column({name: 'column:2'}).splitter.drag({deltaX: 600});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(800);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(100);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      // Scroll right to grab the splitter.
+      await table.scrollTo({x: 'end'});
+      await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
+
+      // Shrink column two. Columns to the left and right should stay the same.
+      const dragHandle = await table.column({name: 'column:2'}).splitter.startDrag();
+      await dragHandle.dragTo({deltaX: -100}, {steps: 1});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(700);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(100);
+      await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      // Shrink column two. Columns to the left and right should stay the same.
+      await dragHandle.dragTo({deltaX: 0}, {steps: 1});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(600);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(100);
+      await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      // Shrink column two. Columns to the left and right should stay the same.
+      await dragHandle.dragTo({deltaX: 0}, {steps: 1});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(500);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(100);
+      await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      // Shrink column two. Columns to the left and right should stay the same.
+      await dragHandle.dragTo({deltaX: 0}, {steps: 1});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(400);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(100);
+      await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      // Shrink column two. Columns to the left and right should stay the same.
+      await dragHandle.dragTo({deltaX: 0}, {steps: 1});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(300);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(100);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      // Shrink column two. Columns to the left should stay the same, to the right should grow.
+      await dragHandle.dragTo({deltaX: 0}, {steps: 1});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(200);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      // Shrink column two. Columns to the left should stay the same, to the right should grow.
+      await dragHandle.dragTo({deltaX: -50}, {steps: 20});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(150);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(250);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      await dragHandle.release();
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(150);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(250);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+      await expectTable(table).not.toHaveHorizontalOverflow();
+    });
+
+    test('should shrink table when all flexible columns shrink', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: -100});
+      await table.column({name: 'column:2'}).splitter.drag({deltaX: -100});
+      await table.column({name: 'column:3'}).splitter.drag({deltaX: -100});
+
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(150);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(250);
+
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds?.width)).toBeLessThan(600);
+    });
+
+    test('should lock flexible columns on overflow', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(800);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+      await tablePage.addColumn({name: 'column:4', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+
+      await table.column({name: 'column:3'}).splitter.drag({deltaX: 600});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(800);
+      await expect.poll(() => table.column({name: 'column:4'}).width()).toBe(100);
+
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: 100});
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(300);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(200);
+      await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(800);
+      await expect.poll(() => table.column({name: 'column:4'}).width()).toBe(100);
+    });
+
+    test('should hide row hover while resizing', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setCssVariable('--sci-table-row-background-color-hover', 'rgb(0, 0, 255)');
+      await tablePage.addColumn({name: 'column:name', type: 'string', minWidth: 100, width: '100px'});
+      const rowBounds = await table.row({nth: 3}).bounds();
+
+      // Try to shrink the column below its minimum width. Splitter stays at its original position.
+      const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
+      await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter});
+      await page.waitForTimeout(250);
+      await expect(table.row({nth: 3}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+
+      await dragHandle.release();
+      await expect(table.row({nth: 3}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+    });
+  });
+
+  test.describe('Splitters', () => {
+
+    test('should display splitter on hover (table with column headers)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setFilterable(false);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should display splitter on hover (table with column headers and filters)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setFilterable(true);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should display splitter on hover (table with column filters)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(false);
+      await tablePage.setFilterable(true);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should display splitter on hover (table without column headers and filters)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(false);
+      await tablePage.setFilterable(false);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should hide column header dividers if configured', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setCssVariable('--sci-table-header-column-divider', 'hidden');
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+      await table.column({name: 'column:2'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-splitter');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+      await table.column({name: 'column:3'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('hidden');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should stick column header dividers to the top', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setRowCount(1_000);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      // Expect column header dividers to stick to the top.
+      await expect(async () => {
+        const tableHeaderBounds = await table.header.bounds();
+        const splitterHandleBounds = await table.column({name: 'column:1'}).splitter.handleBounds();
+        expect(splitterHandleBounds.top).toBeGreaterThan(tableHeaderBounds.top);
+        expect(splitterHandleBounds.bottom).toBeLessThan(tableHeaderBounds.bottom);
+      }).toPass();
+
+      // Scroll to the end.
+      await table.scrollTo({y: 'end'});
+
+      // Expect column header dividers to stick to the top.
+      await expect(async () => {
+        const tableHeaderBounds = await table.header.bounds();
+        const splitterHandleBounds = await table.column({name: 'column:1'}).splitter.handleBounds();
+        expect(splitterHandleBounds.top).toBeGreaterThan(tableHeaderBounds.top);
+        expect(splitterHandleBounds.bottom).toBeLessThan(tableHeaderBounds.bottom);
+      }).toPass();
+    });
+
+    /**
+     * Verifies that splitters are still not displayed also if the scroll operation temporarily stops.
+     */
+    test('should not display splitter during scroll if not active scrolling', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+
+      // Click scrollbar thumb.
+      await table.verticalScrollbar.thumb.locator.hover();
+      await page.mouse.down();
+
+      // Hover splitter of column 1.
+      await table.column({name: 'column:1'}).splitter.hover();
+
+      // Wait some time to simulate no active scrolling, but still not completed scrolling.
+      await page.waitForTimeout(1000);
+
+      // Expect splitter not to be visible.
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+
+      // Hover splitter of column 2.
+      await table.column({name: 'column:2'}).splitter.hover();
+
+      // Expect splitter not to be visible.
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+
+      // Hover splitter of column 3.
+      await table.column({name: 'column:3'}).splitter.hover();
+
+      // Expect splitter not to be visible.
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden'); // hidden because last column
+    });
+
+    test('should not display splitter when scrolling via scrollbar', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      const scrollbarBounds = await table.verticalScrollbar.bounds();
+
+      // Click scrollbar thumb.
+      await table.verticalScrollbar.thumb.locator.hover();
+      await page.mouse.down();
+
+      // Hover splitter of column 1.
+      await table.column({name: 'column:1'}).splitter.hover();
+
+      // Expect splitter not to be visible.
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+
+      // Scroll viewport to the end.
+      void page.mouse.move(scrollbarBounds.hcenter, scrollbarBounds.bottom); // do not await scrolling
+
+      // Expect splitter not to be visible.
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+
+      // Expect viewport to be scrolled.
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      // Expect splitter not to be visible.
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+    });
+
+    test('should not display splitter when hovering row actions', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showRowActions(true);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '50px'});
+
+      // Hover row to display row actions.
+      await table.row({nth: 0}).hover();
+
+      // Expect row actions to display.
+      await expect(table.row({nth: 0}).rowActions).toBeVisible();
+
+      // Hover splitter of column 1.
+      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+      const actionBounds = await table.row({nth: 0}).rowActionsBounds();
+      await page.mouse.move(columnSplitterBounds.hcenter, actionBounds.vcenter);
+
+      // Wait some time until idle.
+      await page.waitForTimeout(500);
+
+      // Expect column splitter not to be visible.
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+    });
+
+    test('should hide last splitter if at table edge', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '200px'});
+      await tablePage.addColumn({name: 'column:3', type: 'string', width: '200px'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+      await test.step('Hover last column splitter', async () => {
+        await table.column({name: 'column:3'}).splitter.hover();
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+      });
+
+      await test.step('Move last column into viewport by shrinking column 1', async () => {
+        await table.column({name: 'column:1'}).splitter.drag({deltaX: -100});
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+
+        await table.column({name: 'column:3'}).splitter.hover();
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      });
+
+      await test.step('Move last column to viewport edge by growing column 1', async () => {
+        await table.column({name: 'column:1'}).splitter.drag({deltaX: 100});
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+        await expectTable(table).not.toHaveHorizontalOverflow();
+
+        await table.column({name: 'column:3'}).splitter.hover();
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+      });
+
+      await test.step('Move last column out of viewport', async () => {
+        await table.column({name: 'column:1'}).splitter.drag({deltaX: 100});
+        await expectTable(table).toHaveHorizontalOverflow();
+
+        await table.scrollTo({x: 'end'});
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+
+        await table.column({name: 'column:3'}).splitter.hover();
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
+      });
+    });
+  });
+
+  test.describe('Sorting', () => {
+
+    test('should sort string column ascending and descending', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+      // Sort ascending.
+      await table.column({name: 'column:string'}).sort();
+      await expectTable(table).column({name: 'column:string'}).toBeSorted('asc');
+
+      // Sort descending.
+      await table.column({name: 'column:string'}).sort();
+      await expectTable(table).column({name: 'column:string'}).toBeSorted('desc');
+    });
+
+    test('should sort number column ascending and descending', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:number', type: 'number'});
+
+      // Sort ascending.
+      await table.column({name: 'column:number'}).sort();
+      await expectTable(table).column({name: 'column:number'}).toBeSorted('asc');
+
+      // Sort descending.
+      await table.column({name: 'column:number'}).sort();
+      await expectTable(table).column({name: 'column:number'}).toBeSorted('desc');
+    });
+
+    test('should sort boolean column ascending and descending', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+      // Sort ascending: false values first.
+      await table.column({name: 'column:boolean'}).sort();
+      await expectTable(table).column({name: 'column:boolean'}).toBeSorted('asc');
+
+      // Sort descending: true values first.
+      await table.column({name: 'column:boolean'}).sort();
+      await expectTable(table).column({name: 'column:boolean'}).toBeSorted('desc');
+    });
+
+    test('should sort multiple columns with ctrl or meta', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'number'});
+
+      await table.column({name: 'column:1'}).sort();
+      await table.column({name: 'column:2'}).sort({modifiers: ['ControlOrMeta']});
+
+      await expect.poll(() => table.column({name: 'column:1'}).sortDirection()).toEqual('asc');
+      await expect.poll(() => table.column({name: 'column:2'}).sortDirection()).toEqual('asc');
+    });
+
+    test('should retain filter after sorting', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await table.column({name: 'column:name'}).filter('Product 1');
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+
+      await table.column({name: 'column:name'}).sort();
+      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+      await expectTable(table).column({name: 'column:name'}).toBeSorted();
+    });
+
+    test('should sort large amount of data', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1_000_000);
+      await tablePage.addColumn({name: 'column:price', type: 'number'});
+
+      await table.column({name: 'column:price'}).sort();
+      await expect(table.column({name: 'column:price'}).cells.first()).toHaveText('1');
+      await table.column({name: 'column:price'}).sort();
+      await expect(table.column({name: 'column:price'}).cells.first()).toHaveText('1000');
+    });
+
+    test('should reset scroll position to top when applying sort', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      // Scroll down so the viewport is no longer at the top.
+      await table.scrollTo({y: 1000});
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      // Applying a sort should reset the viewport scroll position to the top.
+      await table.column({name: 'column:name'}).sort();
+      await expect.poll(() => table.scrollTop()).toBe(0);
+    });
+
+    test('should retain selection after sorting', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeSelected();
+
+      await table.column({name: 'column:name'}).sort();
+      await expectTable(table).column({name: 'column:name'}).toBeSorted();
+      await expectRow(table.row({nth: 0})).toBeSelected();
+    });
+  });
+
+  test.describe('Selection', () => {
+
+    test('should receive focus via tab navigation', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.sortButtons.first().focus();
+      await page.keyboard.press('Tab'); // Filter
+      await page.keyboard.press('Tab'); // Table keyboard navigator
+      await page.keyboard.press('ArrowDown');
+
+      await expectRow(table.row({nth: 0})).toBeActive();
+    });
+
+    test('should scroll the active row into view during keyboard navigation', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.body.focus();
+      const renderedRowCount = await waitUntilStable(() => table.rows.count());
+
+      for (let i = 0; i < renderedRowCount; i++) {
+        await page.keyboard.press('ArrowDown');
+      }
+
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+      await expectRow(table.row({index: renderedRowCount - 1})).toBeActive();
+      await expect(table.row({index: renderedRowCount - 1}).locator).toBeInViewport({ratio: 1});
+    });
+
+    test('should keep the active row within keyboard navigation boundaries', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(3);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.row({nth: 0}).click();
+      await expectRow(table.row({nth: 0})).toBeActive();
+
+      await page.keyboard.press('ArrowUp');
+      await expectRow(table.row({nth: 0})).toBeActive();
+
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      await expectRow(table.row({nth: 2})).toBeActive();
+
+      await page.keyboard.press('ArrowDown');
+      await expectRow(table.row({nth: 2})).toBeActive();
+    });
+
+    test('should keep selection on scroll', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+      await table.row({nth: 0}).click();
+      await expect(tablePage.selection).toHaveText('0');
+
+      await table.scrollTo({y: 'end'});
+      await expect(tablePage.selection).toHaveText('0');
+
+      await table.scrollTo({y: 'start'});
+      await expect(tablePage.selection).toHaveText('0');
+    });
+
+    test('should keep selection on filter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+      await table.row({nth: 0}).click();
+      await expect(tablePage.selection).toHaveText('0');
+
+      await table.column({name: 'column:name'}).filter('9999');
+      await expect(tablePage.selection).toHaveText('0');
+
+      await table.column({name: 'column:name'}).clearFilter();
+      await expect(tablePage.selection).toHaveText('0');
+    });
+
+    test('should keep selection on sort', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+      await table.row({nth: 0}).click();
+      await expect(tablePage.selection).toHaveText('0');
+
+      await table.column({name: 'column:name'}).sort();
+      await expect(tablePage.selection).toHaveText('0');
+
+      await table.column({name: 'column:name'}).sort();
+      await expect(tablePage.selection).toHaveText('0');
+
+      await table.column({name: 'column:name'}).sort();
+      await expect(tablePage.selection).toHaveText('0');
+    });
+
+    test('should scroll with active row', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.showHeader(false);
+      await tablePage.setRowHeight(20);
+      await tablePage.setHeight(40);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+
+      await table.row({nth: 0}).click();
+      await expect(tablePage.selection).toHaveText('0');
+      await expect.poll(() => table.scrollTop()).toBe(0);
+
+      await page.keyboard.press('ArrowDown');
+      await expect(tablePage.selection).toHaveText('1');
+      await expect.poll(() => table.scrollTop()).toBe(0);
+
+      await page.keyboard.press('ArrowDown');
+      await expect(tablePage.selection).toHaveText('2');
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      await page.keyboard.press('ArrowDown');
+      await expect(tablePage.selection).toHaveText('3');
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      await page.keyboard.press('ArrowDown');
+      await expect(tablePage.selection).toHaveText('4');
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      await page.keyboard.press('ArrowUp');
+      await expect(tablePage.selection).toHaveText('3');
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      await page.keyboard.press('ArrowUp');
+      await expect(tablePage.selection).toHaveText('2');
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      await page.keyboard.press('ArrowUp');
+      await expect(tablePage.selection).toHaveText('1');
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+
+      await page.keyboard.press('ArrowUp');
+      await expect(tablePage.selection).toHaveText('0');
+      await expect.poll(() => table.scrollTop()).toBe(0);
+    });
+
+    test('should not prevent native keystrokes (Home, End, Ctrl+A, ...) in inputs of custom column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {component: 'component:custom-input-column'}});
+
+      const cell = table.row({nth: 0}).cell('column:component');
+      const component = new CustomInputColumnPO(cell);
+
+      await test.step('Pressing End', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('End');
+        await expect(component.input).toHaveTextSelection({start: 10, end: 10});
+      });
+
+      await test.step('Pressing Home', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 10});
+
+        await page.keyboard.press('Home');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 0});
+      });
+
+      await test.step('Pressing Shift+End', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('Shift+End');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 10});
+      });
+
+      await test.step('Pressing Shift+Home', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 10});
+
+        await page.keyboard.press('Shift+Home');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 10});
+      });
+
+      await test.step('Pressing ArrowRight', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('ArrowRight');
+        await expect(component.input).toHaveTextSelection({start: 1, end: 1});
+      });
+
+      await test.step('Pressing ArrowLeft', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 10});
+
+        await page.keyboard.press('ArrowLeft');
+        await expect(component.input).toHaveTextSelection({start: 9, end: 9});
+      });
+
+      await test.step('Pressing Ctrl+ArrowRight', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('ControlOrMeta+ArrowRight');
+        await expect(component.input).toHaveTextSelection({start: 10, end: 10});
+      });
+
+      await test.step('Pressing Ctrl+ArrowLeft', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 10});
+
+        await page.keyboard.press('ControlOrMeta+ArrowLeft');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 0});
+      });
+
+      await test.step('Pressing Ctrl+A', async () => {
+        await component.input.fill('0123456789');
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('ControlOrMeta+A');
+        await expect(component.input).toHaveTextSelection({start: 0, end: 10});
+      });
+
+      await test.step('Pressing Space', async () => {
+        await component.input.clear();
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('A');
+        await page.keyboard.press('Space');
+        await page.keyboard.press('B');
+        await expect(component.input).toHaveValue('A B');
+      });
+    });
+
+    test('should not prevent native keystrokes (Home, End, Ctrl+A, ...) in buttons of custom column', async ({page, consoleLogs}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {component: 'component:custom-button-column'}});
+
+      const cell = table.row({nth: 0}).cell('column:component');
+      const component = new CustomButtonColumnPO(cell);
+
+      await test.step('Pressing Space', async () => {
+        await component.button.focus();
+        await page.keyboard.press('Space');
+
+        await expect.poll(() => consoleLogs.get()).toContain('[CustomButtonColumnComponent] Button clicked');
+        await expectRow(table.row({nth: 0})).toBeSelected();
+        consoleLogs.clear();
+
+        await page.keyboard.press('ControlOrMeta+Space');
+        await expect.poll(() => consoleLogs.get()).toContain('[CustomButtonColumnComponent] Button clicked');
+        await expectRow(table.row({nth: 0})).not.toBeSelected();
+        consoleLogs.clear();
+
+        await page.keyboard.press('ControlOrMeta+Space');
+        await expect.poll(() => consoleLogs.get()).toContain('[CustomButtonColumnComponent] Button clicked');
+        await expectRow(table.row({nth: 0})).toBeSelected();
+      });
+
+      // TODO [dwi] add test that selection keystrokes like Ctrl+A, ArrowDown, ...are working on button.
+    });
+
+    test.describe('Single Selection', () => {
+
+      test.describe('Click', () => {
+
+        test('should select on click', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          await table.row({nth: 1}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          await table.row({nth: 1}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          await table.row({nth: 2}).click(['Shift']);
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          await table.row({nth: 2}).click(['Shift']);
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+        });
+      });
+
+      test.describe('Space', () => {
+
+        test('should select on Space', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Space');
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          await page.keyboard.press('Space');
+          await expect(tablePage.selection).toHaveText('1');
+
+          // Expect viewport not to be scrolled, i.e., default was prevented.
+          await expect.poll(() => table.scrollTop()).toBe(0);
+        });
+
+        test('should toggle selection on ControlOrMeta+Space', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(600);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+Space');
+          await expect(tablePage.selection).toHaveText('');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+Space');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          await page.keyboard.press('ControlOrMeta+Space');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          // Expect viewport not to be scrolled, i.e., default was prevented.
+          await expect.poll(() => table.scrollTop()).toBe(0);
+        });
+      });
+
+      test.describe('ArrowDown / ArrowUp', () => {
+
+        test('should select on ArrowDown / ArrowUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(40);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should select on Shift+ArrowDown / Shift+ArrowUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(40);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should select on ControlOrMeta+Shift+ArrowDown / ControlOrMeta+Shift+ArrowUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(40);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should retain selection on ControlOrMeta+ArrowDown / ControlOrMeta+ArrowUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('1');
+        });
+      });
+
+      test.describe('PageDown / PageUp', () => {
+
+        test('should select on PageDown / PageUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('8');
+          await expect(tablePage.activeItemId).toHaveText('8');
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('5');
+          await expect(tablePage.activeItemId).toHaveText('5');
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should select on Shift+PageDown / Shift+PageUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('8');
+          await expect(tablePage.activeItemId).toHaveText('8');
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('5');
+          await expect(tablePage.activeItemId).toHaveText('5');
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should select on ControlOrMeta+Shift+PageDown / ControlOrMeta+Shift+PageUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+          await page.keyboard.press('ControlOrMeta+Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('8');
+          await expect(tablePage.activeItemId).toHaveText('8');
+          await page.keyboard.press('ControlOrMeta+Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+          await page.keyboard.press('ControlOrMeta+Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('ControlOrMeta+Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('5');
+          await expect(tablePage.activeItemId).toHaveText('5');
+          await page.keyboard.press('ControlOrMeta+Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('ControlOrMeta+Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('ControlOrMeta+Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should retain selection on ControlOrMeta+PageDown / ControlOrMeta+PageUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          await page.keyboard.press('ControlOrMeta+PageDown');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('6');
+
+          await table.row({nth: 6}).click();
+          await expect(tablePage.selection).toHaveText('6');
+          await expect(tablePage.activeItemId).toHaveText('6');
+
+          await page.keyboard.press('ControlOrMeta+PageUp');
+          await expect(tablePage.selection).toHaveText('6');
+          await expect(tablePage.activeItemId).toHaveText('2');
+        });
+      });
+
+      test.describe('End / Home', () => {
+
+        test('should select on End / Home', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+          await page.keyboard.press('End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should select on Shift+End / Shift+Home', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should select on ControlOrMeta+Shift+End / ControlOrMeta+Shift+Home', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+Shift+End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+          await page.keyboard.press('ControlOrMeta+Shift+End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('ControlOrMeta+Shift+Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('ControlOrMeta+Shift+Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should retain selection on ControlOrMeta+End / ControlOrMeta+Home', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          await page.keyboard.press('ControlOrMeta+End');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await table.row({nth: 7}).click();
+          await expect(tablePage.selection).toHaveText('7');
+          await expect(tablePage.activeItemId).toHaveText('7');
+
+          await page.keyboard.press('ControlOrMeta+Home');
+          await expect(tablePage.selection).toHaveText('7');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+      });
+
+      test.describe('ControlOrMeta+A', () => {
+
+        test('should not select on ControlOrMeta+A', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setSelectable('single');
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.body.focus();
+          await page.keyboard.press('ControlOrMeta+A');
+          await expect(tablePage.selection).toHaveText('');
+        });
+      });
+    });
+
+    test.describe('Multi Selection', () => {
+
+      test.describe('Click', () => {
+
+        test('should select on click', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await table.row({nth: 1}).click();
+          await expect(tablePage.selection).toHaveText('1');
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+        });
+
+        test('should remove selection on click outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1');
+
+          await table.row({nth: 3}).click();
+          await expect(tablePage.selection).toHaveText('3');
+        });
+
+        test('should remove selection on click in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+
+          await table.row({nth: 1}).click();
+          await expect(tablePage.selection).toHaveText('1');
+        });
+
+        test('should select on Shift+Click', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(200);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 4}).click();
+          await expect(tablePage.selection).toHaveText('4');
+
+          await table.row({nth: 6}).click(['Shift']);
+          await expect(tablePage.selection).toHaveText('4 5 6');
+
+          await table.row({nth: 2}).click(['Shift']);
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6');
+
+          await table.row({nth: 8}).click(['Shift']);
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8');
+        });
+
+        test('should select on ControlOrMeta+Click', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(600);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 4}).click();
+          await expect(tablePage.selection).toHaveText('4');
+
+          await table.row({nth: 6}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('4 6');
+
+          await table.row({nth: 2}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('2 4 6');
+
+          await table.row({nth: 8}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('2 4 6 8');
+
+          await table.row({nth: 6}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('2 4 8');
+
+          await table.row({nth: 2}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('4 8');
+
+          await table.row({nth: 8}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('4');
+
+          await table.row({nth: 4}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('');
+        });
+      });
+
+      test.describe('Space', () => {
+
+        test('should select on Space', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Space');
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('1');
+
+          await page.keyboard.press('Space');
+          await expect(tablePage.selection).toHaveText('1');
+        });
+
+        test('should remove selection on Space outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1');
+
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await page.keyboard.press('Space');
+          await expect(tablePage.selection).toHaveText('2');
+        });
+
+        test('should remove selection on Space in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await page.keyboard.press('Space');
+          await expect(tablePage.selection).toHaveText('1');
+        });
+
+        test('should toggle selection on ControlOrMeta+Space', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(600);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ControlOrMeta+Space');
+          await expect(tablePage.selection).toHaveText('');
+
+          await page.keyboard.press('ControlOrMeta+Space');
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await page.keyboard.press('ControlOrMeta+Space');
+          await expect(tablePage.selection).toHaveText('0 2');
+        });
+      });
+
+      test.describe('ArrowDown / ArrowUp', () => {
+
+        test('should select on ArrowDown / ArrowUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(40);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+          await page.keyboard.press('ArrowDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('2');
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should expand selection on Shift+ArrowDown at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+        });
+
+        test('should expand selection on Shift+ArrowUp at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('1 2');
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+        });
+
+        test('should shrink selection on Shift+ArrowDown at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('1 2');
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+
+          // Press Shift+ArrowDown at block start
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('1 2');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+        });
+
+        test('should shrink selection on Shift+ArrowUp at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+
+          // Press Shift+ArrowUp at block end
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0 1');
+
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0');
+        });
+
+        test('should retain selection on Shift+ArrowDown in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+ArrowDown
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+        });
+
+        test('should retain selection on Shift+ArrowUp in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+ArrowUp
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+        });
+
+        test('should remove selection on Shift+ArrowDown outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3');
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          // Press Shift+ArrowDown outside of block.
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('4 5');
+        });
+
+        test('should remove selection on Shift+ArrowUp outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 4}).click();
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('3 4');
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          // Press Shift+ArrowUp outside of block.
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('1 2');
+        });
+
+        test('should retain selection on ControlOrMeta+ArrowDown', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('3');
+        });
+
+        test('should retain selection on ControlOrMeta+ArrowUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2');
+          await expect(tablePage.activeItemId).toHaveText('1');
+        });
+
+        test('should retain selection on ControlOrMeta+Shift+ArrowDown outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          // Press ControlOrMeta+Shift+ArrowDown outside of block.
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 4 5');
+        });
+
+        test('should retain selection on ControlOrMeta+Shift+ArrowUp outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 5}).click();
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press ControlOrMeta+Shift+ArrowUp outside of block.
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('2 3 5');
+        });
+      });
+
+      test.describe('PageDown / PageUp', () => {
+
+        test('should select on PageDown / PageUp', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('8');
+          await expect(tablePage.activeItemId).toHaveText('8');
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+          await page.keyboard.press('PageDown');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('5');
+          await expect(tablePage.activeItemId).toHaveText('5');
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('1');
+          await expect(tablePage.activeItemId).toHaveText('1');
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('PageUp');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should expand selection on Shift+PageDown at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8');
+          await expect(tablePage.activeItemId).toHaveText('8');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8 9 10 11 12');
+          await expect(tablePage.activeItemId).toHaveText('12');
+        });
+
+        test('should expand selection on Shift+PageUp at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          await table.row({index: 99}).click();
+          await expect(tablePage.selection).toHaveText('99');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('95 96 97 98 99');
+          await expect(tablePage.activeItemId).toHaveText('95');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('91 92 93 94 95 96 97 98 99');
+          await expect(tablePage.activeItemId).toHaveText('91');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('87 88 89 90 91 92 93 94 95 96 97 98 99');
+          await expect(tablePage.activeItemId).toHaveText('87');
+        });
+
+        test('should shrink selection on Shift+PageDown at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({index: 2}).click();
+          await page.keyboard.press('Shift+ArrowUp');
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+
+          // Press Shift+PageDown at block start
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+        });
+
+        test('should shrink selection on Shift+PageUp at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8');
+
+          // Press Shift+PageUp at block end
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should retain selection on Shift+PageDown in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 10});
+
+          // Given
+          await table.row({index: 10}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('10 11 12');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('11');
+
+          // Press Shift+PageDown
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('10 11 12 13 14 15');
+          await expect(tablePage.activeItemId).toHaveText('15');
+        });
+
+        test('should retain selection on Shift+PageUp in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 10});
+
+          // Given
+          await table.row({index: 10}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('10 11 12');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('11');
+
+          // Press Shift+PageUp
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('7 8 9 10 11 12');
+          await expect(tablePage.activeItemId).toHaveText('7');
+        });
+
+        test('should remove selection on Shift+PageDown outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+PageDown outside of block.
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('3 4 5 6 7');
+        });
+
+        test('should remove selection on Shift+PageUp outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 10});
+
+          // Given
+          await table.row({nth: 10}).click();
+          await expect(tablePage.selection).toHaveText('10');
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          // Press Shift+PageUp outside of block.
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('5 6 7 8 9');
+        });
+
+        test('should retain selection on ControlOrMeta+Shift+PageDown outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          // Press ControlOrMeta+Shift+PageDown outside of block.
+          await page.keyboard.press('ControlOrMeta+Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('2 4 5 6 7 8');
+        });
+
+        test('should retain selection on ControlOrMeta+Shift+PageUp outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 10});
+
+          // Given
+          await table.row({index: 10}).click();
+          await expect(tablePage.selection).toHaveText('10');
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('8');
+
+          // Press ControlOrMeta+Shift+PageUp outside of block.
+          await page.keyboard.press('ControlOrMeta+Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('4 5 6 7 8 10');
+        });
+      });
+
+      test.describe('End / Home', () => {
+
+        test('should select on End', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 0}).click();
+          await expect(tablePage.selection).toHaveText('0');
+
+          await page.keyboard.press('End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+
+          await page.keyboard.press('End');
+          await expect(tablePage.selection).toHaveText('9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should select on Home', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          await table.row({index: 9}).click();
+          await expect(tablePage.selection).toHaveText('9');
+
+          await page.keyboard.press('Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+          await page.keyboard.press('Home');
+          await expect(tablePage.selection).toHaveText('0');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should expand selection on Shift+End at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 1}).click();
+          await expect(tablePage.selection).toHaveText('1');
+
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('1 2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should expand selection on Shift+Home at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          await table.row({index: 8}).click();
+          await expect(tablePage.selection).toHaveText('8');
+
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should shrink selection on Shift+End at start of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({index: 2}).click();
+          await page.keyboard.press('Shift+ArrowUp');
+          await page.keyboard.press('Shift+ArrowUp');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+
+          // Press Shift+End at block start
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should shrink selection on Shift+Home at end of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.row({nth: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Press Shift+Home at block end
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should retain selection on Shift+End in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({index: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+End
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should retain selection on Shift+Home in middle of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({index: 2}).click();
+          await page.keyboard.press('Shift+ArrowDown');
+          await page.keyboard.press('Shift+ArrowDown');
+          await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Move active item to middle of block.
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+Home
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should remove selection on Shift+End outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 1}).click();
+          await expect(tablePage.selection).toHaveText('1');
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('2');
+
+          // Press Shift+End outside of block.
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('2 3 4 5 6 7 8 9');
+        });
+
+        test('should remove selection on ShiftHome outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          // Given
+          await table.row({index: 8}).click();
+          await expect(tablePage.selection).toHaveText('8');
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('7');
+
+          // Press Shift+Home outside of block.
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7');
+        });
+
+        test('should retain selection on ControlOrMeta+Shift+End outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 2}).click();
+          await expect(tablePage.selection).toHaveText('2');
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await page.keyboard.press('ControlOrMeta+ArrowDown');
+          await expect(tablePage.activeItemId).toHaveText('4');
+
+          // Press ControlOrMeta+Shift+End outside of block.
+          await page.keyboard.press('ControlOrMeta+Shift+End');
+          await expect(tablePage.selection).toHaveText('2 4 5 6 7 8 9');
+        });
+
+        test('should retain selection on ControlOrMeta+Shift+Home outside of block', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+          await table.scrollTo({y: 'end'});
+
+          // Given
+          await table.row({index: 9}).click();
+          await expect(tablePage.selection).toHaveText('9');
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await page.keyboard.press('ControlOrMeta+ArrowUp');
+          await expect(tablePage.activeItemId).toHaveText('7');
+
+          // Press ControlOrMeta+Shift+Home outside of block.
+          await page.keyboard.press('ControlOrMeta+Shift+Home');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 9');
+        });
+      });
+
+      test.describe('ControlOrMeta+A', () => {
+
+        test('should select on ControlOrMeta+A', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.body.focus();
+          await page.keyboard.press('ControlOrMeta+A');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8 9');
+        });
+      });
+    });
+
+    test.describe('Disabled Selection', () => {
+
+      test('should not select on click', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.setSelectable(false);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+
+        await table.row({nth: 1}).click(['ControlOrMeta']);
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('1');
+
+        await table.row({nth: 1}).click(['ControlOrMeta']);
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('1');
+
+        await table.row({nth: 2}).click(['Shift']);
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('2');
+
+        await table.row({nth: 2}).click(['Shift']);
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('2');
+      });
+
+      test('should not select on Space', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.setSelectable(false);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+
+        await page.keyboard.press('Space');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+
+        await page.keyboard.press('ControlOrMeta+ArrowDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('1');
+
+        await page.keyboard.press('Space');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('1');
+      });
+
+      test('should not select on ArrowDown / ArrowUp', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.setSelectable(false);
+        await tablePage.showHeader(false);
+        await tablePage.setFilterable(false);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(40);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('1');
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('2');
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('3');
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('4');
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('4');
+
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('3');
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('2');
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('1');
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+      });
+
+      test('should select on PageDown / PageUp', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.setSelectable(false);
+        await tablePage.showHeader(false);
+        await tablePage.setFilterable(false);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(100);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+
+        await page.keyboard.press('PageDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('4');
+        await page.keyboard.press('PageDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('8');
+        await page.keyboard.press('PageDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('9');
+        await page.keyboard.press('PageDown');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('9');
+
+        await page.keyboard.press('PageUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('5');
+        await page.keyboard.press('PageUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('1');
+        await page.keyboard.press('PageUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+        await page.keyboard.press('PageUp');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+      });
+
+      test('should not select on End / Home', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.setSelectable(false);
+        await tablePage.showHeader(false);
+        await tablePage.setFilterable(false);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(100);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+
+        await page.keyboard.press('End');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('9');
+        await page.keyboard.press('End');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('9');
+
+        await page.keyboard.press('Home');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+        await page.keyboard.press('Home');
+        await expect(tablePage.selection).toHaveText('');
+        await expect(tablePage.activeItemId).toHaveText('0');
+      });
+
+      test('should not select on ControlOrMeta+A', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.setSelectable(false);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.body.focus();
+        await page.keyboard.press('ControlOrMeta+A');
+        await expect(tablePage.selection).toHaveText('');
+      });
+    });
+
+    test.describe('Buffer Size Zero', () => {
+
+      test('should select on Shift+Click', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.showHeader(false);
+        await tablePage.setFilterable(false);
+        await tablePage.setBufferSize(0);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(40);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({index: 0}).click();
+        await expect(tablePage.selection).toHaveText('0');
+
+        await table.scrollTo({y: 'end'});
+        await table.row({index: 9}).click(['Shift']);
+        await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8 9');
+      });
+
+      test('should select on ArrowDown / ArrowUp', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.showHeader(false);
+        await tablePage.setFilterable(false);
+        await tablePage.setBufferSize(0);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(40);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('0');
+
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('1');
+        await expect(tablePage.activeItemId).toHaveText('1');
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('2');
+        await expect(tablePage.activeItemId).toHaveText('2');
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('3');
+        await expect(tablePage.activeItemId).toHaveText('3');
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('4');
+        await expect(tablePage.activeItemId).toHaveText('4');
+        await page.keyboard.press('ArrowDown');
+        await expect(tablePage.selection).toHaveText('4');
+        await expect(tablePage.activeItemId).toHaveText('4');
+
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('3');
+        await expect(tablePage.activeItemId).toHaveText('3');
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('2');
+        await expect(tablePage.activeItemId).toHaveText('2');
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('1');
+        await expect(tablePage.activeItemId).toHaveText('1');
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('0');
+        await expect(tablePage.activeItemId).toHaveText('0');
+        await page.keyboard.press('ArrowUp');
+        await expect(tablePage.selection).toHaveText('0');
+        await expect(tablePage.activeItemId).toHaveText('0');
+      });
+
+      test('should select on PageDown / PageUp', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.showHeader(false);
+        await tablePage.setFilterable(false);
+        await tablePage.setBufferSize(0);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(100);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('0');
+
+        await page.keyboard.press('PageDown');
+        await expect(tablePage.selection).toHaveText('4');
+        await expect(tablePage.activeItemId).toHaveText('4');
+        await page.keyboard.press('PageDown');
+        await expect(tablePage.selection).toHaveText('8');
+        await expect(tablePage.activeItemId).toHaveText('8');
+        await page.keyboard.press('PageDown');
+        await expect(tablePage.selection).toHaveText('9');
+        await expect(tablePage.activeItemId).toHaveText('9');
+        await page.keyboard.press('PageDown');
+        await expect(tablePage.selection).toHaveText('9');
+        await expect(tablePage.activeItemId).toHaveText('9');
+
+        await page.keyboard.press('PageUp');
+        await expect(tablePage.selection).toHaveText('5');
+        await expect(tablePage.activeItemId).toHaveText('5');
+        await page.keyboard.press('PageUp');
+        await expect(tablePage.selection).toHaveText('1');
+        await expect(tablePage.activeItemId).toHaveText('1');
+        await page.keyboard.press('PageUp');
+        await expect(tablePage.selection).toHaveText('0');
+        await expect(tablePage.activeItemId).toHaveText('0');
+        await page.keyboard.press('PageUp');
+        await expect(tablePage.selection).toHaveText('0');
+        await expect(tablePage.activeItemId).toHaveText('0');
+      });
+
+      test('should select on End / Home', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.showHeader(false);
+        await tablePage.setFilterable(false);
+        await tablePage.setBufferSize(0);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(100);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.row({nth: 0}).click();
+        await expect(tablePage.selection).toHaveText('0');
+
+        await page.keyboard.press('End');
+        await expect(tablePage.selection).toHaveText('9');
+        await expect(tablePage.activeItemId).toHaveText('9');
+        await page.keyboard.press('End');
+        await expect(tablePage.selection).toHaveText('9');
+        await expect(tablePage.activeItemId).toHaveText('9');
+
+        await page.keyboard.press('Home');
+        await expect(tablePage.selection).toHaveText('0');
+        await expect(tablePage.activeItemId).toHaveText('0');
+        await page.keyboard.press('Home');
+        await expect(tablePage.selection).toHaveText('0');
+        await expect(tablePage.activeItemId).toHaveText('0');
+      });
+
+      test('should select ControlOrMeta+A', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.setBufferSize(0);
+        await tablePage.setRowHeight(20);
+        await tablePage.setHeight(100);
+        await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+        await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+        await table.body.focus();
+        await page.keyboard.press('ControlOrMeta+A');
+        await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8 9');
+      });
+    });
+  });
+
+  test.describe('Active Row', () => {
+
+    test('should remove outline of active row if scrolled out of viewport', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setHeight(300);
+      await provideHttpDatasource(page, generateData(1000, i => ({id: i, name: `${i}`})), {datasource: 'array-http'});
+      await tablePage.addColumn({name: 'column:index', type: 'string'});
+
+      // Activate last row.
+      await table.scrollTo({y: 'end'});
+
+      await table.row({index: 999}).click();
+      await expect(tablePage.activeItemId).toHaveText('999');
+      await expect(table.row({active: true}).locator).toBeVisible();
+      await expect(table.activeRowOutline).toBeVisible();
+
+      // Scroll to the top.
+      await table.scrollTo({y: 'start'});
+      await expect(tablePage.activeItemId).toHaveText('999');
+      await expect(table.row({active: true}).locator).not.toBeAttached();
+      await expect(table.activeRowOutline).not.toBeVisible();
+
+      // Scroll to the bottom.
+      await table.scrollTo({y: 'end'});
+      await expect(tablePage.activeItemId).toHaveText('999');
+      await expect(table.row({active: true}).locator).toBeVisible();
+      await expect(table.activeRowOutline).toBeVisible();
+
+      // Scroll to the top.
+      await table.scrollTo({y: 'start'});
+      await expect(tablePage.activeItemId).toHaveText('999');
+      await expect(table.row({active: true}).locator).not.toBeAttached();
+      await expect(table.activeRowOutline).not.toBeVisible();
+    });
+
+    test('should render outline around active row', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setHeight(300);
+      await provideHttpDatasource(page, generateData(1000, i => ({id: i, name: `${i}`})), {datasource: 'array-http'});
+      await tablePage.addColumn({name: 'column:index', type: 'string'});
+
+      await table.row({index: 5}).click();
+      await expect(tablePage.activeItemId).toHaveText('5');
+      await expect.poll(() => table.activeRowOutline.boundingBox()).toEqual(await table.row({index: 5}).locator.boundingBox());
+
+      await table.row({index: 8}).click();
+      await expect(tablePage.activeItemId).toHaveText('8');
+      await expect.poll(() => table.activeRowOutline.boundingBox()).toEqual(await table.row({index: 8}).locator.boundingBox());
+    });
+  });
+
+  test.describe('Styling', () => {
+
+    test('should conditionally style row', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 1}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 2}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+
+      await tablePage.setCustomRowStyling(true);
+
+      await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 1}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 2}).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 2}).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
+    });
+
+    test('should not conditionally style selected row', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setCustomRowStyling(true);
+
+      await expect(table.row({nth: 2}).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
+
+      await table.row({nth: 2}).click();
+
+      await expect(table.row({nth: 2}).cell(0).locator).not.toHaveAttribute('part');
+    });
+
+    test('should conditionally style column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:negative', type: 'string'});
+
+      await expect(table.row({nth: 0}).cell(0).locator).toHaveAttribute('part', 'column:negative');
+      await expect(table.row({nth: 0}).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
+    });
+  });
+
+  test.describe('Row Actions', () => {
+
+    test('should show row actions on hover', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showRowActions(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await table.row({nth: 3}).hover();
+      await expect(table.row({nth: 3}).rowActions).toBeVisible();
+    });
+
+    test('should stick row actions to the right', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(500);
+      await tablePage.showRowActions(true);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await table.column({name: 'column:name'}).splitter.drag({deltaX: 500});
+
+      const rowBounds = await table.row({nth: 3}).bounds();
+      const tableBounds = await table.bounds();
+      const cellPadding = await table.row({nth: 3}).cell(0).paddingInline();
+
+      // Expect horizontal overflow.
+      await expect(table.horizontalScrollbar.locator).toBeVisible();
+
+      // Hover row.
+      await table.row({nth: 3}).hover();
+
+      // Scroll to end.
+      await table.scrollTo({x: 'end'});
+      await expect(table.row({nth: 3}).rowActions).toBeInViewport({ratio: 1});
+      expect(fromRect(await table.row({nth: 3}).rowActions.boundingBox()).right).toBe(tableBounds.right - cellPadding);
+      expect(fromRect(await table.row({nth: 3}).rowActions.boundingBox()).vcenter).toBe(rowBounds.vcenter);
+
+      // Scroll to start.
+      await table.scrollTo({x: 'start'});
+      await expect(table.row({nth: 3}).rowActions).toBeInViewport({ratio: 1});
+      expect(fromRect(await table.row({nth: 3}).rowActions.boundingBox()).right).toBe(tableBounds.right - cellPadding);
+      expect(fromRect(await table.row({nth: 3}).rowActions.boundingBox()).vcenter).toBe(rowBounds.vcenter);
+    });
+
+    test('should hide row actions while resizing', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.showRowActions(true);
+
+      const rowBounds = await table.row({nth: 3}).bounds();
+
+      const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
+      await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter});
+      await expect(table.row({nth: 3}).rowActions).not.toBeAttached();
+
+      await dragHandle.release();
+      await expect(table.row({nth: 3}).rowActions).toBeVisible();
+    });
+
+    test('should hide row actions while scrolling', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.showRowActions(true);
+
+      await table.row({nth: 10}).hover();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
+
+      await page.mouse.wheel(0, 250);
+      await expect.poll(() => table.scrollTop()).toBe(250);
+      await expect(table.row({nth: 10}).rowActions).toBeHidden();
+
+      await table.row({nth: 10}).hover();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
+    });
+
+    test('should keep row actions visible when moving pointer over splitter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
+      await tablePage.showRowActions(true);
+
+      const rowBounds = await table.row({nth: 10}).bounds();
+
+      await page.mouse.move(rowBounds.left, rowBounds.vcenter);
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
+
+      const rowActionBounds = fromRect(await table.row({nth: 10}).rowActions.boundingBox());
+      await page.mouse.move(rowActionBounds.hcenter, rowActionBounds.vcenter);
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
+
+      const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
+      await page.mouse.move(splitterBounds.hcenter, rowBounds.vcenter);
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
+
+      // Move out of splitter bounds on top.
+      await page.mouse.move(splitterBounds.hcenter, splitterBounds.top - 10);
+      await expect(table.row({nth: 10}).rowActions).not.toBeVisible();
+    });
+
+    test('should hide row actions when leaving splitter or toolbar for header', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
+      await tablePage.showRowActions(true);
+
+      const row = table.row({nth: 10});
+      await row.hover();
+      await expect(row.rowActions).toBeVisible();
+
+      const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
+      await page.mouse.move(splitterBounds.hcenter, await row.bounds().then(bounds => bounds.vcenter));
+      await expect(row.rowActions).toBeVisible();
+
+      await table.headers.first().hover();
+      await expect(row.rowActions).toBeHidden();
+
+      await table.row({nth: 10}).hover();
+      await expect(row.rowActions).toBeVisible();
+
+      await row.rowActions.hover();
+      await expect(row.rowActions).toBeVisible();
+
+      await table.headers.first().hover();
+      await expect(row.rowActions).toBeHidden();
+    });
+
+    test('should keep menu open when hovering other row', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.showRowActions(true);
+
+      const row = table.row({nth: 10});
+      await row.hover();
+      await row.rowActions.locator('button.e2e-menu-item.e2e-more').click();
+      await expect(row.locator.locator('sci-menu')).toBeVisible();
+
+      await table.row({nth: 1}).hover();
+      await expect(table.row({nth: 1}).rowActions).toBeVisible();
+      await expect(row.locator.locator('sci-menu')).toBeVisible();
+
+      await table.row({nth: 2}).hover();
+      await expect(table.row({nth: 1}).rowActions).not.toBeVisible();
+      await expect(table.row({nth: 2}).rowActions).toBeVisible();
+      await expect(row.locator.locator('sci-menu')).toBeVisible();
+
+      await table.row({nth: 2}).click();
+      await expect(row.locator.locator('sci-menu')).not.toBeVisible();
+    });
+  });
+
+  test.describe('Scrollbar', () => {
+
+    /**
+     * Verifies that splitters do not cover scrollbars.
+     */
+    test('should overlap column splitters', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '100000px'});
+
+      const column = table.column({name: 'column:1'});
+      const columnSplitter = table.column({name: 'column:1'}).splitter;
+      const columnSplitterBounds = await columnSplitter.bounds();
+      const columnWidth = await column.width();
+
+      // Expect horizontal overflow.
+      await expect(table.horizontalScrollbar.locator).toBeVisible();
+
+      // Expect column splitter not to be visible.
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-header-divider');
+
+      // Move mouse over column splitter.
+      const tableBounds = await table.bounds();
+      await page.mouse.move(columnSplitterBounds.hcenter, tableBounds.vcenter);
+
+      // Expect column splitter to be visible.
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-splitter');
+
+      // Capture scrollbar thumb height in non-hovered state.
+      const thumbHeight = await table.horizontalScrollbar.thumb.height();
+
+      // Move mouse down along the column splitter over the horizontal scrollbar.
+      const scrollbarBounds = await table.horizontalScrollbar.bounds();
+      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+
+      // Expect scrollbar to overlap the column splitter.
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.horizontalScrollbar.thumb.height()).toBeGreaterThan(thumbHeight);
+
+      // Move mouse to the start of the scrollbar.
+      await page.mouse.move(scrollbarBounds.x, scrollbarBounds.vcenter);
+
+      // Move mouse to the right along scrollbar over the column splitter.
+      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+
+      // Expect scrollbar to overlap the column splitter.
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.horizontalScrollbar.thumb.height()).toBeGreaterThan(thumbHeight);
+
+      // Scroll the viewport.
+      await page.mouse.down();
+      await page.mouse.move(columnSplitterBounds.hcenter + 10, scrollbarBounds.vcenter);
+
+      // Expect viewport to be scrolled
+      await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
+
+      // Expect column not to be resized.
+      await expect.poll(() => column.width()).toEqual(columnWidth);
+    });
+
+    test('should not hover scrollbar during resize', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '100000px'});
+
+      const column = table.column({name: 'column:1'});
+      const columnSplitter = table.column({name: 'column:1'}).splitter;
+      const columnSplitterBounds = await columnSplitter.bounds();
+      const columnWidth = await column.width();
+
+      // Expect horizontal overflow.
+      await expect(table.horizontalScrollbar.locator).toBeVisible();
+
+      // Move mouse over column splitter.
+      const tableBounds = await table.bounds();
+      await page.mouse.move(columnSplitterBounds.hcenter, tableBounds.vcenter);
+
+      // Expect column splitter to be visible.
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-splitter');
+
+      // Capture scrollbar thumb height in non-hovered state.
+      const thumbHeight = await table.horizontalScrollbar.thumb.height();
+
+      // Start resizing by clicking on the splitter.
+      await page.mouse.down();
+
+      // Move mouse down along the column splitter over the horizontal scrollbar.
+      const scrollbarBounds = await table.horizontalScrollbar.bounds();
+      await page.mouse.move(columnSplitterBounds.hcenter, scrollbarBounds.vcenter);
+
+      // Expect splitter to be visible and scrollbar not hovered.
+      await expect.poll(() => columnSplitter.getDisplayMode()).toEqual('column-splitter');
+      await expect.poll(() => table.horizontalScrollbar.thumb.height()).toEqual(thumbHeight);
+
+      // Move mouse 10px to the right along the scrollbar.
+      await page.mouse.move(columnSplitterBounds.hcenter + 10, scrollbarBounds.vcenter);
+
+      // Expect column not to be resized.
+      await expect.poll(() => column.width()).toBeGreaterThan(columnWidth);
+
+      // Expect viewport not to be scrolled
+      await expect.poll(() => table.scrollLeft()).toEqual(0);
+    });
+
+    /**
+     * Verifies the table not to have a horizontal overflow if enough horizontal space.
+     */
+    test('should not have horizontal overflow', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      // Hover the table.
+      await table.locator.hover();
+      await waitUntilAngularStable(page);
+
+      // Expect no horizontal overflow.
+      await expect(table.horizontalScrollbar.locator).not.toBeVisible();
+
+      // Expect no vertical overflow.
+      await expect(table.horizontalScrollbar.locator).not.toBeVisible();
+
+      // Force vertical overflow.
+      await tablePage.setRowCount(10_000);
+
+      // Hover the table.
+      await table.locator.hover();
+      await waitUntilAngularStable(page);
+
+      // Expect no horizontal overflow.
+      await expect(table.horizontalScrollbar.locator).not.toBeVisible();
+
+      // Expect vertical overflow.
+      await expect(table.verticalScrollbar.locator).toBeVisible();
+    });
+  });
+
+  test.describe('Scrolling', () => {
+
+    test('should scroll viewport when wheeling on toolbar', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '1200px'});
+      await tablePage.showRowActions(true);
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await table.row({nth: 10}).hover();
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
+
+      const actionBounds = await table.row({nth: 10}).rowActionsBounds();
+      await table.row({nth: 10}).rowActions.hover();
+      await page.mouse.move(actionBounds.hcenter, actionBounds.vcenter);
+      await page.mouse.wheel(0, 250);
+      await expect.poll(() => table.scrollTop()).toBe(250);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+    });
+
+    test('should scroll viewport when wheeling on splitter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '1200px'});
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await table.column({name: 'column:1'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+      await page.mouse.wheel(0, 250);
+
+      await expect.poll(() => table.scrollTop()).toBe(250);
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+    });
+
+    test('should scroll viewport vertically when wheeling on table body', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
+      const tableBounds = await table.bounds();
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(tableBounds.hcenter, tableBounds.vcenter);
+      await page.mouse.wheel(0, 250);
+      await expect.poll(() => table.scrollTop()).toBe(250);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+    });
+
+    test('should scroll viewport horizontally when wheeling on table body with the shift-key pressed', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
+      const tableBounds = await table.bounds();
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(tableBounds.hcenter, tableBounds.vcenter);
+      await page.keyboard.down('Shift');
+      await page.mouse.wheel(0, 250);
+      await page.keyboard.up('Shift');
+      await expect.poll(() => table.scrollTop()).toBe(0);
+      await expect.poll(() => table.scrollLeft()).toBe(250);
+    });
+
+    test('should not scroll viewport vertically when wheeling on table header', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+      await tablePage.showHeader(true);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
+      const tableBounds = await table.bounds();
+      const tableHeaderBounds = await table.header.bounds();
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(tableBounds.hcenter, tableHeaderBounds.vcenter);
+      await page.mouse.wheel(0, 250);
+
+      // Wait some time until wheeling ends.
+      await page.waitForTimeout(1000);
+
+      await expect.poll(() => table.scrollTop()).toBe(0);
+      await expect.poll(() => table.scrollLeft()).toBe(0);
+    });
+
+    test('should scroll viewport horizontally when wheeling on table header with the shift-key pressed', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(600);
+      await tablePage.setHeight(500);
+      await tablePage.setRowCount(10_000);
+      await tablePage.showHeader(true);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '1200px'});
+      const tableBounds = await table.bounds();
+      const tableHeaderBounds = await table.header.bounds();
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      await page.mouse.move(tableBounds.hcenter, tableHeaderBounds.vcenter);
+      await page.keyboard.down('Shift');
+      await page.mouse.wheel(0, 250);
+      await page.keyboard.up('Shift');
+
+      // Wait some time until wheeling ends.
+      await page.waitForTimeout(1000);
+
+      await expect.poll(() => table.scrollTop()).toBe(0);
+      await expect.poll(() => table.scrollLeft()).toBe(250);
+    });
+  });
+
+  test.describe('Layout', () => {
+
+    test('should allow subsequent elements to cover the table', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+
+      // Verify that the table maintains a default stacking level, allowing subsequent DOM elements to cover it without an explicit z-index.
+      expect(await hasDefaultStackingLevel(table.locator), 'Table has an elevated stacking level').toBe(true);
+    });
+
+    test('should fill full width if no column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1);
+      await tablePage.setWidth(500);
+
+      await expect.poll(() => table.bounds().then(bounds => bounds.width)).toEqual(500);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(500);
+
+      // Change width.
+      await tablePage.setWidth(800);
+
+      await expect.poll(() => table.bounds().then(bounds => bounds.width)).toEqual(800);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
+    });
+
+    test('should fill full width if one or more columns', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1);
+      await tablePage.setWidth(500);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await expect.poll(() => table.bounds().then(bounds => bounds.width)).toEqual(500);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(500);
+      await expect.poll(() => table.column({name: 'column:name'}).width()).toEqual(500);
+
+      // Change width.
+      await tablePage.setWidth(800);
+
+      await expect.poll(() => table.bounds().then(bounds => bounds.width)).toEqual(800);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.width)).toEqual(800);
+      await expect.poll(() => table.rows.first().boundingBox().then(bounds => bounds!.width)).toEqual(800);
+    });
+
+    test('should fill full height if no rows', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(0);
+      await tablePage.setHeight(600);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.showHeader(false);
+
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.columns.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+
+      await test.step('Show column headers', async () => {
+        await tablePage.showHeader(true);
+
+        await expect.poll(() => table.header.height()).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
+        await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - await table.header.height());
+        await expect.poll(() => table.columns.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      });
+
+      await test.step('Show column filters', async () => {
+        await tablePage.setFilterable(true);
+
+        await expect.poll(() => table.header.height()).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
+        await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - await table.header.height());
+        await expect.poll(() => table.columns.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      });
+    });
+
+    test('should fill full height if rows do not fill viewport', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(3);
+      await tablePage.setHeight(600);
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.showHeader(false);
+
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
+      await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      await expect.poll(() => table.columns.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+
+      await test.step('Show column headers', async () => {
+        await tablePage.showHeader(true);
+
+        await expect.poll(() => table.header.height()).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
+        await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - await table.header.height());
+        await expect.poll(() => table.columns.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      });
+
+      await test.step('Show column filters', async () => {
+        await tablePage.setFilterable(true);
+
+        await expect.poll(() => table.header.height()).toBeGreaterThan(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
+        await expect.poll(() => table.viewport.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.grid.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+        await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height)).toEqual(600 - await table.header.height());
+        await expect.poll(() => table.columns.boundingBox().then(bounds => bounds!.height)).toEqual(600);
+      });
+    });
+
+    test('should shrink viewport-client instantly if scrolled to the end and row count drops (e.g., when clearing all rows)', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setRowCount(100_000);
+      await tablePage.setRowHeight(20);
+      await tablePage.setHeight(500);
+      await waitUntilStable(() => table.rows.count());
+
+      // Scroll to the end.
+      await table.scrollTo({y: 'end'});
+
+      // Wait until scrolled to the end.
+      const scrollHeight = await table.scrollHeight();
+      await expect.poll(() => table.scrollTop()).toBe(scrollHeight - 500);
+
+      // Change row count to 5.
+      await tablePage.setRowCount(5);
+
+      // Expect viewport client to shrink instantly.
+      await expect.poll(() => table.body.boundingBox().then(bounds => bounds!.height), {timeout: 250}).toBe(500 - await table.header.height());
+      await expect.poll(() => table.scrollTop(), {timeout: 250}).toBe(0);
+      await expect(table.rows).toHaveCount(5, {timeout: 250});
+    });
+
+    test('should have stable column width if scrolling table with variable column content length', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await tablePage.setWidth(200);
+      await tablePage.setHeight(200);
+
+      // Generate 100 products with short names, plus one with a long name at the end.
+      await provideHttpDatasource(page, generateData(100, i => ({
+        name: i < 99 ? 'Product' : 'This is a longer product name which should be truncated with ellipsis.',
+      })));
+
+      // Expect each column to be 100px wide
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(100);
+
+      // Scroll to the end.
+      await table.scrollTo({y: 'end'});
+
+      // Wait until scrolled to the end.
+      const scrollHeight = await table.scrollHeight();
+      await expect.poll(() => table.scrollTop()).toBe(scrollHeight - 200);
+
+      // Expect column widths not to have changed after scrolling.
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(100);
+    });
+
+    test('should not overflow horizontally if flex columns with large content', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(400);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await provideHttpDatasource(page, [
+        {name: 'This is a long product name which should be truncated with ellipsis.'},
+      ]);
+
+      // Expect no horizontal overflow and column to fill available space.
+      await expectTable(table).not.toHaveHorizontalOverflow();
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(200);
+
+      // Add another column.
+      await tablePage.addColumn({name: 'column:3', type: 'string', width: '200px'});
+
+      // Expect no horizontal overflow and columns to fill available space.
+      await expectTable(table).not.toHaveHorizontalOverflow();
+      await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(100);
+      await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(100);
+    });
+
+    test('should grow to breakpoint and shrink to content height', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setRowCount(0);
+      await tablePage.setRowHeight(30);
+      await tablePage.showHeader(false);
+
+      // Configure table to grow with its content to a breakpoint.
+      await tablePage.setGrowToBreakpoint(true);
+
+      await test.step('Table without breakpoint', async () => {
+        await tablePage.setRowCount(0);
+
+        // Re-create table with above settings to simulate initial load without height.
+        await tablePage.setTableCount(0);
+        await tablePage.setTableCount(1);
+
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
+
+        // Grow to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Grow to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Grow to 100 rows.
+        await tablePage.setRowCount(100);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(3000);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 0 rows.
+        await tablePage.setRowCount(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
+      });
+
+      await test.step('Table with breakpoint at 600px', async () => {
+        await tablePage.setMaxHeight(600);
+        await tablePage.setRowCount(0);
+
+        // Re-create table with above settings to simulate initial load without height.
+        await tablePage.setTableCount(0);
+        await tablePage.setTableCount(1);
+
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Grow to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Grow to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Grow to 100 rows.
+        await tablePage.setRowCount(100);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(600);
+        await expectTable(table).toHaveVerticalOverflow();
+
+        // Shrink to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 0 rows.
+        await tablePage.setRowCount(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
+        await expectTable(table).not.toHaveVerticalOverflow();
+      });
+
+      await test.step('Table with breakpoint in parent container at 500px', async () => {
+        await tablePage.setPageHeight(500);
+        await tablePage.setMaxHeight(null);
+        await tablePage.setRowCount(0);
+
+        // Re-create table with above settings to simulate initial load without height.
+        await tablePage.setTableCount(0);
+        await tablePage.setTableCount(1);
+
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Grow to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Grow to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Grow to 100 rows.
+        await tablePage.setRowCount(100);
+        await expect.poll(() => table.bounds({box: 'border'}).then(bounds => bounds.height)).toEqual(500);
+        await expectTable(table).toHaveVerticalOverflow();
+
+        // Shrink to 10 rows.
+        await tablePage.setRowCount(10);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(300);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 1 row.
+        await tablePage.setRowCount(1);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(30);
+        await expectTable(table).not.toHaveVerticalOverflow();
+
+        // Shrink to 0 rows.
+        await tablePage.setRowCount(0);
+        await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
+        await expectTable(table).not.toHaveVerticalOverflow();
+      });
+    });
+
+    test('should overflow at layout breakpoint', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setPageHeight(500);
+      await expect.poll(() => table.bounds({box: 'border'}).then(bounds => bounds.height)).toEqual(500);
+      await expectTable(table).toHaveVerticalOverflow();
+    });
+
+    test('should overflow at table height', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setHeight(500);
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(500);
+      await expectTable(table).toHaveVerticalOverflow();
+    });
+
+    test('should overflow at table max height', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setMaxHeight(500);
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(500);
+      await expectTable(table).toHaveVerticalOverflow();
+    });
+  });
+
+  test.describe('No Items Found', () => {
+
+    test(`should display 'No Items Found' if no rows`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:testee', type: 'string'});
+
+      await tablePage.setRowCount(10);
+      await expect(table.locator).not.toContainText('No items found.');
+
+      await tablePage.setRowCount(0);
+      await expect(table.locator).toContainText('No items found.');
+
+      await tablePage.setRowCount(10);
+      await expect(table.locator).not.toContainText('No items found.');
+
+      await table.column({name: 'column:testee'}).filter('does not exist');
+      await expect(table.locator).toContainText('No items found.');
+    });
+
+    test(`should horizontally center 'No Items Found' in viewport`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(0);
+      await tablePage.setWidth(600);
+      await tablePage.setRowHeight(30);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '1200px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '1200px'});
+
+      // Expect horizontal overflow.
+      await expectTable(table).toHaveHorizontalOverflow();
+      const tableBounds = await table.bounds();
+
+      // Scroll to the start.
+      await table.scrollTo({x: 'start'});
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toBeCloseTo(tableBounds.hcenter, 0);
+
+      // Scroll to the end.
+      await table.scrollTo({x: 'end'});
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toBeCloseTo(tableBounds.hcenter, 0);
+    });
+
+    test(`should horizontally center 'No Items Found' in table-body if no overflow`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(0);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+
+      // Expect no horizontal overflow.
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      const tableBounds = await table.bounds();
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toBeCloseTo(tableBounds.hcenter, 0);
+
+      // Shrink column so the table does not fill the viewport.
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: -300});
+
+      // Expect 'No Items Found' message to be horizontally centered within the column.
+      const columnBounds = await table.column({name: 'column:1'}).bounds();
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toBeCloseTo(columnBounds.hcenter, 0);
+    });
+
+    test(`should vertically center 'No Items Found' in first row`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(0);
+      await tablePage.setRowHeight(50);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+
+      const tableBounds = await table.bounds();
+      const headerBounds = await table.header.bounds();
+
+      await expect(table.message.noData).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).hcenter).toBeCloseTo(tableBounds.hcenter, 0);
+      await expect.poll(async () => fromRect(await table.message.noData.boundingBox()).vcenter).toEqual(headerBounds.bottom + 2 * 25); // 25 = half row height
+    });
+
+    test(`should not display 'No Items Found' until loaded initial data`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setHeight(300);
+      await tablePage.setHeaderHeight(30);
+      await tablePage.setRowHeight(30);
+
+      // Install HTTP endpoint that blocks the initial load.
+      const onLoad$ = new Subject<void>();
+      await page.route('**/sci-table/products', async route => {
+        await firstValueFrom(onLoad$);
+        await route.fulfill({json: {items: [], totalCount: 0} satisfies SciTablePageResponse<Product>});
+      });
+
+      await tablePage.addColumn({name: 'column:testee', type: 'string'});
+      await tablePage.setDatasource('loader-http');
+      await waitUntilStable(() => table.rows.count());
+
+      // Expect skeletons to display, but not 'No Items Found'.
+      await expect(table.locator).not.toContainText('No items found.');
+      await expect(table.body.locator('div.e2e-skeleton')).toHaveCount(9);
+
+      // Continue initial load.
+      onLoad$.next();
+
+      // Expect 'No Items Found' to display, but not skeletons.
+      await expect(table.locator).toContainText('No items found.');
+      await expect(table.body.locator('div.e2e-skeleton')).toHaveCount(0);
+    });
+
+    test(`should display 'No Items Found' if table grows with its content`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setRowCount(0);
+      await tablePage.setRowHeight(30);
+      await tablePage.showHeader(false);
+
+      // Configure table to grow with its content.
+      await tablePage.setGrowToBreakpoint(true);
+
+      // Expect table to grow with "No Items Found" message.
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(2 * 30); // "No Items Found" message
+    });
+  });
+
+  test.describe('Datasource Error', () => {
+
+    test(`should display 'Data Unavailable' on datasource error`, async ({page, consoleLogs}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setDatasource('loader');
+      await tablePage.addColumn({name: 'column:testee', type: 'string'});
+
+      await tablePage.setRowCount(10);
+      await expect(table.locator).not.toContainText('Data unavailable.');
+      await expect(table.rows).toHaveCount(10);
+
+      await tablePage.simulateDatasourceError(true);
+      await expect(table.locator).toContainText('Data unavailable.');
+      await expect(table.rows).toHaveCount(0);
+
+      await tablePage.simulateDatasourceError(false);
+      await table.retry();
+      await expect(table.locator).not.toContainText('Data unavailable.');
+      await expect(table.rows).toHaveCount(10);
+
+      await expect.poll(() => consoleLogs.get({severity: 'error'})).toContainEqual(expect.stringContaining('[DatasourceError]'));
+    });
+
+    test(`should horizontally center 'Data Unavailable' in viewport`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setDatasource('loader');
+      await tablePage.simulateDatasourceError(true);
+      await tablePage.setWidth(600);
+      await tablePage.setRowHeight(30);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '1200px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '1200px'});
+
+      // Expect horizontal overflow.
+      await expectTable(table).toHaveHorizontalOverflow();
+      const tableBounds = await table.bounds();
+
+      // Scroll to the start.
+      await table.scrollTo({x: 'start'});
+      await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toBeCloseTo(tableBounds.hcenter, 0);
+
+      // Scroll to the end.
+      await table.scrollTo({x: 'end'});
+      await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toBeCloseTo(tableBounds.hcenter, 0);
+    });
+
+    test(`should horizontally center 'Data Unavailable' in table-body if no overflow`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setDatasource('loader');
+      await tablePage.simulateDatasourceError(true);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+
+      // Expect no horizontal overflow.
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      const tableBounds = await table.bounds();
+      await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toBeCloseTo(tableBounds.hcenter, 0);
+
+      // Shrink column so the table does not fill the viewport.
+      await table.column({name: 'column:1'}).splitter.drag({deltaX: -300});
+
+      // Expect 'Data Unavailable' message to be horizontally centered within the column.
+      const columnBounds = await table.column({name: 'column:1'}).bounds();
+      await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
+      await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toBeCloseTo(columnBounds.hcenter, 0);
+    });
+
+    test(`should display 'Data Unavailable' if table grows with its content`, async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      await tablePage.setDatasource('loader');
+      await tablePage.simulateDatasourceError(true);
+      await tablePage.setRowHeight(30);
+      await tablePage.showHeader(false);
+
+      // Configure table to grow with its content.
+      await tablePage.setGrowToBreakpoint(true);
+
+      // Expect table to grow with "Data Unavailable" message.
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(4 * 30); // "Data Unavailable" message
+    });
+  });
+});

@@ -1,0 +1,27 @@
+@if (column().sortable()) {
+  <button class="sort e2e-sort"
+          [attr.data-sort-direction]="sortDirection()"
+          (click)="onSort($event)">
+    <!-- Header -->
+    <ng-container *ngTemplateOutlet="header_template"/>
+
+    <!-- Sort Indicator -->
+    @switch (sortDirection()) {
+      @case ('asc') {
+        <sci-icon>scion.sort_ascending</sci-icon>
+      }
+      @case ('desc') {
+        <sci-icon>scion.sort_descending</sci-icon>
+      }
+      @default {
+        <sci-icon class="no-sort">scion.sort_indicator</sci-icon>
+      }
+    }
+  </button>
+} @else {
+  <ng-container *ngTemplateOutlet="header_template"/>
+}
+
+<ng-template #header_template>
+  <span class="header e2e-header" [class.wrap]="table().wrapHeader()">{{header()}}</span>
+</ng-template>

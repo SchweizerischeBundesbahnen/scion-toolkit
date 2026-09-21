@@ -13,7 +13,7 @@ import {RouterOutlet} from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  template: '<router-outlet></router-outlet>',
+  template: '<router-outlet/>',
   styleUrl: './app.component.scss',
   imports: [RouterOutlet],
 })

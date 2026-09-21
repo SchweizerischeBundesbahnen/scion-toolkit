@@ -10,6 +10,9 @@ Provides Angular-based components and directives with a focus on SCION requireme
 > [!NOTE]
 > `@scion/components` still requires `@angular/animations`. Removal is planned for 2026.
 
+- [**Table**][link-tool-table]\
+  Provides a table for displaying tabular data.
+
 - [**Viewport**][link-tool-viewport]\
   Provides a viewport component with scrollbars that sit on top of the viewport client.
 
@@ -41,6 +44,7 @@ Provides Angular-based components and directives with a focus on SCION requireme
 [menu-contributing]: /CONTRIBUTING.md
 [menu-sponsoring]: /docs/site/sponsoring.md
 
+[link-tool-table]: /docs/site/tools/table.md
 [link-tool-viewport]: /docs/site/tools/viewport.md
 [link-tool-sashbox]: /docs/site/tools/sashbox.md
 [link-tool-splitter]: /docs/site/tools/splitter.md
