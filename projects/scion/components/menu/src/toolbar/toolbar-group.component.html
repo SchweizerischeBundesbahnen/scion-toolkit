@@ -1,0 +1,107 @@
+@for (menuItem of menuItems(); track $index) {
+  @let disabled = this.disabled() || menuItem.disabled?.() || false;
+  @switch (menuItem.type) {
+    <!-- Toolbar Item -->
+    @case ('menu-item') {
+      @let isSplitButton = (menuItem.onSelect || menuItem.control) && menuItem.menu?.children?.length;
+
+      @if (isSplitButton) {
+        <sci-toolbar-split-button [class]="menuItem.cssClass" #split_button_element>
+          <ng-container *ngTemplateOutlet="menu_item_template; context: {anchor: split_button_element.host}"/>
+        </sci-toolbar-split-button>
+      } @else {
+        <ng-container *ngTemplateOutlet="menu_item_template"/>
+      }
+
+      <!-- Template for rendering the content of a toolbar item. -->
+      <ng-template #menu_item_template let-anchor="anchor">
+        <!-- Render push or toggle button. -->
+        @if (menuItem.onSelect) {
+          <button [attr.disabled]="disabled || null"
+                  [attr.title]="menuItem.accelerator | sciFormatAccelerator:menuItem.tooltip?.()"
+                  [class.checked]="menuItem.checked?.()"
+                  [class]="menuItem.cssClass" class="menu-item toolbar-button e2e-menu-item"
+                  [sciAttributes]="menuItem.attributes"
+                  (click)="onSelect(menuItem)">
+            <!-- Render icon, if any. -->
+            <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
+            <!-- Render label, if any. -->
+            <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
+          </button>
+        } @else if (menuItem.control) {
+          <!-- Render custom control. -->
+          <sci-toolbar-control [attr.title]="menuItem.accelerator | sciFormatAccelerator:menuItem.tooltip?.()"
+                               [class]="menuItem.cssClass" class="e2e-menu-item"
+                               [sciAttributes]="menuItem.attributes">
+            <ng-container *sciComponentOutlet="menuItem.control"/>
+          </sci-toolbar-control>
+        }
+
+        <!-- Render menu button. -->
+        @if (menuItem.menu?.children?.length) {
+          @let hasLabel = menuItem.labelText || menuItem.labelComponent;
+          @let hasIcon = menuItem.iconLigature || menuItem.iconComponent;
+          @let hasVisualMenuIndicator = menuItem.visualMenuIndicator ?? true;
+          @let hasIconChevron = hasVisualMenuIndicator && !isSplitButton && hasIcon && !hasLabel;
+          @let hasChevron = hasVisualMenuIndicator && (isSplitButton || !hasIconChevron);
+
+          <button [attr.disabled]="disabled || null"
+                  [attr.title]="menuItem.tooltip?.()"
+                  [class.menu-open]="activeMenuItem()?.menuItem === menuItem"
+                  [class.menu-indicator]="hasIconChevron"
+                  [class]="menuItem.cssClass" class="menu-item e2e-menu-item"
+                  [sciAttributes]="menuItem.attributes"
+                  (click)="onToolbarMenuButtonClick(menuItem, anchor ?? menu_button)"
+                  (mousedown)="onToolbarMenuButtonMouseDown(menuItem)"
+                  (mouseleave)="onToolbarMenuButtonMouseLeave(menuItem)"
+                  #menu_button>
+            @if (!isSplitButton) {
+              <!-- Render icon, if any. -->
+              <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
+              <!-- Render label, if any. -->
+              <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
+            }
+            <!-- Render chevron to indicate dropdown. -->
+            @if (hasChevron) {
+              <sci-icon class="chevron">scion.chevron_down</sci-icon>
+            }
+          </button>
+        }
+      </ng-template>
+    }
+    <!-- Toolbar Group -->
+    @case ('group') {
+      <sci-toolbar-group [menuItems]="menuItem.children"
+                         [orientation]="orientation()"
+                         [disabled]="disabled"
+                         [popoverViewContainerRef]="popoverViewContainerRef()"
+                         [class]="menuItem.cssClass"/>
+    }
+  }
+}
+
+<!-- Renders the icon of a menu item, if any. -->
+<ng-template #icon_template let-menuItem>
+  @if (menuItem.iconLigature) {
+    <sci-icon>
+      {{menuItem.iconLigature()}}
+    </sci-icon>
+  } @else if (menuItem.iconComponent) {
+    <sci-toolbar-icon>
+      <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
+    </sci-toolbar-icon>
+  }
+</ng-template>
+
+<!-- Renders the label of a menu item, if any. -->
+<ng-template #label_template let-menuItem>
+  @if (menuItem.labelText) {
+    <sci-toolbar-label>
+      {{menuItem.labelText()}}
+    </sci-toolbar-label>
+  } @else if (menuItem.labelComponent) {
+    <sci-toolbar-label>
+      <ng-container *sciComponentOutlet="menuItem.labelComponent"/>
+    </sci-toolbar-label>
+  }
+</ng-template>
