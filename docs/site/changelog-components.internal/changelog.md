@@ -5,6 +5,19 @@
 
 ## [Changelog][menu-changelog] > @scion/components.internal
 
+# [22.1.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-22.0.0...ɵcomponents-22.1.0) (2026-09-24)
+
+
+### Features
+
+* **ɵcomponents/toggle-button:** reduce size of toggle button ([d8c3053](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/d8c30535e283c6c295a02776465420ef9f88cc83))
+
+
+### BREAKING CHANGES
+
+* **ɵcomponents:** `@scion/components.internal` requires `@scion/toolkit` `v2.2.0` or higher.
+
+
 # [22.0.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/ɵcomponents-21.1.0...ɵcomponents-22.0.0) (2026-06-16)
 
 
