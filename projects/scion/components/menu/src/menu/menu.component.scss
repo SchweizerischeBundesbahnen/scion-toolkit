@@ -50,6 +50,7 @@
 
   // Unset native popover styles.
   &[popover] {
+    height: auto; // prevent menu growing to full page height on Safari
     position: fixed;
     margin: unset;
     inset: unset;
