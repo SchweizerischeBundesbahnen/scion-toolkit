@@ -1,0 +1,61 @@
+# TODO
+- Allow programmatic selection of rows
+- Support value function (cell label) returning MaybeSignal<Translatable> 
+- Support signal in header (to support direct translation with ngx-translate) 
+- String Column
+  - align
+- Date Column
+  - format
+  - align
+- Number Column
+  - format
+  - align
+- selection
+  - deselect via escape
+# Bugs
+- Column MinWidth not working on initial render
+- Primary Action Enter support 
+
+
+# Future Features
+- Native Focus für active Row
+- Multiline Headers
+- Dokumentation
+- DataLoaderFn: Add suport to return signal (besides Observable, Promise, Object)
+- Icon column
+- Cell alignment (left, right, center)
+- Workbench Integration: Selected/Active Row nur in accent Farbe wenn part/view Fokus hat
+- Animate skeletons
+- Verbindung offen halten auf Pages die nicht mehr im Viewport sind?
+    - invalidate method on table model?
+    - load wenn into viewport?
+    - analzyse
+    - Problematic: large table with frequent updates -> why should table update for rows not in viewport?
+    - Was machen wir bei einem update, delete
+    - Cancel page requests
+    - Gedanken über updatedaussehalb der aktuellen page gemacht?
+- Gedanken über public API von sort und filter (stateful?)
+- Scrollbar thumb position mismach bei zoom; Umstellung auf capturePointerPosition, dann Umwandlung auf screenX nicht erforderlich; sci-mousemove disoatcher obsolet
+- Option to configure the format for number column
+
+- ## Bugs
+- Filter Field Drop Down
+  - Anzeige DarkModel
+  - allenfalls sci-menu wegen alignment
+
+# UX Fragen
+- Wollen wir Splitter wirklich beim Hover auf rows anzeigen? Reicht nicht Cursor? Ruhiger, Hover auf Splitter möglich 
+  -> wenn nicht, kann z-index auf toolbar entfernt werden
+
+## Tests
+- Add test that filter/sort function on model can be invoked regardless of filterable/sortable of column/table.
+- Add test that global setting for filterable/sortable are stronger than column-level filterable/sortable settings
+
+
+> sci-table {
+   font-size: 20px;
+}
+
+
+DEPRECATIONS:
+- Deprecated `Dictionaries.withoutUndefinedEntries`. Use `prune` instead; API will be removed in version 3.0.0.
