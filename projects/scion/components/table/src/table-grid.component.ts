@@ -17,7 +17,12 @@ import {ɵSCI_TABLE} from './ɵtable.model';
  */
 @Component({
   selector: 'sci-table-grid',
-  template: '<ng-content/>',
+  template: `
+    <!-- delay showing content to prevent flicker (oversized column header dividers) until \`--ɵsci-table-columns\` is set -->
+    @if (gridTemplateColumns()) {
+      <ng-content />
+    }
+  `,
   providers: [
     SciTableColumnService,
   ],

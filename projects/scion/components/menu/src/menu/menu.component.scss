@@ -32,6 +32,7 @@
   outline: none;
   box-sizing: border-box; // prevent different interpretation of menu width constraints
   width: var(--ɵsci-menu-width);
+  height: auto; // prevent menu growing to full page height on Safari
   min-width: var(--ɵsci-menu-min-width);
   max-width: var(--ɵsci-menu-max-width);
   user-select: none;
