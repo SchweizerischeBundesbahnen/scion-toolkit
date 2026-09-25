@@ -10,6 +10,12 @@
 
 /* eslint-disable @stylistic/operator-linebreak */
 
+export interface OperatorGroup {
+  kind: 'operator';
+  operator: string;
+  averageMaxSpeedKmh: number;
+}
+
 export interface Vehicle {
   id: number;
   vehicleId: string;
@@ -54,3 +60,9 @@ export type ProtectionSystem =
   | 'ETCS Baseline 3'
   | 'ZUB'
   | 'INTEGRA-SIGNUM';
+
+export type VehicleOrOperator = Vehicle | OperatorGroup;
+
+export function isVehicle(item: VehicleOrOperator): item is Vehicle {
+  return 'vehicleId' in item;
+}

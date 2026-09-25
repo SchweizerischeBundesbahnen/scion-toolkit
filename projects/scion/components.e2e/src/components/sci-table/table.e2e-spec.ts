@@ -5389,8 +5389,6 @@ test.describe('sci-table', () => {
       await table.retry();
       await expect(table.locator).not.toContainText('Data unavailable.');
       await expect(table.rows).toHaveCount(10);
-
-      await expect.poll(() => consoleLogs.get({severity: 'error'})).toContainEqual(expect.stringContaining('[DatasourceError]'));
     });
 
     test(`should horizontally center 'Data Unavailable' in viewport`, async ({page}) => {

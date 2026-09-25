@@ -12,11 +12,12 @@ import {TestBed} from '@angular/core/testing';
 import {table, table as sciTable} from './table.factory';
 import {assertNotInReactiveContext, Component, computed, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
-import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
+import {BehaviorSubject, map, NEVER, noop, Observable, of, Subject, take, tap, throwError} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {provideTableRowBinding} from './table-row-binding';
 import {SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, ɵillegaldatasource} from './table-datasource';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
+import {provideHierarchicalTableDatasource, providePageableHierarchicalTableDatasource, providePageableTableDatasource} from './table.model';
 
 describe('Table', () => {
 
@@ -1213,7 +1214,482 @@ describe('Table', () => {
     });
   });
 
+  describe('Hierarchical Data Source', () => {
+
+    it('should show the chevron only in the first column by default', async () => {
+      const {fixture} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideHierarchicalTableDatasource(signal(['parent', 'leaf']), {
+          getChildren: item => item === 'parent' ? ['child'] : [],
+          hasChildren: item => item === 'parent',
+        }),
+        datasource: ɵillegaldatasource(),
+        columns: table => table
+          .addStringColumn(item => item)
+          .addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.row({nth: 0}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).not.toBeNull();
+      expect(table.row({nth: 0}).cells[1]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
+      expect(table.row({nth: 1}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
+    });
+
+    it('should show the chevron in the configured column and toggle the row', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideHierarchicalTableDatasource(signal(['parent']), {
+          getChildren: () => ['child'],
+          hasChildren: item => item === 'parent',
+        }),
+        datasource: ɵillegaldatasource(),
+        columns: table => table
+          .addStringColumn(item => item)
+          .addStringColumn({value: item => item, showExpansionControl: true}),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(model.columns().map(column => column.showExpansionControl)).toEqual([false, true]);
+      expect(table.row({nth: 0}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
+      const toggle = table.row({nth: 0}).cells[1]!.element!.querySelector<HTMLButtonElement>('button.e2e-toggle-children');
+      expect(toggle).not.toBeNull();
+
+      toggle!.click();
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(table.row({nth: 0}).cells[1]!.element!.querySelector('sci-icon.e2e-expanded')).not.toBeNull();
+    });
+
+    it('should expand and collapse nested rows', async () => {
+      const children = new Map([
+        ['1', ['1.1', '1.2']],
+        ['1.1', ['1.1.1']],
+      ]);
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideHierarchicalTableDatasource(signal(['1', '2', '3']), {
+          getChildren: item => children.get(item) ?? [],
+          hasChildren: item => children.has(item),
+        }),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      const values = (): string[] => [...model.rowsByIndex().values()].map(row => row.item!);
+      expect(values()).toEqual(['1', '2', '3']);
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+
+      model.expand('1.1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+
+      model.collapse('1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '2', '3']);
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+
+      model.collapse('1.1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+    });
+
+    it('should expand and collapse the last row at the viewport boundary', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: provideHierarchicalTableDatasource(signal(generateData(10, i => i)), {
+          getChildren: item => item === 9 ? [10, 11] : [],
+          hasChildren: item => item === 9,
+        }),
+        datasource: ɵillegaldatasource(),
+        showHeader: false,
+        bufferSize: 0,
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }), {height: '300px', designTokens: {'--sci-table-row-height': '30px'}});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(model.totalCount()).toBe(10);
+
+      model.expand(9);
+      await table.waitUntilStable();
+      expect(model.totalCount()).toBe(12);
+      await table.scrollY({y: 2 * 30});
+      expect(table.row({nth: table.rows.length - 1}).cells[0]!.value).toBe('11');
+
+      model.collapse(9);
+      await table.waitUntilStable();
+      expect(model.totalCount()).toBe(10);
+      expect(table.scrollTop).toBe(0);
+    });
+
+    it('should expand the last row when the table is shorter than the viewport', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideHierarchicalTableDatasource(signal(['1', '2']), {
+          getChildren: item => item === '2' ? ['2.1'] : [],
+          hasChildren: item => item === '2',
+        }),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+
+      model.expand('2');
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(3);
+      expect(table.row({nth: 2}).cells[0]!.value).toBe('2.1');
+
+      model.collapse('2');
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+    });
+  });
+
+  describe('Pageable Hierarchical Data Source', () => {
+
+    it('should expand and collapse nested rows', async () => {
+      const roots = ['1', '2', '3'];
+      const children = new Map([
+        ['1', ['1.1', '1.2']],
+        ['1.1', ['1.1.1']],
+      ]);
+      const rootLoader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<string> => ({
+        items: roots.slice(request.start, request.end), totalCount: roots.length,
+      }));
+      const childLoader = jasmine.createSpy().and.callFake((item: string, request: SciTablePageRequest): SciTablePageResponse<string> => {
+        const items = children.get(item) ?? [];
+        return {items: items.slice(request.start, request.end), totalCount: items.length};
+      });
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: providePageableHierarchicalTableDatasource(
+          rootLoader,
+          {getChildren: childLoader, hasChildren: (item: string) => children.has(item)},
+        ),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      const values = (): string[] => [...model.rowsByIndex().values()].map(row => row.item!);
+      expect(values()).toEqual(roots);
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).not.toHaveBeenCalled();
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+      expect(childLoader).toHaveBeenCalledWith('1', jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
+      expect(childLoader).toHaveBeenCalledTimes(1);
+
+      model.expand('1.1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+      expect(childLoader).toHaveBeenCalledWith('1.1', jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
+      expect(childLoader).toHaveBeenCalledTimes(2);
+
+      model.collapse('1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(roots);
+      expect(childLoader).toHaveBeenCalledTimes(2);
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+      expect(childLoader).toHaveBeenCalledTimes(2);
+
+      model.collapse('1.1');
+      await table.waitUntilStable();
+      expect(values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).toHaveBeenCalledTimes(2);
+    });
+
+    it('should show child errors on the table and reload on retry', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: providePageableHierarchicalTableDatasource(
+          () => ({items: ['parent'], totalCount: 1}),
+          {
+            getChildren: () => throwError(() => new Error('Child load failed')),
+            hasChildren: () => true,
+          },
+        ),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      model.expand('parent');
+      await table.waitUntilStable();
+      expect(model.totalCount()).toBe(0);
+      expect(model.error()).toBeDefined();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry')).not.toBeNull();
+
+      (fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry') as HTMLButtonElement).click();
+      await table.waitUntilStable();
+      expect(model.totalCount()).toBe(1);
+    });
+
+    it('should show skeletons for expanded children until the first page loads', async () => {
+      const children$ = new Subject<SciTablePageResponse<string>>();
+      const childLoader = jasmine.createSpy().and.returnValue(children$);
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: providePageableHierarchicalTableDatasource(
+          () => ({items: ['parent', 'sibling'], totalCount: 2}),
+          {getChildren: childLoader, hasChildren: item => item === 'parent'},
+        ),
+        datasource: ɵillegaldatasource(),
+        pageSize: 3,
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      model.expand('parent');
+      await table.waitUntilStable();
+
+      expect(childLoader).toHaveBeenCalledTimes(1);
+      expect(model.totalCount()).toBe(5);
+      expect(table.rows).toHaveSize(5);
+      expect(table.row({nth: 0}).cells[0]!.value).toContain('parent');
+      for (let index = 1; index <= 3; index++) {
+        expect(table.row({nth: index}).cells[0]!.isLoading()).toBeTrue();
+      }
+      expect(table.row({nth: 4}).cells[0]!.value).toBe('sibling');
+
+      children$.next({items: ['child'], totalCount: 1});
+      await table.waitUntilStable();
+
+      expect(model.totalCount()).toBe(3);
+      expect(table.rows).toHaveSize(3);
+      expect(table.row({nth: 1}).cells[0]!.value).toBe('child');
+      expect(table.row({nth: 2}).cells[0]!.value).toBe('sibling');
+    });
+
+    it('should load each child page only once', async () => {
+      const children = ['1.1', '1.2', '1.3', '1.4'];
+      const rootLoader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<string> => ({
+        items: ['1'].slice(request.start, request.end), totalCount: 1,
+      }));
+      const childLoader = jasmine.createSpy().and.callFake((_item: string, request: SciTablePageRequest): SciTablePageResponse<string> => ({
+        items: children.slice(request.start, request.end), totalCount: children.length,
+      }));
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: providePageableHierarchicalTableDatasource(rootLoader, {
+          getChildren: childLoader,
+          hasChildren: item => item === '1',
+        }),
+        datasource: ɵillegaldatasource(),
+        pageSize: 2,
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).not.toHaveBeenCalled();
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect([...model.rowsByIndex().values()].map(row => row.item)).toEqual(['1', ...children]);
+      expect(childLoader).toHaveBeenCalledWith('1', jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 2, page: 0, pageSize: 2}));
+      expect(childLoader).toHaveBeenCalledWith('1', jasmine.objectContaining<SciTablePageRequest>({start: 2, end: 4, page: 1, pageSize: 2}));
+      expect(childLoader).toHaveBeenCalledTimes(2);
+
+      model.collapse('1');
+      await table.waitUntilStable();
+      model.expand('1');
+      await table.waitUntilStable();
+      expect([...model.rowsByIndex().values()].map(row => row.item)).toEqual(['1', ...children]);
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).toHaveBeenCalledTimes(2);
+    });
+
+    it('should retain child pages across row remapping', async () => {
+      const columns = signal(['first']);
+      const childLoader = jasmine.createSpy().and.returnValue({items: ['child'], totalCount: 1});
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: providePageableHierarchicalTableDatasource(
+          () => of({items: ['parent'], totalCount: 1}),
+          {getChildren: childLoader, hasChildren: item => item === 'parent'},
+        ),
+        datasource: ɵillegaldatasource(),
+        columns: table => {
+          for (const column of columns()) {
+            table.addStringColumn(column, item => item);
+          }
+        },
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      model.expand('parent');
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(childLoader).toHaveBeenCalledTimes(1);
+
+      columns.set(['first', 'second']);
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(table.row({nth: 1}).cells).toHaveSize(2);
+      expect(childLoader).toHaveBeenCalledTimes(1);
+    });
+
+    it('should load children when expanding the last row at the viewport boundary', async () => {
+      const rootLoader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
+        items: generateData(10, i => i).slice(request.start, request.end), totalCount: 10,
+      }));
+      const childLoader = jasmine.createSpy().and.callFake((item: number, request: SciTablePageRequest): SciTablePageResponse<number> => ({
+        items: item === 9 ? [10, 11].slice(request.start, request.end) : [],
+        totalCount: item === 9 ? 2 : 0,
+      }));
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: providePageableHierarchicalTableDatasource(
+          rootLoader,
+          {getChildren: childLoader, hasChildren: item => item === 9},
+        ),
+        datasource: ɵillegaldatasource(),
+        showHeader: false,
+        bufferSize: 0,
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }), {height: '300px', designTokens: {'--sci-table-row-height': '30px'}});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(model.totalCount()).toBe(10);
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).not.toHaveBeenCalled();
+
+      model.expand(9);
+      await table.waitUntilStable();
+      expect(childLoader).toHaveBeenCalledWith(9, jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
+      expect(childLoader).toHaveBeenCalledTimes(1);
+      expect(model.totalCount()).toBe(12);
+      await table.scrollY({y: 2 * 30});
+      expect(table.row({nth: table.rows.length - 1}).cells[0]!.value).toBe('11');
+      expect(childLoader).toHaveBeenCalledTimes(1);
+
+      model.collapse(9);
+      await table.waitUntilStable();
+      expect(model.totalCount()).toBe(10);
+      expect(table.scrollTop).toBe(0);
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).toHaveBeenCalledTimes(1);
+
+      model.expand(9);
+      await table.waitUntilStable();
+      expect(model.totalCount()).toBe(12);
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).toHaveBeenCalledTimes(1);
+    });
+
+    it('should load children when expanding the last row of a table shorter than the viewport', async () => {
+      const rootLoader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<string> => ({
+        items: ['1', '2'].slice(request.start, request.end), totalCount: 2,
+      }));
+      const childLoader = jasmine.createSpy().and.callFake((_item: string, request: SciTablePageRequest): SciTablePageResponse<string> => ({
+        items: ['2.1'].slice(request.start, request.end),
+        totalCount: 1,
+      }));
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: providePageableHierarchicalTableDatasource(
+          rootLoader,
+          {getChildren: childLoader, hasChildren: item => item === '2'},
+        ),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).not.toHaveBeenCalled();
+
+      model.expand('2');
+      await table.waitUntilStable();
+      expect(childLoader).toHaveBeenCalledWith('2', jasmine.objectContaining<SciTablePageRequest>({page: 0}));
+      expect(childLoader).toHaveBeenCalledTimes(1);
+      expect(table.rows).toHaveSize(3);
+      expect(table.row({nth: 2}).cells[0]!.value).toBe('2.1');
+
+      model.collapse('2');
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(rootLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('Pageable Data Source', () => {
+
+    it('should remap columns without loading the page again', async () => {
+      const columns = signal(['id']);
+      const loader = jasmine.createSpy().and.returnValue({items: [{id: '1', name: 'one'}], totalCount: 1});
+      const {fixture, model} = createSciTableComponent(sciTable<{id: string; name: string}>({
+        ɵdatasource: providePageableTableDatasource(loader),
+        datasource: ɵillegaldatasource(),
+        columns: table => {
+          for (const column of columns()) {
+            table.addStringColumn(column, item => item[column as 'id' | 'name']);
+          }
+        },
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(model.rowsByIndex().get(0)?.cells).toHaveSize(1);
+      expect(loader).toHaveBeenCalledTimes(1);
+
+      columns.set(['id', 'name']);
+      await table.waitUntilStable();
+      expect(model.rowsByIndex().get(0)?.cells?.length).toBe(2);
+      expect(loader).toHaveBeenCalledTimes(1);
+    });
+
+    it('should derive the count from the most recent page', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: providePageableTableDatasource(request => request.page === 0 ? {items: [0, 1], totalCount: 5} : {items: [2, 3], totalCount: 4}),
+        datasource: ɵillegaldatasource(),
+        pageSize: 2,
+        bufferSize: 0,
+        showHeader: false,
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }), {height: '30px', designTokens: {'--sci-table-row-height': '30px'}});
+
+      await new TablePO(fixture).waitUntilStable();
+      expect(model.totalCount()).toBe(5);
+
+      await model.loadRange(2, 4);
+      await fixture.whenStable();
+      expect(model.totalCount()).toBe(4);
+    });
 
     it('should cache pages', async () => {
       const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
@@ -1222,7 +1698,7 @@ describe('Table', () => {
       }));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         pageSize: 5,
         bufferSize: 0,
@@ -1268,7 +1744,7 @@ describe('Table', () => {
       const {fixture} = createSciTableComponent(sciTable<number>({
         bufferSize: 3,
         pageSize: 5,
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -1323,7 +1799,7 @@ describe('Table', () => {
       const {fixture} = createSciTableComponent(sciTable<number>({
         bufferSize: 3,
         pageSize: 50,
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -1374,7 +1850,7 @@ describe('Table', () => {
       });
 
       const {fixture, model} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         columns: table => table.addNumberColumn({
           name: 'column:1',
@@ -1419,7 +1895,7 @@ describe('Table', () => {
       });
 
       const {fixture, model} = createSciTableComponent<{id: string; name: string}>(sciTable({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -1532,7 +2008,7 @@ describe('Table', () => {
       });
 
       const {fixture, model} = createSciTableComponent<{id: string; name: string}>(sciTable({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -1587,7 +2063,7 @@ describe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent<number>(sciTable({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -1644,7 +2120,7 @@ describe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent<number>(sciTable({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -1685,7 +2161,7 @@ describe('Table', () => {
       );
 
       const {fixture} = createSciTableComponent(sciTable<string>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         columns: table => table.addStringColumn({
           name: 'column:1',
@@ -1730,7 +2206,7 @@ describe('Table', () => {
       const {fixture} = createSciTableComponent(sciTable<number>({
         pageSize: 10,
         bufferSize: 0,
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -1779,7 +2255,7 @@ describe('Table', () => {
       }));
 
       const {fixture, model} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         columns: table => table.addNumberColumn(item => item),
         injector: TestBed.inject(Injector),
@@ -1803,7 +2279,7 @@ describe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 50,
@@ -1855,7 +2331,7 @@ describe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 1,
         pageSize: 50,
@@ -1902,7 +2378,7 @@ describe('Table', () => {
       const loader = jasmine.createSpy().and.callFake((): Observable<SciTablePageResponse<number>> => NEVER);
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -1935,11 +2411,13 @@ describe('Table', () => {
     it('should call data loader function in injection context', async () => {
       let injector: Injector | undefined;
 
+      const loaderFn: SciTableDataLoaderFn<any> = () => {
+        injector = inject(Injector);
+        return {items: [1, 2, 3], totalCount: 3};
+      };
+
       const {fixture} = createSciTableComponent(table({
-        ɵdatasource: () => {
-          injector = inject(Injector);
-          return {items: [1, 2, 3], totalCount: 3};
-        },
+        ɵdatasource: providePageableTableDatasource(loaderFn),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
@@ -1956,7 +2434,7 @@ describe('Table', () => {
       };
 
       const {fixture, model} = createSciTableComponent(table({
-        ɵdatasource: loaderFn,
+        ɵdatasource: providePageableTableDatasource(loaderFn),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
@@ -1969,11 +2447,13 @@ describe('Table', () => {
     it('should destroy previous data loader function injection context', async () => {
       const destroyRefs = new Array<DestroyRef>();
 
+      const loaderFn: SciTableDataLoaderFn<any> = () => {
+        destroyRefs.push(inject(DestroyRef));
+        return {items: [1, 2, 3], totalCount: 3};
+      };
+
       const {fixture, model} = createSciTableComponent(table({
-        ɵdatasource: () => {
-          destroyRefs.push(inject(DestroyRef));
-          return {items: [1, 2, 3], totalCount: 3};
-        },
+        ɵdatasource: providePageableTableDatasource(loaderFn),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
@@ -2008,7 +2488,7 @@ describe('Table', () => {
       const visibleColumns = signal(new Set<`column:${string}`>(['column:1', 'column:2']));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         filterable: true,
         columns: table => visibleColumns().forEach(column => table.addNumberColumn({
@@ -2069,7 +2549,7 @@ describe('Table', () => {
       const visibleColumns = signal(new Set<`column:${string}`>(['column:1', 'column:2']));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         columns: table => visibleColumns().forEach(column => table.addNumberColumn({
           name: column,

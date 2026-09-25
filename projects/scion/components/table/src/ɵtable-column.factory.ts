@@ -8,11 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
-import {SciBooleanColumn, SciComponentColumn, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
+import {SciBooleanColumnDescriptor, SciColumnDescriptor, SciColumnValueType, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
+import {SciBooleanColumn, SciComponentColumn, SciDynamicColumn, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
 import {computed, signal} from '@angular/core';
 import {ɵSciTable} from './ɵtable.model';
-import {coerceSignal} from '@scion/components/common';
+import {coerceSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 
 export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
 
@@ -135,6 +135,29 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     return this;
   }
 
+  public addColumn(value: (item: T) => SciColumnValueType): this;
+  public addColumn(label: string, value: (item: T) => SciColumnValueType): this;
+  public addColumn(descriptor: SciColumnDescriptor<T>): this;
+  public addColumn(descriptorLike: ((item: T) => SciColumnValueType) | string | SciColumnDescriptor<T>, value?: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this {
+    const descriptor = coerceColumnDescriptor(descriptorLike, value);
+    const column = this.mapToColumn(descriptor);
+    const sortable = descriptor.sortable ?? true;
+    const filterable = descriptor.filterable ?? true;
+
+    this.columns.push({
+      ...column,
+      type: 'dynamic',
+      value: descriptor.value,
+      sortable: computed(() => this._table.sortable() && !!descriptor.sortable),
+      filterable: computed(() => this._table.filterable() && !!descriptor.filterable),
+      compare: typeof sortable === 'object' ? sortable.comparator : (a, b) => String(a.value).localeCompare(String(b.value)),
+      matches: typeof filterable === 'object' ? filterable.matcher : (text, context) => context.value === text,
+      padding: descriptor.padding ?? (() => true),
+    } satisfies SciDynamicColumn<T>);
+
+    return this;
+  }
+
   /**
    * Maps given column descriptor to a {@link SciTableColumn}.
    */
@@ -155,6 +178,14 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       throw Error('[ColumnDefinitionError] Configuring a sort comparator is not supported for tables using a datasource. Sorting must be done by the datasource.');
     }
 
+    const isHierarchical = this._table.isHierarchicalDatasource();
+    const isFirst = this.columns.length === 0;
+    const showExpansionControl = isHierarchical && (descriptor.showExpansionControl ?? isFirst);
+    if (showExpansionControl) {
+      // A later explicitly selected column replaces the default (or previously selected) column.
+      this.columns.forEach(column => column.showExpansionControl = false);
+    }
+
     return {
       name: name,
       header: coerceSignal(descriptor.header ?? ''),
@@ -165,7 +196,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       }),
       minWidth: descriptor.minWidth ?? 100,
       resizing: signal(false),
-      padding: true,
+      showExpansionControl,
       location: {x: 0, width: 0}, // set in `SciTableColumnComponent`
     };
   }
@@ -174,6 +205,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
 /**
  * Coerces given column factory arguments to a {@link SciTableColumnDescriptorLike}.
  */
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => SciColumnValueType) | string | SciColumnDescriptor<T>, value?: (item: T) => SciColumnValueType): SciColumnDescriptor<T>;
 function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): SciStringColumnDescriptor<T>;
 function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): SciNumberColumnDescriptor<T>;
 function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): SciBooleanColumnDescriptor<T>;

@@ -1,0 +1,99 @@
+@if (tree(); as tree) {
+  <main>
+    <sci-tree [tree]="tree" name="tree:companies"/>
+  </main>
+
+  <aside>
+    <sci-tabbar>
+      <!-- Settings -->
+      <ng-template sciTab label="Settings" name="settings">
+        <section>
+          <label>
+            Header
+            <input [formField]="settingsForm.header"/>
+          </label>
+
+          <label>
+            <input [(ngModel)]="tree.filterable" type="checkbox"/>
+            Filterable
+          </label>
+
+          <label>
+            <input [(ngModel)]="tree.sortable" type="checkbox"/>
+            Sortable
+          </label>
+
+          <label>
+            <input [(ngModel)]="tree.wrapHeader" type="checkbox"/>
+            Wrap Header
+          </label>
+
+          <label>
+            Selectable
+            <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)">
+              <option value="multi">Multi</option>
+              <option value="single">Single</option>
+              <option value="false">False</option>
+            </select>
+          </label>
+
+          <button type="button" (click)="onUserSettingsReset()" class="reset">Reset User Settings</button>
+        </section>
+      </ng-template>
+
+      <!-- Design Tokens -->
+      <ng-template sciTab label="Design Tokens">
+        <section class="design-tokens">
+          <label>
+            <input [formField]="settingsForm.showGridlines" type="checkbox"/>
+            Show Gridlines
+          </label>
+
+          <label>
+            <input [formField]="settingsForm.showZebraStriping" type="checkbox"/>
+            Zebra Striped Rows
+          </label>
+
+          <app-design-token-form [form]="designTokenForm" [designTokenRootElement]="host"/>
+        </section>
+      </ng-template>
+
+      <!-- Data Source -->
+      <ng-template sciTab label="Datasource">
+        <section>
+          <label>
+            Row Count
+            <input [(ngModel)]="rowCount" appMinMax min="0" max="10000" type="number"/>
+          </label>
+
+          <label>
+            <input [formField]="settingsForm.slowDatasource" type="checkbox"/>
+            Slow Datasource
+          </label>
+        </section>
+      </ng-template>
+    </sci-tabbar>
+
+    <section class="tree-state">
+      <header>Tree State</header>
+
+      <label>
+        Active Id:
+        <output>{{tree.activeItem()?.dataId ?? '-'}}</output>
+      </label>
+
+      <label>
+        Selection Count:
+        <output>{{tree.selectedItems().length}}</output>
+      </label>
+
+      <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control-->
+      <label>
+        Selection:
+        <sci-viewport>
+          {{selection()}}
+        </sci-viewport>
+      </label>
+    </section>
+  </aside>
+}
