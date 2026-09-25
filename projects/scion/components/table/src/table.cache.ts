@@ -25,9 +25,9 @@ export class SciTableCache<T> {
 
   public readonly rowsByIndex = computed(() => this.projectRows().rowsByIndex, {equal: Objects.isEqual});
 
-  public readonly rowsById: Signal<Map<ID, TableCacheRow<T>>> = computed(() => this.values()
+  public readonly rowsById: Signal<Map<ID, SciTableCacheRow<T>>> = computed(() => this.values()
     .flatMap(page => page.rows.value() ?? [])
-    .reduce((acc, row) => new Map([...acc, [row.id, row], ...row.childrenCache.rowsById()]), new Map<ID, TableCacheRow<T>>()), {equal: Objects.isEqual});
+    .reduce((acc, row) => new Map([...acc, [row.id, row], ...row.childrenCache.rowsById()]), new Map<ID, SciTableCacheRow<T>>()), {equal: Objects.isEqual});
 
   public readonly indexById = computed(() => [...this.rowsByIndex().entries()]
     .reduce((map, [index, row]) => map.set(row.id, index), new Map<ID, number>()));
@@ -73,8 +73,8 @@ export class SciTableCache<T> {
     });
   }
 
-  public setTotalCount(totalCount: number): void {
-    this._directChildrenCount.set(totalCount);
+  public setTotalCount(totalCount: number | undefined): void {
+    this._directChildrenCount.set(totalCount ?? 0);
   }
 
   /**
@@ -83,7 +83,7 @@ export class SciTableCache<T> {
   public findPagesToLoad(start: number, end: number, pageSize: number): TablePage<T>[] {
     const pagesToLoad: TablePage<T>[] = [];
 
-    const findPages = (cache: SciTableCache<T>, indexOffset: number, parent?: TableCacheRow<T>): number => {
+    const findPages = (cache: SciTableCache<T>, indexOffset: number, parent?: SciTableCacheRow<T>): number => {
       const directChildrenCount = cache._directChildrenCount();
 
       if (directChildrenCount === undefined) {
@@ -153,7 +153,7 @@ export class SciTableCache<T> {
     entry.dispose();
   }
 
-  private projectRows(rowsByIndex: Map<number, SciTableRow<T>> = new Map<number, SciTableRow<T>>(), indexOffset: number = 0): {indexOffset: number; rowsByIndex: Map<number, SciRow<T>>} {
+  private projectRows(rowsByIndex: Map<number, SciTableRow<T>> = new Map<number, SciTableRow<T>>(), indexOffset: number = 0): {indexOffset: number; rowsByIndex: Map<number, SciTableRow<T>>} {
     const totalCount = this._directChildrenCount() ?? 0;
     const rowsByLocalIndex = this.rowsByLocalIndex();
 
@@ -176,30 +176,30 @@ export class SciTableCache<T> {
     return {rowsByIndex, indexOffset};
   }
 
-  private rowsByLocalIndex(): Map<number, TableCacheRow<T>> {
+  private rowsByLocalIndex(): Map<number, SciTableCacheRow<T>> {
     return this.values()
       .reduce((rowsByIndex, page) => {
         page.rows.value()?.forEach((row, index) => rowsByIndex.set(page.start + index, row));
         return rowsByIndex;
-      }, new Map<number, TableCacheRow<T>>());
+      }, new Map<number, SciTableCacheRow<T>>());
   }
 
 }
 
 export interface SciTableCacheEntry<T> {
-  rows: ResourceRef<TableCacheRow<T>[] | undefined>;
+  rows: ResourceRef<SciTableCacheRow<T>[] | undefined>;
   start: number;
   end: number;
   dispose: () => void;
 }
 
-export interface TableCacheRow<T> extends SciTableRow<T> {
+export interface SciTableCacheRow<T> extends SciTableRow<T> {
   childrenCache: SciTableCache<T>;
 }
 
 export interface TablePage<T> {
   cache: SciTableCache<T>;
-  parent?: TableCacheRow<T>;
+  parent?: SciTableCacheRow<T>;
   page: number;
 }
 

@@ -8,9 +8,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciBooleanColumnDescriptor, SciTableColumnDescriptorLike, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
+import {SciBooleanColumnDescriptor, SciTableColumnDescriptorLike, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnFactory, SciTemplateColumnDescriptor, SciColumnDescriptor} from './table-column.factory';
 import {SciTableColumnType, SciTableDescriptor} from './table.model';
 import {isSignal} from '@angular/core';
+import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 
 export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
 
@@ -23,21 +24,21 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
   public addBooleanColumn(header: string, value: (item: T) => boolean): this;
   public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
   public addBooleanColumn(valueHeaderDescriptor: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): this {
-    return this.addColumn('boolean', valueHeaderDescriptor, value);
+    return this.ɵaddColumn('boolean', valueHeaderDescriptor, value);
   }
 
   public addStringColumn(value: (item: T) => string): this;
   public addStringColumn(header: string, value: (item: T) => string): this;
   public addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
   public addStringColumn(valueHeaderDescriptor: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): this {
-    return this.addColumn('string', valueHeaderDescriptor, value);
+    return this.ɵaddColumn('string', valueHeaderDescriptor, value);
   }
 
   public addNumberColumn(value: (item: T) => number): this;
   public addNumberColumn(header: string, value: (item: T) => number): this;
   public addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
   public addNumberColumn(valueHeaderDescriptor: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): this {
-    return this.addColumn('number', valueHeaderDescriptor, value);
+    return this.ɵaddColumn('number', valueHeaderDescriptor, value);
   }
 
   public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
@@ -45,17 +46,24 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     if (isSignal(this._descriptor.ɵdatasource) && (config.filterable === true || config.sortable === true)) {
       throw Error('[ColumnDefinitionError] Component columns cannot have a auto filter or auto sort.');
     }
-    return this.addColumn('component', config);
+    return this.ɵaddColumn('component', config);
   }
 
   public addTemplateColumn(config: SciTemplateColumnDescriptor<T>): this {
     if (isSignal(this._descriptor.ɵdatasource) && (config.filterable === true || config.sortable === true)) {
       throw Error('[ColumnDefinitionError] Template columns cannot have a auto filter or auto sort.');
     }
-    return this.addColumn('template', config);
+    return this.ɵaddColumn('template', config);
   }
 
-  private addColumn(type: SciTableColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciTableColumnDescriptorLike<T>, value?: (item: T) => unknown): this {
+  public addColumn(value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this;
+  public addColumn(label: string, value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this;
+  public addColumn(descriptor: SciColumnDescriptor<T>): this;
+  public addColumn(valueLabelDescriptor: ((item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor) | string | SciColumnDescriptor<T>, value?: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this {
+    return this.ɵaddColumn('dynamic', valueLabelDescriptor, value);
+  }
+
+  private ɵaddColumn(type: SciTableColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciTableColumnDescriptorLike<T>, value?: (item: T) => unknown): this {
     const config = (() => {
       switch (typeof valueHeaderDescriptor) {
         case 'string':

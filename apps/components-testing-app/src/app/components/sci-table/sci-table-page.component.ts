@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {provideTableRowBinding, SciTable, SciTableCellContext, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
+import {providePageableTableDatasource, provideTableRowBinding, SciTable, SciTableCellContext, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -83,6 +83,7 @@ export default class SciTablePageComponent {
   // TODO [rebase] providePageableTableDatasource
   private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
     return table({
+      datasource: ɵillegaldatasource(),
       ɵdatasource: (() => {
         switch (options.datasource) {
           case 'array':
@@ -91,14 +92,13 @@ export default class SciTablePageComponent {
             this._productService.enableHttpLoader();
             return this._productService.products;
           case 'loader':
-            return (request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value});
+            return providePageableTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}));
           case 'loader-delayed':
-            return (request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value});
+            return providePageableTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}));
           case 'loader-http':
-            return (request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value)));
+            return providePageableTableDatasource((request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))));
         }
       })(),
-      datasource: ɵillegaldatasource(),
       rowBindings: (bindings, product) => {
         if (options.customRowStyling) {
           bindings.addPartBinding(product.id % 3 === 0 ? 'row:negative' : undefined);

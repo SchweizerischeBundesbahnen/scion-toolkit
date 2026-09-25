@@ -1,9 +1,9 @@
-import {SciColumnFilter, SciColumnType, SciSortCriterion, SciTableRequest, SciTableResponse} from '@scion/components/table';
 import {inject, linkedSignal, Service, signal, untracked} from '@angular/core';
 import {defer, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
+import {SciTableColumnFilter, SciTableColumnType, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
 
 @Service()
 export class ProductService {
@@ -18,7 +18,7 @@ export class ProductService {
   private readonly _products$ = toObservable(this.products);
   private readonly _httpClient = inject(HttpClient);
 
-  public getProducts$(request: SciTableRequest, columnDataTypes: Map<`column:${string}`, SciColumnType>, options?: {slowDataSource?: boolean}): Observable<SciTableResponse<Product>> {
+  public getProducts$(request: SciTablePageRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDataSource?: boolean}): Observable<SciTablePageResponse<Product>> {
     return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
       .pipe(
         switchMap(() => this._products$),
@@ -81,7 +81,7 @@ export namespace Products {
     return Array.from({length: count}, () => createProduct(1));
   }
 
-  export function sort(companies: Product[], sortCriteria: SciSortCriterion[], columnDataTypes: Map<`column:${string}`, SciColumnType>): Product[] {
+  export function sort(companies: Product[], sortCriteria: SciTableSortCriterion[], columnDataTypes: Map<`column:${string}`, SciTableColumnType>): Product[] {
     return [...companies].sort((a, b) => {
       for (const sortCriterion of sortCriteria) {
         const ascendingComparison = (() => {
@@ -106,7 +106,7 @@ export namespace Products {
     });
   }
 
-  export function filter(companies: Product[], filterCriteria: SciColumnFilter[], tableFilter: string | undefined, columnDataTypes: Map<`column:${string}`, SciColumnType>): Product[] {
+  export function filter(companies: Product[], filterCriteria: SciTableColumnFilter[], tableFilter: string | undefined, columnDataTypes: Map<`column:${string}`, SciTableColumnType>): Product[] {
     let copy = [...companies];
     for (const filterCriterion of filterCriteria) {
       const filterText = `${filterCriterion.text}`.toLocaleLowerCase();

@@ -9,23 +9,25 @@
  */
 
 import {Injector, Signal, WritableSignal} from '@angular/core';
-import {SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
+import {SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
+import {MaybeAsync} from './common';
+import {Observable} from 'rxjs';
 
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template' | 'dynamic';;
 
 export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
 
 export interface SciTableDescriptor<T> {
-  datasource: Signal<T[]> | SciTableDatasource<T> | SciPageableTableDatasource<T> | SciHierarchicalTableDatasource<T> | SciPageableHierarchicalTableDatasource<T>;
+  datasource: Signal<T[]>;
   /**
    * @docs-private Not public API. For internal use only.
    * @experimental since 22.3.0; API and behavior may change in any version without notice.
    */
-  ɵdatasource?: Signal<T[]> | SciTableDataLoaderFn<T>;
+  ɵdatasource?: Signal<T[]> | SciTableDatasource<T> | SciPageableTableDatasource<T> | SciHierarchicalTableDatasource<T> | SciPageableHierarchicalTableDatasource<T>
   columns: SciTableColumnFactoryFn<T>;
   sortable?: boolean;
   resizable?: boolean;
@@ -192,6 +194,7 @@ export interface SciTableRow<T> {
   active: Signal<boolean>;
   selected: Signal<boolean>;
   hovered: Signal<boolean>;
+  hasChildren?: Observable<boolean>;
 }
 
 export interface SciStringCell {
@@ -259,13 +262,13 @@ export class SciHierarchicalTableDatasource<T> {
 
 export class SciPageableTableDatasource<T> {
 
-  constructor(public data: SciDataLoaderFn<T>) {
+  constructor(public data: SciTableDataLoaderFn<T>) {
   }
 }
 
 export class SciPageableHierarchicalTableDatasource<T> {
 
-  constructor(public root: SciDataLoaderFn<T>, public children: PageableChildProvider<T>) {
+  constructor(public root: SciTableDataLoaderFn<T>, public children: PageableChildProvider<T>) {
   }
 }
 
@@ -277,11 +280,11 @@ export function provideHierarchicalTableDatasource<T>(root: Signal<T[]>, childre
   return new SciHierarchicalTableDatasource(root, children);
 }
 
-export function providePageableTableDatasource<T>(loader: SciDataLoaderFn<T>): SciPageableTableDatasource<T> {
+export function providePageableTableDatasource<T>(loader: SciTableDataLoaderFn<T>): SciPageableTableDatasource<T> {
   return new SciPageableTableDatasource(loader);
 }
 
-export function providePageableHierarchicalTableDatasource<T>(loader: SciDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableHierarchicalTableDatasource<T> {
+export function providePageableHierarchicalTableDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableHierarchicalTableDatasource<T> {
   return new SciPageableHierarchicalTableDatasource(loader, children);
 }
 
@@ -291,14 +294,14 @@ export interface ChildProvider<T = unknown> {
 }
 
 export interface PageableChildProvider<T> {
-  getChildren(item: T, request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
-  hasChildren(item: T, request: Pick<SciTableRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
+  getChildren(item: T, request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
+  hasChildren(item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
 }
 
 export interface SciPageableTableDatasourceDescriptor<T> {
-  getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
+  getItems(request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
 }
 
 export interface SciPageableTreeDatasourceDescriptor<T> {
-  getItems(request: SciTableRequest): MaybeAsync<SciTableResponse<T>>;
+  getItems(request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
 }

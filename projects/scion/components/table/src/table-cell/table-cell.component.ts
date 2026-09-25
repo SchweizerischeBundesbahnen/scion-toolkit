@@ -10,7 +10,7 @@
 
 import {Component, computed, inject, input, Signal, TemplateRef} from '@angular/core';
 import {SciTableCellLike, SciTableRow} from '../table.model';
-import {NgTemplateOutlet} from '@angular/common';
+import {AsyncPipe, NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
@@ -25,12 +25,13 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
     '[attr.data-column]': 'cell().column.name',
     '[attr.data-padding]': '!cell().padding ? false : null',
     '[attr.part]': 'isSelected() ? null : partAttribute()', // prevent styling selected rows
-    '[attr.data-level]': 'index() === 0 ? row().level : 0',
+    '[attr.data-level]': 'row().index === 0 ? row().level : 0',
   },
   imports: [
     NgTemplateOutlet,
     SciIconComponent,
     SciComponentOutletDirective,
+    AsyncPipe,
 
   ],
 })
@@ -39,7 +40,6 @@ export class SciTableCellComponent<T> {
   public readonly cell = input.required<SciTableCellLike>();
   public readonly row = input.required<SciTableRow<T>>();
   public readonly isSelected = input<boolean>();
-  public readonly index = input<number>();
 
   private readonly _table = inject(ɵSCI_TABLE);
 

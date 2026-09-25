@@ -1,7 +1,7 @@
 @let cell = this.cell();
 
 
-@if (index() === 0 && (row().hasChildren | async)) {
+@if (row().index === 0 && (row().hasChildren | async)) {
   <button class="toggle-children e2e-toggle-children" (click)="toggleChildren($event)">
     @if (isExpanded()) {
       <sci-icon class="e2e-expanded">scion.chevron_down</sci-icon>

@@ -9,7 +9,7 @@
  */
 
 import {SciTree, SciTreeDescriptor} from './tree.model';
-import {SciTableDescriptor, ɵSciTable} from '@scion/components/table';
+import {SciTableDescriptor, ɵillegaldatasource, ɵSciTable} from '@scion/components/table';
 import {effect, signal, Signal, WritableSignal} from '@angular/core';
 import {Translatable} from '@scion/components/text';
 
@@ -28,7 +28,8 @@ export class ɵSciTree<T = unknown> implements SciTree<T> {
   constructor(descriptor: SciTreeDescriptor<T>) {
     this.header = signal(descriptor.header);
     const tableDescriptor: SciTableDescriptor<T> = {
-      datasource: descriptor.datasource,
+      datasource: ɵillegaldatasource(),
+      ɵdatasource: descriptor.datasource,
       filterable: !!descriptor.filterable,
       sortable: !!descriptor.sortable,
       resizable: false,
@@ -40,15 +41,14 @@ export class ɵSciTree<T = unknown> implements SciTree<T> {
       bufferSize: descriptor.bufferSize,
       pageSize: descriptor.pageSize,
       trackBy: descriptor.trackBy,
+      columns: table => table.addColumn({
+        name: 'column:tree',
+        header: this.header(),
+        value: descriptor.label,
+      })
     };
 
-    this._table = new ɵSciTable<T>(
-      table => table.addColumn({
-        name: 'column:tree',
-        label: this.header(),
-        value: descriptor.label,
-      }), tableDescriptor,
-    );
+    this._table = new ɵSciTable<T>(tableDescriptor);
 
     this.activeItem = this._table.activeItem;
     this.selectedItems = this._table.selectedItems;

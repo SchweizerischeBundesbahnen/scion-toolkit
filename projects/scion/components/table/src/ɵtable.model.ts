@@ -8,31 +8,22 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
-import {SciTableColumnFilter, SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
-import {SciTable, SciTableCellContext, SciTableCellLike, SciTableColumnLike, SciTableColumnType, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
+import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, Signal, signal, untracked, WritableSignal} from '@angular/core';
+import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
+import {ChildProvider, PageableChildProvider, SciHierarchicalTableDatasource, SciPageableHierarchicalTableDatasource, SciPageableTableDatasource, SciTable, SciTableCellContext, SciTableCellLike, SciTableColumnLike, SciTableColumnType, SciTableDatasource, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
-import {rangeInclusive} from './common';
-import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
-import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
-import {ChildProvider, PageableChildProvider, SciCellContext, SciCellLike, SciColumnLike, SciColumnType, SciHierarchicalTableDatasource, SciPageableHierarchicalTableDatasource, SciPageableTableDatasource, SciRow, SciRowActionFactoryFn, SciTable, SciTableDatasource, SciTableDescriptor} from './table.model';
-import {ɵSciTableFactory} from './ɵtable.factory';
 import {MaybeAsync, rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {SciTableColumnDescriptorLike} from './table-column.factory';
 import {coerceSignal, createDestroyableInjector, toLazyObservable} from '@scion/components/common';
-import {arrayDatasource} from './ɵtable-array-datasource';
-import {SciTableCache, SciTableCacheEntry} from './table.cache';
-import {SciColumnDescriptorLike} from './table.factory';
-import {coerceSignal} from '@scion/components/common';
-import {arrayDataSource} from './ɵarray-data-source';
-import {TableCache, TableCacheEntry, TableCacheRow} from './table.cache';
+import {SciTableCache, SciTableCacheEntry, SciTableCacheRow} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, switchMap, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
 import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {first, map, startWith} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
+import {arrayDatasource} from './ɵtable-array-datasource';
 
 export class ɵSciTable<T = unknown> implements SciTable<T> {
 
@@ -47,7 +38,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   private readonly _dataLoaderFn: SciTableDataLoaderFn<T>;
   private readonly _trackBy?: (item: T) => unknown;
   private readonly _childProvider?: ChildProvider<T> | PageableChildProvider<T>;
-  private readonly _childDataLoaderFn?: (item: T, request: SciTableRequest) => MaybeAsync<SciTableResponse<T>>;
+  private readonly _childDataLoaderFn?: (item: T, request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
 
   public readonly tableViewRef = signal<SciTableViewRef | undefined>(undefined);
   public readonly userSettings: WritableSignal<SciTableUserSettings>;
@@ -75,6 +66,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   private readonly _selectedItems = signal(new Map<unknown, T>());
 
   // Reset total count on criteria change to show skeletons instead of stale data while loading.
+  // TODO [rebase]
   // public readonly totalCount = linkedSignal({
   //   source: () => this.criteria(),
   //   computation: () => undefined as number | undefined,
@@ -134,21 +126,19 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       ...inject<SciTableRowBindingFactoryFn<T>[]>(SCI_TABLE_ROW_BINDING, {optional: true}) ?? [],
     ];
     this._trackBy = descriptor.trackBy;
-    // TODO [rebase]
-    // this._dataLoaderFn = isSignal(descriptor.ɵdatasource) ? arrayDatasource(descriptor.ɵdatasource, this.columns) : descriptor.ɵdatasource!;
 
-    if (isSignal(descriptor.datasource)) {
-      this._dataLoaderFn = arrayDataSource(descriptor.datasource, this.columns);
+    if (isSignal(descriptor.ɵdatasource)) {
+      this._dataLoaderFn = arrayDatasource(descriptor.ɵdatasource, this.columns);
     }
-    else if (descriptor.datasource instanceof SciTableDatasource) {
-      this._dataLoaderFn = arrayDataSource(descriptor.datasource.data, this.columns);
+    else if (descriptor.ɵdatasource instanceof SciTableDatasource) {
+      this._dataLoaderFn = arrayDatasource(descriptor.ɵdatasource.data, this.columns);
     }
-    else if (descriptor.datasource instanceof SciPageableTableDatasource) {
-      this._dataLoaderFn = descriptor.datasource.data;
+    else if (descriptor.ɵdatasource instanceof SciPageableTableDatasource) {
+      this._dataLoaderFn = descriptor.ɵdatasource.data;
     }
-    else if (descriptor.datasource instanceof SciHierarchicalTableDatasource) {
-      this._dataLoaderFn = arrayDataSource(descriptor.datasource.root, this.columns);
-      const childProvider: ChildProvider<T> = descriptor.datasource.children;
+    else if (descriptor.ɵdatasource instanceof SciHierarchicalTableDatasource) {
+      this._dataLoaderFn = arrayDatasource(descriptor.ɵdatasource.root, this.columns);
+      const childProvider: ChildProvider<T> = descriptor.ɵdatasource.children;
       this._childProvider = childProvider;
       this._childDataLoaderFn = (item, request) => {
         const children = childProvider.getChildren(item);
@@ -158,9 +148,9 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         };
       };
     }
-    else if (descriptor.datasource instanceof SciPageableHierarchicalTableDatasource) {
-      this._dataLoaderFn = descriptor.datasource.root;
-      const childProvider: PageableChildProvider<T> = descriptor.datasource.children;
+    else if (descriptor.ɵdatasource instanceof SciPageableHierarchicalTableDatasource) {
+      this._dataLoaderFn = descriptor.ɵdatasource.root;
+      const childProvider: PageableChildProvider<T> = descriptor.ɵdatasource.children;
       this._childProvider = childProvider;
       this._childDataLoaderFn = (item, request) => childProvider.getChildren(item, request);
     }
@@ -338,7 +328,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         level: 0,
         columnFilters,
         tableFilter,
-        sortCriteria
+        sortCriteria,
       }))
       .map(page => firstValueFrom(toLazyObservable(page.loading, {injector: this._injector}).pipe(first(loading => !loading), defaultIfEmpty(true)))));
   }
@@ -346,27 +336,26 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   /**
    * Loads the requested page from the cache or datasource and returns its loading state with a cancelation handler.
    */
-  private loadPage({cache, loader, page, pageSize, level, sortCriteria, columnFilters, tableFilter}: {cache: TableCache<T>; loader: SciDataLoaderFn<T>; page: number; pageSize: number; level: number; sortCriteria: SciTableSortCriterion[]; columnFilters: SciTableColumnFilter[]; tableFilter?: string}): {loading: Signal<boolean>; cancel: () => void} {
+  private loadPage({cache, loader, page, pageSize, level, sortCriteria, columnFilters, tableFilter}: {cache: SciTableCache<T>; loader: SciTableDataLoaderFn<T>; page: number; pageSize: number; level: number; sortCriteria: SciTableSortCriterion[]; columnFilters: SciTableColumnFilter[]; tableFilter?: string}): {loading: Signal<boolean>; cancel: () => void} {
     const pageStart = page * pageSize;
     const pageEnd = pageStart + pageSize;
     const cacheKey = `${pageStart}-${pageEnd}` as const;
 
     if (this._cache.has(cacheKey)) {
       return {
-        loading: this._cache.get(cacheKey)!.rows.isLoading,
-        cancel: () => this._cache.deleteIfLoading(cacheKey),
+        loading: cache.get(cacheKey)!.rows.isLoading,
+        cancel: () => cache.deleteIfLoading(cacheKey),
       };
     }
 
     const cacheEntryInjector = createDestroyableInjector({parent: this._injector});
 
-    // TODO [rebase]
-    const pageRowsById = new Map<unknown, TableCacheRow<T>>();
+    const pageRowsById = new Map<unknown, SciTableCacheRow<T>>();
     const cacheEntry: SciTableCacheEntry<T> = {
       rows: runInInjectionContext(cacheEntryInjector, () => {
         // Fetch data.
         const tableResponse$ = runSafe(
-          () => Observables.coerce(this._dataLoaderFn({
+          () => Observables.coerce(loader({
             start: pageStart,
             end: pageEnd,
             pageSize,
@@ -395,13 +384,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           switch (rows.status()) {
             case 'resolved': {
               // Update count only after rows resolve to prevent premature scroll invalidation.
-              this.totalCount.set(tableResponse.value()?.totalCount);
+              cache.setTotalCount(tableResponse.value()?.totalCount);
               break;
             }
             case 'error': {
               console.error(rows.error()!.cause);
               // Reset count to scroll to the top so the user sees the error.
-              this.totalCount.set(0);
+              cache.setTotalCount(0);
               break;
             }
           }
@@ -488,12 +477,15 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this._selectedItems.update(updateFn);
   }
 
-  private loadChildPage(parent: TableCacheRow<T>, page: number): void {
+  private loadChildPage(parent: SciTableCacheRow<T>, page: number): {loading: Signal<boolean>; cancel: () => void} {
     if (!this._childDataLoaderFn) {
-      return;
+      return {
+        loading: signal(false), cancel: () => {
+        },
+      };
     }
 
-    this.loadPage({
+    return this.loadPage({
       cache: parent.childrenCache,
       loader: request => this._childDataLoaderFn!(parent.item!, request),
       page,
@@ -507,7 +499,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
   public reset(): void {
     this._cache.clear();
-    this.totalCount.set(undefined);
+    this._cache.setTotalCount(undefined);
   }
 
   public dispose(): void {
@@ -531,7 +523,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
       // Add 1 to end of the range to make sure children of the last row are loaded if it's expanded.
       const pages = this._cache.findPagesToLoad(scrollRange.start, scrollRange.end + 1, this.pageSize);
-
 
       // TODO [rebase]
       // untracked(() => {
@@ -557,7 +548,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           return;
         }
 
-        this.loadPage({
+        const pageRef = this.loadPage({
           cache: page.cache,
           loader: this._dataLoaderFn,
           pageSize: this.pageSize,
@@ -613,13 +604,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     } as SciTableColumnLike<T>;
   }
 
-  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], pageStart: number, level: number, previousRows: Map<unknown, TableCacheRow<T>>): SciTableCacheRow<T>[] {
+  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], pageStart: number, level: number, previousRows: Map<unknown, SciTableCacheRow<T>>): SciTableCacheRow<T>[] {
     return items.map((item, i) => {
       const id = this.trackBy(item);
       const index = pageStart + i;
       const previousRow = previousRows.get(id);
 
-      const row: TableCacheRow<T> = {
+      const row: SciTableCacheRow<T> = {
         id,
         index,
         item,
@@ -628,8 +619,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         selected: computed(() => this.selectedIds().has(id)),
         hovered: computed(() => this.hoveredRow()?.index === index),
         level,
-        hasChildren: coerce(this._childProvider?.hasChildren(item, {columnFilters: this.filterCriteria(), tableFilter: this._tableFilter() ?? undefined}) ?? false),
-        childrenCache: previousRow?.childrenCache ?? new TableCache<T>(computed(() => this.expandedRows())),
+        hasChildren: Observables.coerce(this._childProvider?.hasChildren(item, {columnFilters: this.filterCriteria(), tableFilter: this._tableFilter() ?? undefined}) ?? false),
+        childrenCache: previousRow?.childrenCache ?? new SciTableCache<T>(computed(() => this.expandedRows())),
         bindings: coerceTableRowBindings(this._rowBindings ?? [], item, pageStart + i),
         cells: columns.map(column => {
           if (column.type === 'dynamic') {
@@ -647,7 +638,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
                 // padding: column.padding(item),
                 padding: true,
                 column,
-              } as SciCellLike);
+              } as SciTableCellLike);
             }
             else if (isTemplate) {
               return ({
@@ -657,7 +648,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
                 // padding: column.padding(item),
                 padding: true,
                 column,
-              } as SciCellLike);
+              } as SciTableCellLike);
             }
             else if (typeof valueType === 'string') {
               return ({
@@ -666,7 +657,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
                 // padding: column.padding(item),
                 padding: true,
                 column,
-              } as SciCellLike);
+              } as SciTableCellLike);
             }
             else if (typeof valueType === 'number') {
               return ({
@@ -675,7 +666,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
                 // padding: column.padding(item),
                 padding: true,
                 column,
-              } as SciCellLike);
+              } as SciTableCellLike);
             }
             else {
               return ({
@@ -684,7 +675,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
                 // padding: column.padding(item),
                 padding: true,
                 column,
-              } as SciCellLike);
+              } as SciTableCellLike);
             }
           }
           else {
@@ -695,7 +686,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
               type: column.type,
               padding: column.type !== 'component' && column.type !== 'template' ? true : column.padding,
               column,
-            } as SciCellLike);
+            } as SciTableCellLike);
           }
         }),
       };

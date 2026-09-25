@@ -1,8 +1,7 @@
-import {ChildProvider, PageableChildProvider, SciDataLoaderFn, SciHierarchicalTableDatasource, SciPageableHierarchicalTableDatasource, SciTableRowBinding} from '@scion/components/table';
+import {ChildProvider, PageableChildProvider, SciHierarchicalTableDatasource, SciPageableHierarchicalTableDatasource, SciTableDataLoaderFn, SciTableRowActionFactoryFn, SciTableRowBindingFactoryFn} from '@scion/components/table';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Signal, WritableSignal} from '@angular/core';
 import {Translatable} from '@scion/components/text';
-import {SciToolbarFactory} from '@scion/components/menu';
 
 export interface SciTreeDescriptor<T> {
   label: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
@@ -13,8 +12,8 @@ export interface SciTreeDescriptor<T> {
   selectable?: false | 'single' | 'multi';
   wrapHeader?: boolean;
   initialSort?: 'asc' | 'desc';
-  nodeActions?: SciNodeActionFactoryFn<T>;
-  nodeBindings?: SciTableRowBinding<T>[];
+  nodeActions?: SciTableRowActionFactoryFn<T>;
+  nodeBindings?: SciTableRowBindingFactoryFn<T>;
   /**
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
@@ -48,9 +47,11 @@ export interface SciTree<T> {
   filter(text: string | null): void;
 
   expand(id: unknown): void;
+
   collapse(id: unknown): void;
 
   expandAll(): void;
+
   collapseAll(): void;
 }
 
@@ -61,8 +62,6 @@ export function provideTreeDatasource<T>(root: Signal<T[]>, children: ChildProvi
   return new SciHierarchicalTableDatasource(root, children);
 }
 
-export function providePageableTreeDatasource<T>(loader: SciDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableTreeDataSource<T> {
+export function providePageableTreeDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableTreeDataSource<T> {
   return new SciPageableHierarchicalTableDatasource(loader, children);
 }
-
-export type SciNodeActionFactoryFn<T> = (item: T, toolbar: SciToolbarFactory) => void;

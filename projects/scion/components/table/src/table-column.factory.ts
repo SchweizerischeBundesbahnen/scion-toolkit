@@ -35,6 +35,12 @@ export interface SciTableColumnFactory<T> {
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
+
+  addColumn(value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this;
+
+  addColumn(label: Translatable, value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this;
+
+  addColumn(descriptor: SciColumnDescriptor<T>): this;
 }
 
 export interface SciTableColumnDescriptor {
@@ -51,6 +57,13 @@ export interface SciTableColumnDescriptor {
    * Min column width in px. Defaults to 100.
    */
   minWidth?: number;
+}
+
+export interface SciColumnDescriptor<T> extends SciTableColumnDescriptor {
+  value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
+  sortable?: boolean | {comparator: (a: SciTableCellContext<T, void | string | number | boolean>, b: SciTableCellContext<T, unknown>) => number};
+  filterable?: boolean | {matcher: (text: string, context: SciTableCellContext<T, unknown>) => boolean};
+  padding?: (item: T) => boolean;
 }
 
 export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
@@ -95,4 +108,4 @@ export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor
   padding?: boolean;
 }
 
-export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T> | SciColumnDescriptor<T>;

@@ -8,7 +8,6 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild} from '@angular/core';
-import {attributeBinding, provideTableRowBinding} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -20,6 +19,7 @@ import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {provideTreeDatasource, SciTree, SciTreeComponent, SciTreeNodeContext, tree} from '@scion/components/tree';
 import {noop} from 'rxjs';
+import {provideTableRowBinding} from '@scion/components/table';
 
 @Component({
   selector: 'app-tree-page',
@@ -43,11 +43,12 @@ import {noop} from 'rxjs';
     SciViewportComponent,
     SciTreeComponent,
   ],
+
   providers: [
-    provideTableRowBinding([
+    provideTableRowBinding((bindings, _item, index) => {
       // Add row index attribute to locate rows by dataset index.
-      attributeBinding((_item, index) => ({'data-row-index': index})),
-    ]),
+      bindings.addAttributeBinding('data-row-index', index);
+    }),
   ],
 })
 export default class SciTreePageComponent {
@@ -106,7 +107,7 @@ export default class SciTreePageComponent {
       })(),
       filterable: this.settingsForm.customFilter().value() ? {matcher: customFilter} : undefined,
       sortable: this.settingsForm.customSort().value() ? {comparator: customComparator} : undefined,
-      nodeActions: options.showNodeActions ? (product, toolbar) => toolbar
+      nodeActions: options.showNodeActions ? (toolbar, product) => toolbar
         .addToolbarButton({icon: 'scion.edit', onSelect: noop})
         .addToolbarButton({icon: 'scion.delete', onSelect: noop})
         .addToolbarButton({icon: 'scion.pin', onSelect: noop})
@@ -205,7 +206,7 @@ export default class SciTreePageComponent {
   }
 
   protected onExpandAll(): void {
-    this.tree()?.expandA();
+    this.tree()?.expandAll();
   }
 }
 

@@ -9,7 +9,7 @@
  */
 
 import {signal} from '@angular/core';
-import {TableCache, TableCacheRow} from './table.cache';
+import {TableCache, SciTableCacheRow} from './table.cache';
 
 describe('TableCache', () => {
   it('should project loaded rows at their flattened index', () => {
@@ -116,7 +116,7 @@ describe('TableCache', () => {
   });
 });
 
-function createRow(id: string, expanded: boolean = false): TableCacheRow<string> {
+function createRow(id: string, expanded: boolean = false): SciTableCacheRow<string> {
   return {
     id,
     item: id,

@@ -16,8 +16,8 @@ import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 
 import {provideTableStorage} from './table-storage';
 import {provideTableRowBinding} from './table-row-binding';
 import {SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, ɵillegaldatasource} from './table-datasource';
-import {providePageableTableDatasource} from './table.model';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
+import {providePageableTableDatasource} from './table.model';
 
 describe('Table', () => {
 
@@ -1391,11 +1391,13 @@ describe('Table', () => {
     it('should call data loader function in injection context', async () => {
       let injector: Injector | undefined;
 
+      const loaderFn: SciTableDataLoaderFn<any> = () => {
+        injector = inject(Injector);
+        return {items: [1, 2, 3], totalCount: 3};
+      };
+
       const {fixture} = createSciTableComponent(table({
-        ɵdatasource: () => {
-          injector = inject(Injector);
-          return {items: [1, 2, 3], totalCount: 3};
-        },
+        ɵdatasource: providePageableTableDatasource(loaderFn),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
@@ -1412,7 +1414,7 @@ describe('Table', () => {
       };
 
       const {fixture, model} = createSciTableComponent(table({
-        ɵdatasource: loaderFn,
+        ɵdatasource: providePageableTableDatasource(loaderFn),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
@@ -1425,11 +1427,13 @@ describe('Table', () => {
     it('should destroy previous data loader function injection context', async () => {
       const destroyRefs = new Array<DestroyRef>();
 
+      const loaderFn: SciTableDataLoaderFn<any> = () => {
+        destroyRefs.push(inject(DestroyRef));
+        return {items: [1, 2, 3], totalCount: 3};
+      };
+
       const {fixture, model} = createSciTableComponent(table({
-        ɵdatasource: () => {
-          destroyRefs.push(inject(DestroyRef));
-          return {items: [1, 2, 3], totalCount: 3};
-        },
+        ɵdatasource: providePageableTableDatasource(loaderFn),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
