@@ -294,6 +294,32 @@ jobs:
           release-commit-message-pattern: 'release\(ɵcomponents\): v(.*)'
           expected-version: ${{ needs.build-libs.outputs.components-internal-version }}
           git-tag: ɵcomponents-%v
+  icons-release-guard:
+    name: 'Should release @scion/icons?'
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+    needs:
+      - lint
+      - test
+      - e2e
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.tag-release-commit.outputs.is-release-commit }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: 'Reading package.json version of scion/icons'
+        uses: ./.github/actions/package-json
+        id: icons-package-json
+        with:
+          path: resources/scion-icons/package.json
+      - name: 'If release commit present, add release tag'
+        uses: SchweizerischeBundesbahnen/scion-toolkit/.github/actions/tag-release-commit@master
+        id: tag-release-commit
+        with:
+          release-commit-message-pattern: 'release\(icons\): v(.*)'
+          expected-version: ${{ steps.icons-package-json.outputs.version }}
+          git-tag: icons-%v
   deploy-components-app:
     name: 'Deploying components application'
     if: github.ref == 'refs/heads/master'
@@ -322,6 +348,24 @@ jobs:
           aliases: |
             components.scion.vercel.app,
             components-v%v.scion.vercel.app,
+  deploy-icon-explorer-app:
+    name: 'Deploying icon explorer application'
+    if: github.ref == 'refs/heads/master'
+    needs:
+      - lint
+      - test
+      - e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: 'Deploying icon explorer application to Vercel'
+        uses: ./.github/actions/vercel-deploy
+        with:
+          dist-folder: resources/scion-icons-explorer
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          org-id: ${{ secrets.VERCEL_ORG_ID }}
+          project-id: ${{ secrets.VERCEL_SCION_ICON_EXPLORER_APP_PROJECT_ID }}
+          aliases: icons.scion.vercel.app
   release-toolkit:
     name: 'Releasing @scion/toolkit'
     if: ${{ needs.toolkit-release-guard.outputs.should-release == 'true' }}
@@ -395,3 +439,19 @@ jobs:
           path: dist/scion/components.internal
       - name: 'Publishing @scion/components.internal to NPM'
         run: npm publish dist/scion/components.internal
+  release-icons:
+    name: 'Releasing @scion/icons'
+    if: ${{ needs.icons-release-guard.outputs.should-release == 'true' }}
+    permissions:
+      id-token: write # Required for OIDC. See also https://docs.npmjs.com/trusted-publishers
+      contents: write # Required for GitHub release.
+    needs:
+      - icons-release-guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 'Publishing @scion/icons to NPM'
+        run: npm publish ./resources/scion-icons # Use relative path so npm treats it as a directory, not a GitHub identifier (not needed if publishing from 'dist', which npm recognizes by default)

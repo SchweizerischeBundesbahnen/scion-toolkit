@@ -1,0 +1,82 @@
+=====================================================================
+ SCION Icon Font
+=====================================================================
+
+The SCION icon font `scion-icons` is managed using the IcoMoon app and published as `@scion/icons` to NPM.
+
+***
+Repository: https://github.com/SchweizerischeBundesbahnen/scion-toolkit
+IcoMoon: https://icomoon.io/app/#/projects
+NPM: https://www.npmjs.com/package/@scion/icons
+CDN: https://cdn.jsdelivr.net/npm/@scion/icons
+***
+
+Follow these steps to manage and update the icon font using IcoMoon:
+
+1.  Open the IcoMoon app at https://icomoon.io/app/#/projects.
+2.  Click 'Import Project' from '/resources/scion-icons/scion-icons.json'.
+3.  Open 'Selection' tab
+4.  Add new icons using the 'Import to Set' menu option.
+5.  Open the 'Generate Font' tab and configure ligatures.
+    DO NOT USE HYPHENS IN LIGATURES!
+6.  Download the generated font and unzip it.
+7.  Copy the files from the extracted 'fonts' folder to '/resources/scion-icons':
+    - scion-icons.svg
+    - scion-icons.ttf
+    - scion-icons.woff
+8.  Go to 'Manage Projects' in IcoMoon and download the updated 'scion-icons.json' definition file into '/resources/scion-icons'.
+9.  Increment the `$-version` variable in 'projects/scion/components/design/icons/_scion-icon-font.scss' to enable cache busting.
+10. Release '@scion/icons' NPM module. See 'CONTRIBUTING.md' checklist.
+11. The updated icons are available here:
+    - NPM: https://www.npmjs.com/package/@scion/icons
+    - CDN: https://cdn.jsdelivr.net/npm/@scion/icons
+    - SCION Icon Explorer: https://icons.scion.vercel.app
+
+
+=====================================================================
+ IMPORTANT: NPM Package @scion/icons
+=====================================================================
+- The content of this directory is published to NPM as `@scion/icons` module.
+- Files and folders starting with an underscore (`_`) are excluded from the published NPM module.
+
+
+=====================================================================
+ Testing Updated Icons Locally
+=====================================================================
+
+1. Change the font directory in styles.scss:
+   ```scss
+   @use '@scion/components' with (
+     $icon-font: (
+       directory: '/scion-icons'
+     )
+   );
+   ```
+
+2. Instruct Angular to copy the font files to the public assets folder.
+   ```json
+   "assets": [
+     {
+       "glob": "**/*",
+       "input": "resources/scion-icons",
+       "output": "/scion-icons"
+     }
+   ]
+   ```
+
+=====================================================================
+ Testing Icons from a GitHub branch
+=====================================================================
+
+1. Change the font directory in styles.scss:
+   ```scss
+   @use '@scion/components' with (
+     $icon-font: (
+       directory: 'https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/xxx/resources/scion-icons',
+     )
+   );
+   ```
+2. Update the Content Security Policy (CSP) in `angular.json` to allow loading the icon font files from your branch:
+   ```
+   Content-Security-Policy: font-src 'self' https://cdn.jsdelivr.net/gh/SchweizerischeBundesbahnen/scion-toolkit@issue/xxx/;
+   ```
