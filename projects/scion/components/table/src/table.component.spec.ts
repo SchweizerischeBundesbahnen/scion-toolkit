@@ -16,6 +16,7 @@ import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 
 import {provideTableStorage} from './table-storage';
 import {provideTableRowBinding} from './table-row-binding';
 import {SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, ɵillegaldatasource} from './table-datasource';
+import {providePageableTableDatasource} from './table.model';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
 
 describe('Table', () => {
@@ -677,7 +678,7 @@ describe('Table', () => {
       }));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         pageSize: 5,
         bufferSize: 0,
@@ -723,7 +724,7 @@ describe('Table', () => {
       const {fixture} = createSciTableComponent(sciTable<number>({
         bufferSize: 3,
         pageSize: 5,
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -778,7 +779,7 @@ describe('Table', () => {
       const {fixture} = createSciTableComponent(sciTable<number>({
         bufferSize: 3,
         pageSize: 50,
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -829,7 +830,7 @@ describe('Table', () => {
       });
 
       const {fixture, model} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         columns: table => table.addNumberColumn({
           name: 'column:1',
@@ -874,7 +875,7 @@ describe('Table', () => {
       });
 
       const {fixture, model} = createSciTableComponent<{id: string; name: string}>(sciTable({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -987,7 +988,7 @@ describe('Table', () => {
       });
 
       const {fixture, model} = createSciTableComponent<{id: string; name: string}>(sciTable({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -1042,7 +1043,7 @@ describe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent<number>(sciTable({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -1099,7 +1100,7 @@ describe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent<number>(sciTable({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -1140,7 +1141,7 @@ describe('Table', () => {
       );
 
       const {fixture} = createSciTableComponent(sciTable<string>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         columns: table => table.addStringColumn({
           name: 'column:1',
@@ -1185,7 +1186,7 @@ describe('Table', () => {
       const {fixture} = createSciTableComponent(sciTable<number>({
         pageSize: 10,
         bufferSize: 0,
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -1234,7 +1235,7 @@ describe('Table', () => {
       }));
 
       const {fixture, model} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         columns: table => table.addNumberColumn(item => item),
         injector: TestBed.inject(Injector),
@@ -1258,7 +1259,7 @@ describe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 50,
@@ -1310,7 +1311,7 @@ describe('Table', () => {
       });
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         bufferSize: 1,
         pageSize: 50,
@@ -1357,7 +1358,7 @@ describe('Table', () => {
       const loader = jasmine.createSpy().and.callFake((): Observable<SciTablePageResponse<number>> => NEVER);
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: providePageableTableDatasource(loader),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),

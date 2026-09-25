@@ -1,9 +1,17 @@
+@use '@scion/components/common';
+
 :host {
   display: inline-grid; // fit content to the cell
   position: relative; // positioning context for cell content
   border-inline: var(--ɵsci-table-cell-padding-inline) solid transparent; // use border instead of padding to maintain column gap if cell content overflows
   align-items: center; // center custom cell content vertically
   overflow: hidden; // prevent text and custom content to overflow cell
+  /* @formatter:off */
+  padding-left: calc(var(--sci-table-cell-padding-inline) + 2em * attr(data-level type(<number>), 0));
+  /* @formatter:on */
+  padding-right: var(--sci-table-cell-padding-inline);
+  /* TODO [rebase] */
+
 
   // Enable ellipsis on number and string columns.
   &:is([data-type="string"], [data-type="number"]) {
@@ -20,5 +28,26 @@
   &[data-padding="false"] {
     border-inline: none;
     align-items: stretch; // fill entire cell vertically
+  }
+
+  &:has(button.toggle-children) {
+    display: flex;
+    gap: .25em;
+    align-items: center;
+
+    > button.toggle-children {
+      --sci-button-background-color-hover: transparent;
+      --sci-button-background-color-active: transparent;
+
+      @include common.icon-button-element-states() {
+        border-radius: var(--sci-corner);
+        background-color: var(--ɵsci-table-row-action-background-color);
+        padding: 1px;
+
+        &:focus-visible {
+          outline: none;
+        }
+      }
+    }
   }
 }

@@ -10,6 +10,8 @@
 
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTableSortCriterion, SciTablePageRequest, SciTablePageResponse} from './table-datasource';
 import {SciTableColumnLike} from './table.model';
+import {SciColumnFilter, SciDataLoaderFn, SciSortCriterion, SciTableRequest, SciTableResponse} from './table-data-source';
+import {SciColumnLike} from './table.model';
 import {computed, linkedSignal, Signal} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
 import {toObservable} from '@angular/core/rxjs-interop';
@@ -25,10 +27,24 @@ export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableCo
     const resolvedColumns = columns();
     const items: MappedRow<T>[] = data().map(item => ({
       item,
-      cells: resolvedColumns.reduce((acc, column) => acc.set(column.name, {
-        column,
-        value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined,
-      }), new Map<`column:${string}`, MappedCell<T>>()),
+      cells: resolvedColumns.reduce((acc, column) => {
+        if (column.type === 'dynamic') {
+          const value = column.value(item);
+          const isComponent = typeof value === 'object' && 'component' in value;
+          const isTemplate = typeof value === 'object' && 'template' in value;
+
+          return acc.set(column.name, {
+            column,
+            value: isComponent || isTemplate ? undefined : coerceSignal(value)() as string | number | boolean,
+          });
+        }
+        else {
+          return acc.set(column.name, {
+            column,
+            value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined,
+          });
+        }
+      }, new Map<`column:${string}`, MappedCell<T>>()),
     }));
 
     return {
@@ -132,6 +148,8 @@ function columnFilter<T>(row: MappedRow<T>, filterCriteria: MappedCriterion<T, S
         case 'component':
         case 'template':
           return criterion.column.filter(criterion.text as string, {item: row.item, value: undefined});
+        case 'dynamic':
+          return criterion.column.filter(criterion.text as string, {item: row.item, value: value});
         default:
           return true;
       }

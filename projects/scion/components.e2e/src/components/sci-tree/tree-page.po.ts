@@ -9,31 +9,31 @@
  */
 
 import {Locator, Page} from '@playwright/test';
-import {SciTableColumnType} from '@scion/components/table';
+import {SciColumnType} from '@scion/components/table';
 
-const PATH = '/#/components/sci-table';
+const PATH = '/#/components/sci-tree';
 
-export class TablePagePO {
+export class TreePagePO {
 
   public readonly locator: Locator;
   public readonly properties: Locator;
-  public readonly tableState: Locator;
+  public readonly treeState: Locator;
   public readonly tabbar: Locator;
 
-  public readonly table: Locator;
+  public readonly tree: Locator;
   public readonly activeItemId: Locator;
   public readonly selectionCount: Locator;
   public readonly selection: Locator;
 
   constructor(public page: Page) {
-    this.locator = this.page.locator('app-table-page');
+    this.locator = this.page.locator('app-tree-page');
     this.properties = this.locator.locator('aside.e2e-properties');
-    this.tableState = this.properties.locator('section.e2e-table-state');
+    this.treeState = this.properties.locator('section.e2e-table-state');
     this.tabbar = this.properties.locator('sci-tabbar');
-    this.table = this.locator.locator('sci-table');
-    this.activeItemId = this.tableState.locator('output.e2e-active-item-id');
-    this.selectionCount = this.tableState.locator('output.e2e-selection-count');
-    this.selection = this.tableState.locator('output.e2e-selection');
+    this.tree = this.locator.locator('sci-tree');
+    this.activeItemId = this.treeState.locator('output.e2e-active-item-id');
+    this.selectionCount = this.treeState.locator('output.e2e-selection-count');
+    this.selection = this.treeState.locator('output.e2e-selection');
   }
 
   public async navigate(options?: {tableStorage?: true}): Promise<void> {
@@ -60,19 +60,14 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-sortable').setChecked(checked);
   }
 
-  public async setResizable(checked: boolean): Promise<void> {
-    await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-resizable').setChecked(checked);
-  }
-
   public async setSelectable(selectable: false | 'single' | 'multi'): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('select.e2e-selectable').selectOption(selectable === false ? 'false' : selectable);
   }
 
-  public async showHeader(showHeader: boolean): Promise<void> {
+  public async setHeader(header: string): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-show-header').setChecked(showHeader);
+    await this.properties.locator('input.e2e-header').fill(header);
   }
 
   public async wrapHeader(wrapHeader: boolean): Promise<void> {
@@ -110,11 +105,6 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-page-height').fill(`${height ?? ''}`);
   }
 
-  public async setHeaderHeight(headerHeight: number): Promise<void> {
-    await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-header-height').fill(headerHeight.toString());
-  }
-
   public async setRowHeight(rowHeight: number): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('input.e2e-row-height').fill(rowHeight.toString());
@@ -145,9 +135,9 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-row-actions').setChecked(checked);
   }
 
-  public async setTableCount(tableCount: number): Promise<void> {
+  public async setTreeCount(treeCount: number): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-table-count').fill(tableCount.toString());
+    await this.properties.locator('input.e2e-tree-count').fill(treeCount.toString());
   }
 
   public async setCustomRowStyling(customRowStyling: boolean): Promise<void> {
@@ -160,31 +150,6 @@ export class TablePagePO {
     await this.properties.locator(`input.e2e-column-visibility[data-column="${column}"]`).setChecked(visible);
   }
 
-  public async simulateDatasourceError(simulateError: boolean): Promise<void> {
-    await this.tabbar.locator('button.e2e-datasource').click();
-    await this.properties.locator('input.e2e-simulate-error').setChecked(simulateError);
-  }
-
-  public async addColumn(options: ColumnOptions): Promise<void> {
-    await this.tabbar.locator('button.e2e-columns').click();
-    await this.properties.locator('input.e2e-name').fill(options.name);
-    await this.properties.locator('input.e2e-header').fill(options.header ?? options.name);
-    await this.properties.locator('select.e2e-type').selectOption(options.type);
-    await this.properties.locator('input.e2e-resizable').setChecked(options.resizable ?? true);
-    await this.properties.locator('input.e2e-custom-sort').setChecked(!!options.extras?.customSort);
-    await this.properties.locator('input.e2e-custom-filter').setChecked(!!options.extras?.customFilter);
-    await this.properties.locator('input.e2e-width').fill(options.width ?? '');
-    await this.properties.locator('input.e2e-min-width').fill(`${options.minWidth ?? ''}`);
-
-    if (options.extras?.padding !== undefined) {
-      await this.properties.locator('input.e2e-padding').setChecked(options.extras.padding);
-    }
-    if (options.type === 'component') {
-      await this.properties.locator('select.e2e-component').selectOption(options.extras?.component ?? 'component:custom-column');
-    }
-    await this.properties.locator('button.e2e-column-add').click();
-  }
-
   public async setCssVariable(name: `--${string}`, value: string): Promise<void> {
     await this.locator.evaluate((page, variable: {name: string; value: string}): void => {
       page.style.setProperty(variable.name, variable.value);
@@ -192,17 +157,3 @@ export class TablePagePO {
   }
 }
 
-export interface ColumnOptions {
-  name: `column:${string}`;
-  header?: string;
-  type: SciTableColumnType;
-  resizable?: boolean;
-  width?: string;
-  minWidth?: number;
-  extras?: {
-    component?: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column';
-    padding?: boolean;
-    customFilter?: boolean;
-    customSort?: boolean;
-  };
-}

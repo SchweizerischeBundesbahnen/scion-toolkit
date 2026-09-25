@@ -80,6 +80,7 @@ export default class SciTablePageComponent {
     this.bindTableSettings();
   }
 
+  // TODO [rebase] providePageableTableDatasource
   private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
     return table({
       ɵdatasource: (() => {

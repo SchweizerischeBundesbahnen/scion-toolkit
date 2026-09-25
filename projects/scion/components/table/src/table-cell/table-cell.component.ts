@@ -5,40 +5,52 @@
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
- * SPDX-License-Identifier: EPL-2.0
+ *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, input, Signal, TemplateRef} from '@angular/core';
+import {Component, computed, inject, input, Signal, TemplateRef} from '@angular/core';
 import {SciTableCellLike, SciTableRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
+import {ɵSCI_TABLE} from '../ɵtable.model';
 
 @Component({
   selector: 'sci-table-cell',
   templateUrl: './table-cell.component.html',
   styleUrl: './table-cell.component.scss',
   host: {
-    '[attr.data-type]': 'cell().column.type',
+    '[attr.data-type]': 'cell().type',
     '[attr.data-column]': 'cell().column.name',
-    '[attr.data-padding]': '!cell().column.padding ? false : null',
-    '[attr.part]': 'row().selected() ? null : partAttribute()', // prevent styling selected rows
+    '[attr.data-padding]': '!cell().padding ? false : null',
+    '[attr.part]': 'isSelected() ? null : partAttribute()', // prevent styling selected rows
+    '[attr.data-level]': 'index() === 0 ? row().level : 0',
   },
   imports: [
     NgTemplateOutlet,
     SciIconComponent,
     SciComponentOutletDirective,
+
   ],
 })
 export class SciTableCellComponent<T> {
 
   public readonly cell = input.required<SciTableCellLike>();
   public readonly row = input.required<SciTableRow<T>>();
+  public readonly isSelected = input<boolean>();
+  public readonly index = input<number>();
+
+  private readonly _table = inject(ɵSCI_TABLE);
 
   protected readonly template = this.computeTemplate();
   protected readonly templateContext = this.computeTemplateContext();
   protected readonly partAttribute = this.computePartAttribute();
+  protected readonly isExpanded = computed(() => {
+    console.log('>>> this._table().expandedRows()', this._table().expandedRows());
+    console.log('>>> this.row().id', this.row().id);
+    return this._table().expandedRows().has(this.row().id);
+  });
 
   private computeTemplate(): Signal<TemplateRef<unknown> | null> {
     return computed(() => {
@@ -77,6 +89,21 @@ export class SciTableCellComponent<T> {
         ...Arrays.coerce(this.row().bindings?.part()),
         this.cell().column.name,
       ].join(' ');
+    });
+  }
+
+  protected toggleChildren(event: PointerEvent): void {
+    event.stopPropagation(); // Stop propagation to not select or activate row.
+    this._table().expandedRows.update(expandedRows => {
+      const id = this.row().id;
+      const newExpandedRows = new Set(expandedRows);
+      if (expandedRows.has(id)) {
+        newExpandedRows.delete(id);
+      }
+      else {
+        newExpandedRows.add(id);
+      }
+      return newExpandedRows;
     });
   }
 }

@@ -65,6 +65,8 @@ export default class SciTablePageComponent {
     const vehicleForm = this.vehicleForm;
     const tabbar = this._tabbar;
 
+
+    // TODO [rebase] providePageableTableDatasource
     return table({
       ɵdatasource: options.slowDatasource ? request => inject(VehicleService).getVehicles$(request, {slowDatasource: true}) : inject(VehicleService).vehicles,
       datasource: ɵillegaldatasource(),
