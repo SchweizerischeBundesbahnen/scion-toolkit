@@ -185,6 +185,7 @@ The scope should be the name of the NPM package affected by the change. Optional
 - `components/<module>`: If the change affects the `@scion/components/<module>` entry point.
 - `ɵcomponents`: If the change affects the `@scion/components.internal` NPM package. We use the Theta (`ɵ`) symbol to have a shorter scope name.
 - `ɵcomponents/<module>`: If the change affects the `@scion/components.internal/<module>` entry point.
+- `icons`: If the change affects the `@scion/icons` NPM package.
 - `components-app`: If the change affects the demo app for `@scion/components`.
 - `components-testing-app`: If the change affects the testing app for `@scion/components` or `@scion/components.internal`.
 
@@ -326,15 +327,6 @@ Instructions for releasing the `@scion/components` module.
    - Deploys following apps to Vercel:
       - https://components.scion.vercel.app
       - https://components-vX-X-X.scion.vercel.app
-6. Purge jsDelivr CDN cache if changed the SCION Icon font:
-   - Go to https://www.jsdelivr.com/tools/purge
-   - Go to https://www.jsdelivr.com/tools/purge
-   - Enter the URLs:
-       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.woff
-       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.ttf
-       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.svg
-       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.zip
-       - https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons-ligatures.md
 </details>
 
 <details>
@@ -351,6 +343,30 @@ Instructions for releasing the `@scion/components.internal` module.
    - `@scion/components.internal` is published to: https://www.npmjs.com/package/@scion/components.internal.
    - `Components App` is deployed to: https://components.scion.vercel.app and https://components-vX-X-X.scion.vercel.app.
 
+</details>
+
+<details>
+  <summary><strong>Release Checklist for @scion/icons</strong></summary>
+
+Instructions for releasing the `@scion/icons` module.
+
+1. Update `/resources/scion-icons/package.json` with the new version.
+2. Commit the updated `package.json` using the following commit message: `release(icons): vX.X.X`. Replace `X.X.X` with the current version. Later, when merging the branch into the master branch, a commit message of this format triggers the release action in our [GitHub Actions workflow][link-github-actions-workflow].
+3. Push the commit to the branch `release/icons-X.X.X` and submit a pull request to the master branch. Replace `X.X.X` with the current version.
+4. When merged into the master branch, the release action in our [GitHub Actions workflow][link-github-actions-workflow] does the following.
+   - Creates a Git release tag
+   - Publishes `@scion/icons` package to NPM (https://www.npmjs.com/package/@scion/icons)
+5. Purge the jsDelivr CDN cache:
+   - Go to https://www.jsdelivr.com/tools/purge
+   - Enter the following URLs:
+     - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.woff
+     - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.ttf
+     - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.svg
+     - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.json
+6. Verify that:
+    - `@scion/icons` is published to: https://www.npmjs.com/package/@scion/icons
+    - `@scion/icons` is available on CDN: https://cdn.jsdelivr.net/npm/@scion/icons
+    - `Icon Explorer App` is deployed to: https://icons.scion.vercel.app 
 </details>
 
 [link-github-actions-workflow]: https://github.com/SchweizerischeBundesbahnen/scion-toolkit/actions
