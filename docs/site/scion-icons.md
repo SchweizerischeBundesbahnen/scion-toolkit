@@ -12,7 +12,7 @@ Learn how to provide application-specific icons to SCION components.
 - [Icon Provider](#icon-provider)
 - [Icon Component](#icon-component)
 - [Material Icons](#material-icons)
-- [Built-In Icons](#built-in-icons)
+- [SCION Icons](#scion-icons)
   - [Content Security Policy (CSP)](#content-security-policy-csp)
   - [Self-Hosting the SCION Icon Font](#self-hosting-the-scion-icon-font)
   - [Loading Self-Hosted Icon Font Relative to Document Base](#loading-self-hosted-icon-font-relative-to-document-base)
@@ -31,7 +31,7 @@ import {ComponentType} from '@angular/cdk/portal';
 
 provideIconProvider((icon: string): ComponentType<unknown> | undefined => {
   if (icon.startsWith('scion.')) {
-    return undefined; // <--- Return `undefined` to not replace built-in icons
+    return undefined; // <--- Return `undefined` to not replace SCION icons
   }
   if (icon === 'your-icon') {
     return YourIconComponent; // `YourIconComponent` is illustrative
@@ -42,8 +42,8 @@ provideIconProvider((icon: string): ComponentType<unknown> | undefined => {
 
 > [!TIP]
 > - The function can call `inject` to get any required dependencies.
-> - The function can return `undefined` to not provide a requested icon, e.g., to use the default icon for built-in icons.
-> - Built-in icons start with the `scion.` prefix.
+> - The function can return `undefined` to not provide a requested icon, e.g., to use the built-in SCION icons.
+> - SCION icons start with the `scion.` prefix.
 
 > [!IMPORTANT]
 > Applications using the SCION Workbench should register an icon provider via configuration passed to the `provideWorkbench` function. Refer to the [workbench documentation][link-scion-workbench-icons] for details.
@@ -96,128 +96,89 @@ Example of including the Material icon font in the global `styles.scss`:
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..24,400,0&display=block');
 ```
 
-### Built-In Icons
-SCION has the following built-in icons:
-
-| Icon Key                | Usage                                     |
-|-------------------------|-------------------------------------------|
-| scion.add               | Add an item                               |
-| scion.add_large         | Add an item (large)                       |
-| scion.bin               | Bin symbol                                |
-| scion.checkmark         | Indicates a selected option               |
-| scion.chevron_down      | Chevron down symbol                       |
-| scion.chevron_left      | Chevron left symbol                       |
-| scion.chevron_right     | Chevron right symbol                      |
-| scion.chevron_up        | Chevron up symbol                         |
-| scion.clear             | Clear items                               |
-| scion.close             | Close a popover                           |
-| scion.collapse_all      | Collapse all items                        |
-| scion.copy              | Copy an item                              |
-| scion.delete            | Delete an item                            |
-| scion.dirty             | Indicates unsaved data                    |
-| scion.drag_handle       | Drag or move an item                      |
-| scion.duplicate         | Duplicate an item                         |
-| scion.edit              | Edit an item                              |
-| scion.emdash            | Em dash symbol                            |
-| scion.envelope          | Envelope symbol                           |
-| scion.envelope_closed   | Indicates a closed envelope               |
-| scion.envelope_opened   | Indicates an opened envelope              |
-| scion.expand_all        | Expand an item                            |
-| scion.external_link     | Open link in a new tab                    |
-| scion.filter            | Set or change a filter                    |
-| scion.find              | Find an item                              |
-| scion.folder            | Directory symbol                          |
-| scion.help              | Indicates help, support, or documentation |
-| scion.hide              | Hide a panel                              |
-| scion.magnifier         | Magnifier symbol                          |
-| scion.minimize          | Minimize a panel                          |
-| scion.minus             | Minus sign                                |
-| scion.modified          | Indicates modified data                   |
-| scion.more_horizontal   | Show a popover to the left or right       |
-| scion.more_vertical     | Show a popover above or below             |
-| scion.new               | Create an item                            |
-| scion.new_large         | Create an item (large)                    |
-| scion.paste             | Paste from clipboard                      |
-| scion.pen               | Pen symbol                                |
-| scion.pin               | Pin an item                               |
-| scion.pinned            | Indicates a pinned item                   |
-| scion.placeholder_frame | Placeholder symbol                        |
-| scion.placeholder_image | Placeholder symbol for an image           |
-| scion.plus              | Plus sign                                 |
-| scion.plus_large        | Plus sign (large)                         |
-| scion.remove            | Remove an item (x)                        |
-| scion.remove_minus      | Remove an item (-)                        |
-| scion.reset             | Reset a form                              |
-| scion.search            | Search for an item                        |
-| scion.sort_ascending    | Sort items in ascending order (A-Z, 0-9)  |
-| scion.sort_by           | Change sort order                         |
-| scion.sort_descending   | Sort items in descending order (Z-A, 9-0) |
-| scion.user              | User symbol                               |
-
-
-> [!NOTE]
-> The application can register an icon provider to replace built-in SCION icons.
-
-To use SCION icons, import the `@scion/components` SCSS module in the global `styles.scss`:
+### SCION Icons
+SCION requires icons from https://cdn.jsdelivr.net/npm/@scion/icons, loaded by importing the `@scion/components` SCSS module in `styles.scss`.
 
 ```scss
 @use '@scion/components';
 ```
 
-By default, SCION icons are loaded from the CDN https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons.
+SCION icon ligatures start with the `scion.` prefix. Applications can register an icon provider to replace the built-in SCION icons. 
+
+Refer to https://icons.scion.vercel.app for available SCION icons.
 
 ### Content Security Policy (CSP)
 Applications enforcing a Content Security Policy must whitelist the CDN using the `font-src` directive.
 
 ```
-Content-Security-Policy: font-src 'self' https://cdn.jsdelivr.net/npm/@scion/components/;
+Content-Security-Policy: font-src 'self' https://cdn.jsdelivr.net/npm/@scion/icons/;
 ```
 
 ### Self-Hosting the SCION Icon Font
-As an alternative to loading SCION icons from the CDN, the application can host the SCION icon font.
+As an alternative to loading SCION icons from the CDN, you can host the SCION icon font directly within your application.
 
-To host the icon font locally:
-1. Download the icon font from `https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.zip`.
-2. Extract the font files into the application's public assets folder (e.g., `/public/scion-icons`).
-3. Configure the path in the `@scion/components` SCSS module:
+To self-host the SCION icon font:
+
+1. Install the `@scion/icons` NPM module:
+   ```shell
+   npm install @scion/icons
+   ```
+2. Register the icon font files in `assets` in `angular.json`.
+   ```
+   "assets": [
+     {
+       "glob": "**/*",
+       "input": "node_modules/@scion/icons",
+       "output": "/scion-icons"
+     }
+   ]
+   ```
+3. Configure `@scion/components` SCSS module to load the icon font from `/scion-icons` (leading slash required):
    ```scss
    @use '@scion/components' with (
      $icon-font: (
-       directory: '/scion-icons' // must start with a leading slash
+       directory: '/scion-icons'
      )
    );
    ```
 
+As an alternative to steps 1 and 2, you can manually download the icon font files from the CDN and place them directly into your application's public assets folder (`public/scion-icons/`):
+- https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.ttf
+- https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.svg
+- https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.woff
+
 ### Loading Self-Hosted Icon Font Relative to Document Base
-Applications deployed in a subdirectory must configure the `@scion/components` SCSS module to load the self-hosted icon font relative to the document base URL (defined by the `<base>` HTML tag) and exclude the font files from the application build.
+Applications deployed in a subdirectory must configure the `@scion/components` SCSS module to load the self-hosted icon font relative to the document base URL (defined by the `<base>` HTML tag) and exclude the icon font files from the application build.
 
 Different steps are required depending on whether building the application with esbuild or Webpack.
 
 **Using `@angular/build:application` (esbuild, default since Angular 20)**
 
-1. Remove the leading slash from the directory configuration:
+1. Configure `@scion/components` SCSS module to load the icon font from `scion-icons` (no leading slash to be relative to the document base URL):
    ```scss
    @use '@scion/components' with (
      $icon-font: (
-       directory: 'scion-icons' // relative to document base URL
+       directory: 'scion-icons'
      )
    );
    ```
-2. Exclude the font files from the application build via `externalDependencies` in `angular.json`:
-   ```json
+2. Exclude the icon font files from the application build via `externalDependencies` in `angular.json`:
+   ```
    "externalDependencies": [
-     "scion-icons/scion-icons.*"
+     "scion-icons/*"
    ]
    ```
 
-**Using `@angular-devkit/build-angular:browser` (Webpack)**
+**Using `@angular-devkit/build-angular:browser` (Webpack, deprecated since Angular 22)**
 
-Configure the directory path with a leading caret (`^`), instructing Webpack to exclude the font files from the application build:
+Configure `@scion/components` SCSS module to load the icon font from `^scion-icons` (no leading slash to be relative to the document base URL):
+
+The leading caret (`^`) instructs Webpack to exclude the icon font files from the application build.
 
 ```scss
 @use '@scion/components' with (
   $icon-font: (
-    directory: '^scion-icons' // leading caret excludes the font files from Webpack build
+    directory: '^scion-icons'
   )
 );
 ```

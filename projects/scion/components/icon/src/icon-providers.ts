@@ -23,7 +23,7 @@ export class IconProviders {
   private readonly _iconProviders: SciIconProviderFn[] = [
     // Provide app-specific icons.
     ...inject(SCI_ICON_PROVIDER, {optional: true}) ?? [],
-    // Provide built-in icons.
+    // Provide SCION icons.
     scionIconProvider,
     // Provide material icons.
     materialIconProvider,

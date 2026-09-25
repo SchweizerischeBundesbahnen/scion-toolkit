@@ -212,11 +212,6 @@
                 "input": "apps/components/public"
               },
               {
-                "glob": "scion-icons.*",
-                "input": "resources/scion-icons",
-                "output": "/scion-icons"
-              },
-              {
                 "glob": "favicon.ico",
                 "input": "resources/branding",
                 "output": "/"
@@ -266,7 +261,7 @@
               "buildTarget": "components-app:build:development",
               "port": 7500,
               "headers": {
-                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/@scion/icons/; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
               }
             }
           },
@@ -307,11 +302,6 @@
                 "input": "apps/components-testing-app/public"
               },
               {
-                "glob": "scion-icons.*",
-                "input": "resources/scion-icons",
-                "output": "/scion-icons"
-              },
-              {
                 "glob": "favicon.ico",
                 "input": "resources/branding",
                 "output": "/"
@@ -347,11 +337,18 @@
               "outputHashing": "all",
               "outputPath": "dist/components-testing-app-icon-basehref/subdir",
               "baseHref": "/subdir/browser/",
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "resources/scion-icons",
+                  "output": "/scion-icons"
+                }
+              ],
               "styles": [
                 "apps/components-testing-app/src/styles-base-href-esbuild.scss"
               ],
               "externalDependencies": [
-                "scion-icons/scion-icons.*"
+                "scion-icons/*"
               ]
             },
             "development": {
@@ -364,11 +361,18 @@
               "extractLicenses": false,
               "sourceMap": true,
               "baseHref": "/subdir/browser/",
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "resources/scion-icons",
+                  "output": "/scion-icons"
+                }
+              ],
               "styles": [
                 "apps/components-testing-app/src/styles-base-href-esbuild.scss"
               ],
               "externalDependencies": [
-                "scion-icons/scion-icons.*"
+                "scion-icons/*"
               ]
             }
           },
@@ -389,7 +393,7 @@
                 "input": "apps/components-testing-app/public"
               },
               {
-                "glob": "scion-icons.*",
+                "glob": "**/*",
                 "input": "resources/scion-icons",
                 "output": "/scion-icons"
               },
@@ -433,7 +437,7 @@
             "development": {
               "buildTarget": "components-testing-app:build:development",
               "headers": {
-                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/@scion/icons/; style-src 'self' https://fonts.googleapis.com 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
               }
             },
             "development-icon-basehref": {

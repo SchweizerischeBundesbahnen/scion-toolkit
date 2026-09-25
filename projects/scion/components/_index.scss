@@ -89,61 +89,80 @@
  * ## SCION Icon Font
  * This module provides the standard icon font used by SCION components.
  *
- * By default, SCION icons are loaded from the CDN: https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons.
+ * By default, SCION icons are loaded from the CDN: https://cdn.jsdelivr.net/npm/@scion/icons.
  *
  * ### Content Security Policy (CSP)
  * Applications enforcing a Content Security Policy must whitelist the CDN using the `font-src` directive.
  *
  * ```
- * Content-Security-Policy: font-src 'self' https://cdn.jsdelivr.net/npm/@scion/components/;
+ * Content-Security-Policy: font-src 'self' https://cdn.jsdelivr.net/npm/@scion/icons/;
  * ```
  *
  * ### Self-Hosting the SCION Icon Font
- * As an alternative to loading SCION icons from the CDN, the application can host the SCION icon font.
+ * As an alternative to loading SCION icons from the CDN, you can host the SCION icon font directly within your application.
  *
- * To host the icon font locally:
- * 1. Download the icon font from `https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons/scion-icons.zip`.
- * 2. Extract the font files into the application's public assets folder (e.g., `/public/scion-icons`).
- * 3. Configure the path in the `@scion/components` SCSS module:
+ * To self-host the SCION icon font:
+ *
+ * 1. Install the `@scion/icons` NPM module:
+ *    ```
+ *    npm install @scion/icons
+ *    ```
+ * 2. Register the icon font files in `assets` in `angular.json`.
+ *    ```
+ *    "assets": [
+ *      {
+ *        "glob": "**\/*",
+ *        "input": "node_modules/@scion/icons",
+ *        "output": "/scion-icons"
+ *      }
+ *    ]
+ *    ```
+ * 3. Configure `@scion/components` SCSS module to load the icon font from `/scion-icons` (leading slash required):
  *    ```scss
  *    @use '@scion/components' with (
  *      $icon-font: (
- *        directory: '/scion-icons' // must start with a leading slash
+ *        directory: '/scion-icons'
  *      )
  *    );
  *    ```
  *
+ * As an alternative to steps 1 and 2, you can manually download the icon font files from the CDN and place them directly into your application's public assets folder (`public/scion-icons/`):
+ * - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.ttf
+ * - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.svg
+ * - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.woff
+ *
  * ### Loading Self-Hosted Icon Font Relative to Document Base
- * Applications deployed in a subdirectory must configure the `@scion/components` SCSS module to load the self-hosted icon font relative to the document base URL (defined by the `<base>` HTML tag)
- * and exclude the font files from the application build.
+ * Applications deployed in a subdirectory must configure the `@scion/components` SCSS module to load the self-hosted icon font relative to the document base URL (defined by the `<base>` HTML tag) and exclude the icon font files from the application build.
  *
  * Different steps are required depending on whether building the application with esbuild or Webpack.
  *
  * **Using `@angular/build:application` (esbuild, default since Angular 20)**
  *
- * 1. Remove the leading slash from the directory configuration:
+ * 1. Configure `@scion/components` SCSS module to load the icon font from `scion-icons` (no leading slash to be relative to the document base URL):
  *    ```scss
  *    @use '@scion/components' with (
  *      $icon-font: (
- *        directory: 'scion-icons' // relative to document base URL
+ *        directory: 'scion-icons'
  *      )
  *    );
  *    ```
- * 2. Exclude the font files from the application build via `externalDependencies` in `angular.json`:
- *    ```json
+ * 2. Exclude the icon font files from the application build via `externalDependencies` in `angular.json`:
+ *    ```
  *    "externalDependencies": [
- *      "scion-icons/scion-icons.*"
+ *      "scion-icons/*"
  *    ]
  *    ```
  *
- * **Using `@angular-devkit/build-angular:browser` (Webpack)**
+ * **Using `@angular-devkit/build-angular:browser` (Webpack, deprecated since Angular 22)**
  *
- * Configure the directory path with a leading caret (`^`), instructing Webpack to exclude the font files from the application build:
+ * Configure `@scion/components` SCSS module to load the icon font from `^scion-icons` (no leading slash to be relative to the document base URL):
+ *
+ * The leading caret (`^`) instructs Webpack to exclude the icon font files from the application build.
  *
  * ```scss
  * @use '@scion/components' with (
  *   $icon-font: (
- *     directory: '^scion-icons' // leading caret excludes the font files from Webpack build
+ *     directory: '^scion-icons'
  *   )
  * );
  * ```
