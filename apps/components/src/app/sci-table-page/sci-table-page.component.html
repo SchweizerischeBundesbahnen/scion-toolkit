@@ -59,6 +59,10 @@
           <sci-form-field label="Slow Datasource">
             <input [formField]="settingsForm.slowDatasource" type="checkbox"/>
           </sci-form-field>
+
+          <sci-form-field label="Group by Operator">
+            <input [formField]="settingsForm.groupByOperator" type="checkbox"/>
+          </sci-form-field>
         </section>
       </ng-template>
 
@@ -200,7 +204,7 @@
       <header #header>Table State</header>
 
       <sci-form-field label="Active Id">
-        {{table.activeItem()?.id ?? '-'}}
+        {{activeVehicleId() ?? '-'}}
       </sci-form-field>
 
       <sci-form-field label="Selection Count">

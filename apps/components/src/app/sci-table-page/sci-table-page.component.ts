@@ -8,11 +8,11 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
-import {SciTable, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideHierarchicalTableDatasource, providePageableHierarchicalTableDatasource, providePageableTableDatasource, SciTable, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
 import {DatePipe} from '@angular/common';
-import {createDestroyableInjector} from '@scion/components/common';
+import {createDestroyableInjector, SciComponentDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {FieldValidationDirective} from '../common/field-validation.directive';
@@ -21,7 +21,9 @@ import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {VehicleService} from './vehicle.service';
-import {Vehicle} from './vehicle.model';
+import {isVehicle, Vehicle, VehicleOrOperator} from './vehicle.model';
+import {SciTableDataSource} from '../../../../../projects/scion/components/table/src/table.model';
+import {EMPTY} from 'rxjs';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 
 @Component({
@@ -61,159 +63,191 @@ export default class SciTablePageComponent {
     const selectable = this.table()?.selectable();
     return selectable === false ? 'false' : selectable;
   });
-  protected readonly selection = computed(() => this.table()?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.table()?.selectedItems().filter(isVehicle).map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly activeVehicleId = computed(() => {
+    const item = this.table()?.activeItem();
+    return item && isVehicle(item) ? item.id : undefined;
+  });
 
-  private createTable(options: {slowDatasource: boolean}): SciTable<Vehicle> {
+  private getDataSource(vehicleService: VehicleService, options: {slowDatasource: boolean; groupByOperator: boolean}): Signal<VehicleOrOperator[]> | SciTableDataSource<VehicleOrOperator> {
+    if (options.groupByOperator) {
+      if (options.slowDatasource) {
+        return providePageableHierarchicalTableDatasource<VehicleOrOperator>(request => vehicleService.getGroupedVehicles$(request), {
+          getChildren: (item, request) => !isVehicle(item) ? vehicleService.getOperatorChildren$(item, request) : EMPTY,
+          hasChildren: item => !isVehicle(item),
+        });
+      }
+
+      return provideHierarchicalTableDatasource<VehicleOrOperator>(vehicleService.operators, {
+        getChildren: item => !isVehicle(item) ? vehicleService.vehiclesByOperator().get(item.operator) ?? [] : [],
+        hasChildren: item => !isVehicle(item),
+      });
+    }
+
+    if (options.slowDatasource) {
+      return providePageableTableDatasource(request => vehicleService.getVehicles$(request));
+    }
+
+    return vehicleService.vehicles;
+  }
+
+  private createTable(options: {slowDatasource: boolean; groupByOperator: boolean}): SciTable<VehicleOrOperator> {
     const vehicleService = inject(VehicleService);
     const vehicleForm = this.vehicleForm;
     const tabbar = this._tabbar;
 
     return table({
-      ɵdatasource: options.slowDatasource ? request => inject(VehicleService).getVehicles$(request, {slowDatasource: true}) : inject(VehicleService).vehicles,
+      ɵdatasource: this.getDataSource(vehicleService, options),
       datasource: ɵillegaldatasource(),
       rowBindings: (bindings, _vehicle, index) => {
         if (this.settingsForm.showZebraStriping().value()) {
           bindings.addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd');
         }
       },
-      trackBy: vehicle => vehicle.id,
-      rowActions: (toolbar, vehicle) => addRowActions(toolbar, vehicle),
+      trackBy: item => isVehicle(item) ? item.id : `operator:${item.operator}`,
+      rowActions: (toolbar, item) => isVehicle(item) && addRowActions(toolbar, item),
       columns: table => {
         const visibleColumns = this.settingsForm.visibleColumns().value();
 
-        visibleColumns.id && table.addNumberColumn({
+        options.groupByOperator && table.addStringColumn({
+          name: 'column:operator',
+          header: 'RU / Operator',
+          value: item => item.operator,
+        });
+
+        visibleColumns.id && table.addColumn({
           name: 'column:id',
           header: 'ID',
-          value: vehicle => vehicle.id,
+          value: vehicle => isVehicle(vehicle) ? vehicle.id : '',
           width: '100px',
         });
 
         visibleColumns.vehicleId && table.addStringColumn({
           name: 'column:vehicleId',
           header: 'Vehicle ID',
-          value: vehicle => vehicle.vehicleId,
+          value: item => isVehicle(item) ? item.vehicleId : '',
         });
         visibleColumns.classType && table.addStringColumn({
           name: 'column:classType',
           header: 'Class / Series',
-          value: vehicle => vehicle.classType,
+          value: item => isVehicle(item) ? item.classType : '',
         });
-        visibleColumns.operator && table.addStringColumn({
+        (visibleColumns.operator && !options.groupByOperator) && table.addStringColumn({
           name: 'column:operator',
           header: 'RU / Operator',
-          value: vehicle => vehicle.operator,
+          value: item => item.operator,
         });
         visibleColumns.depot && table.addStringColumn({
           name: 'column:depot',
           header: 'Depot / Maintenance',
-          value: vehicle => vehicle.depot,
+          value: item => isVehicle(item) ? item.depot : '',
         });
         visibleColumns.status && table.addStringColumn({
           name: 'column:status',
           header: 'Status',
-          value: vehicle => vehicle.status,
+          value: item => isVehicle(item) ? item.status : '',
           width: '150px',
         });
         visibleColumns.tps && table.addStringColumn({
           name: 'column:tps',
           header: 'Train Protection',
-          value: vehicle => vehicle.tps,
+          value: item => isVehicle(item) ? item.tps : '',
           width: '150px',
         });
-        visibleColumns.operatingHours && table.addNumberColumn({
+        visibleColumns.operatingHours && table.addColumn({
           name: 'column:operatingHours',
           header: 'Operating Hours (h)',
-          value: vehicle => vehicle.operatingHours,
+          value: vehicle => isVehicle(vehicle) ? vehicle.operatingHours : '',
           width: '175px',
         });
-        visibleColumns.mileage && table.addNumberColumn({
+        visibleColumns.mileage && table.addColumn({
           name: 'column:mileage',
           header: 'Mileage (km)',
-          value: vehicle => vehicle.mileageKm,
+          value: vehicle => isVehicle(vehicle) ? vehicle.mileageKm : '',
           width: '150px',
         });
-        visibleColumns.maxSpeed && table.addNumberColumn({
+        visibleColumns.maxSpeed && table.addColumn({
           name: 'column:maxSpeed',
           header: 'Max Speed (km/h)',
-          value: vehicle => vehicle.maxSpeedKmh,
+          value: vehicleOrOperator => isVehicle(vehicleOrOperator) ? vehicleOrOperator.maxSpeedKmh : vehicleOrOperator.averageMaxSpeedKmh,
           width: '175px',
         });
-        visibleColumns.serviceWeight && table.addNumberColumn({
+        visibleColumns.serviceWeight && table.addColumn({
           name: 'column:serviceWeight',
           header: 'Service Weight (t)',
-          value: vehicle => vehicle.serviceWeightT,
+          value: vehicle => isVehicle(vehicle) ? vehicle.serviceWeightT : '',
           width: '175px',
         });
-        visibleColumns.seatingCapacity && table.addNumberColumn({
+        visibleColumns.seatingCapacity && table.addColumn({
           name: 'column:seatingCapacity',
           header: 'Seats',
-          value: vehicle => vehicle.seatingCapacity,
+          value: vehicle => isVehicle(vehicle) ? vehicle.seatingCapacity : '',
           width: '100px',
         });
-        visibleColumns.buildYear && table.addNumberColumn({
+        visibleColumns.buildYear && table.addColumn({
           name: 'column:buildYear',
           header: 'Year Built',
-          value: vehicle => vehicle.buildYear,
+          value: vehicle => isVehicle(vehicle) ? vehicle.buildYear : '',
           width: '125px',
         });
-        visibleColumns.isOperational && table.addBooleanColumn({
+        visibleColumns.isOperational && table.addColumn({
           name: 'column:isOperational',
           header: 'Operational',
-          value: vehicle => vehicle.status === 'In Operation',
+          value: vehicle => isVehicle(vehicle) ? vehicle.status === 'In Operation' : '',
           width: '120px',
         });
-        visibleColumns.hasWifi && table.addBooleanColumn({
+        visibleColumns.hasWifi && table.addColumn({
           name: 'column:hasWifi',
           header: 'Wi-Fi',
-          value: vehicle => vehicle.hasWifi,
+          value: vehicle => isVehicle(vehicle) ? vehicle.hasWifi : '',
           width: '100px',
         });
-        visibleColumns.isMultiSystem && table.addBooleanColumn({
+        visibleColumns.isMultiSystem && table.addColumn({
           name: 'column:isMultiSystem',
           header: 'Multi-System',
-          value: vehicle => vehicle.isMultiSystem,
+          value: vehicle => isVehicle(vehicle) ? vehicle.isMultiSystem : '',
           width: '150px',
         });
-        visibleColumns.isTpsActive && table.addBooleanColumn({
+        visibleColumns.isTpsActive && table.addColumn({
           name: 'column:isTpsActive',
           header: 'TPS Active',
-          value: vehicle => vehicle.isTpsActive,
+          value: vehicle => isVehicle(vehicle) ? vehicle.isTpsActive : '',
           width: '110px',
         });
-        visibleColumns.isOverhaulDue && table.addBooleanColumn({
+        visibleColumns.isOverhaulDue && table.addColumn({
           name: 'column:isOverhaulDue',
           header: 'Overhaul Due',
-          value: vehicle => vehicle.isOverhaulDue,
+          value: vehicle => isVehicle(vehicle) ? vehicle.isOverhaulDue : '',
           width: '120px',
         });
-        visibleColumns.isNarrowGauge && table.addBooleanColumn({
+        visibleColumns.isNarrowGauge && table.addColumn({
           name: 'column:isNarrowGauge',
           header: 'Narrow Gauge',
-          value: vehicle => vehicle.isNarrowGauge,
+          value: vehicle => isVehicle(vehicle) ? vehicle.isNarrowGauge : '',
           width: '150px',
         });
-        visibleColumns.lastR2Expiry && table.addComponentColumn({
-          name: 'column:lastR2Expiry',
-          header: 'Last R2 Expiry',
-          sortable: untracked(() => this.settingsForm.slowDatasource().value()) ? true : {comparator: (a, b) => new Date(a.item.lastR2Expiry).getTime() - new Date(b.item.lastR2Expiry).getTime()},
-          filterable: untracked(() => this.settingsForm.slowDatasource().value()) ? true : {matcher: (filterText, item) => item.item.lastR2Expiry.includes(filterText)},
-          component: (vehicle: Vehicle) => ({
+        visibleColumns.lastR2Expiry && addDateColumn('column:lastR2Expiry', 'Last R2 Expiry', vehicle => vehicle.lastR2Expiry);
+        visibleColumns.nextRevision && addDateColumn('column:nextRevision', 'Next Revision', vehicle => vehicle.nextRevision);
+
+        function addDateColumn(name: `column:${string}`, header: string, value: (vehicle: Vehicle) => string): void {
+          const component = (vehicle: Vehicle): SciComponentDescriptor => ({
             component: DateCellComponent,
-            bindings: [inputBinding('date', () => new Date(vehicle.lastR2Expiry))],
-          }),
-          width: '150px',
-        });
-        visibleColumns.nextRevision && table.addComponentColumn({
-          name: 'column:nextRevision',
-          header: 'Next Revision',
-          sortable: untracked(() => this.settingsForm.slowDatasource().value()) ? true : {comparator: (a, b) => new Date(a.item.nextRevision).getTime() - new Date(b.item.nextRevision).getTime()},
-          filterable: untracked(() => this.settingsForm.slowDatasource().value()) ? true : {matcher: (filterText, item) => item.item.nextRevision.includes(filterText)},
-          component: (vehicle: Vehicle) => ({
-            component: DateCellComponent,
-            bindings: [inputBinding('date', () => new Date(vehicle.nextRevision))],
-          }),
-          width: '150px',
-        });
+            bindings: [inputBinding('date', () => new Date(value(vehicle)))],
+          });
+          if (options.groupByOperator) {
+            table.addColumn({name, header, value: item => isVehicle(item) ? component(item) : '', sortable: true, filterable: true, width: '150px'});
+          }
+          else {
+            table.addComponentColumn({
+              name,
+              header,
+              sortable: options.slowDatasource ? true : {comparator: (a, b) => new Date(value(a.item as Vehicle)).getTime() - new Date(value(b.item as Vehicle)).getTime()},
+              filterable: options.slowDatasource ? true : {matcher: (filterText, item) => value(item.item as Vehicle).includes(filterText)},
+              component: item => component(item as Vehicle),
+              width: '150px',
+            });
+          }
+        }
       },
     });
 
@@ -267,16 +301,17 @@ export default class SciTablePageComponent {
     }
   }
 
-  private computeTable(): Signal<SciTable<Vehicle> | undefined> {
-    const table = signal<SciTable<Vehicle> | undefined>(undefined);
+  private computeTable(): Signal<SciTable<VehicleOrOperator> | undefined> {
+    const table = signal<SciTable<VehicleOrOperator> | undefined>(undefined);
 
     effect(onCleanup => {
       const slowDatasource = this.settingsForm.slowDatasource().value();
+      const groupByOperator = this.settingsForm.groupByOperator().value();
 
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        table.set(runInInjectionContext(injector, () => this.createTable({slowDatasource: slowDatasource})));
+        table.set(runInInjectionContext(injector, () => this.createTable({slowDatasource, groupByOperator})));
       });
     });
 
@@ -288,6 +323,7 @@ export default class SciTablePageComponent {
       showGridlines: false,
       showZebraStriping: false,
       slowDatasource: false,
+      groupByOperator: false,
       visibleColumns: {
         id: true,
         vehicleId: true,
@@ -389,6 +425,7 @@ interface SettingsForm {
   showGridlines: boolean;
   showZebraStriping: boolean;
   slowDatasource: boolean;
+  groupByOperator: boolean;
   visibleColumns: {
     id: boolean;
     vehicleId: boolean;

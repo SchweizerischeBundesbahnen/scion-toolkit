@@ -53,10 +53,24 @@ class Dataset<T> {
   constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
     const dataset = computed((): DatasetRow<T>[] => data().map(item => ({
       item,
-      cells: columns().reduce((cells, column) => cells.set(column.name, {
-        column: column as SciTableColumn,
-        value: 'value' in column ? coerceSignal(untracked(() => column.value(item)), {coerceUndefined: true})() : undefined,
-      }), new Map<`column:${string}`, DatasetCell>()),
+      cells: columns().reduce((cells, column) => {
+        const value = 'value' in column ? untracked(() => column.value(item)) : undefined;
+
+        if (column.type === 'dynamic') {
+          const isComponent = typeof value === 'object' && 'component' in value;
+          const isTemplate = typeof value === 'object' && 'template' in value;
+
+          return cells.set(column.name, {
+            column: column as SciTableColumn,
+            value: isComponent || isTemplate ? undefined : coerceSignal(value, {coerceUndefined: true})(),
+          });
+        }
+
+        return cells.set(column.name, {
+          column: column as SciTableColumn,
+          value: 'value' in column ? coerceSignal(untracked(() => column.value(item)), {coerceUndefined: true})() : undefined,
+        });
+      }, new Map<`column:${string}`, DatasetCell>()),
     })));
 
     // Memoize filtered/sorted view; recomputes only when dataset or criteria change, not when scrolling through the view, as sorting is an expensive operation.

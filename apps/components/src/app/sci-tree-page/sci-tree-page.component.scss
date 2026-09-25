@@ -1,0 +1,58 @@
+:host {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1em;
+
+  > main {
+    display: flex;
+    flex-direction: column;
+
+    > sci-tree {
+      flex: 1 1 0;
+    }
+  }
+
+  > aside {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1em;
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+    padding: 1em;
+
+    > sci-tabbar {
+      section, form {
+        display: flex;
+        flex-direction: column;
+        gap: .5em;
+      }
+
+      div.button-bar {
+        display: flex;
+        gap: .5em;
+        justify-content: flex-end;
+      }
+    }
+
+    > section.tree-state {
+      display: flex;
+      flex-direction: column;
+      gap: .5em;
+      border: 1px solid var(--sci-color-border);
+      border-radius: var(--sci-corner);
+      padding: 1em;
+      background-color: var(--sci-color-background-primary);
+
+      > header {
+        margin-bottom: 1em;
+        font-weight: bold;
+      }
+
+      sci-viewport {
+        max-height: 100px;
+      }
+    }
+  }
+}

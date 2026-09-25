@@ -35,12 +35,22 @@ export interface SciTableColumnFactory<T> {
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
+
+  addColumn(value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this;
+
+  addColumn(label: Translatable, value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor): this;
+
+  addColumn(descriptor: SciColumnDescriptor<T>): this;
 }
 
 export interface SciTableColumnDescriptor {
   name?: `column:${string}`;
   header?: Translatable;
   resizable?: boolean;
+  /**
+   * Shows the expand/collapse control in this column for hierarchical rows. Defaults to `true` for the first column.
+   */
+  showExpansionControl?: boolean;
   /**
    * Preferred column size.
    * Value which can be used inside `grid-template-columns` definition. Defaults to 1fr.
@@ -51,6 +61,13 @@ export interface SciTableColumnDescriptor {
    * Min column width in px. Defaults to 100.
    */
   minWidth?: number;
+}
+
+export interface SciColumnDescriptor<T> extends SciTableColumnDescriptor {
+  value: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
+  sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T>};
+  filterable?: boolean | {matcher: SciTableColumnFilterMatcherFn<T>};
+  padding?: (item: T) => boolean;
 }
 
 export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
@@ -98,7 +115,7 @@ export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor
 /**
  * Represents a {@link SciStringColumnDescriptor}, {@link SciNumberColumnDescriptor}, {@link SciBooleanColumnDescriptor}, {@link SciComponentColumnDescriptor}, or {@link SciTemplateColumnDescriptor}.
  */
-export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T> | SciColumnDescriptor<T>;
 
 /**
  * Signature of a function used to configure a comparator for sorting a table column.
@@ -109,3 +126,5 @@ export type SciTableColumnSortComparatorFn<T = unknown, VALUE = unknown> = (a: S
  * Signature of a function used to configure a matcher for filtering a table column.
  */
 export type SciTableColumnFilterMatcherFn<T = unknown, VALUE = unknown, FILTER = VALUE> = (filter: FILTER, context: SciTableCellContext<T, VALUE>) => boolean;
+
+export type SciColumnValueType = string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;

@@ -1,5 +1,19 @@
 @let cell = this.cell();
 
+@if (showExpansionControl()) {
+    @if (row().hasChildren()) {
+      <button class="toggle-children e2e-toggle-children" (click)="toggleChildren($event)">
+        @if (row().expanded()) {
+          <sci-icon class="e2e-expanded">scion.chevron_down</sci-icon>
+        } @else {
+          <sci-icon class="e2e-collapsed">scion.chevron_right</sci-icon>
+        }
+      </button>
+    } @else {
+      <div class="toggle-children-spacer"></div>
+    }
+}
+
 @switch (cell.type) {
   @case ('template') {
     <ng-template *ngTemplateOutlet="template(); context: templateContext()"/>
@@ -12,6 +26,10 @@
     <sci-icon class="checkbox">{{cell.value() ? 'scion.checkmark' : 'scion.clear'}}</sci-icon>
   }
   @default {
-    {{cell.value()}}
+    @if (showExpansionControl()) {
+      <span>{{cell.value()}}</span>
+    } @else {
+      {{cell.value()}}
+    }
   }
 }

@@ -54,7 +54,8 @@ export class SciTableRowComponent<T> {
     if (this.row().loading) {
       return;
     }
-    void this._selectionService.onRowClick(this.row().index, event);
+    const index = this.table().rowIndexById().get(this.row().id) ?? -1;
+    void this._selectionService.onRowClick(index, event);
   }
 
   protected onRowDblClick(event: MouseEvent): void {
@@ -65,7 +66,8 @@ export class SciTableRowComponent<T> {
   }
 
   protected onRowMouseEnter(): void {
-    this.table().hoveredIndex.set(this.row().index);
+    const index = this.table().rowIndexById().get(this.row().id) ?? -1;
+    this.table().hoveredIndex.set(index);
   }
 
   protected onRowMouseLeave(event: MouseEvent): void {
