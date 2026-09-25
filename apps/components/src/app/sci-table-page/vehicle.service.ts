@@ -10,11 +10,11 @@
 
 import {SciTableColumnFilter, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
 import {computed, Service, Signal, signal} from '@angular/core';
-import {defer, Observable, of, timer} from 'rxjs';
+import {defer, Observable, timer} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
-import {Vehicle} from './vehicle.model';
+import {OperatorGroup, Vehicle, VehicleOrOperator} from './vehicle.model';
 
 @Service()
 export class VehicleService {
@@ -26,6 +26,12 @@ export class VehicleService {
 
   public readonly vehicleCount = signal(10_000);
   public readonly vehicles: Signal<Vehicle[]> = computed(() => this._datasource.value().slice(0, this.vehicleCount()));
+  public readonly vehiclesByOperator = computed(() => Vehicles.groupByOperator(this.vehicles()));
+  public readonly operators = computed<OperatorGroup[]>(() => [...this.vehiclesByOperator()].map(([operator, vehicles]) => ({
+    operator,
+    kind: 'operator',
+    averageMaxSpeedKmh: Math.round(vehicles.reduce((sum, vehicle) => sum + vehicle.maxSpeedKmh, 0) / vehicles.length),
+  })));
 
   public updateVehicle(vehicle: Vehicle): void {
     this._datasource.update(vehicles => {
@@ -60,17 +66,50 @@ export class VehicleService {
     });
   }
 
-  public getVehicles$(request: SciTablePageRequest, options?: {slowDatasource?: boolean}): Observable<SciTablePageResponse<Vehicle>> {
+  public getGroupedVehicles$(request: SciTablePageRequest): Observable<SciTablePageResponse<VehicleOrOperator>> {
+    return this.getFilteredAndSortedVehicles$(request)
+      .pipe(
+        map(vehicles => Vehicles.groupByOperator(vehicles)),
+        map(byOperator => Vehicles.getOperators(byOperator)),
+        map(operators => ({
+          items: operators.slice(request.start, request.end),
+          totalCount: operators.length,
+        })),
+      );
+  }
+
+  public getOperatorChildren$(item: OperatorGroup, request: SciTablePageRequest): Observable<SciTablePageResponse<Vehicle>> {
     const vehicles$ = toObservable(this.vehicles);
-    return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
+    return defer(() => timer(1000))
       .pipe(
         switchMap(() => vehicles$),
+        map(vehicles => Vehicles.groupByOperator(vehicles).get(item.operator) ?? []),
         map(vehicles => Vehicles.filter(vehicles, request.columnFilters, request.tableFilter)),
         map(vehicles => Vehicles.sort(vehicles, request.sortCriteria)),
         map(vehicles => ({
           items: vehicles.slice(request.start, request.end),
           totalCount: vehicles.length,
         })),
+      );
+  }
+
+  public getVehicles$(request: SciTablePageRequest): Observable<SciTablePageResponse<Vehicle>> {
+    return this.getFilteredAndSortedVehicles$(request)
+      .pipe(
+        map(vehicles => ({
+          items: vehicles.slice(request.start, request.end),
+          totalCount: vehicles.length,
+        })),
+      );
+  }
+
+  private getFilteredAndSortedVehicles$(request: SciTablePageRequest): Observable<Vehicle[]> {
+    const vehicles$ = toObservable(this.vehicles);
+    return defer(() => timer(1000))
+      .pipe(
+        switchMap(() => vehicles$),
+        map(vehicles => Vehicles.filter(vehicles, request.columnFilters, request.tableFilter)),
+        map(vehicles => Vehicles.sort(vehicles, request.sortCriteria)),
       );
   }
 }
@@ -199,5 +238,21 @@ export namespace Vehicles {
     }
 
     return copy;
+  }
+
+  export function groupByOperator(vehicles: Vehicle[]): Map<string, Vehicle[]> {
+    return vehicles.reduce((byOperator, vehicle) => {
+      const vehicles = byOperator.get(vehicle.operator) ?? [];
+      vehicles.push(vehicle);
+      return byOperator.set(vehicle.operator, vehicles);
+    }, new Map<string, Vehicle[]>());
+  }
+
+  export function getOperators(byOperator: Map<string, Vehicle[]>): OperatorGroup[] {
+    return [...byOperator].map(([operator, vehicles]) => ({
+      operator,
+      kind: 'operator',
+      averageMaxSpeedKmh: Math.round(vehicles.reduce((sum, vehicle) => sum + vehicle.maxSpeedKmh, 0) / vehicles.length),
+    }));
   }
 }

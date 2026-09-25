@@ -19,7 +19,7 @@ import {Objects} from '@scion/toolkit/util';
 export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
   const dataset = new Dataset(data, columns);
 
-  return markAsArrayDatasource((request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
+  return (request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
     dataset.columnFilters.set(request.columnFilters);
     dataset.tableFilter.set(request.tableFilter);
     dataset.sortCriteria.set(request.sortCriteria);
@@ -31,7 +31,7 @@ export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableCo
       totalCount: totalCount(),
       items: items(),
     })));
-  });
+  };
 }
 
 /**
@@ -53,10 +53,24 @@ class Dataset<T> {
   constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
     const dataset = computed((): DatasetRow<T>[] => data().map(item => ({
       item,
-      cells: columns().reduce((cells, column) => cells.set(column.name, {
-        column: column as SciTableColumn,
-        value: 'value' in column ? coerceSignal(untracked(() => column.value(item)), {coerceUndefined: true})() : undefined,
-      }), new Map<`column:${string}`, DatasetCell>()),
+      cells: columns().reduce((cells, column) => {
+        const value = 'value' in column ? untracked(() => column.value(item)) : undefined;
+
+        if (column.type === 'dynamic') {
+          const isComponent = typeof value === 'object' && 'component' in value;
+          const isTemplate = typeof value === 'object' && 'template' in value;
+
+          return cells.set(column.name, {
+            column: column as SciTableColumn,
+            value: isComponent || isTemplate ? undefined : coerceSignal(value, {coerceUndefined: true})(),
+          });
+        }
+
+        return cells.set(column.name, {
+          column: column as SciTableColumn,
+          value: 'value' in column ? coerceSignal(untracked(() => column.value(item)), {coerceUndefined: true})() : undefined,
+        });
+      }, new Map<`column:${string}`, DatasetCell>()),
     })));
 
     // Memoize filtered/sorted view; recomputes only when dataset or criteria change, not when scrolling through the view, as sorting is an expensive operation.
@@ -152,26 +166,6 @@ function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: 
 
   return 0;
 }
-
-/**
- * Checks whether given {@link SciTableDataLoaderFn} represents an {@link arrayDatasource}.
- */
-export function isArrayDatasource(loader: SciTableDataLoaderFn<unknown>): boolean {
-  return ARRAY_DATASOURCE_MARKER in loader;
-}
-
-/**
- * Marks given {@link SciTableDataLoaderFn} as an array data source.
- */
-function markAsArrayDatasource<TABLE_DATA_LOADER extends SciTableDataLoaderFn<unknown>>(loader: TABLE_DATA_LOADER): TABLE_DATA_LOADER {
-  Object.defineProperty(loader, ARRAY_DATASOURCE_MARKER, {value: true, writable: false, enumerable: false, configurable: false});
-  return loader;
-}
-
-/**
- * Identifies a {@link SciTableDataLoaderFn} as an {@link arrayDatasource}.
- */
-const ARRAY_DATASOURCE_MARKER = Symbol('ARRAY_DATASOURCE_HINT');
 
 /**
  * Coerces the given filter text into the specified column data type.
