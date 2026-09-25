@@ -14,14 +14,14 @@
 $-version: 1;
 
 /**
- * By default, the icon font is loaded from the CDN: https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons
+ * By default, the icon font is loaded from the CDN: https://cdn.jsdelivr.net/npm/@scion/icons
  */
 $-icon-font-defaults: (
   // NOTE: If self-hosting SCION icons, the font path must be "root-relative" or excluded from the application build.
   // Otherwise, the build fails because the builder cannot resolve the font files relative to "this" SASS file.
   // For esbuild, register excluded assets as `externalDependencies` in angular.json.
   // For webpack, exclude assets by prefixing their path with a leading caret (^).
-  directory: 'https://cdn.jsdelivr.net/npm/@scion/components/resources/scion-icons',
+  directory: 'https://cdn.jsdelivr.net/npm/@scion/icons',
   filename: 'scion-icons',
   version: $-version,
 );

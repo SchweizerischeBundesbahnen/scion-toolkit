@@ -44,7 +44,7 @@ test.describe('HTML base HREF', () => {
    * npm run components-testing-app:icon-basehref-webpack:serve
    * ```
    *
-   * TODO [Angular 23] remove when `@angular-devkit/build-angular:browser` builder is deprecated
+   * TODO [Angular 23] remove when Angular does not support `@angular-devkit/build-angular:browser` builder anymore
    */
   test('should fetch the icon font if deployed in a subdirectory (webpack)', async ({page}) => {
     const response = page.waitForResponse(/http:\/\/localhost:4400\/subdir\/scion-icons\/scion-icons\.(ttf|woff)/);
