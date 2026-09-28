@@ -53,6 +53,7 @@
     position: fixed;
     margin: unset;
     inset: unset;
+    height: auto; // prevent menu growing to full page height in Safari
 
     // Hide while closing to prevent flickering.
     &:not(:popover-open) {
