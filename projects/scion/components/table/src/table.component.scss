@@ -38,7 +38,7 @@
 
     > sci-table-grid {
       display: grid;
-      grid-template-columns: var(--ɵsci-table-columns, repeat(auto-fit, 0)) 0; // Last column reserved for action toolbar; `repeat(auto-fit, 0)` prevents flicker (oversized column header dividers) until `--ɵsci-table-columns` is set.
+      grid-template-columns: var(--ɵsci-table-columns, repeat(auto-fit, 100px)) 0; // Last column reserved for action toolbar; `repeat(auto-fit, 100px)` prevents flicker (oversized column header dividers) until `--ɵsci-table-columns` is set; using 100px (instead of 0) to avoid Safari crash; 100px matches default column min-width;
       grid-auto-rows: min-content;
       grid-template-rows:
         min-content // table header
