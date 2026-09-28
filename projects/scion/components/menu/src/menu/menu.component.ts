@@ -332,7 +332,14 @@ export class SciMenuComponent {
       .pipe(
         filter(menuItems => !!menuItems.length),
         observeOn(animationFrameScheduler), // Wait until next render cycle to capture menu width.
-        raceWith(new Promise(resolve => void requestIdleCallback(resolve, {timeout: 250}))), // fallback if no menu items are contributed
+        raceWith(new Promise(resolve => { // Fallback if no menu items are contributed.
+          if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(resolve, {timeout: 250});
+          }
+          else {
+            setTimeout(resolve, 250); // Fallback if browser does not support `requestIdleCallback`, e.g., Safari
+          }
+        })),
         take(1),
         takeUntilDestroyed(),
       )
