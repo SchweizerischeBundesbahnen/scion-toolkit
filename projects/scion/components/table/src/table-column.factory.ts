@@ -55,8 +55,8 @@ export interface SciTableColumnDescriptor {
 
 export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
   value: (item: T) => MaybeSignal<string>;
-  sortable?: boolean | {comparator: (a: SciTableCellContext<T, string>, b: SciTableCellContext<T, string>) => number};
-  filterable?: boolean | {matcher: (text: string, context: SciTableCellContext<T, string>) => boolean};
+  sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, string>};
+  filterable?: boolean | {matcher: SciTableColumnFilterMatcherFn<T, string>};
 }
 
 export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
@@ -73,8 +73,8 @@ export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor 
 
 export interface SciComponentColumnDescriptor<T> extends SciTableColumnDescriptor {
   component: (item: T) => SciComponentDescriptor;
-  sortable?: boolean | {comparator: (a: SciTableCellContext<T, void>, b: SciTableCellContext<T, void>) => number};
-  filterable?: boolean | {matcher: (text: string, context: SciTableCellContext<T, void>) => boolean};
+  sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, void>};
+  filterable?: boolean | {matcher: SciTableColumnFilterMatcherFn<T, void, string>};
   /**
    * Controls whether cell padding is applied. Set to `false` to let content fill the entire cell (render to cell bounds).
    *
@@ -85,8 +85,8 @@ export interface SciComponentColumnDescriptor<T> extends SciTableColumnDescripto
 
 export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor {
   template: (item: T) => SciTemplateDescriptor;
-  sortable?: boolean | {comparator: (a: SciTableCellContext<T, void>, b: SciTableCellContext<T, void>) => number};
-  filterable?: boolean | {matcher: (text: string, context: SciTableCellContext<T, void>) => boolean};
+  sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, void>};
+  filterable?: boolean | {matcher: SciTableColumnFilterMatcherFn<T, void, string>};
   /**
    * Controls whether cell padding is applied. Set to `false` to let content fill the entire cell (render to cell bounds).
    *
@@ -95,4 +95,17 @@ export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor
   padding?: boolean;
 }
 
+/**
+ * Represents a {@link SciStringColumnDescriptor}, {@link SciNumberColumnDescriptor}, {@link SciBooleanColumnDescriptor}, {@link SciComponentColumnDescriptor}, or {@link SciTemplateColumnDescriptor}.
+ */
 export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+
+/**
+ * Signature of a function used to configure a comparator for sorting a table column.
+ */
+export type SciTableColumnSortComparatorFn<T = unknown, VALUE = unknown> = (a: SciTableCellContext<T, VALUE>, b: SciTableCellContext<T, VALUE>) => number;
+
+/**
+ * Signature of a function used to configure a matcher for filtering a table column.
+ */
+export type SciTableColumnFilterMatcherFn<T = unknown, VALUE = unknown, FILTER = VALUE> = (filter: FILTER, context: SciTableCellContext<T, VALUE>) => boolean;

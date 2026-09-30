@@ -22,6 +22,7 @@ import {Router} from '@angular/router';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {VehicleService} from './vehicle.service';
 import {Vehicle} from './vehicle.model';
+import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 
 @Component({
   selector: 'app-table-page',
@@ -38,6 +39,7 @@ import {Vehicle} from './vehicle.model';
     SciTabbarComponent,
     MinMaxDirective,
     SciViewportComponent,
+    SciFilterFieldComponent,
   ],
   host: {
     '[style.--sci-table-gridline-color]': 'settingsForm.showGridlines().value() ? "var(--sci-color-border)" : null',
@@ -47,6 +49,7 @@ export default class SciTablePageComponent {
 
   private readonly _injector = inject(Injector);
   private readonly _tabbar = viewChild.required(SciTabbarComponent);
+  private readonly _tableFilterField = viewChild.required(SciFilterFieldComponent);
   private readonly _router = inject(Router);
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
@@ -354,6 +357,17 @@ export default class SciTablePageComponent {
     localStorage.removeItem('scion.components.table:vehicles');
     sessionStorage.removeItem('scion.components.table:vehicles');
     void this._router.navigate(['/']).then(() => this._router.navigate(['/sci-table']));
+  }
+
+  protected onTableFilter(filter: string): void {
+    this.table()!.filter(filter);
+  }
+
+  /**
+   * Delegates focus to table filter when start typing on `sci-table`.
+   */
+  protected onTableKeydown(event: KeyboardEvent): void {
+    this._tableFilterField().focusAndApplyKeyboardEvent(event);
   }
 
   protected updateSelectable(selectable: 'multi' | 'single' | 'false'): void {

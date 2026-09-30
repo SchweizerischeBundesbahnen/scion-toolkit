@@ -1,6 +1,7 @@
 @if (table(); as table) {
   <main>
-    <sci-table [table]="table" name="table:vehicles"/>
+    <sci-table [table]="table" name="table:vehicles" (keydown)="onTableKeydown($event)"/>
+    <sci-filter-field (filter)="onTableFilter($event)" placeholder="Type to filter..."/>
   </main>
 
   <aside>

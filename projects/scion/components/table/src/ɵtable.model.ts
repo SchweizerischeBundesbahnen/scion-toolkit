@@ -10,13 +10,12 @@
 
 import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
-import {SciTable, SciTableCellContext, SciTableCellLike, SciTableColumnLike, SciTableColumnType, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
+import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
-import {SciTableColumnDescriptorLike} from './table-column.factory';
 import {coerceSignal, createDestroyableInjector, toLazyObservable} from '@scion/components/common';
-import {arrayDatasource} from './ɵtable-array-datasource';
+import {arrayDatasource, isArrayDatasource} from './ɵtable-array-datasource';
 import {SciTableCache, SciTableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, switchMap, throwError, timer} from 'rxjs';
@@ -141,15 +140,14 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   private computeColumns(descriptor: SciTableDescriptor<T>): Signal<SciTableColumnLike<T>[]> {
     // Create separate injection context per factory invocation to clean up allocated resources, like RxJS subscriptions.
     let injector: DestroyableInjector | undefined;
-
     return computed(() => {
       injector?.destroy();
       injector = createDestroyableInjector({parent: this._injector});
 
       return runInInjectionContext(injector, () => {
-        const tableColumnFactory = new ɵSciTableColumnFactory<T>(descriptor);
+        const tableColumnFactory = new ɵSciTableColumnFactory<T>(this);
         descriptor.columns(tableColumnFactory);
-        return untracked(() => tableColumnFactory.columns.map(column => this.initColumn(column.type, column)));
+        return tableColumnFactory.columns;
       });
     });
   }
@@ -425,6 +423,15 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this._selectedItems.update(updateFn);
   }
 
+  /**
+   * Indicates whether the built-in array datasource is used.
+   *
+   * Supports out-of-the-box filtering and sorting for built-in table columns.
+   */
+  public isArrayDatasource(): boolean {
+    return isArrayDatasource(this._dataLoaderFn);
+  }
+
   public reset(): void {
     this._cache.clear();
     this.totalCount.set(undefined);
@@ -478,35 +485,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     ).subscribe(() => {
       this._cache.clear();
     });
-  }
-
-  // TODO [dwi] Consider moving into factory
-  private initColumn(type: SciTableColumnType, config: SciTableColumnDescriptorLike<T>): SciTableColumnLike<T> {
-    // Columns with a custom component or template must provide a sort function to be sortable, because the default sort function does not work.
-    const sortable = type === 'component' || type === 'template' ? !!config.sortable : config.sortable !== false;
-
-    // Columns with a custom component or template must provide a filter function to be filterable, because the default filter function does not work.
-    const filterable = type === 'component' || type === 'template' ? !!config.filterable : config.filterable !== false;
-
-    return {
-      ...config,
-      type,
-      name: config.name,
-      filter: typeof config.filterable === 'object' ? config.filterable.matcher : defaultFilter,
-      sort: typeof config.sortable === 'object' ? config.sortable.comparator : defaultSort,
-      sortable: computed(() => this.sortable() && sortable),
-      filterable: computed(() => this.filterable() && filterable),
-      resizable: computed(() => this.resizable() && (config.resizable ?? true)),
-      padding: 'padding' in config ? (config.padding ?? true) : true,
-      header: coerceSignal(config.header ?? ''),
-      width: computed(() => {
-        const userSettings = this.userSettings().columns?.find(column => column.name === config.name);
-        return userSettings?.width ? `${userSettings.width}px` : config.width ?? '1fr';
-      }),
-      minWidth: config.minWidth ?? 100,
-      resizing: signal(false),
-      location: {x: 0, width: 0}, // injected in `SciColumnComponent`
-    } as SciTableColumnLike<T>;
   }
 
   private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], pageStart: number): SciTableRow<T>[] {
@@ -585,36 +563,6 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
       return this._cache.rowsById().get(id);
     });
-  }
-}
-
-function defaultFilter<T>(text: string | boolean | number, {value}: SciTableCellContext<T, string | boolean | number>): boolean {
-  if (typeof value !== typeof text) {
-    return false;
-  }
-
-  switch (typeof value) {
-    case 'string':
-      return value.toLowerCase().includes((text as string).toLowerCase());
-    default:
-      return text === value;
-  }
-}
-
-function defaultSort<T>(a: SciTableCellContext<T, string | boolean | number>, b: SciTableCellContext<T, string | boolean | number>): number {
-  if (typeof a.value !== typeof b.value) {
-    return 0;
-  }
-
-  switch (typeof a.value) {
-    case 'string':
-      return a.value.localeCompare(b.value as string);
-    case 'number':
-      return a.value - (b.value as number);
-    case 'boolean':
-      return a.value === b.value ? 0 : (a.value ? 1 : -1);
-    default:
-      return 0;
   }
 }
 

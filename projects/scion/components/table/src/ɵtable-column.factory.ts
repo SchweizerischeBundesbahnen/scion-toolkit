@@ -8,76 +8,182 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciBooleanColumnDescriptor, SciTableColumnDescriptorLike, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
-import {SciTableColumnType, SciTableDescriptor} from './table.model';
-import {isSignal} from '@angular/core';
+import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
+import {SciBooleanColumn, SciComponentColumn, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
+import {computed, signal} from '@angular/core';
+import {ɵSciTable} from './ɵtable.model';
+import {coerceSignal} from '@scion/components/common';
 
 export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
 
-  public readonly columns = new Array<SciTableColumnDescriptorLike<T> & {type: SciTableColumnType}>();
+  public readonly columns = new Array<SciTableColumnLike<T>>();
 
-  constructor(private readonly _descriptor: SciTableDescriptor<T>) {
-  }
-
-  public addBooleanColumn(value: (item: T) => boolean): this;
-  public addBooleanColumn(header: string, value: (item: T) => boolean): this;
-  public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
-  public addBooleanColumn(valueHeaderDescriptor: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): this {
-    return this.addColumn('boolean', valueHeaderDescriptor, value);
+  constructor(private readonly _table: ɵSciTable<T>) {
   }
 
   public addStringColumn(value: (item: T) => string): this;
   public addStringColumn(header: string, value: (item: T) => string): this;
   public addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
-  public addStringColumn(valueHeaderDescriptor: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): this {
-    return this.addColumn('string', valueHeaderDescriptor, value);
+  public addStringColumn(descriptorLike: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): this {
+    const descriptor = coerceColumnDescriptor(descriptorLike, value);
+    const column = this.mapToColumn(descriptor);
+    const sortable = descriptor.sortable ?? true;
+    const filterable = descriptor.filterable ?? true;
+
+    this.columns.push({
+      ...column,
+      type: 'string',
+      value: descriptor.value,
+      sortable: computed(() => this._table.sortable() && !!sortable),
+      filterable: computed(() => this._table.filterable() && !!filterable),
+      compare: typeof sortable === 'object' ? sortable.comparator : (a, b) => a.value.localeCompare(b.value),
+      matches: typeof filterable === 'object' ? filterable.matcher : (text, context) => context.value.toLowerCase().includes(text.toLowerCase()),
+    } satisfies SciStringColumn<T>);
+
+    return this;
   }
 
   public addNumberColumn(value: (item: T) => number): this;
   public addNumberColumn(header: string, value: (item: T) => number): this;
   public addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
-  public addNumberColumn(valueHeaderDescriptor: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): this {
-    return this.addColumn('number', valueHeaderDescriptor, value);
-  }
+  public addNumberColumn(descriptorLike: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): this {
+    const descriptor = coerceColumnDescriptor(descriptorLike, value);
+    const column = this.mapToColumn(descriptor);
 
-  public addComponentColumn(config: SciComponentColumnDescriptor<T>): this {
-    // TODO [dwi] Normalize filterable and sortable and add default matcher/comparator to all columns
-    if (isSignal(this._descriptor.ɵdatasource) && (config.filterable === true || config.sortable === true)) {
-      throw Error('[ColumnDefinitionError] Component columns cannot have a auto filter or auto sort.');
-    }
-    return this.addColumn('component', config);
-  }
+    this.columns.push({
+      ...column,
+      type: 'number',
+      value: descriptor.value,
+      sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
+      filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
+      compare: (a, b) => a.value - b.value,
+      matches: (text, context) => context.value === text,
+    } satisfies SciNumberColumn<T>);
 
-  public addTemplateColumn(config: SciTemplateColumnDescriptor<T>): this {
-    if (isSignal(this._descriptor.ɵdatasource) && (config.filterable === true || config.sortable === true)) {
-      throw Error('[ColumnDefinitionError] Template columns cannot have a auto filter or auto sort.');
-    }
-    return this.addColumn('template', config);
-  }
-
-  private addColumn(type: SciTableColumnType, valueHeaderDescriptor: ((item: T) => unknown) | string | SciTableColumnDescriptorLike<T>, value?: (item: T) => unknown): this {
-    const config = (() => {
-      switch (typeof valueHeaderDescriptor) {
-        case 'string':
-          return {header: valueHeaderDescriptor, value: value!} as SciTableColumnDescriptorLike<T>;
-        case 'function':
-          return {value: valueHeaderDescriptor} as SciTableColumnDescriptorLike<T>;
-        default:
-          return valueHeaderDescriptor;
-      }
-    })();
-
-    if (!isSignal(this._descriptor.ɵdatasource) && (typeof config.sortable === 'object' || typeof config.filterable === 'object')) {
-      throw Error('[ColumnDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
-    }
-
-    // Fallback to the column index as the column name.
-    const name = config.name ?? `column:${this.columns.length}`;
-    if (this.columns.find(column => column.name === name)) {
-      throw Error(`[ColumnDefinitionError] Column names have to be unique. "${name}" is defined more than once.`);
-    }
-
-    this.columns.push({...config, name, type});
     return this;
+  }
+
+  public addBooleanColumn(value: (item: T) => boolean): this;
+  public addBooleanColumn(header: string, value: (item: T) => boolean): this;
+  public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
+  public addBooleanColumn(descriptorLike: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): this {
+    const descriptor = coerceColumnDescriptor(descriptorLike, value);
+    const column = this.mapToColumn(descriptor);
+
+    this.columns.push({
+      ...column,
+      type: 'boolean',
+      value: descriptor.value,
+      sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
+      filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
+      compare: (a, b) => a.value === b.value ? 0 : (a.value ? 1 : -1),
+      matches: (text, context) => context.value === text,
+    } satisfies SciBooleanColumn<T>);
+
+    return this;
+  }
+
+  public addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this {
+    // Require a filter matcher if filterable on an array datasource.
+    if (this._table.isArrayDatasource() && descriptor.filterable === true) {
+      throw Error('[ColumnDefinitionError] Component column requires a filter matcher in order to be filterable.');
+    }
+
+    // Require a sort comparator if sortable on an array datasource.
+    if (this._table.isArrayDatasource() && descriptor.sortable === true) {
+      throw Error('[ColumnDefinitionError] Component column requires a sort comparator in order to be sortable.');
+    }
+
+    const column = this.mapToColumn(descriptor);
+    this.columns.push({
+      ...column,
+      type: 'component',
+      component: descriptor.component,
+      sortable: computed(() => this._table.sortable() && !!descriptor.sortable),
+      filterable: computed(() => this._table.filterable() && !!descriptor.filterable),
+      compare: typeof descriptor.sortable === 'object' ? descriptor.sortable.comparator : () => 0,
+      matches: typeof descriptor.filterable === 'object' ? descriptor.filterable.matcher : () => true,
+      padding: descriptor.padding ?? true,
+    } satisfies SciComponentColumn<T>);
+
+    return this;
+  }
+
+  public addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this {
+    // Require a filter matcher if filterable on an array datasource.
+    if (this._table.isArrayDatasource() && descriptor.filterable === true) {
+      throw Error('[ColumnDefinitionError] Template column requires a filter matcher in order to be filterable.');
+    }
+
+    // Require a sort comparator if sortable on an array datasource.
+    if (this._table.isArrayDatasource() && descriptor.sortable === true) {
+      throw Error('[ColumnDefinitionError] Template column requires a sort comparator in order to be sortable.');
+    }
+
+    const column = this.mapToColumn(descriptor);
+    this.columns.push({
+      ...column,
+      type: 'template',
+      template: descriptor.template,
+      sortable: computed(() => this._table.sortable() && !!descriptor.sortable),
+      filterable: computed(() => this._table.filterable() && !!descriptor.filterable),
+      compare: typeof descriptor.sortable === 'object' ? descriptor.sortable.comparator : () => 0,
+      matches: typeof descriptor.filterable === 'object' ? descriptor.filterable.matcher : () => true,
+      padding: descriptor.padding ?? true,
+    } satisfies SciTemplateColumn<T>);
+
+    return this;
+  }
+
+  /**
+   * Maps given column descriptor to a {@link SciTableColumn}.
+   */
+  private mapToColumn(descriptor: SciTableColumnDescriptorLike<T>): Omit<SciTableColumn, 'type' | 'sortable' | 'filterable' | 'compare' | 'matches'> {
+    // Require a unique column name.
+    const name = descriptor.name ?? `column:${this.columns.length}`;
+    if (this.columns.find(column => column.name === name)) {
+      throw Error(`[ColumnDefinitionError] Column names must be unique. "${name}" is defined more than once.`);
+    }
+
+    // Disallow a filter matcher if using a custom datasource.
+    if (!this._table.isArrayDatasource() && typeof descriptor.filterable === 'object') {
+      throw Error('[ColumnDefinitionError] Configuring a filter matcher is not supported for tables using a datasource. Filtering must be done by the datasource.');
+    }
+
+    // Disallow a sort comparator if using a custom datasource.
+    if (!this._table.isArrayDatasource() && typeof descriptor.sortable === 'object') {
+      throw Error('[ColumnDefinitionError] Configuring a sort comparator is not supported for tables using a datasource. Sorting must be done by the datasource.');
+    }
+
+    return {
+      name: name,
+      header: coerceSignal(descriptor.header ?? ''),
+      resizable: computed(() => this._table.resizable() && (descriptor.resizable ?? true)),
+      width: computed(() => {
+        const userSettings = this._table.userSettings().columns?.find(column => column.name === name);
+        return userSettings?.width ? `${userSettings.width}px` : descriptor.width ?? '1fr';
+      }),
+      minWidth: descriptor.minWidth ?? 100,
+      resizing: signal(false),
+      padding: true,
+      location: {x: 0, width: 0}, // set in `SciTableColumnComponent`
+    };
+  }
+}
+
+/**
+ * Coerces given column factory arguments to a {@link SciTableColumnDescriptorLike}.
+ */
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): SciStringColumnDescriptor<T>;
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): SciNumberColumnDescriptor<T>;
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): SciBooleanColumnDescriptor<T>;
+function coerceColumnDescriptor(argument1: unknown, argument2?: unknown): unknown {
+  switch (typeof argument1) {
+    case 'string':
+      return {header: argument1, value: argument2};
+    case 'function':
+      return {value: argument1};
+    default:
+      return argument1;
   }
 }

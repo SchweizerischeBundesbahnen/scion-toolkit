@@ -66,7 +66,6 @@ describe('Table', () => {
           datasource: data,
           columns: table => table.addTemplateColumn({
             name: 'column:template',
-            // TODO [ego] Wollen wir hier eine Convenience anbieten?
             template: () => ({template}),
           }),
           injector: TestBed.inject(Injector),
@@ -296,88 +295,208 @@ describe('Table', () => {
 
     describe('Sorting', () => {
 
-      it('should sort number column', async () => {
-        const data = signal([{id: 1}, {id: 3}, {id: 2}]);
+      it('should be sortable (defaults)', async () => {
+        const data = signal(new Array<{string: string; number: number; boolean: boolean}>());
+        const templateFixture = TestBed.createComponent(CustomColumnTemplateProviderComponent);
+
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
-          columns: table => table.addNumberColumn({
-            name: 'column:id',
-            header: 'ID',
-            value: item => item.id,
-          }),
+          columns: table => table
+            .addStringColumn({
+              name: 'column:string',
+              value: item => item.string,
+            })
+            .addNumberColumn({
+              name: 'column:number',
+              value: item => item.number,
+            })
+            .addBooleanColumn({
+              name: 'column:boolean',
+              value: item => item.boolean,
+            })
+            .addComponentColumn({
+              name: 'column:component',
+              component: item => ({
+                component: CustomColumnComponent,
+                bindings: [inputBinding('value', () => item)],
+              }),
+            })
+            .addTemplateColumn({
+              name: 'column:template',
+              template: () => ({
+                template: templateFixture.componentInstance.template(),
+              }),
+            })
+            .addComponentColumn({
+              name: 'column:component-sortable',
+              component: item => ({
+                component: CustomColumnComponent,
+                bindings: [inputBinding('value', () => item)],
+              }),
+              sortable: {comparator: () => 0},
+            })
+            .addTemplateColumn({
+              name: 'column:template-sortable',
+              template: () => ({
+                template: templateFixture.componentInstance.template(),
+              }),
+              sortable: {comparator: () => 0},
+            }),
           injector: TestBed.inject(Injector),
         }));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        model.sort('column:id', false);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:id'})!.values()).toEqual(['1', '2', '3']);
+        expect(table.column({name: 'column:string'})!.sortable).toBeTrue();
+        expect(table.column({name: 'column:number'})!.sortable).toBeTrue();
+        expect(table.column({name: 'column:boolean'})!.sortable).toBeTrue();
+        expect(table.column({name: 'column:component'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:template'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:component-sortable'})!.sortable).toBeTrue();
+        expect(table.column({name: 'column:template-sortable'})!.sortable).toBeTrue();
 
-        model.sort('column:id', false);
+        // Disable 'sortable' at table-level.
+        model.sortable.set(false);
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:id'})!.values()).toEqual(['3', '2', '1']);
+
+        expect(table.column({name: 'column:string'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:number'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:boolean'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:component'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:template'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:component-sortable'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:template-sortable'})!.sortable).toBeFalse();
       });
 
       it('should sort string column', async () => {
-        const data = signal([{name: 'b'}, {name: 'c'}, {name: 'a'}]);
+        const data = signal([{string: 'b'}, {string: 'c'}, {string: 'a'}]);
 
-        const {fixture, model} = createSciTableComponent(sciTable({
+        const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           columns: table => table.addStringColumn({
-            name: 'column:name',
-            header: 'Name',
-            value: item => item.name,
+            name: 'column:string',
+            value: item => item.string,
           }),
           injector: TestBed.inject(Injector),
         }));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
+        const column = table.column({name: 'column:string'})!;
 
-        model.sort('column:name', false);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['a', 'b', 'c']);
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['a', 'b', 'c']);
 
-        model.sort('column:name', false);
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['c', 'b', 'a']);
+      });
+
+      it('should sort number column', async () => {
+        const data = signal([{number: 1}, {number: 3}, {number: 2}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addNumberColumn({
+            name: 'column:number',
+            value: item => item.number,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['c', 'b', 'a']);
+        const column = table.column({name: 'column:number'})!;
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['1', '2', '3']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['3', '2', '1']);
       });
 
       it('should sort boolean column', async () => {
-        const data = signal([{active: true}, {active: false}, {active: true}]);
-        const {fixture, model} = createSciTableComponent(sciTable({
+        const data = signal([{boolean: true}, {boolean: false}, {boolean: true}]);
+        const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           columns: table => table.addBooleanColumn({
-            name: 'column:active',
-            header: 'Active',
-            value: item => item.active,
+            name: 'column:boolean',
+            value: item => item.boolean,
           }),
           injector: TestBed.inject(Injector),
         }));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
+        const column = table.column({name: 'column:boolean'})!;
 
-        model.sort('column:active', false);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:active'})!.values()).toEqual(['clear', 'checkmark', 'checkmark']);
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['clear', 'checkmark', 'checkmark']);
 
-        model.sort('column:active', false);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:active'})!.values()).toEqual(['checkmark', 'checkmark', 'clear']);
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['checkmark', 'checkmark', 'clear']);
       });
 
-      it('should sort custom template column', async () => {
+      it('should sort string column with custom sort comparator', async () => {
+        const data = signal(['1', '2', '3']);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addStringColumn({
+            name: 'column:string',
+            value: item => item,
+            sortable: {comparator: (a, b) => Number(b.item) - Number(a.item)},
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:string'})!;
+
+        expect(await column.values()).toEqual(['1', '2', '3']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['3', '2', '1']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['1', '2', '3']);
+      });
+
+      it('should sort component column with custom sort comparator', async () => {
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addComponentColumn({
+            name: 'column:component',
+            component: item => ({
+              component: CustomColumnComponent,
+              bindings: [inputBinding('value', () => item)],
+            }),
+            sortable: {comparator: (a, b) => a.item - b.item},
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:component'})!;
+
+        expect(await column.values()).toEqual(['1', '2', '3']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['1', '2', '3']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['3', '2', '1']);
+      });
+
+      it('should sort template column with custom sort comparator', async () => {
         const templateFixture = TestBed.createComponent(CustomColumnTemplateProviderComponent);
 
         const data = signal([1, 2, 3]);
-        const {fixture, model} = createSciTableComponent(sciTable({
+        const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           columns: table => table.addTemplateColumn({
             name: 'column:template',
-            // TODO [ego] Wollen wir hier eine Convenience anbieten?
             template: () => ({
               template: templateFixture.componentInstance.template(),
             }),
@@ -388,116 +507,109 @@ describe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
+        const column = table.column({name: 'column:template'})!;
 
-        model.sort('column:template', false);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
-
-        model.sort('column:template', false);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:template'})!.values()).toEqual(['3', '2', '1']);
-      });
-
-      // TODO [ego] Add test: 'should sort custom component column'
-
-      it('should sort with header click', async () => {
-        const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          columns: table => table.addNumberColumn('ID', item => item.id),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        const column = table.column({header: 'ID'})!;
+        expect(await column.values()).toEqual(['1', '2', '3']);
 
         await column.toggleSort();
-        expect(await table.column({header: 'ID'})!.values()).toEqual(['1', '2', '3']);
+        expect(await column.values()).toEqual(['1', '2', '3']);
 
         await column.toggleSort();
-        expect(await table.column({header: 'ID'})!.values()).toEqual(['3', '2', '1']);
+        expect(await column.values()).toEqual(['3', '2', '1']);
       });
     });
 
-    describe('Filtering', () => {
+    describe('Filtering (per Column)', () => {
 
-      it('should allow global filtering', async () => {
-        const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
+      it('should be filterable (defaults)', async () => {
+        const data = signal(new Array<{string: string; number: number; boolean: boolean}>());
+        const templateFixture = TestBed.createComponent(CustomColumnTemplateProviderComponent);
+
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
-          columns: table => table.addStringColumn({
-            name: 'column:name',
-            header: 'Name',
-            value: item => item.name,
-          }),
+          columns: table => table
+            .addStringColumn({
+              name: 'column:string',
+              value: item => item.string,
+            })
+            .addNumberColumn({
+              name: 'column:number',
+              value: item => item.number,
+            })
+            .addBooleanColumn({
+              name: 'column:boolean',
+              value: item => item.boolean,
+            })
+            .addComponentColumn({
+              name: 'column:component',
+              component: item => ({
+                component: CustomColumnComponent,
+                bindings: [inputBinding('value', () => item)],
+              }),
+            })
+            .addTemplateColumn({
+              name: 'column:template',
+              template: () => ({
+                template: templateFixture.componentInstance.template(),
+              }),
+            })
+            .addComponentColumn({
+              name: 'column:component-filterable',
+              component: item => ({
+                component: CustomColumnComponent,
+                bindings: [inputBinding('value', () => item)],
+              }),
+              filterable: {matcher: () => false},
+            })
+            .addTemplateColumn({
+              name: 'column:template-filterable',
+              template: () => ({
+                template: templateFixture.componentInstance.template(),
+              }),
+              filterable: {matcher: () => false},
+            }),
           injector: TestBed.inject(Injector),
         }));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        model.filter('alpha');
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['alpha']);
+        expect(table.column({name: 'column:string'})!.filterable).toBeFalse();
+        expect(table.column({name: 'column:number'})!.filterable).toBeFalse();
+        expect(table.column({name: 'column:boolean'})!.filterable).toBeFalse();
+        expect(table.column({name: 'column:component'})!.filterable).toBeFalse();
+        expect(table.column({name: 'column:template'})!.filterable).toBeFalse();
+        expect(table.column({name: 'column:component-filterable'})!.filterable).toBeFalse();
+        expect(table.column({name: 'column:template-filterable'})!.filterable).toBeFalse();
 
-        model.filter('a');
+        // Enable 'filterable' at table-level.
+        model.filterable.set(true);
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['alpha', 'beta', 'gamma']);
 
-        model.filter('m');
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['gamma']);
-
-        model.filter(null);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['alpha', 'beta', 'gamma']);
+        expect(table.column({name: 'column:string'})!.filterable).toBeTrue();
+        expect(table.column({name: 'column:number'})!.filterable).toBeTrue();
+        expect(table.column({name: 'column:boolean'})!.filterable).toBeTrue();
+        expect(table.column({name: 'column:component'})!.filterable).toBeTrue();
+        expect(table.column({name: 'column:template'})!.filterable).toBeTrue();
+        expect(table.column({name: 'column:component-filterable'})!.filterable).toBeTrue();
+        expect(table.column({name: 'column:template-filterable'})!.filterable).toBeTrue();
       });
-
-      it('should filter number column', async () => {
-        const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          filterable: true,
-          columns: table => table.addNumberColumn({
-            name: 'column:id',
-            header: 'ID',
-            value: item => item.id,
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        const column = table.column({name: 'column:id'})!;
-
-        await column.filter('3');
-        expect(await column.values()).toEqual(['3']);
-
-        await column.filter('');
-        expect(await column.values()).toEqual(['1', '3', '2']);
-      });
-
-      // TODO [ego] Add test: 'should filter custom template column'
-      // TODO [ego] Add test: 'should filter custom component column'
 
       it('should filter string column', async () => {
-        const data = signal([{name: 'a'}, {name: 'c'}, {name: 'b'}]);
+        const data = signal([{string: 'a'}, {string: 'c'}, {string: 'b'}]);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           filterable: true,
           columns: table => table.addStringColumn({
-            name: 'column:name',
-            header: 'Name',
-            value: item => item.name,
+            name: 'column:string',
+            value: item => item.string,
           }),
           injector: TestBed.inject(Injector),
         }));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        const column = table.column({name: 'column:name'})!;
+        const column = table.column({name: 'column:string'})!;
 
         await column.filter('c');
         expect(await column.values()).toEqual(['c']);
@@ -506,22 +618,44 @@ describe('Table', () => {
         expect(await column.values()).toEqual(['a', 'c', 'b']);
       });
 
-      it('should filter boolean column', async () => {
-        const data = signal([{active: true}, {active: false}, {active: true}]);
+      it('should filter number column', async () => {
+        const data = signal([{number: 1}, {number: 3}, {number: 2}]);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           filterable: true,
-          columns: table => table.addBooleanColumn({
-            name: 'column:active',
-            header: 'Active',
-            value: item => item.active,
+          columns: table => table.addNumberColumn({
+            name: 'column:number',
+            value: item => item.number,
           }),
           injector: TestBed.inject(Injector),
         }));
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        const column = table.column({name: 'column:active'})!;
+        const column = table.column({name: 'column:number'})!;
+
+        await column.filter('3');
+        expect(await column.values()).toEqual(['3']);
+
+        await column.filter('');
+        expect(await column.values()).toEqual(['1', '3', '2']);
+      });
+
+      it('should filter boolean column', async () => {
+        const data = signal([{boolean: true}, {boolean: false}, {boolean: true}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addBooleanColumn({
+            name: 'column:boolean',
+            value: item => item.boolean,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:boolean'})!;
 
         await column.filter(true);
         expect(await column.values()).toEqual(['checkmark', 'checkmark']);
@@ -530,14 +664,13 @@ describe('Table', () => {
         expect(await column.values()).toEqual(['checkmark', 'clear', 'checkmark']);
       });
 
-      it('should support filter with custom filter function', async () => {
+      it('should filter string column with custom filter matcher', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           filterable: true,
           columns: table => table.addStringColumn({
-            name: 'column:name',
-            header: 'Name',
+            name: 'column:string',
             value: item => item.name,
             filterable: {matcher: (text, context) => context.value.length === text.length},
           }),
@@ -546,7 +679,7 @@ describe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        const column = table.column({name: 'column:name'})!;
+        const column = table.column({name: 'column:string'})!;
 
         await column.filter('abcd');
         expect(await column.values()).toEqual(['beta']);
@@ -555,15 +688,511 @@ describe('Table', () => {
         expect(await column.values()).toEqual(['alpha', 'beta', 'gamma']);
       });
 
-      it('should support global filter with custom filter function', async () => {
-        const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const {fixture, model} = createSciTableComponent(sciTable({
+      it('should filter component column with custom filter matcher', async () => {
+        const data = signal(['alpha', 'beta', 'gamma']);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addComponentColumn({
+            name: 'column:component',
+            component: item => ({
+              component: CustomColumnComponent,
+              bindings: [inputBinding('value', () => item)],
+            }),
+            filterable: {matcher: (text, context) => context.item.length === text.length},
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:component'})!;
+
+        await column.filter('abcd');
+        expect(await column.values()).toEqual(['beta']);
+
+        await column.filter('');
+        expect(await column.values()).toEqual(['alpha', 'beta', 'gamma']);
+      });
+
+      it('should filter template column with custom filter matcher', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal(['alpha', 'beta', 'gamma']);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addTemplateColumn({
+            name: 'column:template',
+            template: () => ({template: template}),
+            filterable: {matcher: (text, context) => context.item.length === text.length},
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:template'})!;
+
+        await column.filter('abcd');
+        expect(await column.values()).toEqual(['beta']);
+
+        await column.filter('');
+        expect(await column.values()).toEqual(['alpha', 'beta', 'gamma']);
+      });
+
+      it('should ignore invalid number input', async () => {
+        const data = signal([{number: 1}, {number: 3}, {number: 2}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addNumberColumn({
+            name: 'column:number',
+            value: item => item.number,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:number'})!;
+
+        await column.filter('invalid');
+        expect(await column.values()).toEqual(['1', '3', '2']);
+      });
+
+      it('should trim string filter input', async () => {
+        const data = signal([{string: 'alpha'}, {string: 'beta'}, {string: 'gamma'}]);
+        const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           filterable: true,
           columns: table => table.addStringColumn({
-            name: 'column:name',
-            header: 'Name',
-            value: item => item.name,
+            name: 'column:string',
+            value: item => item.string,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:string'})!;
+
+        await column.filter(' beta ');
+        expect(await column.values()).toEqual(['beta']);
+      });
+
+      it('should filter string column case-insensitively', async () => {
+        const data = signal([{string: 'Alpha'}, {string: 'beta'}, {string: 'gamma'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addStringColumn({
+            name: 'column:string',
+            value: item => item.string,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:string'})!;
+
+        await column.filter('ALPHA');
+        expect(await column.values()).toEqual(['Alpha']);
+      });
+    });
+
+    describe('Filtering (per Table)', () => {
+
+      it('should filter string column when using a global filter', async () => {
+        const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addStringColumn({
+              name: 'column:string',
+              value: item => item.string,
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('alpha');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha'],
+        ]);
+
+        model.filter('a');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha'],
+          ['2', 'beta'],
+          ['3', 'gamma'],
+        ]);
+
+        model.filter('m');
+        await table.waitUntilStable();
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['3', 'gamma'],
+        ]);
+
+        model.filter(null);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha'],
+          ['2', 'beta'],
+          ['3', 'gamma'],
+        ]);
+      });
+
+      it('should filter number column when using a global filter', async () => {
+        const data = signal([{row: '1', number: 0}, {row: '2', number: 1}, {row: '3', number: 10}, {row: '4', number: 11}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addNumberColumn({
+              name: 'column:number',
+              value: item => item.number,
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('0');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '0'],
+        ]);
+
+        model.filter('1');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', '1'],
+        ]);
+
+        model.filter('2');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
+
+        model.filter('10');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['3', '10'],
+        ]);
+
+        model.filter('11');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['4', '11'],
+        ]);
+
+        model.filter('12');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
+      });
+
+      it('should filter boolean column when using a global filter', async () => {
+        const data = signal([{row: '1', boolean: true}, {row: '2', boolean: false}, {row: '3', boolean: true}, {row: '4', boolean: false}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addBooleanColumn({
+              name: 'column:boolean',
+              value: item => item.boolean,
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('true');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'checkmark'],
+          ['3', 'checkmark'],
+        ]);
+
+        model.filter('false');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', 'clear'],
+          ['4', 'clear'],
+        ]);
+
+        model.filter('0');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', 'clear'],
+          ['4', 'clear'],
+        ]);
+
+        model.filter('1');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'checkmark'],
+          ['3', 'checkmark'],
+        ]);
+
+        model.filter('2');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
+      });
+
+      it('should filter component column when using a global filter (without comparator)', async () => {
+        const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addComponentColumn({
+              name: 'column:component',
+              component: item => ({
+                component: CustomColumnComponent,
+                bindings: [inputBinding('value', () => item.string)],
+              }),
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('beta');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha'],
+          ['2', 'beta'],
+          ['3', 'gamma'],
+        ]);
+      });
+
+      it('should filter component column when using a global filter (with comparator)', async () => {
+        const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addComponentColumn({
+              name: 'column:component',
+              component: item => ({
+                component: CustomColumnComponent,
+                bindings: [inputBinding('value', () => item.string)],
+              }),
+              filterable: {matcher: (text, context) => context.item.string === text},
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('beta');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', 'beta'],
+        ]);
+      });
+
+      it('should filter template column when using a global filter (without comparator)', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addTemplateColumn({
+              name: 'column:template',
+              template: item => ({template: template, context: {$implicit: item.string}}),
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('beta');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha'],
+          ['2', 'beta'],
+          ['3', 'gamma'],
+        ]);
+      });
+
+      it('should filter template column when using a global filter (with comparator)', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addTemplateColumn({
+              name: 'column:template',
+              template: item => ({template: template, context: {$implicit: item.string}}),
+              filterable: {matcher: (text, context) => context.item.string === text},
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('beta');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', 'beta'],
+        ]);
+      });
+
+      it('should filter cross-column when using a global filter', async () => {
+        const data = signal([
+          {row: '1', string: 'alpha', number: 2, boolean: true},
+          {row: '2', string: 'beta', number: 1, boolean: false},
+          {row: '3', string: 'gamma', number: 0, boolean: true},
+          {row: '4', string: 'delta', number: 10, boolean: false},
+        ]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addStringColumn({
+              name: 'column:string',
+              value: item => item.string,
+            })
+            .addNumberColumn({
+              name: 'column:number',
+              value: item => item.number,
+            })
+            .addBooleanColumn({
+              name: 'column:boolean',
+              value: item => item.boolean,
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('alpha');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha', '2', 'checkmark'],
+        ]);
+
+        model.filter('a');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha', '2', 'checkmark'],
+          ['2', 'beta', '1', 'clear'],
+          ['3', 'gamma', '0', 'checkmark'],
+          ['4', 'delta', '10', 'clear'],
+        ]);
+
+        model.filter('b');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', 'beta', '1', 'clear'],
+        ]);
+
+        model.filter('true');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha', '2', 'checkmark'],
+          ['3', 'gamma', '0', 'checkmark'],
+        ]);
+
+        model.filter('false');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', 'beta', '1', 'clear'],
+          ['4', 'delta', '10', 'clear'],
+        ]);
+
+        model.filter('0');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', 'beta', '1', 'clear'],
+          ['3', 'gamma', '0', 'checkmark'],
+          ['4', 'delta', '10', 'clear'],
+        ]);
+
+        model.filter('1');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha', '2', 'checkmark'],
+          ['2', 'beta', '1', 'clear'],
+          ['3', 'gamma', '0', 'checkmark'],
+        ]);
+
+        model.filter('2');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha', '2', 'checkmark'],
+        ]);
+
+        model.filter('10');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['4', 'delta', '10', 'clear'],
+        ]);
+
+        model.filter('11');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
+      });
+
+      it('should call custom column filter matcher when using a global filter', async () => {
+        const data = signal([{string: 'alpha'}, {string: 'beta'}, {string: 'gamma'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addStringColumn({
+            name: 'column:string',
+            value: item => item.string,
             filterable: {matcher: (text, context) => context.value.length === text.length},
           }),
           injector: TestBed.inject(Injector),
@@ -571,99 +1200,15 @@ describe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
+        const column = table.column({name: 'column:string'})!;
 
-        // TODO [ego] Do not set filter vial model, but via column; see 'should filter number with filter field'
-        model.filter('abcd');
+        await column.filter('abcd');
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['beta']);
+        expect(await column.values()).toEqual(['beta']);
 
-        model.filter(null);
+        await column.filter(null);
         await table.waitUntilStable();
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['alpha', 'beta', 'gamma']);
-      });
-
-      it('should filter number with filter field', async () => {
-        const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          filterable: true,
-          columns: table => table.addNumberColumn({
-            name: 'column:id',
-            header: 'ID',
-            value: item => item.id,
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        const column = table.column({header: 'ID'})!;
-
-        await column.filter('3');
-        expect(await table.column({name: 'column:id'})!.values()).toEqual(['3']);
-      });
-
-      it('should ignore invalid number input in filter field', async () => {
-        const data = signal([{id: 1}, {id: 3}, {id: 2}]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          filterable: true,
-          columns: table => table.addNumberColumn({
-            name: 'column:id',
-            header: 'ID',
-            value: item => item.id,
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        const column = table.column({header: 'ID'})!;
-
-        await column.filter('invalid');
-        expect(await table.column({name: 'column:id'})!.values()).toEqual(['1', '3', '2']);
-      });
-
-      it('should trim filter field input', async () => {
-        const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          filterable: true,
-          columns: table => table.addStringColumn({
-            name: 'column:name',
-            header: 'Name',
-            value: item => item.name,
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        const column = table.column({header: 'Name'})!;
-
-        await column.filter(' beta ');
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['beta']);
-      });
-
-      it('should filter string column case-insensitively', async () => {
-        const data = signal([{name: 'Alpha'}, {name: 'beta'}, {name: 'gamma'}]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          filterable: true,
-          columns: table => table.addStringColumn({
-            name: 'column:name',
-            header: 'Name',
-            value: item => item.name,
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        const column = table.column({header: 'Name'})!;
-
-        await column.filter('ALPHA');
-        expect(await table.column({name: 'column:name'})!.values()).toEqual(['Alpha']);
+        expect(await column.values()).toEqual(['alpha', 'beta', 'gamma']);
       });
     });
   });
@@ -1817,7 +2362,7 @@ describe('Table', () => {
   template: `{{value()}}`,
 })
 class CustomColumnComponent {
-  public readonly value = input.required<number>();
+  public readonly value = input.required<unknown>();
 }
 
 @Component({
