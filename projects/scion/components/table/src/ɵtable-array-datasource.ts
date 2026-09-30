@@ -10,93 +10,92 @@
 
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
-import {computed, linkedSignal, Signal} from '@angular/core';
+import {computed, signal, Signal, untracked} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
+import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {map, Observable, shareReplay} from 'rxjs';
+import {Objects} from '@scion/toolkit/util';
 
 export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
-  const cache = linkedSignal({
-    source: () => ({data: data(), columns: columns()}),
-    computation: () => new Map<string, Observable<MappedRow<T>[]>>(),
-  });
 
-  const items$ = toObservable(computed(() => {
-    const resolvedColumns = columns();
-    const items: MappedRow<T>[] = data().map(item => ({
-      item,
-      cells: resolvedColumns.reduce((acc, column) => acc.set(column.name, {
-        column,
-        value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item))() : undefined,
-      }), new Map<`column:${string}`, MappedCell<T>>()),
-    }));
-
-    return {
-      items,
-      columns: resolvedColumns,
-    };
-  }));
+  const dataset = new Dataset(data, columns);
 
   return markAsArrayDatasource((request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
-    const sortHash = request.sortCriteria.map(sc => `${sc.columnName}_${sc.direction}`).join('-');
-    const filterHash = request.columnFilters.map(fc => `${fc.columnName}_${fc.text}`).join('-');
-    const hash = `${sortHash}-${filterHash}-${request.tableFilter ?? ''}`;
+    dataset.columnFilters.set(request.columnFilters);
+    dataset.tableFilter.set(request.tableFilter);
+    dataset.sortCriteria.set(request.sortCriteria);
 
-    if (!cache().has(hash)) {
-      const sortedAndFiltered$ = items$.pipe(
-        map(({items, columns}) => {
-          const sortCols = mapCriteria(request.sortCriteria, columns);
-          const filterCols = mapCriteria(request.columnFilters, columns);
+    const totalCount = dataset.count;
+    const items = dataset.slice(request.start, request.end);
 
-          return items
-            .filter(item => matchesColumnFilters(item, filterCols) && matchesGlobalFilter(item, request.tableFilter))
-            .sort((a, b) => sort(a, b, sortCols));
-        }),
-        shareReplay({bufferSize: 1, refCount: true}), // as soon as there are no subscribers left unsubscribe from the source.
-      );
-
-      // Only store one item in the cache.
-      // The cache is used for scrolling and multipage selection.
-      // It caches the data based on the current filter and sort.
-      cache.set(new Map<string, Observable<MappedRow<T>[]>>().set(hash, sortedAndFiltered$));
-    }
-
-    return cache().get(hash)!.pipe(
-      map(items => ({
-        totalCount: items.length,
-        items: items.slice(request.start, request.end).map(i => i.item),
-      })),
-    );
+    return toObservable(computed(() => ({
+      totalCount: totalCount(),
+      items: items(),
+    })));
   });
 }
 
-type Criterion = SciTableSortCriterion | SciTableColumnFilter;
-type MappedCriterion<T, CRIT extends Criterion = Criterion> = CRIT & {
-  column: SciTableColumnLike<T>;
-};
+/**
+ * Provides a filtered and sorted view on given data.
+ */
+class Dataset<T> {
 
-interface MappedCell<T> {
-  column: SciTableColumnLike<T>;
+  private readonly _dataview: Signal<DatasetRow<T>[]>;
+
+  public readonly columnFilters = signal<SciTableColumnFilter[]>([], {equal: Objects.isEqual});
+  public readonly sortCriteria = signal<SciTableSortCriterion[]>([], {equal: Objects.isEqual});
+  public readonly tableFilter = signal<string | undefined>(undefined);
+
+  /**
+   * Returns the total count of items matching the current filters and search criteria.
+   */
+  public readonly count = computed(() => this._dataview().length);
+
+  constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
+    const dataset = computed((): DatasetRow<T>[] => data().map(item => ({
+      item,
+      cells: columns().reduce((cells, column) => cells.set(column.name, {
+        column: column as SciTableColumn,
+        value: 'value' in column ? coerceSignal(untracked(() => column.value(item)), {coerceUndefined: true})() : undefined,
+      }), new Map<`column:${string}`, DatasetCell>()),
+    })));
+
+    // Memoize filtered/sorted view; recomputes only when dataset or criteria change, not when scrolling through the view, as sorting is an expensive operation.
+    this._dataview = computed(() => {
+      const rows = dataset();
+      const columnFilters = this.columnFilters();
+      const tableFilter = this.tableFilter();
+      const sortCriteria = this.sortCriteria();
+
+      // PERF: Do not track signals inside `Array.sort` to avoid Angular signal tracking overhead as the comparator runs repeatedly, degrading performance otherwise.
+      return untracked(() => rows
+        .filter(row => matchesRow(row, columnFilters) && matchesGlobalFilter(row, tableFilter ?? undefined))
+        .sort((a, b) => compareRows(a, b, sortCriteria)));
+    });
+  }
+
+  /**
+   * Returns a slice of the filtered and sorted data within the given range (start inclusive, end exclusive).
+   */
+  public slice(start: number, end: number): Signal<T[]> {
+    return computed(() => this._dataview().slice(start, end).map(row => row.item));
+  }
+}
+
+interface DatasetRow<T> {
+  item: T;
+  cells: Map<`column:${string}`, DatasetCell>;
+}
+
+interface DatasetCell {
+  column: SciTableColumn;
   value: string | number | boolean | undefined;
 }
 
-interface MappedRow<T> {
-  item: T;
-  cells: Map<`column:${string}`, MappedCell<T>>;
-}
-
-function mapCriteria<T, CRIT extends Criterion>(criteria: CRIT[], columns: SciTableColumnLike<T>[]): MappedCriterion<T, CRIT>[] {
-  return criteria.map(sc => {
-    const column = columns.find(c => sc.columnName === c.name);
-
-    return ({
-      ...sc,
-      column,
-    });
-  }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.column !== undefined);
-}
-
-function matchesGlobalFilter<T>(row: MappedRow<T>, filter?: string): boolean {
+/**
+ * Tests whether a row matches the given global filter.
+ */
+function matchesGlobalFilter<T>(row: DatasetRow<T>, filter?: string): boolean {
   if (!filter?.trim()) {
     return true;
   }
@@ -107,7 +106,7 @@ function matchesGlobalFilter<T>(row: MappedRow<T>, filter?: string): boolean {
       continue;
     }
 
-    if (matchesColumnFilters(row, [{text, columnName: cell.column.name, column: cell.column}])) {
+    if (matchesRow(row, [{text, columnName: cell.column.name} satisfies SciTableColumnFilter])) {
       return true;
     }
   }
@@ -115,15 +114,17 @@ function matchesGlobalFilter<T>(row: MappedRow<T>, filter?: string): boolean {
   return false;
 }
 
-function matchesColumnFilters<T>(row: MappedRow<T>, filterCriteria: MappedCriterion<T, SciTableColumnFilter>[]): boolean {
-  if (filterCriteria.length === 0) {
+/**
+ * Tests whether a row matches the given column filters.
+ */
+function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[]): boolean {
+  if (!columnFilters.length) {
     return true;
   }
 
-  for (const criterion of filterCriteria) {
-    const value = row.cells.get(criterion.columnName)?.value;
-    const column = criterion.column as SciTableColumn;
-    if (!column.matches(criterion.text, {item: row.item, value: value})) {
+  for (const columnFilter of columnFilters) {
+    const cell = row.cells.get(columnFilter.columnName)!;
+    if (!cell.column.matches(columnFilter.text, {item: row.item, value: cell.value})) { // component and template columns have no value
       return false;
     }
   }
@@ -131,17 +132,19 @@ function matchesColumnFilters<T>(row: MappedRow<T>, filterCriteria: MappedCriter
   return true;
 }
 
-function sort<T>(a: MappedRow<T>, b: MappedRow<T>, sortCriteria: MappedCriterion<T, SciTableSortCriterion>[]): number {
-  if (sortCriteria.length === 0) {
+/**
+ * Compares two rows based on the given sort criteria.
+ */
+function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: SciTableSortCriterion[]): number {
+  if (!sortCriteria.length) {
     return 0;
   }
 
   for (const criterion of sortCriteria) {
-    const aValue = a.cells.get(criterion.columnName)?.value;
-    const bValue = b.cells.get(criterion.columnName)?.value;
+    const cell1 = row1.cells.get(criterion.columnName)!;
+    const cell2 = row2.cells.get(criterion.columnName)!;
 
-    const column = criterion.column as SciTableColumn;
-    const comparison = column.compare({item: a.item, value: aValue}, {item: b.item, value: bValue});
+    const comparison = cell1.column.compare({item: row1.item, value: cell1.value}, {item: row2.item, value: cell2.value});
     if (comparison !== 0) {
       const signum = criterion.direction === 'asc' ? 1 : -1;
       return signum * comparison;
@@ -152,7 +155,7 @@ function sort<T>(a: MappedRow<T>, b: MappedRow<T>, sortCriteria: MappedCriterion
 }
 
 /**
- * Checks whether given {@link SciTableDataLoaderFn} is an {@link arrayDatasource}.
+ * Checks whether given {@link SciTableDataLoaderFn} represents an {@link arrayDatasource}.
  */
 export function isArrayDatasource(loader: SciTableDataLoaderFn<unknown>): boolean {
   return ARRAY_DATASOURCE_MARKER in loader;
