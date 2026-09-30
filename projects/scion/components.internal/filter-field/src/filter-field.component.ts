@@ -99,23 +99,28 @@ export class SciFilterFieldComponent implements ControlValueAccessor {
   }
 
   /**
-   * Invoke to propagate keyboard events to the filter field.
+   * Delegates keyboard events to this filter field.
    *
-   * If the keyboard event represents an alphanumeric character, filter text is cleared and the cursor set into the filter field.
-   * This allows to start filtering without having to focus the filter field, e.g. if another element has the focus.
+   * Enables filtering without prior focus on the field (for example, if another element has focus).
    */
   public focusAndApplyKeyboardEvent(event: KeyboardEvent): void {
-    if (event.target === this._inputElement().nativeElement) {
-      return; // Ignore the keyboard event if its target is equal to the input element.
-    }
-    if (event.ctrlKey || event.altKey || event.shiftKey) {
+    // Use `composedPath` to identify targets in shadow tree (e.g., within `sci-table`).
+    const [target] = event.composedPath();
+
+    // Ignore keystrokes originating from input elements.
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
       return;
     }
-    if (!isAlphanumeric(event)) {
+
+    // Ignore keystrokes for non-alphanumeric keys or with modifiers pressed.
+    if (event.ctrlKey || event.altKey || event.shiftKey || event.metaKey || !isAlphanumeric(event)) {
       return;
     }
+
+    // Clear field and delegate focus to filter field.
     this.formControl.setValue('');
     this.focus();
+
     event.stopPropagation();
     this._cd.markForCheck();
   }
