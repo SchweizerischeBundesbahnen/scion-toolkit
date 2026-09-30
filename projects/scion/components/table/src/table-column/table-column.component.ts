@@ -9,7 +9,7 @@
  */
 
 import {Component, effect, ElementRef, inject, input, untracked} from '@angular/core';
-import {SciTableColumn} from '../table.model';
+import {SciTableColumnLike} from '../table.model';
 
 @Component({
   selector: 'sci-table-column',
@@ -21,7 +21,7 @@ import {SciTableColumn} from '../table.model';
 })
 export class SciTableColumnComponent {
 
-  public readonly column = input.required<SciTableColumn>();
+  public readonly column = input.required<SciTableColumnLike>();
 
   constructor() {
     this.injectLocationToColumn();
