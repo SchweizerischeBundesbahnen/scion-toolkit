@@ -171,8 +171,6 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-header').fill(options.header ?? options.name);
     await this.properties.locator('select.e2e-type').selectOption(options.type);
     await this.properties.locator('input.e2e-resizable').setChecked(options.resizable ?? true);
-    await this.properties.locator('input.e2e-custom-sort').setChecked(!!options.extras?.customSort);
-    await this.properties.locator('input.e2e-custom-filter').setChecked(!!options.extras?.customFilter);
     await this.properties.locator('input.e2e-width').fill(options.width ?? '');
     await this.properties.locator('input.e2e-min-width').fill(`${options.minWidth ?? ''}`);
 
@@ -202,7 +200,5 @@ export interface ColumnOptions {
   extras?: {
     component?: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column';
     padding?: boolean;
-    customFilter?: boolean;
-    customSort?: boolean;
   };
 }

@@ -172,7 +172,7 @@ describe('Table Factory', () => {
       }, {injector: TestBed.inject(Injector)});
     });
 
-    it('should not allow loader function with custom sort', done => {
+    it('should disallow sort comparator if using custom datasource', done => {
       createSciTableComponent(table({
         ɵdatasource: () => ({totalCount: 0, items: []}),
         datasource: ɵillegaldatasource(),
@@ -180,14 +180,14 @@ describe('Table Factory', () => {
           expect(() => table.addStringColumn({
             value: () => 'test',
             sortable: {comparator: () => 0},
-          })).toThrowError('[ColumnDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
+          })).toThrowError('[ColumnDefinitionError] Configuring a sort comparator is not supported for tables using a datasource. Sorting must be done by the datasource.');
           done();
         },
         injector: TestBed.inject(Injector),
       }));
     });
 
-    it('should not allow loader function with custom filter', done => {
+    it('should disallow filter matcher if using custom datasource', done => {
       createSciTableComponent(table({
         ɵdatasource: () => ({totalCount: 0, items: []}),
         datasource: ɵillegaldatasource(),
@@ -195,98 +195,98 @@ describe('Table Factory', () => {
           expect(() => table.addStringColumn({
             value: () => 'test',
             filterable: {matcher: () => true},
-          })).toThrowError('[ColumnDefinitionError] Data sources with a loader function cannot define a custom sort or filter function. Sorting and filtering have to be done within the loader function.');
+          })).toThrowError('[ColumnDefinitionError] Configuring a filter matcher is not supported for tables using a datasource. Filtering must be done by the datasource.');
           done();
         },
         injector: TestBed.inject(Injector),
       }));
     });
 
-    it('should not allow component column with auto filter', done => {
+    it('should require filter matcher for component column', done => {
       createSciTableComponent(table({
         datasource: signal([]),
         columns: table => {
           expect(() => table.addComponentColumn({
             component: () => ({}) as SciComponentDescriptor,
             filterable: true,
-          })).toThrowError('[ColumnDefinitionError] Component columns cannot have a auto filter or auto sort.');
+          })).toThrowError('[ColumnDefinitionError] Component column requires a filter matcher in order to be filterable.');
           done();
         },
         injector: TestBed.inject(Injector),
       }));
     });
 
-    it('should not allow component column with auto sort', done => {
+    it('should require sort comparator for component column', done => {
       createSciTableComponent(table({
         datasource: signal([]),
         columns: table => {
           expect(() => table.addComponentColumn({
             component: () => ({}) as SciComponentDescriptor,
             sortable: true,
-          })).toThrowError('[ColumnDefinitionError] Component columns cannot have a auto filter or auto sort.');
+          })).toThrowError('[ColumnDefinitionError] Component column requires a sort comparator in order to be sortable.');
           done();
         },
         injector: TestBed.inject(Injector),
       }));
     });
 
-    it('should not allow template column with auto filter', done => {
+    it('should require filter matcher for template column', done => {
       createSciTableComponent(table({
         datasource: signal([]),
         columns: table => {
           expect(() => table.addTemplateColumn({
             template: () => ({}) as SciTemplateDescriptor,
             filterable: true,
-          })).toThrowError('[ColumnDefinitionError] Template columns cannot have a auto filter or auto sort.');
+          })).toThrowError('[ColumnDefinitionError] Template column requires a filter matcher in order to be filterable.');
           done();
         },
         injector: TestBed.inject(Injector),
       }));
     });
 
-    it('should not allow template column with auto sort', done => {
+    it('should require sort comparator for template column', done => {
       createSciTableComponent(table({
         datasource: signal([]),
         columns: table => {
           expect(() => table.addTemplateColumn({
             template: () => ({}) as SciTemplateDescriptor,
             sortable: true,
-          })).toThrowError('[ColumnDefinitionError] Template columns cannot have a auto filter or auto sort.');
+          })).toThrowError('[ColumnDefinitionError] Template column requires a sort comparator in order to be sortable.');
           done();
         },
         injector: TestBed.inject(Injector),
       }));
     });
 
-    it('should not allow multiple columns with the same name', done => {
+    it('should require unique column name', done => {
       createSciTableComponent(table({
         datasource: signal([]),
         columns: table => {
           expect(() => table
             .addStringColumn({name: 'column:test', value: () => ''})
             .addStringColumn({name: 'column:test', value: () => ''}),
-          ).toThrowError('[ColumnDefinitionError] Column names have to be unique. "column:test" is defined more than once.');
+          ).toThrowError('[ColumnDefinitionError] Column names must be unique. "column:test" is defined more than once.');
           done();
         },
         injector: TestBed.inject(Injector),
       }));
     });
 
-    it('should not allow column with the same name as a generated column name', done => {
+    it('should require unique generated column name', done => {
       createSciTableComponent(table({
         datasource: signal([]),
         columns: table => {
           expect(() => table
             .addStringColumn('Test', () => '')
             .addStringColumn({name: 'column:0', value: () => ''}),
-          ).toThrowError('[ColumnDefinitionError] Column names have to be unique. "column:0" is defined more than once.');
+          ).toThrowError('[ColumnDefinitionError] Column names must be unique. "column:0" is defined more than once.');
           done();
         },
         injector: TestBed.inject(Injector),
       }));
     });
 
-    it('should allow multiple columns with no name', done => {
+    it('should not require a column name', done => {
       createSciTableComponent(table({
         datasource: signal([]),
         columns: table => {

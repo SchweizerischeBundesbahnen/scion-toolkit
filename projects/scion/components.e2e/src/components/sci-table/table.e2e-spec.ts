@@ -845,25 +845,6 @@ test.describe('sci-table', () => {
       await expect(templateColumn.columnFilter).toBeStrictEmpty();
     });
 
-    test('should filter template column with custom filter', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await provideHttpDatasource(page, generateData(20, i => ({name: `Product ${i % 4}`})), {datasource: 'array-http'});
-
-      await tablePage.setFilterable(true);
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-      await tablePage.addColumn({name: 'column:template', type: 'template', extras: {customFilter: true}});
-
-      await table.column({name: 'column:template'}).filter('Product 1');
-      await expect(table.rows).toHaveCount(5);
-      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
-
-      await table.column({name: 'column:template'}).clearFilter();
-      await expect(table.rows).toHaveCount(20);
-    });
-
     test('should not filter component column', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -876,25 +857,6 @@ test.describe('sci-table', () => {
       await expect(componentColumn.columnHeader).toBeAttached();
       await expect(componentColumn.columnFilter).toHaveAttribute('data-disabled');
       await expect(componentColumn.columnFilter).toBeStrictEmpty();
-    });
-
-    test('should filter component column with custom filter', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await provideHttpDatasource(page, generateData(20, i => ({name: `Product ${i % 4}`})), {datasource: 'array-http'});
-
-      await tablePage.setFilterable(true);
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {customFilter: true}});
-
-      await table.column({name: 'column:component'}).filter('Product 1');
-      await expect(table.rows).toHaveCount(5);
-      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
-
-      await table.column({name: 'column:component'}).clearFilter();
-      await expect(table.rows).toHaveCount(20);
     });
 
     test('should filter large amount of data', async ({page}) => {

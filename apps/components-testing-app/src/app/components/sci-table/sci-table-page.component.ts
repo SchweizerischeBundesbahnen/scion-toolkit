@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {provideTableRowBinding, SciTable, SciTableCellContext, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciFormFieldComponent} from '@scion/components.internal/form-field';
@@ -134,8 +134,6 @@ export default class SciTablePageComponent {
           case 'string':
             table.addStringColumn({
               ...column,
-              filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
-              sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
               value: product => product.name,
             });
             break;
@@ -154,8 +152,6 @@ export default class SciTablePageComponent {
           case 'component':
             table.addComponentColumn({
               ...column,
-              filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
-              sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
               padding: columnForm.extras.padding,
               component: product => {
                 switch (columnForm.extras.component) {
@@ -176,8 +172,6 @@ export default class SciTablePageComponent {
           case 'template':
             table.addTemplateColumn({
               ...column,
-              filterable: columnForm.extras.customFilter ? {matcher: customFilter} : undefined,
-              sortable: columnForm.extras.customSort ? {comparator: customComparator} : undefined,
               padding: columnForm.extras.padding,
               template: () => ({
                 template: this._customColumnTemplate,
@@ -242,8 +236,6 @@ export default class SciTablePageComponent {
         extras: {
           component: 'component:custom-column',
           padding: true,
-          customSort: false,
-          customFilter: false,
         },
       };
     }
@@ -312,8 +304,6 @@ interface ColumnForm {
   extras: {
     component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';
     padding: boolean;
-    customSort: boolean;
-    customFilter: boolean;
   };
 }
 
@@ -345,14 +335,6 @@ interface LayoutForm {
   tableWidth: number | null;
   tableGrowToBreakpoint: boolean;
   pageHeight: number | null;
-}
-
-function customFilter(text: string, context: SciTableCellContext<Product, unknown>): boolean {
-  return context.item.name.includes(text);
-}
-
-function customComparator(a: SciTableCellContext<Product, unknown>, b: SciTableCellContext<Product, unknown>): number {
-  return a.item.id - b.item.id;
 }
 
 function columnDataTypes(columns: ColumnForm[]): Map<`column:${string}`, ColumnForm['type']> {

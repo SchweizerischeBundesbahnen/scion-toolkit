@@ -89,11 +89,13 @@ export class ColumnPO {
   private readonly _columnElement: HTMLElement;
   private readonly _columnFilterElement: HTMLElement | null;
   private readonly _columnHeaderElement: HTMLElement | null;
+  private readonly _columnSortButton: HTMLButtonElement | null;
 
   constructor(public name: `column:${string}`, public index: number, private _table: TablePO) {
     this._columnElement = this._table.element.querySelector(`sci-table-column[data-column="${this.name}"]`)!;
     this._columnHeaderElement = this._table.element.querySelector(`sci-column-header[data-column="${this.name}"]`);
     this._columnFilterElement = this._table.element.querySelector(`sci-column-filter[data-column="${this.name}"]`);
+    this._columnSortButton = this._columnHeaderElement?.querySelector('button.e2e-sort') ?? null;
   }
 
   public get header(): string | undefined {
@@ -109,12 +111,11 @@ export class ColumnPO {
   }
 
   public async toggleSort(): Promise<void> {
-    if (!this._columnHeaderElement) {
+    if (!this._columnSortButton) {
       throw Error('[PageObjectError] Table without header cannot be sorted.');
     }
 
-    const sortButton: HTMLElement = this._columnHeaderElement.querySelector('button.e2e-sort')!;
-    sortButton.click();
+    this._columnSortButton.click();
     await this._table.waitUntilStable();
   }
 
@@ -174,6 +175,14 @@ export class ColumnPO {
     else {
       return table.rows.map(row => row.cells[this.index]!.value ?? '');
     }
+  }
+
+  public get sortable(): boolean {
+    return this._columnSortButton !== null;
+  }
+
+  public get filterable(): boolean {
+    return this._columnFilterElement !== null;
   }
 }
 

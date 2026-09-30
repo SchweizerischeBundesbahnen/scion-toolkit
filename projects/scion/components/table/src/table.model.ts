@@ -14,6 +14,7 @@ import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
+import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
 
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template';
 
@@ -110,15 +111,18 @@ export interface SciTable<T> {
   readonly resizable: WritableSignal<boolean>;
   readonly selectable: WritableSignal<'single' | 'multi' | false>;
 
+  /**
+   * Filters items cross-column, ignoring {@link SciTableDescriptor.filterable} and {@link SciTableColumnDescriptor.filterable} settings.
+   */
   filter(text: string | null): void;
 }
 
-export interface SciTableCellContext<T, VALUE> {
+export interface SciTableCellContext<T = unknown, VALUE = unknown> {
   item: T;
   value: VALUE;
 }
 
-export interface SciTableColumn {
+export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
   type: SciTableColumnType;
   name: `column:${string}`;
   header: Signal<string>;
@@ -130,41 +134,43 @@ export interface SciTableColumn {
   minWidth: number;
   resizing: WritableSignal<boolean>;
   location: {x: number; width: number};
+  compare: SciTableColumnSortComparatorFn<T, VALUE>;
+  matches: SciTableColumnFilterMatcherFn<T, VALUE, FILTER>;
 }
 
-export interface SciStringColumn<T> extends SciTableColumn {
+export interface SciStringColumn<T> extends SciTableColumn<T, string> {
   type: 'string';
   value: (item: T) => MaybeSignal<string>;
-  sort: (a: SciTableCellContext<T, string>, b: SciTableCellContext<T, string>) => number;
-  filter: (text: string, context: SciTableCellContext<T, string>) => boolean;
+  compare: SciTableColumnSortComparatorFn<T, string>;
+  matches: SciTableColumnFilterMatcherFn<T, string>;
 }
 
-export interface SciNumberColumn<T> extends SciTableColumn {
+export interface SciNumberColumn<T> extends SciTableColumn<T, number> {
   type: 'number';
   value: (item: T) => MaybeSignal<number>;
-  sort: (a: SciTableCellContext<T, number>, b: SciTableCellContext<T, number>) => number;
-  filter: (text: number, context: SciTableCellContext<T, number>) => boolean;
+  compare: SciTableColumnSortComparatorFn<T, number>;
+  matches: SciTableColumnFilterMatcherFn<T, number>;
 }
 
-export interface SciBooleanColumn<T> extends SciTableColumn {
+export interface SciBooleanColumn<T> extends SciTableColumn<T, boolean> {
   type: 'boolean';
   value: (item: T) => MaybeSignal<boolean>;
-  sort: (a: SciTableCellContext<T, boolean>, b: SciTableCellContext<T, boolean>) => number;
-  filter: (text: boolean, context: SciTableCellContext<T, boolean>) => boolean;
+  compare: SciTableColumnSortComparatorFn<T, boolean>;
+  matches: SciTableColumnFilterMatcherFn<T, boolean>;
 }
 
-export interface SciComponentColumn<T> extends SciTableColumn {
+export interface SciComponentColumn<T> extends SciTableColumn<T, void, string> {
   type: 'component';
   component: (item: T) => SciComponentDescriptor;
-  sort: (a: SciTableCellContext<T, void>, b: SciTableCellContext<T, void>) => number;
-  filter: (text: string, context: SciTableCellContext<T, void>) => boolean;
+  compare: SciTableColumnSortComparatorFn<T, void>;
+  matches: SciTableColumnFilterMatcherFn<T, void, string>;
 }
 
-export interface SciTemplateColumn<T> extends SciTableColumn {
+export interface SciTemplateColumn<T> extends SciTableColumn<T, void, string> {
   type: 'template';
   template: (item: T) => SciTemplateDescriptor;
-  sort: (a: SciTableCellContext<T, void>, b: SciTableCellContext<T, void>) => number;
-  filter: (text: string, context: SciTableCellContext<T, void>) => boolean;
+  compare: SciTableColumnSortComparatorFn<T, void>;
+  matches: SciTableColumnFilterMatcherFn<T, void, string>;
 }
 
 export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;

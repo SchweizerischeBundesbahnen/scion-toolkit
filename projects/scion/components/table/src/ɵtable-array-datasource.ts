@@ -8,8 +8,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTableDataLoaderFn, SciTableSortCriterion, SciTablePageRequest, SciTablePageResponse} from './table-datasource';
-import {SciTableColumnLike} from './table.model';
+import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
+import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
 import {computed, linkedSignal, Signal} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
 import {toObservable} from '@angular/core/rxjs-interop';
@@ -37,7 +37,7 @@ export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableCo
     };
   }));
 
-  return (request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
+  return markAsArrayDatasource((request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
     const sortHash = request.sortCriteria.map(sc => `${sc.columnName}_${sc.direction}`).join('-');
     const filterHash = request.columnFilters.map(fc => `${fc.columnName}_${fc.text}`).join('-');
     const hash = `${sortHash}-${filterHash}-${request.tableFilter ?? ''}`;
@@ -49,7 +49,7 @@ export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableCo
           const filterCols = mapCriteria(request.columnFilters, columns);
 
           return items
-            .filter(item => columnFilter(item, filterCols) && globalFilter(item, request.tableFilter))
+            .filter(item => matchesColumnFilters(item, filterCols) && matchesGlobalFilter(item, request.tableFilter))
             .sort((a, b) => sort(a, b, sortCols));
         }),
         shareReplay({bufferSize: 1, refCount: true}), // as soon as there are no subscribers left unsubscribe from the source.
@@ -67,7 +67,7 @@ export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableCo
         items: items.slice(request.start, request.end).map(i => i.item),
       })),
     );
-  };
+  });
 }
 
 type Criterion = SciTableSortCriterion | SciTableColumnFilter;
@@ -96,16 +96,18 @@ function mapCriteria<T, CRIT extends Criterion>(criteria: CRIT[], columns: SciTa
   }).filter((sc): sc is MappedCriterion<T, CRIT> => sc.column !== undefined);
 }
 
-function globalFilter<T>(row: MappedRow<T>, filter?: string): boolean {
+function matchesGlobalFilter<T>(row: MappedRow<T>, filter?: string): boolean {
   if (!filter?.trim()) {
     return true;
   }
 
-  for (const column of row.cells.values()) {
-    const result = columnFilter(row, [{text: filter, columnName: column.column.name, column: column.column}]);
+  for (const cell of row.cells.values()) {
+    const text = coerceFilterText(filter, {to: cell.column.type});
+    if (text === undefined) {
+      continue;
+    }
 
-    // If any value includes the filter, it matches the filter.
-    if (result) {
+    if (matchesColumnFilters(row, [{text, columnName: cell.column.name, column: cell.column}])) {
       return true;
     }
   }
@@ -113,32 +115,15 @@ function globalFilter<T>(row: MappedRow<T>, filter?: string): boolean {
   return false;
 }
 
-function columnFilter<T>(row: MappedRow<T>, filterCriteria: MappedCriterion<T, SciTableColumnFilter>[]): boolean {
+function matchesColumnFilters<T>(row: MappedRow<T>, filterCriteria: MappedCriterion<T, SciTableColumnFilter>[]): boolean {
   if (filterCriteria.length === 0) {
     return true;
   }
 
   for (const criterion of filterCriteria) {
     const value = row.cells.get(criterion.columnName)?.value;
-
-    const filter = (() => {
-      switch (criterion.column.type) {
-        case 'string':
-          return criterion.column.filter(criterion.text as string, {item: row.item, value: value as string});
-        case 'number':
-          return criterion.column.filter(criterion.text as number, {item: row.item, value: value as number});
-        case 'boolean':
-          return criterion.column.filter(criterion.text as boolean, {item: row.item, value: value as boolean});
-        case 'component':
-        case 'template':
-          return criterion.column.filter(criterion.text as string, {item: row.item, value: undefined});
-        default:
-          return true;
-      }
-    })();
-
-    // all filters must match (for now)
-    if (!filter) {
+    const column = criterion.column as SciTableColumn;
+    if (!column.matches(criterion.text, {item: row.item, value: value})) {
       return false;
     }
   }
@@ -155,27 +140,57 @@ function sort<T>(a: MappedRow<T>, b: MappedRow<T>, sortCriteria: MappedCriterion
     const aValue = a.cells.get(criterion.columnName)?.value;
     const bValue = b.cells.get(criterion.columnName)?.value;
 
-    const sort = (() => {
-      switch (criterion.column.type) {
-        case 'string':
-          return criterion.column.sort({item: a.item, value: aValue as string}, {item: b.item, value: bValue as string});
-        case 'number':
-          return criterion.column.sort({item: a.item, value: aValue as number}, {item: b.item, value: bValue as number});
-        case 'boolean':
-          return criterion.column.sort({item: a.item, value: aValue as boolean}, {item: b.item, value: bValue as boolean});
-        case 'component':
-        case 'template':
-          return criterion.column.sort({item: a.item, value: undefined}, {item: b.item, value: undefined});
-        default:
-          return 0;
-      }
-    })();
-
-    if (sort !== 0) {
-      const dir = criterion.direction === 'asc' ? 1 : -1;
-      return sort * dir;
+    const column = criterion.column as SciTableColumn;
+    const comparison = column.compare({item: a.item, value: aValue}, {item: b.item, value: bValue});
+    if (comparison !== 0) {
+      const signum = criterion.direction === 'asc' ? 1 : -1;
+      return signum * comparison;
     }
   }
 
   return 0;
+}
+
+/**
+ * Checks whether given {@link SciTableDataLoaderFn} is an {@link arrayDatasource}.
+ */
+export function isArrayDatasource(loader: SciTableDataLoaderFn<unknown>): boolean {
+  return ARRAY_DATASOURCE_MARKER in loader;
+}
+
+/**
+ * Marks given {@link SciTableDataLoaderFn} as an array data source.
+ */
+function markAsArrayDatasource<TABLE_DATA_LOADER extends SciTableDataLoaderFn<unknown>>(loader: TABLE_DATA_LOADER): TABLE_DATA_LOADER {
+  Object.defineProperty(loader, ARRAY_DATASOURCE_MARKER, {value: true, writable: false, enumerable: false, configurable: false});
+  return loader;
+}
+
+/**
+ * Identifies a {@link SciTableDataLoaderFn} as an {@link arrayDatasource}.
+ */
+const ARRAY_DATASOURCE_MARKER = Symbol('ARRAY_DATASOURCE_HINT');
+
+/**
+ * Coerces the given filter text into the specified column data type.
+ */
+function coerceFilterText(text: string, options: {to: SciTableColumnType}): string | number | boolean | undefined {
+  switch (options.to) {
+    case 'number': {
+      const number = Number.parseFloat(text);
+      return !Number.isNaN(number) ? number : undefined;
+    }
+    case 'boolean': {
+      if (text === 'true' || text === '1') {
+        return true;
+      }
+      if (text === 'false' || text === '0') {
+        return false;
+      }
+      return undefined;
+    }
+    default: {
+      return text;
+    }
+  }
 }
