@@ -110,18 +110,18 @@ export class ColumnPO {
     return this._table.element.querySelector(`sci-splitter[data-column="${this.name}"]`)!;
   }
 
-  public async toggleSort(): Promise<void> {
+  public async toggleSort(modifiers?: {ctrl?: true}): Promise<void> {
     if (!this._columnSortButton) {
       throw Error('[PageObjectError] Table without header cannot be sorted.');
     }
 
-    this._columnSortButton.click();
+    this._columnSortButton.dispatchEvent(new MouseEvent('click', {ctrlKey: modifiers?.ctrl ?? false}));
     await this._table.waitUntilStable();
   }
 
   public async filter(value: string | number | boolean | null): Promise<void> {
     if (!this._columnFilterElement) {
-      throw Error('[PageObjectError] Table without header cannot be filtered.');
+      throw Error('[PageObjectError] Table without column filters cannot be filtered.');
     }
 
     if (value === null) {

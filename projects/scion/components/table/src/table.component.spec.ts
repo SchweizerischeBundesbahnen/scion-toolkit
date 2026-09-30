@@ -1998,6 +1998,137 @@ describe('Table', () => {
       expect(destroyRefs[1]!.destroyed).toBeTrue();
       expect(destroyRefs[2]!.destroyed).toBeFalse();
     });
+
+    it('should remove stale column filter when removing column', async () => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
+        totalCount: 10,
+        items: generateData(request.pageSize, i => request.start + i),
+      }));
+
+      const visibleColumns = signal(new Set<`column:${string}`>(['column:1', 'column:2']));
+
+      const {fixture} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: loader,
+        datasource: ɵillegaldatasource(),
+        filterable: true,
+        columns: table => visibleColumns().forEach(column => table.addNumberColumn({
+          name: column,
+          value: item => item,
+        })),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({columnFilters: []}));
+      loader.calls.reset();
+
+      // Filter by 'column:1'.
+      await table.column({name: 'column:1'})!.filter(1);
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        columnFilters: [
+          {columnName: 'column:1', text: 1},
+        ],
+      }));
+      loader.calls.reset();
+
+      // Filter by 'column:2'.
+      await table.column({name: 'column:2'})!.filter(2);
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        columnFilters: [
+          {columnName: 'column:1', text: 1},
+          {columnName: 'column:2', text: 2},
+        ],
+      }));
+      loader.calls.reset();
+
+      // Remove 'column:1'.
+      visibleColumns.update(columns => deleteFromSet(columns, 'column:1'));
+      await table.waitUntilStable();
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        columnFilters: [
+          {columnName: 'column:2', text: 2},
+        ],
+      }));
+      loader.calls.reset();
+
+      // Remove 'column:2'.
+      visibleColumns.update(columns => deleteFromSet(columns, 'column:2'));
+      await table.waitUntilStable();
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({columnFilters: []}));
+      loader.calls.reset();
+    });
+
+    it('should remove stale column sort criteria when removing column', async () => {
+      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
+        totalCount: 10,
+        items: generateData(request.pageSize, i => request.start + i),
+      }));
+
+      const visibleColumns = signal(new Set<`column:${string}`>(['column:1', 'column:2']));
+
+      const {fixture} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: loader,
+        datasource: ɵillegaldatasource(),
+        columns: table => visibleColumns().forEach(column => table.addNumberColumn({
+          name: column,
+          value: item => item,
+        })),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({sortCriteria: []}));
+      loader.calls.reset();
+
+      // Sort by 'column:1'.
+      await table.column({name: 'column:1'})!.toggleSort();
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        sortCriteria: [
+          {columnName: 'column:1', direction: 'asc'},
+        ],
+      }));
+      loader.calls.reset();
+
+      // Sort by 'column:2'.
+      await table.column({name: 'column:2'})!.toggleSort({ctrl: true});
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        sortCriteria: [
+          {columnName: 'column:1', direction: 'asc'},
+          {columnName: 'column:2', direction: 'asc'},
+        ],
+      }));
+      loader.calls.reset();
+
+      // Sort by 'column:2'.
+      await table.column({name: 'column:2'})!.toggleSort({ctrl: true});
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        sortCriteria: [
+          {columnName: 'column:1', direction: 'asc'},
+          {columnName: 'column:2', direction: 'desc'},
+        ],
+      }));
+      loader.calls.reset();
+
+      // Remove 'column:1'.
+      visibleColumns.update(columns => deleteFromSet(columns, 'column:1'));
+      await table.waitUntilStable();
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        sortCriteria: [
+          {columnName: 'column:2', direction: 'desc'},
+        ],
+      }));
+      loader.calls.reset();
+
+      // Remove 'column:2'.
+      visibleColumns.update(columns => deleteFromSet(columns, 'column:2'));
+      await table.waitUntilStable();
+      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({sortCriteria: []}));
+      loader.calls.reset();
+    });
   });
 
   describe('Row Actions', () => {
@@ -2399,4 +2530,10 @@ export function generateData<T>(countOrRange: number | {start: number/* inclusiv
   else {
     return Array.from({length: countOrRange.end - countOrRange.start}, (_, index) => factoryFn(index + countOrRange.start));
   }
+}
+
+function deleteFromSet<T>(set: Set<T>, element: T): Set<T> {
+  const copy = new Set<T>(set);
+  copy.delete(element);
+  return copy;
 }

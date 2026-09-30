@@ -55,8 +55,18 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
   public readonly scrolling: Signal<boolean>;
   public readonly resizing = computed(() => this.columns().some(column => column.resizing()));
-  public readonly sortCriteria = signal<SciTableSortCriterion[]>([]);
-  public readonly filterCriteria = signal<SciTableColumnFilter[]>([]);
+
+  public readonly sortCriteria = linkedSignal<SciTableColumnLike<T>[], SciTableSortCriterion[]>({
+    source: () => this.columns(), // Discard stale criteria on column change.
+    computation: (columns, previous) => previous?.value.filter(criteria => columns.some(column => column.name === criteria.columnName)) ?? [],
+    equal: Objects.isEqual,
+  });
+
+  public readonly filterCriteria = linkedSignal<SciTableColumnLike<T>[], SciTableColumnFilter[]>({
+    source: () => this.columns(), // Discard stale criteria on column change.
+    computation: (columns, previous) => previous?.value.filter(criteria => columns.some(column => column.name === criteria.columnName)) ?? [],
+    equal: Objects.isEqual,
+  });
 
   private readonly _cache = new SciTableCache<T>();
   private readonly _tableFilter = signal<string | null>(null);
