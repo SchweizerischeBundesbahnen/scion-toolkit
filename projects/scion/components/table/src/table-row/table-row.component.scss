@@ -44,7 +44,7 @@
     align-items: center;
 
     > div.skeleton {
-      @include common.skeleton();
+      @include common.skeleton($delay: 50ms);
       height: 1em;
       margin-inline: var(--ɵsci-table-cell-padding-inline);
     }
