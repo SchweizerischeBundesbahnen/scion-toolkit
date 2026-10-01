@@ -509,7 +509,6 @@ The following CSS variables are supported:
 - `--sci-table-row-outline-width`
 - `--sci-table-row-outline-style`
 - `--sci-table-row-action-background-color`
-- `--sci-table-row-action-background-color-selected`
 - `--sci-table-cell-padding-inline`
 
 Refer to [SCION Design Tokens][link-scion-design-tokens] for more information on customizing the default look of SCION components and supporting different themes.

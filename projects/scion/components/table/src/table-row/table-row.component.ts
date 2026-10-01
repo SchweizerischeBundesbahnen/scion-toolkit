@@ -8,13 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, inject, input, output, viewChild} from '@angular/core';
+import {Component, inject, input, output} from '@angular/core';
 import {SciTableEvent, SciTableRow} from '../table.model';
 import {SciTableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciTableSelectionService} from '../table-selection.service';
-import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
-import {UUID} from '@scion/toolkit/uuid';
 
 @Component({
   selector: 'sci-table-row',
@@ -22,7 +20,6 @@ import {UUID} from '@scion/toolkit/uuid';
   styleUrl: './table-row.component.scss',
   imports: [
     SciTableCellComponent,
-    SciToolbarComponent,
   ],
   host: {
     '[attr.data-active]': `row().active() ? '' : null`,
@@ -41,14 +38,8 @@ export class SciTableRowComponent<T> {
   public readonly primaryAction = output<SciTableEvent<T>>();
 
   protected readonly table = inject(ɵSCI_TABLE);
-  protected readonly rowActionToolbar = viewChild(SciToolbarComponent);
-  protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
 
   private readonly _selectionService = inject(SciTableSelectionService);
-
-  constructor() {
-    this.contributeRowActions();
-  }
 
   protected onRowClick(event: PointerEvent): void {
     if (this.row().loading) {
@@ -75,20 +66,10 @@ export class SciTableRowComponent<T> {
       return;
     }
 
+    if (next instanceof Element && next.closest('sci-toolbar.row-actions')) {
+      return;
+    }
+
     this.table().hoveredIndex.set(-1);
-  }
-
-  protected onActionToolbarClick(event: PointerEvent): void {
-    event.stopPropagation(); // prevent selecting the row
-    this.table().activeItem.set(this.row().item);
-  }
-
-  private contributeRowActions(): void {
-    contributeMenu(this.rowActionsToolbarName, toolbar => {
-      const rowActionsFactoryFn = this.table().rowActions;
-      if (!this.row().loading && rowActionsFactoryFn) {
-        rowActionsFactoryFn(toolbar, this.row().item, this.row().index);
-      }
-    });
   }
 }

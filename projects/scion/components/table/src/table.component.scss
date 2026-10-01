@@ -47,6 +47,12 @@
       min-width: 100%; // Never shrink below viewport width to distribute free space to flex columns.
       min-height: 100%;
 
+
+      // Prevent hovering or selecting rows on opened row action menu.
+      @container style(--ɵsci-table-row-actions-menu: open) {
+        pointer-events: none;
+      }
+
       @container not style(--ɵsci-table-header-visible: true) {
         grid-template-rows: 1fr; // table body
       }
@@ -80,11 +86,6 @@
 
         > sci-table-row {
           grid-column: 1/-1;
-
-          // Position active row outline element over the active row.
-          &[data-active] {
-            anchor-name: --sci-table-active-row;
-          }
         }
 
         > div.active-row-outline {
@@ -148,6 +149,38 @@
         top: 0;
         max-height: var(--ɵsci-table-viewport-height); // Required to stick to the top of the viewport. Uses `max-height` instead of `height` so the table can shrink with its content.
       }
+    }
+  }
+
+  sci-toolbar.row-actions {
+    position: fixed;
+    --ɵsci-table-row-actions-align-top: calc(anchor(--sci-table-hovered-row top) - calc(var(--ɵsci-table-row-actions-height) / 2));
+    --ɵsci-table-row-actions-align-bottom: calc(anchor(--sci-table-hovered-row bottom) - calc(var(--ɵsci-table-row-actions-height) / 2));
+    --ɵsci-table-row-actions-align-baseline-top: calc(anchor(--sci-table-hovered-row center) + .5em);
+    --ɵsci-table-row-actions-align-baseline-bottom: calc(anchor(--sci-table-hovered-row center) - var(--ɵsci-table-row-actions-height) - .5em);
+    --ɵsci-table-row-actions-align-center: calc(anchor(--sci-table-hovered-row center) - calc(var(--ɵsci-table-row-actions-height) / 2));
+    --sci-toolbar-item-background-color-hover: color-mix(in srgb, var(--sci-table-row-action-background-color) 85%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
+    --sci-toolbar-item-background-color-active: color-mix(in srgb, var(--sci-table-row-action-background-color) 75%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
+
+    margin: unset;
+    inset: auto;
+    height: auto; // prevent menu growing to full page height in Safari
+    right: calc(max(anchor(--sci-table-viewport right), anchor(--sci-table-body right)) + var(--ɵsci-table-cell-padding-inline));
+
+    // Position row actions at the top of the row.
+    bottom: max(var(--ɵsci-table-row-actions-align-top), var(--ɵsci-table-row-actions-align-baseline-top));
+    // Position row actions in the center of the row.
+    //top: var(--ɵsci-table-row-actions-align-center);
+    // Position row actions at the bottom of the row.
+    //bottom: min(var(--ɵsci-table-row-actions-align-bottom), var(--ɵsci-table-row-actions-align-baseline-bottom));
+
+    border: 1px solid var(--ɵsci-table-border-color);
+    border-radius: var(--sci-corner);
+    padding: .25em .275em;
+    background-color: var(--sci-table-row-action-background-color);
+
+    &:empty {
+      display: none;
     }
   }
 
