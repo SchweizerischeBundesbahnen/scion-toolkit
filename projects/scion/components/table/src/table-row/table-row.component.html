@@ -26,12 +26,3 @@
     <div class="skeleton e2e-skeleton" [attr.data-column]="column.name"></div>
   }
 }
-
-<!--Row Actions -->
-@let hasRowActions = !!table().rowActions;
-@let isRowHovered = table().hoveredIndex() === row.index;
-@let isRowActionMenuOpen = rowActionToolbar()?.menuOpen();
-
-@if (hasRowActions && (isRowHovered || isRowActionMenuOpen)) {
-  <sci-toolbar [name]="rowActionsToolbarName" (click)="onActionToolbarClick($event)" class="row-actions"/>
-}

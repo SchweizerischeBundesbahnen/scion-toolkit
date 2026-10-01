@@ -8,13 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, inject, input, output, Signal, viewChild} from '@angular/core';
+import {Component, inject, input, output, Signal} from '@angular/core';
 import {SciTableEvent, SciTableRow, skeletonRowId} from '../table.model';
 import {SciTableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
 import {SciTableSelectionService} from '../table-selection.service';
-import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
-import {UUID} from '@scion/toolkit/uuid';
 import {SciIconComponent} from '@scion/components/icon';
 import {isFromButton, isFromInput} from '../common';
 
@@ -24,7 +22,6 @@ import {isFromButton, isFromInput} from '../common';
   styleUrl: './table-row.component.scss',
   imports: [
     SciTableCellComponent,
-    SciToolbarComponent,
     SciIconComponent,
   ],
   host: {
@@ -47,13 +44,6 @@ export class SciTableRowComponent<T, ID> {
 
   protected readonly table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
   private readonly _selectionService = inject(SciTableSelectionService);
-
-  protected readonly rowActionToolbar = viewChild(SciToolbarComponent);
-  protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
-
-  constructor() {
-    this.contributeRowActions();
-  }
 
   protected onRowClick(event: PointerEvent): void {
     const row = this.row();
@@ -88,16 +78,11 @@ export class SciTableRowComponent<T, ID> {
       return;
     }
 
-    this.table().hoveredIndex.set(-1);
-  }
-
-  protected onActionToolbarClick(event: PointerEvent): void {
-    const row = this.row();
-    if (row.id === skeletonRowId) {
+    if (next instanceof Element && next.closest('sci-toolbar.row-actions')) {
       return;
     }
-    event.stopPropagation(); // prevent selecting the row
-    this.table().setActiveItem(row.id);
+
+    this.table().hoveredIndex.set(-1);
   }
 
   protected onTreeNodeHandle(event: PointerEvent): void {
@@ -107,13 +92,5 @@ export class SciTableRowComponent<T, ID> {
     }
     event.stopPropagation(); // prevent selecting the row
     this.table().toggleRow(row.id);
-  }
-
-  private contributeRowActions(): void {
-    contributeMenu(this.rowActionsToolbarName, toolbar => {
-      if (this.row().id !== skeletonRowId) {
-        this.table().rowActions?.(toolbar, this.row().item, this.row().index);
-      }
-    });
   }
 }

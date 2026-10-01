@@ -97,6 +97,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public readonly rowIndexById: Signal<Map<ID, number>>;
   public readonly activeItem: Signal<ID | undefined>;
   public readonly activeIndex = computed(() => this.activeItem() !== undefined ? (this.rowIndexById().get(this.activeItem()!) ?? -1) : -1);
+  public readonly rowActionsMenuOpen = signal(false);
 
   constructor(descriptor: SciTableDescriptor<T, ID> & {type?: 'table' | 'tree'}) {
     this.type = descriptor.type ?? 'table';
@@ -605,5 +606,6 @@ export interface SciTableViewRef {
   headerHeight: Signal<number>;
   cellPadding: Signal<number>;
   itemHeight: Signal<number>;
+  rowActionsHeight: Signal<number>;
   scrollToTop: () => void;
 }
