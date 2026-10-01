@@ -147,7 +147,7 @@ export class ColumnSplitterPO {
    *
    * Use `options` to control where to grab the splitter.
    */
-  public async drag(distance: CoordinateOrDelta, options?: {location: 'table-header' | 'table-body'}): Promise<void> {
+  public async drag(distance: CoordinateOrDelta, options?: OneOf<{location: 'table-header' | 'table-body'; y: number}>): Promise<void> {
     const dragHandle = await this.startDrag(options);
     await dragHandle.dragTo(distance);
     await dragHandle.release();
@@ -158,10 +158,15 @@ export class ColumnSplitterPO {
    *
    * Use `options` to control where to hover the splitter. Defaults to `table-body`.
    */
-  public async hover(options?: {location?: 'table-header' | 'table-body'}): Promise<{x: number; y: number}> {
+  public async hover(options?: OneOf<{location: 'table-header' | 'table-body'; y: number}>): Promise<{x: number; y: number}> {
     const splitterBounds = await this.bounds();
     const x = splitterBounds.left;
-    const y = Math.floor(fromRect(await (options?.location === 'table-header' ? this._table.header.locator : this._table.viewport).boundingBox()).vcenter);
+    const y = await (async () => {
+      if (!options || 'location' in options) {
+        return Math.floor(fromRect(await (options?.location === 'table-header' ? this._table.header.locator : this._table.viewport).boundingBox()).vcenter);
+      }
+      return options.y;
+    })();
     await this.locator.page().mouse.move(x, y, {steps: 1});
     return {x, y};
   }
@@ -173,8 +178,8 @@ export class ColumnSplitterPO {
    *
    * Use the returned drag handle to continue the drag operation.
    */
-  public async startDrag(options?: {location?: 'table-header' | 'table-body'}): Promise<DrageHandlePO> {
-    const {x, y} = await this.hover({location: options?.location});
+  public async startDrag(options?: OneOf<{location: 'table-header' | 'table-body'; y: number}>): Promise<DrageHandlePO> {
+    const {x, y} = await this.hover(options);
 
     const page = this.locator.page();
     await page.mouse.down();

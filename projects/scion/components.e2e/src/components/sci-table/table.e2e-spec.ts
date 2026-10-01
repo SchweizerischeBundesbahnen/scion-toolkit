@@ -1305,23 +1305,99 @@ test.describe('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:4'}).width()).toBe(100);
     });
 
-    test('should hide row hover while resizing', async ({page}) => {
+    test('should not hover other rows while resizing', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.setRowCount(10);
       await tablePage.setCssVariable('--sci-table-row-background-color-hover', 'rgb(0, 0, 255)');
-      await tablePage.addColumn({name: 'column:name', type: 'string', minWidth: 100, width: '100px'});
-      const rowBounds = await table.row({nth: 3}).bounds();
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px', minWidth: 100});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
 
-      // Try to shrink the column below its minimum width. Splitter stays at its original position.
-      const dragHandle = await table.column({name: 'column:name'}).splitter.startDrag();
-      await dragHandle.dragTo({x: rowBounds.hcenter, y: rowBounds.vcenter});
+      const row1Bounds = await table.row({nth: 0}).bounds();
+      const row2Bounds = await table.row({nth: 1}).bounds();
+      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+
+      // Hover row 1, 10px to the right of the splitter.
+      await page.mouse.move(columnSplitterBounds.hcenter + 10, row1Bounds.vcenter);
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+
+      // Move mouse horizontally to the left over the splitter.
+      const dragHandle = await table.column({name: 'column:1'}).splitter.startDrag({y: row1Bounds.vcenter});
+      await dragHandle.dragTo({x: columnSplitterBounds.hcenter});
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+      // Move mouse down along the splitter to the next row.
+      await dragHandle.dragTo({y: row2Bounds.vcenter});
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.row({nth: 1}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+
+      // Move mouse to the left. The splitter should not move because the column is already at its minimum width.
+      await dragHandle.dragTo({deltaX: -10});
       await page.waitForTimeout(250);
-      await expect(table.row({nth: 3}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
 
+      // Expect hovered row not to be "hovered".
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.row({nth: 1}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+      // Complete drag.
       await dragHandle.release();
-      await expect(table.row({nth: 3}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+
+      // Expect hovered row to be "hovered".
+      await expect(table.row({nth: 0}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.row({nth: 1}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+    });
+
+    test('should not hover header while resizing', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(10);
+      await tablePage.setCssVariable('--sci-table-row-background-color-hover', 'rgb(0, 0, 255)');
+      await tablePage.setCssVariable('--sci-table-header-background-color-hover', 'rgb(0, 0, 255)');
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px', minWidth: 100});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      const headerBounds = await table.header.bounds();
+      const rowBounds = await table.row({nth: 0}).bounds();
+      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+
+      // Hover row 1, 10px to the right of the splitter.
+      await page.mouse.move(columnSplitterBounds.hcenter + 10, rowBounds.vcenter);
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+
+      // Move mouse horizontally to the left over the splitter.
+      const dragHandle = await table.column({name: 'column:1'}).splitter.startDrag({y: rowBounds.vcenter});
+      await dragHandle.dragTo({x: columnSplitterBounds.hcenter});
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+      // Move mouse up along the splitter to the header.
+      await dragHandle.dragTo({y: headerBounds.vcenter});
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.column({name: 'column:1'}).sortButton).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+
+      // Move mouse to the left. The splitter should not move because the column is already at its minimum width.
+      await dragHandle.dragTo({deltaX: -10});
+      await page.waitForTimeout(250);
+
+      // Expect header not to be hovered.
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.column({name: 'column:1'}).sortButton).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+
+      // Complete drag.
+      await dragHandle.release();
+
+      // Expect current row to be hovered.
+      await expect(table.row({nth: 0}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.column({name: 'column:1'}).sortButton).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
     });
   });
 
@@ -1612,6 +1688,38 @@ test.describe('sci-table', () => {
         await page.mouse.move(0, 0);
         await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
       });
+    });
+
+    test('should preserve row hover when hovering splitter', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(10);
+      await tablePage.setCssVariable('--sci-table-row-background-color-hover', 'rgb(0, 0, 255)');
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px', minWidth: 100});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      const rowBounds = await table.row({nth: 0}).bounds();
+      const columnSplitterBounds = await table.column({name: 'column:1'}).splitter.bounds();
+
+      // Hover row 1, 10px to the right of the splitter.
+      await page.mouse.move(columnSplitterBounds.hcenter + 10, rowBounds.vcenter);
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+
+      // Move mouse horizontally to the left over the splitter.
+      const dragHandle = await table.column({name: 'column:1'}).splitter.startDrag({y: rowBounds.vcenter});
+      await dragHandle.dragTo({x: columnSplitterBounds.hcenter});
+      await page.waitForTimeout(250);
+
+      // Expect row to still be hovered.
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+
+      // Release mouse.
+      await dragHandle.release();
+
+      // Expect row to still be hovered.
+      await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
     });
   });
 
@@ -4293,13 +4401,34 @@ test.describe('sci-table', () => {
       await expect(table.row({nth: 10}).rowActions).toBeVisible();
     });
 
-    test('should keep row actions visible when moving pointer over splitter', async ({page}) => {
+    test('should not hide row actions when moving pointer over splitter outside row actions', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+      await tablePage.showRowActions(true);
+
+      const rowBounds = await table.row({nth: 10}).bounds();
+
+      // Hover row.
+      await page.mouse.move(rowBounds.left, rowBounds.vcenter);
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
+
+      // Hover splitter
+      await table.column({name: 'column:1'}).splitter.hover({y: rowBounds.vcenter});
+      await page.waitForTimeout(250);
+      await expect(table.row({nth: 10}).rowActions).toBeVisible();
+    });
+
+    test('should not hide row actions when moving pointer over splitter crossing row actions', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '100px'});
       await tablePage.showRowActions(true);
 
       const rowBounds = await table.row({nth: 10}).bounds();
@@ -4307,45 +4436,52 @@ test.describe('sci-table', () => {
       await page.mouse.move(rowBounds.left, rowBounds.vcenter);
       await expect(table.row({nth: 10}).rowActions).toBeVisible();
 
-      const rowActionBounds = fromRect(await table.row({nth: 10}).rowActions.boundingBox());
-      await page.mouse.move(rowActionBounds.hcenter, rowActionBounds.vcenter);
+      // Hover row actions.
+      await table.row({nth: 10}).rowActions.hover();
       await expect(table.row({nth: 10}).rowActions).toBeVisible();
 
-      const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
-      await page.mouse.move(splitterBounds.hcenter, rowBounds.vcenter);
+      // Hover splitter crossing row actions.
+      await table.column({name: 'column:1'}).splitter.hover({y: rowBounds.vcenter});
       await expect(table.row({nth: 10}).rowActions).toBeVisible();
 
       // Move out of splitter bounds on top.
-      await page.mouse.move(splitterBounds.hcenter, splitterBounds.top - 10);
+      await table.column({name: 'column:1'}).splitter.hover({y: 0});
       await expect(table.row({nth: 10}).rowActions).not.toBeVisible();
     });
 
-    test('should hide row actions when leaving splitter or toolbar for header', async ({page}) => {
+    test('should hide row actions when leaving splitter or row actions for header', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
-      await tablePage.addColumn({name: 'column:testee', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '100px'});
       await tablePage.showRowActions(true);
 
       const row = table.row({nth: 10});
+      const rowBounds = await row.bounds();
+
+      // Hover row.
       await row.hover();
       await expect(row.rowActions).toBeVisible();
 
-      const splitterBounds = await table.column({name: 'column:name'}).splitter.bounds();
-      await page.mouse.move(splitterBounds.hcenter, await row.bounds().then(bounds => bounds.vcenter));
+      // Hover splitter crossing row actions.
+      await table.column({name: 'column:1'}).splitter.hover({y: rowBounds.vcenter});
       await expect(row.rowActions).toBeVisible();
 
+      // Hover header.
       await table.headers.first().hover();
       await expect(row.rowActions).toBeHidden();
 
+      // Hover row.
       await table.row({nth: 10}).hover();
       await expect(row.rowActions).toBeVisible();
 
+      // Hover row action.
       await row.rowActions.hover();
       await expect(row.rowActions).toBeVisible();
 
+      // Hover header.
       await table.headers.first().hover();
       await expect(row.rowActions).toBeHidden();
     });
@@ -4525,7 +4661,7 @@ test.describe('sci-table', () => {
 
   test.describe('Scrolling', () => {
 
-    test('should scroll viewport when wheeling on toolbar', async ({page}) => {
+    test('should scroll viewport when wheeling on row actions', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
