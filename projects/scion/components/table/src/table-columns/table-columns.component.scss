@@ -34,6 +34,11 @@
       pointer-events: auto;
     }
 
+    // Prevent hovering splitters on opened row action menu.
+    @container style(--ɵsci-table-row-actions-menu: open) {
+      pointer-events: none;
+    }
+
     // Render splitter handles as column header dividers (splitters still span full viewport height).
     @container style(--ɵsci-table-header-column-divider-visible: true) {
       --sci-splitter-cross-axis-start: .5em;
