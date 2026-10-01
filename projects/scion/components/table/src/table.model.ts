@@ -203,6 +203,7 @@ export interface SciTableRow<T> {
   item?: T;
   id?: unknown;
   level: number;
+  parentId?: unknown;
   cells?: SciTableCellLike[];
   bindings?: SciTableRowBindings;
   loading: boolean;

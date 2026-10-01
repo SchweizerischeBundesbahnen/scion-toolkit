@@ -13,6 +13,7 @@ import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
 import {firstValueFrom, timer} from 'rxjs';
 import {SciTableRow} from './table.model';
+import {SciTableCacheRow} from './table.cache';
 
 @Injectable()
 export class SciTableSelectionService<T> {
@@ -125,6 +126,122 @@ export class SciTableSelectionService<T> {
     else {
       await this.selectItems(endIndex, endIndex);
     }
+  }
+
+  public async onArrowLeft(event: Event): Promise<void> {
+    event.preventDefault();
+
+    const table = this._table();
+    const activeRow = table.activeRow();
+
+    if (!activeRow) {
+      return;
+    }
+
+    if (activeRow.hasChildren() && activeRow.expanded()) {
+      table.collapse(activeRow.id);
+    }
+    else if (activeRow.parentId) {
+      const parentIndex = table.rowIndexById().get(activeRow.parentId) ?? -1;
+
+      // Set active item.
+      const item = table.rowsByIndex().get(parentIndex)?.item;
+      table.activeItem.set(item);
+
+      if (table.selectable()) {
+        await this.selectItems(parentIndex, parentIndex);
+      }
+    }
+    // Root case
+    else {
+      const previousRow = findPreviousRootExpanded(activeRow.index - 1);
+
+      if (previousRow) {
+        const index = table.rowIndexById().get(previousRow.id) ?? -1;
+        table.activeItem.set(previousRow.item);
+
+        if (table.selectable()) {
+          await this.selectItems(index, index);
+        }
+      }
+      else {
+        // Go to top
+        const startIndex = 0;
+        await this.loadMissingItems(startIndex, startIndex);
+        table.activeItem.set(table.rowsByIndex().get(startIndex)?.item);
+
+        if (table.selectable()) {
+          await this.selectItems(startIndex, startIndex);
+        }
+      }
+
+      function findPreviousRootExpanded(index: number): SciTableRow<T> | undefined {
+        if (index < 0) {
+          return undefined;
+        }
+
+        const row = table.rowsById().get(table.rowsByIndex().get(index)?.id);
+
+        const candidate = findPreviousChildExpanded(row);
+
+        if (candidate) {
+          return candidate;
+        }
+
+        return findPreviousRootExpanded(index - 1);
+      }
+
+      function findPreviousChildExpanded(row: SciTableCacheRow<T> | undefined): SciTableRow<T> | undefined {
+        if (!row || !row.hasChildren() || !row.expanded()) {
+          return undefined;
+        }
+
+        const children = [...row.childrenCache.rowsById().values()];
+
+        for (let i = children.length - 1; i >= 0; i--) {
+          const candidate = findPreviousChildExpanded(children[i]);
+          if (candidate) {
+            return candidate;
+          }
+        }
+
+        return row;
+      }
+    }
+  }
+
+  public async onArrowRight(event: Event): Promise<void> {
+    event.preventDefault();
+
+    const table = this._table();
+    const activeRow = table.activeRow();
+
+    if (!activeRow) {
+      return;
+    }
+
+    if (activeRow.hasChildren() && !activeRow.expanded()) {
+      table.expand(activeRow.id);
+      return;
+    }
+
+    const activeIndex = table.rowIndexById().get(activeRow.id) ?? -1;
+    const endIndex = Math.min(activeIndex + 1, table.totalCount()! - 1);
+
+    if (endIndex === activeIndex) {
+      return;
+    }
+
+    // Set active item.
+    await this.loadMissingItems(endIndex, endIndex);
+    const endItem = table.rowsByIndex().get(endIndex)?.item;
+    table.activeItem.set(endItem);
+
+    if (!table.selectable()) {
+      return;
+    }
+
+    await this.selectItems(endIndex, endIndex);
   }
 
   public async onPageUp(event: Event): Promise<void> {

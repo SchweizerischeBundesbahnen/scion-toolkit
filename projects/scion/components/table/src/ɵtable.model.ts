@@ -99,6 +99,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
   public readonly rowsByIndex = this._cache.rowsByIndex;
+  public readonly rowsById = this._cache.rowsById;
   public readonly rowIndexById = this._cache.indexById;
   public readonly rows = this.computeRows();
 
@@ -334,6 +335,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         page,
         pageSize: this.pageSize,
         level: 0,
+        parentId: undefined,
         columnFilters,
         tableFilter,
         sortCriteria,
@@ -344,7 +346,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   /**
    * Loads the requested page from the cache or datasource and returns its loading state with a cancelation handler.
    */
-  private loadPage({cache, loader, page, pageSize, level, sortCriteria, columnFilters, tableFilter}: {cache: SciTableCache<T>; loader: SciTableDataLoaderFn<T>; page: number; pageSize: number; level: number; sortCriteria: SciTableSortCriterion[]; columnFilters: SciTableColumnFilter[]; tableFilter?: string}): {loading: Signal<boolean>; cancel: () => void} {
+  private loadPage({cache, loader, page, pageSize, level, parentId, sortCriteria, columnFilters, tableFilter}: {cache: SciTableCache<T>; loader: SciTableDataLoaderFn<T>; page: number; pageSize: number; level: number; parentId: unknown; sortCriteria: SciTableSortCriterion[]; columnFilters: SciTableColumnFilter[]; tableFilter?: string}): {loading: Signal<boolean>; cancel: () => void} {
     const pageStart = page * pageSize;
     const pageEnd = pageStart + pageSize;
     const cacheKey = `${pageStart}-${pageEnd}` as const;
@@ -378,7 +380,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         stream: () => tableResponse$.pipe(
           combineLatestWith(columns),
           map(([response, columns]) => {
-            const rows = this.mapItemsToRow(response.items, columns, pageStart, level, this._cache.rowsById(), cacheEntryInjector);
+            const rows = this.mapItemsToRow(response.items, columns, pageStart, level, parentId, this._cache.rowsById(), cacheEntryInjector);
             return {rows, totalCount: response.totalCount};
           }),
         )},
@@ -480,6 +482,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       page,
       pageSize: this.pageSize,
       level: parent.level + 1,
+      parentId: parent.id,
       sortCriteria: this.sortCriteria(),
       columnFilters: this.filterCriteria(),
       tableFilter: this._tableFilter() ?? undefined,
@@ -535,6 +538,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
             pageSize: this.pageSize,
             page: page.page,
             level: 0,
+            parentId: undefined,
             sortCriteria,
             columnFilters,
             tableFilter,
@@ -601,7 +605,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     return pagesToLoad;
   }
 
-  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], pageStart: number, level: number, existingRows: Map<unknown, SciTableCacheRow<T>>, injector: Injector): SciTableCacheRow<T>[] {
+  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], pageStart: number, level: number, parentId: unknown, existingRows: Map<unknown, SciTableCacheRow<T>>, injector: Injector): SciTableCacheRow<T>[] {
     return items.map((item, i) => {
       const id = this.trackBy(item);
       const index = pageStart + i;
@@ -626,6 +630,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           return this._toggledRows().has(id);
         }),
         level,
+        parentId,
         hasChildren,
         childrenCache: previousRow?.childrenCache ?? new SciTableCache<T>(),
         bindings: coerceTableRowBindings(this._rowBindings, item, pageStart + i),

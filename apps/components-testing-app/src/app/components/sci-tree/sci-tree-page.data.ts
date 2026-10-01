@@ -83,7 +83,7 @@ export namespace Products {
         inStock: Math.random() > 0.5,
       };
 
-      if (depth < 3 && Math.random() < 0.5) {
+      if (depth < 5 && Math.random() < 0.9) {
         const childCount = Math.floor(Math.random() * 4) + 1;
         product.children = Array.from(
           {length: childCount},

@@ -30,6 +30,10 @@ import {SciTableSelectionService} from './table-selection.service';
     '(keydown.shift.control.arrowDown)': 'isFromInput($event) || selectionService.onArrowDown($event)',
     '(keydown.shift.meta.arrowDown)': 'isFromInput($event) || selectionService.onArrowDown($event)',
 
+    '(keydown.arrowLeft)': 'isFromInput($event) || selectionService.onArrowLeft($event)',
+
+    '(keydown.arrowRight)': 'isFromInput($event) || selectionService.onArrowRight($event)',
+
     '(keydown.space)': 'isFromInput($event) || isFromButton($event) || selectionService.onSpace($event)',
     '(keydown.control.space)': 'isFromInput($event) || isFromButton($event) || selectionService.onSpace($event)',
     '(keydown.meta.space)': 'isFromInput($event) || isFromButton($event) || selectionService.onSpace($event)',
