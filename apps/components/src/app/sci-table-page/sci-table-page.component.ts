@@ -355,7 +355,6 @@ export default class SciTablePageComponent {
       '--sci-table-row-outline-width',
       '--sci-table-row-outline-style',
       '--sci-table-row-action-background-color',
-      '--sci-table-row-action-background-color-selected',
       '--sci-table-cell-padding-inline',
     ], this._tableElement, {designTokenRootElement: host});
 

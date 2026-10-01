@@ -25,6 +25,8 @@ import {ɵSCI_TABLE} from './ɵtable.model';
     '[style.--ɵsci-table-header-height]': '`${table().tableViewRef()?.headerHeight() ?? 0}px`',
     '[style.--ɵsci-table-cell-padding-inline]': '`${table().tableViewRef()?.cellPadding() ?? 0}px`',
     '[style.--ɵsci-table-row-height]': '`${table().tableViewRef()?.itemHeight() ?? 0}px`',
+    '[style.--ɵsci-table-row-actions-height]': '`${table().tableViewRef()?.rowActionsHeight() ?? 0}px`',
+    '[style.--ɵsci-table-row-actions-menu]': `table().rowActionsMenuOpen() ? 'open' : null`,
   },
 })
 export class SciTableViewportComponent {

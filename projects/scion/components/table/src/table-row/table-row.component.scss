@@ -10,11 +10,19 @@
 
   &[data-hovered] {
     background-color: var(--sci-table-row-background-color-hover);
+    anchor-name: --sci-table-hovered-row; // Used to position row actions toolbar
+  }
+
+  &[data-active] {
+    anchor-name: --sci-table-active-row; // Used to position active row outline
+  }
+
+  &[data-active][data-hovered] {
+    anchor-name: --sci-table-active-row, --sci-table-hovered-row;
   }
 
   &[data-selected] {
     background-color: var(--sci-table-row-background-color-selected);
-    --ɵsci-table-row-selected: true;
   }
 
   // Render round corners on hovered row unless selected.
@@ -47,32 +55,6 @@
       @include common.skeleton($fade-in-duration: 500ms);
       height: 1em;
       margin-inline: var(--ɵsci-table-cell-padding-inline);
-    }
-  }
-
-  > sci-toolbar.row-actions {
-    position: sticky;
-    right: 0;
-    transform: translateX(calc(-1 * var(--ɵsci-table-cell-padding-inline))); // Prevent hiding vertical scrollbar. Uses `translateX` instead of `right` to maintain the padding on horizontal overflow.
-    justify-self: end;
-    align-self: center;
-    border-radius: var(--sci-corner);
-    padding: 1px;
-    background-color: var(--ɵsci-table-row-action-background-color);
-    z-index: 2; // required to overlap splitters
-    --sci-toolbar-item-background-color-hover: color-mix(in srgb, var(--ɵsci-table-row-action-background-color) 85%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
-    --sci-toolbar-item-background-color-active: color-mix(in srgb, var(--ɵsci-table-row-action-background-color) 75%, #{light-dark}(var(--sci-static-color-black), var(--sci-static-color-white)));
-
-    @container not style(--ɵsci-table-row-selected: true) {
-      --ɵsci-table-row-action-background-color: var(--sci-table-row-action-background-color);
-    }
-
-    @container style(--ɵsci-table-row-selected: true) {
-      --ɵsci-table-row-action-background-color: var(--sci-table-row-action-background-color-selected);
-    }
-
-    &:empty {
-      display: none;
     }
   }
 }

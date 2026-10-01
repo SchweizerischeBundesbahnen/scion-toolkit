@@ -100,6 +100,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
+  public readonly rowActionsMenuOpen = signal(false);
   public readonly rowsByIndex = this._cache.rowsByIndex;
   public readonly rows = this.computeRows();
 
@@ -601,5 +602,6 @@ export interface SciTableViewRef {
   headerHeight: Signal<number>;
   cellPadding: Signal<number>;
   itemHeight: Signal<number>;
+  rowActionsHeight: Signal<number>;
   scrollToTop: () => void;
 }
