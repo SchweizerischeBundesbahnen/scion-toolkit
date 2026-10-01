@@ -17,7 +17,6 @@ import {toObservable} from '@angular/core/rxjs-interop';
 import {Objects} from '@scion/toolkit/util';
 
 export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
-
   const dataset = new Dataset(data, columns);
 
   return markAsArrayDatasource((request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {

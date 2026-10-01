@@ -71,7 +71,7 @@ export class SciTableRowComponent<T> {
   protected onRowMouseLeave(event: MouseEvent): void {
     const next = event.relatedTarget;
     // Do not unset hovered row when hovering a column resize splitter.
-    if (next instanceof Element && next.closest('sci-column-splitter')) {
+    if (next instanceof Element && next.closest('sci-splitter')) {
       return;
     }
 
