@@ -5,6 +5,10 @@
   --sci-table-header-background-color: light-dark(var(--sci-color-gray-100), var(--sci-color-gray-75)); // define at page-level so it can be reset to this color
   --sci-table-gridline-color: var(--sci-color-gray-200); // define at page-level so it can be reset to this color
 
+  &:has(> aside.closed) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   > main {
     display: flex;
     flex-direction: column;
@@ -30,6 +34,11 @@
     border-radius: var(--sci-corner);
     background-color: var(--sci-color-background-secondary);
     padding: 1em;
+
+
+    &.closed {
+      display: none;
+    }
 
     > sci-tabbar {
       flex: auto;

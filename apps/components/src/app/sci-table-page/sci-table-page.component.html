@@ -4,7 +4,7 @@
     <sci-filter-field (filter)="onTableFilter($event)" placeholder="Type to filter"/>
   </main>
 
-  <aside>
+  <aside [class.closed]="!panelOpen()">
     <sci-tabbar>
       <!-- Settings -->
       <ng-template sciTab label="Settings" name="settings">
