@@ -1,6 +1,7 @@
 @use '@angular/cdk';
 @use '@scion/components';
 @use '@scion/components.internal/design' as sci-design;
+@use 'app/app.mixin';
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..24,400,0&display=block');
@@ -27,7 +28,19 @@ body {
   box-sizing: border-box;
 }
 
-button {
+a {
+  @include sci-design.style-link();
+}
+
+label {
+  @include app.form-field();
+}
+
+button[class*="material-icons"], button[class*="material-symbols"] {
+  @include sci-design.style-mat-icon-button();
+}
+
+button:not([class*="material-icons"]):not([class*="material-symbols"]):not(:has(sci-icon)) {
   @include sci-design.style-button();
 }
 

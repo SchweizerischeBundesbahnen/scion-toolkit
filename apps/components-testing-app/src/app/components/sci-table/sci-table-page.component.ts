@@ -11,7 +11,6 @@ import {Component, computed, effect, inject, Injector, inputBinding, runInInject
 import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
-import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {createDestroyableInjector} from '@scion/components/common';
 import {FieldValidationDirective} from '../field-validation.directive';
@@ -31,7 +30,6 @@ import {CustomButtonColumnComponent} from './custom-button-column.component';
     SciTableComponent,
     FormsModule,
     FormField,
-    SciFormFieldComponent,
     SciTabDirective,
     SciTabbarComponent,
     FormRoot,

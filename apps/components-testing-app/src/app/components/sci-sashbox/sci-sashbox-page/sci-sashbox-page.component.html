@@ -10,27 +10,31 @@
   <sci-tabbar>
     <ng-template sciTab label="Settings" [cssClass]="'e2e-settings'">
       <div class="tab e2e-tab">
-        <sci-form-field label="Direction">
+        <label>
+          Direction
           <select [formControl]="directionFormControl" class="e2e-direction">
             <option value="column">column</option>
             <option value="row">row</option>
           </select>
-        </sci-form-field>
+        </label>
       </div>
     </ng-template>
 
     @for (sash of sashes; track sash; let i = $index) {
       <ng-template sciTab [label]="'Sash ' + (i + 1)" [cssClass]="'e2e-sash-' + (i + 1)">
         <div class="tab e2e-tab">
-          <sci-form-field label="Size">
+          <label>
+            Size
             <input [(ngModel)]="sash.size" placeholder="Value in any CSS unit or unitless as a ratio" class="e2e-size">
-          </sci-form-field>
-          <sci-form-field label="Min size">
+          </label>
+          <label>
+            Min size
             <input [(ngModel)]="sash.minSize" placeholder="Value in pixel or percent" class="e2e-min-size">
-          </sci-form-field>
-          <sci-form-field label="Key">
+          </label>
+          <label>
+            Key
             <input [(ngModel)]="sash.key" class="e2e-key">
-          </sci-form-field>
+          </label>
         </div>
       </ng-template>
     }
