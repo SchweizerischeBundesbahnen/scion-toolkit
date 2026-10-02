@@ -1,17 +1,5 @@
 <main>
-  <sci-sashbox [direction]="formGroup.controls.direction.value"
-               [style.--sci-sashbox-gap]="formGroup.controls.styling.controls['--sci-sashbox-gap'].value"
-               [style.--sci-sashbox-splitter-background-color]="formGroup.controls.styling.controls['--sci-sashbox-splitter-background-color'].value"
-               [style.--sci-sashbox-splitter-background-color-hover]="formGroup.controls.styling.controls['--sci-sashbox-splitter-background-color-hover'].value"
-               [style.--sci-sashbox-splitter-size]="formGroup.controls.styling.controls['--sci-sashbox-splitter-size'].value"
-               [style.--sci-sashbox-splitter-size-hover]="formGroup.controls.styling.controls['--sci-sashbox-splitter-size-hover'].value"
-               [style.--sci-sashbox-splitter-touch-target-size]="formGroup.controls.styling.controls['--sci-sashbox-splitter-touch-target-size'].value"
-               [style.--sci-sashbox-splitter-cross-axis-size]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-size'].value"
-               [style.--sci-sashbox-splitter-cross-axis-start]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-start'].value"
-               [style.--sci-sashbox-splitter-cross-axis-end]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-end'].value"
-               [style.--sci-sashbox-splitter-border-radius]="formGroup.controls.styling.controls['--sci-sashbox-splitter-border-radius'].value"
-               [style.--sci-sashbox-splitter-opacity-active]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-active'].value"
-               [style.--sci-sashbox-splitter-opacity-hover]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-hover'].value"
+  <sci-sashbox [direction]="direction()"
                (sashEnd)="onSashEnd($event)">
     @for (sash of sashes; track sash; let i = $index) {
       @if (sash.visible) {
@@ -29,7 +17,7 @@
       <div class="tab">
         <label>
           Direction
-          <select [formControl]="formGroup.controls.direction">
+          <select [(ngModel)]="direction">
             <option value="column">column</option>
             <option value="row">row</option>
           </select>
@@ -64,57 +52,8 @@
       </ng-template>
     }
 
-    <ng-template sciTab label="Styling">
-      <div class="tab">
-        <label>
-          --sci-sashbox-gap
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-gap']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-background-color
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-background-color']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-background-color-hover
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-background-color-hover']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-size
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-size']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-size-hover
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-size-hover']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-touch-target-size
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-touch-target-size']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-cross-axis-size
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-size']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-cross-axis-start
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-start']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-cross-axis-end
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-end']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-border-radius
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-border-radius']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-opacity-active
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-active']">
-        </label>
-        <label>
-          --sci-sashbox-splitter-opacity-hover
-          <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-hover']">
-        </label>
-      </div>
+    <ng-template sciTab label="Design Tokens">
+      <app-design-token-form [form]="designTokenForm"/>
     </ng-template>
 
     <ng-template sciTab label="Miscellaneous">

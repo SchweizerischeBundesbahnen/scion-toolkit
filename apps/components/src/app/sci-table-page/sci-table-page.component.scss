@@ -2,6 +2,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1em;
+  --sci-table-header-background-color: light-dark(var(--sci-color-gray-100), var(--sci-color-gray-75)); // define at page-level so it can be reset to this color
+  --sci-table-gridline-color: var(--sci-color-gray-200); // define at page-level so it can be reset to this color
 
   > main {
     display: flex;
@@ -12,7 +14,6 @@
       flex: 1 1 0;
       border: 1px solid var(--sci-color-border);
       border-radius: var(--sci-corner-small);
-      --sci-table-header-background-color: light-dark(var(--sci-color-gray-100), var(--sci-color-gray-75));
     }
 
     > sci-table::part(row\:even) {
@@ -31,6 +32,8 @@
     padding: 1em;
 
     > sci-tabbar {
+      flex: auto;
+
       section, form {
         display: flex;
         flex-direction: column;
@@ -46,6 +49,21 @@
       section.settings {
         > button.reset {
           margin-top: 1.5em;
+        }
+      }
+
+      section.design-tokens {
+        display: flex;
+        flex-direction: column;
+        gap: .5em;
+
+        > label {
+          flex: none;
+        }
+
+        > app-design-token-form {
+          flex: auto;
+          margin-top: 1em;
         }
       }
     }

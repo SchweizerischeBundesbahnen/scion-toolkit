@@ -1,0 +1,18 @@
+<sci-filter-field (filter)="onFilter($event)" placeholder="Type to filter"/>
+
+<sci-viewport>
+  @for (designTokenField of fields(); track $index) {
+    @let name = designTokenField[0];
+    @let field = designTokenField[1];
+
+    <label>
+      {{name}}
+      <div class="input-field" [class.overriden]="field().dirty()">
+        <input [formField]="field"/>
+        <button (click)="onFieldReset(name, field())" [disabled]="!field().dirty()" title="Reset">
+          <sci-icon>scion.reset</sci-icon>
+        </button>
+      </div>
+    </label>
+  }
+</sci-viewport>

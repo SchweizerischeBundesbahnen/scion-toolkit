@@ -1,7 +1,7 @@
 @if (table(); as table) {
   <main>
     <sci-table [table]="table" name="table:vehicles" (keydown)="onTableKeydown($event)"/>
-    <sci-filter-field (filter)="onTableFilter($event)" placeholder="Type to filter..."/>
+    <sci-filter-field (filter)="onTableFilter($event)" placeholder="Type to filter"/>
   </main>
 
   <aside>
@@ -35,16 +35,6 @@
           </label>
 
           <label>
-            <input [formField]="settingsForm.showGridlines" type="checkbox"/>
-            Show Gridlines
-          </label>
-
-          <label>
-            <input [formField]="settingsForm.showZebraStriping" type="checkbox"/>
-            Zebra Striped Rows
-          </label>
-
-          <label>
             Selectable
             <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)">
               <option value="multi">Multi</option>
@@ -57,18 +47,20 @@
         </section>
       </ng-template>
 
-      <!-- Data Source -->
-      <ng-template sciTab label="Datasource">
-        <section>
+      <!-- Design Tokens -->
+      <ng-template sciTab label="Design Tokens">
+        <section class="design-tokens">
           <label>
-            Row Count
-            <input [(ngModel)]="rowCount" appMinMax min="0" max="10000" type="number"/>
+            <input [formField]="settingsForm.showGridlines" type="checkbox"/>
+            Show Gridlines
           </label>
 
           <label>
-            <input [formField]="settingsForm.slowDatasource" type="checkbox"/>
-            Slow Datasource
+            <input [formField]="settingsForm.showZebraStriping" type="checkbox"/>
+            Zebra Striped Rows
           </label>
+
+          <app-design-token-form [form]="designTokenForm" [designTokenRootElement]="host"/>
         </section>
       </ng-template>
 
@@ -178,6 +170,21 @@
           <label>
             <input [formField]="settingsForm.visibleColumns.nextRevision" type="checkbox"/>
             Next Revision
+          </label>
+        </section>
+      </ng-template>
+
+      <!-- Data Source -->
+      <ng-template sciTab label="Datasource">
+        <section>
+          <label>
+            Row Count
+            <input [(ngModel)]="rowCount" appMinMax min="0" max="10000" type="number"/>
+          </label>
+
+          <label>
+            <input [formField]="settingsForm.slowDatasource" type="checkbox"/>
+            Slow Datasource
           </label>
         </section>
       </ng-template>

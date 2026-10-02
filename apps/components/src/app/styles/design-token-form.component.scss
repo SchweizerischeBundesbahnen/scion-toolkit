@@ -1,0 +1,52 @@
+@use '@scion/components.internal/design' as sci-design;
+@use '../app.mixin';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+
+  > sci-filter-field {
+    flex: none;
+  }
+
+  > sci-viewport {
+    flex: 1 1 0;
+
+    &::part(content) {
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+    }
+
+    > label {
+      user-select: auto; // allow select and copy design token name
+
+      > div.input-field {
+        @include sci-design.style-input-field();
+        $padding: .5em;
+        display: flex;
+        align-items: center;
+        padding: 0 $padding;
+
+        &.overriden {
+          background-color: var(--sci-color-blue-100);
+        }
+
+        > input {
+          all: unset;
+          padding: $padding 0;
+          flex: auto;
+        }
+
+        > button {
+          @include app.icon-button-element-states();
+
+          &:disabled {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}
