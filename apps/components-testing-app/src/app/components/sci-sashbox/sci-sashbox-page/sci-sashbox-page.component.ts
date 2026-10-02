@@ -10,7 +10,6 @@
 import {Component, inject} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
-import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
 @Component({
@@ -22,7 +21,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     ReactiveFormsModule,
     SciSashboxComponent,
     SciSashDirective,
-    SciFormFieldComponent,
     SciTabDirective,
     SciTabbarComponent,
   ],

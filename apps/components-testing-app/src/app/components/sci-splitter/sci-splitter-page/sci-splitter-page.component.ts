@@ -9,7 +9,6 @@
  */
 import {Component, computed, linkedSignal, signal} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {SciSplitterComponent, SplitterMoveEvent} from '@scion/components/splitter';
 import {animationFrameScheduler, interval} from 'rxjs';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -22,7 +21,6 @@ import {filter} from 'rxjs/operators';
   imports: [
     FormsModule,
     ReactiveFormsModule,
-    SciFormFieldComponent,
     SciSplitterComponent,
   ],
 })
