@@ -7,11 +7,12 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, effect, ElementRef, inject, signal, Signal, untracked, viewChild} from '@angular/core';
-import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
+import {Component, ElementRef, Signal, signal, viewChild} from '@angular/core';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
+import {createDesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
 
 @Component({
   selector: 'sci-sashbox-page',
@@ -25,6 +26,7 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     SciMaterialIconDirective,
     SciTabDirective,
     SciTabbarComponent,
+    DesignTokenFormComponent,
   ],
   host: {
     '(keydown.escape)': 'onGlasspaneToggle()',
@@ -32,26 +34,24 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
 })
 export default class SciSashboxPageComponent {
 
-  private readonly _formBuilder = inject(NonNullableFormBuilder);
-  private readonly _sashBoxComponent: Signal<ElementRef<HTMLElement>> = viewChild.required(SciSashboxComponent, {read: ElementRef<HTMLElement>});
+  protected readonly direction = signal<'column' | 'row'>('row');
 
-  protected readonly formGroup = this._formBuilder.group({
-    direction: this._formBuilder.control<'column' | 'row'>('row'),
-    styling: this._formBuilder.group({
-      '--sci-sashbox-gap': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-background-color': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-background-color-hover': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-size': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-size-hover': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-touch-target-size': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-cross-axis-size': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-cross-axis-start': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-cross-axis-end': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-border-radius': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-opacity-active': this._formBuilder.control(''),
-      '--sci-sashbox-splitter-opacity-hover': this._formBuilder.control(''),
-    }),
-  });
+  private readonly _sashboxElement: Signal<ElementRef<HTMLElement>> = viewChild.required(SciSashboxComponent, {read: ElementRef});
+
+  protected readonly designTokenForm = createDesignTokenForm([
+    '--sci-sashbox-gap',
+    '--sci-sashbox-splitter-background-color',
+    '--sci-sashbox-splitter-background-color-hover',
+    '--sci-sashbox-splitter-size',
+    '--sci-sashbox-splitter-size-hover',
+    '--sci-sashbox-splitter-touch-target-size',
+    '--sci-sashbox-splitter-cross-axis-size',
+    '--sci-sashbox-splitter-cross-axis-start',
+    '--sci-sashbox-splitter-cross-axis-end',
+    '--sci-sashbox-splitter-border-radius',
+    '--sci-sashbox-splitter-opacity-active',
+    '--sci-sashbox-splitter-opacity-hover',
+  ], this._sashboxElement);
 
   protected readonly sashes: Sash[] = [
     {visible: true, size: '250px', minSize: 75},
@@ -60,18 +60,6 @@ export default class SciSashboxPageComponent {
   ];
 
   protected readonly glasspaneVisible = signal(false);
-
-  constructor() {
-    effect(() => {
-      const sashBoxComponent = this._sashBoxComponent();
-      untracked(() => {
-        Object.entries(this.formGroup.controls.styling.controls).forEach(([key, formControl]) => {
-          const defaultValue = getComputedStyle(sashBoxComponent.nativeElement).getPropertyValue(key);
-          formControl.setValue(defaultValue);
-        });
-      });
-    });
-  }
 
   protected onGlasspaneToggle(): void {
     this.glasspaneVisible.update(value => !value);

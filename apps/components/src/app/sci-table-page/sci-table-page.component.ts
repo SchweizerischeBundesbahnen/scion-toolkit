@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
+import {Component, computed, effect, ElementRef, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
 import {SciTable, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
@@ -22,6 +22,7 @@ import {SciViewportComponent} from '@scion/components/viewport';
 import {VehicleService} from './vehicle.service';
 import {Vehicle} from './vehicle.model';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
+import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
 
 @Component({
   selector: 'app-table-page',
@@ -38,10 +39,8 @@ import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
     MinMaxDirective,
     SciViewportComponent,
     SciFilterFieldComponent,
+    DesignTokenFormComponent,
   ],
-  host: {
-    '[style.--sci-table-gridline-color]': 'settingsForm.showGridlines().value() ? "var(--sci-color-border)" : null',
-  },
 })
 export default class SciTablePageComponent {
 
@@ -49,8 +48,10 @@ export default class SciTablePageComponent {
   private readonly _tabbar = viewChild.required(SciTabbarComponent);
   private readonly _tableFilterField = viewChild.required(SciFilterFieldComponent);
   private readonly _router = inject(Router);
+  private readonly _tableElement: Signal<ElementRef<HTMLElement> | undefined> = viewChild(SciTableComponent, {read: ElementRef});
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
+  protected readonly designTokenForm: FieldTree<DesignTokenForm> = this.createDesignTokenForm();
   protected readonly vehicleForm: FieldTree<VehicleForm> = this.createVehicleForm();
 
   protected readonly table = this.computeTable();
@@ -60,6 +61,7 @@ export default class SciTablePageComponent {
     return selectable === false ? 'false' : selectable;
   });
   protected readonly selection = computed(() => this.table()?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
 
   private createTable(options: {slowDatasource: boolean}): SciTable<Vehicle> {
     const vehicleService = inject(VehicleService);
@@ -226,7 +228,7 @@ export default class SciTablePageComponent {
           },
         })
         .addToolbarButton({icon: 'scion.duplicate', tooltip: 'Duplicate', onSelect: () => vehicleService.addVehicle(vehicle)})
-        .addToolbarButton({icon: 'scion.delete', tooltip: 'Delete', accelerator: {key: 'delete'}, onSelect: () => vehicleService.deleteVehicle(vehicle.id)})
+        .addToolbarButton({icon: 'scion.delete', tooltip: 'Delete', onSelect: () => vehicleService.deleteVehicle(vehicle.id)})
         .addGroup(group => group
           .addToolbarButton({icon: 'play_circle', tooltip: 'In Operation', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'In Operation'}), disabled: computed(() => vehicle.status === 'In Operation')})
           .addToolbarButton({icon: 'pause_circle', tooltip: 'Stabled', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'Stabled'}), disabled: computed(() => vehicle.status === 'Stabled')}),
@@ -282,7 +284,7 @@ export default class SciTablePageComponent {
   }
 
   private createSettingsForm(): FieldTree<SettingsForm> {
-    const defaults: SettingsForm = {
+    return form(signal({
       showGridlines: false,
       showZebraStriping: false,
       slowDatasource: false,
@@ -309,8 +311,47 @@ export default class SciTablePageComponent {
         lastR2Expiry: true,
         nextRevision: true,
       },
-    };
-    return form(signal(defaults));
+    }));
+  }
+
+  private createDesignTokenForm(): FieldTree<DesignTokenForm> {
+    const host = inject(ElementRef).nativeElement as HTMLElement;
+    const form = createDesignTokenForm([
+      '--sci-table-gridline-color',
+      '--sci-table-header-height',
+      '--sci-table-header-cursor',
+      '--sci-table-header-background-color',
+      '--sci-table-header-background-color-hover',
+      '--sci-table-header-font-family',
+      '--sci-table-header-font-size',
+      '--sci-table-header-font-weight',
+      '--sci-table-header-text-color',
+      '--sci-table-header-column-divider',
+      '--sci-table-row-height',
+      '--sci-table-row-background-color-hover',
+      '--sci-table-row-background-color-selected',
+      '--sci-table-row-border-radius',
+      '--sci-table-row-outline-color',
+      '--sci-table-row-outline-width',
+      '--sci-table-row-outline-style',
+      '--sci-table-row-action-background-color',
+      '--sci-table-row-action-background-color-selected',
+      '--sci-table-cell-padding-inline',
+    ], this._tableElement, {designTokenRootElement: host});
+
+    // Set/Unset gridline color based on 'Show Gridlines' setting.
+    effect(() => {
+      const tableElement = this._tableElement()?.nativeElement;
+      if (!tableElement) {
+        return;
+      }
+
+      const showGridlines = this.settingsForm.showGridlines().value();
+      const gridlineColor = form['--sci-table-gridline-color']!().value();
+      tableElement.style.setProperty('--sci-table-gridline-color', showGridlines ? gridlineColor : 'transparent');
+    });
+
+    return form;
   }
 
   private createVehicleForm(): FieldTree<VehicleForm> {
@@ -369,7 +410,7 @@ export default class SciTablePageComponent {
   }
 
   protected updateSelectable(selectable: 'multi' | 'single' | 'false'): void {
-    this.table()?.selectable.set(selectable === 'false' ? false : selectable);
+    this.table()!.selectable.set(selectable === 'false' ? false : selectable);
   }
 }
 
