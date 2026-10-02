@@ -2,10 +2,11 @@ import {ChildProvider, PageableChildProvider, SciHierarchicalTableDatasource, Sc
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Signal, WritableSignal} from '@angular/core';
 import {Translatable} from '@scion/components/text';
+import {SciTableDataSourceProvider} from '../../table/src/table.model';
 
 export interface SciTreeDescriptor<T> {
   label: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
-  datasource: SciTreeDataSource<T> | SciPageableTreeDataSource<T>;
+  datasource: SciTableDataSourceProvider<T>;
   header?: Translatable;
   filterable?: boolean | {matcher: (text: string, context: SciTreeNodeContext<T>) => boolean};
   sortable?: boolean | {comparator: (a: SciTreeNodeContext<T>, b: SciTreeNodeContext<T>) => number};
@@ -58,10 +59,10 @@ export interface SciTree<T> {
 export type SciTreeDataSource<T> = SciHierarchicalTableDatasource<T>;
 export type SciPageableTreeDataSource<T> = SciPageableHierarchicalTableDatasource<T>;
 
-export function provideTreeDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciTreeDataSource<T> {
-  return new SciHierarchicalTableDatasource(root, children);
+export function provideTreeDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciTableDataSourceProvider<T> {
+  return columns => new SciHierarchicalTableDatasource(root, columns, children);
 }
 
-export function providePageableTreeDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableTreeDataSource<T> {
-  return new SciPageableHierarchicalTableDatasource(loader, children);
+export function providePageableTreeDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciTableDataSourceProvider<T> {
+  return () => new SciPageableHierarchicalTableDatasource(loader, children);
 }

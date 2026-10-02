@@ -22,7 +22,7 @@ import {Router} from '@angular/router';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {VehicleService} from './vehicle.service';
 import {isVehicle, Vehicle, VehicleOrOperator} from './vehicle.model';
-import {SciTableDataSource} from '../../../../../projects/scion/components/table/src/table.model';
+import {SciTableDataSourceProvider} from '../../../../../projects/scion/components/table/src/table.model';
 import {EMPTY} from 'rxjs';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 
@@ -69,7 +69,7 @@ export default class SciTablePageComponent {
     return item && isVehicle(item) ? item.id : undefined;
   });
 
-  private getDataSource(vehicleService: VehicleService, options: {slowDatasource: boolean; groupByOperator: boolean}): Signal<VehicleOrOperator[]> | SciTableDataSource<VehicleOrOperator> {
+  private getDataSource(vehicleService: VehicleService, options: {slowDatasource: boolean; groupByOperator: boolean}): Signal<VehicleOrOperator[]> | SciTableDataSourceProvider<VehicleOrOperator> {
     if (options.groupByOperator) {
       if (options.slowDatasource) {
         return providePageableHierarchicalTableDatasource<VehicleOrOperator>(request => vehicleService.getGroupedVehicles$(request), {

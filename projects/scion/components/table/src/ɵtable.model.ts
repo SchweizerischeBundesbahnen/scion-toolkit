@@ -9,13 +9,12 @@
  */
 
 import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
-import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
-import {ChildProvider, PageableChildProvider, SciHierarchicalTableDatasource, SciPageableHierarchicalTableDatasource, SciPageableTableDatasource, SciTable, SciTableArrayDatasource, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
+import {SciTableColumnFilter, SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
+import {SciHierarchicalTableDatasource, SciPageableHierarchicalTableDatasource, SciTable, SciTableArrayDatasource, SciTableCellLike, SciTableColumnLike, SciTableDataSource, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
-import {MaybeAsync, rangeInclusive} from './common';
+import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {coerceSignal, createDestroyableInjector, toLazyObservable} from '@scion/components/common';
-import {arrayDatasource, isArrayDatasource} from './ɵtable-array-datasource';
 import {SciTableCache, SciTableCacheEntry, SciTableCacheRow, TablePage} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {combineLatestWith, concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, throwError, timer} from 'rxjs';
@@ -34,10 +33,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly rowActions?: SciTableRowActionFactoryFn<T>;
 
   private readonly _rowBindings: SciTableRowBindingFactoryFn<T>[];
-  private readonly _dataLoaderFn: SciTableDataLoaderFn<T>;
+  private readonly _datasource: SciTableDataSource<T>;
   private readonly _trackBy?: (item: T) => unknown;
-  private readonly _childProvider?: ChildProvider<T> | PageableChildProvider<T>;
-  private readonly _childDataLoaderFn?: (item: T, request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
 
   public readonly tableViewRef = signal<SciTableViewRef | undefined>(undefined);
   public readonly userSettings: WritableSignal<SciTableUserSettings>;
@@ -132,35 +129,10 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this._trackBy = descriptor.trackBy;
 
     if (isSignal(descriptor.ɵdatasource)) {
-      this._dataLoaderFn = arrayDatasource(descriptor.ɵdatasource, this.columns);
+      this._datasource = new SciTableArrayDatasource(descriptor.ɵdatasource, this.columns);
     }
-    else if (descriptor.ɵdatasource instanceof SciTableArrayDatasource) {
-      this._dataLoaderFn = arrayDatasource(descriptor.ɵdatasource.data, this.columns);
-    }
-    else if (descriptor.ɵdatasource instanceof SciPageableTableDatasource) {
-      this._dataLoaderFn = descriptor.ɵdatasource.data;
-    }
-    else if (descriptor.ɵdatasource instanceof SciHierarchicalTableDatasource) {
-      this._dataLoaderFn = arrayDatasource(descriptor.ɵdatasource.root, this.columns);
-      const childProvider: ChildProvider<T> = descriptor.ɵdatasource.children;
-      const root$ = toObservable(descriptor.ɵdatasource.root);
-      this._childProvider = descriptor.ɵdatasource.children;
-      this._childDataLoaderFn = (item, request) => {
-        // Fetch children again as soon as data source changes.
-        return root$.pipe(
-          map(() => childProvider.getChildren(item)),
-          map(children => ({
-            items: children.slice(request.start, request.end),
-            totalCount: children.length,
-          })),
-        );
-      };
-    }
-    else if (descriptor.ɵdatasource instanceof SciPageableHierarchicalTableDatasource) {
-      this._dataLoaderFn = descriptor.ɵdatasource.root;
-      const childProvider: PageableChildProvider<T> = descriptor.ɵdatasource.children;
-      this._childProvider = childProvider;
-      this._childDataLoaderFn = (item, request) => childProvider.getChildren(item, request);
+    else if (descriptor.ɵdatasource) {
+      this._datasource = descriptor.ɵdatasource(this.columns);
     }
     else {
       throw new Error('Could not initialize data loader');
@@ -331,7 +303,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     await Promise.all(pages
       .map(page => this.loadPage({
         cache: this._cache,
-        loader: this._dataLoaderFn,
+        loader: this._datasource.load,
         page,
         pageSize: this.pageSize,
         level: 0,
@@ -469,7 +441,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   }
 
   private loadChildPage(parent: SciTableCacheRow<T>, page: number): {loading: Signal<boolean>; cancel: () => void} {
-    if (!this._childDataLoaderFn) {
+    if (!this.isHierarchicalDatasource()) {
       return {
         loading: signal(false), cancel: () => {
         },
@@ -478,7 +450,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
 
     return this.loadPage({
       cache: parent.childrenCache,
-      loader: request => this._childDataLoaderFn!(parent.item!, request),
+      loader: request => this._datasource.loadChildren!(parent.item!, request),
       page,
       pageSize: this.pageSize,
       level: parent.level + 1,
@@ -495,11 +467,11 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
    * Supports out-of-the-box filtering and sorting for built-in table columns.
    */
   public isArrayDatasource(): boolean {
-    return isArrayDatasource(this._dataLoaderFn);
+    return this._datasource instanceof SciTableArrayDatasource || this._datasource instanceof SciHierarchicalTableDatasource;
   }
 
   public isHierarchicalDatasource(): boolean {
-    return Boolean(this._childProvider);
+    return this._datasource instanceof SciHierarchicalTableDatasource || this._datasource instanceof SciPageableHierarchicalTableDatasource;
   }
 
   public reset(): void {
@@ -534,7 +506,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           this.loadChildPage(page.parent, page.page) :
           this.loadPage({
             cache: page.cache,
-            loader: this._dataLoaderFn,
+            loader: this._datasource.load,
             pageSize: this.pageSize,
             page: page.page,
             level: 0,
@@ -610,7 +582,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       const id = this.trackBy(item);
       const index = pageStart + i;
       const previousRow = existingRows.get(id);
-      const hasChildren = runInInjectionContext(injector, () => toSignal(Observables.coerce(this._childProvider?.hasChildren(item, {columnFilters: this.filterCriteria(), tableFilter: this._tableFilter() ?? undefined}) ?? false), {initialValue: false}));
+      const hasChildren = runInInjectionContext(injector, () => toSignal(Observables.coerce(this._datasource.hasChildren?.(item, {columnFilters: this.filterCriteria(), tableFilter: this._tableFilter() ?? undefined}) ?? false), {initialValue: false}));
 
       const row: SciTableCacheRow<T> = {
         id,

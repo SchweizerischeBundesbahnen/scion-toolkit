@@ -15,8 +15,10 @@ import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
 import {MaybeAsync} from './common';
-import {Observable} from 'rxjs';
 import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
+import {arrayDatasource} from './ɵtable-array-datasource';
+import {map} from 'rxjs/operators';
+import {toObservable} from '@angular/core/rxjs-interop';
 
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template' | 'dynamic';
 
@@ -28,7 +30,7 @@ export interface SciTableDescriptor<T> {
    * @docs-private Not public API. For internal use only.
    * @experimental since 22.3.0; API and behavior may change in any version without notice.
    */
-  ɵdatasource?: Signal<T[]> | SciTableDataSource<T>;
+  ɵdatasource?: Signal<T[]> | SciTableDataSourceProvider<T>;
   columns: SciTableColumnFactoryFn<T>;
   sortable?: boolean;
   resizable?: boolean;
@@ -265,44 +267,74 @@ export interface SciTableEvent<T> {
   items: T[];
 }
 
-export class SciTableArrayDatasource<T> {
+export type SciTableDataSourceProvider<T> = (columns: Signal<SciTableColumnLike<T>[]>) => SciTableDataSource<T>;
 
-  constructor(public data: Signal<T[]>) {
+export interface SciTableDataSource<T> {
+  load: SciTableDataLoaderFn<T>;
+  hasChildren?(item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
+  loadChildren?(item: T, request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
+}
+
+export class SciTableArrayDatasource<T> implements SciTableDataSource<T> {
+  public load: SciTableDataLoaderFn<T>;
+
+  constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
+    this.load = arrayDatasource(data, columns);
   }
 }
 
-export class SciHierarchicalTableDatasource<T> {
+export class SciHierarchicalTableDatasource<T> implements SciTableDataSource<T> {
+  public load: SciTableDataLoaderFn<T>;
+  public hasChildren: (item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>) => MaybeAsync<boolean>;
+  public loadChildren: (item: T, request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
 
-  constructor(public root: Signal<T[]>, public children: ChildProvider<T>) {
+  constructor(root: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>, public children: ChildProvider<T>) {
+    this.load = arrayDatasource(root, columns);
+    const root$ = toObservable(root);
+    this.hasChildren = this.children.hasChildren;
+    this.loadChildren = (item, request) => {
+      // Fetch children again as soon as data source changes.
+      return root$.pipe(
+        map(() => children.getChildren(item)),
+        map(children => ({
+          items: children.slice(request.start, request.end),
+          totalCount: children.length,
+        })),
+      );
+    };
   }
 }
 
-export class SciPageableTableDatasource<T> {
+export class SciPageableTableDatasource<T> implements SciTableDataSource<T> {
 
-  constructor(public data: SciTableDataLoaderFn<T>) {
+  constructor(public load: SciTableDataLoaderFn<T>) {
   }
 }
 
-export class SciPageableHierarchicalTableDatasource<T> {
+export class SciPageableHierarchicalTableDatasource<T> implements SciTableDataSource<T> {
+  public hasChildren: (item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>) => MaybeAsync<boolean>;
+  public loadChildren: (item: T, request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
 
-  constructor(public root: SciTableDataLoaderFn<T>, public children: PageableChildProvider<T>) {
+  constructor(public load: SciTableDataLoaderFn<T>, public children: PageableChildProvider<T>) {
+    this.hasChildren = children.hasChildren;
+    this.loadChildren = children.getChildren;
   }
 }
 
-export function provideTableDatasource<T>(data: Signal<T[]>): SciTableArrayDatasource<T> {
-  return new SciTableArrayDatasource(data);
+export function provideTableDatasource<T>(data: Signal<T[]>): SciTableDataSourceProvider<T> {
+  return columns => new SciTableArrayDatasource(data, columns);
 }
 
-export function provideHierarchicalTableDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciHierarchicalTableDatasource<T> {
-  return new SciHierarchicalTableDatasource(root, children);
+export function provideHierarchicalTableDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciTableDataSourceProvider<T> {
+  return columns => new SciHierarchicalTableDatasource(root, columns, children);
 }
 
-export function providePageableTableDatasource<T>(loader: SciTableDataLoaderFn<T>): SciPageableTableDatasource<T> {
-  return new SciPageableTableDatasource(loader);
+export function providePageableTableDatasource<T>(loader: SciTableDataLoaderFn<T>): SciTableDataSourceProvider<T> {
+  return () => new SciPageableTableDatasource(loader);
 }
 
-export function providePageableHierarchicalTableDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciPageableHierarchicalTableDatasource<T> {
-  return new SciPageableHierarchicalTableDatasource(loader, children);
+export function providePageableHierarchicalTableDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciTableDataSourceProvider<T> {
+  return () => new SciPageableHierarchicalTableDatasource(loader, children);
 }
 
 export interface ChildProvider<T = unknown> {
@@ -314,8 +346,6 @@ export interface PageableChildProvider<T> {
   getChildren(item: T, request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
   hasChildren(item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
 }
-
-export type SciTableDataSource<T> = SciTableArrayDatasource<T> | SciHierarchicalTableDatasource<T> | SciPageableTableDatasource<T> | SciPageableHierarchicalTableDatasource<T>;
 
 export interface SciPageableTableDatasourceDescriptor<T> {
   getItems(request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
