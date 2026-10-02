@@ -1,10 +1,45 @@
 :host {
-  display: grid;
-  width: 100%;
-  height: 100%;
-  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  inset: 0;
 
-  > router-outlet {
-    position: absolute; // out of the document flow
+  > header {
+    flex: none;
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--sci-color-background-secondary);
+    border-bottom: 1px solid var(--sci-color-border);
+    padding: 2px;
+    position: relative; // positioning context to align title horizontally in the center
+
+    > span.title {
+      position: absolute;
+      left: 0;
+      right: 0;
+      align-self: center;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+      pointer-events: none;
+      user-select: none;
+    }
+  }
+
+  > main {
+    flex: auto;
+    padding: 1em;
+    display: grid;
+    position: relative; // positioning context for tests to position elements absolutely
+
+    > router-outlet {
+      position: absolute; // out of the document flow
+    }
+
+    > span.welcome-message {
+      text-align: center;
+      font-size: 1.25em;
+      padding: 2em;
+    }
   }
 }
