@@ -35,17 +35,17 @@
     <ng-template sciTab label="Tab Visible">
       <div class="tab">
         <label>
-          <sci-checkbox [formControl]="form.controls.shortContentTabVisible"></sci-checkbox>
+          <input [formControl]="form.controls.shortContentTabVisible" type="checkbox">
           Tab "Short Content"
         </label>
 
         <label>
-          <sci-checkbox [formControl]="form.controls.longContentTabVisible"></sci-checkbox>
+          <input [formControl]="form.controls.longContentTabVisible" type="checkbox">
           Tab "Long Content"
         </label>
 
         <label>
-          <sci-checkbox [formControl]="form.controls.textareaTabVisible"></sci-checkbox>
+          <input [formControl]="form.controls.textareaTabVisible" type="checkbox">
           Tab "Textarea"
         </label>
       </div>

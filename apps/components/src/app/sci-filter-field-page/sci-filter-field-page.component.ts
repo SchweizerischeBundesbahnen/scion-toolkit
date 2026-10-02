@@ -9,7 +9,6 @@
  */
 import {Component, inject, signal} from '@angular/core';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
-import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
@@ -21,7 +20,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
   imports: [
     ReactiveFormsModule,
     SciFilterFieldComponent,
-    SciCheckboxComponent,
     SciTabDirective,
     SciTabbarComponent,
   ],

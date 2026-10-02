@@ -17,16 +17,18 @@
   <sci-tabbar>
     <ng-template sciTab label="Settings">
       <div class="tab">
-        <sci-form-field label="Variant">
+        <label>
+          Variant
           <select [formControl]="form.controls.variant">
             <option value="solid">solid</option>
             <option value="bubble">bubble</option>
           </select>
-        </sci-form-field>
+        </label>
 
-        <sci-form-field label="Multi">
-          <sci-checkbox [formControl]="form.controls.multi"></sci-checkbox>
-        </sci-form-field>
+        <label>
+          <input [formControl]="form.controls.multi" type="checkbox">
+          Multi
+        </label>
       </div>
     </ng-template>
   </sci-tabbar>

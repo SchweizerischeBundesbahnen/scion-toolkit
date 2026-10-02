@@ -1,3 +1,5 @@
+@use '@scion/components.internal/design' as sci-design;
+
 /**
  * Provides styles for an icon button's element states: :hover, :active, and :focus.
  *
@@ -36,4 +38,31 @@
   }
 
   @content;
+}
+
+@mixin form-field {
+  // Styles a form field having an input.
+  &:has(:is(input:not([type="checkbox"])), select, textarea) {
+    display: flex;
+    flex-direction: column;
+    gap: .25em;
+    user-select: none;
+
+    > input, select {
+      @include sci-design.style-input-field();
+    }
+  }
+
+  // Styles a form field having a checkbox.
+  &:has(input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    gap: .5em;
+    user-select: none;
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+  }
 }
