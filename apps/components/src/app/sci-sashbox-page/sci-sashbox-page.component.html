@@ -27,75 +27,93 @@
   <sci-tabbar>
     <ng-template sciTab label="Settings">
       <div class="tab">
-        <sci-form-field label="Direction">
+        <label>
+          Direction
           <select [formControl]="formGroup.controls.direction">
             <option value="column">column</option>
             <option value="row">row</option>
           </select>
-        </sci-form-field>
+        </label>
       </div>
     </ng-template>
 
     @for (sash of sashes; track sash; let i = $index) {
       <ng-template sciTab [label]="'Sash ' + (i + 1)">
         <div class="tab">
-          <sci-form-field label="Visible">
-            <sci-checkbox [(ngModel)]="sash.visible"/>
-          </sci-form-field>
-          <sci-form-field label="Size">
+          <label>
+            <input [(ngModel)]="sash.visible" type="checkbox"/>
+            Visible
+          </label>
+          <label>
+            Size
             <input [(ngModel)]="sash.size" placeholder="Value in any CSS unit or unitless as a ratio">
-          </sci-form-field>
-          <sci-form-field label="Min size">
+          </label>
+          <label>
+            Min size
             <input [(ngModel)]="sash.minSize" placeholder="Value in pixel or percent">
-          </sci-form-field>
-          <sci-form-field label="Key">
+          </label>
+          <label>
+            Key
             <input [(ngModel)]="sash.key">
-          </sci-form-field>
-          <sci-form-field label="Animate">
-            <sci-checkbox [(ngModel)]="sash.animate"/>
-          </sci-form-field>
+          </label>
+          <label>
+            <input [(ngModel)]="sash.animate" type="checkbox"/>
+            Animate
+          </label>
         </div>
       </ng-template>
     }
 
     <ng-template sciTab label="Styling">
       <div class="tab">
-        <sci-form-field label="--sci-sashbox-gap" direction="column">
+        <label>
+          --sci-sashbox-gap
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-gap']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-background-color" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-background-color
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-background-color']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-background-color-hover" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-background-color-hover
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-background-color-hover']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-size" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-size
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-size']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-size-hover" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-size-hover
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-size-hover']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-touch-target-size" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-touch-target-size
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-touch-target-size']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-cross-axis-size" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-cross-axis-size
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-size']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-cross-axis-start" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-cross-axis-start
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-start']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-cross-axis-end" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-cross-axis-end
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-cross-axis-end']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-border-radius" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-border-radius
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-border-radius']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-opacity-active" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-opacity-active
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-active']">
-        </sci-form-field>
-        <sci-form-field label="--sci-sashbox-splitter-opacity-hover" direction="column">
+        </label>
+        <label>
+          --sci-sashbox-splitter-opacity-hover
           <input [formControl]="formGroup.controls.styling.controls['--sci-sashbox-splitter-opacity-hover']">
-        </sci-form-field>
+        </label>
       </div>
     </ng-template>
 

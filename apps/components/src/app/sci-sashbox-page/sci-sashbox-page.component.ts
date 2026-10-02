@@ -10,8 +10,6 @@
 import {Component, effect, ElementRef, inject, signal, Signal, untracked, viewChild} from '@angular/core';
 import {FormsModule, NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SciSashboxComponent, SciSashDirective} from '@scion/components/sashbox';
-import {SciFormFieldComponent} from '@scion/components.internal/form-field';
-import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import {SciMaterialIconDirective} from '@scion/components.internal/material-icon';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 
@@ -24,8 +22,6 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
     ReactiveFormsModule,
     SciSashboxComponent,
     SciSashDirective,
-    SciFormFieldComponent,
-    SciCheckboxComponent,
     SciMaterialIconDirective,
     SciTabDirective,
     SciTabbarComponent,

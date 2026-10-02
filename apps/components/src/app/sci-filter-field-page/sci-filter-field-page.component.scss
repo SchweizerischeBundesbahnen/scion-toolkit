@@ -31,14 +31,6 @@
       flex-direction: column;
       gap: 1em;
       padding: .25em;
-
-      > label {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        column-gap: 1em;
-        align-items: center;
-        user-select: none;
-      }
     }
   }
 }

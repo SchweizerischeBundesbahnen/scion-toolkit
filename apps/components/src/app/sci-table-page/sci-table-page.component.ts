@@ -14,7 +14,6 @@ import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular
 import {DatePipe} from '@angular/common';
 import {createDestroyableInjector} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
-import {SciFormFieldComponent} from '@scion/components.internal/form-field';
 import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
@@ -32,7 +31,6 @@ import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
     SciTableComponent,
     FormsModule,
     FormField,
-    SciFormFieldComponent,
     FormRoot,
     FieldValidationDirective,
     SciTabDirective,

@@ -12,7 +12,6 @@ import {Component, inject, viewChild} from '@angular/core';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {NonNullableFormBuilder, ReactiveFormsModule} from '@angular/forms';
 import {SplitPipe} from '../common/split.pipe';
-import {SciCheckboxComponent} from '@scion/components.internal/checkbox';
 import loremIpsum from './lorem-ipsum.json';
 
 @Component({
@@ -21,7 +20,6 @@ import loremIpsum from './lorem-ipsum.json';
   styleUrls: ['./sci-tabbar-page.component.scss'],
   imports: [
     ReactiveFormsModule,
-    SciCheckboxComponent,
     SciTabbarComponent,
     SciTabDirective,
     SplitPipe,

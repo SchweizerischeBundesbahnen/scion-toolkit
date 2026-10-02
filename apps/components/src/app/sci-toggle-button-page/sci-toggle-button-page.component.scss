@@ -21,13 +21,6 @@
       padding: .25em;
       gap: 1em;
 
-      > label {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        column-gap: 1em;
-        align-items: center;
-        user-select: none;
-      }
     }
   }
 }

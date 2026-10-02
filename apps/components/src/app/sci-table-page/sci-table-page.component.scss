@@ -42,24 +42,40 @@
         gap: .5em;
         justify-content: flex-end;
       }
+
+      section.settings {
+        > button.reset {
+          margin-top: 1.5em;
+        }
+      }
     }
 
     > section.table-state {
-      display: flex;
-      flex-direction: column;
-      gap: .5em;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: .5em 2em;
       border: 1px solid var(--sci-color-border);
       border-radius: var(--sci-corner);
       padding: 1em;
       background-color: var(--sci-color-background-primary);
 
       > header {
+        grid-column: 1/-1;
         margin-bottom: 1em;
         font-weight: bold;
       }
 
-      sci-viewport {
-        max-height: 100px;
+      > label {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1/-1;
+
+        > sci-viewport {
+          // Prevent viewport from stretching subgrid column by setting `width: 0` together with `min-width: 100%`
+          width: 0; // Used by browser during track sizing to compute preferred width
+          min-width: 100%; // Used by browser during rendering; overrides width because min-width takes priority
+          max-height: 100px;
+        }
       }
     }
   }
