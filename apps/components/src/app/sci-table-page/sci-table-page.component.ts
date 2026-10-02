@@ -7,13 +7,13 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, ElementRef, inject, Injector, input, inputBinding, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
+import {Component, computed, effect, ElementRef, inject, Injector, input, inputBinding, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
 import {SciTable, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
 import {DatePipe} from '@angular/common';
 import {createDestroyableInjector} from '@scion/components/common';
-import {SciToolbarFactory} from '@scion/components/menu';
+import {contributeMenu, SciToolbarFactory} from '@scion/components/menu';
 import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
@@ -23,6 +23,9 @@ import {VehicleService} from './vehicle.service';
 import {Vehicle} from './vehicle.model';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
+import {BreakpointObserver} from '@angular/cdk/layout';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {map} from 'rxjs/operators';
 
 @Component({
   selector: 'app-table-page',
@@ -49,6 +52,7 @@ export default class SciTablePageComponent {
   private readonly _tableFilterField = viewChild.required(SciFilterFieldComponent);
   private readonly _router = inject(Router);
   private readonly _tableElement: Signal<ElementRef<HTMLElement> | undefined> = viewChild(SciTableComponent, {read: ElementRef});
+  private readonly _isMobile = toSignal(inject(BreakpointObserver).observe('(max-width: 700px)').pipe(map(breakpoint => breakpoint.matches)));
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
   protected readonly designTokenForm: FieldTree<DesignTokenForm> = this.createDesignTokenForm();
@@ -61,12 +65,18 @@ export default class SciTablePageComponent {
     return selectable === false ? 'false' : selectable;
   });
   protected readonly selection = computed(() => this.table()?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly panelOpen = linkedSignal(() => !this._isMobile());
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
+
+  constructor() {
+    this.contributeMainToolbarMenu();
+  }
 
   private createTable(options: {slowDatasource: boolean}): SciTable<Vehicle> {
     const vehicleService = inject(VehicleService);
     const vehicleForm = this.vehicleForm;
     const tabbar = this._tabbar;
+    const panelOpen = this.panelOpen;
 
     return table({
       ɵdatasource: options.slowDatasource ? request => inject(VehicleService).getVehicles$(request, {slowDatasource: true}) : inject(VehicleService).vehicles,
@@ -224,7 +234,10 @@ export default class SciTablePageComponent {
           tooltip: 'Edit',
           onSelect: () => {
             vehicleForm().reset(vehicle);
-            requestAnimationFrame(() => tabbar().activateTab('vehicle-editor'));
+            requestAnimationFrame(() => {
+              tabbar().activateTab('vehicle-editor');
+              panelOpen.set(true);
+            });
           },
         })
         .addToolbarButton({icon: 'scion.duplicate', tooltip: 'Duplicate', onSelect: () => vehicleService.addVehicle(vehicle)})
@@ -382,6 +395,9 @@ export default class SciTablePageComponent {
           vehicleService.updateVehicle(form().value() as Vehicle);
           this.vehicleForm().reset(defaults);
           this._tabbar().activateTab('settings');
+          if (this._isMobile()) {
+            this.panelOpen.set(false);
+          }
         },
       },
     });
@@ -390,6 +406,9 @@ export default class SciTablePageComponent {
   protected onVehicleFormCancel(): void {
     this.vehicleForm.id().value.set(null);
     this._tabbar().activateTab('settings');
+    if (this._isMobile()) {
+      this.panelOpen.set(false);
+    }
   }
 
   protected onUserSettingsReset(): void {
@@ -411,6 +430,13 @@ export default class SciTablePageComponent {
 
   protected updateSelectable(selectable: 'multi' | 'single' | 'false'): void {
     this.table()!.selectable.set(selectable === 'false' ? false : selectable);
+  }
+
+  private contributeMainToolbarMenu(): void {
+    contributeMenu('toolbar:main', toolbar => toolbar
+      .addToolbarButton({visible: this.panelOpen(), icon: 'right_panel_close', tooltip: 'Hide side panel', onSelect: () => this.panelOpen.set(false)})
+      .addToolbarButton({visible: computed(() => !this.panelOpen()), icon: 'right_panel_open', tooltip: 'Show side panel', onSelect: () => this.panelOpen.set(true)}),
+    );
   }
 }
 
