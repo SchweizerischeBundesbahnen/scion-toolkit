@@ -1,0 +1,16 @@
+<header>
+  <sci-menubar name="menubar:main"/>
+  <span class="title">{{url()}}</span>
+</header>
+
+<main>
+  <router-outlet/>
+
+  @if (!url()) {
+    <span class="welcome-message">
+      Welcome to SCION Components Testing Application.
+      <p>
+      Please select a component from the menu.
+    </span>
+  }
+</main>

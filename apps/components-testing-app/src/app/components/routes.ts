@@ -12,6 +12,14 @@ import {Routes} from '@angular/router';
 
 export default [
   {
+    path: 'sci-table',
+    loadChildren: () => import('./sci-table/routes'),
+  },
+  {
+    path: 'sci-sashbox',
+    loadChildren: () => import('./sci-sashbox/routes'),
+  },
+  {
     path: 'sci-viewport',
     loadChildren: () => import('./sci-viewport/routes'),
   },
@@ -20,19 +28,11 @@ export default [
     loadChildren: () => import('./sci-scrollbar/routes'),
   },
   {
-    path: 'sci-sashbox',
-    loadChildren: () => import('./sci-sashbox/routes'),
-  },
-  {
     path: 'sci-splitter',
     loadChildren: () => import('./sci-splitter/routes'),
   },
   {
     path: 'sci-icon',
     loadChildren: () => import('./sci-icon/routes'),
-  },
-  {
-    path: 'sci-table',
-    loadChildren: () => import('./sci-table/routes'),
   },
 ] satisfies Routes;
