@@ -152,7 +152,7 @@
     }
   }
 
-  sci-toolbar.row-actions {
+  div.row-actions {
     position: fixed;
     --ɵsci-table-row-actions-align-top: calc(anchor(--sci-table-hovered-row top) - calc(var(--ɵsci-table-row-actions-height) / 2));
     --ɵsci-table-row-actions-align-bottom: calc(anchor(--sci-table-hovered-row bottom) - calc(var(--ɵsci-table-row-actions-height) / 2));
