@@ -38,19 +38,19 @@
   @content;
 }
 
-@mixin skeleton($border-radius: var(--sci-corner-small), $delay: 0) {
+@mixin skeleton($border-radius: var(--sci-corner-small), $fade-in-duration: 0) {
   display: inline-block;
   position: relative; // positioning anchor for ::after pseudo element
   overflow: hidden;
   border-radius: $border-radius;
   background-color: var(--sci-color-skeleton-subtle);
 
-  // Delay displaying the skeleton if configured a delay.
-  @if ($delay != 0) {
+  // Duration for the skeleton to fade in to full opacity.
+  @if ($fade-in-duration != 0) {
     opacity: 0;
     animation-name: visiblity;
-    animation-duration: 0s;
-    animation-delay: $delay;
+    animation-duration: $fade-in-duration;
+    animation-timing-function: ease-in;
     animation-fill-mode: forwards; // retain opacity after animation completes
   }
 
