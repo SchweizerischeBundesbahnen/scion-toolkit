@@ -8,11 +8,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
-import {SciBooleanColumn, SciComponentColumn, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
-import {computed, signal} from '@angular/core';
+import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciDateColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
+import {SciBooleanColumn, SciComponentColumn, SciDateColumn, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
+import {computed, inject, LOCALE_ID, signal} from '@angular/core';
 import {ɵSciTable} from './ɵtable.model';
 import {coerceSignal} from '@scion/components/common';
+import {coerceDateValue, SciDateLike} from './table-date-column.model';
 
 export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
 
@@ -33,7 +34,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     this.columns.push({
       ...column,
       type: 'string',
-      value: descriptor.value,
+      value: item => coerceSignal(descriptor.value(item)),
       sortable: computed(() => this._table.sortable() && !!sortable),
       filterable: computed(() => this._table.filterable() && !!filterable),
       compare: typeof sortable === 'object' ? sortable.comparator : (a, b) => a.value.localeCompare(b.value),
@@ -53,7 +54,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     this.columns.push({
       ...column,
       type: 'number',
-      value: descriptor.value,
+      value: item => coerceSignal(descriptor.value(item)),
       sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
       filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
       compare: (a, b) => a.value - b.value,
@@ -73,12 +74,42 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     this.columns.push({
       ...column,
       type: 'boolean',
-      value: descriptor.value,
+      value: item => coerceSignal(descriptor.value(item)),
       sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
       filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
       compare: (a, b) => a.value === b.value ? 0 : (a.value ? 1 : -1),
       matches: (text, context) => context.value === text,
     } satisfies SciBooleanColumn<T>);
+
+    return this;
+  }
+
+  public addDateColumn(value: (item: T) => SciDateLike): this;
+  public addDateColumn(header: string, value: (item: T) => SciDateLike): this;
+  public addDateColumn(descriptor: SciDateColumnDescriptor<T>): this;
+  public addDateColumn(descriptorLike: ((item: T) => SciDateLike) | string | SciDateColumnDescriptor<T>, value?: (item: T) => SciDateLike): this {
+    const descriptor = coerceColumnDescriptor(descriptorLike, value);
+    const column = this.mapToColumn(descriptor);
+
+    const locale = descriptor.locale ?? inject(LOCALE_ID);
+    const format = descriptor.format ?? 'mediumDate';
+    const timezone = descriptor.timezone;
+
+    // TODO [dwie] Performance -> provide formatted string on column model?
+    // TODO [dwie] Locale change when changing language
+
+    this.columns.push({
+      ...column,
+      type: 'date',
+      value: item => {
+        const dateLike = coerceSignal(descriptor.value(item));
+        return computed(() => coerceDateValue(dateLike(), {locale, format, timezone}));
+      },
+      sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
+      filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
+      compare: (a, b) => a.value.millis - b.value.millis, // faster than comparing ISO strings
+      matches: (text, context) => context.value.formatted.toLowerCase().includes(text.toLowerCase()),
+    } satisfies SciDateColumn<T>);
 
     return this;
   }
@@ -176,6 +207,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
  */
 function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): SciStringColumnDescriptor<T>;
 function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): SciNumberColumnDescriptor<T>;
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => SciDateLike) | string | SciDateColumnDescriptor<T>, value?: (item: T) => SciDateLike): SciDateColumnDescriptor<T>;
 function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): SciBooleanColumnDescriptor<T>;
 function coerceColumnDescriptor(argument1: unknown, argument2?: unknown): unknown {
   switch (typeof argument1) {

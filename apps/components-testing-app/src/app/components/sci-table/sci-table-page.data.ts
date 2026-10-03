@@ -1,4 +1,4 @@
-import {SciTableColumnFilter, SciTableColumnType, SciTableSortCriterion, SciTablePageRequest, SciTablePageResponse} from '@scion/components/table';
+import {SciTableColumnFilter, SciTableColumnType, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
 import {effect, inject, Injector, linkedSignal, Service, Signal, signal, untracked} from '@angular/core';
 import {defer, mergeWith, NEVER, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
@@ -8,7 +8,7 @@ import {HttpClient} from '@angular/common/http';
 @Service()
 export class ProductService {
 
-  public readonly productCount = signal(10_000);
+  public readonly productCount = signal(1_000_000);
 
   public readonly products = linkedSignal(() => {
     const count = this.productCount();
@@ -50,17 +50,26 @@ export interface Product {
   name: string;
   price: number;
   inStock: boolean;
+  expirationDate: Date;
+  expirationDateIso: string;
+  expirationDateMillis: number;
 }
 
 export namespace Products {
 
   export function generate(count: number): Product[] {
-    return Array.from(Array(count), (_, i) => ({
-      id: i + 1,
-      name: `Product ${i + 1}`,
-      price: Math.floor(Math.random() * 1000) + 1,
-      inStock: Math.random() > 0.5,
-    }));
+    return Array.from(Array(count), (_, i) => {
+      const date = randomDate(15);
+      return ({
+        id: i + 1,
+        name: `Product ${i + 1}`,
+        price: Math.floor(Math.random() * 1000) + 1,
+        inStock: Math.random() > 0.5,
+        expirationDate: date,
+        expirationDateIso: date.toISOString(),
+        expirationDateMillis: date.getTime(),
+      });
+    });
   }
 
   export function sort(companies: Product[], sortCriteria: SciTableSortCriterion[], columnDataTypes: Map<`column:${string}`, SciTableColumnType>): Product[] {
@@ -132,4 +141,11 @@ export function simulateError$(simulateError: Signal<boolean> | undefined, optio
 
     return () => effectRef.destroy();
   });
+}
+
+function randomDate(years: number): Date {
+  const from = new Date();
+  const to = new Date();
+  to.setFullYear(from.getFullYear() + years);
+  return new Date(from.getTime() + Math.random() * (to.getTime() - from.getTime()));
 }

@@ -21,6 +21,7 @@ import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';
 import {CustomButtonColumnComponent} from './custom-button-column.component';
+import {DatePipe} from '@angular/common';
 
 @Component({
   selector: 'app-table-page',
@@ -36,6 +37,7 @@ import {CustomButtonColumnComponent} from './custom-button-column.component';
     FieldValidationDirective,
     CustomColumnComponent,
     SciViewportComponent,
+    DatePipe,
   ],
   providers: [
     provideTableRowBinding((bindings, _item, index) => {
@@ -73,9 +75,43 @@ export default class SciTablePageComponent {
   protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem()?.id);
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
   protected readonly selection = computed(() => this.tables()[0]?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly now = new Date();
 
   constructor() {
     this.bindTableSettings();
+
+    this.columns.set([
+      // {
+      //   type: 'date',
+      //   name: 'column:date',
+      //   header: 'column:date',
+      //   resizable: true,
+      //   width: '',
+      //   minWidth: null,
+      //   visible: signal(true),
+      //   extras: {component: '', padding: true, format: '', locale: 'de-CH', timezone: ''},
+      // },
+      // {
+      //   type: 'date-millis',
+      //   name: 'column:date-millis',
+      //   header: 'column:date-millis',
+      //   resizable: true,
+      //   width: '',
+      //   minWidth: null,
+      //   visible: signal(true),
+      //   extras: {component: '', padding: true, format: '', locale: '', timezone: ''},
+      // },
+      // {
+      //   type: 'date-iso',
+      //   name: 'column:date-iso',
+      //   header: 'column:date-iso',
+      //   resizable: true,
+      //   width: '',
+      //   minWidth: null,
+      //   visible: signal(true),
+      //   extras: {component: '', padding: true, format: '', locale: '', timezone: ''},
+      // },
+    ]);
   }
 
   private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
@@ -145,6 +181,33 @@ export default class SciTablePageComponent {
             table.addBooleanColumn({
               ...column,
               value: product => product.inStock,
+            });
+            break;
+          case 'date':
+            table.addDateColumn({
+              ...column,
+              value: product => product.expirationDate,
+              format: columnForm.extras.format || undefined,
+              locale: columnForm.extras.locale || undefined,
+              timezone: columnForm.extras.timezone || undefined,
+            });
+            break;
+          case 'date-iso':
+            table.addDateColumn({
+              ...column,
+              value: product => product.expirationDateIso,
+              format: columnForm.extras.format || undefined,
+              locale: columnForm.extras.locale || undefined,
+              timezone: columnForm.extras.timezone || undefined,
+            });
+            break;
+          case 'date-millis':
+            table.addDateColumn({
+              ...column,
+              value: product => product.expirationDateMillis,
+              format: columnForm.extras.format || undefined,
+              locale: columnForm.extras.locale || undefined,
+              timezone: columnForm.extras.timezone || undefined,
             });
             break;
           case 'component':
@@ -234,6 +297,9 @@ export default class SciTablePageComponent {
         extras: {
           component: 'component:custom-column',
           padding: true,
+          format: '',
+          locale: '',
+          timezone: '',
         },
       };
     }
@@ -293,7 +359,7 @@ export default class SciTablePageComponent {
 
 interface ColumnForm {
   name: `column:${string}` | '';
-  type: SciTableColumnType;
+  type: SciTableColumnType | 'date-iso' | 'date-millis';
   header: string;
   resizable: boolean;
   width: string;
@@ -301,7 +367,10 @@ interface ColumnForm {
   visible: WritableSignal<boolean>;
   extras: {
     component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';
-    padding: boolean;
+    padding: boolean; // used by component and template column
+    format: string | ''; // used by temporal column
+    locale: string | ''; // used by temporal column
+    timezone: string | ''; // used by temporal column
   };
 }
 
@@ -335,6 +404,14 @@ interface LayoutForm {
   pageHeight: number | null;
 }
 
-function columnDataTypes(columns: ColumnForm[]): Map<`column:${string}`, ColumnForm['type']> {
-  return columns.reduce((map, column) => map.set(column.name as `column:${string}`, column.type), new Map<`column:${string}`, ColumnForm['type']>());
+function columnDataTypes(columns: ColumnForm[]): Map<`column:${string}`, SciTableColumnType> {
+  return columns.reduce((map, column) => {
+    switch (column.type) {
+      case 'date-iso':
+      case 'date-millis':
+        return map.set(column.name as `column:${string}`, 'date');
+      default:
+        return map.set(column.name as `column:${string}`, column.type);
+    }
+  }, new Map<`column:${string}`, SciTableColumnType>());
 }

@@ -14,7 +14,7 @@ import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciT
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
-import {coerceSignal, createDestroyableInjector, toLazyObservable} from '@scion/components/common';
+import {createDestroyableInjector, toLazyObservable} from '@scion/components/common';
 import {arrayDatasource, isArrayDatasource} from './ɵtable-array-datasource';
 import {SciTableCache, SciTableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
@@ -512,7 +512,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         hovered: computed(() => this.hoveredRow()?.index === index),
         bindings: coerceTableRowBindings(this._rowBindings, item, pageStart + i),
         cells: columns.map(column => ({
-          value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
+          value: 'value' in column ? column.value(item) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,
           template: column.type === 'template' ? column.template(item) : undefined,
           type: column.type,

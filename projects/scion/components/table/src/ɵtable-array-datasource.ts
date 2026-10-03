@@ -10,11 +10,12 @@
 
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
-import {computed, signal, Signal, untracked} from '@angular/core';
-import {coerceSignal} from '@scion/components/common';
+import {computed, inject, signal, Signal, untracked} from '@angular/core';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {Objects} from '@scion/toolkit/util';
+import {eTableCellValue, SciTableCellPreloader} from './table-cell-value-preloader';
+import {SciDateValue} from './table-date-column.model';
 
 export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
   const dataset = new Dataset(data, columns);
@@ -39,7 +40,7 @@ export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableCo
  */
 class Dataset<T> {
 
-  private readonly _dataview: Signal<DatasetRow<T>[]>;
+  private readonly _dataview: Signal<T[]>;
 
   public readonly columnFilters = signal<SciTableColumnFilter[]>([], {equal: Objects.isEqual});
   public readonly sortCriteria = signal<SciTableSortCriterion[]>([], {equal: Objects.isEqual});
@@ -51,13 +52,30 @@ class Dataset<T> {
   public readonly count = computed(() => this._dataview().length);
 
   constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
-    const dataset = computed((): DatasetRow<T>[] => data().map(item => ({
-      item,
-      cells: columns().reduce((cells, column) => cells.set(column.name, {
-        column: column as SciTableColumn,
-        value: 'value' in column ? coerceSignal(untracked(() => column.value(item)), {coerceUndefined: true})() : undefined,
-      }), new Map<`column:${string}`, DatasetCell>()),
-    })));
+    const tableCellPreloader = inject(SciTableCellPreloader);
+
+    const dataset = computed((): DatasetRow<T>[] => {
+      const timerName = `Prepare Dataset`;
+      console.time(timerName);
+      try {
+        return data().map(item => {
+          return ({
+            item,
+            cells: columns().reduce((cells, column) => {
+              const tableCellValue = 'value' in column ? new eTableCellValue(tableCellPreloader, () => untracked(() => column.value(item)())) : undefined;
+
+              return cells.set(column.name, {
+                column: column as SciTableColumn,
+                value: () => tableCellValue?.value(),
+              });
+            }, new Map<`column:${string}`, DatasetCell>()),
+          });
+        });
+      }
+      finally {
+        console.timeEnd(timerName);
+      }
+    });
 
     // Memoize filtered/sorted view; recomputes only when dataset or criteria change, not when scrolling through the view, as sorting is an expensive operation.
     this._dataview = computed(() => {
@@ -67,9 +85,37 @@ class Dataset<T> {
       const sortCriteria = this.sortCriteria();
 
       // PERF: Do not track signals inside `Array.sort` to avoid Angular signal tracking overhead as the comparator runs repeatedly, degrading performance otherwise.
-      return untracked(() => rows
-        .filter(row => matchesRow(row, columnFilters) && matchesGlobalFilter(row, tableFilter ?? undefined))
-        .sort((a, b) => compareRows(a, b, sortCriteria)));
+      // return untracked(() => {
+      //   console.time('Dataset');
+      //   const filtered = columnFilters.length || tableFilter !== undefined ? rows.filter(row => matchesRow(row, columnFilters) && matchesGlobalFilter(row, tableFilter)) : rows;
+      //   const sorted = sortCriteria.length ? filtered.sort((a, b) => compareRows(a, b, sortCriteria)) : filtered;
+      //   // const sorted = filtered.sort((a, b) => compareRows(a, b, sortCriteria));
+      //   console.timeEnd('DataSet')
+      //   return sorted;
+      // });
+      const optimized = true;
+      const timerName = `Dataset [optimized=${optimized}]`;
+      console.time(timerName);
+      try {
+        if (optimized) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+          return untracked(() => {
+            // Filter rows, only if necessary to not degrade performance.
+            const filtered = columnFilters.length || tableFilter !== undefined ? rows.filter(row => matchesRow(row, columnFilters) && matchesGlobalFilter(row, tableFilter)) : rows;
+            // Sort rows, only if necessary to not degrade performance.
+            const sorted = sortCriteria.length ? filtered.sort((a, b) => compareRows(a, b, sortCriteria)) : filtered;
+            // Extract items.
+            return sorted.map(row => row.item);
+          });
+        }
+
+        return untracked(() => rows
+          .filter(row => matchesRow(row, columnFilters) && matchesGlobalFilter(row, tableFilter))
+          .sort((a, b) => compareRows(a, b, sortCriteria))
+          .map(row => row.item));
+      }
+      finally {
+        console.timeEnd(timerName);
+      }
     });
   }
 
@@ -77,7 +123,7 @@ class Dataset<T> {
    * Returns a slice of the filtered and sorted data within the given range (start inclusive, end exclusive).
    */
   public slice(start: number, end: number): Signal<T[]> {
-    return computed(() => this._dataview().slice(start, end).map(row => row.item));
+    return computed(() => this._dataview().slice(start, end));
   }
 }
 
@@ -88,7 +134,7 @@ interface DatasetRow<T> {
 
 interface DatasetCell {
   column: SciTableColumn;
-  value: string | number | boolean | undefined;
+  value: () => string | number | boolean | SciDateValue | undefined;
 }
 
 /**
@@ -123,7 +169,7 @@ function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[]
 
   for (const columnFilter of columnFilters) {
     const cell = row.cells.get(columnFilter.columnName)!;
-    if (!cell.column.matches(columnFilter.text, {item: row.item, value: cell.value})) { // component and template columns have no value
+    if (!cell.column.matches(columnFilter.text, {item: row.item, value: cell.value()})) { // component and template columns have no value
       return false;
     }
   }
@@ -143,7 +189,7 @@ function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: 
     const cell1 = row1.cells.get(criterion.columnName)!;
     const cell2 = row2.cells.get(criterion.columnName)!;
 
-    const comparison = cell1.column.compare({item: row1.item, value: cell1.value}, {item: row2.item, value: cell2.value});
+    const comparison = cell1.column.compare({item: row1.item, value: cell1.value()}, {item: row2.item, value: cell2.value()});
     if (comparison !== 0) {
       const signum = criterion.direction === 'asc' ? 1 : -1;
       return signum * comparison;

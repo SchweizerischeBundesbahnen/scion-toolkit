@@ -26,6 +26,9 @@
               <option value="string">String</option>
               <option value="number">Number</option>
               <option value="boolean">Boolean</option>
+              <option value="date">Date</option>
+              <option value="date-iso">Date ISO</option>
+              <option value="date-millis">Date Millis</option>
               <option value="template">Template</option>
               <option value="component">Component</option>
             </select>
@@ -47,6 +50,33 @@
               <input [formField]="columnForm.extras.padding" type="checkbox" class="e2e-padding"/>
               Padding
             </label>
+          }
+
+
+          @switch (columnForm.type().value()) {
+            @case ('date')
+            @case ('date-iso')
+            @case ('date-millis') {
+              <label>
+                Format
+                <input [formField]="columnForm.extras.format" class="e2e-format" list="date-formats"/>
+              </label>
+
+              <label>
+                Locale
+                <select [formField]="columnForm.extras.locale" class="e2e-locale" appFieldValidation>
+                  <option value="de-CH">German (Switzerland)</option>
+                  <option value="fr-CH">French (Switzerland)</option>
+                  <option value="it-CH">Italian (Switzerland)</option>
+                  <option value="en-US">English (United States)</option>
+                </select>
+              </label>
+
+              <label>
+                Timezone
+                <input [formField]="columnForm.extras.timezone" class="e2e-timezone" placeholder="+0200"/>
+              </label>
+            }
           }
 
           <label>
@@ -257,3 +287,23 @@
 <ng-template let-product #custom_column_template>
   <app-custom-column [product]="product"/>
 </ng-template>
+
+<datalist id="date-formats">
+  <!-- Date and Time Formats -->
+  <option value="short">{{now | date:'short'}}</option>
+  <option value="medium">{{now | date:'medium'}}</option>
+  <option value="long">{{now | date:'long'}}</option>
+  <option value="full">{{now | date:'full'}}</option>
+
+  <!-- Date-Only Formats -->
+  <option value="shortDate">{{now | date:'shortDate'}}</option>
+  <option value="mediumDate">{{now | date:'mediumDate'}}</option>
+  <option value="longDate">{{now | date:'longDate'}}</option>
+  <option value="fullDate">{{now | date:'fullDate'}}</option>
+
+  <!-- Time-Only Formats -->
+  <option value="shortTime">{{now | date:'shortTime'}}</option>
+  <option value="mediumTime">{{now | date:'mediumTime'}}</option>
+  <option value="longTime">{{now | date:'longTime'}}</option>
+  <option value="fullTime">{{now | date:'fullTime'}}</option>
+</datalist>

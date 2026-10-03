@@ -11,6 +11,7 @@
 import {SciTableCellContext} from './table.model';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
+import {SciDateLike} from './table-date-column.model';
 
 export interface SciTableColumnFactory<T> {
 
@@ -20,6 +21,7 @@ export interface SciTableColumnFactory<T> {
 
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
+  // TODO [dwie] Move after number column
   addBooleanColumn(header: Translatable, value: (item: T) => boolean): this;
 
   addBooleanColumn(value: (item: T) => boolean): this;
@@ -31,6 +33,13 @@ export interface SciTableColumnFactory<T> {
   addNumberColumn(value: (item: T) => number): this;
 
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
+
+  // TODO [dwie] Rename to addTemporalColumn because can be used to display date, time, or date-time
+  addDateColumn(header: Translatable, value: (item: T) => SciDateLike): this;
+
+  addDateColumn(value: (item: T) => SciDateLike): this;
+
+  addDateColumn(descriptor: SciDateColumnDescriptor<T>): this;
 
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
@@ -71,6 +80,33 @@ export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor 
   filterable?: boolean;
 }
 
+export interface SciDateColumnDescriptor<T> extends SciTableColumnDescriptor {
+  /**
+   * @return string in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ), or ISO 8601 Date-only (YYYY-MM-DD), number as milliseconds since UTC epoch, or {@link Date}
+   */
+  value: (item: T) => MaybeSignal<SciDateLike>;
+  sortable?: boolean;
+  filterable?: boolean;
+  /**
+   * The date-time components to include. See Angular {@link DatePipe} for details.
+   * https://angular.dev/api/common/DatePipe#pre-defined-format-options
+   *
+   * Defaults to mediumDate.
+   *
+   */
+  format?: 'shortDate' | 'mediumDate' | 'longDate' | 'fullDate' | 'shortTime' | 'mediumTime' | 'longTime' | 'fullTime' | 'short' | 'medium' | 'long' | 'full' | string;
+  /**
+   * A locale code for the locale format rules to use.
+   *
+   * If not specified, uses the value of {@link LOCALE_ID}, which is `en-US` by default.
+   */
+  locale?: string;
+  /**
+   * The time zone. A time zone offset from GMT (such as '+0430'). If not specified, uses local system timezone.
+   */
+  timezone?: string;
+}
+
 export interface SciComponentColumnDescriptor<T> extends SciTableColumnDescriptor {
   component: (item: T) => SciComponentDescriptor;
   sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, void>};
@@ -98,7 +134,7 @@ export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor
 /**
  * Represents a {@link SciStringColumnDescriptor}, {@link SciNumberColumnDescriptor}, {@link SciBooleanColumnDescriptor}, {@link SciComponentColumnDescriptor}, or {@link SciTemplateColumnDescriptor}.
  */
-export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciDateColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
 
 /**
  * Signature of a function used to configure a comparator for sorting a table column.
