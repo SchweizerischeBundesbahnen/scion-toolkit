@@ -27,6 +27,7 @@ import {SciAttributesDirective} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
+import {fromEvent} from 'rxjs';
 
 /**
  * @experimental since 22.3.0; API and behavior may change in any version without notice.
@@ -85,7 +86,7 @@ export class SciTableComponent<T = unknown> {
   private readonly _itemSizeSyntheticElement = viewChild.required<ElementRef<HTMLElement>>('item_size_synthetic_element');
   private readonly _cellPaddingSyntheticElement = viewChild.required<ElementRef<HTMLElement>>('cell_padding_synthetic_element');
   private readonly _rowActionsToolbar = viewChild.required(SciToolbarComponent);
-  private readonly _rowActionsToolbarElement: Signal<ElementRef<HTMLElement>> = viewChild.required(SciToolbarComponent, {read: ElementRef<HTMLElement>});
+  private readonly _rowActionsToolbarElement: Signal<ElementRef<HTMLElement>> = viewChild.required('row_actions', {read: ElementRef<HTMLElement>});
 
   protected readonly rows = viewChildren(SciTableRowComponent);
   protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
@@ -198,9 +199,17 @@ export class SciTableComponent<T = unknown> {
         // Display row actions popover.
         toolbarElement.showPopover();
 
+        // Dispose contribution when closing the popover (e.g., via light dismiss).
+        const onCloseSubscription = fromEvent<ToggleEvent>(toolbarElement, 'toggle').subscribe(event => {
+          if (event.newState === 'closed') {
+            contribution.dispose();
+          }
+        });
+
         onCleanup(() => {
           toolbarElement.hidePopover();
           contribution.dispose();
+          onCloseSubscription.unsubscribe();
         });
       });
     });
