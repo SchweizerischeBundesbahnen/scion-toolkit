@@ -78,7 +78,7 @@ export class SciTableRowComponent<T, ID> {
       return;
     }
 
-    if (next instanceof Element && next.closest('sci-toolbar.row-actions')) {
+    if (next instanceof Element && next.closest('div.row-actions')) {
       return;
     }
 

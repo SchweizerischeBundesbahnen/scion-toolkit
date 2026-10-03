@@ -9,7 +9,7 @@
  */
 
 import {Component, computed, effect, ElementRef, inject, Injector, input, output, Provider, Signal, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
-import {SciTable, SciTableEvent} from './table.model';
+import {SciTable, SciTableEvent, skeletonRowId} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {SciScrollbarComponent} from '@scion/components/viewport';
 import {dimension} from '@scion/components/dimension';
@@ -27,6 +27,7 @@ import {SciAttributesDirective} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
+import {fromEvent} from 'rxjs';
 
 /**
  * Provides a table to display tabular or hierarchical data.
@@ -151,7 +152,7 @@ export class SciTableComponent<T = unknown, ID = T> {
   private readonly _itemSizeSyntheticElement = viewChild.required<ElementRef<HTMLElement>>('item_size_synthetic_element');
   private readonly _cellPaddingSyntheticElement = viewChild.required<ElementRef<HTMLElement>>('cell_padding_synthetic_element');
   private readonly _rowActionsToolbar = viewChild.required(SciToolbarComponent);
-  private readonly _rowActionsToolbarElement: Signal<ElementRef<HTMLElement>> = viewChild.required(SciToolbarComponent, {read: ElementRef<HTMLElement>});
+  private readonly _rowActionsToolbarElement: Signal<ElementRef<HTMLElement>> = viewChild.required('row_actions', {read: ElementRef<HTMLElement>});
 
   protected readonly rows = viewChildren(SciTableRowComponent);
   protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
@@ -172,8 +173,10 @@ export class SciTableComponent<T = unknown, ID = T> {
   }
 
   protected onRowActionsToolbarClick(): void {
-    const hoveredRow = this.table().hoveredRow();
-    this.table().activeItem.set(hoveredRow!.item);
+    const hoveredRowIndex = this.table().hoveredIndex();
+    const hoveredTreeNode = hoveredRowIndex !== -1 ? (this.table().visibleRows() ?? [])[hoveredRowIndex] : undefined;
+    const hoveredRow = hoveredTreeNode && this.table().rowsById().get(hoveredTreeNode.id);
+    this.table().setActiveItem(hoveredRow!.id as ID);
   }
 
   protected onRowActionToolbarWheel(event: WheelEvent): void {
@@ -252,8 +255,10 @@ export class SciTableComponent<T = unknown, ID = T> {
         return;
       }
 
-      const hoveredRow = this.table().hoveredRow();
-      if (!hoveredRow || hoveredRow.loading) {
+      const hoveredRowIndex = this.table().hoveredIndex();
+      const hoveredTreeNode = hoveredRowIndex !== -1 ? (this.table().visibleRows() ?? [])[hoveredRowIndex] : undefined;
+      const hoveredRow = hoveredTreeNode && this.table().rowsById().get(hoveredTreeNode.id);
+      if (!hoveredRow || hoveredRow.id === skeletonRowId) {
         return;
       }
 
@@ -267,9 +272,17 @@ export class SciTableComponent<T = unknown, ID = T> {
         // Display row actions popover.
         toolbarElement.showPopover();
 
+        // Dispose contribution when closing the popover (e.g., via light dismiss).
+        const onCloseSubscription = fromEvent<ToggleEvent>(toolbarElement, 'toggle').subscribe(event => {
+          if (event.newState === 'closed') {
+            contribution.dispose();
+          }
+        });
+
         onCleanup(() => {
           toolbarElement.hidePopover();
           contribution.dispose();
+          onCloseSubscription.unsubscribe();
         });
       });
     });

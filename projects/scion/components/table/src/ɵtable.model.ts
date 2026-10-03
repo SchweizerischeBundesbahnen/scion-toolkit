@@ -9,7 +9,7 @@
  */
 
 import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
-import {eSCI_TABLE_DATASOURCE_PROVIDER, provideTableDatasource, SciTableColumnFilter, SciTableSortCriterion, SciTreeTableNode, SciTreeTableDatasource} from './table-datasource';
+import {eSCI_TABLE_DATASOURCE_PROVIDER, provideTableDatasource, SciTableColumnFilter, SciTableSortCriterion, SciTreeTableDatasource, SciTreeTableNode} from './table-datasource';
 import {SciEnumValueLike, SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn, skeletonRowId} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {SCI_COMPONENTS_STORAGE, toLazyObservable, ɵcreateDestroyableInjector, ɵSingleActiveInjectorFactory} from '@scion/components/common';
