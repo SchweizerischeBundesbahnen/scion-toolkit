@@ -41,11 +41,14 @@
   <!--eslint-disable-next-line @angular-eslint/template/click-events-have-key-events,@angular-eslint/template/interactive-supports-focus -->
   <!-- inside viewport for style container queries as variables are defined on viewport -->
   <!-- manual has no light dismiss, may be configurable, but not auto, but hint, see mdn: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/popover-->
-  <sci-toolbar [name]="rowActionsToolbarName"
-               (click)="onRowActionsToolbarClick()"
-               (wheel)="onRowActionToolbarWheel($event)"
-               popover="manual"
-               class="row-actions"/>
+  <!-- use container element to not close toolbar popover when opening menu since menu is rendered as sibliing of toolbar, not contained -->
+  <div class="row-actions" popover="hint" #row_actions>
+    <sci-toolbar [name]="rowActionsToolbarName"
+                 (click)="onRowActionsToolbarClick()"
+                 (wheel)="onRowActionToolbarWheel($event)"
+                 class="row-actions"/>
+
+  </div>
 </sci-table-viewport>
 
 <!-- Scrollbars -->
