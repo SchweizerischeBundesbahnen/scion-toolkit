@@ -36,9 +36,9 @@ import {UUID} from '@scion/toolkit/uuid';
     '(mouseleave)': 'onRowMouseLeave($event)',
   },
 })
-export class SciTableRowComponent<T> {
+export class SciTableRowComponent<T, ID> {
 
-  public readonly row = input.required<SciTableRow<T>>();
+  public readonly row = input.required<SciTableRow<T, ID>>();
   public readonly primaryAction = output<SciTableEvent<T>>();
 
   protected readonly table = inject(ɵSCI_TABLE);
@@ -83,7 +83,7 @@ export class SciTableRowComponent<T> {
 
   protected onActionToolbarClick(event: PointerEvent): void {
     event.stopPropagation(); // prevent selecting the row
-    this.table().activeItem.set(this.row().item);
+    this.table().activeItem.set(this.row().id);
   }
 
   private contributeRowActions(): void {

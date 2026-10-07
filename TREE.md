@@ -53,7 +53,5 @@
 
 # TODO
 - Row expand: sollte auch parents mit expanden
-  - Nicht möglich via tree traversal, da wir die Daten evtl. nicht haben (noch nicht geladen sind)
-  - API ergänzen, dass man ein Set an Ids reingeben kann, so kann der aufrufer den path zum Item mitgeben
 - Row collapse: bei table children nicht collapsen bei Tree schon (to discuss)
-- Für selection propagation muss evtl. die DataSource angepasst werden (Alle IDs müssen bekannt sein) würde auch für row expand / collapse helfen 
+- Testingpage: addNumberColumn / addBooleanColumn muss auch undefined gehen

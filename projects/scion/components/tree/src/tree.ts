@@ -12,7 +12,7 @@ import {assertInInjectionContext, DestroyRef, inject, Injector, runInInjectionCo
 import {SciTree, SciTreeDescriptor} from './tree.model';
 import {ɵSciTree} from './ɵtree.model';
 
-export function tree<T>(descriptor: SciTreeDescriptor<T>, options?: {injector?: Injector}): SciTree<T> {
+export function tree<T, ID>(descriptor: SciTreeDescriptor<T, ID>, options?: {injector?: Injector}): SciTree<ID> {
   if (!options?.injector) {
     assertInInjectionContext(tree);
   }

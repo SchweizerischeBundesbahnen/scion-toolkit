@@ -9,7 +9,7 @@
  */
 
 import {Injector, Signal, WritableSignal} from '@angular/core';
-import {SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
+import {SciTableDataSourceProvider, SciTableSortCriterion} from './table-datasource';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
@@ -17,21 +17,18 @@ import {SciTableColumnFactoryFn} from './table.factory';
 import {MaybeAsync} from './common';
 import {SciDateValue} from './table-date-column.model';
 import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
-import {arrayDatasource} from './ɵtable-array-datasource';
-import {map} from 'rxjs/operators';
-import {toObservable} from '@angular/core/rxjs-interop';
 
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'component' | 'template' | 'dynamic';
 
 export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
 
-export interface SciTableDescriptor<T> {
+export interface SciTableDescriptor<T, ID = unknown> {
   datasource: Signal<T[]>;
   /**
    * @docs-private Not public API. For internal use only.
    * @experimental since 22.3.0; API and behavior may change in any version without notice.
    */
-  ɵdatasource?: Signal<T[]> | SciTableDataSourceProvider<T>;
+  ɵdatasource?: Signal<T[]> | SciTableDataSourceProvider<T, ID>;
   columns: SciTableColumnFactoryFn<T>;
   sortable?: boolean;
   resizable?: boolean;
@@ -94,20 +91,20 @@ export interface SciTableDescriptor<T> {
    * Specifies the number of items to load per page. Defaults to 50.
    */
   pageSize?: number;
-  trackBy?: (item: T) => unknown;
+  trackBy?: (item: T) => ID;
   injector?: Injector;
 }
 
-export interface SciTable<T> {
+export interface SciTable<ID = unknown> {
   /**
-   * Currently active item.
+   * Currently active item id.
    */
-  readonly activeItem: Signal<T | undefined>;
+  readonly activeItem: Signal<ID | undefined>;
 
   /**
    * Selected items.
    */
-  readonly selectedItems: Signal<Array<T>>;
+  readonly selectedItems: Signal<Array<ID>>;
 
   readonly filterable: WritableSignal<boolean>;
   readonly showHeader: WritableSignal<boolean>;
@@ -204,12 +201,12 @@ export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColu
 /**
  * Mapped row, used as display state.
  */
-export interface SciTableRow<T> {
+export interface SciTableRow<T, ID> {
   index: number;
   item?: T;
-  id?: unknown;
+  id?: ID;
   level: number;
-  parentId?: unknown;
+  parentId?: ID;
   cells?: SciTableCellLike[];
   bindings?: SciTableRowBindings;
   loading: boolean;
@@ -283,93 +280,85 @@ export interface SciTableEvent<T> {
   items: T[];
 }
 
-export type SciTableDataSourceProvider<T> = (columns: Signal<SciTableColumnLike<T>[]>) => SciTableDataSource<T>;
+// export type SciTableDataSourceProvider<T> = (columns: Signal<SciTableColumnLike<T>[]>) => SciTableDataSource<T>;
 
-export interface SciTableDataSource<T> {
-  load: SciTableDataLoaderFn<T>;
-  hasChildren?(item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
-  loadChildren?(item: T, request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
-}
+// export interface SciTableDataSource<T> {
+//   load: SciTableDataLoaderFn<T>;
+//   hasChildren?(item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
+//   loadChildren?(item: T, request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
+// }
 
-export class SciTableArrayDatasource<T> implements SciTableDataSource<T> {
-  public load: SciTableDataLoaderFn<T>;
+// export class SciTableArrayDatasource<T> implements SciTableDataSource<T> {
+//   public load: SciTableDataLoaderFn<T>;
+//
+//   constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
+//     this.load = arrayDatasource(data, columns);
+//   }
+// }
 
-  constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
-    this.load = arrayDatasource(data, columns);
-  }
-}
+// export class SciHierarchicalTableDatasource<T> implements SciTableDataSource<T> {
+//   public load: SciTableDataLoaderFn<T>;
+//   public hasChildren: (item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>) => MaybeAsync<boolean>;
+//   public loadChildren: (item: T, request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
+//
+//   constructor(root: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>, public children: ChildProvider<T>) {
+//     this.load = arrayDatasource(root, columns);
+//     const root$ = toObservable(root);
+//     this.hasChildren = this.children.hasChildren;
+//     this.loadChildren = (item, request) => {
+//       // Fetch children again as soon as data source changes.
+//       return root$.pipe(
+//         map(() => children.getChildren(item)),
+//         map(children => ({
+//           items: children.slice(request.start, request.end),
+//           totalCount: children.length,
+//         })),
+//       );
+//     };
+//   }
+// }
 
-export class SciHierarchicalTableDatasource<T> implements SciTableDataSource<T> {
-  public load: SciTableDataLoaderFn<T>;
-  public hasChildren: (item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>) => MaybeAsync<boolean>;
-  public loadChildren: (item: T, request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
+// export class SciPageableTableDatasource<T> implements SciTableDataSource<T> {
+//
+//   constructor(public load: SciTableDataLoaderFn<T>) {
+//   }
+// }
+//
+// export class SciPageableHierarchicalTableDatasource<T> implements SciTableDataSource<T> {
+//   public hasChildren: (item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>) => MaybeAsync<boolean>;
+//   public loadChildren: (item: T, request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
+//
+//   constructor(public load: SciTableDataLoaderFn<T>, public children: PageableChildProvider<T>) {
+//     this.hasChildren = children.hasChildren;
+//     this.loadChildren = children.getChildren;
+//   }
+// }
 
-  constructor(root: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>, public children: ChildProvider<T>) {
-    this.load = arrayDatasource(root, columns);
-    const root$ = toObservable(root);
-    this.hasChildren = this.children.hasChildren;
-    this.loadChildren = (item, request) => {
-      // Fetch children again as soon as data source changes.
-      return root$.pipe(
-        map(() => children.getChildren(item)),
-        map(children => ({
-          items: children.slice(request.start, request.end),
-          totalCount: children.length,
-        })),
-      );
-    };
-  }
-}
+// export function provideTableDatasource<T>(data: Signal<T[]>): SciTableDataSourceProvider<T> {
+//   return columns => new SciTableArrayDatasource(data, columns);
+// }
+//
+// export function provideHierarchicalTableDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciTableDataSourceProvider<T> {
+//   return columns => new SciHierarchicalTableDatasource(root, columns, children);
+// }
+//
+// export function providePageableTableDatasource<T>(loader: SciTableDataLoaderFn<T>): SciTableDataSourceProvider<T> {
+//   return () => new SciPageableTableDatasource(loader);
+// }
+//
+// export function providePageableHierarchicalTableDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciTableDataSourceProvider<T> {
+//   return () => new SciPageableHierarchicalTableDatasource(loader, children);
+// }
 
-export class SciPageableTableDatasource<T> implements SciTableDataSource<T> {
-
-  constructor(public load: SciTableDataLoaderFn<T>) {
-  }
-}
-
-export class SciPageableHierarchicalTableDatasource<T> implements SciTableDataSource<T> {
-  public hasChildren: (item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>) => MaybeAsync<boolean>;
-  public loadChildren: (item: T, request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
-
-  constructor(public load: SciTableDataLoaderFn<T>, public children: PageableChildProvider<T>) {
-    this.hasChildren = children.hasChildren;
-    this.loadChildren = children.getChildren;
-  }
-}
-
-export function provideTableDatasource<T>(data: Signal<T[]>): SciTableDataSourceProvider<T> {
-  return columns => new SciTableArrayDatasource(data, columns);
-}
-
-export function provideHierarchicalTableDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciTableDataSourceProvider<T> {
-  return columns => new SciHierarchicalTableDatasource(root, columns, children);
-}
-
-export function providePageableTableDatasource<T>(loader: SciTableDataLoaderFn<T>): SciTableDataSourceProvider<T> {
-  return () => new SciPageableTableDatasource(loader);
-}
-
-export function providePageableHierarchicalTableDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciTableDataSourceProvider<T> {
-  return () => new SciPageableHierarchicalTableDatasource(loader, children);
-}
-
-export interface ChildProvider<T = unknown> {
-  getChildren(item: T): T[];
-  hasChildren(item: T): boolean;
-}
-
-export interface PageableChildProvider<T> {
-  getChildren(item: T, request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
-  hasChildren(item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
-}
-
-export interface SciPageableTableDatasourceDescriptor<T> {
-  getItems(request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
-}
-
-export interface SciPageableTreeDatasourceDescriptor<T> {
-  getItems(request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
-}
+// export interface ChildProvider<T = unknown> {
+//   getChildren(item: T): T[];
+//   hasChildren(item: T): boolean;
+// }
+//
+// export interface PageableChildProvider<T> {
+//   getChildren(item: T, request: SciTablePageRequest): MaybeAsync<SciTablePageResponse<T>>;
+//   hasChildren(item: T, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>): MaybeAsync<boolean>;
+// }
 
 /**
  * Represents an ISO 8601 date/time string, milliseconds since the UTC epoch, or a `Date` object.

@@ -22,7 +22,7 @@ import {Objects} from '@scion/toolkit/util';
 /**
  * Creates {@link SciTableComponent}, configuring the table using the passed callback function.
  */
-export function createSciTableComponent<T>(table: SciTable<T>, options?: {name?: `table:${string}`; height?: string; width?: string; designTokens?: {[name: `--${string}`]: string}}): {model: ɵSciTable<T>; fixture: ComponentFixture<SciTableComponent>} {
+export function createSciTableComponent<T, ID = T>(table: SciTable<ID>, options?: {name?: `table:${string}`; height?: string; width?: string; designTokens?: {[name: `--${string}`]: string}}): {model: ɵSciTable<T, ID>; fixture: ComponentFixture<SciTableComponent>} {
   const fixture = TestBed.createComponent(SciTableComponent, {
     bindings: [
       inputBinding('name', () => options?.name ?? 'table:testee'),
@@ -42,7 +42,7 @@ export function createSciTableComponent<T>(table: SciTable<T>, options?: {name?:
   // Set CSS variables.
   Objects.entries(options?.designTokens ?? {}).forEach(([key, value]) => element.style.setProperty(key, value));
 
-  return {model: table as ɵSciTable<T>, fixture};
+  return {model: table as ɵSciTable<T, ID>, fixture};
 }
 
 /**

@@ -8,15 +8,15 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {providePageableTableDatasource, provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {createDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
 import {FieldValidationDirective} from '../field-validation.directive';
-import {Product, ProductService, simulateError$} from './sci-table-page.data';
+import {Product, ProductService} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
-import {mergeWith, noop} from 'rxjs';
+import {noop} from 'rxjs';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';
@@ -73,17 +73,17 @@ export default class SciTablePageComponent {
   protected readonly tables = this.computeTables();
   protected readonly rowCount = inject(ProductService).productCount;
   protected readonly locale = inject(SCI_LOCALE);
-  protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem()?.id);
+  protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem());
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
-  protected readonly selection = computed(() => this.tables()[0]?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.tables()[0]?.selectedItems().sort((a, b) => a - b).join(' '));
   protected readonly now = new Date();
 
   constructor() {
     this.bindTableSettings();
   }
 
-  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
-    return table({
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<number> {
+    return table<Product, number>({
       datasource: ɵillegaldatasource(),
       ɵdatasource: (() => {
         switch (options.datasource) {
@@ -92,12 +92,14 @@ export default class SciTablePageComponent {
           case 'array-http':
             this._productService.enableHttpLoader();
             return this._productService.products;
-          case 'loader':
-            return providePageableTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}));
-          case 'loader-delayed':
-            return providePageableTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}));
-          case 'loader-http':
-            return providePageableTableDatasource((request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))));
+          default:
+            return this._productService.products;
+          // case 'loader':
+          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}));
+          // case 'loader-delayed':
+          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}));
+          // case 'loader-http':
+          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))));
         }
       })(),
       rowBindings: (bindings, product) => {
@@ -204,8 +206,8 @@ export default class SciTablePageComponent {
     });
   }
 
-  private computeTables(): Signal<SciTable<Product>[]> {
-    const tables = signal<SciTable<Product>[]>([]);
+  private computeTables(): Signal<SciTable<number>[]> {
+    const tables = signal<SciTable<number>[]>([]);
 
     effect(onCleanup => {
       const tableCount = this.settingsForm.tableCount().value();

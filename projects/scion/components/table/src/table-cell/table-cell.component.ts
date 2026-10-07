@@ -35,10 +35,10 @@ import {SciNumberPipe} from './number.pipe';
     SciNumberPipe,
   ],
 })
-export class SciTableCellComponent<T> {
+export class SciTableCellComponent<T, ID> {
 
   public readonly cell = input.required<SciTableCellLike>();
-  public readonly row = input.required<SciTableRow<T>>();
+  public readonly row = input.required<SciTableRow<T, ID>>();
 
   private readonly _table = inject(ɵSCI_TABLE);
 

@@ -242,6 +242,11 @@ export class CellPO {
   }
 
   public get value(): string | undefined {
+    // With expansion controls cells can have spans, return the span content as the value.
+    if (this.element?.querySelector('span')) {
+      return this.element.querySelector('span')?.textContent.trim();
+    }
+
     // TODO [Vitest] Evaluate if still required to strip non-breaking spaces
     return this.element?.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim(); // Strip non-breaking spaces (NBSP) and narrow non-breaking spaces (NNBSP)
   }

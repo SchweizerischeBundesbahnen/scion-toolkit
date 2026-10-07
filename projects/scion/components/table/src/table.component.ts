@@ -129,8 +129,8 @@ export class SciTableComponent<T = unknown> {
 
   private scrollActiveRowIntoViewport(): void {
     effect(() => {
-      const activeRow = this.table().activeRow();
-      if (!activeRow) {
+      const activeItem = this.table().activeItem();
+      if (!activeItem) {
         return;
       }
 
@@ -138,7 +138,7 @@ export class SciTableComponent<T = unknown> {
         const viewport = this._viewport().nativeElement as HTMLElement;
         const viewportHeight = this.table().tableViewRef()?.viewportHeight() ?? 0;
         const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
-        const activeIndex = this.table().rowIndexById().get(this.table().activeRow()?.id) ?? -1;
+        const activeIndex = this.table().rowIndexById().get(activeItem) ?? -1;
 
         const activeRowTop = activeIndex * itemHeight;
         const activeRowBottom = activeRowTop + itemHeight;

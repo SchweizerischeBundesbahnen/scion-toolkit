@@ -16,11 +16,11 @@ import {coerceSignal, MaybeSignal, SCI_LOCALE, SciComponentDescriptor, SciTempla
 import {coerceDateValue, SciDateValue} from './table-date-column.model';
 import {DATE_PIPE_DEFAULT_OPTIONS} from '@angular/common';
 
-export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
+export class ɵSciTableColumnFactory<T, ID> implements SciTableColumnFactory<T> {
 
   public readonly columns = new Array<SciTableColumnLike<T>>();
 
-  constructor(private readonly _table: ɵSciTable<T>) {
+  constructor(private readonly _table: ɵSciTable<T, ID>) {
   }
 
   public addStringColumn(value: (item: T) => string): this;
@@ -217,7 +217,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       throw Error('[ColumnDefinitionError] Configuring a sort comparator is not supported for tables using a datasource. Sorting must be done by the datasource.');
     }
 
-    const isHierarchical = this._table.isHierarchicalDatasource();
+    const isHierarchical = this._table.isTreeDatasource();
     const isFirst = this.columns.length === 0;
     const showExpansionControl = isHierarchical && (descriptor.showExpansionControl ?? isFirst);
     if (showExpansionControl) {
