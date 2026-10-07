@@ -69,6 +69,10 @@ export class TablePO {
     });
   }
 
+  public get loadingIndicator(): HTMLElement | null {
+    return this.element.querySelector('sci-throbber.e2e-loading-indicator');
+  }
+
   public get scrollTop(): number {
     return this.viewport.scrollTop;
   }
@@ -230,7 +234,8 @@ export class CellPO {
   }
 
   public get value(): string | undefined {
-    return this.element?.textContent.trim();
+    // TODO [Vitest] Evaluate if still required to strip non-breaking spaces
+    return this.element?.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim(); // Strip non-breaking spaces (NBSP) and narrow non-breaking spaces (NNBSP)
   }
 
   public isLoading(): boolean {

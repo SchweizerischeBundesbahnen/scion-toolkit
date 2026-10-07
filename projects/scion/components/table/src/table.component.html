@@ -44,7 +44,7 @@
 <sci-scrollbar direction="vscroll" [viewport]="viewport.host"/>
 
 @if (table.loading()) {
-  <sci-throbber type="spinner"/>
+  <sci-throbber type="spinner" class="loading-indicator e2e-loading-indicator"/>
 }
 
 <!-- Synthetic element to compute the absolute pixel value of the `--sci-table-row-height`, relative to the table's font size if em-based. -->

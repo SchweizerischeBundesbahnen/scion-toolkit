@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {afterRenderEffect, Component, computed, Directive, effect, ElementRef, inject, InjectionToken, Injector, input, linkedSignal, NgZone, Provider, Signal, Type, untracked, viewChild, ViewContainerRef, WritableSignal} from '@angular/core';
+import {afterRenderEffect, Component, computed, Directive, effect, ElementRef, inject, InjectionToken, Injector, input, linkedSignal, NgZone, onIdle, Provider, Signal, Type, untracked, viewChild, ViewContainerRef, WritableSignal} from '@angular/core';
 import {SciFormatAcceleratorPipe} from './accelerator-format.pipe';
 import {SciMenuGroupComponent} from './menu-group.component';
 import {SciMenuFilterComponent} from './menu-filter.component';
@@ -332,14 +332,7 @@ export class SciMenuComponent {
       .pipe(
         filter(menuItems => !!menuItems.length),
         observeOn(animationFrameScheduler), // Wait until next render cycle to capture menu width.
-        raceWith(new Promise(resolve => { // Fallback if no menu items are contributed.
-          if (typeof requestIdleCallback === 'function') {
-            requestIdleCallback(resolve, {timeout: 250});
-          }
-          else {
-            setTimeout(resolve, 250); // Fallback if browser does not support `requestIdleCallback`, e.g., Safari
-          }
-        })),
+        raceWith(onIdle({timeout: 250})), // Fallback if no menu items are contributed.
         take(1),
         takeUntilDestroyed(),
       )

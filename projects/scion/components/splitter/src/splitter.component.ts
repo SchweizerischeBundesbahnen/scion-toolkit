@@ -78,7 +78,7 @@ export class SciSplitterComponent {
   /**
    * Notifies when start moving the splitter.
    */
-  public readonly start = output<void>(); // eslint-disable-line @angular-eslint/no-output-native
+  public readonly start = output<void>();
 
   /**
    * Notifies when moving the splitter. The event is emitted outside the Angular zone.

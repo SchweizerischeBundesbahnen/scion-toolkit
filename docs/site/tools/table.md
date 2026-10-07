@@ -12,14 +12,15 @@ The NPM sub-module `@scion/components/table` provides an Angular component for d
 
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
-- [Column Width](#column-width)
+- [Columns](#columns)
 - [Custom Columns](#custom-columns)
+- [Column Width](#column-width)
 - [Table Configuration](#table-configuration)
-  - [Filtering](#filtering)
-  - [Sorting](#sorting)
-  - [Selection](#selection)
-  - [Row Actions](#row-actions)
-  - [Row Bindings](#row-bindings)
+    - [Filtering](#filtering)
+    - [Sorting](#sorting)
+    - [Selection](#selection)
+    - [Row Actions](#row-actions)
+    - [Row Bindings](#row-bindings)
 - [Table Events](#table-events)
 - [User Settings](#user-settings)
 - [Localization of Column Headers](#localization-of-column-headers)
@@ -58,9 +59,9 @@ const users = httpResource<User[]>(() => 'users', {defaultValue: []});
 // Create the table and pass data.
 const userTable = table(users.value, table => table
   .addNumberColumn('ID', user => user.id)
-  .addStringColumn('Firstname', user => user.firstname)
-  .addStringColumn('Lastname', user => user.lastname)
-  .addBooleanColumn('Inactive', user => user.inactive),
+  .addStringColumn('Name', user => user.name)
+  .addBooleanColumn('Inactive', user => user.inactive)
+  .addDateColumn('Expiration', user => user.expiration),
 );
 ```
 
@@ -81,7 +82,7 @@ A column requires at minimum a value function to provide the cell label for an i
 ```ts
 import {table} from '@scion/components/table';
 
-table(users.value, table => table.addStringColumn('Firstname', user => user.firstname));
+table(users.value, table => table.addStringColumn('Name', user => user.name));
 ```
 
 Alternatively, a descriptor can be passed to configure the column in more detail, for example, to set a preferred column width or configure a custom column filter and sort function.
@@ -90,8 +91,8 @@ Alternatively, a descriptor can be passed to configure the column in more detail
 import {table} from '@scion/components/table';
 
 table(users.value, table => table.addStringColumn({
-  header: 'Firstname',
-  value: user => user.firstname,
+  header: 'Name',
+  value: user => user.name,
   width: '2fr',
   minWidth: 200,
   filterable: {matcher: (text, context) => matchesUser(context.item, text)}, // `matchesUser` is illustrative
@@ -99,15 +100,147 @@ table(users.value, table => table.addStringColumn({
 }));
 ```
 
-The table supports columns for the following data types: `string`, `number` and `boolean`. Columns for other data types or custom cell formats can be added as custom columns. See the [Custom Columns](#custom-columns) section for more information.
+### Columns
+The table provides built-in columns for the following data types: `string`, `number`, `boolean`, and `Date`. Columns for other data types or custom cell rendering can be added as custom columns. See the [Custom Columns](#custom-columns) section for details.
 
-### Column Width
+#### String Column
+Displays text.
 
-By default, columns have an equal width of `1fr`. The available space is distributed equally among the columns.
+```ts
+import {table} from '@scion/components/table';
 
-You can set an explicit width for a column via its `width` property, either as an absolute value (`px`) or as a fraction (`fr`).
+table(users.value, table => table.addStringColumn({
+  header: 'Name',
+  value: user => user.name,
+}));
+```
 
-Columns with an absolute width do not grow or shrink, but they can still be resized by the user.  Columns with a fractional width are distributed proportionally based on their ratio (`fr`) within the available space.
+The column can be configured with a custom matcher and comparator for custom filtering and sorting.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addStringColumn({
+  header: 'Name',
+  value: user => user.name,
+  filterable: {matcher: (text, context) => matchesUser(context.item, text)}, // `matchesUser` is illustrative
+  sortable: {comparator: (a, b) => compareUsers(a.item, b.item)}, // `compareUsers` is illustrative
+}));
+```
+
+#### Number Column
+Displays numeric values.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addNumberColumn({
+  header: 'Active Session Count',
+  value: user => user.sessionsCount,
+}));
+```
+
+#### Boolean Column
+Displays boolean values.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addBooleanColumn({
+  header: 'Inactive',
+  value: user => user.inactive,
+}));
+```
+
+#### Date Column
+Displays dates, times, or both.
+
+A date column accepts an ISO 8601 date/time string (e.g., `2026-10-06`, `2026-10-06T14:30:15Z`, or `T14:30:15`), milliseconds since the UTC epoch, or a `Date` object.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addDateColumn({
+  header: 'Expiration',
+  value: user => user.expiration,
+}));
+```
+
+Use the `format` property to control how the date is rendered. The format can be a predefined Angular date format (e.g., `mediumDate` or `mediumTime`) or a custom date/time pattern (e.g., `dd.MM.yyyy` or `HH:mm`). If omitted, it defaults to the format configured in `DATE_PIPE_DEFAULT_OPTIONS` or falls back to `mediumDate`.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addDateColumn({
+  header: 'Daily Digest Time',
+  value: user => user.dailyDigestTime,
+  format: 'HH:mm', // <--- Set the format
+}));
+```
+
+> [!TIP]
+> - See [Angular Predefined Format Options](https://angular.dev/api/common/DatePipe#pre-defined-format-options) for available formats.
+> - See [Angular Custom Format Syntax](https://angular.dev/api/common/DatePipe#custom-format-options) for custom date/time pattern syntax.
+
+
+Dates render in the user's local timezone by default. You can override this per column using the `timezone` property or globally via the `DATE_PIPE_DEFAULT_OPTIONS` DI token.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addDateColumn({
+  header: 'Daily Digest Time',
+  value: user => user.dailyDigestTime,
+  format: 'HH:mm',
+  timezone: '+0200' // <--- Set the timezone
+}));
+```
+
+Dates are localized using the locale provided by `SCI_LOCALE`, a writable signal initialized with Angular's `LOCALE_ID`. Localization affects date/time patterns, month and weekday names, AM/PM indicators, and related formatting symbols.
+
+The default locale can be changed at runtime as follows:
+
+```ts
+import {inject} from '@angular/core';
+import {SCI_LOCALE} from '@scion/components/common';
+
+inject(SCI_LOCALE).set('de-CH');
+```
+
+To override the locale for a single column, use the `locale` property:
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addDateColumn({
+  header: 'Daily Digest Time',
+  value: user => user.dailyDigestTime,
+  format: 'HH:mm',
+  locale: 'de-CH', // <--- Set the locale
+}));
+```
+
+Angular includes only `en-US` by default. Register other locales via `registerLocaleData()`, typically in an environment initializer at app startup:
+
+```ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {provideEnvironmentInitializer} from '@angular/core';
+import {registerLocaleData} from '@angular/common';
+
+import localeDeCH from '@angular/common/locales/de-CH';
+import localeFrCH from '@angular/common/locales/fr-CH';
+import localeItCH from '@angular/common/locales/it-CH';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideEnvironmentInitializer(() => {
+      registerLocaleData(localeDeCH);
+      registerLocaleData(localeFrCH);
+      registerLocaleData(localeItCH);
+    }),
+  ],
+});
+```
 
 ### Custom Columns
 
@@ -120,15 +253,15 @@ import {table} from '@scion/components/table';
 import {inputBinding} from '@angular/core';
 
 table(users.value, table => table.addComponentColumn({
-  header: 'Expiration',
+  header: 'Status',
   component: user => ({ // <--- Set the component
-    component: DateComponent,
+    component: StatusComponent,
     bindings: [
-      inputBinding('date', () => user.expiration),
+      inputBinding('status', () => user.status),
     ],
   }),
-  filterable: {matcher: (text, context) => matchesDate(context.item, text)}, // `matchesDate` is illustrative
-  sortable: {comparator: (a, b) => compareDates(a.item, b.item)}, // `compareDates` is illustrative
+  filterable: {matcher: (text, context) => matchesStatus(context.item, text)}, // `matchesStatus` is illustrative
+  sortable: {comparator: (a, b) => compareStatus(a.item, b.item)}, // `compareStatus` is illustrative
 }));
 ```
 
@@ -137,30 +270,38 @@ To add a template column, specify the template via the `template` property. The 
 ```ts
 import {table} from '@scion/components/table';
 import {TemplateRef, viewChild} from '@angular/core';
-import {DatePipe} from '@angular/common';
 
 // Inject the template
-const expirationTemplate = viewChild.required<TemplateRef<User>>('expiration');
+const statusTemplate = viewChild.required<TemplateRef<User>>('status');
 
 table(users.value, table => table.addTemplateColumn({
-  header: 'Expiration',
-  template: () => ({template: expirationTemplate}),  // <--- Set the template
-  filterable: {matcher: (text, context) => matchesDate(context.item, text)}, // `matchesDate` is illustrative
-  sortable: {comparator: (a, b) => compareDates(a.item, b.item)}, // `compareDates` is illustrative
+  header: 'Status',
+  template: () => ({template: statusTemplate}),  // <--- Set the template
+  filterable: {matcher: (text, context) => matchesStatus(context.item, text)}, // `matchesStatus` is illustrative
+  sortable: {comparator: (a, b) => compareStatus(a.item, b.item)}, // `compareStatus` is illustrative
 }));
 ```
 
 An explicit binding is usually not required because the item is available via default template variable (`let-user`).
 
 ```html
-<ng-template #expiration let-user>
-  {{user.expiration | date}}
+<ng-template #status let-user>
+  <!-- chip is illustrative -->
+  <app-chip>{{user.status}}</app-chip>
 </ng-template>
 ```
 
 > [!IMPORTANT]
 > In order to be filterable and sortable, custom columns require an explicit filter matcher and sort comparator.
 
+
+### Column Width
+
+By default, columns have an equal width of `1fr`. The available space is distributed equally among the columns.
+
+You can set an explicit width for a column via its `width` property, either as an absolute value (`px`) or as a fraction (`fr`).
+
+Columns with an absolute width do not grow or shrink, but they can still be resized by the user.  Columns with a fractional width are distributed proportionally based on their ratio (`fr`) within the available space.
 
 ### Table Configuration
 
@@ -178,9 +319,10 @@ const userTable = table({
   selectable: 'single',
   wrapHeader: true,
   columns: table => table
-    .addStringColumn('Firstname', user => user.firstname)
-    .addStringColumn('Lastname', user => user.lastname)
-    .addBooleanColumn('Inactive', user => user.inactive),
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
 });
 ```
 
@@ -197,12 +339,14 @@ table({
   datasource: users.value,
   filterable: true, // <--- enable column filtering 
   columns: table => table
-    .addStringColumn('Firstname', user => user.firstname)
-    .addStringColumn('Lastname', user => user.lastname),
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
 });
 ```
 
-Built-in columns of a table, such as `string`, `number`, or `boolean`, are filterable by default, using a default matcher which can be overridden at the column level via `filterable` property.
+Built-in columns of a table are filterable by default, using a default matcher which can be overridden at the column level via `filterable` property.
 
 Custom columns (`component` or `template` columns) cannot be filtered unless a matcher is configured in the column's `filterable` property.
 
@@ -227,8 +371,10 @@ In addition to column filters, `SciTable` provides a `filter()` method for filte
 import {table} from '@scion/components/table';
 
 const userTable = table(users.value, table => table
-  .addStringColumn('Username', user => user.username)
-  .addStringColumn('Firstname', user => user.firstname),
+  .addNumberColumn('ID', user => user.id)
+  .addStringColumn('Name', user => user.name)
+  .addBooleanColumn('Inactive', user => user.inactive)
+  .addDateColumn('Expiration', user => user.expiration),
 );
 
 userTable.filter('...');
@@ -236,7 +382,7 @@ userTable.filter('...');
 
 #### Sorting
 
-Built-in table columns, such as `string`, `number`, or `boolean`, are sortable by default. Sorting can be disabled at the table or column level via the `sortable` property. Columns can configure a custom comparator.
+Built-in table columns are sortable by default. Sorting can be disabled at the table or column level via the `sortable` property. Columns can configure a custom comparator.
 
 ```ts
 import {table} from '@scion/components/table';
@@ -245,8 +391,10 @@ table({
   datasource: users.value,
   sortable: false, // <--- disable column sorting 
   columns: table => table
-    .addStringColumn('Firstname', user => user.firstname)
-    .addStringColumn('Lastname', user => user.lastname),
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
 });
 ```
 
@@ -280,9 +428,10 @@ const userTable = table({
   datasource: users.value,
   selectable: 'single', // <--- limit to single selection
   columns: table => table
-    .addStringColumn('Firstname', user => user.firstname)
-    .addStringColumn('Lastname', user => user.lastname)
-    .addBooleanColumn('Inactive', user => user.inactive),
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
 });
 ```
 
@@ -293,8 +442,10 @@ import {table} from '@scion/components/table';
 import {effect, Signal} from '@angular/core';
 
 const userTable = table(users.value, table => table
-  .addStringColumn('Username', user => user.username)
-  .addStringColumn('Firstname', user => user.firstname),
+  .addNumberColumn('ID', user => user.id)
+  .addStringColumn('Name', user => user.name)
+  .addBooleanColumn('Inactive', user => user.inactive)
+  .addDateColumn('Expiration', user => user.expiration),
 );
 
 effect(() => {
@@ -315,9 +466,10 @@ import {table} from '@scion/components/table';
 table({
   datasource: users.value,
   columns: table => table
-    .addStringColumn('Firstname', user => user.firstname)
-    .addStringColumn('Lastname', user => user.lastname)
-    .addBooleanColumn('Inactive', user => user.inactive),
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
   rowActions: (toolbar, user) => toolbar
     .addToolbarButton({icon: 'user_attributes', onSelect: () => openProfile(user)}) // `openProfile` is illustrative
     .addToolbarMenu({icon: 'more_vert', visualMenuIndicator: false}, menu => menu
@@ -344,9 +496,10 @@ import {table} from '@scion/components/table';
 table({
   datasource: users.value,
   columns: table => table
-    .addStringColumn('Firstname', user => user.firstname)
-    .addStringColumn('Lastname', user => user.lastname)
-    .addBooleanColumn('Inactive', user => user.inactive),
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
   rowBindings: (bindings, user, index) => bindings
     .addPartBinding(user.inactive ? 'row:inactive' : 'row:active') // <--- ::part binding
     .addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd')
@@ -388,8 +541,10 @@ However, the application can read/write table settings via `SciTable` and provid
 import {table} from '@scion/components/table';
 
 const userTable = table(users.value, table => table
-  .addStringColumn('Username', user => user.username)
-  .addStringColumn('Firstname', user => user.firstname),
+  .addNumberColumn('ID', user => user.id)
+  .addStringColumn('Name', user => user.name)
+  .addBooleanColumn('Inactive', user => user.inactive)
+  .addDateColumn('Expiration', user => user.expiration),
 );
 
 userTable.filterable.set(true);
@@ -436,7 +591,7 @@ Column headers can be localized using the built-in [Localization][link-scion-loc
 ```ts
 import {table} from '@scion/components/table';
 
-table(users.value, table => table.addStringColumn('%firstname.label', user => user.firstname));
+table(users.value, table => table.addStringColumn('%name.label', user => user.name));
 ```
 
 A text provider can be registered using the `provideTextProvider()` function. Refer to [Localization][link-scion-localization] for more information.

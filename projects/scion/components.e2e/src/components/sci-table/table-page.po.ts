@@ -120,6 +120,11 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-row-height').fill(rowHeight.toString());
   }
 
+  public async setLocale(locale: 'en-US' | 'de-CH' | 'fr-CH' | 'it-CH'): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('select.e2e-locale').selectOption(locale);
+  }
+
   public async setRowCount(rowCount: number): Promise<void> {
     await this.tabbar.locator('button.e2e-datasource').click();
     await this.properties.locator('input.e2e-row-count').fill(rowCount.toString());
@@ -174,11 +179,22 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-width').fill(options.width ?? '');
     await this.properties.locator('input.e2e-min-width').fill(`${options.minWidth ?? ''}`);
 
-    if (options.extras?.padding !== undefined) {
-      await this.properties.locator('input.e2e-padding').setChecked(options.extras.padding);
-    }
-    if (options.type === 'component') {
-      await this.properties.locator('select.e2e-component').selectOption(options.extras?.component ?? 'component:custom-column');
+    switch (options.type) {
+      case 'component': {
+        await this.properties.locator('select.e2e-component').selectOption(options.extras?.componentColumn?.component ?? 'component:custom-column');
+        await this.properties.locator('input.e2e-padding').setChecked(options.extras?.componentColumn?.padding ?? true);
+        break;
+      }
+      case 'template': {
+        await this.properties.locator('input.e2e-padding').setChecked(options.extras?.templateColumn?.padding ?? true);
+        break;
+      }
+      case 'date': {
+        await this.properties.locator('input.e2e-format').fill(options.extras?.dateColumn?.format ?? '');
+        await this.properties.locator('select.e2e-locale').selectOption(options.extras?.dateColumn?.locale ?? '');
+        await this.properties.locator('input.e2e-timezone').fill(options.extras?.dateColumn?.timezone ?? '');
+        break;
+      }
     }
     await this.properties.locator('button.e2e-column-add').click();
   }
@@ -198,7 +214,17 @@ export interface ColumnOptions {
   width?: string;
   minWidth?: number;
   extras?: {
-    component?: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column';
-    padding?: boolean;
+    dateColumn?: {
+      format?: 'shortDate' | 'mediumDate' | 'longDate' | 'fullDate' | 'shortTime' | 'mediumTime' | 'longTime' | 'fullTime' | 'short' | 'medium' | 'long' | 'full' | string;
+      locale?: 'en-US' | 'de-CH' | 'fr-CH' | 'it-CH';
+      timezone?: string;
+    },
+    componentColumn?: {
+      component?: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column';
+      padding?: boolean;
+    };
+    templateColumn?: {
+      padding?: boolean;
+    };
   };
 }

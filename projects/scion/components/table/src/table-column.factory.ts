@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableCellContext} from './table.model';
+import {SciDateLike, SciTableCellContext} from './table.model';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
 
@@ -20,17 +20,44 @@ export interface SciTableColumnFactory<T> {
 
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
+  addNumberColumn(header: Translatable, value: (item: T) => number): this;
+
+  addNumberColumn(value: (item: T) => number): this;
+
+  addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
+
   addBooleanColumn(header: Translatable, value: (item: T) => boolean): this;
 
   addBooleanColumn(value: (item: T) => boolean): this;
 
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
-  addNumberColumn(header: Translatable, value: (item: T) => number): this;
+  /**
+   * Adds a temporal column to the table for displaying dates, times, or both.
+   *
+   * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
+   *
+   * Dates are formatted using `mediumDate`, or as specified in {@link DATE_PIPE_DEFAULT_OPTIONS}.
+   */
+  addDateColumn(header: Translatable, value: (item: T) => SciDateLike): this;
 
-  addNumberColumn(value: (item: T) => number): this;
+  /**
+   * Adds a temporal column to the table for displaying dates, times, or both.
+   *
+   * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
+   *
+   * Dates are formatted using `mediumDate`, or as specified in {@link DATE_PIPE_DEFAULT_OPTIONS}.
+   */
+  addDateColumn(value: (item: T) => SciDateLike): this;
 
-  addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
+  /**
+   * Adds a temporal column to the table for displaying dates, times, or both.
+   *
+   * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
+   *
+   * Dates are formatted as specified in {@link SciDateColumnDescriptor.format}, {@link SciDateColumnDescriptor.locale}, and {@link SciDateColumnDescriptor.timezone}.
+   */
+  addDateColumn(descriptor: SciDateColumnDescriptor<T>): this;
 
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
@@ -71,6 +98,56 @@ export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor 
   filterable?: boolean;
 }
 
+/**
+ * Configures a table column for displaying dates.
+ */
+export interface SciDateColumnDescriptor<T> extends SciTableColumnDescriptor {
+  /**
+   * Specifies the date value to display in this column.
+   *
+   * Can be an ISO 8601 date/time string (e.g., `2026-10-06`, `2026-10-06T14:30:15Z`, `T14:30:15`), milliseconds since the UTC epoch, or a `Date` object.
+   */
+  value: (item: T) => MaybeSignal<SciDateLike>;
+  /**
+   * Controls whether the user can sort this column. Defaults to `true`.
+   */
+  sortable?: boolean;
+  /**
+   * Controls whether the user can filter this column. Defaults to `true`.
+   */
+  filterable?: boolean;
+  /**
+   * Specifies how to format dates. Defaults to the format configured in {@link DATE_PIPE_DEFAULT_OPTIONS}, or `mediumDate` if not provided.
+   *
+   * Accepts a predefined Angular date format (e.g., `mediumDate`, `mediumTime`) or a custom format (e.g., `dd.MM.yyyy`, `HH:mm`).
+   * Formatting may vary depending on the active {@link locale}.
+   *
+   * Use a time-only format to display only the time component.
+   *
+   * @see https://angular.dev/api/common/DatePipe#pre-defined-format-options
+   * @see https://angular.dev/api/common/DatePipe#custom-format-options
+   */
+  format?: 'shortDate' | 'mediumDate' | 'longDate' | 'fullDate' | 'shortTime' | 'mediumTime' | 'longTime' | 'fullTime' | 'short' | 'medium' | 'long' | 'full' | string;
+  /**
+   * Specifies the locale used to localize dates.
+   *
+   * The locale determines date/time patterns, month and weekday names, AM/PM indicators, and related formatting symbols.
+   *
+   * Defaults to {@link SCI_LOCALE}, which initializes from {@link LOCALE_ID} (defaulting to `en-US`).
+   *
+   * See {@link SCI_LOCALE} for details on how to change the locale at runtime.
+   */
+  locale?: MaybeSignal<string>;
+  /**
+   * Specifies the timezone in which to render dates.
+   *
+   * Must be a UTC/GMT offset (e.g., `+0430` or `-0500`).
+   *
+   * Defaults to the timezone configured in {@link DATE_PIPE_DEFAULT_OPTIONS}, or the user's system timezone if not provided.
+   */
+  timezone?: string;
+}
+
 export interface SciComponentColumnDescriptor<T> extends SciTableColumnDescriptor {
   component: (item: T) => SciComponentDescriptor;
   sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, void>};
@@ -98,7 +175,7 @@ export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor
 /**
  * Represents a {@link SciStringColumnDescriptor}, {@link SciNumberColumnDescriptor}, {@link SciBooleanColumnDescriptor}, {@link SciComponentColumnDescriptor}, or {@link SciTemplateColumnDescriptor}.
  */
-export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciDateColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
 
 /**
  * Signature of a function used to configure a comparator for sorting a table column.
