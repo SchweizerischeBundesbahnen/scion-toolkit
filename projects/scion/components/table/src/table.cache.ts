@@ -16,16 +16,16 @@ export class SciTableCache<T> {
 
   private readonly _cache = signal(new Map<SciTableCacheKey, SciTableCacheEntry<T>>());
 
-  public readonly loading: Signal<boolean> = computed(() => this.values().some(entry => entry.rows.isLoading()));
-  public readonly error: Signal<Error | undefined> = computed(() => this.values().find(entry => entry.rows.error())?.rows.error());
+  public readonly loading: Signal<boolean> = computed(() => this.values().some(entry => entry.page.isLoading()));
+  public readonly error: Signal<Error | undefined> = computed(() => this.values().find(entry => entry.page.error())?.page.error());
   public readonly values: Signal<SciTableCacheEntry<T>[]> = computed(() => [...this._cache().values()]);
 
   public readonly rowsByIndex: Signal<Map<number, SciTableRow<T>>> = computed(() => this.values()
-    .flatMap(page => page.rows.value())
+    .flatMap(page => page.page.value()?.rows ?? [])
     .reduce((acc, row) => acc.set(row.index, row), new Map<number, SciTableRow<T>>()), {equal: Objects.isEqual});
 
   public readonly rowsById: Signal<Map<unknown, SciTableRow<T>>> = computed(() => this.values()
-    .flatMap(page => page.rows.value())
+    .flatMap(page => page.page.value()?.rows ?? [])
     .reduce((acc, row) => row.id !== undefined ? acc.set(row.id, row) : acc, new Map<unknown, SciTableRow<T>>()), {equal: Objects.isEqual});
 
   public has(key: SciTableCacheKey): boolean {
@@ -55,7 +55,7 @@ export class SciTableCache<T> {
    */
   public deleteIfLoading(key: SciTableCacheKey): void {
     const cacheEntry = this._cache().get(key);
-    if (!cacheEntry?.rows.isLoading()) {
+    if (!cacheEntry?.page.isLoading()) {
       return;
     }
 
@@ -78,7 +78,7 @@ export class SciTableCache<T> {
 }
 
 export interface SciTableCacheEntry<T> {
-  rows: ResourceRef<SciTableRow<T>[]>;
+  page: ResourceRef<{totalCount: number; rows: SciTableRow<T>[]} | undefined>;
   start: number;
   end: number;
   dispose: () => void;
