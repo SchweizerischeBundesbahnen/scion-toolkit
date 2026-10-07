@@ -74,6 +74,9 @@
     //      "@scion/toolkit/crypto": [
     //        "./projects/scion/toolkit/crypto/src/public_api"
     //      ],
+    //      "@scion/toolkit/common": [
+    //        "./projects/scion/toolkit/common/src/public_api"
+    //      ],
     //      "@scion/toolkit/observable": [
     //        "./projects/scion/toolkit/observable/src/public_api"
     //      ],

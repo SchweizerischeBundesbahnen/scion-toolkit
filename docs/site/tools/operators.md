@@ -260,6 +260,23 @@ The snippet above prints the following output to the console:
 
 </details>
 
+<details>
+  <summary><strong>serializeExecution</strong></summary>
+
+Serializes the execution of elements emitted by the source Observable.
+
+```ts
+import {delay, interval, of} from 'rxjs';
+import {serializeExecution} from '@scion/toolkit/operators';
+
+interval(10)
+  .pipe(serializeExecution(item => of(item).pipe(delay(1000))))
+  .subscribe(item => {
+    console.log(item); // emits 0 at 1.01s, 1 at 2.01s, 2 at 3.01s, etc.
+  });
+```
+</details>
+
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
 [menu-changelog]: /docs/site/changelog.md

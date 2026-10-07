@@ -19,6 +19,9 @@ This module provides framework-agnostic utilities in TypeScript. It only has a d
 - [**Operators**][link-tool-operators]\
   Provides a set of useful RxJS operators.
 
+- [**Common**][link-tool-common]\
+  Provides common tools.
+
 - [**Util**][link-tool-util]\
   Provides some utilities for dealing with collections and objects.
 
@@ -38,6 +41,7 @@ This module provides framework-agnostic utilities in TypeScript. It only has a d
 [link-tool-crypto]: /docs/site/tools/crypto.md
 [link-tool-observable]: /docs/site/tools/observable.md
 [link-tool-operators]: /docs/site/tools/operators.md
+[link-tool-common]: /docs/site/tools/common.md
 [link-tool-util]: /docs/site/tools/util.md
 [link-tool-uuid]: /docs/site/tools/uuid.md
 [link-tool-web-storage]: /docs/site/tools/web-storage.md

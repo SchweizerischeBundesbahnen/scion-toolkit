@@ -216,3 +216,14 @@ export function subscribeIn<T>(fn: (doSubscribe: () => void) => void): MonoTypeO
     });
   };
 }
+
+/**
+ * Serializes the execution of elements emitted by the source Observable.
+ *
+ * For each element emitted by the source, the specified callback function is called.
+ * The next element will only be processed once the Promise or Observable returned by
+ * the callback function resolves or completes.
+ */
+export function serializeExecution<IN, OUT>(fn: (value: IN) => Observable<OUT> | Promise<OUT>): OperatorFunction<IN, OUT> {
+  return mergeMap(element => fn(element), 1);
+}
