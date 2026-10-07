@@ -1,8 +1,10 @@
-import {ChildProvider, PageableChildProvider, SciHierarchicalTableDatasource, SciPageableHierarchicalTableDatasource, SciTableDataLoaderFn, SciTableRowActionFactoryFn, SciTableRowBindingFactoryFn} from '@scion/components/table';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Signal, WritableSignal} from '@angular/core';
 import {Translatable} from '@scion/components/text';
-import {SciTableDataSourceProvider} from '../../table/src/table.model';
+import {SciTableRowActionFactoryFn} from '../../table/src/table.model';
+import {SciTableDataSourceProvider, SciTableIdsRequest, SciTableRowBindingFactoryFn, SciTableTreeNode} from '@scion/components/table';
+import {SciAsyncTableTreeDatasource, SciTableTreeDatasource} from '../../table/src/table-datasource';
+import {MaybeAsync} from '../../table/src/common';
 
 export interface SciTreeDescriptor<T> {
   label: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
@@ -56,13 +58,13 @@ export interface SciTree<T> {
   collapseAll(): void;
 }
 
-export type SciTreeDataSource<T> = SciHierarchicalTableDatasource<T>;
-export type SciPageableTreeDataSource<T> = SciPageableHierarchicalTableDatasource<T>;
+export type SciTreeDataSource<T> = SciTableTreeDatasource<T>;
+export type SciPageableTreeDataSource<T> = SciAsyncTableTreeDatasource<T>;
 
-export function provideTreeDatasource<T>(root: Signal<T[]>, children: ChildProvider<T>): SciTableDataSourceProvider<T> {
-  return columns => new SciHierarchicalTableDatasource(root, columns, children);
+export function provideTreeDatasource<T>(root: Signal<T[]>, getChildren: (item: T) => T[]): SciTableDataSourceProvider<T> {
+  return (columns, trackBy) => new SciTableTreeDatasource(root, {columns, trackBy, getChildren});
 }
 
-export function providePageableTreeDatasource<T>(loader: SciTableDataLoaderFn<T>, children: PageableChildProvider<T>): SciTableDataSourceProvider<T> {
-  return () => new SciPageableHierarchicalTableDatasource(loader, children);
+export function providePageableTreeDatasource<T>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNode<unknown>[]>, getItems: (ids: unknown[], meta?: {parent?: T}) => MaybeAsync<T[]>): SciTableDataSourceProvider<T> {
+  return () => new SciAsyncTableTreeDatasource(getIds, getItems);
 }

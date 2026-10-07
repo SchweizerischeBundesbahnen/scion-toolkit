@@ -14,6 +14,7 @@ export interface OperatorGroup {
   kind: 'operator';
   operator: string;
   averageMaxSpeedKmh: number;
+  children: Vehicle[];
 }
 
 export interface Vehicle {

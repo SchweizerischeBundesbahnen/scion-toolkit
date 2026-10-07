@@ -9,18 +9,17 @@
  */
 
 import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
-import {SciTableColumnFilter, SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
-import {SciHierarchicalTableDatasource, SciPageableHierarchicalTableDatasource, SciTable, SciTableArrayDatasource, SciTableCellLike, SciTableColumnLike, SciTableDataSource, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
+import {SciAsyncTableTreeDatasource, SciTableArrayDatasource, SciTableColumnFilter, SciTableDataSource, SciTableSortCriterion, SciTableTreeDatasource, SciTableTreeNode} from './table-datasource';
+import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
-import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
-import {coerceSignal, createDestroyableInjector, toLazyObservable} from '@scion/components/common';
-import {SciTableCache, SciTableCacheEntry, SciTableCacheRow, TablePage} from './table.cache';
-import {rxResource, takeUntilDestroyed, toObservable, toSignal} from '@angular/core/rxjs-interop';
-import {combineLatestWith, concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, throwError, timer} from 'rxjs';
+import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
+import {SciTableCacheNew, SciTableCacheRow, TableBatch} from './table.cache';
+import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {combineLatestWith, concat, fromEvent, of, skip, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
 import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
-import {first, map, startWith, switchMap} from 'rxjs/operators';
+import {map, startWith, switchMap} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
 
 export class ɵSciTable<T = unknown> implements SciTable<T> {
@@ -67,13 +66,11 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     equal: Objects.isEqual,
   });
 
-  private readonly _cache = new SciTableCache<T>(true);
+  private readonly _cache = new SciTableCacheNew<T>();
   private readonly _tableFilter = signal<string | null>(null);
   private readonly _selectedItems = signal(new Map<unknown, T>());
   private readonly _expandedAll = signal(false);
   private readonly _toggledRows = signal(new Set<unknown>());
-
-  public readonly totalCount = this._cache.totalCount;
 
   public readonly activeItem = linkedSignal({
     source: () => this.criteria(),
@@ -95,10 +92,100 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
-  public readonly rowsByIndex = this._cache.rowsByIndex;
+  public readonly rowsByIndex = computed(() => this.projectRows());
   public readonly rowsById = this._cache.rowsById;
-  public readonly rowIndexById = this._cache.indexById;
   public readonly rows = this.computeRows();
+
+  public readonly allIds = rxResource({
+    params: () => this.sortCriteria(),
+    stream: ({params}) => {
+      return runInInjectionContext(this._injector, () => Observables.coerce(this._datasource.getIds({sortCriteria: params, columnFilters: []})).pipe(
+        map((ids): SciTableTreeNode<unknown>[] => {
+          if (this.isTreeDatasource()) {
+            return ids as SciTableTreeNode<unknown>[];
+          }
+
+          return ids.map(id => ({item: id}));
+        }),
+      ));
+    },
+  });
+
+  public readonly filteredIds = rxResource({
+    params: () => ({
+      filterCriteria: this.filterCriteria(),
+      tableFilter: this._tableFilter() ?? undefined,
+      allIds: this.allIds.value() ?? [],
+    }),
+    stream: ({params}) => {
+      // If no filters are applied, filteredIds === allIds
+      if (!params.tableFilter && params.filterCriteria.length === 0) {
+        return of(this.allIds.value());
+      }
+
+      return runInInjectionContext(this._injector, () => Observables.coerce(this._datasource.getIds({sortCriteria: [], columnFilters: params.filterCriteria, tableFilter: params.tableFilter})).pipe(
+        map((ids): SciTableTreeNode<unknown>[] => {
+          if (this._datasource instanceof SciTableTreeDatasource || this._datasource instanceof SciAsyncTableTreeDatasource) {
+            return ids as SciTableTreeNode<unknown>[];
+          }
+
+          return ids.map(id => ({item: id}));
+        }),
+        map(ids => {
+          const nodesById = new Map(params.allIds.map(node => [node.item, node]));
+          const filteredIds = new Set(ids.map(node => node.item));
+          const ancestorIds = new Set<unknown>();
+
+          // Traverse up the tree and store ancestors nodes.
+          for (const node of ids) {
+            let parentId = (nodesById.get(node.item) ?? node).parent;
+            while (parentId !== undefined && !ancestorIds.has(parentId)) {
+              ancestorIds.add(parentId);
+              parentId = nodesById.get(parentId)?.parent;
+            }
+          }
+
+          const hasFilteredAncestor = (node?: SciTableTreeNode<unknown>): boolean => {
+            if (node?.parent === undefined) {
+              return false;
+            }
+
+            if (filteredIds.has(node.parent)) {
+              return true;
+            }
+
+            return hasFilteredAncestor(nodesById.get(node.parent));
+          };
+
+          return [
+            ...ids,
+            // Add additional nodes which are not already in the returned set and either
+            //  - are an ancestor of a node in the returned set.
+            //  - have an ancestor in the returned set.
+            ...params.allIds.filter(node => !filteredIds.has(node.item) && (ancestorIds.has(node.item) || hasFilteredAncestor(node)))];
+        }),
+      ));
+    },
+  });
+
+  public readonly totalCount = computed(() => this.filteredIds.value()?.length);
+
+  public readonly rowIdByIndex = computed(() => {
+    const allIds = this.filteredIds.value() ?? [];
+
+    const getChildren = (parentId?: unknown): SciTableTreeNode<unknown>[] => {
+      // TODO [tree]: possibly optimize for table (additional getChildren is not needed)
+      return allIds
+        .filter(node => node.parent === parentId)
+        .flatMap(node => getChildren(node));
+    };
+
+    return untracked(() => getChildren(undefined).reduce((map, node, index) => map.set(index, node), new Map<number, unknown>()));
+  });
+
+  public readonly rowIndexById = computed(() => {
+    return new Map([...this.rowIdByIndex().entries()].map(kv => kv.reverse() as [unknown, number]));
+  });
 
   constructor(descriptor: SciTableDescriptor<T>) {
     // TODO [table] Remove after datasource is final. See ɵillegaldatasource.
@@ -129,10 +216,10 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this._trackBy = descriptor.trackBy;
 
     if (isSignal(descriptor.ɵdatasource)) {
-      this._datasource = new SciTableArrayDatasource(descriptor.ɵdatasource, this.columns);
+      this._datasource = new SciTableArrayDatasource(descriptor.ɵdatasource, {columns: this.columns, trackBy: descriptor.trackBy ?? (item => item)});
     }
     else if (descriptor.ɵdatasource) {
-      this._datasource = descriptor.ɵdatasource(this.columns);
+      this._datasource = descriptor.ɵdatasource(this.columns, descriptor.trackBy ?? (item => item));
     }
     else {
       throw new Error('Could not initialize data loader');
@@ -285,95 +372,96 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     }).value;
   }
 
+  private projectRows(): Map<number, SciTableRow<T> | undefined> {
+    const ids = this.filteredIds.value() ?? [];
+    const rowsByLocalIndex = this.rowsById();
+
+    // console.log(rowsByLocalIndex, ids);
+
+    // console.log(ids.reduce((map, node, index) => map.set(index, rowsByLocalIndex.get(node)), new Map<number, SciTableRow<T> | undefined>()))
+
+    return ids.reduce((map, node, index) => map.set(index, rowsByLocalIndex.get(node.item)), new Map<number, SciTableRow<T> | undefined>())
+
+    // const getExpandedChildren = (nodes: SciTableTreeNode<unknown>[]): SciTableTreeNode<unknown>[] => {
+    //   return nodes.flatMap(node => [
+    //     node,
+    //     ...rowsByLocalIndex.get(node.item)?.expanded() ? getExpandedChildren(ids.filter(childNode => childNode.parent === node.item)) : [],
+    //   ]);
+    // };
+    //
+    // return getExpandedChildren(ids.filter(node => node.parent === undefined)).reduce((rows, node, index) => {
+    //   return rows.set(index, rowsByLocalIndex.get(node.item));
+    // }, new Map<number, SciTableRow<T> | undefined>());
+  }
+
   /**
    * Loads a range of rows, based on the current sort and filter criteria, into the cache.
    */
   public async loadRange(start: number, end: number): Promise<void> {
-    const sortCriteria = this.sortCriteria();
-    const columnFilters = this.filterCriteria();
-    const tableFilter = this._tableFilter() ?? undefined;
-
-    // Calculate pages based on row indices and page size.
-    const pages = pagesByRange(start, end, this.pageSize);
-    if (!pages) {
-      return;
-    }
+    // const sortCriteria = this.sortCriteria();
+    // const columnFilters = this.filterCriteria();
+    // const tableFilter = this._tableFilter() ?? undefined;
+    //
+    // // Calculate pages based on row indices and page size.
+    // const pages = pagesByRange(start, end, this.pageSize);
+    // if (!pages) {
+    //   return;
+    // }
 
     // Load pages and wait until completed loading.
-    await Promise.all(pages
-      .map(page => this.loadPage({
-        cache: this._cache,
-        loader: this._datasource.load,
-        page,
-        pageSize: this.pageSize,
-        level: 0,
-        parentId: undefined,
-        columnFilters,
-        tableFilter,
-        sortCriteria,
-      }))
-      .map(page => firstValueFrom(toLazyObservable(page.loading, {injector: this._injector}).pipe(first(loading => !loading), defaultIfEmpty(true)))));
+    // await Promise.all(pages
+    //   .map(page => this.loadPage({
+    //     cache: this._cache,
+    //     loader: this._datasource.load,
+    //     page,
+    //     pageSize: this.pageSize,
+    //     level: 0,
+    //     parentId: undefined,
+    //     columnFilters,
+    //     tableFilter,
+    //     sortCriteria,
+    //   }))
+    //   .map(page => firstValueFrom(toLazyObservable(page.loading, {injector: this._injector}).pipe(first(loading => !loading), defaultIfEmpty(true)))));
   }
 
   /**
    * Loads the requested page from the cache or datasource and returns its loading state with a cancelation handler.
    */
-  private loadPage({cache, loader, page, pageSize, level, parentId, sortCriteria, columnFilters, tableFilter}: {cache: SciTableCache<T>; loader: SciTableDataLoaderFn<T>; page: number; pageSize: number; level: number; parentId: unknown; sortCriteria: SciTableSortCriterion[]; columnFilters: SciTableColumnFilter[]; tableFilter?: string}): {loading: Signal<boolean>; cancel: () => void} {
-    const pageStart = page * pageSize;
-    const pageEnd = pageStart + pageSize;
-    const cacheKey = `${pageStart}-${pageEnd}` as const;
+  private loadBatch({parent, ids}: {parent?: SciTableCacheRow<T>; ids: unknown[]}): {loading: Signal<boolean>; cancel: () => void} {
+    const cache = parent?.childrenCache ?? this._cache;
+    const level = parent ? parent.level + 1 : 0;
+    const parentId = parent?.id;
 
-    if (cache.has(cacheKey)) {
+    if (ids.every(id => cache.has(id))) {
       return {
-        loading: cache.get(cacheKey)!.page.isLoading,
-        cancel: () => cache.deleteIfLoading(cacheKey),
+        loading: computed(() => cache.allResources().some(resource => resource.isLoading())),
+        cancel: () => cache.deleteIfLoading(ids),
       };
     }
 
-    const cacheEntryInjector = createDestroyableInjector({parent: this._injector});
-
-    const pageResource = runInInjectionContext(cacheEntryInjector, () => {
+    const pageResource = runInInjectionContext(this._injector, () => {
       // Fetch data.
       const tableResponse$ = runSafe(
-        () => Observables.coerce(loader({
-          start: pageStart,
-          end: pageEnd,
-          pageSize,
-          page,
-          sortCriteria,
-          tableFilter,
-          columnFilters,
-        })),
+        () => Observables.coerce(this._datasource.getItems(ids, {parent: parent?.item})),
         error => throwError(() => error));
 
       const columns = toObservable(this.columns);
       // Create a resource to track loading and error states.
-      const pageResource = rxResource({
+      return rxResource({
         stream: () => tableResponse$.pipe(
           combineLatestWith(columns),
           map(([response, columns]) => {
-            const rows = this.mapItemsToRow(response.items, columns, pageStart, level, parentId, this._cache.rowsById(), cacheEntryInjector);
-            return {rows, totalCount: response.totalCount};
+            return this.mapItemsToRow(response, columns, level, parentId, this._cache.rowsById());
           }),
         )},
       );
-
-      return pageResource;
     });
-    const cacheEntry: SciTableCacheEntry<T> = {
-      page: pageResource,
-      dispose: () => {
-        cacheEntryInjector.destroy();
-      },
-      start: pageStart,
-      end: pageEnd,
-    };
 
-    cache.set(cacheKey, cacheEntry);
+    cache.set(ids, pageResource);
 
     return {
-      loading: cacheEntry.page.isLoading,
-      cancel: () => cache.deleteIfLoading(cacheKey),
+      loading: pageResource.isLoading,
+      cancel: () => cache.deleteIfLoading(ids),
     };
   }
 
@@ -440,38 +528,17 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this._selectedItems.update(updateFn);
   }
 
-  private loadChildPage(parent: SciTableCacheRow<T>, page: number): {loading: Signal<boolean>; cancel: () => void} {
-    if (!this.isHierarchicalDatasource()) {
-      return {
-        loading: signal(false),
-        cancel: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-      };
-    }
-
-    return this.loadPage({
-      cache: parent.childrenCache,
-      loader: request => this._datasource.loadChildren!(parent.item!, request),
-      page,
-      pageSize: this.pageSize,
-      level: parent.level + 1,
-      parentId: parent.id,
-      sortCriteria: this.sortCriteria(),
-      columnFilters: this.filterCriteria(),
-      tableFilter: this._tableFilter() ?? undefined,
-    });
-  }
-
   /**
    * Indicates whether the built-in array datasource is used.
    *
    * Supports out-of-the-box filtering and sorting for built-in table columns.
    */
   public isArrayDatasource(): boolean {
-    return this._datasource instanceof SciTableArrayDatasource || this._datasource instanceof SciHierarchicalTableDatasource;
+    return this._datasource instanceof SciTableArrayDatasource || this._datasource instanceof SciAsyncTableTreeDatasource;
   }
 
-  public isHierarchicalDatasource(): boolean {
-    return this._datasource instanceof SciHierarchicalTableDatasource || this._datasource instanceof SciPageableHierarchicalTableDatasource;
+  public isTreeDatasource(): boolean {
+    return this._datasource instanceof SciTableTreeDatasource || this._datasource instanceof SciAsyncTableTreeDatasource;
   }
 
   public reset(): void {
@@ -490,36 +557,28 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   private installPageLoader(): void {
     effect(onCleanup => {
       const scrollRange = this.scrollRange();
-      const sortCriteria = this.sortCriteria();
-      const columnFilters = this.filterCriteria();
-      const tableFilter = this._tableFilter() ?? undefined;
       this._toggledRows(); // track toggled rows, to ensure child pages of new expanded rows are loaded.
 
       if (!scrollRange) {
         return;
       }
 
-      const pages = this.findPagesToLoad(scrollRange.start, scrollRange.end, this.pageSize);
+      const batches = this.findBatchesToLoad(scrollRange.start, scrollRange.end);
 
-      untracked(() => pages.forEach(page => {
-        const pageRef = page.parent ?
-          this.loadChildPage(page.parent, page.page) :
-          this.loadPage({
-            cache: page.cache,
-            loader: this._datasource.load,
-            pageSize: this.pageSize,
-            page: page.page,
-            level: 0,
-            parentId: undefined,
-            sortCriteria,
-            columnFilters,
-            tableFilter,
-          });
+      untracked(() => {
+        const rows = this.rowsById();
 
-        onCleanup(() => {
-          pageRef.cancel();
+        batches.forEach(page => {
+          const parentRow = rows.get(page.parent);
+          // Always load root batches, but only load child batches if we already have a parent row.
+          if (!page.parent || parentRow) {
+            const pageRef = this.loadBatch({parent: parentRow, ids: page.ids});
+            onCleanup(() => {
+              pageRef.cancel();
+            });
+          }
         });
-      }));
+      });
     });
   }
 
@@ -537,52 +596,33 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   /**
    * Traverses the tree to find pages which need to be loaded based on the current scroll range.
    */
-  public findPagesToLoad(start: number, end: number, pageSize: number): TablePage<T>[] {
-    const pagesToLoad: TablePage<T>[] = [];
+  public findBatchesToLoad(start: number, end: number): TableBatch<T>[] {
+    const filteredIds = this.filteredIds.value() ?? [];
+    const childrenByNode = new Map<unknown, unknown[]>();
 
-    const findPages = (cache: SciTableCache<T>, indexOffset: number, parent?: SciTableCacheRow<T>): number => {
-      const directChildrenCount = cache.directChildrenCount();
-      if (untracked(() => cache.empty()) || directChildrenCount === undefined) {
-        // Always load first page, if cache is empty.
-        pagesToLoad.push({parent, cache, page: 0});
-        return indexOffset;
+    for (const node of filteredIds.slice(start, end)) {
+      const children = childrenByNode.get(node.parent) ?? [];
+      children.push(node.item);
+      childrenByNode.set(node.parent, children);
+    }
+
+    return [...childrenByNode.entries()].flatMap(([parent, children]) => {
+      const batches: TableBatch<T>[] = [];
+      for (let page = 0; page <= Math.floor(children.length / this.pageSize); page++) {
+        const start = page * this.pageSize;
+        const end = start + this.pageSize;
+        batches.push({parent, ids: children.slice(start, end)});
       }
-
-      // Don't track recursive search rowsByLocalIndex.
-      // Canceling a load changes the rowsByLocalIndex which would causes the outer effect to run again, which in turn causes load cancellation again and so on.
-      const rowsByLocalIndex = untracked(() => cache.rowsByLocalIndex());
-      const localPagesToLoad = new Set<number>();
-
-      // loop through rows, while not yet reaching the end of the request.
-      for (let localIndex = 0; localIndex < directChildrenCount && indexOffset < end; localIndex++, indexOffset++) {
-        const row = rowsByLocalIndex.get(localIndex);
-        if (!row) {
-          const page = Math.floor(localIndex / pageSize);
-          // Only add pages which are not already in the pagesToLoad / localPagesToLoad.
-          if (indexOffset >= start && !localPagesToLoad.has(page)) {
-            pagesToLoad.push({parent, cache, page});
-            localPagesToLoad.add(page);
-          }
-        }
-        else if (row.expanded()) {
-          // Subtract one from new offset, since it's increased in the loop.
-          indexOffset = findPages(row.childrenCache, indexOffset + 1, row) - 1;
-        }
-      }
-
-      return indexOffset;
-    };
-
-    findPages(this._cache, 0);
-    return pagesToLoad;
+      return batches;
+    });
   }
 
-  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], pageStart: number, level: number, parentId: unknown, existingRows: Map<unknown, SciTableCacheRow<T>>, injector: Injector): SciTableCacheRow<T>[] {
+  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], level: number, parentId: unknown, existingRows: Map<unknown, SciTableCacheRow<T>>): SciTableCacheRow<T>[] {
     return items.map((item, i) => {
       const id = this.trackBy(item);
-      const index = pageStart + i;
+      const index = this.rowIndexById().get(id) ?? -1;
       const previousRow = existingRows.get(id);
-      const hasChildren = runInInjectionContext(injector, () => toSignal(Observables.coerce(this._datasource.hasChildren?.(item, {columnFilters: this.filterCriteria(), tableFilter: this._tableFilter() ?? undefined}) ?? false), {initialValue: false}));
+      const hasChildren = computed(() => this.filteredIds.value()?.some(node => node.parent === id) ?? false);
 
       const row: SciTableCacheRow<T> = {
         id,
@@ -604,8 +644,8 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         level,
         parentId,
         hasChildren,
-        childrenCache: previousRow?.childrenCache ?? new SciTableCache<T>(),
-        bindings: coerceTableRowBindings(this._rowBindings, item, pageStart + i),
+        childrenCache: previousRow?.childrenCache ?? new SciTableCacheNew<T>(),
+        bindings: coerceTableRowBindings(this._rowBindings, item, index),
         cells: columns.map(column => {
           if (column.type === 'dynamic') {
             const value = column.value(item);
@@ -786,16 +826,6 @@ export interface SciScrollRange {
   start: number;
   /** exclusive */
   end: number;
-}
-
-/**
- * Gets pages by range and page size, or `null` if empty. End is exclusive.
- */
-function pagesByRange(start: number, end: number, pageSize: number): number[] | null {
-  const startPage = Math.floor(start / pageSize);
-  const endPage = Math.floor((end - 1) / pageSize); // `end` is exclusive, so use the last included index (`end - 1`) for page calculation.
-  const pages = rangeInclusive(startPage, endPage);
-  return pages.length ? pages : null;
 }
 
 export interface SciTableUserSettings {

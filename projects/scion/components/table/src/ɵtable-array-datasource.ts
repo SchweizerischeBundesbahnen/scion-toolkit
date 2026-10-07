@@ -8,96 +8,80 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
+import {SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeNode} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
-import {computed, signal, Signal, untracked} from '@angular/core';
+import {computed, Signal, untracked} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {Objects} from '@scion/toolkit/util';
 
-export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
-  const dataset = new Dataset(data, columns);
+export function treeDatasource<T>(data: Signal<Map<unknown, SciTableTreeNode<T>>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<SciTableTreeNode<unknown>[]>) {
+  const dataset = computed((): TreeDatasetRow<T>[] => {
+    return [...data().entries()].map(([id, node]) => ({...createDatasetRow(id, node.item, columns()), parent: node.parent}));
+  });
 
-  return (request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
-    dataset.columnFilters.set(request.columnFilters);
-    dataset.tableFilter.set(request.tableFilter);
-    dataset.sortCriteria.set(request.sortCriteria);
+  return (request: SciTableIdsRequest): Observable<SciTableTreeNode<unknown>[]> => {
+    return toObservable(computed(() => {
+      const rows = dataset();
 
-    const totalCount = dataset.count;
-    const items = dataset.slice(request.start, request.end);
-
-    return toObservable(computed(() => ({
-      totalCount: totalCount(),
-      items: items(),
-    })));
+      return untracked(() => {
+        return rows
+          .filter(row => (matchesRow(row, request.columnFilters) && matchesGlobalFilter(row, request.tableFilter)))
+          .sort((a, b) => compareRows(a, b, request.sortCriteria))
+          .map(row => ({item: row.id, parent: row.parent}));
+      });
+    }));
   };
 }
 
-/**
- * Provides a filtered and sorted view on given data.
- */
-class Dataset<T> {
+export function arrayDatasource<T>(data: Signal<Map<unknown, T>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<unknown[]>) {
+  const dataset = computed((): DatasetRow<T>[] => [...data().entries()].map(([id, item]) => createDatasetRow(id, item, columns())));
 
-  private readonly _dataview: Signal<DatasetRow<T>[]>;
+  return (request: SciTableIdsRequest): Observable<unknown[]> => {
+    return toObservable(computed(() => {
+      const rows = dataset();
 
-  public readonly columnFilters = signal<SciTableColumnFilter[]>([], {equal: Objects.isEqual});
-  public readonly sortCriteria = signal<SciTableSortCriterion[]>([], {equal: Objects.isEqual});
-  public readonly tableFilter = signal<string | undefined>(undefined);
+      return untracked(() => rows
+        .filter(row => matchesRow(row, request.columnFilters) && matchesGlobalFilter(row, request.tableFilter ?? undefined))
+        .sort((a, b) => compareRows(a, b, request.sortCriteria)))
+        .map(row => row.id);
+    }));
+  };
+}
 
-  /**
-   * Returns the total count of items matching the current filters and search criteria.
-   */
-  public readonly count = computed(() => this._dataview().length);
+function createDatasetRow<T>(id: unknown, item: T, columns: SciTableColumnLike<T>[]): DatasetRow<T> {
+  return {
+    id,
+    item,
+    cells: columns.reduce((cells, column) => {
+      const value = 'value' in column ? untracked(() => column.value(item)) : undefined;
 
-  constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
-    const dataset = computed((): DatasetRow<T>[] => data().map(item => ({
-      item,
-      cells: columns().reduce((cells, column) => {
-        const value = 'value' in column ? untracked(() => column.value(item)) : undefined;
-
-        if (column.type === 'dynamic') {
-          const isComponent = typeof value === 'object' && 'component' in value;
-          const isTemplate = typeof value === 'object' && 'template' in value;
-
-          return cells.set(column.name, {
-            column: column as SciTableColumn,
-            value: isComponent || isTemplate ? undefined : coerceSignal(value, {coerceUndefined: true})(),
-          });
-        }
+      if (column.type === 'dynamic') {
+        const isComponent = typeof value === 'object' && 'component' in value;
+        const isTemplate = typeof value === 'object' && 'template' in value;
 
         return cells.set(column.name, {
           column: column as SciTableColumn,
-          value: 'value' in column ? coerceSignal(untracked(() => column.value(item)), {coerceUndefined: true})() : undefined,
+          value: isComponent || isTemplate ? undefined : coerceSignal(value, {coerceUndefined: true})(),
         });
-      }, new Map<`column:${string}`, DatasetCell>()),
-    })));
+      }
 
-    // Memoize filtered/sorted view; recomputes only when dataset or criteria change, not when scrolling through the view, as sorting is an expensive operation.
-    this._dataview = computed(() => {
-      const rows = dataset();
-      const columnFilters = this.columnFilters();
-      const tableFilter = this.tableFilter();
-      const sortCriteria = this.sortCriteria();
-
-      // PERF: Do not track signals inside `Array.sort` to avoid Angular signal tracking overhead as the comparator runs repeatedly, degrading performance otherwise.
-      return untracked(() => rows
-        .filter(row => matchesRow(row, columnFilters) && matchesGlobalFilter(row, tableFilter ?? undefined))
-        .sort((a, b) => compareRows(a, b, sortCriteria)));
-    });
-  }
-
-  /**
-   * Returns a slice of the filtered and sorted data within the given range (start inclusive, end exclusive).
-   */
-  public slice(start: number, end: number): Signal<T[]> {
-    return computed(() => this._dataview().slice(start, end).map(row => row.item));
-  }
+      return cells.set(column.name, {
+        column: column as SciTableColumn,
+        value: 'value' in column ? coerceSignal(value as Signal<string | number | boolean> | undefined, {coerceUndefined: true})() : undefined,
+      });
+    }, new Map<`column:${string}`, DatasetCell>()),
+  };
 }
 
 interface DatasetRow<T> {
+  id: unknown;
   item: T;
   cells: Map<`column:${string}`, DatasetCell>;
+}
+
+interface TreeDatasetRow<T> extends DatasetRow<T> {
+  parent?: unknown;
 }
 
 interface DatasetCell {

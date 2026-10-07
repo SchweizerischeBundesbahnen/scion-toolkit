@@ -65,12 +65,7 @@ export default class SciTreePageComponent {
   private createTree(): SciTree<Company> {
     return tree<Company>({
       label: company => company.dataId,
-      datasource: provideTreeDatasource(computed(() => data().filter(item => item.parent === undefined)), {
-        getChildren: item => {
-          return data().filter(i => i.parent === item.code);
-        },
-        hasChildren: item => data().some(i => i.parent === item.code),
-      }),
+      datasource: provideTreeDatasource(computed(() => data().filter(item => item.parent === undefined)), item => data().filter(i => i.parent === item.code)),
       nodeBindings: (bindings, _vehicle, index) => {
         if (this.settingsForm.showZebraStriping().value()) {
           bindings.addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd');

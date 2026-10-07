@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, ElementRef, inject, Injector, input, inputBinding, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
-import {provideHierarchicalTableDatasource, providePageableHierarchicalTableDatasource, providePageableTableDatasource, SciTable, SciTableComponent, SciTableDataSourceProvider, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideAsyncTableDatasource, provideTableTreeDatasource, SciTable, SciTableComponent, SciTableDataSourceProvider, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
 import {DatePipe} from '@angular/common';
@@ -311,20 +311,17 @@ export default class SciTablePageComponent {
   private getDataSource(vehicleService: VehicleService, options: {slowDatasource: boolean; groupByOperator: boolean}): Signal<VehicleOrOperator[]> | SciTableDataSourceProvider<VehicleOrOperator> {
     if (options.groupByOperator) {
       if (options.slowDatasource) {
-        return providePageableHierarchicalTableDatasource<VehicleOrOperator>(request => vehicleService.getGroupedVehicles$(request), {
-          getChildren: (item, request) => !isVehicle(item) ? vehicleService.getOperatorChildren$(item, request) : EMPTY,
-          hasChildren: item => !isVehicle(item),
-        });
+        // return provideAsyncTableTreeDatasource<VehicleOrOperator>(
+        //   request => vehicleService.getGroupedVehicles$(request),
+        //   (parent, ids) => vehicleService.getTreeItems$(parent, ids),
+        // );
       }
 
-      return provideHierarchicalTableDatasource<VehicleOrOperator>(vehicleService.operators, {
-        getChildren: item => !isVehicle(item) ? vehicleService.vehiclesByOperator().get(item.operator) ?? [] : [],
-        hasChildren: item => !isVehicle(item),
-      });
+      return provideTableTreeDatasource<VehicleOrOperator>(computed(() => vehicleService.operators()), operator => isVehicle(operator) ? [] : operator.children);
     }
 
     if (options.slowDatasource) {
-      return providePageableTableDatasource(request => vehicleService.getVehicles$(request));
+      return provideAsyncTableDatasource(request => vehicleService.getVehicles$(request), ids => vehicleService.getItems$(ids));
     }
 
     return vehicleService.vehicles;

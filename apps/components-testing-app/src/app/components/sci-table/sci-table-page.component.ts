@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {providePageableTableDatasource, provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideAsyncTableDatasource, provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
@@ -89,11 +89,11 @@ export default class SciTablePageComponent {
             this._productService.enableHttpLoader();
             return this._productService.products;
           case 'loader':
-            return providePageableTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}));
+            return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}));
           case 'loader-delayed':
-            return providePageableTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}));
+            return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}));
           case 'loader-http':
-            return providePageableTableDatasource((request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))));
+            return provideAsyncTableDatasource((request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))));
         }
       })(),
       rowBindings: (bindings, product) => {

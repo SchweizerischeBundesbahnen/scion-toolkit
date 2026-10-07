@@ -8,9 +8,82 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, linkedSignal, ResourceRef, signal, Signal} from '@angular/core';
+import {computed, effect, linkedSignal, ResourceRef, signal, Signal} from '@angular/core';
 import {SciTableRow} from './table.model';
 import {Objects} from '@scion/toolkit/util';
+
+export class SciTableCacheNew<T> {
+
+  private readonly _resourcesById = signal(new Map<unknown, ResourceRef<SciTableCacheRow<T>[] | undefined>>());
+
+  public readonly rowsById: Signal<Map<ID, SciTableCacheRow<T>>> = computed(() => [...this._resourcesById().values()]
+    .flatMap(resource => resource.status() === 'error' ? [] : resource.value() ?? [])
+    .reduce((acc, row) => new Map([...acc, [row.id, row], ...row.childrenCache.rowsById()]), new Map<ID, SciTableCacheRow<T>>()), {equal: Objects.isEqual});
+
+  public readonly allResources = computed(() => {
+    const resources = new Set(this._resourcesById().values());
+    for (const resource of [...resources]) {
+      resource.value()?.forEach(row => row.childrenCache.allResources().forEach(childResource => {
+        resources.add(childResource);
+      }));
+    }
+    return [...resources];
+  });
+
+  public readonly empty: Signal<boolean> = computed(() => this._resourcesById().size === 0);
+  public readonly loading: Signal<boolean> = computed(() => this.allResources().some(entry => entry.isLoading()));
+  public readonly error: Signal<Error | undefined> = computed(() => {
+    return this.allResources().find(resource => resource.status() === 'error')?.error();
+  });
+
+  public has(key: unknown): boolean {
+    return this._resourcesById().has(key);
+  }
+
+  public get(key: unknown): ResourceRef<SciTableCacheRow<T>[] | undefined> | undefined {
+    return this._resourcesById().get(key);
+  }
+
+  public set(ids: unknown[], resource: ResourceRef<SciTableCacheRow<T>[] | undefined>): void {
+    this._resourcesById.update(cache => {
+      const newCache = new Map(cache);
+      for (const id of ids) {
+        newCache.set(id, resource);
+      }
+      return newCache;
+    });
+  }
+
+  public deleteIfLoading(ids: unknown[]): void {
+    this._resourcesById.update(cache => {
+      const cacheCopy = new Map(cache);
+      let previousResource: ResourceRef<SciTableCacheRow<T>[] | undefined> | undefined = undefined;
+      for (const id of ids) {
+        const existing = cacheCopy.get(id);
+        // Remove all cache entries pointing to the same resource.
+        if (existing && (existing === previousResource || existing.isLoading())) {
+          previousResource = existing;
+          cacheCopy.delete(id);
+          existing.destroy();
+        }
+      }
+
+      return cacheCopy;
+    });
+  }
+
+  public clear(): void {
+    this._resourcesById.update(cache => {
+      for (const entry of new Set(cache.values())) {
+        entry.value()?.forEach(row => {
+          row.childrenCache.clear();
+        });
+        entry.destroy();
+      }
+      return new Map();
+    });
+  }
+}
 
 export class SciTableCache<T> {
 
@@ -83,7 +156,7 @@ export class SciTableCache<T> {
     return this.values()
       .flatMap(entry => entry.page.status() === 'error' ? [] : entry.page.value()?.rows ?? [])
       .filter(row => row.expanded())
-      .reduce((visibleCount, row) => visibleCount + (row.childrenCache.totalCount() ?? 0), totalCount);
+      .reduce((visibleCount, row) => visibleCount, totalCount);
   });
 
   constructor(public readonly isRoot: boolean = false) {}
@@ -150,12 +223,12 @@ export class SciTableCache<T> {
       }
 
       rowsByIndex.set(indexOffset, row);
-      if (row.expanded()) {
-        // `projectRows` adds the child rows directly into the map.
-        const childRows = row.childrenCache.projectRows(rowsByIndex, indexOffset + 1);
-        // Subtract one from new offset, since it's increased in the loop.
-        indexOffset = childRows.indexOffset - 1;
-      }
+      // if (row.expanded()) {
+      //   // `projectRows` adds the child rows directly into the map.
+      //   const childRows = row.childrenCache.projectRows(rowsByIndex, indexOffset + 1);
+      //   // Subtract one from new offset, since it's increased in the loop.
+      //   indexOffset = childRows.indexOffset - 1;
+      // }
     }
 
     return {rowsByIndex, indexOffset};
@@ -180,13 +253,12 @@ export interface SciTableCacheEntry<T> {
 }
 
 export interface SciTableCacheRow<T> extends SciTableRow<T> {
-  childrenCache: SciTableCache<T>;
+  childrenCache: SciTableCacheNew<T>;
 }
 
-export interface TablePage<T> {
-  cache: SciTableCache<T>;
-  parent?: SciTableCacheRow<T>;
-  page: number;
+export interface TableBatch<T> {
+  parent?: unknown;
+  ids: unknown[];
 }
 
 type SciTableCacheKey = `${number}-${number}`;

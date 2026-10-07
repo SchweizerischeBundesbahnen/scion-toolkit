@@ -8,13 +8,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
+import {SciTableColumnFilter, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion, SciTableTreeNode, SciTableIdsRequest} from '@scion/components/table';
 import {computed, Service, Signal, signal} from '@angular/core';
 import {defer, Observable, timer} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
-import {OperatorGroup, Vehicle, VehicleOrOperator} from './vehicle.model';
+import {isVehicle, OperatorGroup, Vehicle, VehicleOrOperator} from './vehicle.model';
 
 @Service()
 export class VehicleService {
@@ -31,6 +31,7 @@ export class VehicleService {
     operator,
     kind: 'operator',
     averageMaxSpeedKmh: Math.round(vehicles.reduce((sum, vehicle) => sum + vehicle.maxSpeedKmh, 0) / vehicles.length),
+    children: vehicles,
   })));
 
   public updateVehicle(vehicle: Vehicle): void {
@@ -66,44 +67,84 @@ export class VehicleService {
     });
   }
 
-  public getGroupedVehicles$(request: SciTablePageRequest): Observable<SciTablePageResponse<VehicleOrOperator>> {
+  public getItems$(ids: unknown[]): Observable<Vehicle[]> {
+    const items = computed(() => {
+      const vehicles = this.vehicles();
+      return ids
+        .map(id => vehicles.find(vehicle => vehicle.id === id))
+        .filter((vehicle): vehicle is Vehicle => !!vehicle);
+    });
+
+    const items$ = toObservable(items);
+    return defer(() => timer(1000)).pipe(
+      switchMap(() => items$),
+    );
+  }
+
+  public getTreeItems$(parent: VehicleOrOperator | undefined, ids: unknown[]): Observable<VehicleOrOperator[]> {
+    const items = computed(() => {
+      const vehicles = this.vehicles();
+      const operators = Vehicles.getOperators(Vehicles.groupByOperator(vehicles));
+
+      return ids
+        .map(id => String(id).startsWith('operator:') ?
+          operators.find(operator => operator.operator === String(id).slice(9)) :
+          vehicles.find(vehicle => vehicle.id === id))
+        .filter((item): item is VehicleOrOperator => item !== undefined);
+    });
+
+    const items$ = toObservable(items);
+
+    return defer(() => timer(1000)).pipe(
+      switchMap(() => items$),
+    );
+  }
+
+  // public getGroupedVehicles$(request: SciTableIdsRequest): Observable<SciTableTreeNode<unknown>[]> {
+  //   return this.getFilteredAndSortedVehicles$(request)
+  //     .pipe(
+  //       map(vehicles => Vehicles.groupByOperator(vehicles)),
+  //       map(byOperator => Vehicles.getOperators(byOperator)),
+  //       map(operators => operators.reduce((nodes, item) => {
+  //         const id = isVehicle(item) ? item.id : `operator:${item.operator}`;
+  //         if (isVehicle(item)) {
+  //           const parentId = `operator:${item.operator}`;
+  //           const parentIndex = nodes.findIndex(operator => operator.item === parentId);
+  //           const parent = nodes[parentIndex] ?? ({item: parentId, children: []});
+  //           parent.children!.push({item: id});
+  //           nodes.splice(parentIndex, 1, parent);
+  //         }
+  //         else {
+  //           nodes.push({item: id});
+  //         }
+  //         return nodes;
+  //       }, new Array<SciTableTreeNode<unknown>>())),
+  //     );
+  // }
+  //
+  // public getOperatorChildren$(item: OperatorGroup, request: SciTablePageRequest): Observable<SciTablePageResponse<Vehicle>> {
+  //   const vehicles$ = toObservable(this.vehicles);
+  //   return defer(() => timer(1000))
+  //     .pipe(
+  //       switchMap(() => vehicles$),
+  //       map(vehicles => Vehicles.groupByOperator(vehicles).get(item.operator) ?? []),
+  //       map(vehicles => Vehicles.filter(vehicles, request.columnFilters, request.tableFilter)),
+  //       map(vehicles => Vehicles.sort(vehicles, request.sortCriteria)),
+  //       map(vehicles => ({
+  //         items: vehicles.slice(request.start, request.end),
+  //         totalCount: vehicles.length,
+  //       })),
+  //     );
+  // }
+
+  public getVehicles$(request: SciTableIdsRequest): Observable<unknown[]> {
     return this.getFilteredAndSortedVehicles$(request)
       .pipe(
-        map(vehicles => Vehicles.groupByOperator(vehicles)),
-        map(byOperator => Vehicles.getOperators(byOperator)),
-        map(operators => ({
-          items: operators.slice(request.start, request.end),
-          totalCount: operators.length,
-        })),
+        map(vehicles => vehicles.map(v => v.id)),
       );
   }
 
-  public getOperatorChildren$(item: OperatorGroup, request: SciTablePageRequest): Observable<SciTablePageResponse<Vehicle>> {
-    const vehicles$ = toObservable(this.vehicles);
-    return defer(() => timer(1000))
-      .pipe(
-        switchMap(() => vehicles$),
-        map(vehicles => Vehicles.groupByOperator(vehicles).get(item.operator) ?? []),
-        map(vehicles => Vehicles.filter(vehicles, request.columnFilters, request.tableFilter)),
-        map(vehicles => Vehicles.sort(vehicles, request.sortCriteria)),
-        map(vehicles => ({
-          items: vehicles.slice(request.start, request.end),
-          totalCount: vehicles.length,
-        })),
-      );
-  }
-
-  public getVehicles$(request: SciTablePageRequest): Observable<SciTablePageResponse<Vehicle>> {
-    return this.getFilteredAndSortedVehicles$(request)
-      .pipe(
-        map(vehicles => ({
-          items: vehicles.slice(request.start, request.end),
-          totalCount: vehicles.length,
-        })),
-      );
-  }
-
-  private getFilteredAndSortedVehicles$(request: SciTablePageRequest): Observable<Vehicle[]> {
+  private getFilteredAndSortedVehicles$(request: SciTableIdsRequest): Observable<Vehicle[]> {
     const vehicles$ = toObservable(this.vehicles);
     return defer(() => timer(1000))
       .pipe(
@@ -253,6 +294,7 @@ export namespace Vehicles {
       operator,
       kind: 'operator',
       averageMaxSpeedKmh: Math.round(vehicles.reduce((sum, vehicle) => sum + vehicle.maxSpeedKmh, 0) / vehicles.length),
+      children: vehicles,
     }));
   }
 }
