@@ -10,13 +10,18 @@
 
 import {TestBed} from '@angular/core/testing';
 import {table, table as sciTable} from './table.factory';
-import {assertNotInReactiveContext, Component, computed, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
+import {assertNotInReactiveContext, Component, computed, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
 import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {provideTableRowBinding} from './table-row-binding';
 import {SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, ɵillegaldatasource} from './table-datasource';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
+import {SciTableCellValuePreloader} from './table-cell-value-preloader';
+import {registerLocaleData} from '@angular/common';
+import localeDeCH from '@angular/common/locales/de-CH';
+import localeEnCH from '@angular/common/locales/en-CH';
+import {SCI_LOCALE} from '@scion/components/common';
 
 describe('Table', () => {
 
@@ -157,6 +162,327 @@ describe('Table', () => {
         expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
       });
     });
+
+    describe('Date Column', () => {
+
+      it('should support different date input formats', async () => {
+        const data = signal([
+          {
+            date1: '2026-02-17',
+            date2: new Date('2026-02-17'),
+            date3: new Date('2026-02-17').getTime(),
+            date4: '2026-02-17T20:00:00.000Z',
+          },
+        ]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addDateColumn({
+              value: item => item.date1,
+              format: 'dd.MM.yyyy',
+            })
+            .addDateColumn({
+              value: item => item.date2,
+              format: 'dd.MM.yyyy',
+            })
+            .addDateColumn({
+              value: item => item.date3,
+              format: 'dd.MM.yyyy',
+            })
+            .addDateColumn({
+              value: item => item.date4,
+              format: 'dd.MM.yyyy',
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['17.02.2026', '17.02.2026', '17.02.2026', '17.02.2026'],
+        ]);
+      });
+
+      it('should display date in specified format', async () => {
+        const data = signal([{date: '2026-02-17'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addDateColumn(item => item.date)
+            .addDateColumn({
+              value: item => item.date,
+              format: 'dd.MM.yyyy',
+            })
+            .addDateColumn({
+              value: item => item.date,
+              format: 'yyyy-MM-dd',
+            })
+            .addDateColumn({
+              value: item => item.date,
+              format: 'longDate',
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Feb 17, 2026', '17.02.2026', '2026-02-17', 'February 17, 2026'],
+        ]);
+      });
+
+      it('should localize date', async () => {
+        TestBed.overrideProvider(LOCALE_ID, {useValue: 'de-CH'});
+        registerLocaleData(localeDeCH);
+        registerLocaleData(localeEnCH);
+
+        const locale = TestBed.inject(SCI_LOCALE);
+        const columnLocale = linkedSignal(locale);
+
+        const data = signal([{date: '2026-02-17'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addDateColumn({
+              value: item => item.date,
+              format: 'longDate',
+            })
+            .addDateColumn({
+              value: item => item.date,
+              format: 'fullDate',
+              locale: columnLocale,
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['17. Februar 2026', 'Dienstag, 17. Februar 2026'],
+        ]);
+
+        // Expect global locale to be 'de-CH'.
+        expect(locale()).toEqual('de-CH');
+
+        // Change global locale to 'en-US'.
+        locale.set('en-US');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['February 17, 2026', 'Tuesday, February 17, 2026'],
+        ]);
+
+        // Change column locale to 'en-CH'.
+        columnLocale.set('en-CH');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['February 17, 2026', 'Tuesday, 17 February 2026'],
+        ]);
+      });
+
+      it('should default to DATE_PIPE_DEFAULT_OPTIONS.dateFormat', async () => {
+        TestBed.overrideProvider(DATE_PIPE_DEFAULT_OPTIONS, {useValue: {dateFormat: 'dd.MM.yyyy'} satisfies DatePipeConfig});
+
+        const data = signal([{date: '2026-02-17'}]);
+
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addDateColumn(item => item.date),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['17.02.2026'],
+        ]);
+      });
+    });
+
+    describe('Time Column', () => {
+
+      it('should support different time input formats', async () => {
+        const data = signal([
+          {
+            time1: '16:20:45Z',
+            time2: 'T16:20:45Z',
+            time3: '2026-02-17T16:20:45Z',
+            time4: new Date('2026-02-17T16:20:45Z'),
+            time5: new Date('2026-02-17T16:20:45Z').getTime(),
+          },
+        ]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addDateColumn({
+              value: item => item.time1,
+              format: 'HH:mm:ss',
+              timezone: 'UTC',
+            })
+            .addDateColumn({
+              value: item => item.time2,
+              format: 'HH:mm:ss',
+              timezone: 'UTC',
+            })
+            .addDateColumn({
+              value: item => item.time3,
+              format: 'HH:mm:ss',
+              timezone: 'UTC',
+            })
+            .addDateColumn({
+              value: item => item.time4,
+              format: 'HH:mm:ss',
+              timezone: 'UTC',
+            })
+            .addDateColumn({
+              value: item => item.time5,
+              format: 'HH:mm:ss',
+              timezone: 'UTC',
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['16:20:45', '16:20:45', '16:20:45', '16:20:45', '16:20:45'],
+        ]);
+      });
+
+      it('should display time in specified format', async () => {
+        const data = signal([{time: 'T16:20:45Z'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addDateColumn({
+              value: item => item.time,
+              format: 'HH:mm',
+              timezone: 'UTC',
+            })
+            .addDateColumn({
+              value: item => item.time,
+              format: 'HH:mm:ss',
+              timezone: 'UTC',
+            })
+            .addDateColumn({
+              value: item => item.time,
+              format: 'shortTime',
+              timezone: 'UTC',
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['16:20', '16:20:45', '4:20 PM'],
+        ]);
+      });
+
+      it('should localize time', async () => {
+        TestBed.overrideProvider(LOCALE_ID, {useValue: 'de-CH'});
+        registerLocaleData(localeDeCH);
+        registerLocaleData(localeEnCH);
+
+        const locale = TestBed.inject(SCI_LOCALE);
+        const columnLocale = linkedSignal(locale);
+
+        const data = signal([{time: 'T16:20:45Z'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addDateColumn({
+              value: item => item.time,
+              format: 'longTime',
+              timezone: 'UTC',
+            })
+            .addDateColumn({
+              value: item => item.time,
+              format: 'fullTime',
+              locale: columnLocale,
+              timezone: 'UTC',
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['16:20:45 GMT+0', '16:20:45 GMT+00:00'],
+        ]);
+
+        // Expect global locale to be 'de-CH'.
+        expect(locale()).toEqual('de-CH');
+
+        // Change global locale to 'en-US'.
+        locale.set('en-US');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['4:20:45 PM GMT+0', '4:20:45 PM GMT+00:00'],
+        ]);
+
+        // Change column locale to 'en-CH'.
+        columnLocale.set('en-CH');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['4:20:45 PM GMT+0', '16:20:45 GMT+00:00'],
+        ]);
+      });
+
+      it('should display time in specified timezone', async () => {
+        const data = signal([{time: 'T16:20:45Z'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addDateColumn({
+              value: item => item.time,
+              format: 'HH:mm:ss',
+              timezone: '+0000',
+            })
+            .addDateColumn({
+              value: item => item.time,
+              format: 'HH:mm:ss',
+              timezone: '+0100',
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['16:20:45', '17:20:45'],
+        ]);
+      });
+
+      it('should default to DATE_PIPE_DEFAULT_OPTIONS.timezone', async () => {
+        TestBed.overrideProvider(DATE_PIPE_DEFAULT_OPTIONS, {useValue: {timezone: '+0500'} satisfies DatePipeConfig});
+
+        const data = signal([{time: 'T16:20:45Z'}]);
+
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addDateColumn({
+            value: item => item.time,
+            format: 'HH:mm:ss',
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['21:20:45'],
+        ]);
+      });
+    });
   });
 
   describe('Column Resize', () => {
@@ -293,10 +619,38 @@ describe('Table', () => {
       expect(table.columns).toHaveSize(2);
     });
 
+    it('should be in state loading while preloading cell values', async () => {
+      const preloader = new class implements SciTableCellValuePreloader {
+        public readonly loading = signal(false);
+        public readonly queue = noop;
+      }();
+      TestBed.overrideProvider(SciTableCellValuePreloader, {useValue: preloader});
+
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: signal([]),
+        columns: table => table,
+        injector: TestBed.inject(Injector),
+      }));
+      const table = new TablePO(fixture);
+
+      // Simulate preloading cell values.
+      preloader.loading.set(true);
+      await fixture.whenStable();
+      expect(model.loading()).toEqual(true);
+      expect(table.loadingIndicator).toBeDefined();
+
+      // Simulate completed preloading cell values.
+      preloader.loading.set(false);
+      await fixture.whenStable();
+
+      expect(model.loading()).toEqual(false);
+      expect(table.loadingIndicator).toBeNull();
+    });
+
     describe('Sorting', () => {
 
       it('should be sortable (defaults)', async () => {
-        const data = signal(new Array<{string: string; number: number; boolean: boolean}>());
+        const data = signal(new Array<{string: string; number: number; boolean: boolean; date: string}>());
         const templateFixture = TestBed.createComponent(CustomColumnTemplateProviderComponent);
 
         const {fixture, model} = createSciTableComponent(sciTable({
@@ -313,6 +667,10 @@ describe('Table', () => {
             .addBooleanColumn({
               name: 'column:boolean',
               value: item => item.boolean,
+            })
+            .addDateColumn({
+              name: 'column:date',
+              value: item => item.date,
             })
             .addComponentColumn({
               name: 'column:component',
@@ -351,6 +709,7 @@ describe('Table', () => {
         expect(table.column({name: 'column:string'})!.sortable).toBeTrue();
         expect(table.column({name: 'column:number'})!.sortable).toBeTrue();
         expect(table.column({name: 'column:boolean'})!.sortable).toBeTrue();
+        expect(table.column({name: 'column:date'})!.sortable).toBeTrue();
         expect(table.column({name: 'column:component'})!.sortable).toBeFalse();
         expect(table.column({name: 'column:template'})!.sortable).toBeFalse();
         expect(table.column({name: 'column:component-sortable'})!.sortable).toBeTrue();
@@ -363,6 +722,7 @@ describe('Table', () => {
         expect(table.column({name: 'column:string'})!.sortable).toBeFalse();
         expect(table.column({name: 'column:number'})!.sortable).toBeFalse();
         expect(table.column({name: 'column:boolean'})!.sortable).toBeFalse();
+        expect(table.column({name: 'column:date'})!.sortable).toBeFalse();
         expect(table.column({name: 'column:component'})!.sortable).toBeFalse();
         expect(table.column({name: 'column:template'})!.sortable).toBeFalse();
         expect(table.column({name: 'column:component-sortable'})!.sortable).toBeFalse();
@@ -390,6 +750,9 @@ describe('Table', () => {
 
         await column.toggleSort();
         expect(await column.values()).toEqual(['c', 'b', 'a']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['b', 'c', 'a']);
       });
 
       it('should sort number column', async () => {
@@ -412,6 +775,9 @@ describe('Table', () => {
 
         await column.toggleSort();
         expect(await column.values()).toEqual(['3', '2', '1']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['1', '3', '2']);
       });
 
       it('should sort boolean column', async () => {
@@ -434,6 +800,137 @@ describe('Table', () => {
 
         await column.toggleSort();
         expect(await column.values()).toEqual(['checkmark', 'checkmark', 'clear']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['checkmark', 'clear', 'checkmark']);
+      });
+
+      it('should sort date column', async () => {
+        const date1 = new Date('2026-05-30').getTime();
+        const date2 = new Date('2026-06-15');
+        const date3 = '2025-04-15';
+        const date4 = '2026-02-17T08:16:00.000Z';
+        const date5 = '2026-10-04T11:54:43+02:00';
+
+        const data = signal([{date: date1}, {date: date2}, {date: date3}, {date: date4}, {date: date5}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addDateColumn({
+            name: 'column:date',
+            value: item => item.date,
+            format: 'dd.MM.yyyy',
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:date'})!;
+        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '04.10.2026']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['15.04.2025', '17.02.2026', '30.05.2026', '15.06.2026', '04.10.2026']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['04.10.2026', '15.06.2026', '30.05.2026', '17.02.2026', '15.04.2025']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '04.10.2026']);
+      });
+
+      it('should sort time column', async () => {
+        const data = signal([
+          {row: '1', time: '2025-02-20T08:16:43Z'},
+          {row: '2', time: 'T11:55:29+02:00'},
+          {row: '3', time: '15:15:08Z'},
+          {row: '4', time: 'T15:15:08Z'},
+          {row: '5', time: '2025-02-17T10:16:43Z'},
+          {row: '6', time: '2025-02-17T09:16:43Z'},
+          {row: '7', time: '2025-02-17T09:16:43.000Z'},
+          {row: '8', time: '2025-02-17T09:15:43Z'},
+          {row: '9', time: '2024-02-17T09:15:43Z'},
+          {row: '10', time: '2024-10-13:20:00+02:00'},
+        ]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+            })
+            .addDateColumn({
+              name: 'column:time',
+              value: item => item.time,
+              format: 'HH:mm:ss',
+              timezone: 'UTC',
+            })
+            .addStringColumn({
+              name: 'column:string',
+              value: item => item.time,
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:time'})!;
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '08:16:43', '2025-02-20T08:16:43Z'],
+          ['2', '09:55:29', 'T11:55:29+02:00'],
+          ['3', '15:15:08', '15:15:08Z'],
+          ['4', '15:15:08', 'T15:15:08Z'],
+          ['5', '10:16:43', '2025-02-17T10:16:43Z'],
+          ['6', '09:16:43', '2025-02-17T09:16:43Z'],
+          ['7', '09:16:43', '2025-02-17T09:16:43.000Z'],
+          ['8', '09:15:43', '2025-02-17T09:15:43Z'],
+          ['9', '09:15:43', '2024-02-17T09:15:43Z'],
+          ['10', '18:00:00', '2024-10-13:20:00+02:00'],
+        ]);
+
+        await column.toggleSort();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', '09:55:29', 'T11:55:29+02:00'],
+          ['3', '15:15:08', '15:15:08Z'],
+          ['4', '15:15:08', 'T15:15:08Z'],
+          ['9', '09:15:43', '2024-02-17T09:15:43Z'],
+          ['10', '18:00:00', '2024-10-13:20:00+02:00'],
+          ['8', '09:15:43', '2025-02-17T09:15:43Z'],
+          ['6', '09:16:43', '2025-02-17T09:16:43Z'],
+          ['7', '09:16:43', '2025-02-17T09:16:43.000Z'],
+          ['5', '10:16:43', '2025-02-17T10:16:43Z'],
+          ['1', '08:16:43', '2025-02-20T08:16:43Z'],
+        ]);
+
+        await column.toggleSort();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '08:16:43', '2025-02-20T08:16:43Z'],
+          ['5', '10:16:43', '2025-02-17T10:16:43Z'],
+          ['6', '09:16:43', '2025-02-17T09:16:43Z'],
+          ['7', '09:16:43', '2025-02-17T09:16:43.000Z'],
+          ['8', '09:15:43', '2025-02-17T09:15:43Z'],
+          ['10', '18:00:00', '2024-10-13:20:00+02:00'],
+          ['9', '09:15:43', '2024-02-17T09:15:43Z'],
+          ['3', '15:15:08', '15:15:08Z'],
+          ['4', '15:15:08', 'T15:15:08Z'],
+          ['2', '09:55:29', 'T11:55:29+02:00'],
+        ]);
+
+        await column.toggleSort();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '08:16:43', '2025-02-20T08:16:43Z'],
+          ['2', '09:55:29', 'T11:55:29+02:00'],
+          ['3', '15:15:08', '15:15:08Z'],
+          ['4', '15:15:08', 'T15:15:08Z'],
+          ['5', '10:16:43', '2025-02-17T10:16:43Z'],
+          ['6', '09:16:43', '2025-02-17T09:16:43Z'],
+          ['7', '09:16:43', '2025-02-17T09:16:43.000Z'],
+          ['8', '09:15:43', '2025-02-17T09:15:43Z'],
+          ['9', '09:15:43', '2024-02-17T09:15:43Z'],
+          ['10', '18:00:00', '2024-10-13:20:00+02:00'],
+        ]);
       });
 
       it('should sort string column with custom sort comparator', async () => {
@@ -522,7 +1019,7 @@ describe('Table', () => {
     describe('Filtering (per Column)', () => {
 
       it('should be filterable (defaults)', async () => {
-        const data = signal(new Array<{string: string; number: number; boolean: boolean}>());
+        const data = signal(new Array<{string: string; number: number; boolean: boolean; date: string}>());
         const templateFixture = TestBed.createComponent(CustomColumnTemplateProviderComponent);
 
         const {fixture, model} = createSciTableComponent(sciTable({
@@ -539,6 +1036,10 @@ describe('Table', () => {
             .addBooleanColumn({
               name: 'column:boolean',
               value: item => item.boolean,
+            })
+            .addDateColumn({
+              name: 'column:date',
+              value: item => item.date,
             })
             .addComponentColumn({
               name: 'column:component',
@@ -577,6 +1078,7 @@ describe('Table', () => {
         expect(table.column({name: 'column:string'})!.filterable).toBeFalse();
         expect(table.column({name: 'column:number'})!.filterable).toBeFalse();
         expect(table.column({name: 'column:boolean'})!.filterable).toBeFalse();
+        expect(table.column({name: 'column:date'})!.filterable).toBeFalse();
         expect(table.column({name: 'column:component'})!.filterable).toBeFalse();
         expect(table.column({name: 'column:template'})!.filterable).toBeFalse();
         expect(table.column({name: 'column:component-filterable'})!.filterable).toBeFalse();
@@ -589,6 +1091,7 @@ describe('Table', () => {
         expect(table.column({name: 'column:string'})!.filterable).toBeTrue();
         expect(table.column({name: 'column:number'})!.filterable).toBeTrue();
         expect(table.column({name: 'column:boolean'})!.filterable).toBeTrue();
+        expect(table.column({name: 'column:date'})!.filterable).toBeTrue();
         expect(table.column({name: 'column:component'})!.filterable).toBeTrue();
         expect(table.column({name: 'column:template'})!.filterable).toBeTrue();
         expect(table.column({name: 'column:component-filterable'})!.filterable).toBeTrue();
@@ -662,6 +1165,52 @@ describe('Table', () => {
 
         await column.filter(null);
         expect(await column.values()).toEqual(['checkmark', 'clear', 'checkmark']);
+      });
+
+      it('should filter date column', async () => {
+        const date1 = new Date('2026-05-30').getTime();
+        const date2 = new Date('2026-06-15');
+        const date3 = '2025-04-15';
+        const date4 = '2026-02-17T08:16:00.000Z';
+        const date5 = '2026-10-04T11:54:43+02:00';
+
+        const data = signal([{date: date1}, {date: date2}, {date: date3}, {date: date4}, {date: date5}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addDateColumn({
+            name: 'column:date',
+            value: item => item.date,
+            format: 'dd.MM.yyyy',
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:date'})!;
+        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '04.10.2026']);
+
+        await column.filter('2026');
+        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '17.02.2026', '04.10.2026']);
+
+        await column.filter('2025');
+        expect(await column.values()).toEqual(['15.04.2025']);
+
+        await column.filter('15.06.2026');
+        expect(await column.values()).toEqual(['15.06.2026']);
+
+        await column.filter('11:54:43'); // Time of date 5 (not displayed)
+        expect(await column.values()).toEqual([]);
+
+        await column.filter('06');
+        expect(await column.values()).toEqual(['15.06.2026']);
+
+        await column.filter('15');
+        expect(await column.values()).toEqual(['15.06.2026', '15.04.2025']);
+
+        await column.filter('');
+        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '04.10.2026']);
       });
 
       it('should filter string column with custom filter matcher', async () => {
@@ -804,7 +1353,7 @@ describe('Table', () => {
 
     describe('Filtering (per Table)', () => {
 
-      it('should filter string column when using a global filter', async () => {
+      it('should filter string column using a global filter', async () => {
         const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
@@ -854,7 +1403,7 @@ describe('Table', () => {
         ]);
       });
 
-      it('should filter number column when using a global filter', async () => {
+      it('should filter number column using a global filter', async () => {
         const data = signal([{row: '1', number: 0}, {row: '2', number: 1}, {row: '3', number: 10}, {row: '4', number: 11}]);
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
@@ -907,7 +1456,7 @@ describe('Table', () => {
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
       });
 
-      it('should filter boolean column when using a global filter', async () => {
+      it('should filter boolean column using a global filter', async () => {
         const data = signal([{row: '1', boolean: true}, {row: '2', boolean: false}, {row: '3', boolean: true}, {row: '4', boolean: false}]);
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
@@ -960,7 +1509,92 @@ describe('Table', () => {
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
       });
 
-      it('should filter component column when using a global filter (without comparator)', async () => {
+      it('should filter date column using a global filter', async () => {
+        const date1 = new Date('2026-05-30').getTime();
+        const date2 = new Date('2026-06-15');
+        const date3 = '2025-04-15';
+        const date4 = '2026-02-17T08:16:00.000Z';
+        const date5 = '2026-10-04T11:54:43+02:00';
+
+        const data = signal([{row: '1', date: date1}, {row: '2', date: date2}, {row: '3', date: date3}, {row: '4', date: date4}, {row: '5', date: date5}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addDateColumn({
+              name: 'column:date',
+              value: item => item.date,
+              format: 'dd.MM.yyyy',
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '30.05.2026'],
+          ['2', '15.06.2026'],
+          ['3', '15.04.2025'],
+          ['4', '17.02.2026'],
+          ['5', '04.10.2026'],
+        ]);
+
+        model.filter('2026');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '30.05.2026'],
+          ['2', '15.06.2026'],
+          ['4', '17.02.2026'],
+          ['5', '04.10.2026'],
+        ]);
+
+        model.filter('2025');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['3', '15.04.2025'],
+        ]);
+
+        model.filter('15.06.2026');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', '15.06.2026'],
+        ]);
+
+        model.filter('11:54:43');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
+
+        model.filter('06');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', '15.06.2026'],
+        ]);
+
+        model.filter('15');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['2', '15.06.2026'],
+          ['3', '15.04.2025'],
+        ]);
+
+        model.filter('');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '30.05.2026'],
+          ['2', '15.06.2026'],
+          ['3', '15.04.2025'],
+          ['4', '17.02.2026'],
+          ['5', '04.10.2026'],
+        ]);
+      });
+
+      it('should filter component column using a global filter (without comparator)', async () => {
         const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
@@ -992,7 +1626,7 @@ describe('Table', () => {
         ]);
       });
 
-      it('should filter component column when using a global filter (with comparator)', async () => {
+      it('should filter component column using a global filter (with comparator)', async () => {
         const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
@@ -1023,7 +1657,7 @@ describe('Table', () => {
         ]);
       });
 
-      it('should filter template column when using a global filter (without comparator)', async () => {
+      it('should filter template column using a global filter (without comparator)', async () => {
         const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
 
         const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
@@ -1054,7 +1688,7 @@ describe('Table', () => {
         ]);
       });
 
-      it('should filter template column when using a global filter (with comparator)', async () => {
+      it('should filter template column using a global filter (with comparator)', async () => {
         const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
 
         const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}]);
@@ -1084,7 +1718,7 @@ describe('Table', () => {
         ]);
       });
 
-      it('should filter cross-column when using a global filter', async () => {
+      it('should filter cross-column using a global filter', async () => {
         const data = signal([
           {row: '1', string: 'alpha', number: 2, boolean: true},
           {row: '2', string: 'beta', number: 1, boolean: false},
@@ -1185,7 +1819,7 @@ describe('Table', () => {
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
       });
 
-      it('should call custom column filter matcher when using a global filter', async () => {
+      it('should call custom column filter matcher using a global filter', async () => {
         const data = signal([{string: 'alpha'}, {string: 'beta'}, {string: 'gamma'}]);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
@@ -2128,6 +2762,257 @@ describe('Table', () => {
       await table.waitUntilStable();
       expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({sortCriteria: []}));
       loader.calls.reset();
+    });
+
+    describe('Filtering', () => {
+
+      it('should filter string column', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{string: string}> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<{string: string}>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addStringColumn({
+            name: 'column:string',
+            value: item => item.string,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:string'})!;
+        loader.calls.reset();
+
+        await column.filter('abc');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:string', text: 'abc'},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter('');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
+      it('should filter number column', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{number: number}> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<{number: number}>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addNumberColumn({
+            name: 'column:number',
+            value: item => item.number,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:number'})!;
+        loader.calls.reset();
+
+        await column.filter(123);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:number', text: 123},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
+      it('should filter boolean column', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{boolean: boolean}> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<{boolean: boolean}>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addBooleanColumn({
+            name: 'column:boolean',
+            value: item => item.boolean,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:boolean'})!;
+        loader.calls.reset();
+
+        await column.filter(true);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:boolean', text: true},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
+      it('should filter date column', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{date: Date}> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<{date: Date}>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addDateColumn({
+            name: 'column:date',
+            value: item => item.date,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:date'})!;
+        loader.calls.reset();
+
+        await column.filter('04.10.2026');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:date', text: '04.10.2026'},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
+      it('should filter component column', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<string> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<string>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addComponentColumn({
+            name: 'column:component',
+            filterable: true,
+            component: item => ({
+              component: CustomColumnComponent,
+              bindings: [inputBinding('value', () => item)],
+            }),
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:component'})!;
+        loader.calls.reset();
+
+        await column.filter('abc');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:component', text: 'abc'},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
+      it('should filter template column', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<string> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<string>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addTemplateColumn({
+            name: 'column:template',
+            filterable: true,
+            template: () => ({template}),
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:template'})!;
+        loader.calls.reset();
+
+        await column.filter('abc');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:template', text: 'abc'},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
+      it('should pass global filter', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<unknown> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture, model} = createSciTableComponent(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table,
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        loader.calls.reset();
+
+        model.filter('abc');
+        await table.waitUntilStable();
+
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          tableFilter: 'abc',
+        }));
+        loader.calls.reset();
+
+        model.filter(null);
+        await table.waitUntilStable();
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          tableFilter: undefined,
+        }));
+      });
     });
   });
 

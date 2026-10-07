@@ -13,6 +13,7 @@ import {provideRouter, withHashLocation} from '@angular/router';
 import {provideAnimations} from '@angular/platform-browser/animations';
 import {routes} from './app.routes';
 import {provideTableStorage} from './sci-table-page/sci-table-storage.provider';
+import {provideLocales} from './app.locales';
 
 /**
  * Central place to configure the application.
@@ -22,5 +23,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withHashLocation()),
     provideAnimations(),
     provideTableStorage(localStorage),
+    provideLocales(),
   ],
 };

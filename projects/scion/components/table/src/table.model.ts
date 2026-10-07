@@ -10,13 +10,14 @@
 
 import {Injector, Signal, WritableSignal} from '@angular/core';
 import {SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
-import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
+import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
 import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
+import {SciDateValue} from './table-date-column.model';
 
-export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'component' | 'template';
+export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'component' | 'template';
 
 export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
 
@@ -117,11 +118,6 @@ export interface SciTable<T> {
   filter(text: string | null): void;
 }
 
-export interface SciTableCellContext<T = unknown, VALUE = unknown> {
-  item: T;
-  value: VALUE;
-}
-
 export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
   type: SciTableColumnType;
   name: `column:${string}`;
@@ -138,42 +134,49 @@ export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
   matches: SciTableColumnFilterMatcherFn<T, VALUE, FILTER>;
 }
 
-export interface SciStringColumn<T> extends SciTableColumn<T, string> {
+export interface SciStringColumn<T = unknown> extends SciTableColumn<T, string> {
   type: 'string';
-  value: (item: T) => MaybeSignal<string>;
+  value: (item: T) => Signal<string>;
   compare: SciTableColumnSortComparatorFn<T, string>;
   matches: SciTableColumnFilterMatcherFn<T, string>;
 }
 
-export interface SciNumberColumn<T> extends SciTableColumn<T, number> {
+export interface SciNumberColumn<T = unknown> extends SciTableColumn<T, number> {
   type: 'number';
-  value: (item: T) => MaybeSignal<number>;
+  value: (item: T) => Signal<number>;
   compare: SciTableColumnSortComparatorFn<T, number>;
   matches: SciTableColumnFilterMatcherFn<T, number>;
 }
 
-export interface SciBooleanColumn<T> extends SciTableColumn<T, boolean> {
+export interface SciBooleanColumn<T = unknown> extends SciTableColumn<T, boolean> {
   type: 'boolean';
-  value: (item: T) => MaybeSignal<boolean>;
+  value: (item: T) => Signal<boolean>;
   compare: SciTableColumnSortComparatorFn<T, boolean>;
   matches: SciTableColumnFilterMatcherFn<T, boolean>;
 }
 
-export interface SciComponentColumn<T> extends SciTableColumn<T, void, string> {
+export interface SciDateColumn<T = unknown> extends SciTableColumn<T, SciDateValue, string> {
+  type: 'date';
+  value: (item: T) => Signal<SciDateValue>;
+  compare: SciTableColumnSortComparatorFn<T, SciDateValue>;
+  matches: SciTableColumnFilterMatcherFn<T, SciDateValue, string>;
+}
+
+export interface SciComponentColumn<T = unknown> extends SciTableColumn<T, void, string> {
   type: 'component';
   component: (item: T) => SciComponentDescriptor;
   compare: SciTableColumnSortComparatorFn<T, void>;
   matches: SciTableColumnFilterMatcherFn<T, void, string>;
 }
 
-export interface SciTemplateColumn<T> extends SciTableColumn<T, void, string> {
+export interface SciTemplateColumn<T = unknown> extends SciTableColumn<T, void, string> {
   type: 'template';
   template: (item: T) => SciTemplateDescriptor;
   compare: SciTableColumnSortComparatorFn<T, void>;
   matches: SciTableColumnFilterMatcherFn<T, void, string>;
 }
 
-export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
+export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciDateColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
 
 /**
  * Mapped row, used as display state.
@@ -192,35 +195,46 @@ export interface SciTableRow<T> {
 
 export interface SciStringCell {
   type: 'string';
-  column: SciTableColumnLike;
+  column: SciStringColumn;
   value: Signal<string>;
 }
 
 export interface SciNumberCell {
   type: 'number';
-  column: SciTableColumnLike;
+  column: SciNumberColumn;
   value: Signal<number>;
 }
 
 export interface SciBooleanCell {
   type: 'boolean';
-  column: SciTableColumnLike;
+  column: SciBooleanColumn;
   value: Signal<boolean>;
+}
+
+export interface SciDateCell {
+  type: 'date';
+  column: SciDateColumn;
+  value: Signal<SciDateValue>;
 }
 
 export interface SciComponentCell {
   type: 'component';
-  column: SciTableColumnLike;
+  column: SciComponentColumn;
   component: SciComponentDescriptor;
 }
 
 export interface SciTemplateCell {
   type: 'template';
-  column: SciTableColumnLike;
+  column: SciTemplateColumn;
   template: SciTemplateDescriptor;
 }
 
-export type SciTableCellLike = SciStringCell | SciNumberCell | SciBooleanCell | SciComponentCell | SciTemplateCell;
+export type SciTableCellLike = SciStringCell | SciNumberCell | SciBooleanCell | SciDateCell | SciComponentCell | SciTemplateCell;
+
+export interface SciTableCellContext<T = unknown, VALUE = unknown> {
+  item: T;
+  value: VALUE;
+}
 
 /**
  * Represents an event emitted by {@link SciTableComponent}.
@@ -235,3 +249,8 @@ export interface SciTableEvent<T> {
    */
   items: T[];
 }
+
+/**
+ * Represents an ISO 8601 date/time string, milliseconds since the UTC epoch, or a `Date` object.
+ */
+export type SciDateLike = string | number | Date;

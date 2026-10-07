@@ -7,11 +7,10 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, ElementRef, inject, Injector, input, inputBinding, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
+import {Component, computed, effect, ElementRef, inject, Injector, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
 import {SciTable, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
-import {DatePipe} from '@angular/common';
 import {createDestroyableInjector} from '@scion/components/common';
 import {contributeMenu, SciToolbarFactory} from '@scion/components/menu';
 import {FieldValidationDirective} from '../common/field-validation.directive';
@@ -202,26 +201,16 @@ export default class SciTablePageComponent {
           value: vehicle => vehicle.isNarrowGauge,
           width: '150px',
         });
-        visibleColumns.lastR2Expiry && table.addComponentColumn({
+        visibleColumns.lastR2Expiry && table.addDateColumn({
           name: 'column:lastR2Expiry',
           header: 'Last R2 Expiry',
-          sortable: untracked(() => this.settingsForm.slowDatasource().value()) ? true : {comparator: (a, b) => new Date(a.item.lastR2Expiry).getTime() - new Date(b.item.lastR2Expiry).getTime()},
-          filterable: untracked(() => this.settingsForm.slowDatasource().value()) ? true : {matcher: (filterText, item) => item.item.lastR2Expiry.includes(filterText)},
-          component: (vehicle: Vehicle) => ({
-            component: DateCellComponent,
-            bindings: [inputBinding('date', () => new Date(vehicle.lastR2Expiry))],
-          }),
+          value: vehicle => vehicle.lastR2Expiry,
           width: '150px',
         });
-        visibleColumns.nextRevision && table.addComponentColumn({
+        visibleColumns.nextRevision && table.addDateColumn({
           name: 'column:nextRevision',
           header: 'Next Revision',
-          sortable: untracked(() => this.settingsForm.slowDatasource().value()) ? true : {comparator: (a, b) => new Date(a.item.nextRevision).getTime() - new Date(b.item.nextRevision).getTime()},
-          filterable: untracked(() => this.settingsForm.slowDatasource().value()) ? true : {matcher: (filterText, item) => item.item.nextRevision.includes(filterText)},
-          component: (vehicle: Vehicle) => ({
-            component: DateCellComponent,
-            bindings: [inputBinding('date', () => new Date(vehicle.nextRevision))],
-          }),
+          value: vehicle => vehicle.nextRevision,
           width: '150px',
         });
       },
@@ -438,16 +427,6 @@ export default class SciTablePageComponent {
       .addToolbarButton({visible: computed(() => !this.panelOpen()), icon: 'right_panel_open', tooltip: 'Show side panel', onSelect: () => this.panelOpen.set(true)}),
     );
   }
-}
-
-@Component({
-  selector: 'app-date-cell',
-  imports: [DatePipe],
-  template: `{{date() | date : 'dd.MM.yyyy'}}`,
-})
-class DateCellComponent {
-
-  protected readonly date = input.required<Date>();
 }
 
 interface SettingsForm {

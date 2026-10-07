@@ -1,4 +1,4 @@
-import {SciTableColumnFilter, SciTableColumnType, SciTableSortCriterion, SciTablePageRequest, SciTablePageResponse} from '@scion/components/table';
+import {SciTableColumnFilter, SciTableColumnType, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
 import {effect, inject, Injector, linkedSignal, Service, Signal, signal, untracked} from '@angular/core';
 import {defer, mergeWith, NEVER, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
@@ -50,6 +50,7 @@ export interface Product {
   name: string;
   price: number;
   inStock: boolean;
+  expirationDate: string;
 }
 
 export namespace Products {
@@ -60,6 +61,7 @@ export namespace Products {
       name: `Product ${i + 1}`,
       price: Math.floor(Math.random() * 1000) + 1,
       inStock: Math.random() > 0.5,
+      expirationDate: randomDate().toISOString(),
     }));
   }
 
@@ -132,4 +134,11 @@ export function simulateError$(simulateError: Signal<boolean> | undefined, optio
 
     return () => effectRef.destroy();
   });
+}
+
+function randomDate(): Date {
+  const from = new Date();
+  const to = new Date();
+  to.setFullYear(to.getFullYear() + 15);
+  return new Date(from.getTime() + Math.random() * (to.getTime() - from.getTime()));
 }

@@ -26,27 +26,59 @@
               <option value="string">String</option>
               <option value="number">Number</option>
               <option value="boolean">Boolean</option>
+              <option value="date">Date</option>
               <option value="template">Template</option>
               <option value="component">Component</option>
             </select>
           </label>
 
-          @if (columnForm.type().value() === 'component') {
-            <label>
-              Component
-              <select [formField]="columnForm.extras.component" class="e2e-component" appFieldValidation>
-                <option value="component:custom-column">custom-column</option>
-                <option value="component:custom-input-column">custom-input-column</option>
-                <option value="component:custom-button-column">custom-button-column</option>
-              </select>
-            </label>
-          }
+          @switch (columnForm.type().value()) {
+            @case ('date') {
+              @let extras = columnForm.extras.dateColumn;
+              <label>
+                Format
+                <input [formField]="extras.format" class="e2e-format" list="date-formats"/>
+              </label>
 
-          @if (columnForm.type().value() === 'component' || columnForm.type().value() === 'template') {
-            <label>
-              <input [formField]="columnForm.extras.padding" type="checkbox" class="e2e-padding"/>
-              Padding
-            </label>
+              <label>
+                Locale
+                <select [formField]="extras.locale" class="e2e-locale" appFieldValidation>
+                  <option value="de-CH">German (Switzerland)</option>
+                  <option value="fr-CH">French (Switzerland)</option>
+                  <option value="it-CH">Italian (Switzerland)</option>
+                  <option value="en-US">English (United States)</option>
+                  <option value=""></option>
+                </select>
+              </label>
+
+              <label>
+                Timezone
+                <input [formField]="extras.timezone" class="e2e-timezone" placeholder="+0200"/>
+              </label>
+            }
+            @case ('component') {
+              @let extras = columnForm.extras.componentColumn;
+              <label>
+                Component
+                <select [formField]="extras.component" class="e2e-component" appFieldValidation>
+                  <option value="component:custom-column">custom-column</option>
+                  <option value="component:custom-input-column">custom-input-column</option>
+                  <option value="component:custom-button-column">custom-button-column</option>
+                </select>
+              </label>
+
+              <label>
+                <input [formField]="extras.padding" type="checkbox" class="e2e-padding"/>
+                Padding
+              </label>
+            }
+            @case ('template') {
+              @let extras = columnForm.extras.templateColumn;
+              <label>
+                <input [formField]="extras.padding" type="checkbox" class="e2e-padding"/>
+                Padding
+              </label>
+            }
           }
 
           <label>
@@ -148,6 +180,16 @@
         <label>
           Row Height
           <input [formField]="settingsForm.rowHeight" type="number" class="e2e-row-height"/>
+        </label>
+
+        <label>
+          Locale
+          <select [(ngModel)]="locale" class="e2e-locale" [ngModelOptions]="{standalone: true}">
+            <option value="de-CH">German (Switzerland)</option>
+            <option value="fr-CH">French (Switzerland)</option>
+            <option value="it-CH">Italian (Switzerland)</option>
+            <option value="en-US">English (United States)</option>
+          </select>
         </label>
       </form>
     </ng-template>
@@ -257,3 +299,23 @@
 <ng-template let-product #custom_column_template>
   <app-custom-column [product]="product"/>
 </ng-template>
+
+<datalist id="date-formats">
+  <!-- Date and Time Formats -->
+  <option value="short">{{now | date:'short'}}</option>
+  <option value="medium">{{now | date:'medium'}}</option>
+  <option value="long">{{now | date:'long'}}</option>
+  <option value="full">{{now | date:'full'}}</option>
+
+  <!-- Date-Only Formats -->
+  <option value="shortDate">{{now | date:'shortDate'}}</option>
+  <option value="mediumDate">{{now | date:'mediumDate'}}</option>
+  <option value="longDate">{{now | date:'longDate'}}</option>
+  <option value="fullDate">{{now | date:'fullDate'}}</option>
+
+  <!-- Time-Only Formats -->
+  <option value="shortTime">{{now | date:'shortTime'}}</option>
+  <option value="mediumTime">{{now | date:'mediumTime'}}</option>
+  <option value="longTime">{{now | date:'longTime'}}</option>
+  <option value="fullTime">{{now | date:'fullTime'}}</option>
+</datalist>

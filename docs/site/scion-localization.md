@@ -9,12 +9,47 @@ Learn how to localize texts in SCION components.
 
 ***
 **Content:**
+- [Locale](#locale)
 - [Text Provider](#text-provider)
 - [Translatable Text](#translatable-text)
 - [Text Function](#text-function)
 - [Text Pipe](#text-pipe)
 - [Built-In Texts](#built-in-texts)
 ***
+
+### Locale
+SCION components use the locale defined by the `SCI_LOCALE` DI token to localize dates and numbers. `SCI_LOCALE` is a writable signal initialized with Angular's `LOCALE_ID`. A locale defines the language and optional region/variant (e.g., `de-CH`).
+
+The locale can be changed at runtime as follows:
+
+```ts
+import {inject} from '@angular/core';
+import {SCI_LOCALE} from '@scion/components/common';
+
+inject(SCI_LOCALE).set('de-CH');
+```
+
+Angular includes only `en-US` by default. Register other locales via `registerLocaleData()`, typically in an environment initializer at app startup:
+
+```ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {provideEnvironmentInitializer} from '@angular/core';
+import {registerLocaleData} from '@angular/common';
+
+import localeDeCH from '@angular/common/locales/de-CH';
+import localeFrCH from '@angular/common/locales/fr-CH';
+import localeItCH from '@angular/common/locales/it-CH';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideEnvironmentInitializer(() => {
+      registerLocaleData(localeDeCH);
+      registerLocaleData(localeFrCH);
+      registerLocaleData(localeItCH);
+    }),
+  ],
+});
+```
 
 ### Text Provider
 Text providers are used to provide texts to SCION components. A text provider is a function that returns the text for a translation key.

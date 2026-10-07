@@ -5,8 +5,8 @@
   align-items: center; // center custom cell content vertically
   overflow: hidden; // prevent text and custom content to overflow cell
 
-  // Enable ellipsis on number and string columns.
-  &:is([data-type="string"], [data-type="number"]) {
+  // Enable ellipsis on string, number and date columns.
+  &:is([data-type="string"], [data-type="number"], [data-type="date"]) {
     display: inline; // ellipsis is only supported on block or inline-block elements
     white-space: nowrap;
     text-overflow: ellipsis;

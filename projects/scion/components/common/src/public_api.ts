@@ -18,3 +18,4 @@ export {createDestroyableInjector, assertInInjectionContext} from './injector.ut
 export {type SciComponentDescriptor, SciComponentOutletDirective} from './component-outlet.directive';
 export {SciAttributesDirective} from './attributes.directive';
 export {type SciTemplateDescriptor} from './template-descriptor';
+export {SCI_LOCALE} from './locale';

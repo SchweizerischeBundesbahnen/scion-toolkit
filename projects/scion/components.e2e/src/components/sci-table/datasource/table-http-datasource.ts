@@ -18,6 +18,7 @@ export async function provideHttpDatasource(page: Page, productLike: Partial<Pro
     name: product.name ?? `Product ${i + 1}`,
     price: product.price ?? Math.floor(Math.random() * 1000) + 1,
     inStock: product.inStock ?? Math.random() > 0.5,
+    expirationDate: product.expirationDate ?? randomDate().toISOString(),
   }));
 
   // Install HTTP endpoint.
@@ -54,6 +55,7 @@ export interface Product {
   name: string;
   price: number;
   inStock: boolean;
+  expirationDate: string;
 }
 
 /**
@@ -61,4 +63,11 @@ export interface Product {
  */
 export function generateData<T>(count: number, factoryFn: (index: number) => T): T[] {
   return Array.from(Array(count), (_, index) => factoryFn(index));
+}
+
+function randomDate(): Date {
+  const from = new Date();
+  const to = new Date();
+  to.setFullYear(to.getFullYear() + 15);
+  return new Date(from.getTime() + Math.random() * (to.getTime() - from.getTime()));
 }

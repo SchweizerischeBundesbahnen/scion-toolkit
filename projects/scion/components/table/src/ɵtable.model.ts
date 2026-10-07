@@ -14,7 +14,7 @@ import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciT
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
-import {coerceSignal, createDestroyableInjector, toLazyObservable} from '@scion/components/common';
+import {createDestroyableInjector, toLazyObservable} from '@scion/components/common';
 import {arrayDatasource, isArrayDatasource} from './ɵtable-array-datasource';
 import {SciTableCache, SciTableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
@@ -23,6 +23,7 @@ import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactory
 import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {first, map, startWith} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
+import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 
 export class ɵSciTable<T = unknown> implements SciTable<T> {
 
@@ -69,6 +70,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   });
 
   private readonly _cache = new SciTableCache<T>();
+  private readonly _tableCellValuePreloader = inject(SciTableCellValuePreloader);
   private readonly _tableFilter = signal<string | null>(null);
   private readonly _selectedItems = signal(new Map<unknown, T>());
 
@@ -92,7 +94,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   });
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), tableFilter: this._tableFilter()}));
-  public readonly loading = this._cache.loading;
+  public readonly loading = computed(() => this._cache.loading() || this._tableCellValuePreloader.loading());
   public readonly error = this._cache.error;
   public readonly activeRow: Signal<SciTableRow<T> | undefined>;
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
@@ -512,7 +514,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         hovered: computed(() => this.hoveredRow()?.index === index),
         bindings: coerceTableRowBindings(this._rowBindings, item, pageStart + i),
         cells: columns.map(column => ({
-          value: column.type !== 'component' && column.type !== 'template' ? coerceSignal(column.value(item)) : undefined,
+          value: 'value' in column ? column.value(item) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,
           template: column.type === 'template' ? column.template(item) : undefined,
           type: column.type,

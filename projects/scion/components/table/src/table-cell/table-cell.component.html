@@ -11,6 +11,9 @@
     <!-- TODO [dwi] Use another ligature for icon scion.clear -->
     <sci-icon class="checkbox">{{cell.value() ? 'scion.checkmark' : 'scion.clear'}}</sci-icon>
   }
+  @case ('date') {
+    {{cell.value().formatted}}
+  }
   @default {
     {{cell.value()}}
   }

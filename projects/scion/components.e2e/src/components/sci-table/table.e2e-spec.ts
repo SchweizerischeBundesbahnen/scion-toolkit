@@ -390,6 +390,90 @@ test.describe('sci-table', () => {
       });
     });
 
+    test.describe('Date column', () => {
+
+      test('should add date column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:date', type: 'date'});
+        await expect(table.column({name: 'column:date'}).columnHeader).toBeVisible();
+      });
+
+      test('should center text vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:date', type: 'date'});
+        await tablePage.setRowHeight(30);
+
+        const cell = table.row({nth: 0}).cell('column:date');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:date', type: 'date'});
+
+        const cell = table.row({nth: 0}).cell('column:date');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align text to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:date', type: 'date'});
+
+        const cell = table.row({nth: 0}).cell('column:date');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should have ellipsis on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setWidth(600);
+        await tablePage.addColumn({name: 'column:date', type: 'date', extras: {dateColumn: {format: 'fullDate'}}});
+        const cell = table.row({nth: 0}).cell('column:date');
+        await expect(cell.locator).not.toHaveEllipsis();
+
+        await cell.column.splitter.drag({deltaX: -500});
+        await expect(cell.locator).toHaveEllipsis();
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:date', type: 'date'});
+
+        const cell = table.row({nth: 0}).cell('column:date');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+    });
+
     test.describe('Template column', () => {
 
       test('should add template column', async ({page}) => {
@@ -467,7 +551,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.setWidth(600);
-        await tablePage.addColumn({name: 'column:template', type: 'template', extras: {padding: false}});
+        await tablePage.addColumn({name: 'column:template', type: 'template', extras: {templateColumn: {padding: false}}});
         await expect.poll(() => table.column({name: 'column:template'}).width()).toBe(600);
 
         // Set explicit template width.
@@ -486,7 +570,7 @@ test.describe('sci-table', () => {
 
         await tablePage.setWidth(600);
         await tablePage.setRowCount(1);
-        await tablePage.addColumn({name: 'column:template', type: 'template', extras: {padding: false}});
+        await tablePage.addColumn({name: 'column:template', type: 'template', extras: {templateColumn: {padding: false}}});
 
         const cell = table.row({nth: 0}).cell('column:template');
         const template = new CustomColumnPO(cell);
@@ -507,8 +591,8 @@ test.describe('sci-table', () => {
 
         await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
 
-        await tablePage.addColumn({name: 'column:template-padding', type: 'template', extras: {padding: true}});
-        await tablePage.addColumn({name: 'column:template-no-padding', type: 'template', extras: {padding: false}});
+        await tablePage.addColumn({name: 'column:template-padding', type: 'template', extras: {templateColumn: {padding: true}}});
+        await tablePage.addColumn({name: 'column:template-no-padding', type: 'template', extras: {templateColumn: {padding: false}}});
 
         await test.step('column with cell padding', async () => {
           const cell = table.row({nth: 0}).cell('column:template-padding');
@@ -620,7 +704,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.setWidth(600);
-        await tablePage.addColumn({name: 'column:component', type: 'component', extras: {padding: false}});
+        await tablePage.addColumn({name: 'column:component', type: 'component', extras: {componentColumn: {padding: false}}});
         await expect.poll(() => table.column({name: 'column:component'}).width()).toBe(600);
 
         // Set explicit component width.
@@ -639,7 +723,7 @@ test.describe('sci-table', () => {
 
         await tablePage.setWidth(600);
         await tablePage.setRowCount(1);
-        await tablePage.addColumn({name: 'column:component', type: 'component', extras: {padding: false}});
+        await tablePage.addColumn({name: 'column:component', type: 'component', extras: {componentColumn: {padding: false}}});
 
         const cell = table.row({nth: 0}).cell('column:component');
         const component = new CustomColumnPO(cell);
@@ -660,8 +744,8 @@ test.describe('sci-table', () => {
 
         await tablePage.setCssVariable('--sci-table-cell-padding-inline', '10px');
 
-        await tablePage.addColumn({name: 'column:component-padding', type: 'component', extras: {padding: true}});
-        await tablePage.addColumn({name: 'column:component-no-padding', type: 'component', extras: {padding: false}});
+        await tablePage.addColumn({name: 'column:component-padding', type: 'component', extras: {componentColumn: {padding: true}}});
+        await tablePage.addColumn({name: 'column:component-no-padding', type: 'component', extras: {componentColumn: {padding: false}}});
 
         await test.step('column with cell padding', async () => {
           const cell = table.row({nth: 0}).cell('column:component-padding');
@@ -782,17 +866,17 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await provideHttpDatasource(page, generateData(20, i => ({name: `Product ${i % 4}`})), {datasource: 'array-http'});
+      const data = [{name: 'Product 1'}, {name: 'Product 2'}, {name: 'Product 3'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
 
       await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.column({name: 'column:name'}).filter('Product 1');
-      await expect(table.rows).toHaveCount(5);
-      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+      await table.column({name: 'column:name'}).filter('Product 2');
+      await expectTable(table).toHaveContent([['Product 2']]);
 
       await table.column({name: 'column:name'}).clearFilter();
-      await expect(table.rows).toHaveCount(20);
+      await expectTable(table).toHaveContent([['Product 1'], ['Product 2'], ['Product 3']]);
     });
 
     test('should filter number column', async ({page}) => {
@@ -800,17 +884,17 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await provideHttpDatasource(page, generateData(20, i => ({price: i % 4})), {datasource: 'array-http'});
+      const data = [{price: 1}, {price: 2}, {price: 3}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
 
       await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:price', type: 'number'});
 
       await table.column({name: 'column:price'}).filter(2);
-      await expect(table.rows).toHaveCount(5);
-      await expectTable(table).column({name: 'column:price'}).cells.toContainText('2');
+      await expectTable(table).toHaveContent([['2']]);
 
       await table.column({name: 'column:price'}).clearFilter();
-      await expect(table.rows).toHaveCount(20);
+      await expectTable(table).toHaveContent([['1'], ['2'], ['3']]);
     });
 
     test('should filter boolean column', async ({page}) => {
@@ -818,17 +902,42 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await provideHttpDatasource(page, generateData(20, i => ({inStock: i % 4 !== 0})), {datasource: 'array-http'});
+      const data = [{inStock: true}, {inStock: false}, {inStock: true}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
 
       await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
 
       await table.column({name: 'column:boolean'}).filter(false);
-      await expect(table.rows).toHaveCount(5);
-      await expectTable(table).column({name: 'column:boolean'}).cells.toContainText('clear');
+      await expectTable(table).toHaveContent([['clear']]);
+
+      await table.column({name: 'column:boolean'}).filter(true);
+      await expectTable(table).toHaveContent([['checkmark'], ['checkmark']]);
 
       await table.column({name: 'column:boolean'}).clearFilter();
-      await expect(table.rows).toHaveCount(20);
+      await expectTable(table).toHaveContent([['checkmark'], ['clear'], ['checkmark']]);
+    });
+
+    test('should filter date column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      const data = [{expirationDate: '2026-05-01'}, {expirationDate: '2026-05-02'}, {expirationDate: '2026-05-03'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:date', type: 'date', extras: {dateColumn: {format: 'dd.MM.yyyy'}}});
+
+      await table.column({name: 'column:date'}).filter('01.05.2026');
+      await expectTable(table).toHaveContent([['01.05.2026']]);
+
+      await table.column({name: 'column:date'}).clearFilter();
+      await expectTable(table).toHaveContent([
+        ['01.05.2026'],
+        ['02.05.2026'],
+        ['03.05.2026'],
+      ]);
     });
 
     test('should not filter template column', async ({page}) => {
@@ -892,15 +1001,21 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      const data = [{id: 1, name: 'Product 1'}, {id: 2, name: 'Product 2'}, {id: 3, name: 'Product 3'}, {id: 10, name: 'Product 10'}, {id: 11, name: 'Product 11'}, {id: 12, name: 'Product 12'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
       await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await expectTable(table).toHaveContent([['Product 1'], ['Product 2'], ['Product 3'], ['Product 10'], ['Product 11'], ['Product 12']]);
 
-      await table.row({nth: 0}).click();
-      await expectRow(table.row({nth: 0})).toBeSelected();
+      await table.row({nth: 3}).click();
+      await expectRow(table.row({nth: 3})).toBeSelected();
+      await expect(tablePage.selection).toHaveText('10');
 
       await table.column({name: 'column:name'}).filter('Product 1');
-      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
-      await expectRow(table.row({nth: 0})).toBeSelected();
+      await expectTable(table).toHaveContent([['Product 1'], ['Product 10'], ['Product 11'], ['Product 12']]);
+      await expectRow(table.row({nth: 1})).toBeSelected();
+      await expect(tablePage.selection).toHaveText('10');
     });
 
     test('should focus filter field when clicking filter icon', async ({page}) => {
@@ -1730,15 +1845,25 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      const data = [{name: 'Product 1'}, {name: 'Product 3'}, {name: 'Product 2'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
       await tablePage.addColumn({name: 'column:string', type: 'string'});
 
       // Sort ascending.
       await table.column({name: 'column:string'}).sort();
-      await expectTable(table).column({name: 'column:string'}).toBeSorted('asc');
+      await expectTable(table).column({name: 'column:string'}).toHaveSortDirection('asc');
+      await expectTable(table).toHaveContent([['Product 1'], ['Product 2'], ['Product 3']]);
 
       // Sort descending.
       await table.column({name: 'column:string'}).sort();
-      await expectTable(table).column({name: 'column:string'}).toBeSorted('desc');
+      await expectTable(table).column({name: 'column:string'}).toHaveSortDirection('desc');
+      await expectTable(table).toHaveContent([['Product 3'], ['Product 2'], ['Product 1']]);
+
+      // Unset sort.
+      await table.column({name: 'column:string'}).sort();
+      await expectTable(table).column({name: 'column:string'}).toHaveSortDirection(null);
+      await expectTable(table).toHaveContent([['Product 1'], ['Product 3'], ['Product 2']]);
     });
 
     test('should sort number column ascending and descending', async ({page}) => {
@@ -1746,15 +1871,25 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      const data = [{price: 1}, {price: 3}, {price: 2}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
       await tablePage.addColumn({name: 'column:number', type: 'number'});
 
       // Sort ascending.
       await table.column({name: 'column:number'}).sort();
-      await expectTable(table).column({name: 'column:number'}).toBeSorted('asc');
+      await expectTable(table).column({name: 'column:number'}).toHaveSortDirection('asc');
+      await expectTable(table).toHaveContent([['1'], ['2'], ['3']]);
 
       // Sort descending.
       await table.column({name: 'column:number'}).sort();
-      await expectTable(table).column({name: 'column:number'}).toBeSorted('desc');
+      await expectTable(table).column({name: 'column:number'}).toHaveSortDirection('desc');
+      await expectTable(table).toHaveContent([['3'], ['2'], ['1']]);
+
+      // Unset sort.
+      await table.column({name: 'column:number'}).sort();
+      await expectTable(table).column({name: 'column:number'}).toHaveSortDirection(null);
+      await expectTable(table).toHaveContent([['1'], ['3'], ['2']]);
     });
 
     test('should sort boolean column ascending and descending', async ({page}) => {
@@ -1762,15 +1897,51 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      const data = [{inStock: true}, {inStock: false}, {inStock: true}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
       await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
 
-      // Sort ascending: false values first.
+      // Sort ascending.
       await table.column({name: 'column:boolean'}).sort();
-      await expectTable(table).column({name: 'column:boolean'}).toBeSorted('asc');
+      await expectTable(table).column({name: 'column:boolean'}).toHaveSortDirection('asc');
+      await expectTable(table).toHaveContent([['clear'], ['checkmark'], ['checkmark']]);
 
-      // Sort descending: true values first.
+      // Sort descending.
       await table.column({name: 'column:boolean'}).sort();
-      await expectTable(table).column({name: 'column:boolean'}).toBeSorted('desc');
+      await expectTable(table).column({name: 'column:boolean'}).toHaveSortDirection('desc');
+      await expectTable(table).toHaveContent([['checkmark'], ['checkmark'], ['clear']]);
+
+      // Unset sort.
+      await table.column({name: 'column:boolean'}).sort();
+      await expectTable(table).column({name: 'column:boolean'}).toHaveSortDirection(null);
+      await expectTable(table).toHaveContent([['checkmark'], ['clear'], ['checkmark']]);
+    });
+
+    test('should sort date column ascending and descending', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      const data = [{expirationDate: '2026-05-01'}, {expirationDate: '2026-05-03'}, {expirationDate: '2026-05-02'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
+      await tablePage.addColumn({name: 'column:date', type: 'date', extras: {dateColumn: {format: 'dd.MM.yyyy'}}});
+
+      // Sort ascending.
+      await table.column({name: 'column:date'}).sort();
+      await expectTable(table).column({name: 'column:date'}).toHaveSortDirection('asc');
+      await expectTable(table).toHaveContent([['01.05.2026'], ['02.05.2026'], ['03.05.2026']]);
+
+      // Sort descending.
+      await table.column({name: 'column:date'}).sort();
+      await expectTable(table).column({name: 'column:date'}).toHaveSortDirection('desc');
+      await expectTable(table).toHaveContent([['03.05.2026'], ['02.05.2026'], ['01.05.2026']]);
+
+      // Unset sort.
+      await table.column({name: 'column:date'}).sort();
+      await expectTable(table).column({name: 'column:date'}).toHaveSortDirection(null);
+      await expectTable(table).toHaveContent([['01.05.2026'], ['03.05.2026'], ['02.05.2026']]);
     });
 
     test('should sort multiple columns with ctrl or meta', async ({page}) => {
@@ -1793,14 +1964,19 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      const data = [{name: 'Product 10'}, {name: 'Product 2'}, {name: 'Product 1'}, {name: 'Product 3'}, {name: 'Product 12'}, {name: 'Product 11'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
       await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:name', type: 'string'});
       await table.column({name: 'column:name'}).filter('Product 1');
-      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
+      await expectTable(table).toHaveContent([['Product 10'], ['Product 1'], ['Product 12'], ['Product 11']]);
 
       await table.column({name: 'column:name'}).sort();
-      await expectTable(table).column({name: 'column:name'}).cells.toContainText('Product 1');
-      await expectTable(table).column({name: 'column:name'}).toBeSorted();
+      await expectTable(table).toHaveContent([['Product 1'], ['Product 10'], ['Product 11'], ['Product 12']]);
+
+      await table.column({name: 'column:name'}).sort();
+      await expectTable(table).toHaveContent([['Product 12'], ['Product 11'], ['Product 10'], ['Product 1']]);
     });
 
     test('should sort large amount of data', async ({page}) => {
@@ -1838,14 +2014,17 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      const data = [{name: 'Product 3'}, {name: 'Product 1'}, {name: 'Product 2'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.row({nth: 0}).click();
       await expectRow(table.row({nth: 0})).toBeSelected();
 
       await table.column({name: 'column:name'}).sort();
-      await expectTable(table).column({name: 'column:name'}).toBeSorted();
-      await expectRow(table.row({nth: 0})).toBeSelected();
+      await expectTable(table).toHaveContent([['Product 1'], ['Product 2'], ['Product 3']]);
+      await expectRow(table.row({nth: 2})).toBeSelected();
     });
   });
 
@@ -2019,7 +2198,7 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {component: 'component:custom-input-column'}});
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {componentColumn: {component: 'component:custom-input-column'}}});
 
       const cell = table.row({nth: 0}).cell('column:component');
       const component = new CustomInputColumnPO(cell);
@@ -2112,7 +2291,7 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {component: 'component:custom-button-column'}});
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {componentColumn: {component: 'component:custom-button-column'}}});
 
       const cell = table.row({nth: 0}).cell('column:component');
       const component = new CustomButtonColumnPO(cell);

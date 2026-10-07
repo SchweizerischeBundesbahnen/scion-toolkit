@@ -12,7 +12,7 @@ import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColu
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
-import {createDestroyableInjector} from '@scion/components/common';
+import {createDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
 import {FieldValidationDirective} from '../field-validation.directive';
 import {Product, ProductService, simulateError$} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
@@ -21,6 +21,7 @@ import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';
 import {CustomButtonColumnComponent} from './custom-button-column.component';
+import {DatePipe} from '@angular/common';
 
 @Component({
   selector: 'app-table-page',
@@ -36,6 +37,7 @@ import {CustomButtonColumnComponent} from './custom-button-column.component';
     FieldValidationDirective,
     CustomColumnComponent,
     SciViewportComponent,
+    DatePipe,
   ],
   providers: [
     provideTableRowBinding((bindings, _item, index) => {
@@ -70,9 +72,11 @@ export default class SciTablePageComponent {
 
   protected readonly tables = this.computeTables();
   protected readonly rowCount = inject(ProductService).productCount;
+  protected readonly locale = inject(SCI_LOCALE);
   protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem()?.id);
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
   protected readonly selection = computed(() => this.tables()[0]?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly now = new Date();
 
   constructor() {
     this.bindTableSettings();
@@ -147,12 +151,21 @@ export default class SciTablePageComponent {
               value: product => product.inStock,
             });
             break;
+          case 'date':
+            table.addDateColumn({
+              ...column,
+              value: product => product.expirationDate,
+              format: columnForm.extras.dateColumn.format || undefined,
+              locale: columnForm.extras.dateColumn.locale || undefined,
+              timezone: columnForm.extras.dateColumn.timezone || undefined,
+            });
+            break;
           case 'component':
             table.addComponentColumn({
               ...column,
-              padding: columnForm.extras.padding,
+              padding: columnForm.extras.componentColumn.padding,
               component: product => {
-                switch (columnForm.extras.component) {
+                switch (columnForm.extras.componentColumn.component) {
                   case 'component:custom-input-column':
                     return ({component: CustomInputColumnComponent});
                   case 'component:custom-button-column':
@@ -170,7 +183,7 @@ export default class SciTablePageComponent {
           case 'template':
             table.addTemplateColumn({
               ...column,
-              padding: columnForm.extras.padding,
+              padding: columnForm.extras.templateColumn.padding,
               template: () => ({
                 template: this._customColumnTemplate,
               }),
@@ -207,8 +220,8 @@ export default class SciTablePageComponent {
       pattern(column.name, /column:.+/);
       required(column.name);
       required(column.type);
-      required(column.extras.component);
-      hidden(column.extras.component, {when: ({valueOf}) => valueOf(column.type) !== 'component'});
+      required(column.extras.componentColumn.component);
+      hidden(column.extras.componentColumn.component, {when: ({valueOf}) => valueOf(column.type) !== 'component'});
     }, {
       submission: {
         action: async form => {
@@ -232,8 +245,18 @@ export default class SciTablePageComponent {
         minWidth: null,
         visible: signal(true),
         extras: {
-          component: 'component:custom-column',
-          padding: true,
+          dateColumn: {
+            format: '',
+            locale: '',
+            timezone: '',
+          },
+          componentColumn: {
+            component: 'component:custom-column',
+            padding: true,
+          },
+          templateColumn: {
+            padding: true,
+          },
         },
       };
     }
@@ -300,8 +323,18 @@ interface ColumnForm {
   minWidth: number | null;
   visible: WritableSignal<boolean>;
   extras: {
-    component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';
-    padding: boolean;
+    dateColumn: {
+      format: string | '';
+      locale: string | '';
+      timezone: string | '';
+    };
+    componentColumn: {
+      component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';
+      padding: boolean;
+    };
+    templateColumn: {
+      padding: boolean;
+    };
   };
 }
 
@@ -335,6 +368,6 @@ interface LayoutForm {
   pageHeight: number | null;
 }
 
-function columnDataTypes(columns: ColumnForm[]): Map<`column:${string}`, ColumnForm['type']> {
-  return columns.reduce((map, column) => map.set(column.name as `column:${string}`, column.type), new Map<`column:${string}`, ColumnForm['type']>());
+function columnDataTypes(columns: ColumnForm[]): Map<`column:${string}`, SciTableColumnType> {
+  return columns.reduce((map, column) => map.set(column.name as `column:${string}`, column.type), new Map<`column:${string}`, SciTableColumnType>());
 }
