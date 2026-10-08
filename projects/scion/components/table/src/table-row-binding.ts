@@ -41,11 +41,11 @@ export interface SciTableRowBindingFactory {
    * ```
    *
    * ```scss
-   * sci-table::part(row\:even) {
+   * sci-table::part(row\:even row\:not\:selected) {
    *   background-color: lightgray;
    * }
    *
-   * sci-table::part(row\:active) {
+   * sci-table::part(row\:active row\:not\:selected) {
    *   background-color: green;
    * }
    * ```

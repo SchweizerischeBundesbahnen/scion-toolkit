@@ -25,7 +25,8 @@ The NPM sub-module `@scion/components/table` provides an Angular component for d
 - [User Settings](#user-settings)
 - [Localization of Column Headers](#localization-of-column-headers)
 - [Fixed Row Height](#fixed-row-height)
-- [Custom Styling](#custom-styling)
+- [Table Styling](#table-styling)
+- [Row/Column Styling](#rowcolumn-styling)
 
 ***
 Click [here](https://components.scion.vercel.app/#/sci-table) for a demo of the table component.
@@ -68,6 +69,7 @@ const userTable = table(users.value, table => table
 In the HTML, assign the table a name and bind it to the table instance returned by the `table()` function. The name must start with the `table:` prefix and is used to store user settings in the storage.
 
 ```html
+
 <sci-table name="table:users" [table]="userTable"/>
 ```
 
@@ -101,9 +103,11 @@ table(users.value, table => table.addStringColumn({
 ```
 
 ### Columns
+
 The table provides built-in columns for the following data types: `string`, `number`, `boolean`, and `Date`. Columns for other data types or custom cell rendering can be added as custom columns. See the [Custom Columns](#custom-columns) section for details.
 
 #### String Column
+
 Displays text.
 
 ```ts
@@ -129,6 +133,7 @@ table(users.value, table => table.addStringColumn({
 ```
 
 #### Number Column
+
 Displays numeric values.
 
 ```ts
@@ -141,6 +146,7 @@ table(users.value, table => table.addNumberColumn({
 ```
 
 #### Boolean Column
+
 Displays boolean values.
 
 ```ts
@@ -153,6 +159,7 @@ table(users.value, table => table.addBooleanColumn({
 ```
 
 #### Date Column
+
 Displays dates, times, or both.
 
 A date column accepts an ISO 8601 date/time string (e.g., `2026-10-06`, `2026-10-06T14:30:15Z`, or `T14:30:15`), milliseconds since the UTC epoch, or a `Date` object.
@@ -285,6 +292,7 @@ table(users.value, table => table.addTemplateColumn({
 An explicit binding is usually not required because the item is available via default template variable (`let-user`).
 
 ```html
+
 <ng-template #status let-user>
   <!-- chip is illustrative -->
   <app-chip>{{user.status}}</app-chip>
@@ -294,14 +302,13 @@ An explicit binding is usually not required because the item is available via de
 > [!IMPORTANT]
 > In order to be filterable and sortable, custom columns require an explicit filter matcher and sort comparator.
 
-
 ### Column Width
 
 By default, columns have an equal width of `1fr`. The available space is distributed equally among the columns.
 
 You can set an explicit width for a column via its `width` property, either as an absolute value (`px`) or as a fraction (`fr`).
 
-Columns with an absolute width do not grow or shrink, but they can still be resized by the user.  Columns with a fractional width are distributed proportionally based on their ratio (`fr`) within the available space.
+Columns with an absolute width do not grow or shrink, but they can still be resized by the user. Columns with a fractional width are distributed proportionally based on their ratio (`fr`) within the available space.
 
 ### Table Configuration
 
@@ -507,22 +514,20 @@ table({
 });
 ```
 
-Part bindings make a row stylable by associating it with a [part attribute][link-mdn-part-attribute] that can be referenced in CSS using the [`::part()` CSS pseudo-element selector][link-mdn-part-selector].
+Part bindings make a row stylable by associating its cells with an [HTML part attribute][link-mdn-part-attribute] that can be referenced in CSS using the [`::part()` CSS pseudo-element selector][link-mdn-part-selector]. A single row can have multiple part bindings.
 
 ```scss
-sci-table::part(row\:even) {
-  background-color: lightgray;
-}
-
-sci-table::part(row\:inactive) {
-  background-color: indianred;
+sci-table::part(row\:negative) {
+  color: red;
 }
 ```
 
+See the [Row/Column Styling](#rowcolumn-styling) section for details.
+
 HTML attribute bindings are useful for end-to-end testing. For example, they can be used to associate a row with an item's primary key.
 
-```scss
-sci-table-row[data-userid="123"];
+```ts
+document.querySelector('sci-table[name="table:testee"] sci-table-row[data-userid="123"]');
 ```
 
 ### Table Events
@@ -596,7 +601,6 @@ table(users.value, table => table.addStringColumn('%name.label', user => user.na
 
 A text provider can be registered using the `provideTextProvider()` function. Refer to [Localization][link-scion-localization] for more information.
 
-
 ### Fixed Row Height
 
 All rows in the table must have equal height, which is `2em` by default. The height can be changed per table using the CSS variable `--sci-table-row-height`.
@@ -607,7 +611,7 @@ sci-table {
 }
 ```
 
-### Custom Styling
+### Table Styling
 
 The default look of `sci-table` can be customized using CSS variables.
 
@@ -668,6 +672,94 @@ The following CSS variables are supported:
 - `--sci-table-cell-padding-inline`
 
 Refer to [SCION Design Tokens][link-scion-design-tokens] for more information on customizing the default look of SCION components and supporting different themes.
+
+To change default cell styles, like `text-align`, `user-select`, or `font-variant-numeric`, use the [`::part()` CSS pseudo-element selector][link-mdn-part-selector] as described in the [Row/Column Styling](#rowcolumn-styling) section.
+
+### Row/Column Styling
+
+Cells can be styled using the [`::part()` CSS pseudo-element selector][link-mdn-part-selector] by referencing part names contributed to the cell's [HTML `part` attribute][link-mdn-part-attribute].
+
+- **Rows** can register [row bindings](#row-bindings) to contribute part names to the HTML `part` attribute of their cells.
+- **Columns** automatically contribute their name (`column:name`) and data type (`column:datatype`) to the HTML `part` attribute of their cells.
+
+Cells can also be styled conditionally based on the row state. When setting a custom background color, conditional styling is recommended to avoid covering the default background color of selected rows.
+
+- **row:selected / row:not:selected** \
+  Applied when a row is selected or not selected.
+- **row:active / row:not:active** \
+  Applied when a row is active or not active.
+
+**Styling Rows**
+
+Style cells in rows matching a row binding (e.g., `row:some-row`):
+
+```scss
+sci-table::part(row\:some-row) {
+  font-weight: 600;
+}
+```
+
+```scss
+sci-table::part(row\:even row\:not\:selected) {
+  background-color: lightgray;
+}
+```
+
+See [row bindings](#row-bindings) for how to register a `part` row binding.
+
+**Styling Columns**
+
+Style cells in columns of a specific column data type:
+
+```scss
+sci-table::part(column\:number) {
+  font-variant-numeric: normal;
+}
+
+sci-table::part(column\:string) {
+  text-align: center;
+}
+```
+
+Style cells in a column of a specific column name (e.g., `column:some-column`):
+
+```scss
+sci-table::part(column\:some-column) {
+  text-align-last: justify;
+  user-select: text;
+}
+```
+
+**Styling Specific Cells**
+
+Style a cell at the intersection of a specific row binding and column name:
+
+```scss
+sci-table::part(row\:some-row column\:some-column) {
+  text-align-last: justify;
+}
+```
+
+> [!NOTE]
+> In CSS `::part()` selectors, separate multiple part names with a space (` `) to match cells having all specified part names.
+
+> [!NOTE]
+> In CSS `::part()` selectors, escape colons within part names using a backslash (`\:`).
+
+> [!TIP]
+> Use conditional styling based on the row state when setting a custom background color.
+>
+> ```scss
+> sci-table::part(row\:even row\:not\:selected) {
+>   background-color: lightgray;
+> }
+> ```
+
+> [!TIP]
+> - Set the `user-select` CSS property to `text` to make text in a cell selectable.
+> - Set the `text-align` or `text-align-last` CSS property to align text in a column.
+> - Set the `font-variant-numeric` CSS property to `normal` to disable tabular figures in a column.
+
 
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md

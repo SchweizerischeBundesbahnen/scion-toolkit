@@ -4455,32 +4455,16 @@ test.describe('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row({nth: 1}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row({nth: 2}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', /row:negative/);
+      await expect(table.row({nth: 1}).cell(0).locator).not.toHaveAttribute('part', /row:negative/);
+      await expect(table.row({nth: 2}).cell(0).locator).not.toHaveAttribute('part', /row:negative/);
 
       await tablePage.setCustomRowStyling(true);
 
-      await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row({nth: 1}).cell(0).locator).not.toHaveAttribute('part', 'row:negative column:name');
-      await expect(table.row({nth: 2}).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
+      await expect(table.row({nth: 0}).cell(0).locator).not.toHaveAttribute('part', /row:negative/);
+      await expect(table.row({nth: 1}).cell(0).locator).not.toHaveAttribute('part', /row:negative/);
+      await expect(table.row({nth: 2}).cell(0).locator).toHaveAttribute('part', /row:negative/);
       await expect(table.row({nth: 2}).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
-    });
-
-    test('should not conditionally style selected row', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-
-      await tablePage.setCustomRowStyling(true);
-
-      await expect(table.row({nth: 2}).cell(0).locator).toHaveAttribute('part', 'row:negative column:name');
-
-      await table.row({nth: 2}).click();
-
-      await expect(table.row({nth: 2}).cell(0).locator).not.toHaveAttribute('part');
     });
 
     test('should conditionally style column', async ({page}) => {
@@ -4490,7 +4474,7 @@ test.describe('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:negative', type: 'string'});
 
-      await expect(table.row({nth: 0}).cell(0).locator).toHaveAttribute('part', 'column:negative');
+      await expect(table.row({nth: 0}).cell(0).locator).toHaveAttribute('part', /column:negative/);
       await expect(table.row({nth: 0}).cell(0).locator).toHaveCSS('background-color', 'rgba(255, 0, 0, 0.2)');
     });
   });

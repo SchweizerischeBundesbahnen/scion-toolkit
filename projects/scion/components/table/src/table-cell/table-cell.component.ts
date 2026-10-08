@@ -23,7 +23,7 @@ import {SciIconComponent} from '@scion/components/icon';
     '[attr.data-type]': 'cell().column.type',
     '[attr.data-column]': 'cell().column.name',
     '[attr.data-padding]': '!cell().column.padding ? false : null',
-    '[attr.part]': 'row().selected() ? null : partAttribute()', // prevent styling selected rows
+    '[attr.part]': 'partAttribute()',
   },
   imports: [
     NgTemplateOutlet,
@@ -73,10 +73,18 @@ export class SciTableCellComponent<T> {
 
   private computePartAttribute(): Signal<string> {
     return computed(() => {
-      return [
-        ...Arrays.coerce(this.row().bindings?.part()),
+      return Arrays.distinct([
+        // Enable column styling based on column type.
+        `column:${this.cell().column.type}`,
+        // Enable column styling based on column name.
         this.cell().column.name,
-      ].join(' ');
+        // Enable row styling based on selection state.
+        this.row().selected() ? 'row:selected' : 'row:not:selected',
+        // Enable row styling based on active state.
+        this.row().active() ? 'row:active' : 'row:not:active',
+        // Enable row styling based on row bindings.
+        ...Arrays.coerce(this.row().bindings?.part()),
+      ]).join(' ');
     });
   }
 }
