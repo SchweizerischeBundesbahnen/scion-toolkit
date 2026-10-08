@@ -136,28 +136,28 @@ export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
 
 export interface SciStringColumn<T = unknown> extends SciTableColumn<T, string> {
   type: 'string';
-  value: (item: T) => Signal<string>;
+  value: (item: T) => Signal<string | undefined>;
   compare: SciTableColumnSortComparatorFn<T, string>;
   matches: SciTableColumnFilterMatcherFn<T, string>;
 }
 
 export interface SciNumberColumn<T = unknown> extends SciTableColumn<T, number> {
   type: 'number';
-  value: (item: T) => Signal<number>;
+  value: (item: T) => Signal<number | undefined>;
   compare: SciTableColumnSortComparatorFn<T, number>;
   matches: SciTableColumnFilterMatcherFn<T, number>;
 }
 
 export interface SciBooleanColumn<T = unknown> extends SciTableColumn<T, boolean> {
   type: 'boolean';
-  value: (item: T) => Signal<boolean>;
+  value: (item: T) => Signal<boolean | undefined>;
   compare: SciTableColumnSortComparatorFn<T, boolean>;
   matches: SciTableColumnFilterMatcherFn<T, boolean>;
 }
 
 export interface SciDateColumn<T = unknown> extends SciTableColumn<T, SciDateValue, string> {
   type: 'date';
-  value: (item: T) => Signal<SciDateValue>;
+  value: (item: T) => Signal<SciDateValue | undefined>;
   compare: SciTableColumnSortComparatorFn<T, SciDateValue>;
   matches: SciTableColumnFilterMatcherFn<T, SciDateValue, string>;
 }
@@ -196,25 +196,25 @@ export interface SciTableRow<T> {
 export interface SciStringCell {
   type: 'string';
   column: SciStringColumn;
-  value: Signal<string>;
+  value: Signal<string | undefined>;
 }
 
 export interface SciNumberCell {
   type: 'number';
   column: SciNumberColumn;
-  value: Signal<number>;
+  value: Signal<number | undefined>;
 }
 
 export interface SciBooleanCell {
   type: 'boolean';
   column: SciBooleanColumn;
-  value: Signal<boolean>;
+  value: Signal<boolean | undefined>;
 }
 
 export interface SciDateCell {
   type: 'date';
   column: SciDateColumn;
-  value: Signal<SciDateValue>;
+  value: Signal<SciDateValue | undefined>;
 }
 
 export interface SciComponentCell {

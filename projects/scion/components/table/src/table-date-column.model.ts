@@ -5,7 +5,7 @@ import {formatDate} from '@angular/common';
  *
  * Calling this function is expensive due to date parsing and formatting.
  */
-export function coerceDateValue(dateLike: string | number | Date, options: {format: string; locale: string; timezone?: string}): SciDateValue {
+export function coerceDateValue(dateLike: string | number | Date | undefined, options: {format: string; locale: string; timezone?: string}): SciDateValue | undefined {
   const {format, locale, timezone} = options;
 
   switch (typeof dateLike) {
@@ -34,6 +34,9 @@ export function coerceDateValue(dateLike: string | number | Date, options: {form
         millis: date.getTime(),
         formatted: formatDate(isoString, format, locale, timezone),
       };
+    }
+    case 'undefined': {
+      return undefined;
     }
   }
 }

@@ -12,7 +12,7 @@ import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciDateColumnD
 import {SciBooleanColumn, SciComponentColumn, SciDateColumn, SciDateLike, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
 import {computed, inject, signal} from '@angular/core';
 import {ɵSciTable} from './ɵtable.model';
-import {coerceSignal, SCI_LOCALE} from '@scion/components/common';
+import {coerceSignal, MaybeSignal, SCI_LOCALE} from '@scion/components/common';
 import {coerceDateValue} from './table-date-column.model';
 import {DATE_PIPE_DEFAULT_OPTIONS} from '@angular/common';
 
@@ -35,7 +35,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     this.columns.push({
       ...column,
       type: 'string',
-      value: item => coerceSignal(descriptor.value(item)),
+      value: item => coerceSignal(descriptor.value(item), {coerceUndefined: true}),
       sortable: computed(() => this._table.sortable() && !!sortable),
       filterable: computed(() => this._table.filterable() && !!filterable),
       compare: typeof sortable === 'object' ? sortable.comparator : (a, b) => a.value.localeCompare(b.value),
@@ -55,7 +55,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     this.columns.push({
       ...column,
       type: 'number',
-      value: item => coerceSignal(descriptor.value(item)),
+      value: item => coerceSignal(descriptor.value(item), {coerceUndefined: true}),
       sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
       filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
       compare: (a, b) => a.value - b.value,
@@ -75,7 +75,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     this.columns.push({
       ...column,
       type: 'boolean',
-      value: item => coerceSignal(descriptor.value(item)),
+      value: item => coerceSignal(descriptor.value(item), {coerceUndefined: true}),
       sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
       filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
       compare: (a, b) => a.value === b.value ? 0 : (a.value ? 1 : -1),
@@ -101,7 +101,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       ...column,
       type: 'date',
       value: item => {
-        const dateLike = coerceSignal(descriptor.value(item));
+        const dateLike = coerceSignal(descriptor.value(item), {coerceUndefined: true});
         return computed(() => coerceDateValue(dateLike(), {locale: locale(), format, timezone}));
       },
       sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
@@ -204,10 +204,10 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
 /**
  * Coerces given column factory arguments to a {@link SciTableColumnDescriptorLike}.
  */
-function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => string) | string | SciStringColumnDescriptor<T>, value?: (item: T) => string): SciStringColumnDescriptor<T>;
-function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => number) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => number): SciNumberColumnDescriptor<T>;
-function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => SciDateLike) | string | SciDateColumnDescriptor<T>, value?: (item: T) => SciDateLike): SciDateColumnDescriptor<T>;
-function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => boolean) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => boolean): SciBooleanColumnDescriptor<T>;
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => MaybeSignal<string | undefined>) | string | SciStringColumnDescriptor<T>, value?: (item: T) => MaybeSignal<string | undefined>): SciStringColumnDescriptor<T>;
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => MaybeSignal<number | undefined>) | string | SciNumberColumnDescriptor<T>, value?: (item: T) => MaybeSignal<number | undefined>): SciNumberColumnDescriptor<T>;
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => MaybeSignal<boolean | undefined>) | string | SciBooleanColumnDescriptor<T>, value?: (item: T) => MaybeSignal<boolean | undefined>): SciBooleanColumnDescriptor<T>;
+function coerceColumnDescriptor<T>(descriptorLike: ((item: T) => MaybeSignal<SciDateLike | undefined>) | string | SciDateColumnDescriptor<T>, value?: (item: T) => MaybeSignal<SciDateLike | undefined>): SciDateColumnDescriptor<T>;
 function coerceColumnDescriptor(argument1: unknown, argument2?: unknown): unknown {
   switch (typeof argument1) {
     case 'string':

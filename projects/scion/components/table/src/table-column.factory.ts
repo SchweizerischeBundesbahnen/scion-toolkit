@@ -14,9 +14,9 @@ import {Translatable} from '@scion/components/text';
 
 export interface SciTableColumnFactory<T> {
 
-  addStringColumn(header: Translatable, value: (item: T) => string): this;
+  addStringColumn(header: Translatable, value: (item: T) => MaybeSignal<string | undefined>): this;
 
-  addStringColumn(value: (item: T) => string): this;
+  addStringColumn(value: (item: T) => MaybeSignal<string | undefined>): this;
 
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
@@ -42,7 +42,7 @@ export interface SciTableColumnFactory<T> {
    * }
    * ```
    */
-  addNumberColumn(header: Translatable, value: (item: T) => number): this;
+  addNumberColumn(header: Translatable, value: (item: T) => MaybeSignal<number | undefined>): this;
 
   /**
    * Adds a number column to the table for displaying numeric values.
@@ -66,7 +66,7 @@ export interface SciTableColumnFactory<T> {
    * }
    * ```
    */
-  addNumberColumn(value: (item: T) => number): this;
+  addNumberColumn(value: (item: T) => MaybeSignal<number | undefined>): this;
 
   /**
    * Adds a number column to the table for displaying numeric values.
@@ -92,9 +92,9 @@ export interface SciTableColumnFactory<T> {
    */
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
-  addBooleanColumn(header: Translatable, value: (item: T) => boolean): this;
+  addBooleanColumn(header: Translatable, value: (item: T) => MaybeSignal<boolean | undefined>): this;
 
-  addBooleanColumn(value: (item: T) => boolean): this;
+  addBooleanColumn(value: (item: T) => MaybeSignal<boolean | undefined>): this;
 
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
@@ -124,7 +124,7 @@ export interface SciTableColumnFactory<T> {
    * }
    * ```
    */
-  addDateColumn(header: Translatable, value: (item: T) => SciDateLike): this;
+  addDateColumn(header: Translatable, value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
 
   /**
    * Adds a temporal column to the table for displaying dates, times, or both.
@@ -152,7 +152,7 @@ export interface SciTableColumnFactory<T> {
    * }
    * ```
    */
-  addDateColumn(value: (item: T) => SciDateLike): this;
+  addDateColumn(value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
 
   /**
    * Adds a temporal column to the table for displaying dates, times, or both.
@@ -204,7 +204,7 @@ export interface SciTableColumnDescriptor {
 }
 
 export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
-  value: (item: T) => MaybeSignal<string>;
+  value: (item: T) => MaybeSignal<string | undefined>;
   sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, string>};
   filterable?: boolean | {matcher: SciTableColumnFilterMatcherFn<T, string>};
 }
@@ -216,7 +216,7 @@ export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
   /**
    * Specifies the number to display in this column.
    */
-  value: (item: T) => MaybeSignal<number>;
+  value: (item: T) => MaybeSignal<number | undefined>;
   /**
    * Controls whether the user can sort this column. Defaults to `true`.
    */
@@ -228,7 +228,7 @@ export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
 }
 
 export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor {
-  value: (item: T) => MaybeSignal<boolean>;
+  value: (item: T) => MaybeSignal<boolean | undefined>;
   sortable?: boolean;
   filterable?: boolean;
 }
@@ -242,7 +242,7 @@ export interface SciDateColumnDescriptor<T> extends SciTableColumnDescriptor {
    *
    * Can be an ISO 8601 date/time string (e.g., `2026-10-06`, `2026-10-06T14:30:15Z`, `T14:30:15`), milliseconds since the UTC epoch, or a `Date` object.
    */
-  value: (item: T) => MaybeSignal<SciDateLike>;
+  value: (item: T) => MaybeSignal<SciDateLike | undefined>;
   /**
    * Controls whether the user can sort this column. Defaults to `true`.
    */

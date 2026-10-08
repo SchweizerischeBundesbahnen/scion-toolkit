@@ -131,7 +131,11 @@ function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[]
 
   for (const columnFilter of columnFilters) {
     const cell = row.cells.get(columnFilter.columnName)!;
-    if (!cell.column.matches(columnFilter.text, {item: row.item, value: cell.value()})) { // component and template columns have no value
+    if ('value' in cell.column && cell.value() === undefined) { // Component and template columns have no value.
+      return false;
+    }
+
+    if (!cell.column.matches(columnFilter.text, {item: row.item, value: cell.value()})) {
       return false;
     }
   }
@@ -150,11 +154,20 @@ function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: 
   for (const criterion of sortCriteria) {
     const cell1 = row1.cells.get(criterion.columnName)!;
     const cell2 = row2.cells.get(criterion.columnName)!;
+    const value1 = cell1.value();
+    const value2 = cell2.value();
 
-    const comparison = cell1.column.compare({item: row1.item, value: cell1.value()}, {item: row2.item, value: cell2.value()});
+    // Always place `undefined` values at the end, independent of the sort direction. Note that component and template columns have no value.
+    if (value1 === undefined && value2 !== undefined) {
+      return 1;
+    }
+    if (value2 === undefined && value1 !== undefined) {
+      return -1;
+    }
+
+    const comparison = cell1.column.compare({item: row1.item, value: value1}, {item: row2.item, value: value2});
     if (comparison !== 0) {
-      const signum = criterion.direction === 'asc' ? 1 : -1;
-      return signum * comparison;
+      return criterion.direction === 'asc' ? comparison : -comparison;
     }
   }
 
