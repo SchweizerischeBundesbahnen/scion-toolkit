@@ -17,6 +17,12 @@
     text-align: end;
   }
 
+  // Enable tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+  // Tabular figures include digits (0-9), basic math symbols, and punctuations/spaces.
+  &:is([data-type="number"], [data-type="date"]) {
+    font-variant-numeric: tabular-nums;
+  }
+
   &[data-padding="false"] {
     border-inline: none;
     align-items: stretch; // fill entire cell vertically

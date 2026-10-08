@@ -145,6 +145,24 @@ table(users.value, table => table.addNumberColumn({
 }));
 ```
 
+Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+
+Tabular figures include digits (`0-9`), basic math symbols, and punctuations/spaces.
+
+To disable tabular figures using CSS:
+
+```scss
+// Disable tabular figures for all number columns.
+sci-table::part(column\:number) {
+  font-variant-numeric: normal;
+}
+
+// Disable tabular figures for a specific column (replace `column-name` with the column's name).
+sci-table::part(column\:column-name) {
+  font-variant-numeric: normal;
+}
+```
+
 #### Boolean Column
 
 Displays boolean values.
@@ -173,6 +191,8 @@ table(users.value, table => table.addDateColumn({
 }));
 ```
 
+##### Date Format
+
 Use the `format` property to control how the date is rendered. The format can be a predefined Angular date format (e.g., `mediumDate` or `mediumTime`) or a custom date/time pattern (e.g., `dd.MM.yyyy` or `HH:mm`). If omitted, it defaults to the format configured in `DATE_PIPE_DEFAULT_OPTIONS` or falls back to `mediumDate`.
 
 ```ts
@@ -190,6 +210,8 @@ table(users.value, table => table.addDateColumn({
 > - See [Angular Custom Format Syntax](https://angular.dev/api/common/DatePipe#custom-format-options) for custom date/time pattern syntax.
 
 
+##### Timezone
+
 Dates render in the user's local timezone by default. You can override this per column using the `timezone` property or globally via the `DATE_PIPE_DEFAULT_OPTIONS` DI token.
 
 ```ts
@@ -202,6 +224,8 @@ table(users.value, table => table.addDateColumn({
   timezone: '+0200' // <--- Set the timezone
 }));
 ```
+
+##### Locale
 
 Dates are localized using the locale provided by `SCI_LOCALE`, a writable signal initialized with Angular's `LOCALE_ID`. Localization affects date/time patterns, month and weekday names, AM/PM indicators, and related formatting symbols.
 
@@ -247,6 +271,24 @@ bootstrapApplication(AppComponent, {
     }),
   ],
 });
+```
+##### Tabular Figures
+Dates are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+
+Tabular figures include digits (`0-9`), basic math symbols, and punctuations/spaces.
+
+To disable tabular figures using CSS:
+
+```scss
+// Disable tabular figures for all date columns.
+sci-table::part(column\:date) {
+  font-variant-numeric: normal;
+}
+
+// Disable tabular figures for a specific column (replace `column-name` with the column's name).
+sci-table::part(column\:column-name) {
+  font-variant-numeric: normal;
+}
 ```
 
 ### Custom Columns

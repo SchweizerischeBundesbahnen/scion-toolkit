@@ -22,6 +22,7 @@ import {registerLocaleData} from '@angular/common';
 import localeDeCH from '@angular/common/locales/de-CH';
 import localeEnCH from '@angular/common/locales/en-CH';
 import {SCI_LOCALE} from '@scion/components/common';
+import {Arrays} from '@scion/toolkit/util';
 
 describe('Table', () => {
 
@@ -163,6 +164,47 @@ describe('Table', () => {
       });
     });
 
+    describe('Number Column', () => {
+
+      it('should have tabular (monospaced) figures', async () => {
+        const data = signal([{number: 1}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addNumberColumn(item => item.number),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('tabular-nums');
+      });
+
+      it('should disable tabular (monospaced) figures via CSS', async () => {
+        const data = signal([{number: 1}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addNumberColumn(item => item.number),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        // Disable tabular figures via CSS.
+        const styleSheet = new CSSStyleSheet();
+        styleSheet.insertRule(`
+          sci-table::part(column\\:number) {
+            font-variant-numeric: normal;
+          }
+        `);
+        document.adoptedStyleSheets.push(styleSheet);
+        TestBed.inject(DestroyRef).onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
+
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('normal');
+      });
+    });
+
     describe('Date Column', () => {
 
       it('should support different date input formats', async () => {
@@ -299,6 +341,44 @@ describe('Table', () => {
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['17.02.2026'],
         ]);
+      });
+
+      it('should have tabular (monospaced) figures', async () => {
+        const data = signal([{date: '2026-02-17'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addDateColumn(item => item.date),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('tabular-nums');
+      });
+
+      it('should disable tabular (monospaced) figures via CSS', async () => {
+        const data = signal([{date: '2026-02-17'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addDateColumn(item => item.date),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        // Disable tabular figures via CSS.
+        const styleSheet = new CSSStyleSheet();
+        styleSheet.insertRule(`
+          sci-table::part(column\\:date) {
+            font-variant-numeric: normal;
+          }
+        `);
+        document.adoptedStyleSheets.push(styleSheet);
+        TestBed.inject(DestroyRef).onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
+
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('normal');
       });
     });
 
@@ -481,6 +561,44 @@ describe('Table', () => {
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['21:20:45'],
         ]);
+      });
+
+      it('should have tabular (monospaced) figures', async () => {
+        const data = signal([{time: 'T16:20:45Z'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addDateColumn(item => item.time),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('tabular-nums');
+      });
+
+      it('should disable tabular (monospaced) figures via CSS', async () => {
+        const data = signal([{time: 'T16:20:45Z'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addDateColumn(item => item.time),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        // Disable tabular figures via CSS.
+        const styleSheet = new CSSStyleSheet();
+        styleSheet.insertRule(`
+          sci-table::part(column\\:date) {
+            font-variant-numeric: normal;
+          }
+        `);
+        document.adoptedStyleSheets.push(styleSheet);
+        TestBed.inject(DestroyRef).onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
+
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('normal');
       });
     });
   });

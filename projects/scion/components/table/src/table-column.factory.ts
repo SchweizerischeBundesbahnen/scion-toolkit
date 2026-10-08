@@ -20,10 +20,76 @@ export interface SciTableColumnFactory<T> {
 
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
+  /**
+   * Adds a number column to the table for displaying numeric values.
+   *
+   * ### Tabular Figures
+   * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+   *
+   * Tabular figures include digits (0-9), basic math symbols, and punctuations/spaces.
+   *
+   * To disable tabular figures using CSS:
+   *
+   * ```scss
+   * // Disable tabular figures for all number columns.
+   * sci-table::part(column\:number) {
+   *   font-variant-numeric: normal;
+   * }
+   *
+   * // Disable tabular figures for a specific column (replace `column-name` with the column's name).
+   * sci-table::part(column\:column-name) {
+   *   font-variant-numeric: normal;
+   * }
+   * ```
+   */
   addNumberColumn(header: Translatable, value: (item: T) => number): this;
 
+  /**
+   * Adds a number column to the table for displaying numeric values.
+   *
+   * ### Tabular Figures
+   * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+   *
+   * Tabular figures include digits (0-9), basic math symbols, and punctuations/spaces.
+   *
+   * To disable tabular figures using CSS:
+   *
+   * ```scss
+   * // Disable tabular figures for all number columns.
+   * sci-table::part(column\:number) {
+   *   font-variant-numeric: normal;
+   * }
+   *
+   * // Disable tabular figures for a specific column (replace `column-name` with the column's name).
+   * sci-table::part(column\:column-name) {
+   *   font-variant-numeric: normal;
+   * }
+   * ```
+   */
   addNumberColumn(value: (item: T) => number): this;
 
+  /**
+   * Adds a number column to the table for displaying numeric values.
+   *
+   * ### Tabular Figures
+   * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+   *
+   * Tabular figures include digits (0-9), basic math symbols, and punctuations/spaces.
+   *
+   * To disable tabular figures using CSS:
+   *
+   * ```scss
+   * // Disable tabular figures for all number columns.
+   * sci-table::part(column\:number) {
+   *   font-variant-numeric: normal;
+   * }
+   *
+   * // Disable tabular figures for a specific column (replace `column-name` with the column's name).
+   * sci-table::part(column\:column-name) {
+   *   font-variant-numeric: normal;
+   * }
+   * ```
+   */
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
   addBooleanColumn(header: Translatable, value: (item: T) => boolean): this;
@@ -38,6 +104,25 @@ export interface SciTableColumnFactory<T> {
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
    * Dates are formatted using `mediumDate`, or as specified in {@link DATE_PIPE_DEFAULT_OPTIONS}.
+   *
+   * ### Tabular Figures
+   * Dates are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+   *
+   * Tabular figures include digits (0-9), basic math symbols, and punctuations/spaces.
+   *
+   * To disable tabular figures using CSS:
+   *
+   * ```scss
+   * // Disable tabular figures for all date columns.
+   * sci-table::part(column\:date) {
+   *   font-variant-numeric: normal;
+   * }
+   *
+   * // Disable tabular figures for a specific column (replace `column-name` with the column's name).
+   * sci-table::part(column\:column-name) {
+   *   font-variant-numeric: normal;
+   * }
+   * ```
    */
   addDateColumn(header: Translatable, value: (item: T) => SciDateLike): this;
 
@@ -47,6 +132,25 @@ export interface SciTableColumnFactory<T> {
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
    * Dates are formatted using `mediumDate`, or as specified in {@link DATE_PIPE_DEFAULT_OPTIONS}.
+   *
+   * ### Tabular Figures
+   * Dates are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+   *
+   * Tabular figures include digits (0-9), basic math symbols, and punctuations/spaces.
+   *
+   * To disable tabular figures using CSS:
+   *
+   * ```scss
+   * // Disable tabular figures for all date columns.
+   * sci-table::part(column\:date) {
+   *   font-variant-numeric: normal;
+   * }
+   *
+   * // Disable tabular figures for a specific column (replace `column-name` with the column's name).
+   * sci-table::part(column\:column-name) {
+   *   font-variant-numeric: normal;
+   * }
+   * ```
    */
   addDateColumn(value: (item: T) => SciDateLike): this;
 
@@ -56,6 +160,25 @@ export interface SciTableColumnFactory<T> {
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
    * Dates are formatted as specified in {@link SciDateColumnDescriptor.format}, {@link SciDateColumnDescriptor.locale}, and {@link SciDateColumnDescriptor.timezone}.
+   *
+   * ### Tabular Figures
+   * Dates are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
+   *
+   * Tabular figures include digits (0-9), basic math symbols, and punctuations/spaces.
+   *
+   * To disable tabular figures using CSS:
+   *
+   * ```scss
+   * // Disable tabular figures for all date columns.
+   * sci-table::part(column\:date) {
+   *   font-variant-numeric: normal;
+   * }
+   *
+   * // Disable tabular figures for a specific column (replace `column-name` with the column's name).
+   * sci-table::part(column\:column-name) {
+   *   font-variant-numeric: normal;
+   * }
+   * ```
    */
   addDateColumn(descriptor: SciDateColumnDescriptor<T>): this;
 
@@ -86,9 +209,21 @@ export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
   filterable?: boolean | {matcher: SciTableColumnFilterMatcherFn<T, string>};
 }
 
+/**
+ * Configures a table column for displaying numeric values.
+ */
 export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
+  /**
+   * Specifies the number to display in this column.
+   */
   value: (item: T) => MaybeSignal<number>;
+  /**
+   * Controls whether the user can sort this column. Defaults to `true`.
+   */
   sortable?: boolean;
+  /**
+   * Controls whether the user can filter this column. Defaults to `true`.
+   */
   filterable?: boolean;
 }
 
