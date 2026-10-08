@@ -3353,6 +3353,162 @@ describe('Table', () => {
       expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:positive');
       expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:positive');
     });
+
+    it('should style rows based on row state (selected/unselected, active/inactive)', async () => {
+      const data = signal(['1', '2', '3']);
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table.addStringColumn({name: 'column:column-name', value: item => item}),
+        rowBindings: bindings => bindings.addPartBinding('row:row-binding'),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      // Expect state of row 1.
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+
+      // Expect state of row 2.
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+
+      // Expect state of row 3.
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+
+      // Select row 2.
+      table.row({nth: 1}).select();
+      await table.waitUntilStable();
+      expect(table.row({nth: 1}).isSelected()).toBeTrue();
+      expect(table.row({nth: 1}).isActive()).toBeTrue();
+
+      // Expect state of row 1.
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+
+      // Expect state of row 2 (selected, active).
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:selected');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:active');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:not:selected');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:not:active');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+
+      // Expect state of row 3.
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+
+      // Activate row 3.
+      table.body.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', ctrlKey: true}));
+      await table.waitUntilStable();
+      expect(table.row({nth: 1}).isSelected()).toBeTrue();
+      expect(table.row({nth: 1}).isActive()).toBeFalse();
+      expect(table.row({nth: 2}).isSelected()).toBeFalse();
+      expect(table.row({nth: 2}).isActive()).toBeTrue();
+
+      // Expect state of row 1.
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+
+      // Expect state of row 2 (selected).
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:selected');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:not:selected');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+
+      // Expect state of row 3 (active).
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:active');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:not:active');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+    });
+  });
+
+  describe('Column Bindings', () => {
+
+    it('should style column based on the column name', async () => {
+      const data = signal([{string: 'abc'}]);
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table
+          .addStringColumn({
+            name: 'column:column-name',
+            value: item => item.string,
+          }),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+    });
+
+    it('should style column based on the column data type', async () => {
+      const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+      const data = signal([{string: 'abc', number: 123, boolean: true, date: '2026-10-06'}]);
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table
+          .addStringColumn(item => item.string)
+          .addNumberColumn(item => item.number)
+          .addBooleanColumn(item => item.boolean)
+          .addDateColumn(item => item.date)
+          .addComponentColumn({component: item => ({component: CustomColumnComponent, bindings: [inputBinding('value', () => item)]})})
+          .addTemplateColumn({template: () => ({template})}),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 0}).cells[1]!.element!.getAttribute('part')).toContain('column:number');
+      expect(table.row({nth: 0}).cells[2]!.element!.getAttribute('part')).toContain('column:boolean');
+      expect(table.row({nth: 0}).cells[3]!.element!.getAttribute('part')).toContain('column:date');
+      expect(table.row({nth: 0}).cells[4]!.element!.getAttribute('part')).toContain('column:component');
+      expect(table.row({nth: 0}).cells[5]!.element!.getAttribute('part')).toContain('column:template');
+    });
   });
 
   describe('Miscellaneous', () => {

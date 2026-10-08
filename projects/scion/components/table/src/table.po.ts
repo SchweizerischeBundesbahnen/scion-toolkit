@@ -215,6 +215,14 @@ export class RowPO {
     this.element.click();
   }
 
+  public isSelected(): boolean {
+    return this.element.hasAttribute('data-selected');
+  }
+
+  public isActive(): boolean {
+    return this.element.hasAttribute('data-active');
+  }
+
   public get rowIndex(): number {
     const rowIndex = this.element.getAttribute('data-row-index');
     if (rowIndex === null) {

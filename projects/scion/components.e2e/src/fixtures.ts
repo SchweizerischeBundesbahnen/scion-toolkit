@@ -35,7 +35,7 @@ declare global {
       toHaveEllipsis(): Promise<R>;
 
       /**
-       * Like Playwrights `toBeEmpty`, but additionally checks that the element has no child elements.
+       * Like Playwright's `toBeEmpty`, but additionally checks that the element has no child elements.
        */
       toBeStrictEmpty(): Promise<R>;
 

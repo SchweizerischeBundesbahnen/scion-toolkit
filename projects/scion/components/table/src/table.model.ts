@@ -76,7 +76,7 @@ export interface SciTableDescriptor<T> {
    * ```
    *
    * ```scss
-   * sci-table::part(row\:even) {
+   * sci-table::part(row\:even row\:not\:selected) {
    *   background-color: lightgray;
    * }
    * ```
