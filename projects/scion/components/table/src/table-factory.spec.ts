@@ -175,7 +175,7 @@ describe('Table Factory', () => {
 
     it('should disallow sort comparator if using custom datasource', done => {
       createSciTableComponent(table({
-        ɵdatasource: provideAsyncTableDatasource(() => ({totalCount: 0, items: []})),
+        ɵdatasource: provideAsyncTableDatasource(() => [], () => []),
         datasource: ɵillegaldatasource(),
         columns: table => {
           expect(() => table.addStringColumn({
@@ -190,7 +190,7 @@ describe('Table Factory', () => {
 
     it('should disallow filter matcher if using custom datasource', done => {
       createSciTableComponent(table({
-        ɵdatasource: provideAsyncTableDatasource(() => ({totalCount: 0, items: []})),
+        ɵdatasource: provideAsyncTableDatasource(() => [], () => []),
         datasource: ɵillegaldatasource(),
         columns: table => {
           expect(() => table.addStringColumn({

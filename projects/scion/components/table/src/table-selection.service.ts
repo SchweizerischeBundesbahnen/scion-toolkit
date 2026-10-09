@@ -94,7 +94,7 @@ export class SciTableSelectionService<T> {
 
     const table = this._table();
     const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
-    const endIndex = Math.min(activeIndex + 1, table.totalCount()! - 1);
+    const endIndex = Math.min(activeIndex + 1, table.visibleRowCount()! - 1);
 
     if (endIndex === activeIndex) {
       return;
@@ -226,7 +226,7 @@ export class SciTableSelectionService<T> {
     }
 
     const activeIndex = table.rowIndexById().get(activeRow.id) ?? -1;
-    const endIndex = Math.min(activeIndex + 1, table.totalCount()! - 1);
+    const endIndex = Math.min(activeIndex + 1, table.visibleRowCount()! - 1);
 
     if (endIndex === activeIndex) {
       return;
@@ -287,7 +287,7 @@ export class SciTableSelectionService<T> {
 
     const table = this._table();
     const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
-    const endIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.totalCount()! - 1);
+    const endIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.visibleRowCount()! - 1);
 
     if (endIndex === activeIndex) {
       return;
@@ -364,7 +364,7 @@ export class SciTableSelectionService<T> {
     const table = this._table();
     const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
 
-    const endIndex = table.totalCount()! - 1;
+    const endIndex = table.visibleRowCount()! - 1;
 
     if (endIndex === activeIndex) {
       return;
@@ -374,7 +374,7 @@ export class SciTableSelectionService<T> {
     // But otherwise, loading and setting the active item needs to be done for each case, or once at the end.
 
     // Set active item.
-    await this.loadMissingItems(endIndex, endIndex);
+    // await this.loadMissingItems(endIndex, endIndex);
     const endItem = table.rowsByIndex().get(endIndex)?.item;
     table.activeItem.set(endItem);
 
@@ -429,7 +429,7 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const totalCount = table.totalCount() ?? 0;
+    const totalCount = table.visibleRowCount() ?? 0;
 
     if (table.selectable() === 'multi' && totalCount >= 0) {
       await this.selectItems(0, totalCount - 1);
