@@ -13,21 +13,21 @@ import {SciTableDescriptor, ɵillegaldatasource, ɵSciTable} from '@scion/compon
 import {effect, signal, Signal, WritableSignal} from '@angular/core';
 import {Translatable} from '@scion/components/text';
 
-export class ɵSciTree<T = unknown> implements SciTree<T> {
+export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
 
-  public readonly activeItem: Signal<T | undefined>;
-  public readonly selectedItems: Signal<Array<T>>;
+  public readonly activeItem: Signal<ID | undefined>;
+  public readonly selectedItems: Signal<Array<ID>>;
   public readonly filterable: WritableSignal<boolean>;
   public readonly header: WritableSignal<Translatable | undefined>;
   public readonly wrapHeader: WritableSignal<boolean>;
   public readonly sortable: WritableSignal<boolean>;
   public readonly selectable: WritableSignal<'single' | 'multi' | false>;
 
-  private readonly _table: ɵSciTable<T>;
+  private readonly _table: ɵSciTable<T, ID>;
 
-  constructor(descriptor: SciTreeDescriptor<T>) {
+  constructor(descriptor: SciTreeDescriptor<T, ID>) {
     this.header = signal(descriptor.header);
-    const tableDescriptor: SciTableDescriptor<T> = {
+    const tableDescriptor: SciTableDescriptor<T, ID> = {
       datasource: ɵillegaldatasource(),
       ɵdatasource: descriptor.datasource,
       filterable: !!descriptor.filterable,
@@ -48,7 +48,7 @@ export class ɵSciTree<T = unknown> implements SciTree<T> {
       }),
     };
 
-    this._table = new ɵSciTable<T>(tableDescriptor);
+    this._table = new ɵSciTable<T, ID>(tableDescriptor);
 
     this.activeItem = this._table.activeItem;
     this.selectedItems = this._table.selectedItems;
@@ -59,7 +59,7 @@ export class ɵSciTree<T = unknown> implements SciTree<T> {
     effect(() => this._table.showHeader.set(!!this.header()));
   }
 
-  public get table(): ɵSciTable<T> {
+  public get table(): ɵSciTable<T, ID> {
     return this._table;
   }
 
@@ -67,7 +67,7 @@ export class ɵSciTree<T = unknown> implements SciTree<T> {
     this._table.filter(text);
   }
 
-  public expand(id: unknown): void {
+  public expand(id: ID): void {
     this._table.expand(id);
   }
 
@@ -75,7 +75,7 @@ export class ɵSciTree<T = unknown> implements SciTree<T> {
     this._table.expandAll();
   }
 
-  public collapse(id: unknown): void {
+  public collapse(id: ID): void {
     this._table.collapse(id);
   }
 

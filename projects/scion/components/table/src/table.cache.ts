@@ -12,19 +12,19 @@ import {computed, ResourceRef, signal, Signal} from '@angular/core';
 import {SciTableRow} from './table.model';
 import {Objects} from '@scion/toolkit/util';
 
-export class SciTableCache<T> {
+export class SciTableCache<T, ID> {
 
-  private readonly _resourcesById = signal(new Map<unknown, ResourceRef<SciTableRow<T>[] | undefined>>());
+  private readonly _resourcesById = signal(new Map<unknown, ResourceRef<SciTableRow<T, ID>[] | undefined>>());
 
   private readonly _idsByResource = computed(() => [...this._resourcesById().entries()].reduce((map, [id, resource]) => {
     const ids = map.get(resource) ?? new Set();
     ids.add(id);
     return map.set(resource, ids);
-  }, new Map<ResourceRef<SciTableRow<T>[] | undefined>, Set<unknown>>()));
+  }, new Map<ResourceRef<SciTableRow<T, ID>[] | undefined>, Set<unknown>>()));
 
-  public readonly rowsById: Signal<Map<ID, SciTableRow<T>>> = computed(() => [...this._resourcesById().values()]
+  public readonly rowsById: Signal<Map<ID, SciTableRow<T, ID>>> = computed(() => [...this._resourcesById().values()]
     .flatMap(resource => resource.status() === 'error' ? [] : resource.value() ?? [])
-    .reduce((acc, row) => acc.set(row.id, row), new Map<ID, SciTableRow<T>>()), {equal: Objects.isEqual});
+    .reduce((acc, row) => row.id ? acc.set(row.id, row) : acc, new Map<ID, SciTableRow<T, ID>>()), {equal: Objects.isEqual});
 
   private readonly _resources = computed(() => {
     const resources = new Set(this._resourcesById().values());
@@ -41,11 +41,11 @@ export class SciTableCache<T> {
     return this._resourcesById().has(key);
   }
 
-  public get(key: unknown): ResourceRef<SciTableRow<T>[] | undefined> | undefined {
+  public get(key: unknown): ResourceRef<SciTableRow<T, ID>[] | undefined> | undefined {
     return this._resourcesById().get(key);
   }
 
-  public set(ids: unknown[], resource: ResourceRef<SciTableRow<T>[] | undefined>): void {
+  public set(ids: unknown[], resource: ResourceRef<SciTableRow<T, ID>[] | undefined>): void {
     this._resourcesById.update(cache => {
       const newCache = new Map(cache);
       for (const id of ids) {
@@ -90,5 +90,3 @@ export class SciTableCache<T> {
     });
   }
 }
-
-type ID = unknown;

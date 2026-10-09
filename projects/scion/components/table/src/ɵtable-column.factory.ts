@@ -14,11 +14,11 @@ import {computed, signal} from '@angular/core';
 import {ɵSciTable} from './ɵtable.model';
 import {coerceSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 
-export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
+export class ɵSciTableColumnFactory<T, ID> implements SciTableColumnFactory<T> {
 
   public readonly columns = new Array<SciTableColumnLike<T>>();
 
-  constructor(private readonly _table: ɵSciTable<T>) {
+  constructor(private readonly _table: ɵSciTable<T, ID>) {
   }
 
   public addStringColumn(value: (item: T) => string): this;

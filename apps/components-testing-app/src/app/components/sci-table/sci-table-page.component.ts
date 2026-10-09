@@ -70,16 +70,16 @@ export default class SciTablePageComponent {
 
   protected readonly tables = this.computeTables();
   protected readonly rowCount = inject(ProductService).productCount;
-  protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem()?.id);
+  protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem());
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
-  protected readonly selection = computed(() => this.tables()[0]?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.tables()[0]?.selectedItems().sort((a, b) => a - b).join(' '));
 
   constructor() {
     this.bindTableSettings();
   }
 
-  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
-    return table({
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<number> {
+    return table<Product, number>({
       datasource: ɵillegaldatasource(),
       ɵdatasource: (() => {
         switch (options.datasource) {
@@ -183,8 +183,8 @@ export default class SciTablePageComponent {
     });
   }
 
-  private computeTables(): Signal<SciTable<Product>[]> {
-    const tables = signal<SciTable<Product>[]>([]);
+  private computeTables(): Signal<SciTable<number>[]> {
+    const tables = signal<SciTable<number>[]>([]);
 
     effect(onCleanup => {
       const tableCount = this.settingsForm.tableCount().value();

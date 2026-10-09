@@ -8,19 +8,19 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeNode, SciTableTreeNodeIds} from './table-datasource';
+import {SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeNode} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
 import {computed, Signal, untracked} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 
-export function treeDatasource<T>(data: Signal<Map<unknown, SciTableTreeNode<T>>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<SciTableTreeNodeIds[]>) {
-  const dataset = computed((): TreeDatasetRow<T>[] => {
+export function treeDatasource<T, ID>(data: Signal<Map<ID, SciTableTreeNode<T, ID>>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<SciTableTreeNode<ID>[]>) {
+  const dataset = computed((): TreeDatasetRow<T, ID>[] => {
     return [...data().entries()].map(([id, node]) => ({...createDatasetRow(id, node.item, columns()), parent: node.parent}));
   });
 
-  return (request: SciTableIdsRequest): Observable<SciTableTreeNodeIds[]> => {
+  return (request: SciTableIdsRequest): Observable<SciTableTreeNode<ID>[]> => {
     return toObservable(computed(() => {
       const rows = dataset();
 
@@ -28,16 +28,16 @@ export function treeDatasource<T>(data: Signal<Map<unknown, SciTableTreeNode<T>>
         return rows
           .filter(row => (matchesRow(row, request.columnFilters) && matchesGlobalFilter(row, request.tableFilter)))
           .sort((a, b) => compareRows(a, b, request.sortCriteria))
-          .map(row => ({id: row.id, parentId: row.parent}));
+          .map(row => ({item: row.id, parent: row.parent}));
       });
     }));
   };
 }
 
-export function arrayDatasource<T>(data: Signal<Map<unknown, T>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<unknown[]>) {
-  const dataset = computed((): DatasetRow<T>[] => [...data().entries()].map(([id, item]) => createDatasetRow(id, item, columns())));
+export function arrayDatasource<T, ID>(data: Signal<Map<ID, T>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<ID[]>) {
+  const dataset = computed((): DatasetRow<T, ID>[] => [...data().entries()].map(([id, item]) => createDatasetRow(id, item, columns())));
 
-  return (request: SciTableIdsRequest): Observable<unknown[]> => {
+  return (request: SciTableIdsRequest): Observable<ID[]> => {
     return toObservable(computed(() => {
       const rows = dataset();
 
@@ -49,7 +49,7 @@ export function arrayDatasource<T>(data: Signal<Map<unknown, T>>, columns: Signa
   };
 }
 
-function createDatasetRow<T>(id: unknown, item: T, columns: SciTableColumnLike<T>[]): DatasetRow<T> {
+function createDatasetRow<T, ID>(id: ID, item: T, columns: SciTableColumnLike<T>[]): DatasetRow<T, ID> {
   return {
     id,
     item,
@@ -74,14 +74,14 @@ function createDatasetRow<T>(id: unknown, item: T, columns: SciTableColumnLike<T
   };
 }
 
-interface DatasetRow<T> {
-  id: unknown;
+interface DatasetRow<T, ID> {
+  id: ID;
   item: T;
   cells: Map<`column:${string}`, DatasetCell>;
 }
 
-interface TreeDatasetRow<T> extends DatasetRow<T> {
-  parent?: unknown;
+interface TreeDatasetRow<T, ID> extends DatasetRow<T, ID> {
+  parent?: ID;
 }
 
 interface DatasetCell {
@@ -92,7 +92,7 @@ interface DatasetCell {
 /**
  * Tests whether a row matches the given global filter.
  */
-function matchesGlobalFilter<T>(row: DatasetRow<T>, filter?: string): boolean {
+function matchesGlobalFilter<T, ID>(row: DatasetRow<T, ID>, filter?: string): boolean {
   if (!filter?.trim()) {
     return true;
   }
@@ -114,7 +114,7 @@ function matchesGlobalFilter<T>(row: DatasetRow<T>, filter?: string): boolean {
 /**
  * Tests whether a row matches the given column filters.
  */
-function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[]): boolean {
+function matchesRow<T, ID>(row: DatasetRow<T, ID>, columnFilters: SciTableColumnFilter[]): boolean {
   if (!columnFilters.length) {
     return true;
   }
@@ -132,7 +132,7 @@ function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[]
 /**
  * Compares two rows based on the given sort criteria.
  */
-function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: SciTableSortCriterion[]): number {
+function compareRows<T, ID>(row1: DatasetRow<T, ID>, row2: DatasetRow<T, ID>, sortCriteria: SciTableSortCriterion[]): number {
   if (!sortCriteria.length) {
     return 0;
   }

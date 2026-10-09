@@ -27,7 +27,7 @@ import {SciTableColumnComponent} from '../table-column/table-column.component';
 })
 export class SciTableColumnsComponent<T> {
 
-  public readonly rows = input.required<readonly SciTableRowComponent<unknown>[]>();
+  public readonly rows = input.required<readonly SciTableRowComponent<unknown, unknown>[]>();
 
   protected readonly table = inject(ɵSCI_TABLE);
 

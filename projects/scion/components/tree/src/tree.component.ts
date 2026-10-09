@@ -18,7 +18,7 @@ import {SciTableComponent} from '@scion/components/table';
   template: '',
   imports: [],
 })
-export class SciTreeComponent<T = unknown> {
+export class SciTreeComponent<T = unknown, ID = T> {
 
   /**
    * Specifies a unique tree identifier, used as the key for storing user preferences.
@@ -28,7 +28,7 @@ export class SciTreeComponent<T = unknown> {
   /**
    * Specifies the tree definition and datasource.
    */
-  public readonly tree = input.required({transform: (tree: SciTree<T>) => tree as ɵSciTree<T>});
+  public readonly tree = input.required({transform: (tree: SciTree<ID>) => tree as ɵSciTree<T, ID>});
 
   /**
    * Emits when the user performs a primary action on a node (double-clicking or pressing `Enter`).

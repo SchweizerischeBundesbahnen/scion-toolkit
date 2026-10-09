@@ -55,15 +55,15 @@ export default class SciTreePageComponent {
     const selectable = this.tree()?.selectable();
     return selectable === false ? 'false' : selectable;
   });
-  protected readonly selection = computed(() => this.tree()?.selectedItems().map(item => Number(item.dataId)).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.tree()?.selectedItems().map(item => Number(item)).sort((a, b) => a - b).join(' '));
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
 
   constructor() {
     this.bindTreeSettings();
   }
 
-  private createTree(): SciTree<Company> {
-    return tree<Company>({
+  private createTree(): SciTree<string> {
+    return tree<Company, string>({
       label: company => company.dataId,
       datasource: provideTreeDatasource(computed(() => data().filter(item => item.parent === undefined)), item => data().filter(i => i.parent === item.code)),
       nodeBindings: (bindings, _vehicle, index) => {
@@ -75,8 +75,8 @@ export default class SciTreePageComponent {
     });
   }
 
-  private computeTree(): Signal<SciTree<Company> | undefined> {
-    const tree = signal<SciTree<Company> | undefined>(undefined);
+  private computeTree(): Signal<SciTree<string> | undefined> {
+    const tree = signal<SciTree<string> | undefined>(undefined);
 
     effect(onCleanup => {
       untracked(() => {

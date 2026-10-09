@@ -66,16 +66,16 @@ export default class SciTreePageComponent {
   protected readonly trees = this.computeTrees();
   protected readonly tree = computed(() => this.trees()[0]);
   protected readonly rowCount = inject(ProductService).productCount;
-  protected readonly activeItemId = computed(() => this.tree()?.activeItem()?.id);
+  protected readonly activeItemId = computed(() => this.tree()?.activeItem());
   protected readonly selectedItems = computed(() => this.tree()?.selectedItems());
-  protected readonly selection = computed(() => this.tree()?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.tree()?.selectedItems().sort((a, b) => a - b).join(' '));
 
   constructor() {
     this.bindTreeSettings();
   }
 
-  private createTree(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showNodeActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTree<Product> {
-    return tree<Product>({
+  private createTree(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showNodeActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTree<number> {
+    return tree({
       label: product => product.name,
       datasource: (() => {
         switch (options.datasource) {
@@ -119,8 +119,8 @@ export default class SciTreePageComponent {
     });
   }
 
-  private computeTrees(): Signal<SciTree<Product>[]> {
-    const trees = signal<SciTree<Product>[]>([]);
+  private computeTrees(): Signal<SciTree<number>[]> {
+    const trees = signal<SciTree<number>[]>([]);
 
     effect(onCleanup => {
       const treeCount = this.settingsForm.treeCount().value();

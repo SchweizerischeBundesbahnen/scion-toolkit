@@ -57,55 +57,55 @@ export interface SciTableIdsRequest {
  */
 export type SciTableDataLoaderFn<T> = (request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
 
-export interface SciTableTreeNodeIds {
-  id: unknown;
-  parentId?: unknown;
-}
+// export interface SciTableTreeNodeIds<ID> {
+//   id: ID;
+//   parentId?: ID;
+// }
 
-export interface SciTableTreeNode<T> {
+export interface SciTableTreeNode<T, P = T> {
   item: T;
-  parent?: T;
+  parent?: P;
 }
 
 export type SciTableIdsProvider<T> = (request: SciTableIdsRequest) => MaybeAsync<T[]>;
 
-export interface SciTableTreeDataProvider<T> {
-  getIds: SciTableIdsProvider<SciTableTreeNodeIds>;
-  getItems(ids: unknown[]): MaybeAsync<T[]>;
+export interface SciTableTreeDataProvider<T, ID> {
+  getIds: SciTableIdsProvider<SciTableTreeNode<ID>>;
+  getItems(ids: ID[]): MaybeAsync<T[]>;
 }
 
-export interface SciTableDataProvider<T> {
-  getIds: SciTableIdsProvider<unknown>;
-  getItems(ids: unknown[]): MaybeAsync<T[]>;
+export interface SciTableDataProvider<T, ID> {
+  getIds: SciTableIdsProvider<ID>;
+  getItems(ids: ID[]): MaybeAsync<T[]>;
 }
 
-export type SciTableDataSource<T> = SciTableDataProvider<T> | SciTableTreeDataProvider<T>;
-export type SciTableDataSourceProvider<T> = (columns: Signal<SciTableColumnLike<T>[]>, trackBy: (item: T) => unknown) => SciTableDataSource<T>;
+export type SciTableDataSource<T, ID> = SciTableDataProvider<T, ID> | SciTableTreeDataProvider<T, ID>;
+export type SciTableDataSourceProvider<T, ID> = (columns: Signal<SciTableColumnLike<T>[]>, trackBy: (item: T) => ID) => SciTableDataSource<T, ID>;
 
-export class SciTableArrayDatasource<T> implements SciTableDataProvider<T> {
-  public readonly getIds: SciTableIdsProvider<unknown>;
-  public readonly getItems: (ids: unknown[]) => MaybeAsync<T[]>;
+export class SciTableArrayDatasource<T, ID> implements SciTableDataProvider<T, ID> {
+  public readonly getIds: SciTableIdsProvider<ID>;
+  public readonly getItems: (ids: ID[]) => MaybeAsync<T[]>;
 
-  constructor(data: Signal<T[]>, options: {columns: Signal<SciTableColumnLike<T>[]>; trackBy: (item: T) => unknown}) {
-    const byId = computed(() => data().reduce((map, item) => map.set(options.trackBy(item), item), new Map<unknown, T>()));
+  constructor(data: Signal<T[]>, options: {columns: Signal<SciTableColumnLike<T>[]>; trackBy: (item: T) => ID}) {
+    const byId = computed(() => data().reduce((map, item) => map.set(options.trackBy(item), item), new Map<ID, T>()));
     this.getItems = ids => ids.map(id => byId().get(id)).filter((item): item is T => item !== undefined);
     this.getIds = arrayDatasource(byId, options.columns);
   }
 }
 
-export class SciAsyncTableDatasource<T> implements SciTableDataProvider<T> {
+export class SciAsyncTableDatasource<T, ID> implements SciTableDataProvider<T, ID> {
 
-  constructor(public getIds: SciTableIdsProvider<unknown>, public getItems: (ids: unknown[]) => MaybeAsync<T[]>) {
+  constructor(public getIds: SciTableIdsProvider<ID>, public getItems: (ids: ID[]) => MaybeAsync<T[]>) {
   }
 }
 
-export class SciTableTreeDatasource<T> implements SciTableTreeDataProvider<T> {
-  public readonly getIds: SciTableIdsProvider<SciTableTreeNodeIds>;
-  public readonly getItems: (ids: unknown[]) => MaybeAsync<T[]>;
+export class SciTableTreeDatasource<T, ID> implements SciTableTreeDataProvider<T, ID> {
+  public readonly getIds: SciTableIdsProvider<SciTableTreeNode<ID>>;
+  public readonly getItems: (ids: ID[]) => MaybeAsync<T[]>;
 
-  constructor(root: Signal<T[]>, options: {columns: Signal<SciTableColumnLike<T>[]>; trackBy: (item: T) => unknown; getChildren: (node: T) => T[]}) {
-    const loadChildren = (item: T): SciTableTreeNode<T>[] => options.getChildren(item).flatMap(child => [
-      {item: child, parent: options.trackBy(item)} as SciTableTreeNode<T>,
+  constructor(root: Signal<T[]>, options: {columns: Signal<SciTableColumnLike<T>[]>; trackBy: (item: T) => ID; getChildren: (node: T) => T[]}) {
+    const loadChildren = (item: T): SciTableTreeNode<T, ID>[] => options.getChildren(item).flatMap(child => [
+      {item: child, parent: options.trackBy(item)},
       ...loadChildren(child),
     ]);
 
@@ -115,35 +115,35 @@ export class SciTableTreeDatasource<T> implements SciTableTreeDataProvider<T> {
         ...loadChildren(node),
       ];
     }));
-    const byId = computed(() => tree().reduce((map, node) => map.set(options.trackBy(node.item), node), new Map<unknown, SciTableTreeNode<T>>()));
+    const byId = computed(() => tree().reduce((map, node) => map.set(options.trackBy(node.item), node), new Map<ID, SciTableTreeNode<T, ID>>()));
 
     this.getItems = ids => ids.map(id => byId().get(id)?.item).filter((item): item is T => item !== undefined);
     this.getIds = treeDatasource(byId, options.columns);
   }
 }
 
-export class SciAsyncTableTreeDatasource<T> implements SciTableTreeDataProvider<T> {
+export class SciAsyncTableTreeDatasource<T, ID> implements SciTableTreeDataProvider<T, ID> {
 
   constructor(
-    public getIds: SciTableIdsProvider<SciTableTreeNodeIds>,
-    public getItems: (ids: unknown[]) => MaybeAsync<T[]>,
+    public getIds: SciTableIdsProvider<SciTableTreeNode<ID>>,
+    public getItems: (ids: ID[]) => MaybeAsync<T[]>,
   ) {
   }
 }
 
-export function provideTableDatasource<T>(data: Signal<T[]>): SciTableDataSourceProvider<T> {
+export function provideTableDatasource<T, ID>(data: Signal<T[]>): SciTableDataSourceProvider<T, ID> {
   return (columns, trackBy) => new SciTableArrayDatasource(data, {columns, trackBy});
 }
 
-export function provideAsyncTableDatasource<T>(getIds: (request: SciTableIdsRequest) => MaybeAsync<unknown[]>, getItems: (ids: unknown[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T> {
+export function provideAsyncTableDatasource<T, ID>(getIds: (request: SciTableIdsRequest) => MaybeAsync<ID[]>, getItems: (ids: ID[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T, ID> {
   return () => new SciAsyncTableDatasource(getIds, getItems);
 }
 
-export function provideTableTreeDatasource<T>(root: Signal<T[]>, getChildren: (item: T) => T[]): SciTableDataSourceProvider<T> {
+export function provideTableTreeDatasource<T, ID>(root: Signal<T[]>, getChildren: (item: T) => T[]): SciTableDataSourceProvider<T, ID> {
   return (columns, trackBy) => new SciTableTreeDatasource(root, {columns, trackBy, getChildren});
 }
 
-export function provideAsyncTableTreeDatasource<T>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNodeIds[]>, getItems: (ids: unknown[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T> {
+export function provideAsyncTableTreeDatasource<T, ID>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNode<ID>[]>, getItems: (ids: ID[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T, ID> {
   return () => new SciAsyncTableTreeDatasource(getIds, getItems);
 }
 
@@ -159,10 +159,10 @@ export function ɵillegaldatasource<T>(): Signal<T[]> {
   });
 }
 
-export function isArrayDatasource(datasource: SciTableDataProvider<unknown>): boolean {
+export function isArrayDatasource(datasource: SciTableDataProvider<unknown, unknown>): boolean {
   return datasource instanceof SciTableArrayDatasource || datasource instanceof SciAsyncTableDatasource;
 }
 
-export function isTreeDatasource(datasource: SciTableDataProvider<unknown>): boolean {
+export function isTreeDatasource(datasource: SciTableDataProvider<unknown, unknown>): boolean {
   return datasource instanceof SciTableTreeDatasource || datasource instanceof SciAsyncTableTreeDatasource;
 }

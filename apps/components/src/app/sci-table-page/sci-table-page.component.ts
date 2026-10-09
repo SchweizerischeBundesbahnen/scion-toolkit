@@ -21,7 +21,6 @@ import {Router} from '@angular/router';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {VehicleService} from './vehicle.service';
 import {isVehicle, Vehicle, VehicleOrOperator} from './vehicle.model';
-import {EMPTY} from 'rxjs';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
 import {BreakpointObserver} from '@angular/cdk/layout';
@@ -65,10 +64,10 @@ export default class SciTablePageComponent {
     const selectable = this.table()?.selectable();
     return selectable === false ? 'false' : selectable;
   });
-  protected readonly selection = computed(() => this.table()?.selectedItems().filter(isVehicle).map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.table()?.selectedItems().sort((a, b) => a.localeCompare(b)).join(' '));
   protected readonly activeVehicleId = computed(() => {
     const item = this.table()?.activeItem();
-    return item && isVehicle(item) ? item.id : undefined;
+    return item?.startsWith('operator') ? undefined : item;
   });
   protected readonly panelOpen = linkedSignal(() => !this._isMobile());
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
@@ -77,13 +76,13 @@ export default class SciTablePageComponent {
     this.contributeMainToolbarMenu();
   }
 
-  private createTable(options: {slowDatasource: boolean; groupByOperator: boolean}): SciTable<VehicleOrOperator> {
+  private createTable(options: {slowDatasource: boolean; groupByOperator: boolean}): SciTable<string> {
     const vehicleService = inject(VehicleService);
     const vehicleForm = this.vehicleForm;
     const tabbar = this._tabbar;
     const panelOpen = this.panelOpen;
 
-    return table({
+    return table<VehicleOrOperator, string>({
       ɵdatasource: this.getDataSource(vehicleService, options),
       datasource: ɵillegaldatasource(),
       rowBindings: (bindings, _vehicle, index) => {
@@ -91,7 +90,7 @@ export default class SciTablePageComponent {
           bindings.addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd');
         }
       },
-      trackBy: item => isVehicle(item) ? item.id : `operator:${item.operator}`,
+      trackBy: (item): string => isVehicle(item) ? item.id.toString() : `operator:${item.operator}`,
       rowActions: (toolbar, item) => isVehicle(item) && addRowActions(toolbar, item),
       columns: table => {
         const visibleColumns = this.settingsForm.visibleColumns().value();
@@ -291,8 +290,8 @@ export default class SciTablePageComponent {
     }
   }
 
-  private computeTable(): Signal<SciTable<VehicleOrOperator> | undefined> {
-    const table = signal<SciTable<VehicleOrOperator> | undefined>(undefined);
+  private computeTable(): Signal<SciTable<string> | undefined> {
+    const table = signal<SciTable<string> | undefined>(undefined);
 
     effect(onCleanup => {
       const slowDatasource = this.settingsForm.slowDatasource().value();
@@ -308,7 +307,7 @@ export default class SciTablePageComponent {
     return table;
   }
 
-  private getDataSource(vehicleService: VehicleService, options: {slowDatasource: boolean; groupByOperator: boolean}): Signal<VehicleOrOperator[]> | SciTableDataSourceProvider<VehicleOrOperator> {
+  private getDataSource(vehicleService: VehicleService, options: {slowDatasource: boolean; groupByOperator: boolean}): Signal<VehicleOrOperator[]> | SciTableDataSourceProvider<VehicleOrOperator, string> {
     if (options.groupByOperator) {
       if (options.slowDatasource) {
         // return provideAsyncTableTreeDatasource<VehicleOrOperator>(
@@ -317,11 +316,11 @@ export default class SciTablePageComponent {
         // );
       }
 
-      return provideTableTreeDatasource<VehicleOrOperator>(computed(() => vehicleService.operators()), operator => isVehicle(operator) ? [] : operator.children);
+      return provideTableTreeDatasource<VehicleOrOperator, string>(computed(() => vehicleService.operators()), operator => isVehicle(operator) ? [] : operator.children);
     }
 
     if (options.slowDatasource) {
-      return provideAsyncTableDatasource(request => vehicleService.getVehicles$(request), ids => vehicleService.getItems$(ids));
+      return provideAsyncTableDatasource<Vehicle, string>(request => vehicleService.getVehicles$(request), ids => vehicleService.getItems$(ids));
     }
 
     return vehicleService.vehicles;

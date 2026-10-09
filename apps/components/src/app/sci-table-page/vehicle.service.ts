@@ -137,10 +137,10 @@ export class VehicleService {
   //     );
   // }
 
-  public getVehicles$(request: SciTableIdsRequest): Observable<unknown[]> {
+  public getVehicles$(request: SciTableIdsRequest): Observable<string[]> {
     return this.getFilteredAndSortedVehicles$(request)
       .pipe(
-        map(vehicles => vehicles.map(v => v.id)),
+        map(vehicles => vehicles.map(v => v.id.toString())),
       );
   }
 

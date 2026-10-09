@@ -20,13 +20,13 @@ export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'component' |
 
 export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
 
-export interface SciTableDescriptor<T> {
+export interface SciTableDescriptor<T, ID = unknown> {
   datasource: Signal<T[]>;
   /**
    * @docs-private Not public API. For internal use only.
    * @experimental since 22.3.0; API and behavior may change in any version without notice.
    */
-  ɵdatasource?: Signal<T[]> | SciTableDataSourceProvider<T>;
+  ɵdatasource?: Signal<T[]> | SciTableDataSourceProvider<T, ID>;
   columns: SciTableColumnFactoryFn<T>;
   sortable?: boolean;
   resizable?: boolean;
@@ -89,20 +89,20 @@ export interface SciTableDescriptor<T> {
    * Specifies the number of items to load per page. Defaults to 50.
    */
   pageSize?: number;
-  trackBy?: (item: T) => unknown;
+  trackBy?: (item: T) => ID;
   injector?: Injector;
 }
 
-export interface SciTable<T> {
+export interface SciTable<ID = unknown> {
   /**
-   * Currently active item.
+   * Currently active item id.
    */
-  readonly activeItem: Signal<T | undefined>;
+  readonly activeItem: Signal<ID | undefined>;
 
   /**
    * Selected items.
    */
-  readonly selectedItems: Signal<Array<T>>;
+  readonly selectedItems: Signal<Array<ID>>;
 
   readonly filterable: WritableSignal<boolean>;
   readonly showHeader: WritableSignal<boolean>;
@@ -196,12 +196,12 @@ export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColu
 /**
  * Mapped row, used as display state.
  */
-export interface SciTableRow<T> {
+export interface SciTableRow<T, ID> {
   index: number;
   item?: T;
-  id?: unknown;
+  id?: ID;
   level: number;
-  parentId?: unknown;
+  parentId?: ID;
   cells?: SciTableCellLike[];
   bindings?: SciTableRowBindings;
   loading: boolean;

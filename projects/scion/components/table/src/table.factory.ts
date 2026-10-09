@@ -19,10 +19,10 @@ export type SciTableColumnFactoryFn<T> = (table: SciTableColumnFactory<T>) => vo
 // Do not change order for better IntelliSense.
 
 /** @experimental since 22.3.0; API and behavior may change in any version without notice. */
-export function table<T>(descriptor: SciTableDescriptor<T>): SciTable<T>;
+export function table<T, ID>(descriptor: SciTableDescriptor<T, ID>): SciTable<ID>;
 /** @experimental since 22.3.0; API and behavior may change in any version without notice. */
-export function table<T>(data: Signal<T[]>, columnFactoryFn: SciTableColumnFactoryFn<T>, options?: {injector?: Injector}): SciTable<T>;
-export function table<T>(dataOrDescriptor: Signal<T[]> | SciTableDescriptor<T>, columnFactoryFn?: SciTableColumnFactoryFn<T>, options?: {injector?: Injector}): SciTable<T> {
+export function table<T, ID>(data: Signal<T[]>, columnFactoryFn: SciTableColumnFactoryFn<T>, options?: {injector?: Injector}): SciTable<ID>;
+export function table<T, ID>(dataOrDescriptor: Signal<T[]> | SciTableDescriptor<T, ID>, columnFactoryFn?: SciTableColumnFactoryFn<T>, options?: {injector?: Injector}): SciTable<ID> {
   assertNotInReactiveContext(table, 'Call table in a non-reactive (non-tracking) context, such as within the untracked() function.');
 
   const descriptor = isSignal(dataOrDescriptor) ? ({ɵdatasource: dataOrDescriptor, datasource: ɵillegaldatasource(), columns: columnFactoryFn!, injector: options?.injector}) satisfies SciTableDescriptor<T> : dataOrDescriptor;

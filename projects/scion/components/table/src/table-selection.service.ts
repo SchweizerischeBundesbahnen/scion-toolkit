@@ -11,43 +11,43 @@
 import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
-import {firstValueFrom, timer} from 'rxjs';
 import {SciTableRow} from './table.model';
+import {SciTableTreeNode} from '@scion/components/table';
 
 @Injectable()
-export class SciTableSelectionService<T> {
+export class SciTableSelectionService<T, ID> {
 
-  private readonly _table = inject<Signal<ɵSciTable<T>>>(ɵSCI_TABLE);
+  private readonly _table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
 
   public async onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();
-    const rowsByIndex = table.rowsByIndex();
-    const row = rowsByIndex.get(index);
-    const item = rowsByIndex.get(index)?.item;
-    const previousFocusedIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
+    const rowId = table.visibleRows()?.[index]?.item;
 
-    table.activeItem.set(item);
+    table.activeItem.set(rowId);
 
-    if (item === undefined || !table.selectable()) {
+    if (rowId === undefined || !table.selectable()) {
       return;
     }
 
     if (table.selectable() === 'single') {
-      table.updateSelectedItems(() => new Map<unknown, T>().set(row!.id, item));
+      table.updateSelectedItems(() => new Set<ID>().add(rowId));
       return;
     }
 
-    if (event.shiftKey && previousFocusedIndex >= 0) {
-      const start = Math.min(previousFocusedIndex, index);
-      const end = Math.max(previousFocusedIndex, index);
+    const previousActiveItem = table.activeItem();
+    const previousActiveIndex = previousActiveItem ? (table.rowIndexById().get(previousActiveItem) ?? -1) : -1;
+
+    if (event.shiftKey && previousActiveIndex >= 0) {
+      const start = Math.min(previousActiveIndex, index);
+      const end = Math.max(previousActiveIndex, index);
       await this.selectItems(start, end, {add: true});
     }
     else if (event.ctrlKey || event.metaKey) {
-      this.toggleSelectedItem(item);
+      this.toggleSelectedItem(rowId);
     }
     else {
       // If no modifier is pressed set the selection to the clicked row.
-      table.updateSelectedItems(() => new Map<unknown, T>().set(row!.id, item));
+      table.updateSelectedItems(() => new Set<ID>().add(rowId));
     }
   }
 
@@ -55,7 +55,8 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
+    const activeItem = table.activeItem();
+    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
     if (activeIndex <= 0) {
       return;
@@ -63,8 +64,7 @@ export class SciTableSelectionService<T> {
 
     // Set active item.
     const startIndex = activeIndex - 1;
-    await this.loadMissingItems(startIndex, startIndex);
-    const startItem = table.rowsByIndex().get(startIndex)?.item;
+    const startItem = table.visibleRows()?.[startIndex]?.item;
     table.activeItem.set(startItem);
 
     if (!table.selectable()) {
@@ -93,7 +93,8 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
+    const activeItem = table.activeItem();
+    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
     const endIndex = Math.min(activeIndex + 1, table.visibleRowCount()! - 1);
 
     if (endIndex === activeIndex) {
@@ -101,8 +102,7 @@ export class SciTableSelectionService<T> {
     }
 
     // Set active item.
-    await this.loadMissingItems(endIndex, endIndex);
-    const endItem = table.rowsByIndex().get(endIndex)?.item;
+    const endItem = table.visibleRows()?.[endIndex]?.item;
     table.activeItem.set(endItem);
 
     if (!table.selectable()) {
@@ -133,7 +133,7 @@ export class SciTableSelectionService<T> {
     const table = this._table();
     const activeRow = table.activeRow();
 
-    if (!activeRow) {
+    if (activeRow?.item === undefined || activeRow.id === undefined) {
       return;
     }
 
@@ -144,7 +144,7 @@ export class SciTableSelectionService<T> {
       const parentIndex = table.rowIndexById().get(activeRow.parentId) ?? -1;
 
       // Set active item.
-      const item = table.rowsByIndex().get(parentIndex)?.item;
+      const item = table.visibleRows()?.[parentIndex]?.item;
       table.activeItem.set(item);
 
       if (table.selectable()) {
@@ -153,59 +153,32 @@ export class SciTableSelectionService<T> {
     }
     // Root case
     else {
-      const previousRow = findPreviousRootExpanded(activeRow.index - 1);
+      const row = findPreviousExpandedRow(activeRow.index - 1);
 
-      if (previousRow) {
-        const index = table.rowIndexById().get(previousRow.id) ?? -1;
-        table.activeItem.set(previousRow.item);
+      if (row?.id !== undefined) {
+        const index = table.rowIndexById().get(row.id) ?? -1;
+        table.activeItem.set(row.id);
 
         if (table.selectable()) {
           await this.selectItems(index, index);
         }
       }
-      else {
-        // Go to top
-        const startIndex = 0;
-        await this.loadMissingItems(startIndex, startIndex);
-        table.activeItem.set(table.rowsByIndex().get(startIndex)?.item);
 
-        if (table.selectable()) {
-          await this.selectItems(startIndex, startIndex);
-        }
-      }
-
-      function findPreviousRootExpanded(index: number): SciTableRow<T> | undefined {
+      function findPreviousExpandedRow(index: number): SciTableRow<T, ID> | undefined {
         if (index < 0) {
           return undefined;
         }
 
-        const row = table.rowsById().get(table.rowsByIndex().get(index)?.id);
-
-        const candidate = findPreviousChildExpanded(row);
-
-        if (candidate) {
-          return candidate;
+        let i = index;
+        while (i >= 0) {
+          const row = table.rowsByIndex().get(i);
+          if (row?.expanded()) {
+            return row;
+          }
+          i--;
         }
 
-        return findPreviousRootExpanded(index - 1);
-      }
-
-      function findPreviousChildExpanded(row: SciTableRow<T> | undefined): SciTableRow<T> | undefined {
-        if (!row || !row.hasChildren() || !row.expanded()) {
-          return undefined;
-        }
-
-        // TODO [tree]: fix with unified cache
-        // const children = [...row.childrenCache.rowsById().values()];
-
-        // for (let i = children.length - 1; i >= 0; i--) {
-        //   const candidate = findPreviousChildExpanded(children[i]);
-        //   if (candidate) {
-        //     return candidate;
-        //   }
-        // }
-
-        return row;
+        return table.rowsByIndex().get(i);
       }
     }
   }
@@ -216,7 +189,7 @@ export class SciTableSelectionService<T> {
     const table = this._table();
     const activeRow = table.activeRow();
 
-    if (!activeRow) {
+    if (activeRow?.id === undefined) {
       return;
     }
 
@@ -233,8 +206,7 @@ export class SciTableSelectionService<T> {
     }
 
     // Set active item.
-    await this.loadMissingItems(endIndex, endIndex);
-    const endItem = table.rowsByIndex().get(endIndex)?.item;
+    const endItem = table.visibleRows()?.[endIndex]?.item;
     table.activeItem.set(endItem);
 
     if (!table.selectable()) {
@@ -248,16 +220,16 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
+    const activeItem = table.activeItem();
+    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
-    if (activeIndex === 0) {
+    if (activeIndex <= 0) {
       return;
     }
 
     // Set active item.
     const startIndex = Math.max(activeIndex - table.viewportPageSize() + 1, 0);
-    await this.loadMissingItems(startIndex, startIndex);
-    const startItem = table.rowsByIndex().get(startIndex)?.item;
+    const startItem = table.visibleRows()?.[startIndex]?.item;
     table.activeItem.set(startItem);
 
     if (!table.selectable()) {
@@ -286,7 +258,8 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
+    const activeItem = table.activeItem();
+    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
     const endIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.visibleRowCount()! - 1);
 
     if (endIndex === activeIndex) {
@@ -294,8 +267,7 @@ export class SciTableSelectionService<T> {
     }
 
     // Set active item.
-    await this.loadMissingItems(endIndex, endIndex);
-    const endItem = table.rowsByIndex().get(endIndex)?.item;
+    const endItem = table.visibleRows()?.[endIndex]?.item;
     table.activeItem.set(endItem);
 
     if (!table.selectable()) {
@@ -324,7 +296,8 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
+    const activeItem = table.activeItem();
+    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
     if (activeIndex <= 0) {
       return;
@@ -332,8 +305,7 @@ export class SciTableSelectionService<T> {
 
     // Set active item.
     const startIndex = 0;
-    await this.loadMissingItems(startIndex, startIndex);
-    const startItem = table.rowsByIndex().get(startIndex)?.item;
+    const startItem = table.visibleRows()?.[startIndex]?.item;
     table.activeItem.set(startItem);
 
     if (!table.selectable()) {
@@ -362,7 +334,8 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.rowIndexById().get(table.activeRow()?.id) ?? -1;
+    const activeItem = table.activeItem();
+    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
     const endIndex = table.visibleRowCount()! - 1;
 
@@ -374,8 +347,7 @@ export class SciTableSelectionService<T> {
     // But otherwise, loading and setting the active item needs to be done for each case, or once at the end.
 
     // Set active item.
-    // await this.loadMissingItems(endIndex, endIndex);
-    const endItem = table.rowsByIndex().get(endIndex)?.item;
+    const endItem = table.visibleRows()![endIndex]!.item;
     table.activeItem.set(endItem);
 
     if (!table.selectable()) {
@@ -408,20 +380,19 @@ export class SciTableSelectionService<T> {
       return;
     }
 
-    const activeItem = table.activeItem();
-    if (!activeItem) {
+    const activeItemId = table.activeItem();
+    if (!activeItemId) {
       return;
     }
 
     const keyboardEvent = event as KeyboardEvent;
     const ctrlOrMeta = keyboardEvent.ctrlKey || keyboardEvent.metaKey;
-    const activeItemId = table.trackBy(activeItem);
 
     if (ctrlOrMeta) {
-      this.toggleSelectedItem(activeItem);
+      this.toggleSelectedItem(activeItemId);
     }
     else {
-      table.updateSelectedItems(() => new Map<unknown, T>().set(activeItemId, activeItem));
+      table.updateSelectedItems(() => new Set<ID>().add(activeItemId));
     }
   }
 
@@ -448,8 +419,7 @@ export class SciTableSelectionService<T> {
     const startIndex = activeIndex;
     const endIndex = options.endIndex;
 
-    const activeItem = table.rowsByIndex().get(activeIndex)!.item!;
-    const activeItemId = table.trackBy(activeItem)!;
+    const activeItemId = table.visibleRows()![activeIndex]!.item;
 
     if (table.selectable() === 'single') {
       await this.selectItems(endIndex, endIndex);
@@ -491,8 +461,7 @@ export class SciTableSelectionService<T> {
     const startIndex = options.startIndex;
     const endIndex = activeIndex;
 
-    const activeItem = table.rowsByIndex().get(activeIndex)!.item!;
-    const activeItemId = table.trackBy(activeItem)!;
+    const activeItemId = table.visibleRows()![activeIndex]!.item;
 
     if (table.selectable() === 'single') {
       await this.selectItems(startIndex, startIndex);
@@ -530,90 +499,60 @@ export class SciTableSelectionService<T> {
     const table = this._table();
     const selectedIds = table.selectedIds();
 
-    const previousItem = table.rowsByIndex().get(activeIndex - 1)?.item;
-    const previousItemId = previousItem ? table.trackBy(previousItem) : undefined;
+    const previousItemId = table.visibleRows()?.[(activeIndex - 1)]?.item;
+    const nextItemId = table.visibleRows()?.[(activeIndex + 1)]?.item;
 
-    const nextItem = table.rowsByIndex().get(activeIndex + 1)?.item;
-    const nextItemId = nextItem ? table.trackBy(nextItem) : undefined;
-
-    return !selectedIds.has(previousItemId) && selectedIds.has(nextItemId);
+    return (previousItemId === undefined || !selectedIds.has(previousItemId)) && nextItemId !== undefined && selectedIds.has(nextItemId);
   }
 
   private isSelectionAtBlockEnd(activeIndex: number): boolean {
     const table = this._table();
     const selectedIds = table.selectedIds();
 
-    const previousItem = table.rowsByIndex().get(activeIndex - 1)?.item;
-    const previousItemId = previousItem ? table.trackBy(previousItem) : undefined;
+    const previousItemId = table.visibleRows()?.[(activeIndex - 1)]?.item;
+    const nextItemId = table.visibleRows()?.[(activeIndex + 1)]?.item;
 
-    const nextItem = table.rowsByIndex().get(activeIndex + 1)?.item;
-    const nextItemId = nextItem ? table.trackBy(nextItem) : undefined;
-
-    return selectedIds.has(previousItemId) && !selectedIds.has(nextItemId);
-  }
-
-  private async loadMissingItems(startIndex: number, endIndex: number): Promise<void> {
-    const table = this._table();
-    const indices = rangeInclusive(startIndex, endIndex + 1);
-    const rows = indices.map(i => table.rowsByIndex().get(i));
-    if (rows.some(row => row?.id === undefined)) {
-      await Promise.race([
-        table.loadRange(startIndex, endIndex + 1),
-        firstValueFrom(timer(5_000)),
-      ]);
-    }
+    return previousItemId !== undefined && selectedIds.has(previousItemId) && (nextItemId === undefined || !selectedIds.has(nextItemId));
   }
 
   private async selectItems(startIndex: number, endIndex: number, options?: {add: boolean}): Promise<void> {
     const table = this._table();
     const indices = rangeInclusive(startIndex, endIndex);
     const add = options?.add ?? false;
-    let rows = indices.map(i => table.rowsByIndex().get(i));
+    const rows = indices.map(i => table.visibleRows()?.[i]);
 
-    if (rows.some(row => row?.id === undefined)) {
-      // If not all id's could be found load the missing items.
-      await Promise.race([
-        table.loadRange(startIndex, endIndex),
-        firstValueFrom(timer(5_000)),
-      ]);
-      rows = indices.map(i => table.rowsByIndex().get(i));
-    }
-
-    table.updateSelectedItems(existing => new Map<unknown, T>([
+    table.updateSelectedItems(existing => new Set<ID>([
       ...(add ? existing : []),
       ...rows
-        .filter((row): row is Required<SciTableRow<T>> => row?.id !== undefined && row.item !== undefined)
-        .map((row): [unknown, T] => [row.id, row.item]),
+        .filter((row): row is Required<SciTableTreeNode<ID>> => !!row)
+        .map(row => row.item),
     ]));
   }
 
   private async selectFromBlockStart(startIndex: number, endIndex: number): Promise<void> {
     const table = this._table();
 
-    await this.loadMissingItems(startIndex, endIndex);
     const indices = rangeInclusive(startIndex, endIndex);
 
     table.updateSelectedItems(selection => {
-      const newSelection = new Map(selection);
+      const newSelection = new Set(selection);
 
       for (let i = 0; i < indices.length; i++) {
         const currentIndex = indices[i]!;
         const nextIndex = indices[i + 1]!;
 
-        const item = table.rowsByIndex().get(currentIndex)?.item;
-        if (!item) {
+        const itemId = table.visibleRows()?.[currentIndex]?.item;
+        if (!itemId) {
           continue;
         }
 
-        const itemId = table.trackBy(item);
-        const nextItem = table.rowsByIndex().get(nextIndex)?.item;
-        const nextItemId = nextItem ? table.trackBy(nextItem) : undefined;
+        const nextItemId = table.visibleRows()?.[nextIndex]?.item;
 
-        if (selection.has(nextItemId)) {
+        if (nextItemId && selection.has(nextItemId)) {
           newSelection.delete(itemId);
         }
         else {
-          newSelection.set(itemId, item);
+          newSelection.add(itemId);
         }
       }
       return newSelection;
@@ -623,42 +562,38 @@ export class SciTableSelectionService<T> {
   private async selectFromBlockEnd(startIndex: number, endIndex: number): Promise<void> {
     const table = this._table();
 
-    await this.loadMissingItems(startIndex, endIndex);
     const indices = rangeInclusive(startIndex, endIndex);
 
     table.updateSelectedItems(selection => {
-      const newSelection = new Map(selection);
+      const newSelection = new Set(selection);
 
       for (let i = indices.length - 1; i >= 0; i--) {
         const currentIndex = indices[i]!;
         const previousIndex = indices[i - 1]!;
 
-        const item = table.rowsByIndex().get(currentIndex)?.item;
-        if (!item) {
+        const itemId = table.visibleRows()?.[currentIndex]?.item;
+
+        if (!itemId) {
           continue;
         }
 
-        const itemId = table.trackBy(item);
-        const previousItem = table.rowsByIndex().get(previousIndex)?.item;
-        const previousItemId = previousItem ? table.trackBy(previousItem) : undefined;
-
-        if (selection.has(previousItemId)) {
+        const previousItemId = table.visibleRows()?.[previousIndex]?.item;
+        if (previousItemId && selection.has(previousItemId)) {
           newSelection.delete(itemId);
         }
         else {
-          newSelection.set(itemId, item);
+          newSelection.add(itemId);
         }
       }
       return newSelection;
     });
   }
 
-  private toggleSelectedItem(item: T): void {
+  private toggleSelectedItem(id: ID): void {
     const table = this._table();
-    const id = table.trackBy(item);
 
     table.updateSelectedItems(selection => {
-      const next = new Map(selection);
+      const next = new Set(selection);
       if (next.has(id)) {
         next.delete(id);
       }
@@ -666,7 +601,7 @@ export class SciTableSelectionService<T> {
         if (table.selectable() === 'single') {
           next.clear();
         }
-        next.set(id, item);
+        next.add(id);
       }
       return next;
     });

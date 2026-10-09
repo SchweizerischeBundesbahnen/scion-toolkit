@@ -3,12 +3,12 @@ import {Signal, WritableSignal} from '@angular/core';
 import {Translatable} from '@scion/components/text';
 import {SciTableRowActionFactoryFn} from '../../table/src/table.model';
 import {SciTableDataSourceProvider, SciTableIdsRequest, SciTableRowBindingFactoryFn, SciTableTreeNode} from '@scion/components/table';
-import {SciAsyncTableTreeDatasource, SciTableTreeDatasource, SciTableTreeNodeIds} from '../../table/src/table-datasource';
+import {SciAsyncTableTreeDatasource, SciTableTreeDatasource} from '../../table/src/table-datasource';
 import {MaybeAsync} from '../../table/src/common';
 
-export interface SciTreeDescriptor<T> {
+export interface SciTreeDescriptor<T, ID> {
   label: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
-  datasource: SciTableDataSourceProvider<T>;
+  datasource: SciTableDataSourceProvider<T, ID>;
   header?: Translatable;
   filterable?: boolean | {matcher: (text: string, context: SciTreeNodeContext<T>) => boolean};
   sortable?: boolean | {comparator: (a: SciTreeNodeContext<T>, b: SciTreeNodeContext<T>) => number};
@@ -22,7 +22,7 @@ export interface SciTreeDescriptor<T> {
    */
   bufferSize?: number;
   pageSize?: number;
-  trackBy?: (item: T) => unknown;
+  trackBy?: (item: T) => ID;
 }
 
 export interface SciTreeNodeContext<T> {
@@ -30,16 +30,16 @@ export interface SciTreeNodeContext<T> {
   label: unknown;
 }
 
-export interface SciTree<T> {
+export interface SciTree<ID> {
   /**
    * Currently active item.
    */
-  readonly activeItem: Signal<T | undefined>;
+  readonly activeItem: Signal<ID | undefined>;
 
   /**
    * Selected items.
    */
-  readonly selectedItems: Signal<Array<T>>;
+  readonly selectedItems: Signal<Array<ID>>;
 
   readonly filterable: WritableSignal<boolean>;
   readonly header: WritableSignal<Translatable | undefined>;
@@ -58,13 +58,13 @@ export interface SciTree<T> {
   collapseAll(): void;
 }
 
-export type SciTreeDataSource<T> = SciTableTreeDatasource<T>;
-export type SciPageableTreeDataSource<T> = SciAsyncTableTreeDatasource<T>;
+export type SciTreeDataSource<T, ID> = SciTableTreeDatasource<T, ID>;
+export type SciPageableTreeDataSource<T, ID> = SciAsyncTableTreeDatasource<T, ID>;
 
-export function provideTreeDatasource<T>(root: Signal<T[]>, getChildren: (item: T) => T[]): SciTableDataSourceProvider<T> {
+export function provideTreeDatasource<T, ID>(root: Signal<T[]>, getChildren: (item: T) => T[]): SciTableDataSourceProvider<T, ID> {
   return (columns, trackBy) => new SciTableTreeDatasource(root, {columns, trackBy, getChildren});
 }
 
-export function providePageableTreeDatasource<T>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNodeIds[]>, getItems: (ids: unknown[], meta?: {parent?: T}) => MaybeAsync<T[]>): SciTableDataSourceProvider<T> {
+export function providePageableTreeDatasource<T, ID>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNode<ID>[]>, getItems: (ids: ID[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T, ID> {
   return () => new SciAsyncTableTreeDatasource(getIds, getItems);
 }
