@@ -31,6 +31,7 @@ export interface Vehicle {
   isNarrowGauge: boolean;
   lastR2Expiry: string;
   nextRevision: string;
+  price: number;
 }
 
 export type OperatorType =

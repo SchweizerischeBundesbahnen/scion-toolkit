@@ -146,6 +146,7 @@ export interface SciNumberColumn<T = unknown> extends SciTableColumn<T, number> 
   value: (item: T) => Signal<number | undefined>;
   compare: SciTableColumnSortComparatorFn<T, number>;
   matches: SciTableColumnFilterMatcherFn<T, number>;
+  format: Signal<Intl.NumberFormat>;
 }
 
 export interface SciBooleanColumn<T = unknown> extends SciTableColumn<T, boolean> {

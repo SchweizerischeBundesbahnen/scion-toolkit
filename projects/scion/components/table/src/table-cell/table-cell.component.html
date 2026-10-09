@@ -16,6 +16,9 @@
   @case ('date') {
     {{cell.value()?.formatted}}
   }
+  @case ('number') {
+    {{cell.value() | sciNumber:cell.column.format()}}
+  }
   @default {
     {{cell.value()}}
   }

@@ -225,6 +225,85 @@ export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
    * Controls whether the user can filter this column. Defaults to `true`.
    */
   filterable?: boolean;
+  /**
+   * Specifies how to format numbers. Defaults to standard number formatting based on the active {@link locale}.
+   *
+   * ##### Grouping Separators
+   * Disable grouping separators (such as thousands separators) by setting {@link Intl.NumberFormatOptions.useGrouping} to `false`.
+   *
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table(data, table => table.addNumberColumn({
+   *   value: item => item.numericValue,
+   *   format: {useGrouping: false},
+   * }));
+   * ```
+   *
+   * ##### Fraction Digits
+   * Control the number of decimal places using the {@link Intl.NumberFormatOptions.minimumFractionDigits} and {@link Intl.NumberFormatOptions.maximumFractionDigits} properties.
+   *
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table(data, table => table.addNumberColumn({
+   *   value: item => item.numericValue,
+   *   format: {
+   *     minimumFractionDigits: 2,
+   *     maximumFractionDigits: 2,
+   *   },
+   * }));
+   * ```
+   *
+   * ##### Currency
+   * To render numbers as currency, set {@link Intl.NumberFormatOptions.style} to `currency` and specify the currency code.
+   *
+   * The currency code defaults to {@link DEFAULT_CURRENCY_CODE}, or `USD` if not provided.
+   * To change the currency, set the {@link Intl.NumberFormatOptions.currency} property to a different [ISO 4217](https://en.wikipedia.org/wiki/ISO_4217) currency code (e.g., `EUR`, `CHF`, `GBP`).
+   *
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table(data, table => table.addNumberColumn({
+   *   value: item => item.numericValue,
+   *   format: {
+   *     style: 'currency',
+   *     currency: 'EUR',
+   *   },
+   * }));
+   * ```
+   *
+   * ##### Unit
+   * To render numbers with a specific unit (e.g., `kilogram`, `kilometer`, `kilometer-per-hour`, or `hour`), set {@link Intl.NumberFormatOptions.style} to `unit`
+   * and specify the unit from [Supported Unit Identifiers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf#supported_unit_identifiers).
+   *
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table(data, table => table.addNumberColumn({
+   *   value: item => item.numericValue,
+   *   format: {
+   *     style: 'unit',
+   *     unit: 'kilometer-per-hour',
+   *   },
+   * }));
+   * ```
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#options
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf#supported_unit_identifiers
+   * @see https://en.wikipedia.org/wiki/ISO_4217
+   */
+  format?: Intl.NumberFormatOptions;
+  /**
+   * Specifies the locale used to localize numbers.
+   *
+   * The locale determines group sizing and separators, decimal point characters, and other locale-specific formatting rules.
+   *
+   * Defaults to {@link SCI_LOCALE}, which initializes from {@link LOCALE_ID} (defaulting to `en-US`).
+   *
+   * See {@link SCI_LOCALE} for details on how to change the locale at runtime.
+   */
+  locale?: MaybeSignal<string>;
 }
 
 export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor {

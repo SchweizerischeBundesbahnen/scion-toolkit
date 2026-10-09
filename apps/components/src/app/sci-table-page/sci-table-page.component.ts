@@ -11,7 +11,7 @@ import {Component, computed, effect, ElementRef, inject, Injector, linkedSignal,
 import {SciTable, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
-import {createDestroyableInjector} from '@scion/components/common';
+import {createDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
 import {contributeMenu, SciToolbarFactory} from '@scion/components/menu';
 import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
@@ -65,6 +65,7 @@ export default class SciTablePageComponent {
   });
   protected readonly selection = computed(() => this.table()?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
   protected readonly panelOpen = linkedSignal(() => !this._isMobile());
+  protected readonly locale = inject(SCI_LOCALE);
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
 
   constructor() {
@@ -94,6 +95,7 @@ export default class SciTablePageComponent {
           name: 'column:id',
           header: 'ID',
           value: vehicle => vehicle.id,
+          format: {useGrouping: false},
           width: '100px',
         });
 
@@ -131,26 +133,30 @@ export default class SciTablePageComponent {
         });
         visibleColumns.operatingHours && table.addNumberColumn({
           name: 'column:operatingHours',
-          header: 'Operating Hours (h)',
+          header: 'Operating Hours',
           value: vehicle => vehicle.operatingHours,
+          format: {style: 'unit', unit: 'hour'},
           width: '175px',
         });
         visibleColumns.mileage && table.addNumberColumn({
           name: 'column:mileage',
-          header: 'Mileage (km)',
+          header: 'Mileage',
           value: vehicle => vehicle.mileageKm,
+          format: {style: 'unit', unit: 'kilometer'},
           width: '150px',
         });
         visibleColumns.maxSpeed && table.addNumberColumn({
           name: 'column:maxSpeed',
-          header: 'Max Speed (km/h)',
+          header: 'Max Speed',
           value: vehicle => vehicle.maxSpeedKmh,
+          format: {style: 'unit', unit: 'kilometer-per-hour'},
           width: '175px',
         });
         visibleColumns.serviceWeight && table.addNumberColumn({
           name: 'column:serviceWeight',
-          header: 'Service Weight (t)',
-          value: vehicle => vehicle.serviceWeightT,
+          header: 'Service Weight',
+          value: vehicle => vehicle.serviceWeightT * 1000,
+          format: {style: 'unit', unit: 'kilogram'},
           width: '175px',
         });
         visibleColumns.seatingCapacity && table.addNumberColumn({
@@ -159,10 +165,21 @@ export default class SciTablePageComponent {
           value: vehicle => vehicle.seatingCapacity,
           width: '100px',
         });
+        visibleColumns.price && table.addNumberColumn({
+          name: 'column:price',
+          header: 'Price',
+          value: vehicle => vehicle.price,
+          format: {
+            style: 'currency',
+            maximumFractionDigits: 0,
+          },
+          width: '150px',
+        });
         visibleColumns.buildYear && table.addNumberColumn({
           name: 'column:buildYear',
           header: 'Year Built',
           value: vehicle => vehicle.buildYear,
+          format: {useGrouping: false},
           width: '125px',
         });
         visibleColumns.isOperational && table.addBooleanColumn({
@@ -299,11 +316,11 @@ export default class SciTablePageComponent {
         status: true,
         tps: true,
         operatingHours: false,
-        mileage: false,
+        mileage: true,
         maxSpeed: true,
         serviceWeight: false,
         seatingCapacity: false,
-        buildYear: false,
+        buildYear: true,
         isOperational: true,
         hasWifi: false,
         isMultiSystem: false,
@@ -312,6 +329,7 @@ export default class SciTablePageComponent {
         isNarrowGauge: false,
         lastR2Expiry: true,
         nextRevision: true,
+        price: true,
       },
     }));
   }
@@ -455,6 +473,7 @@ interface SettingsForm {
     isNarrowGauge: boolean;
     lastR2Expiry: boolean;
     nextRevision: boolean;
+    price: boolean;
   };
 }
 

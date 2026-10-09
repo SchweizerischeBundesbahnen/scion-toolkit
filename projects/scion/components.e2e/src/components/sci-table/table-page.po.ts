@@ -180,6 +180,27 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-min-width').fill(`${options.minWidth ?? ''}`);
 
     switch (options.type) {
+      case 'number': {
+        await this.properties.locator('select.e2e-style').selectOption(options.extras?.numberColumn?.style ?? '');
+        if (options.extras?.numberColumn?.currency) { // only set for 'currency' style
+          await this.properties.locator('select.e2e-currency').selectOption(options.extras.numberColumn.currency);
+        }
+        if (options.extras?.numberColumn?.unit) { // only set for 'unit' style
+          await this.properties.locator('input.e2e-unit').fill(options.extras.numberColumn.unit);
+        }
+        await this.properties.locator('select.e2e-locale').selectOption(options.extras?.numberColumn?.locale ?? '');
+        await this.properties.locator('select.e2e-grouping').selectOption(`${options.extras?.numberColumn?.useGrouping ?? ''}`);
+        await this.properties.locator('input.e2e-minimum-integer-digits').fill(`${options.extras?.numberColumn?.minimumIntegerDigits ?? ''}`);
+        await this.properties.locator('input.e2e-minimum-fraction-digits').fill(`${options.extras?.numberColumn?.minimumFractionDigits ?? ''}`);
+        await this.properties.locator('input.e2e-maximum-fraction-digits').fill(`${options.extras?.numberColumn?.maximumFractionDigits ?? ''}`);
+        break;
+      }
+      case 'date': {
+        await this.properties.locator('input.e2e-format').fill(options.extras?.dateColumn?.format ?? '');
+        await this.properties.locator('select.e2e-locale').selectOption(options.extras?.dateColumn?.locale ?? '');
+        await this.properties.locator('input.e2e-timezone').fill(options.extras?.dateColumn?.timezone ?? '');
+        break;
+      }
       case 'component': {
         await this.properties.locator('select.e2e-component').selectOption(options.extras?.componentColumn?.component ?? 'component:custom-column');
         await this.properties.locator('input.e2e-padding').setChecked(options.extras?.componentColumn?.padding ?? true);
@@ -187,12 +208,6 @@ export class TablePagePO {
       }
       case 'template': {
         await this.properties.locator('input.e2e-padding').setChecked(options.extras?.templateColumn?.padding ?? true);
-        break;
-      }
-      case 'date': {
-        await this.properties.locator('input.e2e-format').fill(options.extras?.dateColumn?.format ?? '');
-        await this.properties.locator('select.e2e-locale').selectOption(options.extras?.dateColumn?.locale ?? '');
-        await this.properties.locator('input.e2e-timezone').fill(options.extras?.dateColumn?.timezone ?? '');
         break;
       }
     }
@@ -214,11 +229,21 @@ export interface ColumnOptions {
   width?: string;
   minWidth?: number;
   extras?: {
+    numberColumn?: {
+      style?: 'decimal' | 'currency' | 'unit' | 'percent' | '';
+      useGrouping?: true | false;
+      minimumIntegerDigits?: number | null;
+      minimumFractionDigits?: number | null;
+      maximumFractionDigits?: number | null;
+      currency?: string | '';
+      unit?: string | '';
+      locale?: 'en-US' | 'de-CH' | 'fr-CH' | 'it-CH';
+    };
     dateColumn?: {
       format?: 'shortDate' | 'mediumDate' | 'longDate' | 'fullDate' | 'shortTime' | 'mediumTime' | 'longTime' | 'fullTime' | 'short' | 'medium' | 'long' | 'full' | string;
       locale?: 'en-US' | 'de-CH' | 'fr-CH' | 'it-CH';
       timezone?: string;
-    },
+    };
     componentColumn?: {
       component?: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column';
       padding?: boolean;

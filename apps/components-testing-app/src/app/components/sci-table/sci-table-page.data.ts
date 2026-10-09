@@ -59,7 +59,7 @@ export namespace Products {
     return Array.from(Array(count), (_, i) => ({
       id: i + 1,
       name: `Product ${i + 1}`,
-      price: Math.floor(Math.random() * 1000) + 1,
+      price: randomNumber({integerDigits: 4, fractionDigits: 2}),
       inStock: Math.random() > 0.5,
       expirationDate: randomDate().toISOString(),
     }));
@@ -141,4 +141,10 @@ function randomDate(): Date {
   const to = new Date();
   to.setFullYear(to.getFullYear() + 15);
   return new Date(from.getTime() + Math.random() * (to.getTime() - from.getTime()));
+}
+
+function randomNumber(options?: {integerDigits?: number; fractionDigits?: number}): number {
+  const integerDigits = options?.integerDigits ?? 2;
+  const fractionDigits = options?.fractionDigits ?? 0;
+  return Math.trunc(Math.random() * Math.pow(10, integerDigits + fractionDigits)) / Math.pow(10, fractionDigits);
 }

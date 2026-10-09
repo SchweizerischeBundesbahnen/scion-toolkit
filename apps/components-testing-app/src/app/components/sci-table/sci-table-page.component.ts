@@ -143,6 +143,16 @@ export default class SciTablePageComponent {
             table.addNumberColumn({
               ...column,
               value: product => product.price,
+              format: {
+                style: columnForm.extras.numberColumn.style || undefined,
+                useGrouping: columnForm.extras.numberColumn.useGrouping === '' ? undefined : columnForm.extras.numberColumn.useGrouping === 'true',
+                minimumIntegerDigits: columnForm.extras.numberColumn.minimumIntegerDigits ?? undefined,
+                minimumFractionDigits: columnForm.extras.numberColumn.minimumFractionDigits ?? undefined,
+                maximumFractionDigits: columnForm.extras.numberColumn.maximumFractionDigits ?? undefined,
+                currency: columnForm.extras.numberColumn.currency || undefined,
+                unit: columnForm.extras.numberColumn.unit || undefined,
+              },
+              locale: columnForm.extras.numberColumn.locale || undefined,
             });
             break;
           case 'boolean':
@@ -221,7 +231,11 @@ export default class SciTablePageComponent {
       required(column.name);
       required(column.type);
       required(column.extras.componentColumn.component);
+      required(column.extras.numberColumn.currency);
+      required(column.extras.numberColumn.unit);
       hidden(column.extras.componentColumn.component, {when: ({valueOf}) => valueOf(column.type) !== 'component'});
+      hidden(column.extras.numberColumn.currency, {when: ({valueOf}) => valueOf(column.extras.numberColumn.style) !== 'currency'});
+      hidden(column.extras.numberColumn.unit, {when: ({valueOf}) => valueOf(column.extras.numberColumn.style) !== 'unit'});
     }, {
       submission: {
         action: async form => {
@@ -245,6 +259,16 @@ export default class SciTablePageComponent {
         minWidth: null,
         visible: signal(true),
         extras: {
+          numberColumn: {
+            style: '',
+            useGrouping: '',
+            maximumFractionDigits: null,
+            minimumFractionDigits: null,
+            minimumIntegerDigits: null,
+            currency: '',
+            unit: '',
+            locale: '',
+          },
           dateColumn: {
             format: '',
             locale: '',
@@ -323,6 +347,16 @@ interface ColumnForm {
   minWidth: number | null;
   visible: WritableSignal<boolean>;
   extras: {
+    numberColumn: {
+      style: 'decimal' | 'currency' | 'unit' | 'percent' | '';
+      useGrouping: 'true' | 'false' | '';
+      minimumIntegerDigits: number | null;
+      minimumFractionDigits: number | null;
+      maximumFractionDigits: number | null;
+      currency: string | '';
+      unit: string | '';
+      locale: string | '';
+    };
     dateColumn: {
       format: string | '';
       locale: string | '';
