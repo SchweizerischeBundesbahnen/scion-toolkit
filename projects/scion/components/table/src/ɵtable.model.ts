@@ -18,7 +18,7 @@ import {createDestroyableInjector, toLazyObservable} from '@scion/components/com
 import {arrayDatasource, isArrayDatasource} from './ɵtable-array-datasource';
 import {SciTableCache, SciTableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, switchMap, throwError, timer} from 'rxjs';
+import {combineLatestWith, concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, switchMap, tap, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
 import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {first, map, startWith} from 'rxjs/operators';
@@ -327,37 +327,28 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           })),
           error => throwError(() => error));
 
-        // Create a resource to track loading and error states.
-        const tableResponse = rxResource({stream: () => tableResponse$});
+        const columns$ = toObservable(this.columns);
 
-        // Create a derived resource mapping the response to rows. Must be done in a separate resource to not fetch data anew on column change.
-        const rows = resource({
-          params: ({chain}) => {
-            const items = chain(tableResponse)?.items;
-            return items && {items, columns: this.columns()};
-          },
-          loader: async ({params}) => this.mapItemsToRow(params.items, params.columns, pageStart),
+        // Create a resource to track loading and error states.
+        return rxResource({
+          stream: () => tableResponse$.pipe(
+            combineLatestWith(columns$),
+            map(([response, columns]) => ({
+              rows: this.mapItemsToRow(response.items, columns, pageStart),
+              totalCount: response.totalCount,
+            })),
+            tap({
+              next: ({totalCount}) => this.totalCount.set(totalCount),
+              error: error => {
+                console.error(error);
+                // Reset count to scroll to the top so the user sees the error.
+                this.totalCount.set(0);
+              },
+            }),
+            map(({rows}) => rows),
+          ),
           defaultValue: [],
         });
-
-        // Synchronize total row count based on resource state.
-        effect(() => {
-          switch (rows.status()) {
-            case 'resolved': {
-              // Update count only after rows resolve to prevent premature scroll invalidation.
-              this.totalCount.set(tableResponse.value()?.totalCount);
-              break;
-            }
-            case 'error': {
-              console.error(rows.error()!.cause);
-              // Reset count to scroll to the top so the user sees the error.
-              this.totalCount.set(0);
-              break;
-            }
-          }
-        });
-
-        return rows;
       }),
       dispose: () => cacheEntryInjector.destroy(),
       start: pageStart,
