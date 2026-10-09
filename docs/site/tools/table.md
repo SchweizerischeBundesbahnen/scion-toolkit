@@ -140,10 +140,106 @@ Displays numeric values.
 import {table} from '@scion/components/table';
 
 table(users.value, table => table.addNumberColumn({
-  header: 'Active Session Count',
+  header: 'Session Count',
   value: user => user.sessionsCount,
 }));
 ```
+
+##### Number Format
+
+Use the `format` property to control how numeric values are rendered. Defaults to standard number formatting based on the active locale.
+See [Number Format Options](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#options) for available properties.
+
+###### Grouping Separators
+
+Disable grouping separators (such as thousands separators) by setting `useGrouping` to `false`.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(data, table => table.addNumberColumn({
+  value: item => item.numericValue,
+  format: {useGrouping: false},
+}));
+```
+
+###### Fraction Digits
+
+Control the number of decimal places using the `minimumFractionDigits` and `maximumFractionDigits` properties.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(data, table => table.addNumberColumn({
+  value: item => item.numericValue,
+  format: {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  },
+}));
+```
+
+###### Currency
+
+To render numbers as currency, set `style` to `currency` and specify the [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217) (e.g., `EUR`, `CHF`, `GBP`).
+The currency code defaults to `DEFAULT_CURRENCY_CODE`, or `USD` if not provided.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(data, table => table.addNumberColumn({
+  value: item => item.numericValue,
+  format: {
+    style: 'currency',
+    currency: 'EUR',
+  },
+}));
+```
+
+###### Unit
+
+To render numbers with a specific unit (e.g., `kilogram`, `kilometer`, `kilometer-per-hour`, or `hour`), set `style` to `unit` and specify the unit
+from [Supported Unit Identifiers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/supportedValuesOf#supported_unit_identifiers).
+
+```ts
+import {table} from '@scion/components/table';
+
+table(data, table => table.addNumberColumn({
+  value: item => item.numericValue,
+  format: {
+    style: 'unit',
+    unit: 'kilometer-per-hour',
+  },
+}));
+```
+
+##### Locale
+
+Numbers are localized using the locale provided by `SCI_LOCALE`, a writable signal initialized with Angular's `LOCALE_ID`. Localization affects group sizing and separators, decimal point characters, and other locale-specific formatting rules.
+
+The default locale can be changed at runtime as follows:
+
+```ts
+import {inject} from '@angular/core';
+import {SCI_LOCALE} from '@scion/components/common';
+
+inject(SCI_LOCALE).set('de-CH');
+```
+
+To override the locale for a single column, use the `locale` property:
+
+```ts
+import {table} from '@scion/components/table';
+
+table(data, table => table.addNumberColumn({
+  value: item => item.numericValue,
+  locale: 'de-CH', // <--- Set the locale
+}));
+```
+
+Angular includes only `en-US` by default. Register other locales via `registerLocaleData()`, typically in an environment initializer at app startup. See [Localization][link-scion-localization] for an example.
+
+##### Tabular Figures
 
 Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
 
@@ -193,7 +289,7 @@ table(users.value, table => table.addDateColumn({
 
 ##### Date Format
 
-Use the `format` property to control how the date is rendered. The format can be a predefined Angular date format (e.g., `mediumDate` or `mediumTime`) or a custom date/time pattern (e.g., `dd.MM.yyyy` or `HH:mm`). If omitted, it defaults to the format configured in `DATE_PIPE_DEFAULT_OPTIONS` or falls back to `mediumDate`.
+Use the `format` property to control how dates are rendered. The format can be a predefined Angular date format (e.g., `mediumDate` or `mediumTime`) or a custom date/time pattern (e.g., `dd.MM.yyyy` or `HH:mm`). If omitted, it defaults to the format configured in `DATE_PIPE_DEFAULT_OPTIONS` or falls back to `mediumDate`.
 
 ```ts
 import {table} from '@scion/components/table';
@@ -208,7 +304,6 @@ table(users.value, table => table.addDateColumn({
 > [!TIP]
 > - See [Angular Predefined Format Options](https://angular.dev/api/common/DatePipe#pre-defined-format-options) for available formats.
 > - See [Angular Custom Format Syntax](https://angular.dev/api/common/DatePipe#custom-format-options) for custom date/time pattern syntax.
-
 
 ##### Timezone
 
@@ -251,28 +346,10 @@ table(users.value, table => table.addDateColumn({
 }));
 ```
 
-Angular includes only `en-US` by default. Register other locales via `registerLocaleData()`, typically in an environment initializer at app startup:
+Angular includes only `en-US` by default. Register other locales via `registerLocaleData()`, typically in an environment initializer at app startup. See [Localization][link-scion-localization] for an example.
 
-```ts
-import {bootstrapApplication} from '@angular/platform-browser';
-import {provideEnvironmentInitializer} from '@angular/core';
-import {registerLocaleData} from '@angular/common';
-
-import localeDeCH from '@angular/common/locales/de-CH';
-import localeFrCH from '@angular/common/locales/fr-CH';
-import localeItCH from '@angular/common/locales/it-CH';
-
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideEnvironmentInitializer(() => {
-      registerLocaleData(localeDeCH);
-      registerLocaleData(localeFrCH);
-      registerLocaleData(localeItCH);
-    }),
-  ],
-});
-```
 ##### Tabular Figures
+
 Dates are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
 
 Tabular figures include digits (`0-9`), basic math symbols, and punctuations/spaces.
@@ -802,7 +879,6 @@ sci-table::part(row\:some-row column\:some-column) {
 > - Set the `text-align` or `text-align-last` CSS property to align text in a column.
 > - Set the `font-variant-numeric` CSS property to `normal` to disable tabular figures in a column.
 
-
 [menu-home]: /README.md
 [menu-projects-overview]: /docs/site/projects-overview.md
 [menu-changelog]: /docs/site/changelog.md
@@ -815,3 +891,4 @@ sci-table::part(row\:some-row column\:some-column) {
 [link-scion-icons]: /docs/site/scion-icons.md
 [link-mdn-part-attribute]: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/part
 [link-mdn-part-selector]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/::part
+[link-scion-localization]: /docs/site/scion-localization.md#locale

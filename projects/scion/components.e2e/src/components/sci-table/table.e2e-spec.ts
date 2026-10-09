@@ -1985,12 +1985,12 @@ test.describe('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setRowCount(1_000_000);
-      await tablePage.addColumn({name: 'column:price', type: 'number'});
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      await table.column({name: 'column:price'}).sort();
-      await expect(table.column({name: 'column:price'}).cells.first()).toHaveText('1');
-      await table.column({name: 'column:price'}).sort();
-      await expect(table.column({name: 'column:price'}).cells.first()).toHaveText('1000');
+      await table.column({name: 'column:name'}).sort();
+      await expect(table.column({name: 'column:name'}).cells.first()).toHaveText('Product 1');
+      await table.column({name: 'column:name'}).sort();
+      await expect(table.column({name: 'column:name'}).cells.first()).toHaveText('Product 999999');
     });
 
     test('should reset scroll position to top when applying sort', async ({page}) => {

@@ -10,7 +10,7 @@
 
 import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciDateColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
 import {SciBooleanColumn, SciComponentColumn, SciDateColumn, SciDateLike, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
-import {computed, inject, signal} from '@angular/core';
+import {computed, DEFAULT_CURRENCY_CODE, inject, signal} from '@angular/core';
 import {ɵSciTable} from './ɵtable.model';
 import {coerceSignal, MaybeSignal, SCI_LOCALE} from '@scion/components/common';
 import {coerceDateValue} from './table-date-column.model';
@@ -52,6 +52,8 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     const descriptor = coerceColumnDescriptor(descriptorLike, value);
     const column = this.mapToColumn(descriptor);
 
+    const locale = coerceSignal(descriptor.locale ?? inject(SCI_LOCALE));
+    const currency = inject(DEFAULT_CURRENCY_CODE, {optional: true}) ?? 'USD';
     this.columns.push({
       ...column,
       type: 'number',
@@ -60,6 +62,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
       compare: (a, b) => a.value - b.value,
       matches: (text, context) => context.value === text,
+      format: computed(() => new Intl.NumberFormat(locale(), {currency, ...descriptor.format})),
     } satisfies SciNumberColumn<T>);
 
     return this;

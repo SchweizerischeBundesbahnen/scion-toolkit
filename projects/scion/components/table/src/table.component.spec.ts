@@ -10,7 +10,7 @@
 
 import {TestBed} from '@angular/core/testing';
 import {table, table as sciTable} from './table.factory';
-import {assertNotInReactiveContext, Component, computed, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
+import {assertNotInReactiveContext, Component, computed, DEFAULT_CURRENCY_CODE, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
 import {TablePO} from './table.po';
 import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
@@ -18,7 +18,7 @@ import {provideTableRowBinding} from './table-row-binding';
 import {SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, ɵillegaldatasource} from './table-datasource';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
-import {registerLocaleData} from '@angular/common';
+import {DATE_PIPE_DEFAULT_OPTIONS, DatePipeConfig, registerLocaleData} from '@angular/common';
 import localeDeCH from '@angular/common/locales/de-CH';
 import localeEnCH from '@angular/common/locales/en-CH';
 import {SCI_LOCALE} from '@scion/components/common';
@@ -235,6 +235,116 @@ describe('Table', () => {
         value.set(2);
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['2']]);
+      });
+
+      it('should display number in specified format', async () => {
+        const data = signal([{number: 12345.6789}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addNumberColumn(item => item.number)
+            .addNumberColumn({
+              value: item => item.number,
+              format: {maximumFractionDigits: 2},
+            })
+            .addNumberColumn({
+              value: item => item.number,
+              format: {useGrouping: false},
+            })
+            .addNumberColumn({
+              value: item => item.number,
+              format: {style: 'currency'},
+            })
+            .addNumberColumn({
+              value: item => item.number,
+              format: {style: 'currency', currency: 'CHF'},
+            })
+            .addNumberColumn({
+              value: item => item.number,
+              format: {style: 'unit', unit: 'kilogram'},
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['12,345.679', '12,345.68', '12345.679', '$12,345.68', 'CHF 12,345.68', '12,345.679 kg'],
+        ]);
+      });
+
+      it('should localize number', async () => {
+        TestBed.overrideProvider(LOCALE_ID, {useValue: 'de-CH'});
+        registerLocaleData(localeDeCH);
+        registerLocaleData(localeEnCH);
+
+        const locale = TestBed.inject(SCI_LOCALE);
+        const columnLocale = linkedSignal(locale);
+
+        const data = signal([{number: 12345.6789}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addNumberColumn(item => item.number)
+            .addNumberColumn({
+              value: item => item.number,
+              format: {style: 'currency'},
+            })
+            .addNumberColumn({
+              value: item => item.number,
+              format: {style: 'currency', currency: 'CHF'},
+              locale: columnLocale,
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['12\'345.679', '$ 12\'345.68', 'CHF 12\'345.68'],
+        ]);
+
+        // Expect global locale to be 'de-CH'.
+        expect(locale()).toEqual('de-CH');
+
+        // Change global locale to 'en-US'.
+        locale.set('en-US');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['12,345.679', '$12,345.68', 'CHF 12,345.68'],
+        ]);
+
+        // Change column locale to 'en-CH'.
+        columnLocale.set('en-CH');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['12,345.679', '$12,345.68', 'CHF 12\'345.68'],
+        ]);
+      });
+
+      it('should default to DEFAULT_CURRENCY_CODE', async () => {
+        TestBed.overrideProvider(DEFAULT_CURRENCY_CODE, {useValue: 'GBP'});
+
+        const data = signal([{number: 12345.6789}]);
+
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addNumberColumn({
+              value: item => item.number,
+              format: {style: 'currency'},
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['£12,345.68'],
+        ]);
       });
 
       it('should have tabular (monospaced) figures', async () => {

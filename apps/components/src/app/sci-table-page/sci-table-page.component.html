@@ -43,6 +43,16 @@
             </select>
           </label>
 
+          <label>
+            Locale
+            <select [(ngModel)]="locale">
+              <option value="de-CH">German (Switzerland)</option>
+              <option value="fr-CH">French (Switzerland)</option>
+              <option value="it-CH">Italian (Switzerland)</option>
+              <option value="en-US">English (United States)</option>
+            </select>
+          </label>
+
           <button type="button" (click)="onUserSettingsReset()" class="reset">Reset User Settings</button>
         </section>
       </ng-template>
@@ -125,6 +135,11 @@
           <label>
             <input [formField]="settingsForm.visibleColumns.seatingCapacity" type="checkbox"/>
             Seats
+          </label>
+
+          <label>
+            <input [formField]="settingsForm.visibleColumns.price" type="checkbox"/>
+            Price
           </label>
 
           <label>

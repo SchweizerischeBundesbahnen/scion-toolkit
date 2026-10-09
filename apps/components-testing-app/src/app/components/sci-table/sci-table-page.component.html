@@ -33,6 +33,68 @@
           </label>
 
           @switch (columnForm.type().value()) {
+            @case ('number') {
+              @let extras = columnForm.extras.numberColumn;
+              <label>
+                style
+                <select [formField]="extras.style" class="e2e-style" appFieldValidation>
+                  <option value="decimal">decimal</option>
+                  <option value="currency">currency</option>
+                  <option value="unit">unit</option>
+                  <option value="percent">percent</option>
+                  <option value=""></option>
+                </select>
+              </label>
+
+              @if (extras.style().value() === 'currency') {
+                <label>
+                  Currency
+                  <input [formField]="extras.currency" placeholder="ISO 4217 (EUR, CHF, GBP, ...)" class="e2e-currency"/>
+                </label>
+              }
+
+              @if (extras.style().value() === 'unit') {
+                <label>
+                  Unit
+                  <input [formField]="extras.unit" placeholder="kilometer, kilometer-per-hour, hour, kilogram, ..." class="e2e-unit"/>
+                </label>
+              }
+
+              <label>
+                Locale
+                <select [formField]="extras.locale" class="e2e-locale" appFieldValidation>
+                  <option value="de-CH">German (Switzerland)</option>
+                  <option value="fr-CH">French (Switzerland)</option>
+                  <option value="it-CH">Italian (Switzerland)</option>
+                  <option value="en-US">English (United States)</option>
+                  <option value=""></option>
+                </select>
+              </label>
+
+              <label>
+                Grouping
+                <select [formField]="extras.useGrouping" class="e2e-grouping" appFieldValidation>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                  <option value=""></option>
+                </select>
+              </label>
+
+              <label>
+                Minimum Integer Digits
+                <input [formField]="extras.minimumIntegerDigits" class="e2e-minimum-integer-digits" type="number">
+              </label>
+
+              <label>
+                Minimum Fraction Digits
+                <input [formField]="extras.minimumFractionDigits" class="e2e-minimum-fraction-digits" type="number">
+              </label>
+
+              <label>
+                Maximum Fraction Digits
+                <input [formField]="extras.maximumFractionDigits" class="e2e-maximum-fraction-digits" type="number">
+              </label>
+            }
             @case ('date') {
               @let extras = columnForm.extras.dateColumn;
               <label>

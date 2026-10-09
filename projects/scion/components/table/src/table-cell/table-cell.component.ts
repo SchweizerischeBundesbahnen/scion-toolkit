@@ -14,6 +14,7 @@ import {NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
+import {SciNumberPipe} from './number.pipe';
 
 @Component({
   selector: 'sci-table-cell',
@@ -29,6 +30,7 @@ import {SciIconComponent} from '@scion/components/icon';
     NgTemplateOutlet,
     SciIconComponent,
     SciComponentOutletDirective,
+    SciNumberPipe,
   ],
 })
 export class SciTableCellComponent<T> {

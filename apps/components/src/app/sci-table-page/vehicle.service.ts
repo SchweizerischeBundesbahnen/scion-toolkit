@@ -124,6 +124,8 @@ export namespace Vehicles {
               return new Date(a.lastR2Expiry).getTime() - new Date(b.lastR2Expiry).getTime();
             case 'column:nextRevision':
               return new Date(a.nextRevision).getTime() - new Date(b.nextRevision).getTime();
+            case 'column:price':
+              return a.price - b.price;
             default:
               return 0;
           }
@@ -186,6 +188,8 @@ export namespace Vehicles {
             return vehicle.lastR2Expiry.toLocaleLowerCase().includes(filterText);
           case 'column:nextRevision':
             return vehicle.nextRevision.toLocaleLowerCase().includes(filterText);
+          case 'column:price':
+            return vehicle.price.toString().includes(filterText);
           default:
             return true;
         }
