@@ -3,7 +3,7 @@ import {Signal, WritableSignal} from '@angular/core';
 import {Translatable} from '@scion/components/text';
 import {SciTableRowActionFactoryFn} from '../../table/src/table.model';
 import {SciTableDataSourceProvider, SciTableIdsRequest, SciTableRowBindingFactoryFn, SciTableTreeNode} from '@scion/components/table';
-import {SciAsyncTableTreeDatasource, SciTableTreeDatasource} from '../../table/src/table-datasource';
+import {SciAsyncTableTreeDatasource, SciTableTreeDatasource, SciTableTreeNodeIds} from '../../table/src/table-datasource';
 import {MaybeAsync} from '../../table/src/common';
 
 export interface SciTreeDescriptor<T> {
@@ -65,6 +65,6 @@ export function provideTreeDatasource<T>(root: Signal<T[]>, getChildren: (item: 
   return (columns, trackBy) => new SciTableTreeDatasource(root, {columns, trackBy, getChildren});
 }
 
-export function providePageableTreeDatasource<T>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNode<unknown>[]>, getItems: (ids: unknown[], meta?: {parent?: T}) => MaybeAsync<T[]>): SciTableDataSourceProvider<T> {
+export function providePageableTreeDatasource<T>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNodeIds[]>, getItems: (ids: unknown[], meta?: {parent?: T}) => MaybeAsync<T[]>): SciTableDataSourceProvider<T> {
   return () => new SciAsyncTableTreeDatasource(getIds, getItems);
 }

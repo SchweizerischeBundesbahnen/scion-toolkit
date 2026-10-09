@@ -13,7 +13,6 @@ import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
 import {firstValueFrom, timer} from 'rxjs';
 import {SciTableRow} from './table.model';
-import {SciTableCacheRow} from './table.cache';
 
 @Injectable()
 export class SciTableSelectionService<T> {
@@ -191,19 +190,20 @@ export class SciTableSelectionService<T> {
         return findPreviousRootExpanded(index - 1);
       }
 
-      function findPreviousChildExpanded(row: SciTableCacheRow<T> | undefined): SciTableRow<T> | undefined {
+      function findPreviousChildExpanded(row: SciTableRow<T> | undefined): SciTableRow<T> | undefined {
         if (!row || !row.hasChildren() || !row.expanded()) {
           return undefined;
         }
 
-        const children = [...row.childrenCache.rowsById().values()];
+        // TODO [tree]: fix with unified cache
+        // const children = [...row.childrenCache.rowsById().values()];
 
-        for (let i = children.length - 1; i >= 0; i--) {
-          const candidate = findPreviousChildExpanded(children[i]);
-          if (candidate) {
-            return candidate;
-          }
-        }
+        // for (let i = children.length - 1; i >= 0; i--) {
+        //   const candidate = findPreviousChildExpanded(children[i]);
+        //   if (candidate) {
+        //     return candidate;
+        //   }
+        // }
 
         return row;
       }

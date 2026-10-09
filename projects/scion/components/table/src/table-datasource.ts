@@ -57,6 +57,11 @@ export interface SciTableIdsRequest {
  */
 export type SciTableDataLoaderFn<T> = (request: SciTablePageRequest) => MaybeAsync<SciTablePageResponse<T>>;
 
+export interface SciTableTreeNodeIds {
+  id: unknown;
+  parentId?: unknown;
+}
+
 export interface SciTableTreeNode<T> {
   item: T;
   parent?: T;
@@ -65,8 +70,8 @@ export interface SciTableTreeNode<T> {
 export type SciTableIdsProvider<T> = (request: SciTableIdsRequest) => MaybeAsync<T[]>;
 
 export interface SciTableTreeDataProvider<T> {
-  getIds: SciTableIdsProvider<SciTableTreeNode<unknown>>;
-  getItems(ids: unknown[], meta?: {parent?: T}): MaybeAsync<T[]>;
+  getIds: SciTableIdsProvider<SciTableTreeNodeIds>;
+  getItems(ids: unknown[]): MaybeAsync<T[]>;
 }
 
 export interface SciTableDataProvider<T> {
@@ -95,8 +100,8 @@ export class SciAsyncTableDatasource<T> implements SciTableDataProvider<T> {
 }
 
 export class SciTableTreeDatasource<T> implements SciTableTreeDataProvider<T> {
-  public readonly getIds: SciTableIdsProvider<SciTableTreeNode<unknown>>;
-  public readonly getItems: (ids: unknown[], meta?: {parent?: T}) => MaybeAsync<T[]>;
+  public readonly getIds: SciTableIdsProvider<SciTableTreeNodeIds>;
+  public readonly getItems: (ids: unknown[]) => MaybeAsync<T[]>;
 
   constructor(root: Signal<T[]>, options: {columns: Signal<SciTableColumnLike<T>[]>; trackBy: (item: T) => unknown; getChildren: (node: T) => T[]}) {
     const loadChildren = (item: T): SciTableTreeNode<T>[] => options.getChildren(item).flatMap(child => [
@@ -120,8 +125,8 @@ export class SciTableTreeDatasource<T> implements SciTableTreeDataProvider<T> {
 export class SciAsyncTableTreeDatasource<T> implements SciTableTreeDataProvider<T> {
 
   constructor(
-    public getIds: SciTableIdsProvider<SciTableTreeNode<unknown>>,
-    public getItems: (ids: unknown[], meta?: {parent?: T}) => MaybeAsync<T[]>,
+    public getIds: SciTableIdsProvider<SciTableTreeNodeIds>,
+    public getItems: (ids: unknown[]) => MaybeAsync<T[]>,
   ) {
   }
 }
@@ -138,7 +143,7 @@ export function provideTableTreeDatasource<T>(root: Signal<T[]>, getChildren: (i
   return (columns, trackBy) => new SciTableTreeDatasource(root, {columns, trackBy, getChildren});
 }
 
-export function provideAsyncTableTreeDatasource<T>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNode<unknown>[]>, getItems: (ids: unknown[], meta?: {parent?: T}) => MaybeAsync<T[]>): SciTableDataSourceProvider<T> {
+export function provideAsyncTableTreeDatasource<T>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNodeIds[]>, getItems: (ids: unknown[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T> {
   return () => new SciAsyncTableTreeDatasource(getIds, getItems);
 }
 
@@ -152,4 +157,12 @@ export function ɵillegaldatasource<T>(): Signal<T[]> {
   return computed(() => {
     throw Error('[SciTableError] Illegal state. ɵillegaldatasource should not be used.');
   });
+}
+
+export function isArrayDatasource(datasource: SciTableDataProvider<unknown>): boolean {
+  return datasource instanceof SciTableArrayDatasource || datasource instanceof SciAsyncTableDatasource;
+}
+
+export function isTreeDatasource(datasource: SciTableDataProvider<unknown>): boolean {
+  return datasource instanceof SciTableTreeDatasource || datasource instanceof SciAsyncTableTreeDatasource;
 }

@@ -88,12 +88,14 @@ export default class SciTablePageComponent {
           case 'array-http':
             this._productService.enableHttpLoader();
             return this._productService.products;
-          case 'loader':
-            return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}));
-          case 'loader-delayed':
-            return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}));
-          case 'loader-http':
-            return provideAsyncTableDatasource((request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))));
+          default:
+            return this._productService.products;
+          // case 'loader':
+          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}));
+          // case 'loader-delayed':
+          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}));
+          // case 'loader-http':
+          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))));
         }
       })(),
       rowBindings: (bindings, product) => {

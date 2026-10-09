@@ -8,19 +8,19 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeNode} from './table-datasource';
+import {SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeNode, SciTableTreeNodeIds} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
 import {computed, Signal, untracked} from '@angular/core';
 import {coerceSignal} from '@scion/components/common';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 
-export function treeDatasource<T>(data: Signal<Map<unknown, SciTableTreeNode<T>>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<SciTableTreeNode<unknown>[]>) {
+export function treeDatasource<T>(data: Signal<Map<unknown, SciTableTreeNode<T>>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<SciTableTreeNodeIds[]>) {
   const dataset = computed((): TreeDatasetRow<T>[] => {
     return [...data().entries()].map(([id, node]) => ({...createDatasetRow(id, node.item, columns()), parent: node.parent}));
   });
 
-  return (request: SciTableIdsRequest): Observable<SciTableTreeNode<unknown>[]> => {
+  return (request: SciTableIdsRequest): Observable<SciTableTreeNodeIds[]> => {
     return toObservable(computed(() => {
       const rows = dataset();
 
@@ -28,7 +28,7 @@ export function treeDatasource<T>(data: Signal<Map<unknown, SciTableTreeNode<T>>
         return rows
           .filter(row => (matchesRow(row, request.columnFilters) && matchesGlobalFilter(row, request.tableFilter)))
           .sort((a, b) => compareRows(a, b, request.sortCriteria))
-          .map(row => ({item: row.id, parent: row.parent}));
+          .map(row => ({id: row.id, parentId: row.parent}));
       });
     }));
   };

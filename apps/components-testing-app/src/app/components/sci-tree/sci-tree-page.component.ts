@@ -80,33 +80,24 @@ export default class SciTreePageComponent {
       datasource: (() => {
         switch (options.datasource) {
           case 'array':
-            return provideTreeDatasource(this._productService.products, {
-              getChildren: item => item.children ?? [],
-              hasChildren: item => !!item.children,
-            });
+            return provideTreeDatasource(this._productService.products, item => item.children ?? []);
           case 'array-http':
             this._productService.enableHttpLoader();
-            return provideTreeDatasource(this._productService.products, {
-              getChildren: item => item.children ?? [],
-              hasChildren: item => !!item.children,
-            });
-          case 'loader':
-          case 'loader-delayed': {
-            const delayed = options.datasource === 'loader-delayed';
-            const columnDataTypes = new Map<`column:${string}`, SciTableColumnType>([['column:tree', 'string']]);
-            return providePageableTreeDatasource<Product>(
-              request => this._productService.getProducts$(request, columnDataTypes, {slowDataSource: delayed, simulateError: this.datasourceForm.simulateError().value}),
-              {
-                getChildren: (item, request) => this._productService.getChildren$(item, request, columnDataTypes, {slowDataSource: delayed}),
-                hasChildren: (item, request) => this._productService.hasChildren(item, request, columnDataTypes),
-              },
-            );
-          }
+            return provideTreeDatasource(this._productService.products, item => item.children ?? []);
+          // case 'loader':
+          // case 'loader-delayed': {
+            // const delayed = options.datasource === 'loader-delayed';
+            // const columnDataTypes = new Map<`column:${string}`, SciTableColumnType>([['column:tree', 'string']]);
+            // return providePageableTreeDatasource<Product>(
+            //   request => this._productService.getProducts$(request, columnDataTypes, {slowDataSource: delayed, simulateError: this.datasourceForm.simulateError().value}),
+            //   {
+            //     getChildren: (item, request) => this._productService.getChildren$(item, request, columnDataTypes, {slowDataSource: delayed}),
+            //     hasChildren: (item, request) => this._productService.hasChildren(item, request, columnDataTypes),
+            //   },
+            // );
+          // }
           default:
-            return provideTreeDatasource(this._productService.products, {
-              getChildren: item => item.children ?? [],
-              hasChildren: item => !!item.children,
-            });
+            return provideTreeDatasource(this._productService.products, item => item.children ?? []);
         }
       })(),
       filterable: this.settingsForm.customFilter().value() ? {matcher: customFilter} : undefined,
