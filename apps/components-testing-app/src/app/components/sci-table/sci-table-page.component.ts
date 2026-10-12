@@ -8,15 +8,15 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {provideAsyncTableDatasource, provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {createDestroyableInjector} from '@scion/components/common';
 import {FieldValidationDirective} from '../field-validation.directive';
-import {Product, ProductService, simulateError$} from './sci-table-page.data';
+import {Product, ProductService} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
-import {mergeWith, noop} from 'rxjs';
+import {noop} from 'rxjs';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';

@@ -330,7 +330,7 @@ export default class SciTablePageComponent {
     return form(signal({
       showGridlines: false,
       showZebraStriping: false,
-      slowDatasource: false,
+      slowDatasource: true,
       groupByOperator: false,
       visibleColumns: {
         id: true,

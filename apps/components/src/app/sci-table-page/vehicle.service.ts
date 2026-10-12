@@ -8,13 +8,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion, SciTableTreeNode, SciTableIdsRequest} from '@scion/components/table';
+import {SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion} from '@scion/components/table';
 import {computed, Service, Signal, signal} from '@angular/core';
 import {defer, Observable, timer} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
-import {isVehicle, OperatorGroup, Vehicle, VehicleOrOperator} from './vehicle.model';
+import {OperatorGroup, Vehicle, VehicleOrOperator} from './vehicle.model';
 
 @Service()
 export class VehicleService {
@@ -67,11 +67,11 @@ export class VehicleService {
     });
   }
 
-  public getItems$(ids: unknown[]): Observable<Vehicle[]> {
+  public getItems$(ids: string[]): Observable<Vehicle[]> {
     const items = computed(() => {
       const vehicles = this.vehicles();
       return ids
-        .map(id => vehicles.find(vehicle => vehicle.id === id))
+        .map(id => vehicles.find(vehicle => vehicle.id.toString() === id))
         .filter((vehicle): vehicle is Vehicle => !!vehicle);
     });
 

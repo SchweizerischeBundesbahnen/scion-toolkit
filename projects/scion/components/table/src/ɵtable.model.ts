@@ -481,6 +481,8 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
         return;
       }
 
+      console.log(scrollRange);
+
       const batches = this.findBatchesToLoad(scrollRange.start, scrollRange.end, visibleNodes);
 
       untracked(() => {
@@ -511,8 +513,9 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public findBatchesToLoad(start: number, end: number, visibleNodes: Array<SciTableTreeNode<ID>>): SciTableTreeNode<ID>[][] {
     const batches = new Array<SciTableTreeNode<ID>[]>();
     const pageStart = Math.floor(start / this.pageSize);
-    const pageEnd = Math.floor(end / this.pageSize);
+    const pageEnd = Math.floor((end - 1) / this.pageSize);
     const pages = rangeInclusive(pageStart, pageEnd);
+    console.log(pages);
 
     for (const page of pages) {
       const start = page * this.pageSize;
@@ -736,11 +739,19 @@ export class TableTreeStructure<T, ID> {
   });
 
   public readonly nodes = rxResource({
-    params: () => ({
-      filterCriteria: this._filterCriteria(),
-      tableFilter: this._tableFilter() ?? undefined,
-      unfilteredNodes: this._unfilteredNodes.value() ?? [],
-    }),
+    params: () => {
+      const unfilteredNodes = this._unfilteredNodes.value();
+
+      if (unfilteredNodes === undefined) {
+        return undefined;
+      }
+
+      return {
+        filterCriteria: this._filterCriteria(),
+        tableFilter: this._tableFilter() ?? undefined,
+        unfilteredNodes,
+      };
+    },
     stream: ({params}) => {
       const unfilteredNodes$ = of(params.unfilteredNodes);
       // If no filters are applied, filteredIds === allIds

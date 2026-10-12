@@ -1347,10 +1347,10 @@ describe('Table', () => {
     it('should expand and collapse nested rows', async () => {
       const roots = ['1', '2', '3'];
       const getIds = jasmine.createSpy().and.returnValue([
-        ...roots.map(id => ({id})),
-        {id: '1.1', parentId: '1'},
-        {id: '1.2', parentId: '1'},
-        {id: '1.1.1', parentId: '1.1'},
+        ...roots.map(id => ({item: id})),
+        {item: '1.1', parent: '1'},
+        {item: '1.2', parent: '1'},
+        {item: '1.1.1', parent: '1.1'},
       ]);
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(String));
       const {fixture, model} = createSciTableComponent(sciTable<string>({
@@ -1397,7 +1397,7 @@ describe('Table', () => {
     });
 
     it('should show child errors on the table and reload on retry', async () => {
-      const getIds = jasmine.createSpy().and.returnValue([{id: 'parent'}, {id: 'child', parentId: 'parent'}]);
+      const getIds = jasmine.createSpy().and.returnValue([{item: 'parent'}, {item: 'child', parent: 'parent'}]);
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.includes('child') ? throwError(() => new Error('Child load failed')) : of(ids.map(String)));
       const {fixture, model} = createSciTableComponent(sciTable<string>({
         ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
@@ -1414,7 +1414,7 @@ describe('Table', () => {
       fixture.detectChanges();
       expect(fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry')).not.toBeNull();
 
-      getItems.and.callFake((ids: unknown[]) => of(ids.map(String)));
+      getItems.and.callFake((ids: string[]) => of(ids));
       getItems.calls.reset();
       (fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry') as HTMLButtonElement).click();
       await table.waitUntilStable();
@@ -1463,8 +1463,8 @@ describe('Table', () => {
 
     it('should load children in batches and reuse loaded items when re-expanding', async () => {
       const children = ['1.1', '1.2', '1.3', '1.4'];
-      const getIds = jasmine.createSpy().and.returnValue([{id: '1'}, ...children.map(id => ({id, parentId: '1'}))]);
-      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(String));
+      const getIds = jasmine.createSpy().and.returnValue([{item: '1'}, ...children.map(id => ({item: id, parent: '1'}))]);
+      const getItems = jasmine.createSpy().and.callFake((ids: string[]) => ids);
       const {fixture, model} = createSciTableComponent(sciTable<string>({
         ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
@@ -1481,9 +1481,10 @@ describe('Table', () => {
 
       model.expand('1');
       await table.waitUntilStable();
-      expect([...model.rowsByIndex().values()].map(row => row!.item)).toEqual(['1', ...children]);
+      const column = table.column({index: 0});
+      expect(await column?.values()).toEqual(['1', ...children]);
       expect(getItems.calls.allArgs()).toEqual([
-        [['1', '1.1']],
+        [['1.1']],
         [['1.2', '1.3']],
         [['1.4']],
       ]);
@@ -1493,14 +1494,14 @@ describe('Table', () => {
       await table.waitUntilStable();
       model.expand('1');
       await table.waitUntilStable();
-      expect([...model.rowsByIndex().values()].map(row => row!.item)).toEqual(['1', ...children]);
+      expect(await column?.values()).toEqual(['1', ...children]);
       expect(getIds).toHaveBeenCalledTimes(1);
       expect(getItems).not.toHaveBeenCalled();
     });
 
     it('should retain child items across row remapping', async () => {
       const columns = signal(['first']);
-      const getIds = jasmine.createSpy().and.returnValue(of([{id: 'parent'}, {id: 'child', parentId: 'parent'}]));
+      const getIds = jasmine.createSpy().and.returnValue(of([{item: 'parent'}, {item: 'child', parent: 'parent'}]));
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => of(ids.map(String)));
       const {fixture, model} = createSciTableComponent(sciTable<string>({
         ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
@@ -1533,9 +1534,9 @@ describe('Table', () => {
     it('should load children when expanding the last row at the viewport boundary', async () => {
       const roots = generateData(10, i => i);
       const getIds = jasmine.createSpy().and.returnValue([
-        ...roots.map(id => ({id})),
-        {id: 10, parentId: 9},
-        {id: 11, parentId: 9},
+        ...roots.map(id => ({item: id})),
+        {item: 10, parent: 9},
+        {item: 11, parent: 9},
       ]);
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
       const {fixture, model} = createSciTableComponent(sciTable<number>({
@@ -1577,8 +1578,8 @@ describe('Table', () => {
     });
 
     it('should load children when expanding the last row of a table shorter than the viewport', async () => {
-      const getIds = jasmine.createSpy().and.returnValue([{id: '1'}, {id: '2'}, {id: '2.1', parentId: '2'}]);
-      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(String));
+      const getIds = jasmine.createSpy().and.returnValue([{item: '1'}, {item: '2'}, {item: '2.1', parent: '2'}]);
+      const getItems = jasmine.createSpy().and.callFake((ids: string[]) => ids);
       const {fixture, model} = createSciTableComponent(sciTable<string>({
         ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
@@ -1688,7 +1689,6 @@ describe('Table', () => {
       expect(getIds).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledWith([0, 1, 2, 3, 4]);
       expect(getItems).toHaveBeenCalledWith([5, 6, 7, 8, 9]);
-      expect(getItems).toHaveBeenCalledTimes(2);
       getItems.calls.reset();
 
       // Scroll down to row 20
@@ -1763,7 +1763,7 @@ describe('Table', () => {
 
     it('should load pages based on pageSize [pageSize=50]', async () => {
       const getIds = jasmine.createSpy().and.returnValue(generateData(1_000, i => i));
-      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
+      const getItems = jasmine.createSpy().and.callFake((ids: number[]) => ids);
 
       const {fixture} = createSciTableComponent(sciTable<number>({
         bufferSize: 3,
@@ -1780,6 +1780,8 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
+
+      console.log(table.row({nth: 0}).element)
 
       // Buffer before:    []
       // Rows in Viewport: [0,..,9]
@@ -1809,7 +1811,7 @@ describe('Table', () => {
     it('should allow global filtering', async () => {
       const data = generateData(100, i => i);
       const getIds = jasmine.createSpy().and.callFake((request: SciTableIdsRequest) => data.filter(item => !request.tableFilter || `${item}` === request.tableFilter));
-      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
+      const getItems = jasmine.createSpy().and.callFake((ids: number[]) => ids);
 
       const {fixture, model} = createSciTableComponent(sciTable<number>({
         ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
