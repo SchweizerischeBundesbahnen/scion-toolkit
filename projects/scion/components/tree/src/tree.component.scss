@@ -1,0 +1,12 @@
+:host {
+  --sci-table-cell-padding-inline: 0px;
+  --sci-table-row-height: var(--sci-tree-node-height);
+  --sci-table-row-background-color-hover: var(--sci-tree-node-background-color-hover);
+  --sci-table-row-background-color-selected: var(--sci-tree-node-background-color-selected);
+  --sci-table-row-border-radius: var(--sci-tree-node-border-radius);
+  --sci-table-row-outline-color: var(--sci-tree-node-outline-color);
+  --sci-table-row-outline-width: var(--sci-tree-node-outline-width);
+  --sci-table-row-outline-style: var(--sci-tree-node-outline-style);
+  --sci-table-row-action-background-color: var(--sci-tree-node-action-background-color);
+  --sci-table-row-action-background-color-selected: var(--sci-tree-node-action-background-color-selected);
+}

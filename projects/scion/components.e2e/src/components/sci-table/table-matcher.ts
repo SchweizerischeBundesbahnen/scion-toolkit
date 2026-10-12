@@ -11,6 +11,7 @@
 import {TablePO} from './table.po';
 import {expect} from '@playwright/test';
 import {RequireOne} from '@scion/toolkit/types';
+import {expectRow} from './row-matcher';
 
 export function expectTable(table: TablePO): TableMatcher {
   return {
@@ -22,19 +23,24 @@ export function expectTable(table: TablePO): TableMatcher {
         },
       };
     },
-    async toHaveContent(expected: string[][]): Promise<void> {
-      await expect(async () => {
-        const actualColumnCount = await table.grid.locator('sci-table-column').count();
-        const actualRowCount = await table.grid.locator('sci-table-row').count();
+    async toHaveContent(expected: (string | TableTreeNode)[][]): Promise<void> {
+      const actualColumnCount = await table.grid.locator('sci-table-column').count();
+      const actualRowCount = await table.grid.locator('sci-table-row').count();
 
-        const cells = table.rows.locator('sci-table-cell');
-        const cellTexts = await cells.evaluateAll(cells => cells.map(cell => cell.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim() || cell.getAttribute('data-value') || '')); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
-        const actual = Array.from({length: actualRowCount}, (_, row) => {
-          return cellTexts.slice(row * actualColumnCount, row * actualColumnCount + actualColumnCount);
-        });
+      for (let y = 0; y < actualRowCount && y < expected.length; y++) {
+        for (let x = 0; x < actualColumnCount && x < expected[y]!.length; x++) {
+          const expectedCell = expected[y]![x]!;
+          const row = table.row({index: y});
+          const cell = row.cell({index: x});
+          if (typeof expectedCell === 'object') {
+            await expectRow(row).toHaveState(expectedCell.state);
+          }
 
-        expect(actual).toStrictEqual(expected);
-      }).toPass();
+          const label = typeof expectedCell === 'object' ? expectedCell.label : expectedCell;
+          // Either the textContent or the value must match (mainly for boolean columns)
+          await expect.poll(async () => ((await cell.textContent()) ?? '').trim() || ((await cell.value()) ?? '')).toEqual(label);
+        }
+      }
     },
     async toHaveVerticalOverflow(): Promise<void> {
       await expect(table.locator.locator('sci-scrollbar[direction="vscroll"].overflow')).toBeAttached();
@@ -70,11 +76,16 @@ export interface TableMatcher {
 
   toHaveColumnCount(count: number): Promise<void>;
 
-  toHaveContent(expected: string[][]): Promise<void>;
+  toHaveContent(expected: (string | TableTreeNode)[][]): Promise<void>;
 
   not: {
     toHaveVerticalOverflow(): Promise<void>;
 
     toHaveHorizontalOverflow(): Promise<void>;
   };
+}
+
+interface TableTreeNode {
+  label?: string;
+  state: 'expanded' | 'collapsed' | null;
 }

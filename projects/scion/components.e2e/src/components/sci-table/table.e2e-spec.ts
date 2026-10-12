@@ -17,7 +17,6 @@ import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, setCaret, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
 import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
 import {firstValueFrom, Subject} from 'rxjs';
-import {SciTablePageResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';
 import {CustomButtonColumnPO} from './custom-button-column.po';
@@ -3160,7 +3159,8 @@ test.describe('sci-table', () => {
 
           await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
 
-          await table.row({nth: 0}).click();
+          await table.body.focus();
+          await page.keyboard.press('ArrowDown');
           await expect(tablePage.selection).toHaveText('0');
 
           await page.keyboard.press('ArrowDown');
@@ -3209,7 +3209,8 @@ test.describe('sci-table', () => {
 
           await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
 
-          await table.row({nth: 0}).click();
+          await table.body.focus();
+          await page.keyboard.press('Shift+ArrowDown');
           await expect(tablePage.selection).toHaveText('0');
 
           await page.keyboard.press('Shift+ArrowDown');
@@ -3258,7 +3259,8 @@ test.describe('sci-table', () => {
 
           await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
 
-          await table.row({nth: 0}).click();
+          await table.body.focus();
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
           await expect(tablePage.selection).toHaveText('0');
 
           await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
@@ -4170,6 +4172,25 @@ test.describe('sci-table', () => {
           await expect(tablePage.activeItemId).toHaveText('0');
         });
 
+        test('should start selection on initial Shift+PageDown', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.body.focus();
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('0 1 2 3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+        });
+
         test('should expand selection on Shift+PageDown at end of block', async ({page}) => {
           const tablePage = new TablePagePO(page);
           const table = new TablePO(tablePage.table);
@@ -4486,6 +4507,25 @@ test.describe('sci-table', () => {
           await page.keyboard.press('Home');
           await expect(tablePage.selection).toHaveText('0');
           await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should select all on initial Shift+End', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.body.focus();
+
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
         });
 
         test('should expand selection on Shift+End at end of block', async ({page}) => {
@@ -6287,9 +6327,9 @@ test.describe('sci-table', () => {
 
       // Install HTTP endpoint that blocks the initial load.
       const onLoad$ = new Subject<void>();
-      await page.route('**/sci-table/products', async route => {
+      await page.route('**/sci-table/products/ids', async route => {
         await firstValueFrom(onLoad$);
-        await route.fulfill({json: {items: [], totalCount: 0} satisfies SciTablePageResponse<Product>});
+        return route.fulfill({json: []});
       });
 
       await tablePage.addColumn({name: 'column:testee', type: 'string'});
@@ -6349,8 +6389,6 @@ test.describe('sci-table', () => {
       await table.retry();
       await expect(table.locator).not.toContainText('Unable to load data.');
       await expect(table.rows).toHaveCount(10);
-
-      await expect.poll(() => consoleLogs.get({severity: 'error'})).toContainEqual(expect.stringContaining('[DatasourceError]'));
     });
 
     test(`should horizontally center 'Unable to load data' in viewport`, async ({page}) => {

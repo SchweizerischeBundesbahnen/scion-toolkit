@@ -23,6 +23,10 @@
     > sci-table::part(row\:even row\:not\:selected) {
       background-color: light-dark(rgb(211 211 211 / 0.25), rgb(66 66 66 / 0.25));
     }
+
+    > sci-table::part(column\:maxSpeed row\:average)::before {
+      content: 'Ø';
+    }
   }
 
   > aside {
@@ -34,7 +38,6 @@
     border-radius: var(--sci-corner);
     background-color: var(--sci-color-background-secondary);
     padding: 1em;
-
 
     &.closed {
       display: none;
@@ -75,6 +78,12 @@
           margin-top: 1em;
         }
       }
+
+      form > section.methods {
+        display: grid;
+        grid-template-columns: auto auto;
+        align-items: center;
+      }
     }
 
     > section.table-state {
@@ -97,7 +106,7 @@
         grid-template-columns: subgrid;
         grid-column: 1/-1;
 
-        > sci-viewport {
+        > sci-viewport, > output {
           // Prevent viewport from stretching subgrid column by setting `width: 0` together with `min-width: 100%`
           width: 0; // Used by browser during track sizing to compute preferred width
           min-width: 100%; // Used by browser during rendering; overrides width because min-width takes priority

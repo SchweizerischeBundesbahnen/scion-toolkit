@@ -8,9 +8,13 @@ import {TablePO} from './table.po';
 export class RowPO {
 
   public rowActions: Locator;
+  public expansionControl: Locator;
+  public icons: Locator;
 
   constructor(public table: TablePO, public locator: Locator) {
     this.rowActions = this.locator.locator('sci-toolbar');
+    this.expansionControl = this.locator.locator('button.e2e-toggle-children');
+    this.icons = this.locator.locator(':scope > sci-icon');
   }
 
   public cell(columnName: `column:${string}`): CellPO;
@@ -26,6 +30,10 @@ export class RowPO {
     await this.locator.click({modifiers});
   }
 
+  public async dblclick(): Promise<void> {
+    await this.locator.dblclick();
+  }
+
   public async hover(): Promise<void> {
     const bounds = await this.bounds();
     await this.locator.page().mouse.move(bounds.left, bounds.vcenter);
@@ -37,5 +45,9 @@ export class RowPO {
 
   public async rowActionsBounds(): Promise<DomRect> {
     return fromRect(await this.rowActions.boundingBox());
+  }
+
+  public async clickExpansionControl(): Promise<void> {
+    await this.expansionControl.click();
   }
 }

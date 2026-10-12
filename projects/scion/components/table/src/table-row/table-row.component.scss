@@ -50,14 +50,47 @@
     }
   }
 
+  > button.toggle-children {
+    --sci-button-background-color-hover: transparent;
+    --sci-button-background-color-active: transparent;
+
+    @include common.icon-button-element-states() {
+      position: relative; // overlapping table-cell is positioned, so button has to be positioned as well.
+      order: 1; // ensure button is clickable by making it first in order.
+      border-radius: var(--sci-corner);
+      background-color: var(--ɵsci-table-row-action-background-color);
+      flex-shrink: 0; // make sure button is always entirely visible.
+      padding: 0;
+
+      &:focus-visible {
+        outline: none;
+      }
+    }
+  }
+
+  $rowLevelIndent: calc(var(--sci-tree-node-indent) * var(--ɵsci-table-row-level)); // add spacing equal to the depth-level of the row.
+  > sci-table-cell:first-child {
+    // Prevent adding the inline padding for cells which disabled it.
+    &[data-padding="false"] {
+      --ɵsci-table-cell-padding-inline: 0px;
+    }
+
+    // Use border-left instead of margin-left so background colors fill the entire element area when styled via the ::part selector.
+    // Because <sci-table-cell> uses border-inline for padding, the padding must be added here.
+    border-left: calc(var(--ɵsci-table-cell-padding-inline) + $rowLevelIndent + var(--ɵsci-table-tree-node-without-children) * 1.5em) solid transparent;
+  }
+
   // Place row icons and the first <sci-table-cell> in the first grid column track.
   // Row icons must not be children of <sci-table-cell> to be independent of horizontal cell alignment.
-  > sci-icon:has(~ sci-table-cell:first-of-type) {
+  > sci-icon:has(~ sci-table-cell:first-of-type),
+  > button.toggle-children:has(~ sci-table-cell:first-of-type) {
+    $siblingIndex: calc(sibling-index() - 1 + var(--ɵsci-table-tree-node-without-children)); // add spacing for tree nodes which have no children (no chevron).
+
     grid-column: 1;
     grid-row: 1;
     align-self: center;
     --sci-icon-size: 1em;
-    margin-left: calc(var(--ɵsci-table-cell-padding-inline) + (sibling-index() - 1) * 1.5em);
+    margin-left: calc(var(--ɵsci-table-cell-padding-inline) + $siblingIndex * 1.5em + $rowLevelIndent);
 
     // Allow the icon to shrink below its minimal size when resizing the column.
     width: auto;
@@ -66,9 +99,8 @@
     + sci-table-cell { // first <sci-table-cell>, only if row icons are present
       grid-column: 1;
       grid-row: 1;
-      // Use border-left instead of margin-left so background colors fill the entire element area when styled via the ::part selector.
-      // Because <sci-table-cell> uses border-inline for padding, the padding must be added here.
-      border-left: calc(var(--ɵsci-table-cell-padding-inline) + (sibling-index() - 1) * 1.5em) solid transparent;
+      // Add spacing for displayed icons + rowLevelIndent
+      border-left: calc(var(--ɵsci-table-cell-padding-inline) + $siblingIndex * 1.5em + $rowLevelIndent) solid transparent;
     }
   }
 

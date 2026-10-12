@@ -13,4 +13,4 @@
  *
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
-export {type OneOf, type RequireOne, type MaybeArray, type MaybeObservable, type Disposable, type DisposeFn} from './types';
+export {type OneOf, type RequireOne, type MaybeArray, type MaybeObservable, type MaybeAsync, type Disposable, type DisposeFn} from './types';
