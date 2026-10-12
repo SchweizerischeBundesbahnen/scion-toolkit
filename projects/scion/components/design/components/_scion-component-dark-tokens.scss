@@ -120,6 +120,28 @@ $sci-table: (
   --sci-table-cell-padding-inline: .5em,
 );
 
+$sci-tree: (
+  --sci-tree-gridline-color: var(--sci-table-gridline-color),
+  --sci-tree-header-height: var(--sci-table-header-height),
+  --sci-tree-header-cursor: var(--sci-table-header-cursor),
+  --sci-tree-header-background-color: var(--sci-table-header-background-color),
+  --sci-tree-header-background-color-hover: var(--sci-table-header-background-color-hover),
+  --sci-tree-header-font-family: var(--sci-table-header-font-family),
+  --sci-tree-header-font-size: var(--sci-table-header-font-size),
+  --sci-tree-header-font-weight: var(--sci-table-header-font-weight),
+  --sci-tree-header-text-color: var(--sci-table-header-text-color),
+  --sci-tree-node-height: var(--sci-table-row-height),
+  --sci-tree-node-background-color-hover: var(--sci-table-row-background-color-hover),
+  --sci-tree-node-background-color-selected: color-mix(in srgb, var(--sci-color-accent) 35%, var(--sci-color-gray-100)),
+  --sci-tree-row-border-radius: var(--sci-corner-small),
+  --sci-tree-row-outline-color: var(--sci-color-accent),
+  --sci-tree-row-outline-width: 1px,
+  --sci-tree-row-outline-style: dotted,
+  --sci-tree-row-action-background-color: var(--sci-color-gray-200),
+  --sci-tree-row-action-background-color-selected: color-mix(in srgb, var(--sci-table-row-background-color-selected) 87.5%, var(--sci-static-color-white)),
+  --sci-tree-cell-padding-inline: .5em,
+);
+
 $sci-button: (
   --sci-button-cursor: default,
   --sci-button-background-color-hover: var(--sci-color-gray-200),
