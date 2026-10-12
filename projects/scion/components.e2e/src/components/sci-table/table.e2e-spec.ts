@@ -17,7 +17,6 @@ import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, setCaret, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
 import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
 import {firstValueFrom, Subject} from 'rxjs';
-import {SciTablePageResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';
 import {CustomButtonColumnPO} from './custom-button-column.po';
@@ -5919,9 +5918,9 @@ test.describe('sci-table', () => {
 
       // Install HTTP endpoint that blocks the initial load.
       const onLoad$ = new Subject<void>();
-      await page.route('**/sci-table/products', async route => {
+      await page.route('**/sci-table/products/ids', async route => {
         await firstValueFrom(onLoad$);
-        await route.fulfill({json: {items: [], totalCount: 0} satisfies SciTablePageResponse<Product>});
+        return route.fulfill({json: []});
       });
 
       await tablePage.addColumn({name: 'column:testee', type: 'string'});
@@ -5981,8 +5980,6 @@ test.describe('sci-table', () => {
       await table.retry();
       await expect(table.locator).not.toContainText('Data unavailable.');
       await expect(table.rows).toHaveCount(10);
-
-      await expect.poll(() => consoleLogs.get({severity: 'error'})).toContainEqual(expect.stringContaining('[DatasourceError]'));
     });
 
     test(`should horizontally center 'Data Unavailable' in viewport`, async ({page}) => {

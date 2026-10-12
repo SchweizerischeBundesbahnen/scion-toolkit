@@ -1,9 +1,10 @@
-import {SciTableColumnFilter, SciTableColumnType, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
-import {effect, inject, Injector, linkedSignal, Service, Signal, signal, untracked} from '@angular/core';
+import {SciTableColumnFilter, SciTableColumnType, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeNode} from '@scion/components/table';
+import {computed, effect, inject, Injector, linkedSignal, Service, Signal, signal, untracked} from '@angular/core';
 import {defer, mergeWith, NEVER, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
+import {filterArray, mapArray} from '@scion/toolkit/operators';
 
 @Service()
 export class ProductService {
@@ -15,20 +16,26 @@ export class ProductService {
     return untracked(() => Products.generate(count));
   });
 
+  public readonly rootProducts = computed(() => this.products().filter(p => p.parentId === undefined));
+
   private readonly _products$ = toObservable(this.products);
   private readonly _httpClient = inject(HttpClient);
 
-  public getProducts$(request: SciTablePageRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<SciTablePageResponse<Product>> {
+  public getHierarchicalProductIds$(request: SciTableIdsRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<SciTableTreeNode<number>[]> {
+    return this.getProducts$(request, columnDataTypes, options)
+      .pipe(mapArray(product => ({item: product.id, parent: product.parentId})));
+  }
+
+  public getProductsIds$(request: SciTableIdsRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<number[]> {
+    return this.getProducts$(request, columnDataTypes, options).pipe(mapArray(product => product.id));
+  }
+
+  public getProductsById$(ids: number[], options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<Product[]> {
     return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
       .pipe(
         mergeWith(simulateError$(options?.simulateError)),
         switchMap(() => this._products$),
-        map(products => Products.filter(products, request.columnFilters, request.tableFilter, columnDataTypes)),
-        map(products => Products.sort(products, request.sortCriteria, columnDataTypes)),
-        map(products => ({
-          items: products.slice(request.start, request.end),
-          totalCount: products.length,
-        })),
+        filterArray(product => ids.includes(product.id)),
       );
   }
 
@@ -43,6 +50,16 @@ export class ProductService {
       )
       .subscribe(products => this.products.set(products));
   }
+
+  private getProducts$(request: SciTableIdsRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<Product[]> {
+    return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
+      .pipe(
+        mergeWith(simulateError$(options?.simulateError)),
+        switchMap(() => this._products$),
+        map(products => Products.filter(products, request.columnFilters, request.tableFilter, columnDataTypes)),
+        map(products => Products.sort(products, request.sortCriteria, columnDataTypes)),
+      );
+  }
 }
 
 export interface Product {
@@ -52,6 +69,7 @@ export interface Product {
   inStock: boolean;
   expirationDate: string;
   status: 'in-stock' | 'low-stock' | 'out-of-stock' | 'backorderable' | 'preorder' | 'discontinued' | 'clearance' | 'coming-soon' | 'on-sale';
+  parentId?: number;
 }
 
 export namespace Products {
@@ -66,6 +84,7 @@ export namespace Products {
       inStock: Math.random() > 0.5,
       expirationDate: randomDate().toISOString(),
       status: statusEnumeration[Math.floor(Math.random() * statusEnumeration.length)]!,
+      parentId: Math.random() > 0.75 && i > 1 ? Math.floor(Math.random() * i) + 1 : undefined,
     }));
   }
 

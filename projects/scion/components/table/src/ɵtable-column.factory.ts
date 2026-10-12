@@ -18,11 +18,11 @@ import {DATE_PIPE_DEFAULT_OPTIONS} from '@angular/common';
 import {coerceEnumValue} from './table-enum-column.model';
 import {text, Translatable} from '@scion/components/text';
 
-export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
+export class ɵSciTableColumnFactory<T, ID> implements SciTableColumnFactory<T> {
 
   public readonly columns = new Array<SciTableColumnLike<T>>();
 
-  constructor(private readonly _table: ɵSciTable<T>) {
+  constructor(private readonly _table: ɵSciTable<T, ID>) {
   }
 
   public addStringColumn(value: (item: T) => MaybeSignal<Translatable | undefined>): this;
@@ -166,13 +166,13 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
   }
 
   public addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this {
-    // Require a filter matcher if filterable on an array datasource.
-    if (this._table.isArrayDatasource() && descriptor.filterable === true) {
+    // Require a filter matcher if filterable on a sync datasource.
+    if (!this._table.isAsyncDatasource() && descriptor.filterable === true) {
       throw Error('[ColumnDefinitionError] Component column requires a filter matcher in order to be filterable.');
     }
 
-    // Require a sort comparator if sortable on an array datasource.
-    if (this._table.isArrayDatasource() && descriptor.sortable === true) {
+    // Require a sort comparator if sortable on a sync datasource.
+    if (!this._table.isAsyncDatasource() && descriptor.sortable === true) {
       throw Error('[ColumnDefinitionError] Component column requires a sort comparator in order to be sortable.');
     }
 
@@ -192,13 +192,13 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
   }
 
   public addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this {
-    // Require a filter matcher if filterable on an array datasource.
-    if (this._table.isArrayDatasource() && descriptor.filterable === true) {
+    // Require a filter matcher if filterable on a sync datasource.
+    if (!this._table.isAsyncDatasource() && descriptor.filterable === true) {
       throw Error('[ColumnDefinitionError] Template column requires a filter matcher in order to be filterable.');
     }
 
-    // Require a sort comparator if sortable on an array datasource.
-    if (this._table.isArrayDatasource() && descriptor.sortable === true) {
+    // Require a sort comparator if sortable on a sync datasource.
+    if (!this._table.isAsyncDatasource() && descriptor.sortable === true) {
       throw Error('[ColumnDefinitionError] Template column requires a sort comparator in order to be sortable.');
     }
 
@@ -227,13 +227,13 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       throw Error(`[ColumnDefinitionError] Column names must be unique. "${name}" is defined more than once.`);
     }
 
-    // Disallow a filter matcher if using a custom datasource.
-    if (!this._table.isArrayDatasource() && typeof descriptor.filterable === 'object') {
+    // Disallow a filter matcher if using an async datasource.
+    if (this._table.isAsyncDatasource() && typeof descriptor.filterable === 'object') {
       throw Error('[ColumnDefinitionError] Configuring a filter matcher is not supported for tables using a datasource. Filtering must be done by the datasource.');
     }
 
-    // Disallow a sort comparator if using a custom datasource.
-    if (!this._table.isArrayDatasource() && typeof descriptor.sortable === 'object') {
+    // Disallow a sort comparator if using an async datasource.
+    if (this._table.isAsyncDatasource() && typeof descriptor.sortable === 'object') {
       throw Error('[ColumnDefinitionError] Configuring a sort comparator is not supported for tables using a datasource. Sorting must be done by the datasource.');
     }
 

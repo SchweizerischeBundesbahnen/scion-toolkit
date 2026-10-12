@@ -125,10 +125,10 @@ export interface SciTableRowBindingFactory {
   addClassBinding(name: string | undefined): this;
 }
 
-class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
+export class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
 
   public readonly icons = new Array<string>();
-  public readonly parts = new Array<`row:${string}`>();
+  public readonly parts = new Array<string>();
   public readonly attributes = new Array<[string, unknown]>();
   public readonly classes = new Array<string>();
 
@@ -139,7 +139,7 @@ class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
     return this;
   }
 
-  public addPartBinding(name: `row:${string}` | undefined): this {
+  public addPartBinding(name: string | undefined): this {
     if (name) {
       this.parts.push(name);
     }
@@ -178,7 +178,7 @@ export function coerceTableRowBindings<T>(bindingsFn: SciTableRowBindingFactoryF
 
 export interface SciTableRowBindings {
   icons: Signal<string[]>;
-  parts: Signal<`row:${string}`[]>;
+  parts: Signal<string[]>;
   attributes: Signal<{[name: string]: unknown}>;
   classes: Signal<string[]>;
 }

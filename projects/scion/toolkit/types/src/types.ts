@@ -35,6 +35,11 @@ export type MaybeArray<T> = T | T[];
 export type MaybeObservable<T> = T | Observable<T>;
 
 /**
+ * Represents a value, an {@link Observable} of that value or a {@link Promise} of that value.
+ */
+export type MaybeAsync<T> = T | Promise<T> | Observable<T>;
+
+/**
  * Represents an object that can be disposed to free resources.
  */
 export interface Disposable {

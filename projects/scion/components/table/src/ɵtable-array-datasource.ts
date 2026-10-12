@@ -8,64 +8,53 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
+import {SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeNode} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike} from './table.model';
-import {computed, inject, runInInjectionContext, signal, Signal, untracked} from '@angular/core';
+import {computed, inject, runInInjectionContext, Signal, untracked} from '@angular/core';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
+import {Arrays} from '@scion/toolkit/util';
 import {SciDateValue} from './table-date-column.model';
 import {SciEnumValue} from './table-enum-column.model';
 import {ɵSingleActiveInjectorFactory} from '@scion/components/common';
+import {mapArray} from '@scion/toolkit/operators';
 
-export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
+export function treeDatasource<T, ID>(data: Signal<Map<ID, SciTableTreeNode<T, ID>>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<SciTableTreeNode<ID>[]>) {
   const dataset = new Dataset(data, columns);
 
-  return markAsArrayDatasource((request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
-    dataset.columnFilters.set(request.columnFilters);
-    dataset.tableFilter.set(request.tableFilter);
-    dataset.sortCriteria.set(request.sortCriteria);
+  return (request: SciTableIdsRequest) => toObservable(dataset.getDataview(request));
+}
 
-    const totalCount = dataset.count;
-    const items = dataset.slice(request.start, request.end);
+export function arrayDatasource<T, ID>(data: Signal<Map<ID, T>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<ID[]>) {
+  const dataset = new Dataset(computed(() => new Map([...data().entries()].map(([id, item]) => [id, {item}]))), columns);
 
-    return toObservable(computed(() => ({
-      totalCount: totalCount(),
-      items: items(),
-    })));
-  });
+  return (request: SciTableIdsRequest) => toObservable(dataset.getDataview(request)).pipe(mapArray(node => node.item));
 }
 
 /**
  * Provides a filtered and sorted view on given data.
  */
-class Dataset<T> {
+class Dataset<T, ID> {
 
-  private readonly _dataview: Signal<T[]>;
+  private readonly _dataset: Signal<DatasetRow<T, ID>[]>;
 
-  public readonly columnFilters = signal<SciTableColumnFilter[]>([], {equal: Objects.isEqual});
-  public readonly sortCriteria = signal<SciTableSortCriterion[]>([], {equal: Objects.isEqual});
-  public readonly tableFilter = signal<string | undefined>(undefined);
-
-  /**
-   * Returns the total count of items matching the current filters and search criteria.
-   */
-  public readonly count = computed(() => this._dataview().length);
-
-  constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
+  constructor(data: Signal<Map<ID, SciTableTreeNode<T, ID>>>, columns: Signal<SciTableColumnLike<T>[]>) {
     const tableCellValuePreloader = inject(SciTableCellValuePreloader);
 
     // Create a factory to instantiate a new injector per dataset run, releasing resources allocated in column value functions.
     const injectorFactory = new ɵSingleActiveInjectorFactory();
 
-    const dataset = computed((): DatasetRow<T>[] => {
+    this._dataset = computed((): DatasetRow<T, ID>[] => {
       const injector = injectorFactory.create();
-      return data().map(item => ({
-        item,
+
+      return [...data().entries()].map(([id, node]) => ({
+        id,
+        parent: node.parent,
+        item: node.item,
         cells: columns().reduce((cells, column) => untracked(() => {
           // PERF: Cell values are computed lazily (on idle or first use) to defer expensive computations like date formatting.
-          const tableCellValue = 'value' in column ? new eSciTableCellValue(tableCellValuePreloader, () => runInInjectionContext(injector, () => column.value(item)())) : undefined;
+          const tableCellValue = 'value' in column ? new eSciTableCellValue(tableCellValuePreloader, () => runInInjectionContext(injector, () => column.value(node.item)())) : undefined;
           return cells.set(column.name, {
             column: column as SciTableColumn,
             value: () => tableCellValue?.value(),
@@ -73,31 +62,24 @@ class Dataset<T> {
         }), new Map<`column:${string}`, DatasetCell>()),
       }));
     });
+  }
 
-    // Memoize filtered/sorted view; recomputes only when dataset or criteria change, not when scrolling through the view, as sorting is an expensive operation.
-    this._dataview = computed(() => {
-      const rows = dataset();
-      const columnFilters = this.columnFilters();
-      const tableFilter = this.tableFilter();
-      const sortCriteria = this.sortCriteria();
+  public getDataview({columnFilters, tableFilter, sortCriteria}: SciTableIdsRequest): Signal<SciTableTreeNode<ID>[]> {
+    return computed(() => {
+      const rows = this._dataset();
 
       // PERF: Do not track signals inside `Array.sort` to avoid Angular signal tracking overhead as the comparator runs repeatedly, degrading performance otherwise.
       return untracked(() => rows
         .filter(row => matchesRow(row, columnFilters, {coerceEnumValueToArray: true}) && matchesGlobalFilter(row, tableFilter, {coerceEnumValueToArray: false}))
         .sort((a, b) => compareRows(a, b, sortCriteria))
-        .map(row => row.item));
+        .map(row => ({item: row.id, parent: row.parent})));
     });
-  }
-
-  /**
-   * Returns a slice of the filtered and sorted data within the given range (start inclusive, end exclusive).
-   */
-  public slice(start: number, end: number): Signal<T[]> {
-    return computed(() => this._dataview().slice(start, end));
   }
 }
 
-interface DatasetRow<T> {
+interface DatasetRow<T, ID> {
+  id: ID;
+  parent?: ID;
   item: T;
   cells: Map<`column:${string}`, DatasetCell>;
 }
@@ -110,7 +92,7 @@ interface DatasetCell {
 /**
  * Tests whether a row matches the given global filter.
  */
-function matchesGlobalFilter<T>(row: DatasetRow<T>, filter: string | undefined, options: {coerceEnumValueToArray: boolean}): boolean {
+function matchesGlobalFilter<T, ID>(row: DatasetRow<T, ID>, filter: string | undefined, options: {coerceEnumValueToArray: boolean}): boolean {
   if (!filter?.trim()) {
     return true;
   }
@@ -132,7 +114,7 @@ function matchesGlobalFilter<T>(row: DatasetRow<T>, filter: string | undefined, 
 /**
  * Tests whether a row matches the given column filters.
  */
-function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[], options: {coerceEnumValueToArray: boolean}): boolean {
+function matchesRow<T, ID>(row: DatasetRow<T, ID>, columnFilters: SciTableColumnFilter[], options: {coerceEnumValueToArray: boolean}): boolean {
   if (!columnFilters.length) {
     return true;
   }
@@ -155,7 +137,7 @@ function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[]
 /**
  * Compares two rows based on the given sort criteria.
  */
-function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: SciTableSortCriterion[]): number {
+function compareRows<T, ID>(row1: DatasetRow<T, ID>, row2: DatasetRow<T, ID>, sortCriteria: SciTableSortCriterion[]): number {
   if (!sortCriteria.length) {
     return 0;
   }
@@ -187,26 +169,6 @@ function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: 
 
   return 0;
 }
-
-/**
- * Checks whether given {@link SciTableDataLoaderFn} represents an {@link arrayDatasource}.
- */
-export function isArrayDatasource(loader: SciTableDataLoaderFn<unknown>): boolean {
-  return ARRAY_DATASOURCE_MARKER in loader;
-}
-
-/**
- * Marks given {@link SciTableDataLoaderFn} as an array data source.
- */
-function markAsArrayDatasource<TABLE_DATA_LOADER extends SciTableDataLoaderFn<unknown>>(loader: TABLE_DATA_LOADER): TABLE_DATA_LOADER {
-  Object.defineProperty(loader, ARRAY_DATASOURCE_MARKER, {value: true, writable: false, enumerable: false, configurable: false});
-  return loader;
-}
-
-/**
- * Identifies a {@link SciTableDataLoaderFn} as an {@link arrayDatasource}.
- */
-const ARRAY_DATASOURCE_MARKER = Symbol('ARRAY_DATASOURCE_HINT');
 
 /**
  * Converts the given string to a number, or `undefined` if it cannot be parsed.

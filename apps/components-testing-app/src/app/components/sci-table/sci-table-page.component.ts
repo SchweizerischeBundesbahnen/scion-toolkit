@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTablePageRequest, SciTablePageResponse, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideAsyncTableDatasource, provideAsyncTableTreeDatasource, provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, SciTableTreeNode, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
@@ -22,6 +22,7 @@ import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';
 import {CustomButtonColumnComponent} from './custom-button-column.component';
 import {DatePipe} from '@angular/common';
+import {provideTreeDatasource} from '@scion/components/tree';
 
 @Component({
   selector: 'app-table-page',
@@ -68,38 +69,62 @@ export default class SciTablePageComponent {
   protected readonly datasourceForm: FieldTree<DatasourceForm> = this.createDatasourceForm();
   protected readonly layoutForm: FieldTree<LayoutForm> = this.createLayoutForm();
   protected readonly columnForm: FieldTree<ColumnForm> = this.createColumnForm();
+  protected readonly methodsForm: FieldTree<MethodsForm> = this.createMethodsForm();
   protected readonly columns = signal<ColumnDefinition[]>([]);
 
   protected readonly tables = this.computeTables();
   protected readonly rowCount = inject(ProductService).productCount;
   protected readonly locale = inject(SCI_LOCALE);
-  protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem()?.id);
+  protected readonly activeItemId = computed(() => this.tables()[0]?.activeItem());
   protected readonly selectedItems = computed(() => this.tables()[0]?.selectedItems());
-  protected readonly selection = computed(() => this.tables()[0]?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.tables()[0]?.selectedItems().sort((a, b) => a - b).join(' '));
   protected readonly now = new Date();
 
   constructor() {
     this.bindTableSettings();
   }
 
-  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
-    return table({
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; bufferSize: number; pageSize: number; hierarchical: boolean}): SciTable<number> {
+    return table<Product, number>({
+      datasource: ɵillegaldatasource(),
       ɵdatasource: (() => {
+        if (options.datasource === 'array-http') {
+          this._productService.enableHttpLoader();
+        }
+
         switch (options.datasource) {
-          case 'array':
-            return this._productService.products;
-          case 'array-http':
-            this._productService.enableHttpLoader();
-            return this._productService.products;
           case 'loader':
-            return (request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value});
-          case 'loader-delayed':
-            return (request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value});
+          case 'loader-delayed': {
+            const requestOptions = {slowDatasource: options.datasource === 'loader-delayed', simulateError: this.datasourceForm.simulateError().value};
+            if (options.hierarchical) {
+              return provideAsyncTableTreeDatasource(
+                request => this._productService.getHierarchicalProductIds$(request, columnDataTypes(this.columns()), requestOptions),
+                ids => this._productService.getProductsById$(ids, requestOptions),
+              );
+            }
+            return provideAsyncTableDatasource(
+              request => this._productService.getProductsIds$(request, columnDataTypes(this.columns()), requestOptions),
+              ids => this._productService.getProductsById$(ids, requestOptions),
+            );
+          }
           case 'loader-http':
-            return (request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value)));
+            if (options.hierarchical) {
+              return provideAsyncTableTreeDatasource(
+                request => this._httpClient.post<SciTableTreeNode<number>[]>('/sci-table/products/ids', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))),
+                ids => this._httpClient.post<Product[]>('/sci-table/products', ids).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))),
+              );
+            }
+            return provideAsyncTableDatasource(
+              request => this._httpClient.post<number[]>('/sci-table/products/ids', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))),
+              ids => this._httpClient.post<Product[]>('/sci-table/products', ids).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))),
+            );
+          default:
+            if (options.hierarchical) {
+              return provideTreeDatasource(this._productService.rootProducts, product => this._productService.products().filter(p => p.parentId === product.id));
+            }
+            return this._productService.products;
         }
       })(),
-      datasource: ɵillegaldatasource(),
       rowBindings: (bindings, product) => {
         if (this.settingsForm.customRowStyling().value()) {
           bindings.addPartBinding(product.id % 3 === 0 ? 'row:negative' : undefined);
@@ -280,8 +305,8 @@ export default class SciTablePageComponent {
     });
   }
 
-  private computeTables(): Signal<SciTable<Product>[]> {
-    const tables = signal<SciTable<Product>[]>([]);
+  private computeTables(): Signal<SciTable<number>[]> {
+    const tables = signal<SciTable<number>[]>([]);
 
     effect(onCleanup => {
       const tableCount = this.settingsForm.tableCount().value();
@@ -289,11 +314,12 @@ export default class SciTablePageComponent {
       const showRowActions = this.settingsForm.showRowActions().value();
       const bufferSize = this.datasourceForm.bufferSize().value();
       const pageSize = this.datasourceForm.pageSize().value();
+      const hierarchical = this.datasourceForm.hierarchical().value();
 
       untracked(() => {
         const injector = ɵcreateDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, bufferSize, pageSize}))));
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, bufferSize, pageSize, hierarchical}))));
       });
     });
 
@@ -405,6 +431,13 @@ export default class SciTablePageComponent {
       bufferSize: 10,
       pageSize: 50,
       simulateError: false,
+      hierarchical: false,
+    }));
+  }
+
+  private createMethodsForm(): FieldTree<MethodsForm> {
+    return form(signal<MethodsForm>({
+      selectId: '',
     }));
   }
 
@@ -431,6 +464,20 @@ export default class SciTablePageComponent {
         table.selectable.set(selectable === 'false' ? false : selectable);
       });
     });
+  }
+
+  protected onExpandAll(): void {
+    this.tables().forEach(table => table.expandAll());
+  }
+
+  protected onCollapseAll(): void {
+    this.tables().forEach(table => table.collapseAll());
+  }
+
+  protected onSelect(): void {
+    const ids = this.methodsForm.selectId().value().split(' ').map(Number);
+    this.tables().forEach(table => table.select(ids));
+    this.methodsForm.selectId().reset('');
   }
 }
 
@@ -513,6 +560,11 @@ interface DatasourceForm {
   bufferSize: number;
   pageSize: number;
   simulateError: boolean;
+  hierarchical: boolean;
+}
+
+interface MethodsForm {
+  selectId: string;
 }
 
 interface LayoutForm {

@@ -8,12 +8,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, input, Signal, TemplateRef} from '@angular/core';
+import {Component, computed, inject, input, Signal, TemplateRef} from '@angular/core';
 import {SciTableCellLike, SciTableRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective, SciTooltipOnOverflowDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
+import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciNumberPipe} from './number.pipe';
 
 @Component({
@@ -37,10 +38,12 @@ import {SciNumberPipe} from './number.pipe';
     SciTooltipOnOverflowDirective,
   ],
 })
-export class SciTableCellComponent<T> {
+export class SciTableCellComponent<T, ID> {
 
   public readonly cell = input.required<SciTableCellLike>();
-  public readonly row = input.required<SciTableRow<T>>();
+  public readonly row = input.required<SciTableRow<T, ID>>();
+
+  private readonly _table = inject(ɵSCI_TABLE);
 
   protected readonly template = this.computeTemplate();
   protected readonly templateContext = this.computeTemplateContext();
@@ -59,10 +62,10 @@ export class SciTableCellComponent<T> {
     });
   }
 
-  private computeTemplateContext(): Signal<{$implicit: NonNullable<T>} | null> {
+  private computeTemplateContext(): Signal<{$implicit: T} | null> {
     return computed(() => {
       const cell = this.cell();
-      const item = this.row().item!;
+      const item = this.row().item;
 
       if (cell.type !== 'template') {
         return null;
@@ -81,6 +84,7 @@ export class SciTableCellComponent<T> {
   private computePartAttribute(): Signal<string> {
     return computed(() => {
       const cell = this.cell();
+      const prefix = this._table().isTree() ? 'node' : 'row';
       const referenceType = cell.type === 'enum' ? cell.column.referenceType : undefined;
 
       return Arrays.distinct([
@@ -89,11 +93,11 @@ export class SciTableCellComponent<T> {
         // Enable column styling based on column name.
         cell.column.name,
         // Enable row styling based on selection state.
-        this.row().selected() ? 'row:selected' : 'row:not:selected',
+        this.row().selected() ? `${prefix}:selected` : `${prefix}:not:selected`,
         // Enable row styling based on active state.
-        this.row().active() ? 'row:active' : 'row:not:active',
+        this.row().active() ? `${prefix}:active` : `${prefix}:not:active`,
         // Enable row styling based on row bindings.
-        ...Arrays.coerce(this.row().bindings?.parts()),
+        ...Arrays.coerce(this.row().bindings.parts()),
       ]).join(' ');
     });
   }
