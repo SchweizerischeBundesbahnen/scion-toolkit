@@ -15,6 +15,7 @@ import {createSciTableComponent} from './testing/testing.util';
 import {table, table as sciTable} from './table.factory';
 import {TablePO} from './table.po';
 import {ɵillegaldatasource} from './table-datasource';
+import {providePageableTableDatasource} from '@scion/components/table';
 
 describe('Table Factory', () => {
 
@@ -174,7 +175,7 @@ describe('Table Factory', () => {
 
     it('should disallow sort comparator if using custom datasource', done => {
       createSciTableComponent(table({
-        ɵdatasource: () => ({totalCount: 0, items: []}),
+        ɵdatasource: providePageableTableDatasource(() => ({totalCount: 0, items: []})),
         datasource: ɵillegaldatasource(),
         columns: table => {
           expect(() => table.addStringColumn({
@@ -189,7 +190,7 @@ describe('Table Factory', () => {
 
     it('should disallow filter matcher if using custom datasource', done => {
       createSciTableComponent(table({
-        ɵdatasource: () => ({totalCount: 0, items: []}),
+        ɵdatasource: providePageableTableDatasource(() => ({totalCount: 0, items: []})),
         datasource: ɵillegaldatasource(),
         columns: table => {
           expect(() => table.addStringColumn({

@@ -1,0 +1,157 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
+import {Locator, Page} from '@playwright/test';
+
+const PATH = '/#/components/sci-tree';
+
+export class TreePagePO {
+
+  public readonly locator: Locator;
+  public readonly properties: Locator;
+  public readonly treeState: Locator;
+  public readonly tabbar: Locator;
+
+  public readonly tree: Locator;
+  public readonly activeItemId: Locator;
+  public readonly selectionCount: Locator;
+  public readonly selection: Locator;
+
+  constructor(public page: Page) {
+    this.locator = this.page.locator('app-tree-page');
+    this.properties = this.locator.locator('aside.e2e-properties');
+    this.treeState = this.properties.locator('section.e2e-tree-state');
+    this.tabbar = this.properties.locator('sci-tabbar');
+    this.tree = this.locator.locator('sci-tree');
+    this.activeItemId = this.treeState.locator('output.e2e-active-item-id');
+    this.selectionCount = this.treeState.locator('output.e2e-selection-count');
+    this.selection = this.treeState.locator('output.e2e-selection');
+  }
+
+  public async navigate(options?: {tableStorage?: true}): Promise<void> {
+    if (options?.tableStorage) {
+      await this.page.goto(`?sci-table-storage${PATH.substring(1)}`);
+    }
+    else {
+      await this.page.goto(PATH);
+    }
+  }
+
+  public async reload(options?: {tableStorage?: true}): Promise<void> {
+    // Do not use `Page.reload()` to preserve options.
+    await this.page.goto('about:blank').then(() => this.navigate(options));
+  }
+
+  public async setFilterable(checked: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-filterable').setChecked(checked);
+  }
+
+  public async setSortable(checked: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-sortable').setChecked(checked);
+  }
+
+  public async setSelectable(selectable: false | 'single' | 'multi'): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('select.e2e-selectable').selectOption(selectable === false ? 'false' : selectable);
+  }
+
+  public async setHeader(header: string): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-header').fill(header);
+  }
+
+  public async wrapHeader(wrapHeader: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-wrap-header').setChecked(wrapHeader);
+  }
+
+  public async showGridlines(showGridlines: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-show-gridlines').setChecked(showGridlines);
+  }
+
+  public async setHeight(height: number | null): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-tree-height').fill(`${height ?? ''}`);
+  }
+
+  public async setWidth(width: number | null): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-tree-width').fill(`${width ?? ''}`);
+  }
+
+  public async setMaxHeight(maxHeight: number | null): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-tree-max-height').fill(`${maxHeight ?? ''}`);
+  }
+
+  public async setGrowToBreakpoint(growToBreakpoint: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-grow-to-breakpoint').setChecked(growToBreakpoint);
+  }
+
+  public async setPageHeight(height: number | null): Promise<void> {
+    await this.tabbar.locator('button.e2e-layout').click();
+    await this.properties.locator('input.e2e-page-height').fill(`${height ?? ''}`);
+  }
+
+  public async setRowHeight(rowHeight: number): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-row-height').fill(rowHeight.toString());
+  }
+
+  public async setRowCount(rowCount: number): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-row-count').fill(rowCount.toString());
+  }
+
+  public async setBufferSize(bufferSize: number): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-buffer-size').fill(bufferSize.toString());
+  }
+
+  public async setPageSize(pageSize: number): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-page-size').fill(pageSize.toString());
+  }
+
+  public async setDatasource(datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('select.e2e-datasource').selectOption(datasource);
+  }
+
+  public async showRowActions(checked: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-row-actions').setChecked(checked);
+  }
+
+  public async setTreeCount(treeCount: number): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-tree-count').fill(treeCount.toString());
+  }
+
+  public async setCustomRowStyling(customRowStyling: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-custom-row-styling').setChecked(customRowStyling);
+  }
+
+  public async setColumnVisible(column: `column:${string}`, visible: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-columns').click();
+    await this.properties.locator(`input.e2e-column-visibility[data-column="${column}"]`).setChecked(visible);
+  }
+
+  public async setCssVariable(name: `--${string}`, value: string): Promise<void> {
+    await this.locator.evaluate((page, variable: {name: string; value: string}): void => {
+      page.style.setProperty(variable.name, variable.value);
+    }, {name, value});
+  }
+}

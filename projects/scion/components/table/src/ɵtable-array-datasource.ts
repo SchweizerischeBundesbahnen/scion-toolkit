@@ -10,7 +10,7 @@
 
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
-import {computed, inject, signal, Signal, untracked} from '@angular/core';
+import {computed, inject, isSignal, signal, Signal, untracked} from '@angular/core';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {Objects} from '@scion/toolkit/util';
@@ -20,7 +20,7 @@ import {SciDateValue} from './table-date-column.model';
 export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
   const dataset = new Dataset(data, columns);
 
-  return markAsArrayDatasource((request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
+  return (request: SciTablePageRequest): Observable<SciTablePageResponse<T>> => {
     dataset.columnFilters.set(request.columnFilters);
     dataset.tableFilter.set(request.tableFilter);
     dataset.sortCriteria.set(request.sortCriteria);
@@ -32,7 +32,7 @@ export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableCo
       totalCount: totalCount(),
       items: items(),
     })));
-  });
+  };
 }
 
 /**
@@ -58,7 +58,17 @@ class Dataset<T> {
       item,
       cells: columns().reduce((cells, column) => untracked(() => {
         // PERF: Cell values are computed lazily (on idle or first use) to defer expensive computations like date formatting.
-        const tableCellValue = 'value' in column ? new eSciTableCellValue(tableCellValuePreloader, () => column.value(item)()) : undefined;
+        const cellValue = ((): Signal<string | number | boolean | SciDateValue | undefined> | undefined => {
+          if ('value' in column) {
+            const value = column.value(item);
+            if (isSignal(value)) {
+              return value;
+            }
+          }
+          return undefined;
+        })();
+
+        const tableCellValue = cellValue ? new eSciTableCellValue(tableCellValuePreloader, () => cellValue()) : undefined;
         return cells.set(column.name, {
           column: column as SciTableColumn,
           value: () => tableCellValue?.value(),
@@ -173,26 +183,6 @@ function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: 
 
   return 0;
 }
-
-/**
- * Checks whether given {@link SciTableDataLoaderFn} represents an {@link arrayDatasource}.
- */
-export function isArrayDatasource(loader: SciTableDataLoaderFn<unknown>): boolean {
-  return ARRAY_DATASOURCE_MARKER in loader;
-}
-
-/**
- * Marks given {@link SciTableDataLoaderFn} as an array data source.
- */
-function markAsArrayDatasource<TABLE_DATA_LOADER extends SciTableDataLoaderFn<unknown>>(loader: TABLE_DATA_LOADER): TABLE_DATA_LOADER {
-  Object.defineProperty(loader, ARRAY_DATASOURCE_MARKER, {value: true, writable: false, enumerable: false, configurable: false});
-  return loader;
-}
-
-/**
- * Identifies a {@link SciTableDataLoaderFn} as an {@link arrayDatasource}.
- */
-const ARRAY_DATASOURCE_MARKER = Symbol('ARRAY_DATASOURCE_HINT');
 
 /**
  * Coerces the given filter text into the specified column data type.

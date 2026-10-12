@@ -201,6 +201,11 @@
             <input [formField]="settingsForm.slowDatasource" type="checkbox"/>
             Slow Datasource
           </label>
+
+          <label>
+            <input [formField]="settingsForm.groupByOperator" type="checkbox"/>
+            Group by Operator
+          </label>
         </section>
       </ng-template>
 
@@ -262,7 +267,7 @@
 
       <label>
         Active Id:
-        <output>{{table.activeItem()?.id ?? '-'}}</output>
+        <output>{{activeVehicleId() ?? '-'}}</output>
       </label>
 
       <label>

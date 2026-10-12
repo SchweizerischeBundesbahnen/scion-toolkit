@@ -16,6 +16,10 @@ export default [
     loadChildren: () => import('./sci-table/routes'),
   },
   {
+    path: 'sci-tree',
+    loadChildren: () => import('./sci-tree/routes'),
+  },
+  {
     path: 'sci-sashbox',
     loadChildren: () => import('./sci-sashbox/routes'),
   },

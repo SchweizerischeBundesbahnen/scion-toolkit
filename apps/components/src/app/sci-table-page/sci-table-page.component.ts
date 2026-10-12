@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, ElementRef, inject, Injector, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
-import {SciTable, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideHierarchicalTableDatasource, providePageableHierarchicalTableDatasource, providePageableTableDatasource, SciTable, SciTableComponent, SciTableDataSourceProvider, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
 import {createDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
@@ -19,7 +19,8 @@ import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {VehicleService} from './vehicle.service';
-import {Vehicle} from './vehicle.model';
+import {isVehicle, Vehicle, VehicleOrOperator} from './vehicle.model';
+import {EMPTY} from 'rxjs';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
 import {BreakpointObserver} from '@angular/cdk/layout';
@@ -63,7 +64,11 @@ export default class SciTablePageComponent {
     const selectable = this.table()?.selectable();
     return selectable === false ? 'false' : selectable;
   });
-  protected readonly selection = computed(() => this.table()?.selectedItems().map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.table()?.selectedItems().filter(isVehicle).map(item => item.id).sort((a, b) => a - b).join(' '));
+  protected readonly activeVehicleId = computed(() => {
+    const item = this.table()?.activeItem();
+    return item && isVehicle(item) ? item.id : undefined;
+  });
   protected readonly panelOpen = linkedSignal(() => !this._isMobile());
   protected readonly locale = inject(SCI_LOCALE);
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
@@ -72,29 +77,35 @@ export default class SciTablePageComponent {
     this.contributeMainToolbarMenu();
   }
 
-  private createTable(options: {slowDatasource: boolean}): SciTable<Vehicle> {
+  private createTable(options: {slowDatasource: boolean; groupByOperator: boolean}): SciTable<VehicleOrOperator> {
     const vehicleService = inject(VehicleService);
     const vehicleForm = this.vehicleForm;
     const tabbar = this._tabbar;
     const panelOpen = this.panelOpen;
 
     return table({
-      ɵdatasource: options.slowDatasource ? request => inject(VehicleService).getVehicles$(request, {slowDatasource: true}) : inject(VehicleService).vehicles,
+      ɵdatasource: this.getDataSource(vehicleService, options),
       datasource: ɵillegaldatasource(),
       rowBindings: (bindings, _vehicle, index) => {
         if (this.settingsForm.showZebraStriping().value()) {
           bindings.addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd');
         }
       },
-      trackBy: vehicle => vehicle.id,
-      rowActions: (toolbar, vehicle) => addRowActions(toolbar, vehicle),
+      trackBy: item => isVehicle(item) ? item.id : `operator:${item.operator}`,
+      rowActions: (toolbar, item) => isVehicle(item) && addRowActions(toolbar, item),
       columns: table => {
         const visibleColumns = this.settingsForm.visibleColumns().value();
+
+        options.groupByOperator && table.addStringColumn({
+          name: 'column:operator',
+          header: 'RU / Operator',
+          value: item => item.operator,
+        });
 
         visibleColumns.id && table.addNumberColumn({
           name: 'column:id',
           header: 'ID',
-          value: vehicle => vehicle.id,
+          value: vehicle => isVehicle(vehicle) ? vehicle.id : undefined,
           format: {useGrouping: false},
           width: '100px',
         });
@@ -102,73 +113,73 @@ export default class SciTablePageComponent {
         visibleColumns.vehicleId && table.addStringColumn({
           name: 'column:vehicleId',
           header: 'Vehicle ID',
-          value: vehicle => vehicle.vehicleId,
+          value: item => isVehicle(item) ? item.vehicleId : '',
         });
         visibleColumns.classType && table.addStringColumn({
           name: 'column:classType',
           header: 'Class / Series',
-          value: vehicle => vehicle.classType,
+          value: item => isVehicle(item) ? item.classType : '',
         });
-        visibleColumns.operator && table.addStringColumn({
+        (visibleColumns.operator && !options.groupByOperator) && table.addStringColumn({
           name: 'column:operator',
           header: 'RU / Operator',
-          value: vehicle => vehicle.operator,
+          value: item => item.operator,
         });
         visibleColumns.depot && table.addStringColumn({
           name: 'column:depot',
           header: 'Depot / Maintenance',
-          value: vehicle => vehicle.depot,
+          value: item => isVehicle(item) ? item.depot : '',
         });
         visibleColumns.status && table.addStringColumn({
           name: 'column:status',
           header: 'Status',
-          value: vehicle => vehicle.status,
+          value: item => isVehicle(item) ? item.status : '',
           width: '150px',
         });
         visibleColumns.tps && table.addStringColumn({
           name: 'column:tps',
           header: 'Train Protection',
-          value: vehicle => vehicle.tps,
+          value: item => isVehicle(item) ? item.tps : '',
           width: '150px',
         });
         visibleColumns.operatingHours && table.addNumberColumn({
           name: 'column:operatingHours',
           header: 'Operating Hours',
-          value: vehicle => vehicle.operatingHours,
+          value: vehicle => isVehicle(vehicle) ? vehicle.operatingHours : undefined,
           format: {style: 'unit', unit: 'hour'},
           width: '175px',
         });
         visibleColumns.mileage && table.addNumberColumn({
           name: 'column:mileage',
           header: 'Mileage',
-          value: vehicle => vehicle.mileageKm,
+          value: vehicle => isVehicle(vehicle) ? vehicle.mileageKm : undefined,
           format: {style: 'unit', unit: 'kilometer'},
           width: '150px',
         });
         visibleColumns.maxSpeed && table.addNumberColumn({
           name: 'column:maxSpeed',
           header: 'Max Speed',
-          value: vehicle => vehicle.maxSpeedKmh,
+          value: vehicleOrOperator => isVehicle(vehicleOrOperator) ? vehicleOrOperator.maxSpeedKmh : vehicleOrOperator.averageMaxSpeedKmh,
           format: {style: 'unit', unit: 'kilometer-per-hour'},
           width: '175px',
         });
         visibleColumns.serviceWeight && table.addNumberColumn({
           name: 'column:serviceWeight',
           header: 'Service Weight',
-          value: vehicle => vehicle.serviceWeightT * 1000,
+          value: vehicle => isVehicle(vehicle) ? vehicle.serviceWeightT * 1000 : undefined,
           format: {style: 'unit', unit: 'kilogram'},
           width: '175px',
         });
         visibleColumns.seatingCapacity && table.addNumberColumn({
           name: 'column:seatingCapacity',
           header: 'Seats',
-          value: vehicle => vehicle.seatingCapacity,
+          value: vehicle => isVehicle(vehicle) ? vehicle.seatingCapacity : undefined,
           width: '100px',
         });
         visibleColumns.price && table.addNumberColumn({
           name: 'column:price',
           header: 'Price',
-          value: vehicle => vehicle.price,
+          value: vehicle => isVehicle(vehicle) ? vehicle.price : undefined,
           format: {
             style: 'currency',
             maximumFractionDigits: 0,
@@ -178,56 +189,56 @@ export default class SciTablePageComponent {
         visibleColumns.buildYear && table.addNumberColumn({
           name: 'column:buildYear',
           header: 'Year Built',
-          value: vehicle => vehicle.buildYear,
+          value: vehicle => isVehicle(vehicle) ? vehicle.buildYear : undefined,
           format: {useGrouping: false},
           width: '125px',
         });
         visibleColumns.isOperational && table.addBooleanColumn({
           name: 'column:isOperational',
           header: 'Operational',
-          value: vehicle => vehicle.status === 'In Operation',
+          value: vehicle => isVehicle(vehicle) ? vehicle.status === 'In Operation' : undefined,
           width: '120px',
         });
         visibleColumns.hasWifi && table.addBooleanColumn({
           name: 'column:hasWifi',
           header: 'Wi-Fi',
-          value: vehicle => vehicle.hasWifi,
+          value: vehicle => isVehicle(vehicle) ? vehicle.hasWifi : undefined,
           width: '100px',
         });
         visibleColumns.isMultiSystem && table.addBooleanColumn({
           name: 'column:isMultiSystem',
           header: 'Multi-System',
-          value: vehicle => vehicle.isMultiSystem,
+          value: vehicle => isVehicle(vehicle) ? vehicle.isMultiSystem : undefined,
           width: '150px',
         });
         visibleColumns.isTpsActive && table.addBooleanColumn({
           name: 'column:isTpsActive',
           header: 'TPS Active',
-          value: vehicle => vehicle.isTpsActive,
+          value: vehicle => isVehicle(vehicle) ? vehicle.isTpsActive : undefined,
           width: '110px',
         });
         visibleColumns.isOverhaulDue && table.addBooleanColumn({
           name: 'column:isOverhaulDue',
           header: 'Overhaul Due',
-          value: vehicle => vehicle.isOverhaulDue,
+          value: vehicle => isVehicle(vehicle) ? vehicle.isOverhaulDue : undefined,
           width: '120px',
         });
         visibleColumns.isNarrowGauge && table.addBooleanColumn({
           name: 'column:isNarrowGauge',
           header: 'Narrow Gauge',
-          value: vehicle => vehicle.isNarrowGauge,
+          value: vehicle => isVehicle(vehicle) ? vehicle.isNarrowGauge : undefined,
           width: '150px',
         });
         visibleColumns.lastR2Expiry && table.addDateColumn({
           name: 'column:lastR2Expiry',
           header: 'Last R2 Expiry',
-          value: vehicle => vehicle.lastR2Expiry,
+          value: vehicle => isVehicle(vehicle) ? vehicle.lastR2Expiry : undefined,
           width: '150px',
         });
         visibleColumns.nextRevision && table.addDateColumn({
           name: 'column:nextRevision',
           header: 'Next Revision',
-          value: vehicle => vehicle.nextRevision,
+          value: vehicle => isVehicle(vehicle) ? vehicle.nextRevision : undefined,
           width: '150px',
         });
       },
@@ -286,20 +297,43 @@ export default class SciTablePageComponent {
     }
   }
 
-  private computeTable(): Signal<SciTable<Vehicle> | undefined> {
-    const table = signal<SciTable<Vehicle> | undefined>(undefined);
+  private computeTable(): Signal<SciTable<VehicleOrOperator> | undefined> {
+    const table = signal<SciTable<VehicleOrOperator> | undefined>(undefined);
 
     effect(onCleanup => {
       const slowDatasource = this.settingsForm.slowDatasource().value();
+      const groupByOperator = this.settingsForm.groupByOperator().value();
 
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        table.set(runInInjectionContext(injector, () => this.createTable({slowDatasource: slowDatasource})));
+        table.set(runInInjectionContext(injector, () => this.createTable({slowDatasource, groupByOperator})));
       });
     });
 
     return table;
+  }
+
+  private getDataSource(vehicleService: VehicleService, options: {slowDatasource: boolean; groupByOperator: boolean}): Signal<VehicleOrOperator[]> | SciTableDataSourceProvider<VehicleOrOperator> {
+    if (options.groupByOperator) {
+      if (options.slowDatasource) {
+        return providePageableHierarchicalTableDatasource<VehicleOrOperator>(request => vehicleService.getGroupedVehicles$(request), {
+          getChildren: (item, request) => !isVehicle(item) ? vehicleService.getOperatorChildren$(item, request) : EMPTY,
+          hasChildren: item => !isVehicle(item),
+        });
+      }
+
+      return provideHierarchicalTableDatasource<VehicleOrOperator>(vehicleService.operators, {
+        getChildren: item => !isVehicle(item) ? vehicleService.vehiclesByOperator().get(item.operator) ?? [] : [],
+        hasChildren: item => !isVehicle(item),
+      });
+    }
+
+    if (options.slowDatasource) {
+      return providePageableTableDatasource(request => vehicleService.getVehicles$(request));
+    }
+
+    return vehicleService.vehicles;
   }
 
   private createSettingsForm(): FieldTree<SettingsForm> {
@@ -307,6 +341,7 @@ export default class SciTablePageComponent {
       showGridlines: false,
       showZebraStriping: false,
       slowDatasource: false,
+      groupByOperator: false,
       visibleColumns: {
         id: true,
         vehicleId: true,
@@ -451,6 +486,7 @@ interface SettingsForm {
   showGridlines: boolean;
   showZebraStriping: boolean;
   slowDatasource: boolean;
+  groupByOperator: boolean;
   visibleColumns: {
     id: boolean;
     vehicleId: boolean;

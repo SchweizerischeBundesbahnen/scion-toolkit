@@ -1,5 +1,19 @@
 @let cell = this.cell();
 
+@if (showExpansionControl()) {
+    @if (row().hasChildren()) {
+      <button class="toggle-children e2e-toggle-children" (click)="toggleChildren($event)">
+        @if (row().expanded()) {
+          <sci-icon class="e2e-expanded">scion.chevron_down</sci-icon>
+        } @else {
+          <sci-icon class="e2e-collapsed">scion.chevron_right</sci-icon>
+        }
+      </button>
+    } @else {
+      <div class="toggle-children-spacer"></div>
+    }
+}
+
 @switch (cell.type) {
   @case ('template') {
     <ng-template *ngTemplateOutlet="template(); context: templateContext()"/>
@@ -17,9 +31,16 @@
     {{cell.value()?.formatted}}
   }
   @case ('number') {
-    {{cell.value() | sciNumber:cell.column.format()}}
+    <!--  TODO [tree] remove this if, cell.column should be more strongly typed  -->
+    @if ('format' in cell.column) {
+      {{cell.value() | sciNumber:cell.column.format()}}
+    }
   }
   @default {
-    {{cell.value()}}
+    @if (showExpansionControl()) {
+      <span>{{cell.value()}}</span>
+    } @else {
+      {{cell.value()}}
+    }
   }
 }

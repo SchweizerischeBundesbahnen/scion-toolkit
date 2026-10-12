@@ -1,0 +1,186 @@
+<main>
+  @for (tree of trees(); track $index) {
+    <sci-tree [name]="`tree:${$index}`" [tree]="tree"/>
+  }
+</main>
+
+<aside class="e2e-properties">
+  <sci-tabbar>
+    <!-- Settings -->
+    <ng-template sciTab label="Settings" cssClass="e2e-settings">
+      <form>
+        <label>
+          Header
+          <input [formField]="settingsForm.header" class="e2e-header" appFieldValidation>
+        </label>
+
+        <label>
+          <input [formField]="settingsForm.wrapHeader" type="checkbox" class="e2e-wrap-header"/>
+          Wrap Header
+        </label>
+
+        <label>
+          <input [formField]="settingsForm.filterable" type="checkbox" class="e2e-filterable"/>
+          Filterable
+        </label>
+
+        <label>
+          <input [formField]="settingsForm.sortable" type="checkbox" class="e2e-sortable"/>
+          Sortable
+        </label>
+
+        <label>
+          <input [formField]="settingsForm.showNodeActions" type="checkbox" class="e2e-node-actions"/>
+          Show Node Actions
+        </label>
+
+        <label>
+          <input [formField]="settingsForm.customRowStyling" type="checkbox" class="e2e-custom-row-styling">
+          Custom Row Styling
+        </label>
+
+        <label>
+          Selectable
+          <select [formField]="settingsForm.selectable" class="e2e-selectable">
+            <option value="multi">Multi</option>
+            <option value="single">Single</option>
+            <option value="false">False</option>
+          </select>
+        </label>
+
+        <label>
+          Tree Count
+          <input [formField]="settingsForm.treeCount" type="number" class="e2e-tree-count"/>
+        </label>
+
+        <label>
+          Row Height
+          <input [formField]="settingsForm.rowHeight" type="number" class="e2e-row-height"/>
+        </label>
+      </form>
+    </ng-template>
+
+    <!-- Methods -->
+    <ng-template sciTab label="Methods" cssClass="e2e-methods">
+      <form>
+        <section class="methods">
+          <label>
+            <input [formField]="methodsForm.expandById" type="number" class="e2e-expand"/>
+          </label>
+          <button type="button" (click)="onExpand()">Expand</button>
+          <label>
+            <input [formField]="methodsForm.collapseById" type="number" class="e2e-collapse"/>
+          </label>
+          <button type="button" (click)="onCollapse()">Collapse</button>
+        </section>
+
+        <button type="button" (click)="onExpandAll()">Expand All</button>
+        <button type="button" (click)="onCollapseAll()">Collapse All</button>
+      </form>
+    </ng-template>
+
+    <!-- Data Source -->
+    <ng-template sciTab label="Datasource" cssClass="e2e-datasource">
+      <section>
+        <label>
+          Datasource
+          <select [formField]="datasourceForm.datasource" class="e2e-datasource">
+            <option value="array">Array</option>
+            <option value="array-http">Array (HTTP)</option>
+            <option value="loader">Loader</option>
+            <option value="loader-delayed">Loader (Delayed)</option>
+            <option value="loader-http">Loader (HTTP)</option>
+          </select>
+        </label>
+
+        <!-- Change of row count is only supported for non-HTTP datasources. -->
+        @switch (datasourceForm.datasource().value()) {
+          @case ('array')
+          @case ('loader')
+          @case ('loader-delayed') {
+            <label>
+              Row Count
+              <input [(ngModel)]="rowCount" type="number" class="e2e-row-count"/>
+            </label>
+          }
+        }
+
+        <label>
+          Buffer Size
+          <input [formField]="datasourceForm.bufferSize" type="number" class="e2e-buffer-size"/>
+        </label>
+
+        <label>
+          Page Size
+          <input [formField]="datasourceForm.pageSize" type="number" class="e2e-page-size"/>
+        </label>
+
+        @switch (datasourceForm.datasource().value()) {
+          @case ('loader')
+          @case ('loader-delayed')
+          @case ('loader-http') {
+            <label>
+              <input [formField]="datasourceForm.simulateError" type="checkbox" class="e2e-simulate-error"/>
+              Simulate Error
+            </label>
+          }
+        }
+      </section>
+    </ng-template>
+
+    <!-- Layout -->
+    <ng-template sciTab label="Layout" cssClass="e2e-layout">
+      <form>
+        <label>
+          Height
+          <input [formField]="layoutForm.treeHeight" type="number" class="e2e-tree-height"/>
+        </label>
+
+        <label>
+          Width
+          <input [formField]="layoutForm.treeWidth" type="number" class="e2e-tree-width"/>
+        </label>
+
+        <label>
+          Max Height
+          <input [formField]="layoutForm.treeMaxHeight" type="number" class="e2e-tree-max-height"/>
+        </label>
+
+        <label>
+          Page Height
+          <input [formField]="layoutForm.pageHeight" type="number" class="e2e-page-height"/>
+        </label>
+
+        <label>
+          <input [formField]="layoutForm.treeGrowToBreakpoint" type="checkbox" class="e2e-grow-to-breakpoint"/>
+          Grow To Breakpoint
+        </label>
+      </form>
+    </ng-template>
+  </sci-tabbar>
+
+  <section class="tree-state e2e-tree-state">
+    <header>Tree State</header>
+
+    <label>
+      Active Id:
+      <output class="e2e-active-item-id">{{activeItemId() ?? '-'}}</output>
+    </label>
+
+    <label>
+      Selection Count:
+      <output class="e2e-selection-count">{{selectedItems()?.length}}</output>
+    </label>
+
+    <label>
+      Selection:
+      <sci-viewport>
+        <output class="e2e-selection">{{selection()}}</output>
+      </sci-viewport>
+    </label>
+  </section>
+</aside>
+
+<ng-template let-product #custom_column_template>
+  <app-custom-column [product]="product"/>
+</ng-template>
