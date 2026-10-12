@@ -530,7 +530,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
       const id = this.trackBy(item);
       const index = nodeIndexById.get(id) ?? -1;
       const node = nodesById.get(id);
-      if (!node) {
+      if (node === undefined) {
         return undefined;
       }
 
@@ -803,7 +803,7 @@ export class TableTreeStructure<T, ID> {
 
           const getChildren = (parentId?: ID): SciTableTreeNode<ID>[] => {
             const children = (childrenIdsByParent.get(parentId) ?? []).flatMap(id => getChildren(id));
-            const parent = parentId ? nodesById.get(parentId) : undefined;
+            const parent = parentId !== undefined ? nodesById.get(parentId) : undefined;
 
             if (parent) {
               return [parent, ...children];
@@ -811,8 +811,6 @@ export class TableTreeStructure<T, ID> {
 
             return children;
           };
-
-          console.log(childrenIdsByParent.get(1 as ID));
 
           return getChildren(undefined);
         }),

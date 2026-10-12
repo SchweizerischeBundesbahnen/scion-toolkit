@@ -50,7 +50,7 @@ export default class SciTreePageComponent {
   protected readonly designTokenForm: FieldTree<DesignTokenForm> = this.createDesignTokenForm();
 
   protected readonly tree = this.computeTree();
-  protected readonly rowCount = companies.length;
+  protected readonly rowCount = signal(companies.length);
   protected readonly selectable = computed(() => {
     const selectable = this.tree()?.selectable();
     return selectable === false ? 'false' : selectable;
@@ -65,7 +65,10 @@ export default class SciTreePageComponent {
   private createTree(): SciTree<string> {
     return tree<Company, string>({
       label: company => company.dataId,
-      datasource: provideTreeDatasource(computed(() => data().filter(item => item.parent === undefined)), item => data().filter(i => i.parent === item.code)),
+      datasource: provideTreeDatasource(
+        computed(() => data().slice(0, this.rowCount()).filter(item => item.parent === undefined)),
+        item => data().filter(i => i.parent === item.code),
+      ),
       nodeBindings: (bindings, _vehicle, index) => {
         if (this.settingsForm.showZebraStriping().value()) {
           bindings.addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd');

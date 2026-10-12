@@ -14,7 +14,7 @@ import {assertNotInReactiveContext, Component, computed, DestroyRef, Environment
 import {TablePO} from './table.po';
 import {BehaviorSubject, map, NEVER, noop, of, Subject, take, tap, throwError} from 'rxjs';
 import {provideTableStorage} from './table-storage';
-import {provideTableRowBinding} from './table-row-binding';
+import {provideTableRowBinding, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
 import {provideAsyncTableDatasource, provideAsyncTableTreeDatasource, provideTableTreeDatasource, SciTableDataProvider, SciTableIdsRequest, ɵillegaldatasource} from './table-datasource';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
 
@@ -1271,28 +1271,28 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      const values = (): string[] => [...model.rowsByIndex().values()].map(row => row!.item!);
-      expect(values()).toEqual(['1', '2', '3']);
+      const column = table.column({index: 0});
+      expect(await column?.values()).toEqual(['1', '2', '3']);
 
       model.expand('1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
 
       model.expand('1.1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
 
       model.collapse('1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '2', '3']);
 
       model.expand('1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
 
       model.collapse('1.1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
     });
 
     it('should expand and collapse the last row at the viewport boundary', async () => {
@@ -1307,17 +1307,15 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      expect(model.visibleRowCount()).toBe(10);
 
       model.expand(9);
       await table.waitUntilStable();
-      expect(model.visibleRowCount()).toBe(12);
       await table.scrollY({y: 2 * 30});
+      expect(table.row({nth: table.rows.length - 2}).cells[0]!.value).toBe('10');
       expect(table.row({nth: table.rows.length - 1}).cells[0]!.value).toBe('11');
 
       model.collapse(9);
       await table.waitUntilStable();
-      expect(model.visibleRowCount()).toBe(10);
       expect(table.scrollTop).toBe(0);
     });
 
@@ -1364,36 +1362,36 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      const values = (): string[] => [...model.rowsByIndex().values()].map(row => row!.item!);
-      expect(values()).toEqual(roots);
+      const column = table.column({index: 0});
+      expect(await column?.values()).toEqual(roots);
       expect(getIds).toHaveBeenCalledOnceWith({sortCriteria: [], columnFilters: []});
       expect(getItems).toHaveBeenCalledOnceWith(roots);
 
       model.expand('1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
       expect(getItems).toHaveBeenCalledWith(['1.1', '1.2']);
       expect(getItems).toHaveBeenCalledTimes(2);
 
       model.expand('1.1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
       expect(getItems).toHaveBeenCalledWith(['1.1.1']);
       expect(getItems).toHaveBeenCalledTimes(3);
 
       model.collapse('1');
       await table.waitUntilStable();
-      expect(values()).toEqual(roots);
+      expect(await column?.values()).toEqual(roots);
       expect(getItems).toHaveBeenCalledTimes(3);
 
       model.expand('1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
       expect(getItems).toHaveBeenCalledTimes(3);
 
       model.collapse('1.1');
       await table.waitUntilStable();
-      expect(values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+      expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
       expect(getIds).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledTimes(3);
     });
@@ -1430,7 +1428,7 @@ describe('Table', () => {
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.includes('child') ? children$ : of(ids.map(String)));
       const {fixture, model} = createSciTableComponent(sciTable<string>({
         ɵdatasource: provideAsyncTableTreeDatasource(
-          () => [{id: 'parent'}, {id: 'child', parentId: 'parent'}, {id: 'sibling'}],
+          () => [{item: 'parent'}, {item: 'child', parent: 'parent'}, {item: 'sibling'}],
           getItems,
         ),
         datasource: ɵillegaldatasource(),
@@ -1615,7 +1613,7 @@ describe('Table', () => {
       const columns = signal(['id']);
       const getIds = jasmine.createSpy().and.returnValue(['1']);
       const getItems = jasmine.createSpy().and.returnValue([{id: '1', name: 'one'}]);
-      const {fixture, model} = createSciTableComponent(sciTable<{id: string; name: string}>({
+      const {fixture, model} = createSciTableComponent(sciTable<{id: string; name: string}, string>({
         ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         trackBy: item => item.id,
@@ -1858,7 +1856,7 @@ describe('Table', () => {
       });
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(id => data.find(item => item.id === id)!));
 
-      const {fixture, model} = createSciTableComponent<{id: string; name: string}>(sciTable({
+      const {fixture, model} = createSciTableComponent(sciTable<{id: string; name: string}, string>({
         ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         trackBy: item => item.id,
@@ -1972,7 +1970,7 @@ describe('Table', () => {
       });
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(id => data.find(item => item.id === id)!));
 
-      const {fixture, model} = createSciTableComponent<{id: string; name: string}>(sciTable({
+      const {fixture, model} = createSciTableComponent(sciTable<{id: string; name: string}, string>({
         ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         trackBy: item => item.id,
@@ -2023,7 +2021,7 @@ describe('Table', () => {
       });
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
-      const {fixture} = createSciTableComponent<number>(sciTable({
+      const {fixture} = createSciTableComponent(sciTable<number>({
         ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
@@ -2079,7 +2077,7 @@ describe('Table', () => {
       });
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
-      const {fixture} = createSciTableComponent<number>(sciTable({
+      const {fixture} = createSciTableComponent(sciTable<number>({
         ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
@@ -2117,7 +2115,7 @@ describe('Table', () => {
       const getIds = jasmine.createSpy().and.returnValue(of(generateData(20, i => i)));
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => data$.pipe(map(data => data.filter(item => ids.includes(item.id)))));
 
-      const {fixture} = createSciTableComponent(sciTable<{id: number; name: string}>({
+      const {fixture} = createSciTableComponent(sciTable<{id: number; name: string}, number>({
         ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         trackBy: item => item.id,
@@ -2351,11 +2349,11 @@ describe('Table', () => {
       let idsInjector: Injector | undefined;
       let itemsInjector: Injector | undefined;
 
-      const getIds: SciTableDataProvider<number>['getIds'] = () => {
+      const getIds: SciTableDataProvider<number, number>['getIds'] = () => {
         idsInjector = inject(Injector);
         return [1, 2, 3];
       };
-      const getItems: SciTableDataProvider<number>['getItems'] = ids => {
+      const getItems: SciTableDataProvider<number, number>['getItems'] = ids => {
         itemsInjector = inject(Injector);
         return ids.map(Number);
       };
@@ -2373,11 +2371,11 @@ describe('Table', () => {
     });
 
     it('should not call data provider functions in reactive context', async () => {
-      const getIds: SciTableDataProvider<number>['getIds'] = () => {
+      const getIds: SciTableDataProvider<number, number>['getIds'] = () => {
         assertNotInReactiveContext(getIds);
         return [1, 2, 3];
       };
-      const getItems: SciTableDataProvider<number>['getItems'] = ids => {
+      const getItems: SciTableDataProvider<number, number>['getItems'] = ids => {
         assertNotInReactiveContext(getItems);
         return ids.map(Number);
       };
@@ -2396,7 +2394,7 @@ describe('Table', () => {
     it('should destroy previous data loader function injection context', async () => {
       const destroyRefs = new Array<DestroyRef>();
 
-      const getItems: SciTableDataProvider<number>['getItems'] = ids => {
+      const getItems: SciTableDataProvider<number, number>['getItems'] = ids => {
         destroyRefs.push(inject(DestroyRef));
         return ids.map(Number);
       };

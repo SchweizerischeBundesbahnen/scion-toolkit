@@ -230,6 +230,10 @@ export class CellPO {
   }
 
   public get value(): string | undefined {
+    // With expansion controls cells can have spans, return the span content as the value.
+    if (this.element?.querySelector('span')) {
+      return this.element.querySelector('span')?.textContent.trim();
+    }
     return this.element?.textContent.trim();
   }
 
