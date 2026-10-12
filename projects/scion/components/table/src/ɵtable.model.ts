@@ -19,7 +19,7 @@ import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-i
 import {catchError, combineLatestWith, concat, fromEvent, of, skip, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
 import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
-import {filter, map, startWith, switchMap} from 'rxjs/operators';
+import {map, startWith, switchMap} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {rangeInclusive} from './common';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
@@ -371,8 +371,8 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
             console.error(error);
             throw error;
           }),
-        )},
-      );
+        ),
+      });
 
       return resource;
     });
@@ -506,6 +506,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
       this._cache.clear();
     });
   }
+
   /**
    * Traverses the tree to find pages which need to be loaded based on the current scroll range.
    */

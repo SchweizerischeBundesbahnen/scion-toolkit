@@ -10,11 +10,10 @@
 
 import {Injector, Signal, WritableSignal} from '@angular/core';
 import {SciTableDataSourceProvider, SciTableSortCriterion} from './table-datasource';
-import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
+import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
-import {MaybeAsync} from './common';
 import {SciDateValue} from './table-date-column.model';
 import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
 

@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, ElementRef, inject, Injector, input, inputBinding, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
+import {Component, computed, effect, ElementRef, inject, Injector, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
 import {provideAsyncTableDatasource, provideTableTreeDatasource, SciTable, SciTableComponent, SciTableDataSourceProvider, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';

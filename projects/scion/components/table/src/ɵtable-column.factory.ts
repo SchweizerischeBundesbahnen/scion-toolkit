@@ -10,10 +10,10 @@
 
 import {SciBooleanColumnDescriptor, SciColumnDescriptor, SciColumnValueType, SciComponentColumnDescriptor, SciDateColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
 import {SciBooleanColumn, SciComponentColumn, SciDateColumn, SciDateLike, SciDynamicColumn, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
-import {computed, DEFAULT_CURRENCY_CODE, inject, Signal, signal} from '@angular/core';
+import {computed, DEFAULT_CURRENCY_CODE, inject, signal} from '@angular/core';
 import {ɵSciTable} from './ɵtable.model';
 import {coerceSignal, MaybeSignal, SCI_LOCALE, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
-import {coerceDateValue, SciDateValue} from './table-date-column.model';
+import {coerceDateValue} from './table-date-column.model';
 import {DATE_PIPE_DEFAULT_OPTIONS} from '@angular/common';
 
 export class ɵSciTableColumnFactory<T, ID> implements SciTableColumnFactory<T> {

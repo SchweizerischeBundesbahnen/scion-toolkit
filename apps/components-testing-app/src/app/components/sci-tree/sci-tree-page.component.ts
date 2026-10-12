@@ -15,9 +15,9 @@ import {createDestroyableInjector} from '@scion/components/common';
 import {HttpClient} from '@angular/common/http';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
-import {providePageableTreeDatasource, provideTreeDatasource, SciTree, SciTreeComponent, SciTreeNodeContext, tree} from '@scion/components/tree';
+import {provideTreeDatasource, SciTree, SciTreeComponent, SciTreeNodeContext, tree} from '@scion/components/tree';
 import {noop} from 'rxjs';
-import {provideTableRowBinding, SciTableColumnType} from '@scion/components/table';
+import {provideTableRowBinding} from '@scion/components/table';
 import {Product, ProductService} from './sci-tree-page.data';
 import {FieldValidationDirective} from '../field-validation.directive';
 
@@ -86,15 +86,15 @@ export default class SciTreePageComponent {
             return provideTreeDatasource(this._productService.products, item => item.children ?? []);
           // case 'loader':
           // case 'loader-delayed': {
-            // const delayed = options.datasource === 'loader-delayed';
-            // const columnDataTypes = new Map<`column:${string}`, SciTableColumnType>([['column:tree', 'string']]);
-            // return providePageableTreeDatasource<Product>(
-            //   request => this._productService.getProducts$(request, columnDataTypes, {slowDataSource: delayed, simulateError: this.datasourceForm.simulateError().value}),
-            //   {
-            //     getChildren: (item, request) => this._productService.getChildren$(item, request, columnDataTypes, {slowDataSource: delayed}),
-            //     hasChildren: (item, request) => this._productService.hasChildren(item, request, columnDataTypes),
-            //   },
-            // );
+          // const delayed = options.datasource === 'loader-delayed';
+          // const columnDataTypes = new Map<`column:${string}`, SciTableColumnType>([['column:tree', 'string']]);
+          // return providePageableTreeDatasource<Product>(
+          //   request => this._productService.getProducts$(request, columnDataTypes, {slowDataSource: delayed, simulateError: this.datasourceForm.simulateError().value}),
+          //   {
+          //     getChildren: (item, request) => this._productService.getChildren$(item, request, columnDataTypes, {slowDataSource: delayed}),
+          //     hasChildren: (item, request) => this._productService.hasChildren(item, request, columnDataTypes),
+          //   },
+          // );
           // }
           default:
             return provideTreeDatasource(this._productService.products, item => item.children ?? []);

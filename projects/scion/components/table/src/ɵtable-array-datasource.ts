@@ -10,10 +10,9 @@
 
 import {SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeNode} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
-import {computed, inject, isSignal, Signal, signal, untracked} from '@angular/core';
+import {computed, inject, isSignal, Signal, untracked} from '@angular/core';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {Objects} from '@scion/toolkit/util';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {SciDateValue} from './table-date-column.model';
 
@@ -23,16 +22,13 @@ export function treeDatasource<T, ID>(data: Signal<Map<ID, SciTableTreeNode<T, I
   return (request: SciTableIdsRequest): Observable<SciTableTreeNode<ID>[]> => {
     return toObservable(computed(() => dataset.getDataview(request)().map(node => ({
       item: node.id,
-      parent: node.id,
+      parent: node.parent,
     }))));
   };
 }
 
 export function arrayDatasource<T, ID>(data: Signal<Map<ID, T>>, columns: Signal<SciTableColumnLike<T>[]>): ((request: SciTableIdsRequest) => Observable<ID[]>) {
-  const dataset = new Dataset(computed(() => {
-    const d = data();
-    return new Map([...d.entries()].map(([id, item]) => [id, {item}]));
-  }), columns);
+  const dataset = new Dataset(computed(() => new Map([...data().entries()].map(([id, item]) => [id, {item}]))), columns);
 
   return (request: SciTableIdsRequest): Observable<ID[]> => {
     return toObservable(computed(() => dataset.getDataview(request)().map(node => node.id)));
