@@ -8,10 +8,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, inject, input, output, viewChild} from '@angular/core';
-import {SciTableEvent, SciTableRow} from '../table.model';
+import {Component, inject, input, output, Signal, viewChild} from '@angular/core';
+import {SciTableEvent, SciTableRow, skeletonRowId} from '../table.model';
 import {SciTableCellComponent} from '../table-cell/table-cell.component';
-import {ɵSCI_TABLE} from '../ɵtable.model';
+import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
 import {SciTableSelectionService} from '../table-selection.service';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
@@ -30,18 +30,19 @@ import {SciIconComponent} from '@scion/components/icon';
     '[attr.data-active]': `row().active() ? '' : null`,
     '[attr.data-selected]': `row().selected() ? '' : null`,
     '[attr.data-hovered]': `row().hovered() ? '' : null`,
+    '[attr.data-level]': 'row().level',
     '(click)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick($event)',
     '(mouseenter)': 'onRowMouseEnter()',
     '(mouseleave)': 'onRowMouseLeave($event)',
   },
 })
-export class SciTableRowComponent<T> {
+export class SciTableRowComponent<T, ID> {
 
-  public readonly row = input.required<SciTableRow<T>>();
-  public readonly primaryAction = output<SciTableEvent<T>>();
+  public readonly row = input.required<SciTableRow<T, ID>>();
+  public readonly primaryAction = output<SciTableEvent<ID>>();
 
-  protected readonly table = inject(ɵSCI_TABLE);
+  protected readonly table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
   protected readonly rowActionToolbar = viewChild(SciToolbarComponent);
   protected readonly rowActionsToolbarName = `toolbar:${UUID.randomUUID()}` as const;
 
@@ -52,21 +53,29 @@ export class SciTableRowComponent<T> {
   }
 
   protected onRowClick(event: PointerEvent): void {
-    if (this.row().loading) {
+    const row = this.row();
+    if (row.id === skeletonRowId) {
       return;
     }
-    void this._selectionService.onRowClick(this.row().index, event);
+    const index = this.table().rowIndexById().get(row.id) ?? -1;
+    void this._selectionService.onRowClick(index, event);
   }
 
   protected onRowDblClick(event: MouseEvent): void {
-    if (this.row().loading) {
+    const row = this.row();
+    if (row.id === skeletonRowId) {
       return;
     }
-    this.primaryAction.emit({sourceEvent: event, items: [this.row().item!]});
+    this.primaryAction.emit({sourceEvent: event, items: [row.id]});
   }
 
   protected onRowMouseEnter(): void {
-    this.table().hoveredIndex.set(this.row().index);
+    const row = this.row();
+    if (row.id === skeletonRowId) {
+      return;
+    }
+    const index = this.table().rowIndexById().get(row.id) ?? -1;
+    this.table().hoveredIndex.set(index);
   }
 
   protected onRowMouseLeave(event: MouseEvent): void {
@@ -80,13 +89,17 @@ export class SciTableRowComponent<T> {
   }
 
   protected onActionToolbarClick(event: PointerEvent): void {
+    const row = this.row();
+    if (row.id === skeletonRowId) {
+      return;
+    }
     event.stopPropagation(); // prevent selecting the row
-    this.table().activeItem.set(this.row().item);
+    this.table().activeItem.set(row.id);
   }
 
   private contributeRowActions(): void {
     contributeMenu(this.rowActionsToolbarName, toolbar => {
-      if (!this.row().loading) {
+      if (this.row().id !== skeletonRowId) {
         this.table().rowActions?.(toolbar, this.row().item, this.row().index);
       }
     });

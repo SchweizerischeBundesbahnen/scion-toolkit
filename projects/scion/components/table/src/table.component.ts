@@ -58,7 +58,7 @@ import {SciIconComponent} from '@scion/components/icon';
     SciTableSelectionService,
   ],
 })
-export class SciTableComponent<T = unknown> {
+export class SciTableComponent<T = unknown, ID = T> {
 
   /**
    * Specifies a unique table identifier, used as the key for storing user preferences.
@@ -68,12 +68,12 @@ export class SciTableComponent<T = unknown> {
   /**
    * Specifies the table definition and datasource.
    */
-  public readonly table = input.required({transform: (table: SciTable<T>) => table as ɵSciTable<T>});
+  public readonly table = input.required({transform: (table: SciTable<ID>) => table as ɵSciTable<T, ID>});
 
   /**
    * Emits when the user double-clicks a row or presses `Enter` on selected rows.
    */
-  public readonly primaryAction = output<SciTableEvent<T>>();
+  public readonly primaryAction = output<SciTableEvent<ID>>();
 
   private readonly _viewport = viewChild.required(SciTableViewportComponent, {read: ElementRef});
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
@@ -89,12 +89,13 @@ export class SciTableComponent<T = unknown> {
     this.scrollActiveRowIntoViewport();
   }
 
-  protected onRowPrimaryAction(event: SciTableEvent<T>): void {
+  protected onRowPrimaryAction(event: SciTableEvent<ID>): void {
     this.primaryAction.emit(event);
+    event.items.forEach(item => this.table().toggleRow(item));
   }
 
   protected onRetry(): void {
-    this.table().reset();
+    this.table().reloadFailed();
   }
 
   private connectToModel(): void {
@@ -129,8 +130,8 @@ export class SciTableComponent<T = unknown> {
 
   private scrollActiveRowIntoViewport(): void {
     effect(() => {
-      const activeRow = this.table().activeRow();
-      if (!activeRow) {
+      const activeItem = this.table().activeItem();
+      if (activeItem === undefined) {
         return;
       }
 
@@ -138,7 +139,9 @@ export class SciTableComponent<T = unknown> {
         const viewport = this._viewport().nativeElement as HTMLElement;
         const viewportHeight = this.table().tableViewRef()?.viewportHeight() ?? 0;
         const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
-        const activeRowTop = activeRow.index * itemHeight;
+        const activeIndex = this.table().rowIndexById().get(activeItem) ?? -1;
+
+        const activeRowTop = activeIndex * itemHeight;
         const activeRowBottom = activeRowTop + itemHeight;
         const scrollTop = viewport.scrollTop;
         const scrollBottom = scrollTop + viewportHeight;

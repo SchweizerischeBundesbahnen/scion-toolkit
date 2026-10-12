@@ -36,6 +36,7 @@ export class AppComponent {
       menubar
         .addMenu({label: 'Components', menu: {filter: {focus: true}}}, menu => menu
           .addMenuItem({label: 'sci-table', onSelect: () => void router.navigate(['components/sci-table'])})
+          .addMenuItem({label: 'sci-tree', onSelect: () => void router.navigate(['components/sci-tree'])})
           .addMenu({label: 'sci-sashbox'}, menu => menu
             .addMenuItem({label: 'sci-sashbox', onSelect: () => void router.navigate(['components/sci-sashbox'])})
             .addGroup(group => group

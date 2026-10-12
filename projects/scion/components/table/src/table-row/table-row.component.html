@@ -1,15 +1,15 @@
 @let row = this.row();
 
 <!-- Row Icons -->
-@if (row.cells?.length) {
-  @for (icon of row.bindings?.icons(); track $index) {
+@if (row.cells.length) {
+  @for (icon of row.bindings.icons(); track $index) {
     <sci-icon>{{icon}}</sci-icon>
   }
 }
 
 <!-- Table Cells -->
 @for (cell of row.cells; track cell.column.name) {
-  <sci-table-cell [cell]="cell" [row]="row"/>
+  <sci-table-cell [cell]="cell" [row]="row" #cell/>
 } @empty {
   @for (column of table().columns(); track column.name) {
     <div class="skeleton e2e-skeleton" [attr.data-column]="column.name"></div>

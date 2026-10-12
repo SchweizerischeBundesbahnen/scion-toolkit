@@ -10,8 +10,46 @@
 
 /* eslint-disable @stylistic/operator-linebreak */
 
+export interface OperatorGroup {
+  kind: 'operator';
+  id: string;
+  label: string;
+  maxSpeedKmh: number;
+  mileageKm: number;
+  price: number;
+  seatingCapacity: number;
+  operatingHours: number;
+  children: ClassTypeGroup[];
+}
+
+export interface ClassTypeGroup {
+  kind: 'classType';
+  id: string;
+  label: string;
+  maxSpeedKmh: number;
+  mileageKm: number;
+  price: number;
+  seatingCapacity: number;
+  operatingHours: number;
+  children: DepotGroup[];
+}
+
+export interface DepotGroup {
+  kind: 'depot';
+  id: string;
+  label: string;
+  maxSpeedKmh: number;
+  mileageKm: number;
+  price: number;
+  seatingCapacity: number;
+  operatingHours: number;
+  children: Vehicle[];
+}
+
 export interface Vehicle {
-  id: number;
+  kind: 'vehicle';
+  id: string;
+  label: string;
   vehicleId: string;
   classType: string;
   operator: OperatorType;
@@ -55,3 +93,5 @@ export type ProtectionSystem =
   | 'ETCS Baseline 3'
   | 'ZUB'
   | 'INTEGRA-SIGNUM';
+
+export type VehicleNode = Vehicle | OperatorGroup | ClassTypeGroup | DepotGroup;

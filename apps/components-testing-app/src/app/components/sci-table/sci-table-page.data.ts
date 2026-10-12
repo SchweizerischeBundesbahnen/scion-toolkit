@@ -1,9 +1,10 @@
-import {SciTableColumnFilter, SciTableColumnType, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
+import {SciTableColumnFilter, SciTableColumnType, SciTableIdsRequest, SciTableSortCriterion} from '@scion/components/table';
 import {effect, inject, Injector, linkedSignal, Service, Signal, signal, untracked} from '@angular/core';
 import {defer, mergeWith, NEVER, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
+import {filterArray, mapArray} from '@scion/toolkit/operators';
 
 @Service()
 export class ProductService {
@@ -18,17 +19,23 @@ export class ProductService {
   private readonly _products$ = toObservable(this.products);
   private readonly _httpClient = inject(HttpClient);
 
-  public getProducts$(request: SciTablePageRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<SciTablePageResponse<Product>> {
+  public getProductsIds$(request: SciTableIdsRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<number[]> {
     return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
       .pipe(
         mergeWith(simulateError$(options?.simulateError)),
         switchMap(() => this._products$),
         map(products => Products.filter(products, request.columnFilters, request.tableFilter, columnDataTypes)),
         map(products => Products.sort(products, request.sortCriteria, columnDataTypes)),
-        map(products => ({
-          items: products.slice(request.start, request.end),
-          totalCount: products.length,
-        })),
+        mapArray(product => product.id),
+      );
+  }
+
+  public getProductsById$(ids: number[], options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<Product[]> {
+    return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
+      .pipe(
+        mergeWith(simulateError$(options?.simulateError)),
+        switchMap(() => this._products$),
+        filterArray(product => ids.includes(product.id)),
       );
   }
 

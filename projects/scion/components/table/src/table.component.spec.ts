@@ -12,10 +12,10 @@ import {TestBed} from '@angular/core/testing';
 import {table, table as sciTable} from './table.factory';
 import {assertNotInReactiveContext, Component, computed, DEFAULT_CURRENCY_CODE, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild} from '@angular/core';
 import {TablePO} from './table.po';
-import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
+import {BehaviorSubject, map, NEVER, noop, of, Subject, take, tap, throwError} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {provideTableRowBinding} from './table-row-binding';
-import {SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, ɵillegaldatasource} from './table-datasource';
+import {provideAsyncTableDatasource, provideAsyncTableTreeDatasource, provideTableTreeDatasource, SciTableDatasource, SciTableIdsRequest, ɵillegaldatasource} from './table-datasource';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {DATE_PIPE_DEFAULT_OPTIONS, DatePipeConfig, registerLocaleData} from '@angular/common';
@@ -186,7 +186,7 @@ describe('Table', () => {
       it('should accept signal as value', async () => {
         const value = signal('a');
         const {fixture} = createSciTableComponent(sciTable({
-          datasource: signal([undefined]),
+          datasource: signal([undefined, undefined, undefined]),
           filterable: true,
           columns: table => table.addStringColumn(() => value),
           injector: TestBed.inject(Injector),
@@ -2524,16 +2524,695 @@ describe('Table', () => {
     });
   });
 
-  describe('Pageable Data Source', () => {
+  describe('Hierarchical Data Source', () => {
 
-    it('should cache pages', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
-        totalCount: 1_000,
-        items: generateData(request.pageSize, i => request.start + i),
+    it('should show the chevron only in the first column by default', async () => {
+      const {fixture} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideTableTreeDatasource(signal(['parent', 'leaf']), item => item === 'parent' ? ['child'] : []),
+        datasource: ɵillegaldatasource(),
+        columns: table => table
+          .addStringColumn(item => item)
+          .addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
       }));
 
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.row({nth: 0}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).not.toBeNull();
+      expect(table.row({nth: 0}).cells[1]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
+      expect(table.row({nth: 1}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
+    });
+
+    it('should show the chevron in the configured column and toggle the row', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideTableTreeDatasource(signal(['parent']), id => id === 'parent' ? ['child'] : []),
+        datasource: ɵillegaldatasource(),
+        columns: table => table
+          .addStringColumn(item => item)
+          .addStringColumn({value: item => item, showExpansionControl: true}),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(model.columns().map(column => column.showExpansionControl)).toEqual([false, true]);
+      expect(table.row({nth: 0}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
+      const toggle = table.row({nth: 0}).cells[1]!.element!.querySelector<HTMLButtonElement>('button.e2e-toggle-children');
+      expect(toggle).not.toBeNull();
+
+      toggle!.click();
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(table.row({nth: 0}).cells[1]!.element!.querySelector('sci-icon.e2e-expanded')).not.toBeNull();
+    });
+
+    it('should expand and collapse nested rows', async () => {
+      const children = new Map([
+        ['1', ['1.1', '1.2']],
+        ['1.1', ['1.1.1']],
+      ]);
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideTableTreeDatasource(signal(['1', '2', '3']), item => children.get(item) ?? []),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      const column = table.column({index: 0});
+      expect(await column?.values()).toEqual(['1', '2', '3']);
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+
+      model.expand('1.1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+
+      model.collapse('1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '2', '3']);
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+
+      model.collapse('1.1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+    });
+
+    it(`should expand and collapse descendants with falsy parents`, async () => {
+      interface TestItem {
+        id: string | number;
+        children?: TestItem[]
+      }
+
+      const data: TestItem[] = [{
+        id: '',
+        children: [{id: 'child'}],
+      }, {
+        id: 0,
+        children: [{id: 'other child'}],
+      }];
+
+      const {fixture, model} = createSciTableComponent(sciTable<TestItem, string | number>({
+        ɵdatasource: provideTableTreeDatasource(signal(data), item => item.children ?? []),
+        datasource: ɵillegaldatasource(),
+        trackBy: item => item.id,
+        columns: table => table.addStringColumn(item => String(item.id)),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      const column = table.column({index: 0})!;
+      expect(await column.values()).toEqual(['', '0']);
+
+      model.expand('');
+      await table.waitUntilStable();
+      expect(await column.values()).toEqual(['', 'child', '0']);
+
+      model.expand(0);
+      await table.waitUntilStable();
+      expect(await column.values()).toEqual(['', 'child', '0', 'other child']);
+      expect(table.rows.map(row => row.cells[0]!.element!.getAttribute('data-level'))).toEqual(['0', '1', '0', '1']);
+
+      model.collapse('');
+      await table.waitUntilStable();
+      expect(await column.values()).toEqual(['', '0', 'other child']);
+
+      model.collapse(0);
+      await table.waitUntilStable();
+      expect(await column.values()).toEqual(['', '0']);
+    });
+
+    it('should expand and collapse the last row at the viewport boundary', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: provideTableTreeDatasource(signal(generateData(10, i => i)), item => item === 9 ? [10, 11] : []),
+        datasource: ɵillegaldatasource(),
+        showHeader: false,
+        bufferSize: 0,
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }), {height: '300px', designTokens: {'--sci-table-row-height': '30px'}});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.expand(9);
+      await table.waitUntilStable();
+      await table.scrollY({y: 2 * 30});
+      expect(table.row({nth: table.rows.length - 2}).cells[0]!.value).toBe('10');
+      expect(table.row({nth: table.rows.length - 1}).cells[0]!.value).toBe('11');
+
+      model.collapse(9);
+      await table.waitUntilStable();
+      expect(table.scrollTop).toBe(0);
+    });
+
+    it('should expand the last row when the table is shorter than the viewport', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideTableTreeDatasource(signal(['1', '2']), item => item === '2' ? ['2.1'] : []),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+
+      model.expand('2');
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(3);
+      expect(table.row({nth: 2}).cells[0]!.value).toBe('2.1');
+
+      model.collapse('2');
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+    });
+
+    it('should expand path to selected item', async () => {
+      interface TestItem {
+        item: string;
+        children?: TestItem[]
+      }
+
+      const items: TestItem[] = [
+        {
+          item: '', // Falsy parent should also expand
+          children: [
+            {item: '1.1'},
+            {item: '1.2', children: [{item: '1.2.1'}]},
+          ],
+        },
+        {item: '2', children: [{item: '2.1'}]},
+        {item: '3'},
+      ];
+
+      const {fixture, model} = createSciTableComponent(sciTable<TestItem, string>({
+        ɵdatasource: provideTableTreeDatasource(signal(items), item => item.children ?? []),
+        datasource: ɵillegaldatasource(),
+        trackBy: item => item.item,
+        columns: table => table.addStringColumn(({item}) => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['', '2', '3']);
+
+      model.select('1.2.1');
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['', '1.1', '1.2', '1.2.1', '2', '3']);
+    });
+
+    it('should expand all items on filter', async () => {
+      interface TestItem {
+        item: string;
+        children?: TestItem[]
+      }
+
+      const items: TestItem[] = [
+        {
+          item: '1',
+          children: [
+            {item: '1.1'},
+            {item: '1.2', children: [{item: '1.2.1'}]},
+          ],
+        },
+        {item: '2', children: [{item: '2.1'}]},
+        {item: '3'},
+      ];
+
+      const {fixture, model} = createSciTableComponent(sciTable<TestItem, string>({
+        ɵdatasource: provideTableTreeDatasource(signal(items), item => item.children ?? []),
+        datasource: ɵillegaldatasource(),
+        trackBy: item => item.item,
+        columns: table => table.addStringColumn(({item}) => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['1', '2', '3']);
+
+      model.filter('1');
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['1', '1.1', '1.2', '1.2.1', '2', '2.1']);
+    });
+
+    it('should expand all items on falsy filter', async () => {
+      interface TestItem {
+        number: number;
+        children?: TestItem[]
+      }
+
+      const items: TestItem[] = [
+        {
+          number: 1,
+          children: [
+            {number: 1.1},
+            {number: 1.2, children: [{number: 0}]},
+          ],
+        },
+        {number: 2, children: [{number: 2.1}]},
+        {number: 3},
+      ];
+
+      const {fixture, model} = createSciTableComponent(sciTable<TestItem, number>({
+        ɵdatasource: provideTableTreeDatasource(signal(items), item => item.children ?? []),
+        datasource: ɵillegaldatasource(),
+        trackBy: item => item.number,
+        columns: table => table.addNumberColumn(({number}) => number),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      // TODO [tree]: remove chevron after icon column rebase
+      expect(await table.column({index: 0})?.values()).toEqual(['chevron_right 1', 'chevron_right 2', '3']);
+
+      model.filter(0, {columnName: 'column:0'});
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['chevron_down 1', 'chevron_down 1.2', '0']);
+    });
+  });
+
+  describe('Pageable Hierarchical Data Source', () => {
+
+    it('should expand and collapse nested rows', async () => {
+      const roots = ['1', '2', '3'];
+      const getIds = jasmine.createSpy().and.returnValue([
+        ...roots.map(id => ({item: id})),
+        {item: '1.1', parent: '1'},
+        {item: '1.2', parent: '1'},
+        {item: '1.1.1', parent: '1.1'},
+      ]);
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(String));
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      const column = table.column({index: 0});
+      expect(await column?.values()).toEqual(roots);
+      expect(getIds).toHaveBeenCalledOnceWith({sortCriteria: [], columnFilters: [], tableFilter: undefined});
+      expect(getItems).toHaveBeenCalledOnceWith(roots);
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+      expect(getItems).toHaveBeenCalledWith(['1.1', '1.2']);
+      expect(getItems).toHaveBeenCalledTimes(2);
+
+      model.expand('1.1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+      expect(getItems).toHaveBeenCalledWith(['1.1.1']);
+      expect(getItems).toHaveBeenCalledTimes(3);
+
+      model.collapse('1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(roots);
+      expect(getItems).toHaveBeenCalledTimes(3);
+
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '1.1', '1.1.1', '1.2', '2', '3']);
+      expect(getItems).toHaveBeenCalledTimes(3);
+
+      model.collapse('1.1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledTimes(3);
+    });
+
+    it('should allow only returning matched elements not their ancestors', async () => {
+      const items = [
+        {item: '1'},
+        {item: '1.1', parent: '1'},
+        {item: '1.2', parent: '1'},
+        {item: '1.1.1', parent: '1.1'},
+      ];
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(request => request.columnFilters.length > 0 ? [{item: '1.1.1', parent: '1.1'}] : items, ids => ids),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        filterable: true,
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.expandAll();
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})!.values()).toEqual(['1', '1.1', '1.1.1', '1.2']);
+
+      await table.column({index: 0})!.filter('test');
+      await table.waitUntilStable();
+      // should display ancestors of the leaf node as well
+      expect(await table.column({index: 0})!.values()).toEqual(['1', '1.1', '1.1.1']);
+    });
+
+    it('should allow only returning matched elements not their children', async () => {
+      const items = [
+        {item: '1'},
+        {item: '1.1', parent: '1'},
+        {item: '1.2', parent: '1'},
+        {item: '1.1.1', parent: '1.1'},
+      ];
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(request => request.columnFilters.length > 0 ? [{item: '1.1', parent: '1'}] : items, ids => ids),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        filterable: true,
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.expandAll();
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})!.values()).toEqual(['1', '1.1', '1.1.1', '1.2']);
+
+      await table.column({index: 0})!.filter('test');
+      await table.waitUntilStable();
+      // should display children of the intermediate node as well.
+      expect(await table.column({index: 0})!.values()).toEqual(['1', '1.1', '1.1.1']);
+    });
+
+    it('should show child errors on the table and reload on retry', async () => {
+      const getIds = jasmine.createSpy().and.returnValue([{item: 'parent'}, {item: 'child', parent: 'parent'}]);
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.includes('child') ? throwError(() => new Error('Child load failed')) : of(ids.map(String)));
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      model.expand('parent');
+      await table.waitUntilStable();
+      expect(model.error()).toBeTrue();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry')).not.toBeNull();
+
+      getItems.and.callFake((ids: string[]) => of(ids));
+      getItems.calls.reset();
+      (fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry') as HTMLButtonElement).click();
+      await table.waitUntilStable();
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(['child']);
+      expect(model.error()).toBeFalse();
+      expect(await table.column({index: 0})!.values()).toEqual(['parent', 'child']);
+    });
+
+    it('should show error on getIds and reload on retry', async () => {
+      const getIds = jasmine.createSpy().and.callFake(() => throwError(() => new Error('load failed')));
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(getIds, ids => ids),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(model.error()).toBeTrue();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry')).not.toBeNull();
+
+      getIds.and.returnValue([{item: 'test'}]);
+      (fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry') as HTMLButtonElement).click();
+      await table.waitUntilStable();
+      expect(getIds).toHaveBeenCalledTimes(2);
+      expect(model.error()).toBeFalse();
+      expect(await table.column({index: 0})!.values()).toEqual(['test']);
+    });
+
+    it('should show skeletons for expanded children until their items load', async () => {
+      const children$ = new Subject<string[]>();
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.includes('child') ? children$ : of(ids.map(String)));
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(
+          () => [{item: 'parent'}, {item: 'child', parent: 'parent'}, {item: 'sibling'}],
+          getItems,
+        ),
+        datasource: ɵillegaldatasource(),
+        pageSize: 1,
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(getItems.calls.allArgs()).toEqual([[['parent']], [['sibling']]]);
+      getItems.calls.reset();
+      model.expand('parent');
+      await table.waitUntilStable();
+
+      expect(getItems).toHaveBeenCalledOnceWith(['child']);
+      expect(model.visibleRowCount()).toBe(3);
+      expect(table.rows).toHaveSize(3);
+      expect(table.row({nth: 0}).cells[0]!.value).toContain('parent');
+      expect(table.row({nth: 1}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 2}).cells[0]!.value).toBe('sibling');
+
+      children$.next(['child']);
+      await table.waitUntilStable();
+
+      expect(model.visibleRowCount()).toBe(3);
+      expect(table.rows).toHaveSize(3);
+      expect(table.row({nth: 1}).cells[0]!.value).toBe('child');
+      expect(table.row({nth: 2}).cells[0]!.value).toBe('sibling');
+      expect(getItems).toHaveBeenCalledTimes(1);
+    });
+
+    it('should load children in batches and reuse loaded items when re-expanding', async () => {
+      const children = ['1.1', '1.2', '1.3', '1.4'];
+      const getIds = jasmine.createSpy().and.returnValue([{item: '1'}, ...children.map(id => ({item: id, parent: '1'}))]);
+      const getItems = jasmine.createSpy().and.callFake((ids: string[]) => ids);
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
+        datasource: ɵillegaldatasource(),
+        pageSize: 2,
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(['1']);
+      getItems.calls.reset();
+
+      model.expand('1');
+      await table.waitUntilStable();
+      const column = table.column({index: 0});
+      expect(await column?.values()).toEqual(['1', ...children]);
+      expect(getItems.calls.allArgs()).toEqual([
+        [['1.1']],
+        [['1.2', '1.3']],
+        [['1.4']],
+      ]);
+      getItems.calls.reset();
+
+      model.collapse('1');
+      await table.waitUntilStable();
+      model.expand('1');
+      await table.waitUntilStable();
+      expect(await column?.values()).toEqual(['1', ...children]);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).not.toHaveBeenCalled();
+    });
+
+    it('should retain child items across row remapping', async () => {
+      const columns = signal(['first']);
+      const getIds = jasmine.createSpy().and.returnValue(of([{item: 'parent'}, {item: 'child', parent: 'parent'}]));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => of(ids.map(String)));
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
+        datasource: ɵillegaldatasource(),
+        columns: table => {
+          for (const column of columns()) {
+            table.addStringColumn(column, item => item);
+          }
+        },
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      model.expand('parent');
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(getItems).toHaveBeenCalledWith(['child']);
+      expect(getItems).toHaveBeenCalledTimes(2);
+
+      columns.set(['first', 'second']);
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(table.row({nth: 1}).cells).toHaveSize(2);
+      expect(table.row({nth: 1}).cells.map(cell => cell.value)).toEqual(['child', 'child']);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledTimes(2);
+    });
+
+    it('should load children when expanding the last row at the viewport boundary', async () => {
+      const roots = generateData(10, i => i);
+      const getIds = jasmine.createSpy().and.returnValue([
+        ...roots.map(id => ({item: id})),
+        {item: 10, parent: 9},
+        {item: 11, parent: 9},
+      ]);
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
+        datasource: ɵillegaldatasource(),
+        showHeader: false,
+        bufferSize: 0,
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }), {height: '300px', designTokens: {'--sci-table-row-height': '30px'}});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(model.visibleRowCount()).toBe(10);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(roots);
+
+      model.expand(9);
+      await table.waitUntilStable();
+      expect(getItems).toHaveBeenCalledWith([10, 11]);
+      expect(getItems).toHaveBeenCalledTimes(2);
+      expect(model.visibleRowCount()).toBe(12);
+      await table.scrollY({y: 2 * 30});
+      expect(table.row({nth: table.rows.length - 1}).cells[0]!.value).toBe('11');
+      expect(getItems).toHaveBeenCalledTimes(2);
+
+      model.collapse(9);
+      await table.waitUntilStable();
+      expect(model.visibleRowCount()).toBe(10);
+      expect(table.scrollTop).toBe(0);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledTimes(2);
+
+      model.expand(9);
+      await table.waitUntilStable();
+      expect(model.visibleRowCount()).toBe(12);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledTimes(2);
+    });
+
+    it('should load children when expanding the last row of a table shorter than the viewport', async () => {
+      const getIds = jasmine.createSpy().and.returnValue([{item: '1'}, {item: '2'}, {item: '2.1', parent: '2'}]);
+      const getItems = jasmine.createSpy().and.callFake((ids: string[]) => ids);
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(getIds, getItems),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(['1', '2']);
+
+      model.expand('2');
+      await table.waitUntilStable();
+      expect(getItems).toHaveBeenCalledWith(['2.1']);
+      expect(getItems).toHaveBeenCalledTimes(2);
+      expect(table.rows).toHaveSize(3);
+      expect(table.row({nth: 2}).cells[0]!.value).toBe('2.1');
+
+      model.collapse('2');
+      await table.waitUntilStable();
+      expect(table.rows).toHaveSize(2);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('Pageable Data Source', () => {
+
+    it('should remap columns without loading the page again', async () => {
+      const columns = signal(['id']);
+      const getIds = jasmine.createSpy().and.returnValue(['1']);
+      const getItems = jasmine.createSpy().and.returnValue([{id: '1', name: 'one'}]);
+      const {fixture} = createSciTableComponent(sciTable<{id: string; name: string}, string>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
+        datasource: ɵillegaldatasource(),
+        trackBy: item => item.id,
+        columns: table => {
+          for (const column of columns()) {
+            table.addStringColumn(column, item => item[column as 'id' | 'name']);
+          }
+        },
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(table.rows[0]?.cells).toHaveSize(1);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(['1']);
+
+      columns.set(['id', 'name']);
+      await table.waitUntilStable();
+      expect(table.rows[0]?.cells).toHaveSize(2);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledTimes(1);
+    });
+
+    it('should derive the count from the most recent IDs', async () => {
+      const ids$ = new BehaviorSubject([0, 1, 2, 3, 4]);
+      const getIds = jasmine.createSpy().and.returnValue(ids$);
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
+        datasource: ɵillegaldatasource(),
+        pageSize: 2,
+        bufferSize: 0,
+        showHeader: false,
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }), {height: '30px', designTokens: {'--sci-table-row-height': '30px'}});
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(model.visibleRowCount()).toBe(5);
+      expect(getItems).toHaveBeenCalledOnceWith([0, 1]);
+
+      ids$.next([0, 1, 2, 3]);
+      await table.waitUntilStable();
+      expect(model.visibleRowCount()).toBe(4);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledTimes(1);
+    });
+
+    it('should cache pages', async () => {
+      const getIds = jasmine.createSpy().and.returnValue(generateData(1_000, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
+
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         pageSize: 5,
         bufferSize: 0,
@@ -2549,37 +3228,36 @@ describe('Table', () => {
       await table.waitUntilStable();
 
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 10}, i => `${i}`));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 5, page: 0, pageSize: 5}));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 5, end: 10, page: 1, pageSize: 5}));
-      expect(loader).toHaveBeenCalledTimes(2);
-      loader.calls.reset();
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledWith([0, 1, 2, 3, 4]);
+      expect(getItems).toHaveBeenCalledWith([5, 6, 7, 8, 9]);
+      getItems.calls.reset();
 
       // Scroll down to row 20
       await table.scrollY({y: 20 * 30});
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 20, end: 30}, i => `${i}`));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 20, end: 25, page: 4, pageSize: 5}));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 25, end: 30, page: 5, pageSize: 5}));
-      expect(loader).toHaveBeenCalledTimes(2);
-      loader.calls.reset();
+      expect(getItems).toHaveBeenCalledWith([20, 21, 22, 23, 24]);
+      expect(getItems).toHaveBeenCalledWith([25, 26, 27, 28, 29]);
+      expect(getItems).toHaveBeenCalledTimes(2);
+      getItems.calls.reset();
 
       // Scroll up to row 0
       await table.scrollY({y: 0});
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 10}, i => `${i}`));
 
       // Expect page not to be loaded again.
-      expect(loader).not.toHaveBeenCalled();
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).not.toHaveBeenCalled();
     });
 
     it('should load pages based on pageSize [pageSize=5]', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
-        totalCount: 1_000,
-        items: generateData(request.pageSize, i => request.start + i),
-      }));
+      const getIds = jasmine.createSpy().and.returnValue(generateData(1_000, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
         bufferSize: 3,
         pageSize: 5,
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -2596,11 +3274,11 @@ describe('Table', () => {
       // Rows in Viewport: [0,..,9]
       // Buffer after:     [10,11,12]
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 13}, i => `${i}`));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 5, page: 0, pageSize: 5}));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 5, end: 10, page: 1, pageSize: 5}));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 10, end: 15, page: 2, pageSize: 5}));
-      expect(loader).toHaveBeenCalledTimes(3);
-      loader.calls.reset();
+      expect(getItems).toHaveBeenCalledWith([0, 1, 2, 3, 4]);
+      expect(getItems).toHaveBeenCalledWith([5, 6, 7, 8, 9]);
+      expect(getItems).toHaveBeenCalledWith([10, 11, 12, 13, 14]);
+      expect(getItems).toHaveBeenCalledTimes(3);
+      getItems.calls.reset();
 
       // Scroll down to row 4
       // Buffer before:    [1,2,3]
@@ -2608,9 +3286,8 @@ describe('Table', () => {
       // Buffer after:     [14,15,16]
       await table.scrollY({y: 4 * 30});
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 1, end: 17}, i => `${i}`));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 15, end: 20, page: 3, pageSize: 5}));
-      expect(loader).toHaveBeenCalledTimes(1);
-      loader.calls.reset();
+      expect(getItems).toHaveBeenCalledOnceWith([15, 16, 17, 18, 19]);
+      getItems.calls.reset();
 
       // Scroll down to row 40
       // Buffer before:    [37,38,39]
@@ -2618,23 +3295,22 @@ describe('Table', () => {
       // Buffer after:     [50,51,52]
       await table.scrollY({y: 40 * 30});
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 37, end: 53}, i => `${i}`));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 35, end: 40, page: 7, pageSize: 5}));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 40, end: 45, page: 8, pageSize: 5}));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 45, end: 50, page: 9, pageSize: 5}));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 50, end: 55, page: 10, pageSize: 5}));
-      expect(loader).toHaveBeenCalledTimes(4);
+      expect(getItems).toHaveBeenCalledWith([35, 36, 37, 38, 39]);
+      expect(getItems).toHaveBeenCalledWith([40, 41, 42, 43, 44]);
+      expect(getItems).toHaveBeenCalledWith([45, 46, 47, 48, 49]);
+      expect(getItems).toHaveBeenCalledWith([50, 51, 52, 53, 54]);
+      expect(getItems).toHaveBeenCalledTimes(4);
+      expect(getIds).toHaveBeenCalledTimes(1);
     });
 
     it('should load pages based on pageSize [pageSize=50]', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
-        totalCount: 1_000,
-        items: generateData(request.pageSize, i => request.start + i),
-      }));
+      const getIds = jasmine.createSpy().and.returnValue(generateData(1_000, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: number[]) => ids);
 
       const {fixture} = createSciTableComponent(sciTable<number>({
         bufferSize: 3,
         pageSize: 50,
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -2651,9 +3327,8 @@ describe('Table', () => {
       // Rows in Viewport: [0,..,9]
       // Buffer after:     [10,11,12]
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 13}, i => `${i}`));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
-      expect(loader).toHaveBeenCalledTimes(1);
-      loader.calls.reset();
+      expect(getItems).toHaveBeenCalledOnceWith(generateData(50, i => i));
+      getItems.calls.reset();
 
       // Scroll down to row 4
       // Buffer before:    [1,2,3]
@@ -2661,8 +3336,7 @@ describe('Table', () => {
       // Buffer after:     [14,15,16]
       await table.scrollY({y: 4 * 30});
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 1, end: 17}, i => `${i}`));
-      expect(loader).not.toHaveBeenCalled();
-      loader.calls.reset();
+      expect(getItems).not.toHaveBeenCalled();
 
       // Scroll down to row 40
       // Buffer before:    [37,38,39]
@@ -2670,22 +3344,17 @@ describe('Table', () => {
       // Buffer after:     [50,51,52]
       await table.scrollY({y: 40 * 30});
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 37, end: 53}, i => `${i}`));
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 50, end: 100, page: 1, pageSize: 50}));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(generateData({start: 50, end: 100}, i => i));
+      expect(getIds).toHaveBeenCalledTimes(1);
     });
 
     it('should allow global filtering', async () => {
       const data = generateData(100, i => i);
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => {
-        const filtered = data.filter(item => !request.tableFilter || `${item}` === request.tableFilter);
-        return {
-          items: filtered.slice(request.start, request.end),
-          totalCount: filtered.length,
-        };
-      });
+      const getIds = jasmine.createSpy().and.callFake((request: SciTableIdsRequest) => data.filter(item => !request.tableFilter || `${item}` === request.tableFilter));
+      const getItems = jasmine.createSpy().and.callFake((ids: number[]) => ids);
 
       const {fixture, model} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         columns: table => table.addNumberColumn({
           name: 'column:1',
@@ -2699,19 +3368,21 @@ describe('Table', () => {
 
       expect(table.row({nth: 0}).cells[0]!.value).toEqual('0');
 
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
       model.filter('50');
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTablePageRequest>({
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         tableFilter: '50',
         columnFilters: [],
       }));
+      expect(getItems).toHaveBeenCalledOnceWith([50]);
       expect(await table.column({name: 'column:1'})!.values()).toEqual(['50']);
     });
 
     it('should filter', async () => {
       const data = generateData(100, i => ({id: `ID: ${i}`, name: `Name: ${i}`}));
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<{id: string; name: string}> => {
+      const getIds = jasmine.createSpy().and.callFake((request: SciTableIdsRequest) => {
         const filtered = data.filter(item => {
           const idFilter = request.columnFilters.find(filter => filter.columnName === 'column:id');
           if (idFilter && item.id !== idFilter.text) {
@@ -2723,15 +3394,14 @@ describe('Table', () => {
           }
           return true;
         });
-        return {
-          items: filtered.slice(request.start, request.end),
-          totalCount: filtered.length,
-        };
+        return filtered.map(item => item.id);
       });
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(id => data.find(item => item.id === id)!));
 
-      const {fixture, model} = createSciTableComponent<{id: string; name: string}>(sciTable({
-        ɵdatasource: loader,
+      const {fixture, model} = createSciTableComponent(sciTable<{id: string; name: string}, string>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
+        trackBy: item => item.id,
         bufferSize: 0,
         pageSize: 20,
         columns: table => table
@@ -2751,80 +3421,82 @@ describe('Table', () => {
 
       expect(await table.column({name: 'column:id'})!.values({rows: 'all'})).toEqual(generateData(100, i => `ID: ${i}`));
       expect(await table.column({name: 'column:name'})!.values({rows: 'all'})).toEqual(generateData(100, i => `Name: ${i}`));
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Filter by 'column:id'.
       model.filter('ID: 5', {columnName: 'column:id'});
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-        start: 0, end: 20, page: 0, pageSize: 20,
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         columnFilters: [
           {columnName: 'column:id', text: 'ID: 5'},
         ],
       }));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 5']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 5']);
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Clear column filter.
       model.filter(null, {columnName: 'column:id'});
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 20, page: 0, pageSize: 20, columnFilters: []}));
-      expect(loader).toHaveBeenCalledTimes(1);
+      // Clearing the filter reuses the unfiltered IDs and reloads the visible items.
+      expect(getIds).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({name: 'column:id'})!.values({rows: 'all'})).toEqual(generateData(100, i => `ID: ${i}`));
       expect(await table.column({name: 'column:name'})!.values({rows: 'all'})).toEqual(generateData(100, i => `Name: ${i}`));
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Filter by 'column:name'.
       model.filter('Name: 10', {columnName: 'column:name'});
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-        start: 0, end: 20, page: 0, pageSize: 20,
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         columnFilters: [
           {columnName: 'column:name', text: 'Name: 10'},
         ],
       }));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 10']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 10']);
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Filter by 'column:id' (no match).
       model.filter('ID: 11', {columnName: 'column:id'});
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-        start: 0, end: 20, page: 0, pageSize: 20,
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         columnFilters: [
           {columnName: 'column:name', text: 'Name: 10'},
           {columnName: 'column:id', text: 'ID: 11'},
         ],
       }));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({name: 'column:id'})!.values()).toEqual([]);
       expect(await table.column({name: 'column:name'})!.values()).toEqual([]);
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Filter by 'column:id' (match).
       model.filter('ID: 10', {columnName: 'column:id'});
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-        start: 0, end: 20, page: 0, pageSize: 20,
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         columnFilters: [
           {columnName: 'column:name', text: 'Name: 10'},
           {columnName: 'column:id', text: 'ID: 10'},
         ],
       }));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 10']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 10']);
     });
 
     it('should scroll to top on filter', async () => {
       const data = generateData(100, i => ({id: `ID: ${i}`, name: `Name: ${i}`}));
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<{id: string; name: string}> => {
+      const getIds = jasmine.createSpy().and.callFake((request: SciTableIdsRequest) => {
         const filtered = data.filter(item => {
           const idFilter = request.columnFilters.find(filter => filter.columnName === 'column:id');
           if (idFilter && item.id !== idFilter.text) {
@@ -2836,15 +3508,14 @@ describe('Table', () => {
           }
           return true;
         });
-        return {
-          items: filtered.slice(request.start, request.end),
-          totalCount: filtered.length,
-        };
+        return filtered.map(item => item.id);
       });
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(id => data.find(item => item.id === id)!));
 
-      const {fixture, model} = createSciTableComponent<{id: string; name: string}>(sciTable({
-        ɵdatasource: loader,
+      const {fixture, model} = createSciTableComponent(sciTable<{id: string; name: string}, string>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
+        trackBy: item => item.id,
         bufferSize: 0,
         pageSize: 20,
         columns: table => table
@@ -2864,41 +3535,36 @@ describe('Table', () => {
       await table.scrollY({deltaY: 300});
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 20, end: 40, page: 1, pageSize: 20}));
-      expect(await table.column({name: 'column:id'})!.values({rows: 'all'})).toEqual(generateData(100, i => `ID: ${i}`));
-      expect(await table.column({name: 'column:name'})!.values({rows: 'all'})).toEqual(generateData(100, i => `Name: ${i}`));
-      loader.calls.reset();
+      expect(table.scrollTop).toBeGreaterThan(0);
+      expect(getItems).toHaveBeenCalledWith(generateData({start: 20, end: 40}, i => `ID: ${i}`));
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Filter by 'column:id'.
       model.filter('ID: 5', {columnName: 'column:id'});
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-        start: 0, end: 20, page: 0, pageSize: 20,
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         columnFilters: [
           {columnName: 'column:id', text: 'ID: 5'},
         ],
       }));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({name: 'column:id'})!.values()).toEqual(['ID: 5']);
       expect(await table.column({name: 'column:name'})!.values()).toEqual(['Name: 5']);
       expect(table.scrollTop).toBe(0);
-      loader.calls.reset();
     });
 
     it('should sort', async () => {
       const data = generateData(100, i => i);
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => {
+      const getIds = jasmine.createSpy().and.callFake((request: SciTableIdsRequest) => {
         const sortCriterion = request.sortCriteria.find(criterion => criterion.columnName === 'column:1');
-        const sorted = sortCriterion?.direction === 'asc' ? [...data] : [...data].reverse();
-        return {
-          items: sorted.slice(request.start, request.end),
-          totalCount: sorted.length,
-        };
+        return sortCriterion?.direction === 'asc' ? [...data] : [...data].reverse();
       });
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
-      const {fixture} = createSciTableComponent<number>(sciTable({
-        ɵdatasource: loader,
+      const {fixture} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -2911,51 +3577,50 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Sort 'column:1' in ascending order.
       await table.column({name: 'column:1'})!.toggleSort();
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-        start: 0, end: 20, page: 0, pageSize: 20,
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
       }));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(generateData(20, i => i));
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`));
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
 
-      // Sort 'column:1' in descening order.
+      // Sort 'column:1' in descending order.
       await table.column({name: 'column:1'})!.toggleSort();
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-        start: 0, end: 20, page: 0, pageSize: 20,
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         sortCriteria: [{columnName: 'column:1', direction: 'desc'}],
       }));
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(100, i => i).map(i => `${i}`).reverse());
-      loader.calls.reset();
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Reset sort for 'column:1'.
       await table.column({name: 'column:1'})!.toggleSort();
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 20, page: 0, pageSize: 20}));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({sortCriteria: []}));
+      expect(getItems).not.toHaveBeenCalled();
     });
 
     it('should scroll to top on sort', async () => {
       const data = generateData(100, i => i);
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => {
+      const getIds = jasmine.createSpy().and.callFake((request: SciTableIdsRequest) => {
         const sortCriterion = request.sortCriteria.find(criterion => criterion.columnName === 'column:1');
-        const sorted = sortCriterion?.direction === 'asc' ? [...data] : [...data].reverse();
-        return {
-          items: sorted.slice(request.start, request.end),
-          totalCount: sorted.length,
-        };
+        return sortCriterion?.direction === 'asc' ? [...data] : [...data].reverse();
       });
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
-      const {fixture} = createSciTableComponent<number>(sciTable({
-        ɵdatasource: loader,
+      const {fixture} = createSciTableComponent(sciTable<number>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 20,
@@ -2971,36 +3636,34 @@ describe('Table', () => {
       await table.scrollY({deltaY: 300});
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 20, end: 40, page: 1, pageSize: 20}));
-      loader.calls.reset();
+      expect(table.scrollTop).toBeGreaterThan(0);
+      expect(getItems).toHaveBeenCalledWith(generateData({start: 20, end: 40}, i => 99 - i));
+      getIds.calls.reset();
+      getItems.calls.reset();
 
       // Sort 'column:1' in ascending order.
       await table.column({name: 'column:1'})!.toggleSort();
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-        start: 0, end: 20, page: 0, pageSize: 20,
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
         sortCriteria: [{columnName: 'column:1', direction: 'asc'}],
       }));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(generateData(20, i => i));
       expect(table.scrollTop).toBe(0);
     });
 
     it('should load data from observable', async () => {
-      const data$ = new BehaviorSubject<string[]>([]);
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): Observable<SciTablePageResponse<string>> => data$
-        .pipe(map(data => ({
-          items: data.slice(request.start, request.end),
-          totalCount: data.length,
-        }))),
-      );
+      const data$ = new BehaviorSubject<{id: number; name: string}[]>([]);
+      const getIds = jasmine.createSpy().and.returnValue(of(generateData(20, i => i)));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => data$.pipe(map(data => data.filter(item => ids.includes(item.id)))));
 
-      const {fixture} = createSciTableComponent(sciTable<string>({
-        ɵdatasource: loader,
+      const {fixture} = createSciTableComponent(sciTable<{id: number; name: string}, number>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
+        trackBy: item => item.id,
         columns: table => table.addStringColumn({
           name: 'column:1',
-          value: item => item,
+          value: item => item.name,
         }),
         injector: TestBed.inject(Injector),
       }), {height: '300px'});
@@ -3009,88 +3672,81 @@ describe('Table', () => {
       await table.waitUntilStable();
 
       // Trigger initial load.
-      data$.next(generateData(20, i => `${i} (initial)`));
+      data$.next(generateData(20, i => ({id: i, name: `${i} (initial)`})));
       await table.waitUntilStable();
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(20, i => `${i} (initial)`));
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledOnceWith(generateData(20, i => i));
 
       // Trigger update.
-      data$.next(generateData(20, i => `${i} (updated)`));
+      data$.next(generateData(20, i => ({id: i, name: `${i} (updated)`})));
       await table.waitUntilStable();
       expect(await table.column({name: 'column:1'})!.values({rows: 'all'})).toEqual(generateData(20, i => `${i} (updated)`));
 
       // Expect loader not to be called again.
-      expect(loader).toHaveBeenCalledTimes(1);
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).toHaveBeenCalledTimes(1);
     });
 
-    // TODO [ego] add test that previous call is canceled
-
     it('should cancel load', async () => {
-      const loaded = new Array<SciTablePageRequest>();
+      const loaded = new Array<unknown[]>();
       const onLoad$ = new Subject<void>();
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): Observable<SciTablePageResponse<number>> => onLoad$
+      const getIds = jasmine.createSpy().and.returnValue(generateData(100, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => onLoad$
         .pipe(
-          take(1), // TODO [ego] Remove when previous fetch is canceled.
-          map(() => ({
-            totalCount: 100,
-            items: generateData(request.pageSize, i => request.start + i),
-          })),
-          tap(() => loaded.push(request)),
+          take(1),
+          map(() => ids.map(Number)),
+          tap(() => loaded.push(ids)),
         ));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
         pageSize: 10,
         bufferSize: 0,
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
         injector: TestBed.inject(Injector),
       }), {
-        height: '300px',
+        height: '270px',
         designTokens: {'--sci-table-row-height': '30px'},
       });
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      // Continue initial loader response (so scrolling is possible).
+      // Complete the initial item load.
       onLoad$.next();
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({page: 0}));
-      expect(loader).toHaveBeenCalledTimes(1);
-      loader.calls.reset();
+      expect(getItems).toHaveBeenCalledOnceWith(generateData(10, i => i));
+      getItems.calls.reset();
 
       // Scroll one page.
       await table.scrollY({deltaY: 300});
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({page: 1}));
-      expect(loader).toHaveBeenCalledTimes(1);
-      loader.calls.reset();
+      expect(getItems).toHaveBeenCalledOnceWith(generateData({start: 10, end: 20}, i => i));
+      getItems.calls.reset();
 
       // Scroll again before loader response.
       await table.scrollY({deltaY: 300});
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({page: 2}));
-      expect(loader).toHaveBeenCalledTimes(1);
-      loader.calls.reset();
+      expect(getItems).toHaveBeenCalledOnceWith(generateData({start: 20, end: 30}, i => i));
+      getItems.calls.reset();
 
       onLoad$.next();
       await table.waitUntilStable();
 
       // Expect to only have loaded the initial page and the last.
       expect(loaded).toEqual([
-        jasmine.objectContaining<SciTablePageRequest>({page: 0}),
-        jasmine.objectContaining<SciTablePageRequest>({page: 2}),
+        generateData(10, i => i),
+        generateData({start: 20, end: 30}, i => i),
       ]);
+      expect(getIds).toHaveBeenCalledTimes(1);
     });
 
-    it('should load and select all rows on Ctrl+a', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
-        totalCount: 100,
-        items: generateData(request.pageSize, i => request.start + i),
-      }));
+    it('should select all rows on Ctrl+a', async () => {
+      const getIds = jasmine.createSpy().and.returnValue(generateData(100, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
       const {fixture, model} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         columns: table => table.addNumberColumn(item => item),
         injector: TestBed.inject(Injector),
@@ -3106,15 +3762,11 @@ describe('Table', () => {
     });
 
     it('should display rows in range [bufferSize=0]', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => {
-        return ({
-          totalCount: 11,
-          items: generateData(request.pageSize, i => request.start + i),
-        });
-      });
+      const getIds = jasmine.createSpy().and.returnValue(generateData(11, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         bufferSize: 0,
         pageSize: 50,
@@ -3129,44 +3781,40 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
+      expect(getItems).toHaveBeenCalledOnceWith(generateData(11, i => i));
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 8}, i => `${i}`));
-      loader.calls.reset();
+      getItems.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      expect(loader).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 1, end: 9}, i => `${i}`));
-      loader.calls.reset();
+      getItems.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      expect(loader).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 2, end: 10}, i => `${i}`));
-      loader.calls.reset();
+      getItems.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      expect(loader).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 3, end: 11}, i => `${i}`));
-      loader.calls.reset();
+      getItems.calls.reset();
 
       // Scroll one row down (beyond end)
       await table.scrollY({deltaY: 30});
-      expect(loader).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 3, end: 11}, i => `${i}`));
     });
 
     it('should display rows in range [bufferSize=1]', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => {
-        return ({
-          totalCount: 11,
-          items: generateData(request.pageSize, i => request.start + i),
-        });
-      });
+      const getIds = jasmine.createSpy().and.returnValue(generateData(11, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         bufferSize: 1,
         pageSize: 50,
@@ -3181,39 +3829,40 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({start: 0, end: 50, page: 0, pageSize: 50}));
+      expect(getItems).toHaveBeenCalledOnceWith(generateData(11, i => i));
       expect(await table.column({index: 0})?.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 9}, i => `${i}`));
-      loader.calls.reset();
+      getItems.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      expect(loader).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 0, end: 10}, i => `${i}`));
-      loader.calls.reset();
+      getItems.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      expect(loader).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 1, end: 11}, i => `${i}`));
-      loader.calls.reset();
+      getItems.calls.reset();
 
       // Scroll one row down.
       await table.scrollY({deltaY: 30});
-      expect(loader).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 2, end: 11}, i => `${i}`));
-      loader.calls.reset();
+      getItems.calls.reset();
 
       // Scroll one row down (beyond end)
       await table.scrollY({deltaY: 30});
-      expect(loader).not.toHaveBeenCalled();
+      expect(getItems).not.toHaveBeenCalled();
       expect(await table.column({index: 0})!.values({rows: 'dom'})).toEqual(generateData({start: 2, end: 11}, i => `${i}`));
     });
 
-    it('should display single page with skeletons until total count is available', async () => {
-      const loader = jasmine.createSpy().and.callFake((): Observable<SciTablePageResponse<number>> => NEVER);
+    it('should display skeletons until IDs are available', async () => {
+      const getIds = jasmine.createSpy().and.returnValue(NEVER);
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         showHeader: false,
         columns: table => table.addNumberColumn(item => item),
@@ -3228,63 +3877,115 @@ describe('Table', () => {
 
       // Expect 10 rows displaying a skeleton.
       expect(table.rows.length).toEqual(10);
-      expect(table.row({nth: 0}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 2}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 3}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 4}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 5}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 6}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 7}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 8}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 9}).cells[0]!.isLoading()).toBeTrue();
-      expect(table.row({nth: 9}).cells[0]!.isLoading()).toBeTrue();
+      for (const row of table.rows) {
+        expect(row.cells[0]!.isLoading()).toBeTrue();
+      }
+      expect(getIds).toHaveBeenCalledTimes(1);
+      expect(getItems).not.toHaveBeenCalled();
 
       // Expect no vertical overflow.
       expect(table.viewport.scrollHeight).toEqual(table.viewport.clientHeight);
     });
 
-    it('should call data loader function in injection context', async () => {
-      let injector: Injector | undefined;
+    it('should call data provider functions in injection context', async () => {
+      let idsInjector: Injector | undefined;
+      let itemsInjector: Injector | undefined;
+
+      const getIds: SciTableDatasource<number, number>['getIds'] = () => {
+        idsInjector = inject(Injector);
+        return [1, 2, 3];
+      };
+      const getItems: SciTableDatasource<number, number>['getItems'] = ids => {
+        itemsInjector = inject(Injector);
+        return ids.map(Number);
+      };
 
       const {fixture} = createSciTableComponent(table({
-        ɵdatasource: () => {
-          injector = inject(Injector);
-          return {items: [1, 2, 3], totalCount: 3};
-        },
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
       }));
 
       await fixture.whenStable();
-      expect(injector).toBeDefined();
+      expect(idsInjector).toBeDefined();
+      expect(itemsInjector).toBeDefined();
     });
 
-    it('should not call data loader function in reactive context', async () => {
-      const loaderFn: SciTableDataLoaderFn<any> = () => {
-        assertNotInReactiveContext(loaderFn);
-        return {items: [1, 2, 3], totalCount: 3};
+    it('should not call data provider functions in reactive context', async () => {
+      const getIds: SciTableDatasource<number, number>['getIds'] = () => {
+        assertNotInReactiveContext(getIds);
+        return [1, 2, 3];
+      };
+      const getItems: SciTableDatasource<number, number>['getItems'] = ids => {
+        assertNotInReactiveContext(getItems);
+        return ids.map(Number);
       };
 
       const {fixture, model} = createSciTableComponent(table({
-        ɵdatasource: loaderFn,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
       }));
 
       await fixture.whenStable();
-      expect(model.error()).toBeUndefined();
+      expect(model.error()).toBeFalse();
     });
 
-    it('should destroy previous data loader function injection context', async () => {
+    it('should destroy previous getIds function injection context', async () => {
       const destroyRefs = new Array<DestroyRef>();
 
+      const getIds: SciTableDatasource<number, number>['getIds'] = () => {
+        destroyRefs.push(inject(DestroyRef));
+        return [1, 2, 3];
+      };
+
+      const {fixture, model} = createSciTableComponent(table<number, number>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, ids => ids),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addNumberColumn({name: 'column:number', value: item => item}),
+        injector: TestBed.inject(Injector),
+      }));
+
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(1);
+      expect(destroyRefs[0]!.destroyed).toBeFalse();
+
+      // Sort items, to force unfiltered getIds call.
+      model.sort('column:number', false);
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(2);
+      expect(destroyRefs[0]!.destroyed).toBeTrue();
+      expect(destroyRefs[1]!.destroyed).toBeFalse();
+
+      // Filter items, to force filtered getIds call.
+      model.filter('test');
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(3);
+      expect(destroyRefs[0]!.destroyed).toBeTrue();
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // All items ref is still active.
+      expect(destroyRefs[2]!.destroyed).toBeFalse(); // New filter ref is still active.
+
+      // Force another reload of the items.
+      model.filter(null);
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(3);
+      expect(destroyRefs[0]!.destroyed).toBeTrue();
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // All items ref is still active.
+      expect(destroyRefs[2]!.destroyed).toBeTrue(); // Filter ref is destroyed.
+    });
+
+    it('should destroy previous getItems function injection context', async () => {
+      const destroyRefs = new Array<DestroyRef>();
+
+      const getItems: SciTableDatasource<number, number>['getItems'] = ids => {
+        destroyRefs.push(inject(DestroyRef));
+        return ids.map(Number);
+      };
+
       const {fixture, model} = createSciTableComponent(table({
-        ɵdatasource: () => {
-          destroyRefs.push(inject(DestroyRef));
-          return {items: [1, 2, 3], totalCount: 3};
-        },
+        ɵdatasource: provideAsyncTableDatasource(() => [1, 2, 3], getItems),
         datasource: ɵillegaldatasource(),
         columns: table => table,
         injector: TestBed.inject(Injector),
@@ -3294,15 +3995,15 @@ describe('Table', () => {
       expect(destroyRefs).toHaveSize(1);
       expect(destroyRefs[0]!.destroyed).toBeFalse();
 
-      // Force reload of page 1.
-      model.filter('reload 1');
+      // Force reload of the items.
+      model.reload();
       await fixture.whenStable();
       expect(destroyRefs).toHaveSize(2);
       expect(destroyRefs[0]!.destroyed).toBeTrue();
       expect(destroyRefs[1]!.destroyed).toBeFalse();
 
-      // Force reload of page 2.
-      model.filter('reload 2');
+      // Force another reload of the items.
+      model.reload();
       await fixture.whenStable();
       expect(destroyRefs).toHaveSize(3);
       expect(destroyRefs[0]!.destroyed).toBeTrue();
@@ -3311,15 +4012,13 @@ describe('Table', () => {
     });
 
     it('should remove stale column filter when removing column', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
-        totalCount: 10,
-        items: generateData(request.pageSize, i => request.start + i),
-      }));
+      const getIds = jasmine.createSpy().and.returnValue(generateData(10, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
       const visibleColumns = signal(new Set<`column:${string}`>(['column:1', 'column:2']));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         filterable: true,
         columns: table => visibleColumns().forEach(column => table.addNumberColumn({
@@ -3332,55 +4031,60 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({columnFilters: []}));
-      loader.calls.reset();
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({columnFilters: []}));
+      getIds.calls.reset();
 
       // Filter by 'column:1'.
       await table.column({name: 'column:1'})!.filter(1);
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
         columnFilters: [
           {columnName: 'column:1', text: 1},
         ],
       }));
-      loader.calls.reset();
+      getIds.calls.reset();
 
       // Filter by 'column:2'.
       await table.column({name: 'column:2'})!.filter(2);
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
         columnFilters: [
           {columnName: 'column:1', text: 1},
           {columnName: 'column:2', text: 2},
         ],
       }));
-      loader.calls.reset();
+      getIds.calls.reset();
 
       // Remove 'column:1'.
       visibleColumns.update(columns => deleteFromSet(columns, 'column:1'));
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
         columnFilters: [
           {columnName: 'column:2', text: 2},
         ],
       }));
-      loader.calls.reset();
+      getIds.calls.reset();
 
       // Remove 'column:2'.
       visibleColumns.update(columns => deleteFromSet(columns, 'column:2'));
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({columnFilters: []}));
-      loader.calls.reset();
+      expect(getIds).not.toHaveBeenCalled(); // Reuse the unfiltered IDs.
+
+      // Add a new filter and verify the removed columns are not part of the request.
+      visibleColumns.set(new Set(['column:3']));
+      await table.waitUntilStable();
+      await table.column({name: 'column:3'})!.filter(3);
+      expect(getIds).toHaveBeenCalledOnceWith(jasmine.objectContaining<SciTableIdsRequest>({
+        columnFilters: [{columnName: 'column:3', text: 3}],
+      }));
     });
 
     it('should remove stale column sort criteria when removing column', async () => {
-      const loader = jasmine.createSpy().and.callFake((request: SciTablePageRequest): SciTablePageResponse<number> => ({
-        totalCount: 10,
-        items: generateData(request.pageSize, i => request.start + i),
-      }));
+      const getIds = jasmine.createSpy().and.returnValue(generateData(10, i => i));
+      const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.map(Number));
 
       const visibleColumns = signal(new Set<`column:${string}`>(['column:1', 'column:2']));
 
       const {fixture} = createSciTableComponent(sciTable<number>({
-        ɵdatasource: loader,
+        ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         columns: table => visibleColumns().forEach(column => table.addNumberColumn({
           name: column,
@@ -3392,64 +4096,62 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({sortCriteria: []}));
-      loader.calls.reset();
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({sortCriteria: []}));
+      getIds.calls.reset();
 
       // Sort by 'column:1'.
       await table.column({name: 'column:1'})!.toggleSort();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
         sortCriteria: [
           {columnName: 'column:1', direction: 'asc'},
         ],
       }));
-      loader.calls.reset();
+      getIds.calls.reset();
 
       // Sort by 'column:2'.
       await table.column({name: 'column:2'})!.toggleSort({ctrl: true});
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
         sortCriteria: [
           {columnName: 'column:1', direction: 'asc'},
           {columnName: 'column:2', direction: 'asc'},
         ],
       }));
-      loader.calls.reset();
+      getIds.calls.reset();
 
       // Sort by 'column:2'.
       await table.column({name: 'column:2'})!.toggleSort({ctrl: true});
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
         sortCriteria: [
           {columnName: 'column:1', direction: 'asc'},
           {columnName: 'column:2', direction: 'desc'},
         ],
       }));
-      loader.calls.reset();
+      getIds.calls.reset();
 
       // Remove 'column:1'.
       visibleColumns.update(columns => deleteFromSet(columns, 'column:1'));
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
         sortCriteria: [
           {columnName: 'column:2', direction: 'desc'},
         ],
       }));
-      loader.calls.reset();
+      getIds.calls.reset();
 
       // Remove 'column:2'.
       visibleColumns.update(columns => deleteFromSet(columns, 'column:2'));
       await table.waitUntilStable();
-      expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({sortCriteria: []}));
-      loader.calls.reset();
+      expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({sortCriteria: []}));
     });
 
     describe('Filtering', () => {
 
       it('should filter string column', async () => {
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{string: string}> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
+        const getItems = jasmine.createSpy().and.callFake(() => []);
 
-        const {fixture} = createSciTableComponent<{string: string}>(sciTable({
-          ɵdatasource: loader,
+        const {fixture} = createSciTableComponent(sciTable<{string: string}>({
+          ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table.addStringColumn({
@@ -3462,29 +4164,26 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:string'})!;
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter('abc');
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:string', text: 'abc'},
           ],
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter('');
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
-        }));
+        expect(getIds).not.toHaveBeenCalled(); // Reuse the unfiltered IDs.
       });
 
       it('should filter number column', async () => {
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{number: number}> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
+        const getItems = jasmine.createSpy().and.callFake(() => []);
 
-        const {fixture} = createSciTableComponent<{number: number}>(sciTable({
-          ɵdatasource: loader,
+        const {fixture} = createSciTableComponent(sciTable<{number: number}>({
+          ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table.addNumberColumn({
@@ -3497,29 +4196,26 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:number'})!;
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(123);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:number', text: 123},
           ],
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(null);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
-        }));
+        expect(getIds).not.toHaveBeenCalled(); // Reuse the unfiltered IDs.
       });
 
       it('should filter boolean column', async () => {
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{boolean: boolean}> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
+        const getItems = jasmine.createSpy().and.callFake(() => []);
 
-        const {fixture} = createSciTableComponent<{boolean: boolean}>(sciTable({
-          ɵdatasource: loader,
+        const {fixture} = createSciTableComponent(sciTable<{boolean: boolean}>({
+          ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table.addBooleanColumn({
@@ -3532,29 +4228,26 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:boolean'})!;
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(true);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:boolean', text: [true]}, // TODO [dwie] Discuss with team
           ],
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(null);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
-        }));
+        expect(getIds).not.toHaveBeenCalled(); // Reuse the unfiltered IDs.
       });
 
       it('should filter date column', async () => {
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{date: Date}> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
+        const getItems = jasmine.createSpy().and.callFake(() => []);
 
-        const {fixture} = createSciTableComponent<{date: Date}>(sciTable({
-          ɵdatasource: loader,
+        const {fixture} = createSciTableComponent(sciTable<{date: Date}>({
+          ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table.addDateColumn({
@@ -3567,29 +4260,26 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:date'})!;
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter('04.10.2026');
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:date', text: '04.10.2026'},
           ],
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(null);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
-        }));
+        expect(getIds).not.toHaveBeenCalled(); // Reuse the unfiltered IDs.
       });
 
       it('should filter component column', async () => {
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<string> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
+        const getItems = jasmine.createSpy().and.callFake(() => []);
 
         const {fixture} = createSciTableComponent<string>(sciTable({
-          ɵdatasource: loader,
+          ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table.addComponentColumn({
@@ -3606,30 +4296,27 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:component'})!;
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter('abc');
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:component', text: 'abc'},
           ],
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(null);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
-        }));
+        expect(getIds).not.toHaveBeenCalled(); // Reuse the unfiltered IDs.
       });
 
       it('should filter template column', async () => {
         const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<string> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
+        const getItems = jasmine.createSpy().and.callFake(() => []);
 
         const {fixture} = createSciTableComponent<string>(sciTable({
-          ɵdatasource: loader,
+          ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table.addTemplateColumn({
@@ -3643,29 +4330,26 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:template'})!;
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter('abc');
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:template', text: 'abc'},
           ],
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(null);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
-        }));
+        expect(getIds).not.toHaveBeenCalled(); // Reuse the unfiltered IDs.
       });
 
       it('should pass global filter', async () => {
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<unknown> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
+        const getItems = jasmine.createSpy().and.callFake(() => []);
 
         const {fixture, model} = createSciTableComponent(sciTable({
-          ɵdatasource: loader,
+          ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table,
@@ -3674,21 +4358,19 @@ describe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        loader.calls.reset();
+        getIds.calls.reset();
 
         model.filter('abc');
         await table.waitUntilStable();
 
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           tableFilter: 'abc',
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         model.filter(null);
         await table.waitUntilStable();
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          tableFilter: undefined,
-        }));
+        expect(getIds).not.toHaveBeenCalled(); // Reuse the unfiltered IDs.
       });
     });
   });
@@ -4182,6 +4864,76 @@ describe('Table', () => {
       expect(table.row({nth: 0}).cells[4]!.element.getAttribute('part')).toContain('column:component');
       expect(table.row({nth: 0}).cells[5]!.element.getAttribute('part')).toContain('column:template');
     });
+  });
+
+  describe('Selection', () => {
+
+    it('should select item', async () => {
+      const data = generateData(100, i => i);
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: signal<number[]>(data),
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.select(55);
+      await table.waitUntilStable();
+
+      expect(table.row({index: 55}).isSelected()).toBeTrue();
+      expect(table.row({index: 55}).isActive()).toBeTrue();
+    });
+
+    it('should select multiple items', async () => {
+      const data = generateData(100, i => i);
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: signal<number[]>(data),
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+        bufferSize: 100,
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.select([33, 65, 66, 64, 11]);
+      await table.waitUntilStable();
+
+      expect(model.selectedItems().length).toBe(5);
+      expect(model.selectedItems()).toEqual(jasmine.arrayContaining([11, 33, 64, 65, 66]));
+
+      expect(table.row({index: 11}).isSelected()).toBeTrue();
+      expect(table.row({index: 33}).isSelected()).toBeTrue();
+      expect(table.row({index: 64}).isSelected()).toBeTrue();
+      expect(table.row({index: 65}).isSelected()).toBeTrue();
+      expect(table.row({index: 66}).isSelected()).toBeTrue();
+      expect(table.row({index: 66}).isActive()).toBeTrue(); // last item should be active.
+    });
+
+   it('should not select unknown item', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: signal<number[]>([1, 2, 3]),
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      // Select known item.
+      model.select([1]);
+      await table.waitUntilStable();
+      expect(model.selectedItems()).toEqual([1]);
+
+      // Select unknown item.
+      model.select(99);
+      await table.waitUntilStable();
+      expect(model.selectedItems()).toEqual([]);
+    });
+
+    // TODO [tree] should select item not included in filter
   });
 
   describe('Miscellaneous', () => {

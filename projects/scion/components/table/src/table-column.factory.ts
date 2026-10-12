@@ -277,6 +277,10 @@ export interface SciTableColumnDescriptor {
   header?: SciColumnHeaderLike;
   resizable?: boolean;
   /**
+   * Shows the expand/collapse control in this column for hierarchical rows. Defaults to `true` for the first column.
+   */
+  showExpansionControl?: boolean;
+  /**
    * Preferred column size.
    * Value which can be used inside `grid-template-columns` definition. Defaults to 1fr.
    * Examples: `1fr`, `max-content`, `100px`.
@@ -616,3 +620,5 @@ export type SciTableColumnSortComparatorFn<T = unknown, VALUE = unknown> = (a: S
  * Signature of a function used to configure a matcher for filtering a table column.
  */
 export type SciTableColumnFilterMatcherFn<T = unknown, VALUE = unknown, FILTER = VALUE> = (filter: FILTER, context: SciTableCellContext<T, VALUE>) => boolean;
+
+export type SciColumnValueType = string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;

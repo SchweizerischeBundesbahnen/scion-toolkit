@@ -74,6 +74,22 @@
         </section>
       </ng-template>
 
+      <!-- Methods -->
+      <ng-template sciTab label="Methods">
+        <form>
+          <section class="methods">
+            <label>
+              <input [formField]="methodsForm.selectId"/>
+            </label>
+            <button type="button" (click)="onSelect()">Select</button>
+          </section>
+
+          <button type="button" (click)="onExpandAll()">Expand All</button>
+          <button type="button" (click)="onCollapseAll()">Collapse All</button>
+        </form>
+      </ng-template>
+
+
       <!-- Visible Columns -->
       <ng-template sciTab label="Visible Columns">
         <section>
@@ -194,12 +210,17 @@
         <section>
           <label>
             Row Count
-            <input [(ngModel)]="rowCount" appMinMax min="0" max="10000" type="number"/>
+            <input [(ngModel)]="rowCount" appMinMax min="0" max="1000000" type="number"/>
           </label>
 
           <label>
             <input [formField]="settingsForm.slowDatasource" type="checkbox"/>
             Slow Datasource
+          </label>
+
+          <label>
+            <input [formField]="settingsForm.hierarchical" type="checkbox"/>
+            Hierarchical
           </label>
         </section>
       </ng-template>
@@ -262,7 +283,7 @@
 
       <label>
         Active Id:
-        <output>{{table.activeItem()?.id ?? '-'}}</output>
+        <output>{{activeVehicleId() ?? '-'}}</output>
       </label>
 
       <label>

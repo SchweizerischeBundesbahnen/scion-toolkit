@@ -28,7 +28,7 @@ export class TablePagePO {
   constructor(public page: Page) {
     this.locator = this.page.locator('app-table-page');
     this.properties = this.locator.locator('aside.e2e-properties');
-    this.tableState = this.properties.locator('section.e2e-table-state ');
+    this.tableState = this.properties.locator('section.e2e-table-state');
     this.tabbar = this.properties.locator('sci-tabbar');
     this.table = this.locator.locator('sci-table');
     this.activeItemId = this.tableState.locator('output.e2e-active-item-id');

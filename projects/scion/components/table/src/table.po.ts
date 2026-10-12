@@ -19,9 +19,9 @@ export class TablePO {
   public readonly element: ShadowRoot;
   public readonly body: HTMLElement;
 
-  constructor(fixture: ComponentFixture<unknown>) {
+  constructor(fixture: ComponentFixture<unknown>, tagName: string = 'sci-table') {
     const element = fixture.debugElement.nativeElement as Element;
-    this.element = element.tagName === 'SCI-TABLE' ? element.shadowRoot! : element.querySelector('sci-table')!.shadowRoot!;
+    this.element = element.tagName === tagName.toLocaleUpperCase() ? element.shadowRoot! : element.querySelector(tagName)!.shadowRoot!;
     this.body = this.element.querySelector('sci-table-body')!;
   }
 
