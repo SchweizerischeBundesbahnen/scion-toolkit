@@ -120,6 +120,18 @@ $sci-table: (
   --sci-table-cell-padding-inline: .5em,
 );
 
+$sci-tree: (
+  --sci-tree-node-height: var(--sci-table-row-height),
+  --sci-tree-node-background-color-hover: var(--sci-table-row-background-color-hover),
+  --sci-tree-node-background-color-selected: var(--sci-table-row-background-color-selected),
+  --sci-tree-node-border-radius: var(--sci-table-row-border-radius),
+  --sci-tree-node-outline-color: var(--sci-table-row-outline-color),
+  --sci-tree-node-outline-width: var(--sci-table-row-outline-width),
+  --sci-tree-node-outline-style: var(--sci-table-row-outline-style),
+  --sci-tree-node-action-background-color: var(--sci-table-row-action-background-color),
+  --sci-tree-node-action-background-color-selected: var(--sci-table-row-action-background-color-selected),
+);
+
 $sci-button: (
   --sci-button-cursor: default,
   --sci-button-background-color-hover: color-mix(in srgb, var(--sci-color-gray-200) 95%, var(--sci-static-color-white)),
@@ -149,5 +161,6 @@ $tokens: sci-theming.map-merge(
   $sci-toolbar,
   $sci-button,
   $sci-table,
+  $sci-tree,
   $sci-skeleton,
 );

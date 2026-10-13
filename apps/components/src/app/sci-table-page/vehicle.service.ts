@@ -14,7 +14,8 @@ import {defer, Observable, timer} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
-import {OperatorGroup, Vehicle, VehicleOrOperator} from './vehicle.model';
+import {OperatorGroup, TreeClassType, TreeDepot, TreeOperator, TreeVehicle, Vehicle, VehicleOrOperator} from './vehicle.model';
+import {UUID} from '@scion/toolkit/uuid';
 
 @Service()
 export class VehicleService {
@@ -33,6 +34,7 @@ export class VehicleService {
     averageMaxSpeedKmh: Math.round(vehicles.reduce((sum, vehicle) => sum + vehicle.maxSpeedKmh, 0) / vehicles.length),
     children: vehicles,
   })));
+  public readonly treeOperators = this.computeTreeOperators();
 
   public updateVehicle(vehicle: Vehicle): void {
     this._datasource.update(vehicles => {
@@ -98,6 +100,55 @@ export class VehicleService {
     return defer(() => timer(1000)).pipe(
       switchMap(() => items$),
     );
+  }
+
+  private computeTreeOperators(): Signal<TreeOperator[]> {
+    return computed(() => {
+      const operators = new Map<string, Map<string, Map<string, TreeVehicle[]>>>();
+
+      for (const vehicle of this.vehicles()) {
+        let classTypes = operators.get(vehicle.operator);
+        if (!classTypes) {
+          classTypes = new Map();
+          operators.set(vehicle.operator, classTypes);
+        }
+
+        let depots = classTypes.get(vehicle.classType);
+        if (!depots) {
+          depots = new Map();
+          classTypes.set(vehicle.classType, depots);
+        }
+
+        let vehiclesAtDepot = depots.get(vehicle.depot);
+        if (!vehiclesAtDepot) {
+          vehiclesAtDepot = [];
+          depots.set(vehicle.depot, vehiclesAtDepot);
+        }
+
+        vehiclesAtDepot.push({
+          kind: 'vehicle',
+          id: `${vehicle.id}`,
+          label: vehicle.vehicleId,
+        });
+      }
+
+      return [...operators].map(([operator, classes]): TreeOperator => ({
+        kind: 'operator',
+        id: UUID.randomUUID(),
+        label: operator,
+        children: [...classes].map(([classType, depots]): TreeClassType => ({
+          kind: 'classType',
+          id: UUID.randomUUID(),
+          label: classType,
+          children: [...depots].map(([depot, vehicles]): TreeDepot => ({
+            kind: 'depot',
+            id: UUID.randomUUID(),
+            label: depot,
+            children: vehicles.map(vehicle => ({...vehicle, id: `${vehicle.id}`})),
+          })),
+        })),
+      }));
+    });
   }
 
   // public getGroupedVehicles$(request: SciTableIdsRequest): Observable<SciTableTreeNode<unknown>[]> {

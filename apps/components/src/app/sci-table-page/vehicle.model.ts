@@ -17,6 +17,33 @@ export interface OperatorGroup {
   children: Vehicle[];
 }
 
+export interface TreeOperator {
+  kind: 'operator';
+  id: string;
+  label: string;
+  children: TreeClassType[];
+}
+
+export interface TreeClassType {
+  kind: 'classType';
+  id: string;
+  label: string;
+  children: TreeDepot[];
+}
+
+export interface TreeDepot {
+  kind: 'depot';
+  id: string;
+  label: string;
+  children: TreeVehicle[];
+}
+
+export interface TreeVehicle {
+  kind: 'vehicle';
+  id: string;
+  label: string;
+}
+
 export interface Vehicle {
   id: number;
   vehicleId: string;

@@ -16,7 +16,7 @@ import {SciTableComponent} from '@scion/components/table';
 @Component({
   selector: 'sci-tree',
   template: '',
-  imports: [],
+  styleUrl: './tree.component.scss',
 })
 export class SciTreeComponent<T = unknown, ID = T> {
 

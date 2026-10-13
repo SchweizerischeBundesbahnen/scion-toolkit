@@ -9,7 +9,7 @@
  */
 import {Component, computed, effect, ElementRef, inject, Injector, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
 import {provideTreeDatasource, SciTree, SciTreeComponent, tree} from '@scion/components/tree';
-import {companies, Company} from './sci-table-page.data';
+import {companies} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField} from '@angular/forms/signals';
 import {createDestroyableInjector} from '@scion/components/common';
@@ -17,13 +17,9 @@ import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/ta
 import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
 import {SciViewportComponent} from '@scion/components/viewport';
-import {UUID} from '@scion/toolkit/uuid';
 import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
-
-const data = signal(new Array(companies.length).fill(0).map((_, i) => ({
-  ...companies[i % companies.length]!,
-  dataId: UUID.randomUUID(),
-})));
+import {TreeClassType, TreeDepot, TreeOperator, TreeVehicle} from '../sci-table-page/vehicle.model';
+import {VehicleService} from '../sci-table-page/vehicle.service';
 
 @Component({
   selector: 'app-table-page',
@@ -58,23 +54,13 @@ export default class SciTreePageComponent {
   protected readonly selection = computed(() => this.tree()?.selectedItems().map(item => Number(item)).sort((a, b) => a - b).join(' '));
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
 
-  constructor() {
-    this.bindTreeSettings();
-  }
-
   private createTree(): SciTree<string> {
-    return tree<Company, string>({
-      label: company => company.dataId,
-      datasource: provideTreeDatasource(
-        computed(() => data().slice(0, this.rowCount()).filter(item => item.parent === undefined)),
-        item => data().filter(i => i.parent === item.code),
-      ),
-      nodeBindings: (bindings, _vehicle, index) => {
-        if (this.settingsForm.showZebraStriping().value()) {
-          bindings.addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd');
-        }
-      },
-      trackBy: company => company.dataId,
+    const vehicleService = inject(VehicleService);
+
+    return tree<TreeOperator | TreeClassType | TreeDepot | TreeVehicle, string>({
+      label: item => item.label,
+      datasource: provideTreeDatasource<TreeOperator | TreeClassType | TreeDepot | TreeVehicle, string>(vehicleService.treeOperators, item => item.kind === 'vehicle' ? [] : item.children),
+      trackBy: item => item.id,
     });
   }
 
@@ -92,60 +78,25 @@ export default class SciTreePageComponent {
     return tree;
   }
 
-  private bindTreeSettings(): void {
-    effect(() => {
-      const tree = this.tree();
-      tree?.header.set(this.settingsForm.header().value());
-    });
-  }
-
   private createSettingsForm(): FieldTree<SettingsForm> {
     return form(signal({
-      header: '',
-      showGridlines: false,
-      showZebraStriping: false,
       slowDatasource: false,
     }));
   }
 
   private createDesignTokenForm(): FieldTree<DesignTokenForm> {
     const host = inject(ElementRef).nativeElement as HTMLElement;
-    const form = createDesignTokenForm([
-      '--sci-table-gridline-color',
-      '--sci-table-header-height',
-      '--sci-table-header-cursor',
-      '--sci-table-header-background-color',
-      '--sci-table-header-background-color-hover',
-      '--sci-table-header-font-family',
-      '--sci-table-header-font-size',
-      '--sci-table-header-font-weight',
-      '--sci-table-header-text-color',
-      '--sci-table-header-column-divider',
-      '--sci-table-row-height',
-      '--sci-table-row-background-color-hover',
-      '--sci-table-row-background-color-selected',
-      '--sci-table-row-border-radius',
-      '--sci-table-row-outline-color',
-      '--sci-table-row-outline-width',
-      '--sci-table-row-outline-style',
-      '--sci-table-row-action-background-color',
-      '--sci-table-row-action-background-color-selected',
-      '--sci-table-cell-padding-inline',
+    return createDesignTokenForm([
+      '--sci-tree-node-height',
+      '--sci-tree-node-background-color-hover',
+      '--sci-tree-node-background-color-selected',
+      '--sci-tree-node-border-radius',
+      '--sci-tree-node-outline-color',
+      '--sci-tree-node-outline-width',
+      '--sci-tree-node-outline-style',
+      '--sci-tree-node-action-background-color',
+      '--sci-tree-node-action-background-color-selected',
     ], this._treeElement, {designTokenRootElement: host});
-
-    // Set/Unset gridline color based on 'Show Gridlines' setting.
-    effect(() => {
-      const tableElement = this._treeElement()?.nativeElement;
-      if (!tableElement) {
-        return;
-      }
-
-      const showGridlines = this.settingsForm.showGridlines().value();
-      const gridlineColor = form['--sci-table-gridline-color']!().value();
-      tableElement.style.setProperty('--sci-table-gridline-color', showGridlines ? gridlineColor : 'transparent');
-    });
-
-    return form;
   }
 
   protected onUserSettingsReset(): void {
@@ -159,8 +110,5 @@ export default class SciTreePageComponent {
 }
 
 interface SettingsForm {
-  header: string;
-  showGridlines: boolean;
-  showZebraStriping: boolean;
   slowDatasource: boolean;
 }

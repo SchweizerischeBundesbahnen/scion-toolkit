@@ -397,6 +397,8 @@ export default class SciTablePageComponent {
         return;
       }
 
+      form().value();
+
       const showGridlines = this.settingsForm.showGridlines().value();
       const gridlineColor = form['--sci-table-gridline-color']!().value();
       tableElement.style.setProperty('--sci-table-gridline-color', showGridlines ? gridlineColor : 'transparent');
