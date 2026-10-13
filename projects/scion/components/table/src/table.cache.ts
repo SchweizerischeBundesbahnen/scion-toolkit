@@ -14,66 +14,66 @@ import {Objects} from '@scion/toolkit/util';
 
 export class SciTableCache<T, ID> {
 
-  private readonly _resourcesById = signal(new Map<unknown, ResourceRef<SciTableRow<T, ID>[] | undefined>>());
+  private readonly _entriesById = signal(new Map<unknown, SciTableCacheEntry<T, ID>>());
 
-  private readonly _idsByResource = computed(() => [...this._resourcesById().entries()].reduce((map, [id, resource]) => {
-    const ids = map.get(resource) ?? new Set();
+  private readonly _idsByEntry = computed(() => [...this._entriesById().entries()].reduce((map, [id, entry]) => {
+    const ids = map.get(entry) ?? new Set();
     ids.add(id);
-    return map.set(resource, ids);
-  }, new Map<ResourceRef<SciTableRow<T, ID>[] | undefined>, Set<unknown>>()));
+    return map.set(entry, ids);
+  }, new Map<SciTableCacheEntry<T, ID>, Set<unknown>>()));
 
-  public readonly rowsById: Signal<Map<ID, SciTableRow<T, ID>>> = computed(() => [...this._resourcesById().values()]
-    .flatMap(resource => resource.status() === 'error' ? [] : resource.value() ?? [])
+  public readonly rowsById: Signal<Map<ID, SciTableRow<T, ID>>> = computed(() => [...this._entriesById().values()]
+    .flatMap(entry => entry.rows.status() === 'error' ? [] : entry.rows.value() ?? [])
     .reduce((acc, row) => row.id !== skeletonRowId ? acc.set(row.id, row) : acc, new Map<ID, SciTableRow<T, ID>>()), {equal: Objects.isEqual});
 
-  private readonly _resources = computed(() => {
-    const resources = new Set(this._resourcesById().values());
-    return [...resources];
+  private readonly _entries = computed(() => {
+    const entries = new Set(this._entriesById().values());
+    return [...entries];
   });
 
-  public readonly empty: Signal<boolean> = computed(() => this._resourcesById().size === 0);
-  public readonly loading: Signal<boolean> = computed(() => this._resources().some(entry => entry.isLoading()));
+  public readonly empty: Signal<boolean> = computed(() => this._entriesById().size === 0);
+  public readonly loading: Signal<boolean> = computed(() => this._entries().some(entry => entry.rows.isLoading()));
   public readonly error: Signal<Error | undefined> = computed(() => {
-    return this._resources().find(resource => resource.status() === 'error')?.error();
+    return this._entries().find(entry => entry.rows.status() === 'error')?.rows.error();
   });
 
   public has(key: unknown): boolean {
-    return this._resourcesById().has(key);
+    return this._entriesById().has(key);
   }
 
-  public get(key: unknown): ResourceRef<SciTableRow<T, ID>[] | undefined> | undefined {
-    return this._resourcesById().get(key);
+  public get(key: unknown): SciTableCacheEntry<T, ID> | undefined {
+    return this._entriesById().get(key);
   }
 
-  public set(ids: unknown[], resource: ResourceRef<SciTableRow<T, ID>[] | undefined>): void {
-    this._resourcesById.update(cache => {
+  public set(ids: unknown[], entry: SciTableCacheEntry<T, ID>): void {
+    this._entriesById.update(cache => {
       const newCache = new Map(cache);
       for (const id of ids) {
-        newCache.set(id, resource);
+        newCache.set(id, entry);
       }
       return newCache;
     });
   }
 
   public deleteIfLoading(ids: unknown[]): void {
-    this._resourcesById.update(cache => {
+    this._entriesById.update(cache => {
       const cacheCopy = new Map(cache);
-      const resources = new Set(ids.map(id => cacheCopy.get(id)));
+      const entries = new Set(ids.map(id => cacheCopy.get(id)));
 
       for (const id of ids) {
-        if (cacheCopy.get(id)?.isLoading()) {
+        if (cacheCopy.get(id)?.rows.isLoading()) {
           cacheCopy.delete(id);
         }
       }
 
-      // Destroy resources, which have no ids left pointing to them.
-      for (const resource of resources) {
-        if (!resource) {
+      // Dispose entries, which have no ids left pointing to them.
+      for (const entry of entries) {
+        if (!entry) {
           continue;
         }
-        const idsByResource = this._idsByResource().get(resource);
-        if (resource.isLoading() && [...(idsByResource ?? [])].every(id => ids.includes(id))) {
-          resource.destroy();
+        const idsByEntry = this._idsByEntry().get(entry);
+        if (entry.rows.isLoading() && [...(idsByEntry ?? [])].every(id => ids.includes(id))) {
+          entry.dispose();
         }
       }
 
@@ -82,19 +82,24 @@ export class SciTableCache<T, ID> {
   }
 
   public reloadFailed(): void {
-    for (const resource of this._resources()) {
-      if (resource.status() === 'error') {
-        resource.reload();
+    for (const entry of this._entries()) {
+      if (entry.rows.status() === 'error') {
+        entry.rows.reload();
       }
     }
   }
 
   public clear(): void {
-    this._resourcesById.update(cache => {
+    this._entriesById.update(cache => {
       for (const entry of new Set(cache.values())) {
-        entry.destroy();
+        entry.dispose();
       }
       return new Map();
     });
   }
+}
+
+export interface SciTableCacheEntry<T, ID> {
+  rows: ResourceRef<SciTableRow<T, ID>[] | undefined>;
+  dispose: () => void;
 }

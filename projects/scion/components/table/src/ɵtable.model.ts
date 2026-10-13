@@ -15,8 +15,8 @@ import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
 import {SciTableCache} from './table.cache';
-import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {catchError, combineLatestWith, concat, fromEvent, of, skip, throwError, timer} from 'rxjs';
+import {rxResource, toObservable} from '@angular/core/rxjs-interop';
+import {catchError, combineLatestWith, concat, fromEvent, of, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
 import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {map, startWith, switchMap} from 'rxjs/operators';
@@ -378,14 +378,10 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
       });
     });
 
-    // TODO [tree]: discuss how to do this. Proxy? Cache object instead of resource?
-    pageResource.destroy = new Proxy(pageResource.destroy, {
-      apply(target: () => void, thisArg: typeof pageResource): void {
-        Reflect.apply(target, thisArg, []);
-        injector.destroy();
-      },
+    this._cache.set(nodeIdsToLoad, {
+      rows: pageResource,
+      dispose: () => injector.destroy(), // Also destroys the resource via its DestroyRef.
     });
-    this._cache.set(nodeIdsToLoad, pageResource);
 
     return {
       loading: pageResource.isLoading,
@@ -894,12 +890,12 @@ export class TableTreeStructure<T, ID> {
   }
 
   public reloadFailed(): void {
-    if (this._unfilteredNodes.error()) {
+    if (this._unfilteredNodes.status() === 'error') {
       this._unfilteredNodes.reload();
       return; // Don't force reload on nodes, since they will reload either way because they are dependent on unfilteredNodes.
     }
 
-    if (this._nodes.error()) {
+    if (this._nodes.status() === 'error') {
       this._nodes.reload();
     }
   }
