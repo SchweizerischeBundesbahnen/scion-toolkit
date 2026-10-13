@@ -2497,6 +2497,62 @@ describe('Table', () => {
       expect(getItems).toHaveBeenCalledTimes(3);
     });
 
+    it('should allow only returning matched elements not their ancestors', async () => {
+      const items = [
+        {item: '1'},
+        {item: '1.1', parent: '1'},
+        {item: '1.2', parent: '1'},
+        {item: '1.1.1', parent: '1.1'},
+      ];
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(request => request.columnFilters.length > 0 ? [{item: '1.1.1', parent: '1.1'}] : items, ids => ids),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        filterable: true,
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.expandAll();
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})!.values()).toEqual(['1', '1.1', '1.1.1', '1.2']);
+
+      await table.column({index: 0})!.filter('test');
+      await table.waitUntilStable();
+      // should display ancestors of the leaf node as well
+      expect(await table.column({index: 0})!.values()).toEqual(['1', '1.1', '1.1.1']);
+    });
+
+    it('should allow only returning matched elements not their children', async () => {
+      const items = [
+        {item: '1'},
+        {item: '1.1', parent: '1'},
+        {item: '1.2', parent: '1'},
+        {item: '1.1.1', parent: '1.1'},
+      ];
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideAsyncTableTreeDatasource(request => request.columnFilters.length > 0 ? [{item: '1.1', parent: '1'}] : items, ids => ids),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        filterable: true,
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.expandAll();
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})!.values()).toEqual(['1', '1.1', '1.1.1', '1.2']);
+
+      await table.column({index: 0})!.filter('test');
+      await table.waitUntilStable();
+      // should display children of the intermediate node as well.
+      expect(await table.column({index: 0})!.values()).toEqual(['1', '1.1', '1.1.1']);
+    });
+
     it('should show child errors on the table and reload on retry', async () => {
       const getIds = jasmine.createSpy().and.returnValue([{item: 'parent'}, {item: 'child', parent: 'parent'}]);
       const getItems = jasmine.createSpy().and.callFake((ids: unknown[]) => ids.includes('child') ? throwError(() => new Error('Child load failed')) : of(ids.map(String)));
@@ -2511,7 +2567,7 @@ describe('Table', () => {
       await table.waitUntilStable();
       model.expand('parent');
       await table.waitUntilStable();
-      expect(model.error()).toBeDefined();
+      expect(model.error()).toBeTrue();
       fixture.detectChanges();
       expect(fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry')).not.toBeNull();
 
@@ -2521,7 +2577,7 @@ describe('Table', () => {
       await table.waitUntilStable();
       expect(getIds).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledOnceWith(['child']);
-      expect(model.error()).toBeUndefined();
+      expect(model.error()).toBeFalse();
       expect(await table.column({index: 0})!.values()).toEqual(['parent', 'child']);
     });
 
@@ -2536,7 +2592,7 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      expect(model.error()).toBeDefined();
+      expect(model.error()).toBeTrue();
       fixture.detectChanges();
       expect(fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry')).not.toBeNull();
 
@@ -2544,7 +2600,7 @@ describe('Table', () => {
       (fixture.nativeElement.shadowRoot.querySelector('.e2e-datasource-retry') as HTMLButtonElement).click();
       await table.waitUntilStable();
       expect(getIds).toHaveBeenCalledTimes(2);
-      expect(model.error()).toBeUndefined();
+      expect(model.error()).toBeFalse();
       expect(await table.column({index: 0})!.values()).toEqual(['test']);
     });
 
@@ -3513,7 +3569,7 @@ describe('Table', () => {
       }));
 
       await fixture.whenStable();
-      expect(model.error()).toBeUndefined();
+      expect(model.error()).toBeFalse();
     });
 
     it('should destroy previous data loader function injection context', async () => {

@@ -33,9 +33,7 @@ export class SciTableCache<T, ID> {
 
   public readonly empty: Signal<boolean> = computed(() => this._entriesById().size === 0);
   public readonly loading: Signal<boolean> = computed(() => this._entries().some(entry => entry.rows.isLoading()));
-  public readonly error: Signal<Error | undefined> = computed(() => {
-    return this._entries().find(entry => entry.rows.status() === 'error')?.rows.error();
-  });
+  public readonly error: Signal<boolean> = computed(() => this._entries().some(entry => entry.rows.status() === 'error'));
 
   public has(key: unknown): boolean {
     return this._entriesById().has(key);
