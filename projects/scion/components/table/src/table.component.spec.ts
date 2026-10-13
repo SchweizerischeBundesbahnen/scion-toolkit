@@ -185,7 +185,7 @@ describe('Table', () => {
       it('should accept signal as value', async () => {
         const value = signal('a');
         const {fixture} = createSciTableComponent(sciTable({
-          datasource: signal([undefined]),
+          datasource: signal([undefined, undefined, undefined]),
           filterable: true,
           columns: table => table.addStringColumn(() => value),
           injector: TestBed.inject(Injector),
@@ -2620,7 +2620,7 @@ describe('Table', () => {
       model.expand('parent');
       await table.waitUntilStable();
       expect(table.rows).toHaveSize(2);
-      expect(getItems).toHaveBeenCalledWith(['parent', 'child']);
+      expect(getItems).toHaveBeenCalledWith(['child']);
       expect(getItems).toHaveBeenCalledTimes(2);
 
       columns.set(['first', 'second']);
@@ -2657,7 +2657,7 @@ describe('Table', () => {
 
       model.expand(9);
       await table.waitUntilStable();
-      expect(getItems).toHaveBeenCalledWith([...roots, 10, 11]);
+      expect(getItems).toHaveBeenCalledWith([10, 11]);
       expect(getItems).toHaveBeenCalledTimes(2);
       expect(model.visibleRowCount()).toBe(12);
       await table.scrollY({y: 2 * 30});
@@ -2696,7 +2696,7 @@ describe('Table', () => {
 
       model.expand('2');
       await table.waitUntilStable();
-      expect(getItems).toHaveBeenCalledWith(['1', '2', '2.1']);
+      expect(getItems).toHaveBeenCalledWith(['2.1']);
       expect(getItems).toHaveBeenCalledTimes(2);
       expect(table.rows).toHaveSize(3);
       expect(table.row({nth: 2}).cells[0]!.value).toBe('2.1');

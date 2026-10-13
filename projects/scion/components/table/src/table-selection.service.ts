@@ -11,7 +11,7 @@
 import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
-import {SciTableRow} from './table.model';
+import {SciTableRow, skeletonRowId} from './table.model';
 import {SciTableTreeNode} from '@scion/components/table';
 
 @Injectable()
@@ -133,7 +133,7 @@ export class SciTableSelectionService<T, ID> {
     const table = this._table();
     const activeRow = table.activeRow();
 
-    if (activeRow?.item === undefined || activeRow.id === undefined) {
+    if (activeRow?.item === undefined || activeRow.id === skeletonRowId) {
       return;
     }
 
@@ -155,7 +155,7 @@ export class SciTableSelectionService<T, ID> {
     else {
       const row = findPreviousExpandedRow(activeRow.index - 1);
 
-      if (row?.id !== undefined) {
+      if (row !== undefined && row.id !== skeletonRowId) {
         const index = table.rowIndexById().get(row.id) ?? -1;
         table.activeItem.set(row.id);
 
@@ -189,7 +189,7 @@ export class SciTableSelectionService<T, ID> {
     const table = this._table();
     const activeRow = table.activeRow();
 
-    if (activeRow?.id === undefined) {
+    if (activeRow === undefined || activeRow.id === skeletonRowId) {
       return;
     }
 

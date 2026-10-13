@@ -10,7 +10,7 @@
 
 import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {isArrayDatasource, isTreeDatasource, SciAsyncTableTreeDatasource, SciTableArrayDatasource, SciTableColumnFilter, SciTableDataSource, SciTableSortCriterion, SciTableTreeDatasource, SciTableTreeNode} from './table-datasource';
-import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
+import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn, skeletonRowId} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
@@ -196,13 +196,17 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
       const rowCount = Math.min(rangeCount, visibleNodes?.length ?? rangeCount);
 
       // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
-      return untracked(() => Array.from({length: rowCount}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? createSyntheticRow(i)));
+      return untracked(() => Array.from({length: rowCount}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? createSkeletonRow(i)));
     });
 
-    function createSyntheticRow(index: number): SciTableRow<T, ID> {
+    function createSkeletonRow(index: number): SciTableRow<T, ID> {
       return {
         index,
         loading: true,
+        id: skeletonRowId,
+        item: undefined!,
+        cells: [],
+        bindings: coerceTableRowBindings([], undefined, index),
         level: 0,
         hasChildren: signal(false).asReadonly(),
         expanded: signal(false).asReadonly(),

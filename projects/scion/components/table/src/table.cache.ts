@@ -9,7 +9,7 @@
  */
 
 import {computed, ResourceRef, signal, Signal} from '@angular/core';
-import {SciTableRow} from './table.model';
+import {SciTableRow, skeletonRowId} from './table.model';
 import {Objects} from '@scion/toolkit/util';
 
 export class SciTableCache<T, ID> {
@@ -24,7 +24,7 @@ export class SciTableCache<T, ID> {
 
   public readonly rowsById: Signal<Map<ID, SciTableRow<T, ID>>> = computed(() => [...this._resourcesById().values()]
     .flatMap(resource => resource.status() === 'error' ? [] : resource.value() ?? [])
-    .reduce((acc, row) => row.id !== undefined ? acc.set(row.id, row) : acc, new Map<ID, SciTableRow<T, ID>>()), {equal: Objects.isEqual});
+    .reduce((acc, row) => row.id !== skeletonRowId ? acc.set(row.id, row) : acc, new Map<ID, SciTableRow<T, ID>>()), {equal: Objects.isEqual});
 
   private readonly _resources = computed(() => {
     const resources = new Set(this._resourcesById().values());

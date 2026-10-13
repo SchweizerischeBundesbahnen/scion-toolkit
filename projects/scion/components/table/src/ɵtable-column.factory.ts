@@ -187,10 +187,10 @@ export class ɵSciTableColumnFactory<T, ID> implements SciTableColumnFactory<T> 
         }
         return coerceSignal(value, {coerceUndefined: true});
       },
-      sortable: computed(() => this._table.sortable() && !!descriptor.sortable),
-      filterable: computed(() => this._table.filterable() && !!descriptor.filterable),
+      sortable: computed(() => this._table.sortable() && !!sortable),
+      filterable: computed(() => this._table.filterable() && !!filterable),
       compare: typeof sortable === 'object' ? sortable.comparator : (a, b) => String(a.value).localeCompare(String(b.value)),
-      matches: typeof filterable === 'object' ? filterable.matcher : (text, context) => context.value === text,
+      matches: typeof filterable === 'object' ? filterable.matcher : (text, context) => String(context.value).toLocaleLowerCase().includes(text.toLocaleLowerCase()),
       padding: descriptor.padding ?? (() => true),
     } satisfies SciDynamicColumn<T>);
 

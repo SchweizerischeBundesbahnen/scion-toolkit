@@ -52,6 +52,13 @@
   - Falls aufwändig, für den Anfang einfach nur auf der ersten Column
 
 # TODO
-- Row expand: sollte auch parents mit expanden
-- Row collapse: bei table children nicht collapsen bei Tree schon (to discuss)
-- Testingpage: addNumberColumn / addBooleanColumn muss auch undefined gehen
+- Select item => scroll into view + parents expanden
+- Expand all bei filter
+- Test / Showcase pages ready machen (datasources, grouping, css variables)
+- Tablemodel aufräumen
+- Für den storage: muss der name mit table: anfangen? für tree komisch.
+  - Evtl. storage extrahieren in common
+- Howto markdown für tree, für Tabelle erweitern
+- Tests
+  - Für tree Tests: nur die API relevanten Sachen testen, der Rest soll über hierarchische Tabelle abgedeckt werden (z.B. keyboard navigation)
+- Review (v.a. Datasource) mit Dani

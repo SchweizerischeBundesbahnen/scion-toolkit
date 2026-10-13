@@ -88,8 +88,15 @@ export class SciTableArrayDatasource<T, ID> implements SciTableDataProvider<T, I
 
   constructor(data: Signal<T[]>, options: {columns: Signal<SciTableColumnLike<T>[]>; trackBy: (item: T) => ID}) {
     const byId = computed(() => data().reduce((map, item) => map.set(options.trackBy(item), item), new Map<ID, T>()));
-    this.getItems = ids => ids.map(id => byId().get(id)).filter((item): item is T => item !== undefined);
+
     this.getIds = arrayDatasource(byId, options.columns);
+    this.getItems = ids => ids.reduce((acc, id) => {
+      // Do not check with `get(id) !== undefined`, because undefined item values are allowed.
+      if (byId().has(id)) {
+        acc.push(byId().get(id)!);
+      }
+      return acc;
+    }, new Array<T>());
   }
 }
 
@@ -117,8 +124,15 @@ export class SciTableTreeDatasource<T, ID> implements SciTableTreeDataProvider<T
     }));
     const byId = computed(() => tree().reduce((map, node) => map.set(options.trackBy(node.item), node), new Map<ID, SciTableTreeNode<T, ID>>()));
 
-    this.getItems = ids => ids.map(id => byId().get(id)?.item).filter((item): item is T => item !== undefined);
     this.getIds = treeDatasource(byId, options.columns);
+    this.getItems = ids => ids.reduce((acc, id) => {
+      // Do not check with `get(id) !== undefined`, because undefined item values are allowed.
+      if (byId().has(id)) {
+        acc.push(byId().get(id)!.item);
+      }
+      return acc;
+    }, new Array<T>());
+
   }
 }
 

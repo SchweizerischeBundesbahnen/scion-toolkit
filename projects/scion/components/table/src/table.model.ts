@@ -197,17 +197,19 @@ export interface SciDynamicColumn<T> extends SciTableColumn<T, unknown, string> 
 
 export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciDateColumn<T> | SciDynamicColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
 
+export const skeletonRowId = Symbol('SKELETON_ROW');
+
 /**
  * Mapped row, used as display state.
  */
 export interface SciTableRow<T, ID> {
   index: number;
-  item?: T;
-  id?: ID;
+  item: T;
+  id: ID | typeof skeletonRowId;
   level: number;
   parentId?: ID;
-  cells?: SciTableCellLike[];
-  bindings?: SciTableRowBindings;
+  cells: SciTableCellLike[];
+  bindings: SciTableRowBindings;
   loading: boolean;
   active: Signal<boolean>;
   selected: Signal<boolean>;
