@@ -81,6 +81,14 @@ export class SciTableCache<T, ID> {
     });
   }
 
+  public reloadFailed(): void {
+    for (const resource of this._resources()) {
+      if (resource.status() === 'error') {
+        resource.reload();
+      }
+    }
+  }
+
   public clear(): void {
     this._resourcesById.update(cache => {
       for (const entry of new Set(cache.values())) {

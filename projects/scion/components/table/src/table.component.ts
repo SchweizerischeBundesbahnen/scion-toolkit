@@ -94,7 +94,7 @@ export class SciTableComponent<T = unknown> {
   }
 
   protected onRetry(): void {
-    this.table().reset();
+    this.table().reloadFailed();
   }
 
   private connectToModel(): void {

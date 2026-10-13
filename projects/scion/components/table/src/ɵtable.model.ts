@@ -87,8 +87,8 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   });
 
   public readonly criteria = computed(() => ({sort: this.sortCriteria(), filter: this.filterCriteria(), tableFilter: this._tableFilter()}));
-  public readonly loading = computed(() => this._cache.loading() || this._tableCellValuePreloader.loading());
-  public readonly error = this._cache.error;
+  public readonly loading = computed(() => this._structure.loading() || this._cache.loading() || this._tableCellValuePreloader.loading());
+  public readonly error = computed(() => this._cache.error() ?? this._structure.error());
   public readonly activeRow: Signal<SciTableRow<T, ID> | undefined>;
   public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
@@ -148,7 +148,6 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     this.rowIndexById = this._structure.nodeIndexById;
     this.visibleRows = this._structure.visibleNodes;
 
-    this.installCriteriaWatcher();
     this.installPageLoader();
   }
 
@@ -351,11 +350,8 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
       };
     }
 
-    const pageResource = runInInjectionContext(this._injector, () => {
-      const tableResponse$ = runSafe(
-        () => Observables.coerce(this._datasource.getItems(nodeIdsToLoad)),
-        error => throwError(() => error));
-
+    const injector = createDestroyableInjector({parent: this._injector});
+    const pageResource = runInInjectionContext(injector, () => {
       // Observe a consistent snapshot of columns and node Ids.
       // If the access happens directly in the `map` they can be out of sync because `nodesById` depends on `columns`.
       // Don't use the rowMapping data as resource params, since it should not refetch from the datasource on change.
@@ -367,8 +363,11 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
       }));
 
       // Create a resource to track loading and error states.
-      const resource = rxResource({
-        stream: () => tableResponse$.pipe(
+      return rxResource({
+        stream: () => runInInjectionContext(injector, () => runSafe(
+          () => Observables.coerce(this._datasource.getItems(nodeIdsToLoad)),
+          error => throwError(() => error),
+        )).pipe(
           combineLatestWith(rowMapping),
           map(([response, {columns, nodesById, nodeIndexById}]) => this.mapItemsToRow(response, columns, nodesById, nodeIndexById)),
           catchError(error => {
@@ -377,10 +376,15 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
           }),
         ),
       });
-
-      return resource;
     });
 
+    // TODO [tree]: discuss how to do this. Proxy? Cache object instead of resource?
+    pageResource.destroy = new Proxy(pageResource.destroy, {
+      apply(target: () => void, thisArg: typeof pageResource): void {
+        Reflect.apply(target, thisArg, []);
+        injector.destroy();
+      },
+    });
     this._cache.set(nodeIdsToLoad, pageResource);
 
     return {
@@ -465,8 +469,14 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     return this._datasource instanceof SciTableTreeDatasource || this._datasource instanceof SciAsyncTableTreeDatasource;
   }
 
-  public reset(): void {
+  public reload(): void {
     this._cache.clear();
+    this._structure.reload();
+  }
+
+  public reloadFailed(): void {
+    this._cache.reloadFailed();
+    this._structure.reloadFailed();
   }
 
   public dispose(): void {
@@ -500,18 +510,6 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   }
 
   /**
-   * Resets cache on criteria changes, to show skeletons instead of stale data while loading.
-   */
-  private installCriteriaWatcher(): void {
-    toObservable(this.criteria).pipe(
-      skip(1), // skip first emission to avoid race condition with loader on initialization.
-      takeUntilDestroyed(),
-    ).subscribe(() => {
-      this._cache.clear();
-    });
-  }
-
-  /**
    * Traverses the tree to find pages which need to be loaded based on the current scroll range.
    */
   public findBatchesToLoad(start: number, end: number, visibleNodes: Array<SciTableTreeNode<ID>>): SciTableTreeNode<ID>[][] {
@@ -530,7 +528,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   }
 
   private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], nodesById: Map<ID, SciTableTreeNode<ID>>, nodeIndexById: Map<ID, number>): SciTableRow<T, ID>[] {
-    const childrenByParent = computed(() => mapChildrenToParent(this._structure.nodes.value() ?? []));
+    const childrenByParent = computed(() => mapChildrenToParent(this._structure.nodes() ?? []));
 
     return items.map((item): SciTableRow<T, ID> | undefined => {
       const id = this.trackBy(item);
@@ -726,6 +724,10 @@ export class TableTreeStructure<T, ID> {
   private readonly _expandedAll = signal(false);
   private readonly _toggledNodes = signal(new Set<ID>());
 
+  public readonly error = computed(() => this._unfilteredNodes.error() ?? this._nodes.error());
+  public readonly loading = computed(() => this._nodes.isLoading());
+  public readonly nodes = computed(() => !this.error() ? this._nodes.value() : undefined);
+
   private readonly _unfilteredNodes = rxResource({
     params: () => this._sortCriteria(),
     stream: ({params}) => {
@@ -741,7 +743,7 @@ export class TableTreeStructure<T, ID> {
     },
   });
 
-  public readonly nodes = rxResource({
+  private readonly _nodes = rxResource({
     params: () => {
       const unfilteredNodes = this._unfilteredNodes.value();
 
@@ -831,7 +833,7 @@ export class TableTreeStructure<T, ID> {
     },
   });
 
-  public readonly nodesById = computed(() => this.nodes.value()?.reduce((nodes, node) => nodes.set(node.item, node), new Map<ID, SciTableTreeNode<ID>>()));
+  public readonly nodesById = computed(() => this.nodes()?.reduce((nodes, node) => nodes.set(node.item, node), new Map<ID, SciTableTreeNode<ID>>()));
 
   public readonly visibleNodes = computed(() => {
     const expandedNodes = this.expandedNodeIds();
@@ -857,7 +859,7 @@ export class TableTreeStructure<T, ID> {
   });
 
   public readonly expandedNodeIds = computed(() => {
-    const nodes = this.nodes.value() ?? [];
+    const nodes = this.nodes() ?? [];
     const toggledRows = this._toggledNodes();
 
     if (this._expandedAll()) {
@@ -885,6 +887,21 @@ export class TableTreeStructure<T, ID> {
     this._filterCriteria = options.filterCriteria;
     this._tableFilter = options.tableFilter;
     this._sortCriteria = options.sortCriteria;
+  }
+
+  public reload(): void {
+    this._unfilteredNodes.reload();
+  }
+
+  public reloadFailed(): void {
+    if (this._unfilteredNodes.error()) {
+      this._unfilteredNodes.reload();
+      return; // Don't force reload on nodes, since they will reload either way because they are dependent on unfilteredNodes.
+    }
+
+    if (this._nodes.error()) {
+      this._nodes.reload();
+    }
   }
 
   public expand(id: ID): void {
