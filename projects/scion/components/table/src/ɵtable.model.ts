@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, ResourceRef, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {isArrayDatasource, isTreeDatasource, SciAsyncTableTreeDatasource, SciTableArrayDatasource, SciTableColumnFilter, SciTableDataSource, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeDatasource, SciTableTreeNode} from './table-datasource';
 import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn, skeletonRowId} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
@@ -99,7 +99,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public readonly visibleRowCount: Signal<number | undefined>;
   public readonly visibleRows: Signal<SciTableTreeNode<ID>[] | undefined>;
   public readonly rowIndexById: Signal<Map<ID, number>>;
-  public readonly childrenByParent = computed(() => mapChildrenToParent(this._structure.nodes() ?? []));
+  public readonly childrenByParent: Signal<Map<ID | undefined, ID[]>>;
 
   constructor(descriptor: SciTableDescriptor<T, ID>) {
     // TODO [table] Remove after datasource is final. See ɵillegaldatasource.
@@ -148,6 +148,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     this.visibleRowCount = this._structure.visibleNodeCount;
     this.rowIndexById = this._structure.nodeIndexById;
     this.visibleRows = this._structure.visibleNodes;
+    this.childrenByParent = this._structure.childrenByParent;
 
     this.installPageLoader();
   }
@@ -669,7 +670,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   }
 }
 
-export class TableTreeStructure<T, ID> {
+class TableTreeStructure<T, ID> {
 
   private readonly _injector = inject(Injector);
 
@@ -681,119 +682,18 @@ export class TableTreeStructure<T, ID> {
   private readonly _expandedAll = signal(false);
   private readonly _toggledNodes = signal(new Set<ID>());
 
-  // Safe access to the nodes resource. Value cannot be accessed when resource is in an error state.
-  public readonly nodes = computed(() => this.error() ? undefined : this._nodes.value());
+  private readonly _unfilteredNodes = this.computeUnfilteredNodes();
+  private readonly _nodes = this.computeNodes();
+
+  public readonly expandedNodeIds = this.computeExpandedNodeIds();
+  public readonly visibleNodes = this.computeVisibleNodes();
+  public readonly childrenByParent = this.computeChildrenByParent();
+  public readonly nodesById = this.computeNodesById();
+  public readonly nodes = this.computeSortedNodes();
+
   public readonly error = computed(() => this._nodes.status() === 'error');
   public readonly loading = computed(() => this._nodes.isLoading());
-
-  private readonly _unfilteredNodes = rxResource({
-    params: () => this._sortCriteria(),
-    stream: ({params}) => this.getIds({sortCriteria: params, columnFilters: []}),
-  });
-
-  private readonly _nodes = rxResource({
-    params: ({chain}) => ({
-      filterCriteria: this._filterCriteria(),
-      tableFilter: this._tableFilter() ?? undefined,
-      unfilteredNodes: chain(this._unfilteredNodes)!,
-    }),
-    stream: ({params}) => {
-      const unfilteredNodes = params.unfilteredNodes;
-      // If no filters are applied, filteredIds === allIds
-      const load$ = !params.tableFilter && params.filterCriteria.length === 0 ?
-        of(unfilteredNodes) :
-        this.getIds({sortCriteria: [], columnFilters: params.filterCriteria, tableFilter: params.tableFilter});
-
-      return load$.pipe(
-        map(filteredNodes => {
-          const nodesById = new Map(unfilteredNodes.map(node => [node.item, node]));
-          const filteredIds = new Set(filteredNodes.map(node => node.item));
-
-          const nodes = unfilteredNodes.reduce((acc, node) => {
-            let parentId = node.parent;
-            const ancestors = [node.item];
-
-            // Traverse up the tree and get all ancestors.
-            while (parentId !== undefined) {
-              ancestors.push(parentId);
-              parentId = nodesById.get(parentId)?.parent;
-            }
-
-            // If the filtered nodes contain an ancestor, add the whole chain.
-            if (ancestors.some(id => filteredIds.has(id))) {
-              ancestors.forEach(id => acc.add(id));
-            }
-
-            return acc;
-          }, new Set<ID>());
-
-          const sortedNodes = unfilteredNodes.filter(node => nodes.has(node.item));
-
-          // Only place the children in correct order for TreeDatasource.
-          if (isArrayDatasource(this._datasource)) {
-            return sortedNodes;
-          }
-          const childrenIdsByParent = mapChildrenToParent(sortedNodes);
-
-          const getChildren = (parentId?: ID): SciTableTreeNode<ID>[] => {
-            const children = (childrenIdsByParent.get(parentId) ?? []).flatMap(id => getChildren(id));
-            const parent = parentId !== undefined ? nodesById.get(parentId) : undefined;
-
-            if (parent) {
-              return [parent, ...children];
-            }
-
-            return children;
-          };
-
-          return getChildren(undefined);
-        }),
-      );
-    },
-  });
-
-  public readonly nodesById = computed(() => this.nodes()?.reduce((nodes, node) => nodes.set(node.item, node), new Map<ID, SciTableTreeNode<ID>>()));
-
-  public readonly visibleNodes = computed(() => {
-    const expandedNodes = this.expandedNodeIds();
-    const nodesById = this.nodesById();
-
-    if (!nodesById) {
-      return undefined;
-    }
-
-    const allAncestorsExpanded = (node?: SciTableTreeNode<ID>): boolean => {
-      if (!node?.parent) {
-        return true;
-      }
-
-      if (!expandedNodes.has(node.parent)) {
-        return false;
-      }
-
-      return allAncestorsExpanded(nodesById.get(node.parent));
-    };
-
-    return untracked(() => [...nodesById.values()].filter(allAncestorsExpanded));
-  });
-
-  public readonly expandedNodeIds = computed(() => {
-    const nodes = this.nodes() ?? [];
-    const toggledRows = this._toggledNodes();
-
-    if (this._expandedAll()) {
-      return new Set(nodes
-        .filter(node => !toggledRows.has(node.item))
-        .map(node => node.item));
-    }
-
-    return toggledRows;
-  });
-
-  public readonly nodeIndexById = computed(() => {
-    return (this.visibleNodes() ?? []).reduce((map, node, index) => map.set(node.item, index), new Map<ID, number>());
-  });
-
+  public readonly nodeIndexById = computed(() => (this.visibleNodes() ?? []).reduce((map, node, index) => map.set(node.item, index), new Map<ID, number>()));
   public readonly visibleNodeCount = computed(() => this.visibleNodes()?.length);
 
   constructor(options: {
@@ -887,16 +787,169 @@ export class TableTreeStructure<T, ID> {
       }),
     ));
   }
-}
 
-function mapChildrenToParent<ID>(nodes: SciTableTreeNode<ID>[]): Map<ID | undefined, ID[]> {
-  const childrenIdsByParent = new Map<ID | undefined, ID[]>();
-  for (const node of nodes) {
-    const values = childrenIdsByParent.get(node.parent) ?? [];
-    values.push(node.item);
-    childrenIdsByParent.set(node.parent, values);
+  private computeUnfilteredNodes(): ResourceRef<SciTableTreeNode<ID>[] | undefined> {
+    return rxResource({
+      params: () => this._sortCriteria(),
+      stream: ({params}) => this.getIds({sortCriteria: params, columnFilters: []}),
+    });
   }
-  return childrenIdsByParent;
+
+  private computeNodes(): ResourceRef<SciTableTreeNode<ID>[] | undefined> {
+    return rxResource({
+      params: ({chain}) => ({
+        filterCriteria: this._filterCriteria(),
+        tableFilter: this._tableFilter() ?? undefined,
+        unfilteredNodes: chain(this._unfilteredNodes)!,
+      }),
+      stream: ({params}) => {
+        const unfilteredNodes = params.unfilteredNodes;
+        // If no filters are applied, filteredIds === allIds
+        const load$ = !params.tableFilter && params.filterCriteria.length === 0 ?
+          of(unfilteredNodes) :
+          this.getIds({sortCriteria: [], columnFilters: params.filterCriteria, tableFilter: params.tableFilter});
+
+        return load$.pipe(
+          map(filteredNodes => {
+            const nodesById = new Map(unfilteredNodes.map(node => [node.item, node]));
+            const filteredIds = new Set(filteredNodes.map(node => node.item));
+
+            const nodes = unfilteredNodes.reduce((acc, node) => {
+              const ancestors = [node.item];
+              let parentId = node.parent;
+
+              // Traverse up the tree and get all ancestors.
+              while (parentId !== undefined) {
+                ancestors.push(parentId);
+                parentId = nodesById.get(parentId)?.parent;
+              }
+
+              // If the filtered nodes contain an ancestor, add the whole chain.
+              if (ancestors.some(id => filteredIds.has(id))) {
+                ancestors.forEach(id => acc.add(id));
+              }
+
+              return acc;
+            }, new Set<ID>());
+
+            return unfilteredNodes.filter(node => nodes.has(node.item));
+          }),
+        );
+      },
+    });
+  }
+
+  private computeExpandedNodeIds(): Signal<Set<ID>> {
+    return computed(() => {
+      const nodes = this.nodes() ?? [];
+      const toggledRows = this._toggledNodes();
+
+      if (this._expandedAll()) {
+        return new Set(nodes
+          .filter(node => !toggledRows.has(node.item))
+          .map(node => node.item));
+      }
+
+      return toggledRows;
+    });
+  }
+
+  private computeVisibleNodes(): Signal<SciTableTreeNode<ID>[] | undefined> {
+    return computed(() => {
+      const expandedNodes = this.expandedNodeIds();
+      const nodesById = this.nodesById();
+      const nodes = this.nodes();
+
+      if (!nodesById || !nodes) {
+        return undefined;
+      }
+
+      const allAncestorsExpanded = (node?: SciTableTreeNode<ID>): boolean => {
+        if (!node?.parent) {
+          return true;
+        }
+
+        if (!expandedNodes.has(node.parent)) {
+          return false;
+        }
+
+        return allAncestorsExpanded(nodesById.get(node.parent));
+      };
+
+      return untracked(() => nodes.filter(allAncestorsExpanded));
+    });
+  }
+
+  /**
+   * Compute sorted nodes, where each node index equals the visual index on the table. i.e.
+   * ```
+   * [
+   *   {item: '1'},
+   *   {item: '1.1', parent: '1'},
+   *   {item: '1.2', parent: '1'},
+   *   {item: '1.2.1', parent: '1.2'},
+   *   {item: '1.3', parent: '1'},
+   *   {item: '2'},
+   * ]
+   * ```
+   */
+  private computeSortedNodes(): Signal<SciTableTreeNode<ID>[] | undefined> {
+    return computed(() => {
+      const childrenIdsByParent = this.childrenByParent();
+      const nodesById = this.nodesById();
+
+      if (nodesById === undefined) {
+        return undefined;
+      }
+
+      // Only place the children in correct order for tree datasource.
+      if (isArrayDatasource(this._datasource)) {
+        return this._nodes.status() === 'error' ? undefined : this._nodes.value();
+      }
+
+      const getChildren = (parentId?: ID): SciTableTreeNode<ID>[] => {
+        const children = (childrenIdsByParent.get(parentId) ?? []).flatMap(id => getChildren(id));
+        const parent = parentId !== undefined ? nodesById.get(parentId) : undefined;
+
+        if (parent) {
+          return [parent, ...children];
+        }
+
+        return children;
+      };
+
+      return getChildren(undefined);
+    });
+  }
+
+  private computeChildrenByParent(): Signal<Map<ID | undefined, ID[]>> {
+    return computed(() => {
+      const childrenIdsByParent = new Map<ID | undefined, ID[]>();
+
+      if (this._nodes.status() === 'error') {
+        return childrenIdsByParent;
+      }
+
+      // Access nodes directly on the resource, since `this.nodes` depends on childrenByParent.
+      const nodes = this._nodes.value() ?? [];
+      for (const node of nodes) {
+        const values = childrenIdsByParent.get(node.parent) ?? [];
+        values.push(node.item);
+        childrenIdsByParent.set(node.parent, values);
+      }
+      return childrenIdsByParent;
+    });
+  }
+
+  private computeNodesById(): Signal<Map<ID, SciTableTreeNode<ID, ID>> | undefined> {
+    return computed(() => {
+      if (this._nodes.status() === 'error') {
+        return undefined;
+      }
+      // Access nodes directly on the resource, since `this.nodes` depends on nodesById.
+      return this._nodes.value()?.reduce((acc, node) => acc.set(node.item, node), new Map<ID, SciTableTreeNode<ID>>());
+    });
+  }
 }
 
 export interface SciScrollRange {
