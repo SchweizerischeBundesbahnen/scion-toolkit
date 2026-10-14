@@ -90,10 +90,9 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public readonly loading = computed(() => this._structure.loading() || this._cache.loading() || this._tableCellValuePreloader.loading());
   public readonly error = computed(() => this._cache.error() || this._structure.error());
   public readonly activeRow: Signal<SciTableRow<T, ID> | undefined>;
-  public readonly hoveredRow = computed(() => this.rowsByIndex().get(this.hoveredIndex()));
+  public readonly hoveredRow = computed(() => this.getRowByIndex(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
   public readonly selectedIds = computed(() => new Set([...this._selectedItems().keys()]));
-  public readonly rowsByIndex = computed(() => this.projectRows());
   public readonly rowsById = this._cache.rowsById;
   public readonly rows = this.computeRows();
   public readonly visibleRowCount: Signal<number | undefined>;
@@ -192,12 +191,18 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
       }
 
       const visibleNodes = this._structure.visibleNodes();
-      const rowsByIndex = this.rowsByIndex();
+      const rowsById = this.rowsById();
       const rangeCount = scrollRange.end - scrollRange.start;
-      const rowCount = Math.min(rangeCount, visibleNodes?.length ?? rangeCount);
+      const rowCount = Math.min(rangeCount, visibleNodes ? Math.max(0, visibleNodes.length - scrollRange.start) : rangeCount);
 
       // Populate rows with cached rows in the range window, fallback to row shell to show skeleton.
-      return untracked(() => Array.from({length: rowCount}, (_, i) => rowsByIndex.get(scrollRange.start + i) ?? createSkeletonRow(i)));
+      return untracked(() => Array.from({length: rowCount}, (_, i) => {
+        const node = visibleNodes?.[scrollRange.start + i];
+        if (node && rowsById.has(node.item)) {
+          return rowsById.get(node.item)!;
+        }
+        return createSkeletonRow(i);
+      }));
     });
 
     function createSkeletonRow(index: number): SciTableRow<T, ID> {
@@ -301,11 +306,12 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     }).value;
   }
 
-  private projectRows(): Map<number, SciTableRow<T, ID> | undefined> {
-    const nodes = this._structure.visibleNodes() ?? [];
-    const rowsByLocalIndex = this.rowsById();
-
-    return nodes.reduce((map, node, index) => map.set(index, rowsByLocalIndex.get(node.item)), new Map<number, SciTableRow<T, ID> | undefined>());
+  /**
+   * Looks up a cached row by its visual index, including rows outside the viewport.
+   */
+  public getRowByIndex(index: number): SciTableRow<T, ID> | undefined {
+    const node = this._structure.visibleNodes()?.[index];
+    return node === undefined ? undefined : this.rowsById().get(node.item);
   }
 
   /**
@@ -815,23 +821,24 @@ class TableTreeStructure<T, ID> {
             const filteredIds = new Set(filteredNodes.map(node => node.item));
 
             const nodes = unfilteredNodes.reduce((acc, node) => {
-              const ancestors = [node.item];
+              const path = [node.item];
               let parentId = node.parent;
 
               // Traverse up the tree and get all ancestors.
               while (parentId !== undefined) {
-                ancestors.push(parentId);
+                path.push(parentId);
                 parentId = nodesById.get(parentId)?.parent;
               }
 
-              // If the filtered nodes contain an ancestor, add the whole chain.
-              if (ancestors.some(id => filteredIds.has(id))) {
-                ancestors.forEach(id => acc.add(id));
+              // If the filtered nodes contain an item in the path, add the whole path.
+              if (path.some(id => filteredIds.has(id))) {
+                path.forEach(id => acc.add(id));
               }
 
               return acc;
             }, new Set<ID>());
 
+            // Return nodes in correct order.
             return unfilteredNodes.filter(node => nodes.has(node.item));
           }),
         );

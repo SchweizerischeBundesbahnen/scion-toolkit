@@ -171,14 +171,14 @@ export class SciTableSelectionService<T, ID> {
 
         let i = index;
         while (i >= 0) {
-          const row = table.rowsByIndex().get(i);
+          const row = table.getRowByIndex(i);
           if (row?.expanded()) {
             return row;
           }
           i--;
         }
 
-        return table.rowsByIndex().get(i);
+        return table.getRowByIndex(i);
       }
     }
   }

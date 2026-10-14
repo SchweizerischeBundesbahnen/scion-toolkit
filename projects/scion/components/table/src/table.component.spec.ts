@@ -2795,7 +2795,7 @@ describe('Table', () => {
       const columns = signal(['id']);
       const getIds = jasmine.createSpy().and.returnValue(['1']);
       const getItems = jasmine.createSpy().and.returnValue([{id: '1', name: 'one'}]);
-      const {fixture, model} = createSciTableComponent(sciTable<{id: string; name: string}, string>({
+      const {fixture} = createSciTableComponent(sciTable<{id: string; name: string}, string>({
         ɵdatasource: provideAsyncTableDatasource(getIds, getItems),
         datasource: ɵillegaldatasource(),
         trackBy: item => item.id,
@@ -2809,13 +2809,13 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      expect(model.rowsByIndex().get(0)?.cells).toHaveSize(1);
+      expect(table.rows[0]?.cells).toHaveSize(1);
       expect(getIds).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledOnceWith(['1']);
 
       columns.set(['id', 'name']);
       await table.waitUntilStable();
-      expect(model.rowsByIndex().get(0)?.cells?.length).toBe(2);
+      expect(table.rows[0]?.cells).toHaveSize(2);
       expect(getIds).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledTimes(1);
     });
