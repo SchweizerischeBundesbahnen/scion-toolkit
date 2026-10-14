@@ -2078,14 +2078,9 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        model.filter('noop');
+        model.filter('no match');
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha'],
-          ['2', 'beta'],
-          ['3', 'gamma'],
-          ['4', ''],
-        ]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
       });
 
       it('should filter component column using a global filter (with comparator)', async () => {
@@ -2117,6 +2112,10 @@ describe('Table', () => {
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['2', 'beta'],
         ]);
+
+        model.filter('no match');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
       });
 
       it('should filter template column using a global filter (without comparator)', async () => {
@@ -2141,14 +2140,9 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        model.filter('noop');
+        model.filter('no match');
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha'],
-          ['2', 'beta'],
-          ['3', 'gamma'],
-          ['4', ''],
-        ]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
       });
 
       it('should filter template column using a global filter (with comparator)', async () => {
@@ -2179,9 +2173,14 @@ describe('Table', () => {
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['2', 'beta'],
         ]);
+
+        model.filter('no match');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
       });
 
       it('should filter cross-column using a global filter', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
         const data = signal([
           {row: '1', string: 'alpha', number: 2, boolean: true, undefined: undefined},
           {row: '2', string: 'beta', number: 1, boolean: false, undefined: undefined},
@@ -2211,6 +2210,21 @@ describe('Table', () => {
             .addStringColumn({
               name: 'column:undefined',
               value: item => item.undefined,
+            })
+            // Component and template columns should not influence filtering.
+            .addComponentColumn({
+              name: 'column:component',
+              component: item => ({
+                component: CustomColumnComponent,
+                bindings: [inputBinding('value', () => item.undefined)],
+              }),
+            })
+            .addTemplateColumn({
+              name: 'column:template',
+              template: item => ({
+                template,
+                context: {$implicit: item.undefined},
+              }),
             }),
           injector: TestBed.inject(Injector),
         }));
@@ -2221,64 +2235,64 @@ describe('Table', () => {
         model.filter('alpha');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', ''],
+          ['1', 'alpha', '2', 'checkmark', '', '', ''],
         ]);
 
         model.filter('a');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', ''],
-          ['2', 'beta', '1', 'clear', ''],
-          ['3', 'gamma', '0', 'checkmark', ''],
-          ['4', 'delta', '10', 'clear', ''],
+          ['1', 'alpha', '2', 'checkmark', '', '', ''],
+          ['2', 'beta', '1', 'clear', '', '', ''],
+          ['3', 'gamma', '0', 'checkmark', '', '', ''],
+          ['4', 'delta', '10', 'clear', '', '', ''],
         ]);
 
         model.filter('b');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'clear', ''],
+          ['2', 'beta', '1', 'clear', '', '', ''],
         ]);
 
         model.filter('true');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', ''],
-          ['3', 'gamma', '0', 'checkmark', ''],
+          ['1', 'alpha', '2', 'checkmark', '', '', ''],
+          ['3', 'gamma', '0', 'checkmark', '', '', ''],
         ]);
 
         model.filter('false');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'clear', ''],
-          ['4', 'delta', '10', 'clear', ''],
+          ['2', 'beta', '1', 'clear', '', '', ''],
+          ['4', 'delta', '10', 'clear', '', '', ''],
         ]);
 
         model.filter('0');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'clear', ''],
-          ['3', 'gamma', '0', 'checkmark', ''],
-          ['4', 'delta', '10', 'clear', ''],
+          ['2', 'beta', '1', 'clear', '', '', ''],
+          ['3', 'gamma', '0', 'checkmark', '', '', ''],
+          ['4', 'delta', '10', 'clear', '', '', ''],
         ]);
 
         model.filter('1');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', ''],
-          ['2', 'beta', '1', 'clear', ''],
-          ['3', 'gamma', '0', 'checkmark', ''],
+          ['1', 'alpha', '2', 'checkmark', '', '', ''],
+          ['2', 'beta', '1', 'clear', '', '', ''],
+          ['3', 'gamma', '0', 'checkmark', '', '', ''],
         ]);
 
         model.filter('2');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', ''],
+          ['1', 'alpha', '2', 'checkmark', '', '', ''],
         ]);
 
         model.filter('10');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['4', 'delta', '10', 'clear', ''],
+          ['4', 'delta', '10', 'clear', '', '', ''],
         ]);
 
         model.filter('11');
