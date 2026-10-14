@@ -135,7 +135,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       sortable: computed(() => this._table.sortable() && !!descriptor.sortable),
       filterable: computed(() => this._table.filterable() && !!descriptor.filterable),
       compare: typeof descriptor.sortable === 'object' ? descriptor.sortable.comparator : () => 0,
-      matches: typeof descriptor.filterable === 'object' ? descriptor.filterable.matcher : () => true,
+      matches: typeof descriptor.filterable === 'object' ? descriptor.filterable.matcher : () => false,
       padding: descriptor.padding ?? true,
     } satisfies SciComponentColumn<T>);
 
@@ -161,7 +161,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       sortable: computed(() => this._table.sortable() && !!descriptor.sortable),
       filterable: computed(() => this._table.filterable() && !!descriptor.filterable),
       compare: typeof descriptor.sortable === 'object' ? descriptor.sortable.comparator : () => 0,
-      matches: typeof descriptor.filterable === 'object' ? descriptor.filterable.matcher : () => true,
+      matches: typeof descriptor.filterable === 'object' ? descriptor.filterable.matcher : () => false,
       padding: descriptor.padding ?? true,
     } satisfies SciTemplateColumn<T>);
 
