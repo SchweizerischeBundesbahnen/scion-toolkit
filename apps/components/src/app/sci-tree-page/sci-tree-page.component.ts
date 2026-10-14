@@ -88,6 +88,7 @@ export default class SciTreePageComponent {
     const host = inject(ElementRef).nativeElement as HTMLElement;
     return createDesignTokenForm([
       '--sci-tree-node-height',
+      '--sci-tree-node-indent',
       '--sci-tree-node-background-color-hover',
       '--sci-tree-node-background-color-selected',
       '--sci-tree-node-border-radius',

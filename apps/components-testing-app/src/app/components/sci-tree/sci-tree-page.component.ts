@@ -19,7 +19,6 @@ import {provideTreeDatasource, SciTree, SciTreeComponent, SciTreeNodeContext, tr
 import {noop} from 'rxjs';
 import {provideTableRowBinding} from '@scion/components/table';
 import {Product, ProductService} from './sci-tree-page.data';
-import {FieldValidationDirective} from '../field-validation.directive';
 
 @Component({
   selector: 'app-tree-page',
@@ -41,7 +40,6 @@ import {FieldValidationDirective} from '../field-validation.directive';
     CustomColumnComponent,
     SciViewportComponent,
     SciTreeComponent,
-    FieldValidationDirective,
   ],
   providers: [
     provideTableRowBinding((bindings, _item, index) => {
@@ -101,7 +99,6 @@ export default class SciTreePageComponent {
         }
       })(),
       filterable: this.settingsForm.customFilter().value() ? {matcher: customFilter} : undefined,
-      sortable: this.settingsForm.customSort().value() ? {comparator: customComparator} : undefined,
       nodeActions: options.showNodeActions ? (toolbar, product) => toolbar
         .addToolbarButton({icon: 'scion.edit', onSelect: noop})
         .addToolbarButton({icon: 'scion.delete', onSelect: noop})
@@ -142,17 +139,13 @@ export default class SciTreePageComponent {
 
   private createSettingsForm(): FieldTree<SettingsForm> {
     return form(signal<SettingsForm>({
-      header: '',
       filterable: false,
-      sortable: true,
       selectable: 'multi',
-      wrapHeader: false,
       showNodeActions: false,
       customRowStyling: false,
       rowHeight: 30,
       treeCount: 1,
       customFilter: false,
-      customSort: false,
     }));
   }
 
@@ -185,9 +178,6 @@ export default class SciTreePageComponent {
   private bindTreeSettings(): void {
     effect(() => {
       this.trees().forEach(tree => {
-        tree.header.set(this.settingsForm.header().value());
-        tree.wrapHeader.set(this.settingsForm.wrapHeader().value());
-        tree.sortable.set(this.settingsForm.sortable().value());
         tree.filterable.set(this.settingsForm.filterable().value());
 
         const selectable = this.settingsForm.selectable().value();
@@ -218,17 +208,13 @@ export default class SciTreePageComponent {
 }
 
 interface SettingsForm {
-  header: string;
   filterable: boolean;
-  sortable: boolean;
   selectable: 'false' | 'single' | 'multi';
-  wrapHeader: boolean;
   showNodeActions: boolean;
   customRowStyling: boolean;
   rowHeight: number | null;
   treeCount: number;
   customFilter: boolean;
-  customSort: boolean;
 }
 
 interface MethodsForm {

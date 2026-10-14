@@ -6,7 +6,7 @@
   align-items: center; // center custom cell content vertically
   overflow: hidden; // prevent text and custom content to overflow cell
   /* @formatter:off */
-  border-left: calc(var(--sci-table-cell-padding-inline) + 2em * attr(data-level type(<number>), 0)) solid transparent;  // use border instead of padding to maintain column gap if cell content overflows
+  border-left: calc(var(--sci-table-cell-padding-inline) + var(--sci-tree-node-indent) * attr(data-level type(<number>), 0)) solid transparent;  // use border instead of padding to maintain column gap if cell content overflows
   /* @formatter:on */
   border-right: var(--sci-table-cell-padding-inline) solid transparent; // use border instead of padding to maintain column gap if cell content overflows
 

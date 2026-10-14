@@ -122,6 +122,7 @@ $sci-table: (
 
 $sci-tree: (
   --sci-tree-node-height: var(--sci-table-row-height),
+  --sci-tree-node-indent: 1em,
   --sci-tree-node-background-color-hover: var(--sci-table-row-background-color-hover),
   --sci-tree-node-background-color-selected: var(--sci-table-row-background-color-selected),
   --sci-tree-node-border-radius: var(--sci-table-row-border-radius),
