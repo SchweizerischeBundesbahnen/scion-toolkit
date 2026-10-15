@@ -12,40 +12,44 @@
 
 export interface OperatorGroup {
   kind: 'operator';
-  operator: string;
-  averageMaxSpeedKmh: number;
-  children: Vehicle[];
-}
-
-export interface TreeOperator {
-  kind: 'operator';
   id: string;
   label: string;
-  children: TreeClassType[];
+  maxSpeedKmh: number;
+  mileageKm: number;
+  price: number;
+  seatingCapacity: number;
+  operatingHours: number;
+  children: ClassTypeGroup[];
 }
 
-export interface TreeClassType {
+export interface ClassTypeGroup {
   kind: 'classType';
   id: string;
   label: string;
-  children: TreeDepot[];
+  maxSpeedKmh: number;
+  mileageKm: number;
+  price: number;
+  seatingCapacity: number;
+  operatingHours: number;
+  children: DepotGroup[];
 }
 
-export interface TreeDepot {
+export interface DepotGroup {
   kind: 'depot';
   id: string;
   label: string;
-  children: TreeVehicle[];
-}
-
-export interface TreeVehicle {
-  kind: 'vehicle';
-  id: string;
-  label: string;
+  maxSpeedKmh: number;
+  mileageKm: number;
+  price: number;
+  seatingCapacity: number;
+  operatingHours: number;
+  children: Vehicle[];
 }
 
 export interface Vehicle {
-  id: number;
+  kind: 'vehicle';
+  id: string;
+  label: string;
   vehicleId: string;
   classType: string;
   operator: OperatorType;
@@ -90,8 +94,4 @@ export type ProtectionSystem =
   | 'ZUB'
   | 'INTEGRA-SIGNUM';
 
-export type VehicleOrOperator = Vehicle | OperatorGroup;
-
-export function isVehicle(item: VehicleOrOperator): item is Vehicle {
-  return 'vehicleId' in item;
-}
+export type VehicleNode = Vehicle | OperatorGroup | ClassTypeGroup | DepotGroup;

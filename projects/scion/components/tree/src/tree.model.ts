@@ -1,7 +1,7 @@
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Signal, WritableSignal} from '@angular/core';
 import {SciTableRowActionFactoryFn} from '../../table/src/table.model';
-import {SciTableDataSourceProvider, SciTableIdsRequest, SciTableRowBindingFactoryFn, SciTableTreeNode} from '@scion/components/table';
+import {SciTableDataSourceProvider, SciTableRowBindingFactoryFn, SciTableTreeNode} from '@scion/components/table';
 import {SciAsyncTableTreeDatasource, SciTableTreeDatasource} from '../../table/src/table-datasource';
 import {MaybeAsync} from '../../table/src/common';
 import {MaybeArray} from '@scion/toolkit/types';
@@ -61,6 +61,14 @@ export function provideTreeDatasource<T, ID>(root: Signal<T[]>, getChildren: (it
   return (columns, trackBy) => new SciTableTreeDatasource(root, {columns, trackBy, getChildren});
 }
 
-export function providePageableTreeDatasource<T, ID>(getIds: (request: SciTableIdsRequest) => MaybeAsync<SciTableTreeNode<ID>[]>, getItems: (ids: ID[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T, ID> {
-  return () => new SciAsyncTableTreeDatasource(getIds, getItems);
+export function provideAsyncTreeDatasource<T, ID>(getIds: (request: SciTreeIdsRequest) => MaybeAsync<SciTableTreeNode<ID>[]>, getItems: (ids: ID[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T, ID> {
+  return () => new SciAsyncTableTreeDatasource(request => {
+    const columnFilter = request.columnFilters.find(columnFilter => columnFilter.columnName === 'column:tree');
+    const filter = [columnFilter?.text ? String(columnFilter?.text) : '', request.tableFilter ?? ''].filter(Boolean);
+    return getIds({filter});
+  }, getItems);
+}
+
+export interface SciTreeIdsRequest {
+  filter: string[];
 }

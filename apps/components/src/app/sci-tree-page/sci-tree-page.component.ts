@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, ElementRef, inject, Injector, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
-import {provideTreeDatasource, SciTree, SciTreeComponent, tree} from '@scion/components/tree';
+import {provideAsyncTreeDatasource, provideTreeDatasource, SciTree, SciTreeComponent, tree} from '@scion/components/tree';
 import {companies} from './sci-table-page.data';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField} from '@angular/forms/signals';
@@ -18,8 +18,9 @@ import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
-import {TreeClassType, TreeDepot, TreeOperator, TreeVehicle} from '../sci-table-page/vehicle.model';
+import {VehicleNode} from '../sci-table-page/vehicle.model';
 import {VehicleService} from '../sci-table-page/vehicle.service';
+import {SciTableDataSourceProvider} from '@scion/components/table';
 
 @Component({
   selector: 'app-table-page',
@@ -41,6 +42,7 @@ export default class SciTreePageComponent {
   private readonly _injector = inject(Injector);
   private readonly _router = inject(Router);
   private readonly _treeElement: Signal<ElementRef<HTMLElement> | undefined> = viewChild(SciTreeComponent, {read: ElementRef});
+  private readonly _vehicleService = inject(VehicleService);
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
   protected readonly designTokenForm: FieldTree<DesignTokenForm> = this.createDesignTokenForm();
@@ -54,12 +56,10 @@ export default class SciTreePageComponent {
   protected readonly selection = computed(() => this.tree()?.selectedItems().map(item => Number(item)).sort((a, b) => a - b).join(' '));
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
 
-  private createTree(): SciTree<string> {
-    const vehicleService = inject(VehicleService);
-
-    return tree<TreeOperator | TreeClassType | TreeDepot | TreeVehicle, string>({
+  private createTree(options: {slowDatasource: boolean}): SciTree<string> {
+    return tree<VehicleNode, string>({
       label: item => item.label,
-      datasource: provideTreeDatasource<TreeOperator | TreeClassType | TreeDepot | TreeVehicle, string>(vehicleService.treeOperators, item => item.kind === 'vehicle' ? [] : item.children),
+      datasource: this.getDataSource(options),
       trackBy: item => item.id,
     });
   }
@@ -68,19 +68,32 @@ export default class SciTreePageComponent {
     const tree = signal<SciTree<string> | undefined>(undefined);
 
     effect(onCleanup => {
+      const slowDatasource = this.settingsForm.slowDatasource().value();
+
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        tree.set(runInInjectionContext(injector, () => this.createTree()));
+        tree.set(runInInjectionContext(injector, () => this.createTree({slowDatasource})));
       });
     });
 
     return tree;
   }
 
+  private getDataSource(options: {slowDatasource: boolean}): SciTableDataSourceProvider<VehicleNode, string> {
+    if (options.slowDatasource) {
+      return provideAsyncTreeDatasource<VehicleNode, string>(
+        request => this._vehicleService.getVehicleNodeIds$(request),
+        ids => this._vehicleService.getVehicleNodes$(ids),
+      );
+    }
+
+    return provideTreeDatasource<VehicleNode, string>(this._vehicleService.operatorGroups, item => item.kind === 'vehicle' ? [] : item.children);
+  }
+
   private createSettingsForm(): FieldTree<SettingsForm> {
     return form(signal({
-      slowDatasource: false,
+      slowDatasource: true,
     }));
   }
 

@@ -407,7 +407,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     // Done here explicitly to avoid race-conditions and pages being loaded unnecessarily.
     this.tableViewRef()?.scrollToTop();
     if (text) {
-      this.expandAll();
+      // this.expandAll();
     }
 
     if (!options) {
@@ -858,22 +858,62 @@ class TableTreeStructure<T, ID> {
             const nodesById = new Map(unfilteredNodes.map(node => [node.item, node]));
             const filteredIds = new Set(filteredNodes.map(node => node.item));
 
-            const nodes = unfilteredNodes.reduce((acc, node) => {
-              const path = findNodePath(nodesById, node);
+            console.log('>>> filteredIds', filteredIds);
 
-              // If the filtered nodes contain any item in the path, add the whole path.
-              // This makes sure that:
-              //  - Children which are not themselves in `filteredNodes` but their parents are, are displayed.
-              //  - Parents which are not themselves in `filteredNodes` but their children are, are displayed.
-              if (path.some(id => filteredIds.has(id))) {
-                path.forEach(id => acc.add(id));
+            const childrenIdsByParent = new Map<ID | undefined, ID[]>();
+
+            for (const node of unfilteredNodes) {
+              const values = childrenIdsByParent.get(node.parent) ?? [];
+              values.push(node.item);
+              childrenIdsByParent.set(node.parent, values);
+            }
+
+            const nodes = new Set<ID>();
+
+            const includeAncestors = (id: ID): void => {
+              let node = nodesById.get(id);
+
+              while (node) {
+                nodes.add(node.item);
+                node = node.parent !== undefined ? nodesById.get(node.parent) : undefined;
               }
+            }
 
-              return acc;
-            }, new Set<ID>());
+            const includeDescendants = (id: ID): void => {
+              nodes.add(id);
+
+              for (const childId of childrenIdsByParent.get(id) ?? []) {
+                includeDescendants(childId);
+              }
+            };
+
+            filteredIds.forEach(id => {
+              // Include the matching node and its ancestors.
+              includeAncestors(id);
+
+              // Include descendants of the matching node.
+              includeDescendants(id);
+            });
 
             // Return nodes in correct order.
             return unfilteredNodes.filter(node => nodes.has(node.item));
+
+            // const nodes = unfilteredNodes.reduce((acc, node) => {
+            //   const path = findNodePath(nodesById, node);
+            //
+            //   // If the filtered nodes contain any item in the path, add the whole path.
+            //   // This makes sure that:
+            //   //  - Children which are not themselves in `filteredNodes` but their parents are, are displayed.
+            //   //  - Parents which are not themselves in `filteredNodes` but their children are, are displayed.
+            //   if (path.some(id => filteredIds.has(id))) {
+            //     path.forEach(id => acc.add(id));
+            //   }
+            //
+            //   return acc;
+            // }, new Set<ID>());
+
+            // Return nodes in correct order.
+            // return unfilteredNodes.filter(node => nodes.has(node.item));
           }),
         );
       },

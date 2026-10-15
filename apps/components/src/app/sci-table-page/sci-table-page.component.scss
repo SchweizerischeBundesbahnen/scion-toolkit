@@ -23,6 +23,11 @@
     > sci-table::part(row\:even row\:not\:selected) {
       background-color: light-dark(rgb(211 211 211 / 0.25), rgb(66 66 66 / 0.25));
     }
+
+    > sci-table::part(column\:maxSpeed row\:average)::before {
+      content: 'Ø';
+    }
+
   }
 
   > aside {

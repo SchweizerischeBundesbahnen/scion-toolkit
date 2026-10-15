@@ -71,11 +71,13 @@ export type SciTableIdsProvider<T> = (request: SciTableIdsRequest) => MaybeAsync
 
 export interface SciTableTreeDataProvider<T, ID> {
   getIds: SciTableIdsProvider<SciTableTreeNode<ID>>;
+
   getItems(ids: ID[]): MaybeAsync<T[]>;
 }
 
 export interface SciTableDataProvider<T, ID> {
   getIds: SciTableIdsProvider<ID>;
+
   getItems(ids: ID[]): MaybeAsync<T[]>;
 }
 
@@ -111,10 +113,13 @@ export class SciTableTreeDatasource<T, ID> implements SciTableTreeDataProvider<T
   public readonly getItems: (ids: ID[]) => MaybeAsync<T[]>;
 
   constructor(root: Signal<T[]>, options: {columns: Signal<SciTableColumnLike<T>[]>; trackBy: (item: T) => ID; getChildren: (node: T) => T[]}) {
-    const loadChildren = (item: T): SciTableTreeNode<T, ID>[] => options.getChildren(item).flatMap(child => [
-      {item: child, parent: options.trackBy(item)},
-      ...loadChildren(child),
-    ]);
+    const loadChildren = (item: T): SciTableTreeNode<T, ID>[] => {
+      const children = options.getChildren(item);
+      return children.flatMap(child => [
+        {item: child, parent: options.trackBy(item)},
+        ...loadChildren(child),
+      ]);
+    };
 
     const tree = computed(() => root().flatMap(node => {
       return [
