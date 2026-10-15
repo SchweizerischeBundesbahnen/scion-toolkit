@@ -30,7 +30,7 @@ import {Product, ProductService} from './sci-tree-page.data';
     '[style.--tree-width]': 'layoutForm.treeWidth().value() !== null ? `${layoutForm.treeWidth().value()}px` : null',
     '[style.--tree-grow-to-breakpoint]': 'layoutForm.treeGrowToBreakpoint().value() ? `true` : null',
     '[style.--tree-page-height]': 'layoutForm.pageHeight().value() !== null ? `${layoutForm.pageHeight().value()}px` : null',
-    '[style.--sci-table-row-height]': 'settingsForm.rowHeight().value() !== null ? `${settingsForm.rowHeight().value()}px` : null',
+    '[style.--sci-tree-node-height]': 'settingsForm.nodeHeight().value() !== null ? `${settingsForm.nodeHeight().value()}px` : null',
   },
   imports: [
     FormsModule,
@@ -143,7 +143,7 @@ export default class SciTreePageComponent {
       selectable: 'multi',
       showNodeActions: false,
       customRowStyling: false,
-      rowHeight: 30,
+      nodeHeight: 30,
       treeCount: 1,
       customFilter: false,
     }));
@@ -153,6 +153,7 @@ export default class SciTreePageComponent {
     return form(signal<MethodsForm>({
       expandById: 0,
       collapseById: 0,
+      selectId: '',
     }));
   }
 
@@ -205,6 +206,11 @@ export default class SciTreePageComponent {
   protected onCollapseAll(): void {
     this.tree()?.collapseAll();
   }
+
+  protected onSelect(): void {
+    this.tree()?.select(this.methodsForm.selectId().value().split(' ').map(Number));
+    this.methodsForm.selectId().reset('');
+  }
 }
 
 interface SettingsForm {
@@ -212,7 +218,7 @@ interface SettingsForm {
   selectable: 'false' | 'single' | 'multi';
   showNodeActions: boolean;
   customRowStyling: boolean;
-  rowHeight: number | null;
+  nodeHeight: number | null;
   treeCount: number;
   customFilter: boolean;
 }
@@ -220,6 +226,7 @@ interface SettingsForm {
 interface MethodsForm {
   expandById: number;
   collapseById: number;
+  selectId: string;
 }
 
 interface DatasourceForm {

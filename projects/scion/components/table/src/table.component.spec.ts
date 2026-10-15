@@ -2441,6 +2441,68 @@ describe('Table', () => {
       await table.waitUntilStable();
       expect(table.rows).toHaveSize(2);
     });
+
+    it('should expand path to selected item', async () => {
+      interface TestItem {item: string; children?: TestItem[]}
+      const items: TestItem[] = [
+        {
+          item: '1',
+          children: [
+            {item: '1.1'},
+            {item: '1.2', children: [{item: '1.2.1'}]},
+          ],
+        },
+        {item: '2', children: [{item: '2.1'}]},
+        {item: '3'},
+      ];
+
+      const {fixture, model} = createSciTableComponent(sciTable<TestItem, string>({
+        ɵdatasource: provideTableTreeDatasource(signal(items), item => item.children ?? []),
+        datasource: ɵillegaldatasource(),
+        trackBy: item => item.item,
+        columns: table => table.addStringColumn(({item}) => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['1', '2', '3']);
+
+      model.select('1.2.1');
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['1', '1.1', '1.2', '1.2.1', '2', '3']);
+    });
+
+    it('should expand all items on filter', async () => {
+      interface TestItem {item: string; children?: TestItem[]}
+      const items: TestItem[] = [
+        {
+          item: '1',
+          children: [
+            {item: '1.1'},
+            {item: '1.2', children: [{item: '1.2.1'}]},
+          ],
+        },
+        {item: '2', children: [{item: '2.1'}]},
+        {item: '3'},
+      ];
+
+      const {fixture, model} = createSciTableComponent(sciTable<TestItem, string>({
+        ɵdatasource: provideTableTreeDatasource(signal(items), item => item.children ?? []),
+        datasource: ɵillegaldatasource(),
+        trackBy: item => item.item,
+        columns: table => table.addStringColumn(({item}) => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['1', '2', '3']);
+
+      model.filter('1');
+      await table.waitUntilStable();
+      expect(await table.column({index: 0})?.values()).toEqual(['1', '1.1', '1.2', '1.2.1', '2', '2.1']);
+    });
   });
 
   describe('Pageable Hierarchical Data Source', () => {
@@ -4506,6 +4568,46 @@ describe('Table', () => {
       expect(table.row({nth: 0}).cells[3]!.element!.getAttribute('part')).toContain('column:date');
       expect(table.row({nth: 0}).cells[4]!.element!.getAttribute('part')).toContain('column:component');
       expect(table.row({nth: 0}).cells[5]!.element!.getAttribute('part')).toContain('column:template');
+    });
+  });
+
+  describe('Selection', () => {
+    it('should select item', async () => {
+      const data = generateData(100, i => i);
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: signal<number[]>(data),
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.select(55);
+      await table.waitUntilStable();
+
+      expect(table.row({index: 55}).isSelected()).toBeTrue();
+      expect(table.row({index: 55}).isActive()).toBeTrue();
+    });
+
+    it('should select multiple items', async () => {
+      const data = generateData(100, i => i);
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: signal<number[]>(data),
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.select([33, 65, 66, 64, 11]);
+      await table.waitUntilStable();
+
+      expect(table.row({index: 64}).isSelected()).toBeTrue();
+      expect(table.row({index: 65}).isSelected()).toBeTrue();
+      expect(table.row({index: 66}).isSelected()).toBeTrue();
+      expect(table.row({index: 66}).isActive()).toBeTrue(); // last item should be active.
     });
   });
 

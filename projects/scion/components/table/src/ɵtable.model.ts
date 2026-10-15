@@ -18,11 +18,12 @@ import {SciTableCache} from './table.cache';
 import {rxResource, toObservable} from '@angular/core/rxjs-interop';
 import {catchError, combineLatestWith, concat, fromEvent, Observable, of, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
-import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
+import {Arrays, clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {map, startWith, switchMap} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {rangeInclusive} from './common';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
+import {MaybeArray} from '@scion/toolkit/types';
 
 export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
 
@@ -402,9 +403,12 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public filter(text: string | null): void;
   public filter(text: string | number | boolean | null, options: {columnName: `column:${string}`}): void;
   public filter(text: string | number | boolean | null, options?: {columnName: `column:${string}`}): void {
-    // Scroll to the top as soon as filter changes.
+    // Scroll to the top and expand all tree nodes as soon as filter changes.
     // Done here explicitly to avoid race-conditions and pages being loaded unnecessarily.
     this.tableViewRef()?.scrollToTop();
+    if (text) {
+      this.expandAll();
+    }
 
     if (!options) {
       this._tableFilter.set(text as string);
@@ -655,6 +659,26 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     });
   }
 
+  public select(ids: MaybeArray<ID>): void {
+    const nodeIds = Arrays.coerce(ids);
+    nodeIds.forEach(id => {
+      const nodesById = this._structure.nodesById();
+      const node = nodesById?.get(id);
+
+      if (node?.parent && nodesById?.has(node.parent)) {
+        // Expand all nodes before the selected one.
+        findNodePath(nodesById, nodesById.get(node.parent)!).forEach(id => this.expand(id));
+      }
+    });
+
+    this._selectedItems.set(new Set(nodeIds));
+
+    // Find and activate last item based on the visual index.
+    const lastItemIndex = Math.max(...nodeIds.map(id => this.rowIndexById().get(id) ?? -1));
+    const lastItem = this.visibleRows()?.[lastItemIndex]?.item;
+    this.activeItem.set(lastItem);
+  }
+
   public expand(id: ID): void {
     this._structure.expand(id);
   }
@@ -835,7 +859,7 @@ class TableTreeStructure<T, ID> {
             const filteredIds = new Set(filteredNodes.map(node => node.item));
 
             const nodes = unfilteredNodes.reduce((acc, node) => {
-              const path = this.findNodePath(nodesById, node);
+              const path = findNodePath(nodesById, node);
 
               // If the filtered nodes contain any item in the path, add the whole path.
               // This makes sure that:
@@ -967,17 +991,17 @@ class TableTreeStructure<T, ID> {
       return this._nodes.value()?.reduce((acc, node) => acc.set(node.item, node), new Map<ID, SciTableTreeNode<ID>>());
     });
   }
+}
 
-  private findNodePath(nodesById: Map<ID, SciTableTreeNode<ID>>, node: SciTableTreeNode<ID>, path: ID[] = []): ID[] {
-    path.push(node.item);
-    const parentId = node.parent;
-    const parent = parentId ? nodesById.get(parentId) : undefined;
-    if (!parent) {
-      return path;
-    }
-
-    return this.findNodePath(nodesById, parent, path);
+function findNodePath<ID>(nodesById: Map<ID, SciTableTreeNode<ID>>, node: SciTableTreeNode<ID>, path: ID[] = []): ID[] {
+  path.push(node.item);
+  const parentId = node.parent;
+  const parent = parentId ? nodesById.get(parentId) : undefined;
+  if (!parent) {
+    return path;
   }
+
+  return findNodePath(nodesById, parent, path);
 }
 
 export interface SciScrollRange {

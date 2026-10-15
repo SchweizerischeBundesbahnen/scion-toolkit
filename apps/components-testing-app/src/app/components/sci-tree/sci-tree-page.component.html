@@ -39,8 +39,8 @@
         </label>
 
         <label>
-          Row Height
-          <input [formField]="settingsForm.rowHeight" type="number" class="e2e-row-height"/>
+          Node Height
+          <input [formField]="settingsForm.nodeHeight" type="number" class="e2e-node-height"/>
         </label>
       </form>
     </ng-template>
@@ -57,6 +57,10 @@
             <input [formField]="methodsForm.collapseById" type="number" class="e2e-collapse"/>
           </label>
           <button type="button" (click)="onCollapse()">Collapse</button>
+          <label>
+            <input [formField]="methodsForm.selectId" class="e2e-select"/>
+          </label>
+          <button type="button" (click)="onSelect()">Select</button>
         </section>
 
         <button type="button" (click)="onExpandAll()">Expand All</button>

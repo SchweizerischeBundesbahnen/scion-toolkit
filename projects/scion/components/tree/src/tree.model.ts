@@ -4,6 +4,7 @@ import {SciTableRowActionFactoryFn} from '../../table/src/table.model';
 import {SciTableDataSourceProvider, SciTableIdsRequest, SciTableRowBindingFactoryFn, SciTableTreeNode} from '@scion/components/table';
 import {SciAsyncTableTreeDatasource, SciTableTreeDatasource} from '../../table/src/table-datasource';
 import {MaybeAsync} from '../../table/src/common';
+import {MaybeArray} from '@scion/toolkit/types';
 
 export interface SciTreeDescriptor<T, ID> {
   label: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
@@ -42,9 +43,11 @@ export interface SciTree<ID> {
 
   filter(text: string | null): void;
 
-  expand(id: unknown): void;
+  select(id: MaybeArray<ID>): void;
 
-  collapse(id: unknown): void;
+  expand(id: ID): void;
+
+  collapse(id: ID): void;
 
   expandAll(): void;
 

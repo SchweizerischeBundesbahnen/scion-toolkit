@@ -52,8 +52,6 @@
   - Falls aufwändig, für den Anfang einfach nur auf der ersten Column
 
 # TODO
-- Select item => scroll into view + parents expanden
-- Expand all bei filter
 - Test / Showcase pages ready machen (datasources, grouping, css variables)
 - Für den storage: muss der name mit table: anfangen? für tree komisch.
   - Evtl. storage extrahieren in common

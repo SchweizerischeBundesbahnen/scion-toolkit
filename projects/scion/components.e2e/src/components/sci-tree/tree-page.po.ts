@@ -106,7 +106,7 @@ export class TreePagePO {
 
   public async setRowHeight(rowHeight: number): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-row-height').fill(rowHeight.toString());
+    await this.properties.locator('input.e2e-node-height').fill(rowHeight.toString());
   }
 
   public async setRowCount(rowCount: number): Promise<void> {

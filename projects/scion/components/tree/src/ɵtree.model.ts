@@ -11,6 +11,7 @@
 import {SciTree, SciTreeDescriptor} from './tree.model';
 import {SciTableDescriptor, ɵillegaldatasource, ɵSciTable} from '@scion/components/table';
 import {Signal, WritableSignal} from '@angular/core';
+import {MaybeArray} from '@scion/toolkit/types';
 
 export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
 
@@ -55,6 +56,10 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
 
   public filter(text: string | null): void {
     this._table.filter(text);
+  }
+
+  public select(ids: MaybeArray<ID>): void {
+    this._table.select(ids);
   }
 
   public expand(id: ID): void {

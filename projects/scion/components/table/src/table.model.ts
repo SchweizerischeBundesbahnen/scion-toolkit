@@ -16,6 +16,7 @@ import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-bind
 import {SciTableColumnFactoryFn} from './table.factory';
 import {SciDateValue} from './table-date-column.model';
 import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
+import {MaybeArray} from '@scion/toolkit/types';
 
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'component' | 'template' | 'dynamic';
 
@@ -117,13 +118,15 @@ export interface SciTable<ID = unknown> {
    */
   filter(text: string | null): void;
 
-  expand(id: unknown): void;
+  expand(id: ID): void;
 
-  collapse(id: unknown): void;
+  collapse(id: ID): void;
 
   expandAll(): void;
 
   collapseAll(): void;
+
+  select(id: MaybeArray<ID>): void;
 }
 
 export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
