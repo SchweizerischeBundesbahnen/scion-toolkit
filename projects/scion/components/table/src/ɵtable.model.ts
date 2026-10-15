@@ -778,8 +778,8 @@ class TableTreeStructure<T, ID> {
     });
   }
 
-  private getIds(request: SciTableIdsRequest): Observable<SciTableTreeNode<ID>[]> {
-    return runInInjectionContext(this._injector, () => Observables.coerce(this._datasource.getIds(request)).pipe(
+  private getIds(request: SciTableIdsRequest, options: {injector: Injector}): Observable<SciTableTreeNode<ID>[]> {
+    return runInInjectionContext(options.injector, () => Observables.coerce(this._datasource.getIds(request)).pipe(
       map((ids): SciTableTreeNode<ID>[] => {
         if (isTreeDatasource(this._datasource)) {
           return ids as SciTableTreeNode<ID>[];
@@ -795,13 +795,24 @@ class TableTreeStructure<T, ID> {
   }
 
   private computeUnfilteredNodes(): ResourceRef<SciTableTreeNode<ID>[] | undefined> {
+    // Create separate injection context per resource invocation to clean up allocated resources.
+    let injector: DestroyableInjector | undefined;
+
     return rxResource({
       params: () => this._sortCriteria(),
-      stream: ({params}) => this.getIds({sortCriteria: params, columnFilters: []}),
+      stream: ({params}) => {
+        injector?.destroy();
+        injector = createDestroyableInjector({parent: this._injector});
+
+        return this.getIds({sortCriteria: params, columnFilters: []}, {injector});
+      },
     });
   }
 
   private computeNodes(): ResourceRef<SciTableTreeNode<ID>[] | undefined> {
+    // Create separate injection context per resource invocation to clean up allocated resources.
+    let injector: DestroyableInjector | undefined;
+
     return rxResource({
       params: ({chain}) => ({
         filterCriteria: this._filterCriteria(),
@@ -809,11 +820,14 @@ class TableTreeStructure<T, ID> {
         unfilteredNodes: chain(this._unfilteredNodes)!,
       }),
       stream: ({params}) => {
+        injector?.destroy();
+        injector = createDestroyableInjector({parent: this._injector});
+
         const unfilteredNodes = params.unfilteredNodes;
         // If no filters are applied, filteredIds === allIds
         const load$ = !params.tableFilter && params.filterCriteria.length === 0 ?
           of(unfilteredNodes) :
-          this.getIds({sortCriteria: [], columnFilters: params.filterCriteria, tableFilter: params.tableFilter});
+          this.getIds({sortCriteria: [], columnFilters: params.filterCriteria, tableFilter: params.tableFilter}, {injector});
 
         return load$.pipe(
           map(filteredNodes => {
@@ -821,16 +835,12 @@ class TableTreeStructure<T, ID> {
             const filteredIds = new Set(filteredNodes.map(node => node.item));
 
             const nodes = unfilteredNodes.reduce((acc, node) => {
-              const path = [node.item];
-              let parentId = node.parent;
+              const path = this.findNodePath(nodesById, node);
 
-              // Traverse up the tree and get all ancestors.
-              while (parentId !== undefined) {
-                path.push(parentId);
-                parentId = nodesById.get(parentId)?.parent;
-              }
-
-              // If the filtered nodes contain an item in the path, add the whole path.
+              // If the filtered nodes contain any item in the path, add the whole path.
+              // This makes sure that:
+              //  - Children which are not themselves in `filteredNodes` but their parents are, are displayed.
+              //  - Parents which are not themselves in `filteredNodes` but their children are, are displayed.
               if (path.some(id => filteredIds.has(id))) {
                 path.forEach(id => acc.add(id));
               }
@@ -956,6 +966,17 @@ class TableTreeStructure<T, ID> {
       // Access nodes directly on the resource, since `this.nodes` depends on nodesById.
       return this._nodes.value()?.reduce((acc, node) => acc.set(node.item, node), new Map<ID, SciTableTreeNode<ID>>());
     });
+  }
+
+  private findNodePath(nodesById: Map<ID, SciTableTreeNode<ID>>, node: SciTableTreeNode<ID>, path: ID[] = []): ID[] {
+    path.push(node.item);
+    const parentId = node.parent;
+    const parent = parentId ? nodesById.get(parentId) : undefined;
+    if (!parent) {
+      return path;
+    }
+
+    return this.findNodePath(nodesById, parent, path);
   }
 }
 

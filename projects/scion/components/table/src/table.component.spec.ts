@@ -3572,7 +3572,50 @@ describe('Table', () => {
       expect(model.error()).toBeFalse();
     });
 
-    it('should destroy previous data loader function injection context', async () => {
+    it('should destroy previous getIds function injection context', async () => {
+      const destroyRefs = new Array<DestroyRef>();
+
+      const getIds: SciTableDataProvider<number, number>['getIds'] = () => {
+        destroyRefs.push(inject(DestroyRef));
+        return [1, 2, 3];
+      };
+
+      const {fixture, model} = createSciTableComponent(table<number, number>({
+        ɵdatasource: provideAsyncTableDatasource(getIds, ids => ids),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addNumberColumn({name: 'column:number', value: item => item}),
+        injector: TestBed.inject(Injector),
+      }));
+
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(1);
+      expect(destroyRefs[0]!.destroyed).toBeFalse();
+
+      // Sort items, to force unfiltered getIds call.
+      model.sort('column:number', false);
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(2);
+      expect(destroyRefs[0]!.destroyed).toBeTrue();
+      expect(destroyRefs[1]!.destroyed).toBeFalse();
+
+      // Filter items, to force filtered getIds call.
+      model.filter('test');
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(3);
+      expect(destroyRefs[0]!.destroyed).toBeTrue();
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // All items ref is still active.
+      expect(destroyRefs[2]!.destroyed).toBeFalse(); // New filter ref is still active.
+
+      // Force another reload of the items.
+      model.filter(null);
+      await fixture.whenStable();
+      expect(destroyRefs).toHaveSize(3);
+      expect(destroyRefs[0]!.destroyed).toBeTrue();
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // All items ref is still active.
+      expect(destroyRefs[2]!.destroyed).toBeTrue(); // Filter ref is destroyed.
+    });
+
+    it('should destroy previous getItems function injection context', async () => {
       const destroyRefs = new Array<DestroyRef>();
 
       const getItems: SciTableDataProvider<number, number>['getItems'] = ids => {

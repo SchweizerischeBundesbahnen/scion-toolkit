@@ -55,7 +55,6 @@
 - Select item => scroll into view + parents expanden
 - Expand all bei filter
 - Test / Showcase pages ready machen (datasources, grouping, css variables)
-- Tablemodel aufräumen
 - Für den storage: muss der name mit table: anfangen? für tree komisch.
   - Evtl. storage extrahieren in common
 - Howto markdown für tree, für Tabelle erweitern
