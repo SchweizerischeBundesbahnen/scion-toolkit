@@ -92,9 +92,7 @@ export class VehicleService {
           return true;
         }
         if (vehicleNode.item.kind === 'vehicle') {
-          const matches = Vehicles.matches(vehicleNode.item, request);
-          const a = matches;
-          return matches;
+          return Vehicles.matches(vehicleNode.item, request);
         }
         return false;
       }),

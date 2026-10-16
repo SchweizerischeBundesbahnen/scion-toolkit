@@ -407,7 +407,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     // Done here explicitly to avoid race-conditions and pages being loaded unnecessarily.
     this.tableViewRef()?.scrollToTop();
     if (text) {
-      // this.expandAll();
+      this.expandAll();
     }
 
     if (!options) {
@@ -861,10 +861,8 @@ class TableTreeStructure<T, ID> {
             const nodes = unfilteredNodes.reduce((acc, node) => {
               const path = findNodePath(nodesById, node);
 
-              // If the filtered nodes contain any item in the path, add the whole path.
-              // This makes sure that:
-              //  - Children which are not themselves in `filteredNodes` but their parents are, are displayed.
-              //  - Parents which are not themselves in `filteredNodes` but their children are, are displayed.
+              // Include the full path (ancestors and descendants) of any filtered node.
+              // This ensures that all ancestors and descendants are displayed, even if they don't match the filter.
               if (path.some(id => filteredIds.has(id))) {
                 path.forEach(id => acc.add(id));
               }

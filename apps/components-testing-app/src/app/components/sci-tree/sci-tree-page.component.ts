@@ -153,8 +153,6 @@ export default class SciTreePageComponent {
 
   private createMethodsForm(): FieldTree<MethodsForm> {
     return form(signal<MethodsForm>({
-      expandById: 0,
-      collapseById: 0,
       selectId: '',
     }));
   }
@@ -214,8 +212,6 @@ interface SettingsForm {
 }
 
 interface MethodsForm {
-  expandById: number;
-  collapseById: number;
   selectId: string;
 }
 

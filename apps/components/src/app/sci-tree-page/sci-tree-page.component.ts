@@ -45,6 +45,7 @@ export default class SciTreePageComponent {
   private readonly _vehicleService = inject(VehicleService);
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
+  protected readonly methodsForm: FieldTree<MethodsForm> = this.createMethodsForm();
   protected readonly designTokenForm: FieldTree<DesignTokenForm> = this.createDesignTokenForm();
 
   protected readonly tree = this.computeTree();
@@ -53,7 +54,7 @@ export default class SciTreePageComponent {
     const selectable = this.tree()?.selectable();
     return selectable === false ? 'false' : selectable;
   });
-  protected readonly selection = computed(() => this.tree()?.selectedItems().map(item => Number(item)).sort((a, b) => a - b).join(' '));
+  protected readonly selection = computed(() => this.tree()?.selectedItems().sort((a, b) => a.localeCompare(b)).join(' '));
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
 
   private createTree(options: {slowDatasource: boolean}): SciTree<string> {
@@ -113,6 +114,12 @@ export default class SciTreePageComponent {
     ], this._treeElement, {designTokenRootElement: host});
   }
 
+  private createMethodsForm(): FieldTree<MethodsForm> {
+    return form(signal<MethodsForm>({
+      selectId: '',
+    }));
+  }
+
   protected onUserSettingsReset(): void {
     sessionStorage.removeItem('scion.components.table:companies');
     void this._router.navigate(['/']).then(() => this._router.navigate(['/sci-tree']));
@@ -121,8 +128,25 @@ export default class SciTreePageComponent {
   protected updateSelectable(selectable: 'multi' | 'single' | 'false'): void {
     this.tree()?.selectable.set(selectable === 'false' ? false : selectable);
   }
+
+  protected onExpandAll(): void {
+    this.tree()?.expandAll();
+  }
+
+  protected onCollapseAll(): void {
+    this.tree()?.collapseAll();
+  }
+
+  protected onSelect(): void {
+    this.tree()?.select(this.methodsForm.selectId().value().split(' '));
+    this.methodsForm.selectId().reset('');
+  }
 }
 
 interface SettingsForm {
   slowDatasource: boolean;
+}
+
+interface MethodsForm {
+  selectId: string;
 }

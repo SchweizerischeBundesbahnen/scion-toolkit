@@ -62,6 +62,12 @@
           margin-top: 1em;
         }
       }
+
+      form > section.methods {
+        display: grid;
+        grid-template-columns: auto auto;
+        align-items: center;
+      }
     }
 
     > section.tree-state {
