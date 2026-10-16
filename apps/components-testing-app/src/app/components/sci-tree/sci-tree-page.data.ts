@@ -3,8 +3,10 @@ import {defer, mergeWith, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {map, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
-import {SciTableColumnFilter, SciTableColumnType, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
+import {SciTableColumnFilter, SciTableColumnType, SciTableSortCriterion, SciTableTreeNode} from '@scion/components/table';
+import {SciTreeIdsRequest} from '@scion/components/tree';
 import {simulateError$} from '../sci-table/sci-table-page.data';
+import {filterArray, mapArray} from '@scion/toolkit/operators';
 
 @Service()
 export class ProductService {
@@ -19,34 +21,26 @@ export class ProductService {
   private readonly _products$ = toObservable(this.products);
   private readonly _httpClient = inject(HttpClient);
 
-  public getProducts$(request: SciTablePageRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDataSource?: boolean; simulateError?: Signal<boolean>}): Observable<SciTablePageResponse<Product>> {
-    return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
+  public getProductsIds$(request: SciTreeIdsRequest, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<SciTableTreeNode<number>[]> {
+    return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
       .pipe(
         mergeWith(simulateError$(options?.simulateError)),
         switchMap(() => this._products$),
-        map(products => Products.filter(products, request.columnFilters, request.tableFilter, columnDataTypes)),
-        map(products => Products.sort(products, request.sortCriteria, columnDataTypes)),
-        map(products => ({
-          items: products.slice(request.start, request.end),
-          totalCount: products.length,
-        })),
+        map(products => Products.flatten(products)),
+        filterArray(node => request.filter.every(text => node.item.name.toLocaleLowerCase().includes(text.toLocaleLowerCase()))),
+        mapArray(node => ({item: node.item.id, parent: node.parent})),
       );
   }
 
-  public getChildren$(item: Product, request: SciTablePageRequest, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDataSource?: boolean}): Observable<SciTablePageResponse<Product>> {
-    return defer(() => options?.slowDataSource ? timer(1000) : of(undefined))
+  public getProductsById$(ids: number[], options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<Product[]> {
+    return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
       .pipe(
-        map(() => Products.filter(item.children ?? [], request.columnFilters, request.tableFilter, columnDataTypes)),
-        map(children => Products.sort(children, request.sortCriteria, columnDataTypes)),
-        map(children => ({
-          items: children.slice(request.start, request.end),
-          totalCount: children.length,
-        })),
+        mergeWith(simulateError$(options?.simulateError)),
+        switchMap(() => this._products$),
+        map(products => Products.flatten(products)),
+        filterArray(node => ids.includes(node.item.id)),
+        mapArray(node => node.item),
       );
-  }
-
-  public hasChildren(item: Product, request: Pick<SciTablePageRequest, 'tableFilter' | 'columnFilters'>, columnDataTypes: Map<`column:${string}`, SciTableColumnType>): boolean {
-    return Products.filter(item.children ?? [], request.columnFilters, request.tableFilter, columnDataTypes).length > 0;
   }
 
   /**
@@ -71,6 +65,13 @@ export interface Product {
 }
 
 export namespace Products {
+
+  export function flatten(products: Product[], parent?: number): SciTableTreeNode<Product, number>[] {
+    return products.flatMap(product => [
+      {item: product, parent},
+      ...flatten(product.children ?? [], product.id),
+    ]);
+  }
 
   export function generate(count: number): Product[] {
     let nextId = 1;
