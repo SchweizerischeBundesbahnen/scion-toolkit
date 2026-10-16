@@ -2,10 +2,9 @@ import {Page} from '@playwright/test';
 import {TablePagePO} from '../table-page.po';
 import {TablePO} from '../table.po';
 import {waitUntilStable} from '../../../helper/testing.utils';
-import {SciTablePageRequest, SciTablePageResponse} from '@scion/components/table';
 
 /**
- * Sets the table datasource to `loader-http` (or `array-http`) and installs an HTTP endpoint returning the given products.
+ * Sets the table datasource to `loader-http` (or `array-http`) and installs HTTP endpoints returning the given products and their IDs.
  *
  * Missing properties on the provided partial {@link Product} items are populated with random values.
  */
@@ -21,20 +20,15 @@ export async function provideHttpDatasource(page: Page, productLike: Partial<Pro
     expirationDate: product.expirationDate ?? randomDate().toISOString(),
   }));
 
-  // Install HTTP endpoint.
+  // Install HTTP endpoints.
+  await page.route('**/sci-table/products/ids', route => route.fulfill({json: products.map(product => product.id)}));
   await page.route('**/sci-table/products', (route, request) => {
     if (datasource === 'array-http') {
       return route.fulfill({json: products});
     }
     else {
-      const tableRequest = request.postDataJSON() as SciTablePageRequest;
-      return route.fulfill({
-        json: {
-          items: products.slice(tableRequest.start, tableRequest.end),
-          totalCount: products.length,
-        } satisfies SciTablePageResponse<Product>,
-      });
-
+      const ids = request.postDataJSON() as number[];
+      return route.fulfill({json: products.filter(product => ids.includes(product.id))});
     }
   });
 

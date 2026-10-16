@@ -8,15 +8,15 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, inject, Injector, inputBinding, runInInjectionContext, Signal, signal, TemplateRef, untracked, viewChild, WritableSignal} from '@angular/core';
-import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideAsyncTableDatasource, provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColumnType, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {createDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
 import {FieldValidationDirective} from '../field-validation.directive';
-import {Product, ProductService} from './sci-table-page.data';
+import {Product, ProductService, simulateError$} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
-import {noop} from 'rxjs';
+import {mergeWith, noop} from 'rxjs';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';
@@ -92,14 +92,23 @@ export default class SciTablePageComponent {
           case 'array-http':
             this._productService.enableHttpLoader();
             return this._productService.products;
+          case 'loader':
+            return provideAsyncTableDatasource(
+              request => this._productService.getProductsIds$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}),
+              ids => this._productService.getProductsById$(ids, {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}),
+            );
+          case 'loader-delayed':
+            return provideAsyncTableDatasource(
+              request => this._productService.getProductsIds$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}),
+              ids => this._productService.getProductsById$(ids, {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}),
+            );
+          case 'loader-http':
+            return provideAsyncTableDatasource(
+              request => this._httpClient.post<number[]>('/sci-table/products/ids', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))),
+              ids => this._httpClient.post<Product[]>('/sci-table/products', ids).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))),
+            );
           default:
             return this._productService.products;
-          // case 'loader':
-          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: false, simulateError: this.datasourceForm.simulateError().value}));
-          // case 'loader-delayed':
-          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._productService.getProducts$(request, columnDataTypes(this.columns()), {slowDatasource: true, simulateError: this.datasourceForm.simulateError().value}));
-          // case 'loader-http':
-          //   return provideAsyncTableDatasource((request: SciTablePageRequest) => this._httpClient.post<SciTablePageResponse<Product>>('/sci-table/products', request).pipe(mergeWith(simulateError$(this.datasourceForm.simulateError().value))));
         }
       })(),
       rowBindings: (bindings, product) => {
