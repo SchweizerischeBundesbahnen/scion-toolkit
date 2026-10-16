@@ -5490,9 +5490,9 @@ test.describe('sci-table', () => {
 
       // Install HTTP endpoint that blocks the initial load.
       const onLoad$ = new Subject<void>();
-      await page.route('**/sci-table/products', async route => {
+      await page.route('**/sci-table/products/ids', async route => {
         await firstValueFrom(onLoad$);
-        await route.fulfill({json: {items: [], totalCount: 0} satisfies SciTablePageResponse<Product>});
+        return route.fulfill({json: []});
       });
 
       await tablePage.addColumn({name: 'column:testee', type: 'string'});

@@ -23,6 +23,9 @@ export class SciTableSelectionService<T, ID> {
     const table = this._table();
     const rowId = table.visibleRows()?.[index]?.item;
 
+    const previousActiveItem = table.activeItem();
+    const previousActiveIndex = previousActiveItem !== undefined ? (table.rowIndexById().get(previousActiveItem) ?? -1) : -1;
+
     table.activeItem.set(rowId);
 
     if (rowId === undefined || !table.selectable()) {
@@ -33,9 +36,6 @@ export class SciTableSelectionService<T, ID> {
       table.updateSelectedItems(() => new Set<ID>().add(rowId));
       return;
     }
-
-    const previousActiveItem = table.activeItem();
-    const previousActiveIndex = previousActiveItem ? (table.rowIndexById().get(previousActiveItem) ?? -1) : -1;
 
     if (event.shiftKey && previousActiveIndex >= 0) {
       const start = Math.min(previousActiveIndex, index);
@@ -56,7 +56,7 @@ export class SciTableSelectionService<T, ID> {
 
     const table = this._table();
     const activeItem = table.activeItem();
-    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
+    const activeIndex = activeItem !== undefined ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
     if (activeIndex <= 0) {
       return;
@@ -94,7 +94,7 @@ export class SciTableSelectionService<T, ID> {
 
     const table = this._table();
     const activeItem = table.activeItem();
-    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
+    const activeIndex = activeItem !== undefined ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
     const endIndex = Math.min(activeIndex + 1, table.visibleRowCount()! - 1);
 
     if (endIndex === activeIndex) {
@@ -140,7 +140,7 @@ export class SciTableSelectionService<T, ID> {
     if (activeRow.hasChildren() && activeRow.expanded()) {
       table.collapse(activeRow.id);
     }
-    else if (activeRow.parentId) {
+    else if (activeRow.parentId !== undefined) {
       const parentIndex = table.rowIndexById().get(activeRow.parentId) ?? -1;
 
       // Set active item.
@@ -221,7 +221,7 @@ export class SciTableSelectionService<T, ID> {
 
     const table = this._table();
     const activeItem = table.activeItem();
-    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
+    const activeIndex = activeItem !== undefined ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
     if (activeIndex <= 0) {
       return;
@@ -259,7 +259,7 @@ export class SciTableSelectionService<T, ID> {
 
     const table = this._table();
     const activeItem = table.activeItem();
-    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
+    const activeIndex = activeItem !== undefined ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
     const endIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.visibleRowCount()! - 1);
 
     if (endIndex === activeIndex) {
@@ -297,7 +297,7 @@ export class SciTableSelectionService<T, ID> {
 
     const table = this._table();
     const activeItem = table.activeItem();
-    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
+    const activeIndex = activeItem !== undefined ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
     if (activeIndex <= 0) {
       return;
@@ -335,7 +335,7 @@ export class SciTableSelectionService<T, ID> {
 
     const table = this._table();
     const activeItem = table.activeItem();
-    const activeIndex = activeItem ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
+    const activeIndex = activeItem !== undefined ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
     const endIndex = table.visibleRowCount()! - 1;
 
@@ -381,7 +381,7 @@ export class SciTableSelectionService<T, ID> {
     }
 
     const activeItemId = table.activeItem();
-    if (!activeItemId) {
+    if (activeItemId === undefined) {
       return;
     }
 
@@ -542,13 +542,13 @@ export class SciTableSelectionService<T, ID> {
         const nextIndex = indices[i + 1]!;
 
         const itemId = table.visibleRows()?.[currentIndex]?.item;
-        if (!itemId) {
+        if (itemId === undefined) {
           continue;
         }
 
         const nextItemId = table.visibleRows()?.[nextIndex]?.item;
 
-        if (nextItemId && selection.has(nextItemId)) {
+        if (nextItemId !== undefined && selection.has(nextItemId)) {
           newSelection.delete(itemId);
         }
         else {
@@ -573,12 +573,12 @@ export class SciTableSelectionService<T, ID> {
 
         const itemId = table.visibleRows()?.[currentIndex]?.item;
 
-        if (!itemId) {
+        if (itemId === undefined) {
           continue;
         }
 
         const previousItemId = table.visibleRows()?.[previousIndex]?.item;
-        if (previousItemId && selection.has(previousItemId)) {
+        if (previousItemId !== undefined && selection.has(previousItemId)) {
           newSelection.delete(itemId);
         }
         else {

@@ -130,7 +130,7 @@ export class SciTableComponent<T = unknown> {
   private scrollActiveRowIntoViewport(): void {
     effect(() => {
       const activeItem = this.table().activeItem();
-      if (!activeItem) {
+      if (activeItem === undefined) {
         return;
       }
 
