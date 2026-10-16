@@ -9,7 +9,7 @@
  */
 
 import {SciTree, SciTreeDescriptor} from './tree.model';
-import {SciTableDescriptor, ɵillegaldatasource, ɵSciTable} from '@scion/components/table';
+import {SciTableDescriptor, SciTableRowBindingFactory, ɵillegaldatasource, ɵSciTable, ɵSciTableRowBindingFactory} from '@scion/components/table';
 import {Signal, WritableSignal} from '@angular/core';
 import {MaybeArray} from '@scion/toolkit/types';
 
@@ -30,16 +30,12 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
       sortable: false,
       resizable: false,
       showHeader: false,
-      sortBy: descriptor.initialSort ? [{columnName: 'column:tree', direction: descriptor.initialSort}] : undefined,
       rowActions: descriptor.nodeActions,
-      rowBindings: descriptor.nodeBindings,
+      rowBindings: (bindings: SciTableRowBindingFactory, item, index) => descriptor.nodeBindings?.((bindings as ɵSciTableRowBindingFactory), item, index),
       bufferSize: descriptor.bufferSize,
       pageSize: descriptor.pageSize,
       trackBy: descriptor.trackBy,
-      columns: table => table.addColumn({
-        name: 'column:tree',
-        value: descriptor.label,
-      }),
+      columns: table => table.addColumn(descriptor.label),
     };
 
     this._table = new ɵSciTable<T, ID>(tableDescriptor);
@@ -62,16 +58,8 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
     this._table.select(ids);
   }
 
-  public expand(id: ID): void {
-    this._table.expand(id);
-  }
-
   public expandAll(): void {
     this._table.expandAll();
-  }
-
-  public collapse(id: ID): void {
-    this._table.collapse(id);
   }
 
   public collapseAll(): void {

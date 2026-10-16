@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 import {Component, computed, effect, ElementRef, inject, Injector, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
-import {provideAsyncTableDatasource, provideAsyncTableTreeDatasource, provideTableTreeDatasource, SciTable, SciTableComponent, SciTableDataSourceProvider, table, ɵillegaldatasource} from '@scion/components/table';
+import {provideAsyncTableDatasource, provideAsyncTableTreeDatasource, provideTableTreeDatasource, SciTable, SciTableComponent, SciTableDatasourceFactory, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
 import {createDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
@@ -313,7 +313,7 @@ export default class SciTablePageComponent {
     return table;
   }
 
-  private getDataSource(options: {slowDatasource: boolean; hierarchical: boolean}): Signal<VehicleNode[]> | SciTableDataSourceProvider<VehicleNode, string> {
+  private getDataSource(options: {slowDatasource: boolean; hierarchical: boolean}): Signal<VehicleNode[]> | SciTableDatasourceFactory<VehicleNode, string> {
     if (options.hierarchical) {
       if (options.slowDatasource) {
         return provideAsyncTableTreeDatasource<VehicleNode, string>(

@@ -53,11 +53,11 @@ export interface SciTableRowBindingFactory {
   addPartBinding(name: `row:${string}` | undefined): this;
 }
 
-class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
+export class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
 
   public readonly attributeBindings = new Array<[string, unknown]>();
   public readonly classBindings = new Array<string>();
-  public readonly partBindings = new Array<`row:${string}`>();
+  public readonly partBindings = new Array<string>();
 
   public addAttributeBinding(name: string, value: unknown | undefined): this {
     if (value !== undefined) {
@@ -73,7 +73,7 @@ class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
     return this;
   }
 
-  public addPartBinding(name: `row:${string}` | undefined): this {
+  public addPartBinding(name: string | undefined): this {
     if (name) {
       this.partBindings.push(name);
     }
@@ -98,7 +98,7 @@ export function coerceTableRowBindings<T>(bindingsFn: SciTableRowBindingFactoryF
 export interface SciTableRowBindings {
   cssClass: Signal<string[]>;
   attributes: Signal<{[name: string]: unknown}>;
-  part: Signal<`row:${string}`[]>;
+  part: Signal<string[]>;
 }
 
 export const SCI_TABLE_ROW_BINDING = new InjectionToken<SciTableRowBindingFactory[]>('SCI_TABLE_ROW_BINDING');

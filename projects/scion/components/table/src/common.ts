@@ -8,10 +8,6 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Observable} from 'rxjs';
-
-export type MaybeAsync<T> = T | Promise<T> | Observable<T>;
-
 /**
  * Creates a range of integers starting at `start` and ending at `end` (including `end`).
  */

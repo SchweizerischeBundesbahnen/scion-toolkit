@@ -9,14 +9,14 @@
  */
 
 import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, ResourceRef, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
-import {isArrayDatasource, isTreeDatasource, SciAsyncTableTreeDatasource, SciTableArrayDatasource, SciTableColumnFilter, SciTableDataSource, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeDatasource, SciTableTreeNode} from './table-datasource';
+import {isArrayDatasource, isTreeDatasource, ɵSciAsyncTableTreeDatasource, ɵSciTableArrayDatasource, SciTableColumnFilter, SciTableIdsRequest, SciTableSortCriterion, ɵSciTableTreeDatasource, SciTableTreeNode, SciTableDatasource, SciTableTreeDatasource} from './table-datasource';
 import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn, skeletonRowId} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {SCI_TABLE_STORAGE} from './table-storage';
 import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
 import {SciTableCache} from './table.cache';
 import {rxResource, toObservable} from '@angular/core/rxjs-interop';
-import {catchError, combineLatestWith, concat, fromEvent, Observable, of, throwError, timer} from 'rxjs';
+import {catchError, combineLatestWith, concat, defer, fromEvent, iif, Observable, of, OperatorFunction, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
 import {Arrays, clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {map, startWith, switchMap} from 'rxjs/operators';
@@ -35,7 +35,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public readonly rowActions?: SciTableRowActionFactoryFn<T>;
 
   private readonly _rowBindings: SciTableRowBindingFactoryFn<T>[];
-  private readonly _datasource: SciTableDataSource<T, ID>;
+  private readonly _datasource: SciTableDatasource<T, ID> | SciTableTreeDatasource<T, ID>;
   private readonly _trackBy?: (item: T) => ID;
 
   public readonly tableViewRef = signal<SciTableViewRef | undefined>(undefined);
@@ -130,7 +130,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     this._trackBy = descriptor.trackBy;
 
     if (isSignal(descriptor.ɵdatasource)) {
-      this._datasource = new SciTableArrayDatasource(descriptor.ɵdatasource, {columns: this.columns, trackBy: descriptor.trackBy ?? (item => item as unknown as ID)});
+      this._datasource = new ɵSciTableArrayDatasource(descriptor.ɵdatasource, {columns: this.columns, trackBy: descriptor.trackBy ?? (item => item as unknown as ID)});
     }
     else if (descriptor.ɵdatasource) {
       this._datasource = descriptor.ɵdatasource(this.columns, descriptor.trackBy ?? (item => item as unknown as ID));
@@ -440,11 +440,11 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
    * Supports out-of-the-box filtering and sorting for built-in table columns.
    */
   public isArrayDatasource(): boolean {
-    return this._datasource instanceof SciTableArrayDatasource || this._datasource instanceof SciAsyncTableTreeDatasource;
+    return this._datasource instanceof ɵSciTableArrayDatasource || this._datasource instanceof ɵSciAsyncTableTreeDatasource;
   }
 
   public isTreeDatasource(): boolean {
-    return this._datasource instanceof SciTableTreeDatasource || this._datasource instanceof SciAsyncTableTreeDatasource;
+    return this._datasource instanceof ɵSciTableTreeDatasource || this._datasource instanceof ɵSciAsyncTableTreeDatasource;
   }
 
   public reload(): void {
@@ -704,7 +704,7 @@ class TableTreeStructure<T, ID> {
 
   private readonly _injector = inject(Injector);
 
-  private readonly _datasource: SciTableDataSource<T, ID>;
+  private readonly _datasource: SciTableDatasource<T, ID> | SciTableTreeDatasource<T, ID>;
   private readonly _sortCriteria: Signal<SciTableSortCriterion[]>;
   private readonly _filterCriteria: Signal<SciTableColumnFilter[]>;
   private readonly _tableFilter: Signal<string | null>;
@@ -715,11 +715,11 @@ class TableTreeStructure<T, ID> {
   private readonly _unfilteredNodes = this.computeUnfilteredNodes();
   private readonly _nodes = this.computeNodes();
 
-  public readonly expandedNodeIds = this.computeExpandedNodeIds();
+  public readonly nodes = this.computeSortedNodes();
+  public readonly nodesById = this.computeNodesById();
   public readonly visibleNodes = this.computeVisibleNodes();
   public readonly childrenByParent = this.computeChildrenByParent();
-  public readonly nodesById = this.computeNodesById();
-  public readonly nodes = this.computeSortedNodes();
+  public readonly expandedNodeIds = this.computeExpandedNodeIds();
 
   public readonly error = computed(() => this._nodes.status() === 'error');
   public readonly loading = computed(() => this._nodes.isLoading());
@@ -730,7 +730,7 @@ class TableTreeStructure<T, ID> {
     sortCriteria: Signal<SciTableSortCriterion[]>;
     filterCriteria: Signal<SciTableColumnFilter[]>;
     tableFilter: Signal<string | null>;
-    datasource: SciTableDataSource<T, ID>;
+    datasource: SciTableDatasource<T, ID> | SciTableTreeDatasource<T, ID>;
   }) {
     this._datasource = options.datasource;
     this._filterCriteria = options.filterCriteria;
@@ -802,8 +802,14 @@ class TableTreeStructure<T, ID> {
     });
   }
 
-  private getIds(request: SciTableIdsRequest, options: {injector: Injector}): Observable<SciTableTreeNode<ID>[]> {
-    return runInInjectionContext(options.injector, () => Observables.coerce(this._datasource.getIds(request)).pipe(
+  private getIds(request: Partial<SciTableIdsRequest>, options: {injector: Injector}): Observable<SciTableTreeNode<ID>[]> {
+    const getIdsRequest: SciTableIdsRequest = {
+      columnFilters: request.columnFilters ?? [],
+      sortCriteria: request.sortCriteria ?? [],
+      tableFilter: request.tableFilter,
+    };
+
+    return runInInjectionContext(options.injector, () => Observables.coerce(this._datasource.getIds(getIdsRequest)).pipe(
       map((ids): SciTableTreeNode<ID>[] => {
         if (isTreeDatasource(this._datasource)) {
           return ids as SciTableTreeNode<ID>[];
@@ -828,7 +834,7 @@ class TableTreeStructure<T, ID> {
         injector?.destroy();
         injector = createDestroyableInjector({parent: this._injector});
 
-        return this.getIds({sortCriteria: params, columnFilters: []}, {injector});
+        return this.getIds({sortCriteria: params}, {injector});
       },
     });
   }
@@ -847,32 +853,12 @@ class TableTreeStructure<T, ID> {
         injector?.destroy();
         injector = createDestroyableInjector({parent: this._injector});
 
-        const unfilteredNodes = params.unfilteredNodes;
-        // If no filters are applied, filteredIds === allIds
-        const load$ = !params.tableFilter && params.filterCriteria.length === 0 ?
-          of(unfilteredNodes) :
-          this.getIds({sortCriteria: [], columnFilters: params.filterCriteria, tableFilter: params.tableFilter}, {injector});
+        console.log(params)
 
-        return load$.pipe(
-          map(filteredNodes => {
-            const nodesById = new Map(unfilteredNodes.map(node => [node.item, node]));
-            const filteredIds = new Set(filteredNodes.map(node => node.item));
-
-            const nodes = unfilteredNodes.reduce((acc, node) => {
-              const path = findNodePath(nodesById, node);
-
-              // Include the full path (ancestors and descendants) of any filtered node.
-              // This ensures that all ancestors and descendants are displayed, even if they don't match the filter.
-              if (path.some(id => filteredIds.has(id))) {
-                path.forEach(id => acc.add(id));
-              }
-
-              return acc;
-            }, new Set<ID>());
-
-            // Return nodes in correct order.
-            return unfilteredNodes.filter(node => nodes.has(node.item));
-          }),
+        const nodes$ = (params.tableFilter || params.filterCriteria.length) ? this.getIds(params, {injector: injector}) : of(params.unfilteredNodes);
+        return nodes$.pipe(
+          includeParentsAndChildren(params.unfilteredNodes),
+          sortNodes(params.unfilteredNodes),
         );
       },
     });
@@ -957,7 +943,7 @@ class TableTreeStructure<T, ID> {
         return children;
       };
 
-      return getChildren(undefined);
+      return untracked(() => getChildren(undefined));
     });
   }
 
@@ -1002,8 +988,31 @@ function findNodePath<ID>(nodesById: Map<ID, SciTableTreeNode<ID>>, node: SciTab
   return findNodePath(nodesById, parent, path);
 }
 
+function includeParentsAndChildren<ID>(unfilteredNodes: SciTableTreeNode<ID>[]): OperatorFunction<SciTableTreeNode<ID>[], Set<ID>> {
+  return map(filteredNodes => {
+    const nodesById = new Map(unfilteredNodes.map(node => [node.item, node]));
+    const filteredIds = new Set(filteredNodes.map(node => node.item));
+
+    return unfilteredNodes.reduce((acc, node) => {
+      const path = findNodePath(nodesById, node);
+
+      // Include the full path (parents and children) of any filtered node.
+      // This ensures that all parents and children are displayed, even if they don't match the filter.
+      if (path.some(id => filteredIds.has(id))) {
+        path.forEach(id => acc.add(id));
+      }
+
+      return acc;
+    }, new Set<ID>());
+  });
+}
+
+function sortNodes<ID>(unfilteredNodes: SciTableTreeNode<ID>[]): OperatorFunction<Set<ID>, SciTableTreeNode<ID>[]> {
+  return map(nodes => unfilteredNodes.filter(node => nodes.has(node.item)));
+}
+
 export interface SciScrollRange {
-  /** incluse */
+  /** inclusive */
   start: number;
   /** exclusive */
   end: number;

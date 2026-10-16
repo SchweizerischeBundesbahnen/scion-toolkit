@@ -9,7 +9,7 @@
  */
 
 import {Injector, Signal, WritableSignal} from '@angular/core';
-import {SciTableDataSourceProvider, SciTableSortCriterion} from './table-datasource';
+import {SciTableDatasourceFactory, SciTableSortCriterion} from './table-datasource';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
@@ -28,7 +28,7 @@ export interface SciTableDescriptor<T, ID = unknown> {
    * @docs-private Not public API. For internal use only.
    * @experimental since 22.3.0; API and behavior may change in any version without notice.
    */
-  ɵdatasource?: Signal<T[]> | SciTableDataSourceProvider<T, ID>;
+  ɵdatasource?: Signal<T[]> | SciTableDatasourceFactory<T, ID>;
   columns: SciTableColumnFactoryFn<T>;
   sortable?: boolean;
   resizable?: boolean;

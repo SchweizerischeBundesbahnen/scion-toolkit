@@ -170,7 +170,7 @@ export class SciTableSelectionService<T, ID> {
         }
 
         let i = index;
-        while (i >= 0) {
+        while (i > 0) {
           const row = table.getRowByIndex(i);
           if (row?.expanded()) {
             return row;

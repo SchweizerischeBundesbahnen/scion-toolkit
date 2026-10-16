@@ -15,7 +15,7 @@ import {TablePO} from './table.po';
 import {BehaviorSubject, map, NEVER, noop, of, Subject, take, tap, throwError} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {provideTableRowBinding} from './table-row-binding';
-import {provideAsyncTableDatasource, provideAsyncTableTreeDatasource, provideTableTreeDatasource, SciTableDataProvider, SciTableIdsRequest, ɵillegaldatasource} from './table-datasource';
+import {provideAsyncTableDatasource, provideAsyncTableTreeDatasource, provideTableTreeDatasource, SciTableDatasource, SciTableIdsRequest, ɵillegaldatasource} from './table-datasource';
 import {createSciTableComponent, waitUntilStable} from './testing/testing.util';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {DATE_PIPE_DEFAULT_OPTIONS, DatePipeConfig, registerLocaleData} from '@angular/common';
@@ -3592,11 +3592,11 @@ describe('Table', () => {
       let idsInjector: Injector | undefined;
       let itemsInjector: Injector | undefined;
 
-      const getIds: SciTableDataProvider<number, number>['getIds'] = () => {
+      const getIds: SciTableDatasource<number, number>['getIds'] = () => {
         idsInjector = inject(Injector);
         return [1, 2, 3];
       };
-      const getItems: SciTableDataProvider<number, number>['getItems'] = ids => {
+      const getItems: SciTableDatasource<number, number>['getItems'] = ids => {
         itemsInjector = inject(Injector);
         return ids.map(Number);
       };
@@ -3614,11 +3614,11 @@ describe('Table', () => {
     });
 
     it('should not call data provider functions in reactive context', async () => {
-      const getIds: SciTableDataProvider<number, number>['getIds'] = () => {
+      const getIds: SciTableDatasource<number, number>['getIds'] = () => {
         assertNotInReactiveContext(getIds);
         return [1, 2, 3];
       };
-      const getItems: SciTableDataProvider<number, number>['getItems'] = ids => {
+      const getItems: SciTableDatasource<number, number>['getItems'] = ids => {
         assertNotInReactiveContext(getItems);
         return ids.map(Number);
       };
@@ -3637,7 +3637,7 @@ describe('Table', () => {
     it('should destroy previous getIds function injection context', async () => {
       const destroyRefs = new Array<DestroyRef>();
 
-      const getIds: SciTableDataProvider<number, number>['getIds'] = () => {
+      const getIds: SciTableDatasource<number, number>['getIds'] = () => {
         destroyRefs.push(inject(DestroyRef));
         return [1, 2, 3];
       };
@@ -3680,7 +3680,7 @@ describe('Table', () => {
     it('should destroy previous getItems function injection context', async () => {
       const destroyRefs = new Array<DestroyRef>();
 
-      const getItems: SciTableDataProvider<number, number>['getItems'] = ids => {
+      const getItems: SciTableDatasource<number, number>['getItems'] = ids => {
         destroyRefs.push(inject(DestroyRef));
         return ids.map(Number);
       };

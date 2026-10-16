@@ -1,19 +1,16 @@
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Signal, WritableSignal} from '@angular/core';
-import {SciTableRowActionFactoryFn} from '../../table/src/table.model';
-import {SciTableDataSourceProvider, SciTableRowBindingFactoryFn, SciTableTreeNode} from '@scion/components/table';
-import {SciAsyncTableTreeDatasource, SciTableTreeDatasource} from '../../table/src/table-datasource';
-import {MaybeAsync} from '../../table/src/common';
+import {SciTableRowActionFactoryFn} from '@scion/components/table';
 import {MaybeArray} from '@scion/toolkit/types';
+import {SciTreeDatasourceFactory} from './tree-datasource';
 
 export interface SciTreeDescriptor<T, ID> {
   label: (item: T) => string | number | boolean | SciComponentDescriptor | SciTemplateDescriptor;
-  datasource: SciTableDataSourceProvider<T, ID>;
+  datasource: SciTreeDatasourceFactory<T, ID>;
   filterable?: boolean | {matcher: (text: string, context: SciTreeNodeContext<T>) => boolean};
   selectable?: false | 'single' | 'multi';
-  initialSort?: 'asc' | 'desc';
-  nodeActions?: SciTableRowActionFactoryFn<T>;
-  nodeBindings?: SciTableRowBindingFactoryFn<T>;
+  nodeActions?: SciTreeNodeActionFactoryFn<T>;
+  nodeBindings?: SciTreeNodeBindingFactoryFn<T>;
   /**
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
@@ -50,21 +47,31 @@ export interface SciTree<ID> {
   collapseAll(): void;
 }
 
-export type SciTreeDataSource<T, ID> = SciTableTreeDatasource<T, ID>;
-export type SciPageableTreeDataSource<T, ID> = SciAsyncTableTreeDatasource<T, ID>;
+export type SciTreeNodeActionFactoryFn<T> = SciTableRowActionFactoryFn<T>;
+export type SciTreeNodeBindingFactoryFn<T> = (bindings: SciTreeNodeBindingFactory, item: T, index: number) => void;
 
-export function provideTreeDatasource<T, ID>(root: Signal<T[]>, getChildren: (item: T) => T[]): SciTableDataSourceProvider<T, ID> {
-  return (columns, trackBy) => new SciTableTreeDatasource(root, {columns, trackBy, getChildren});
-}
+export interface SciTreeNodeBindingFactory {
+  addAttributeBinding(name: string, value: unknown | undefined): this;
 
-export function provideAsyncTreeDatasource<T, ID>(getIds: (request: SciTreeIdsRequest) => MaybeAsync<SciTableTreeNode<ID>[]>, getItems: (ids: ID[]) => MaybeAsync<T[]>): SciTableDataSourceProvider<T, ID> {
-  return () => new SciAsyncTableTreeDatasource(request => {
-    const columnFilter = request.columnFilters.find(columnFilter => columnFilter.columnName === 'column:tree');
-    const filter = [columnFilter?.text ? String(columnFilter?.text) : '', request.tableFilter ?? ''].filter(Boolean);
-    return getIds({filter});
-  }, getItems);
-}
+  addClassBinding(name: string | undefined): this;
 
-export interface SciTreeIdsRequest {
-  filter: string[];
+  /**
+   * Adds the specified values as part attributes to the node, enabling for custom styling of the node, e.g., based on a condition.
+   *
+   * Example usage:
+   * ```ts
+   * tree({
+   *   datasource: data,
+   *   nodeBindings: (bindings, item, index) => bindings
+   *     .addPartBinding(item.active ? 'node:active' : undefined),
+   * });
+   * ```
+   *
+   * ```scss
+   * sci-tree::part(node\:active node\:not\:selected) {
+   *   background-color: green;
+   * }
+   * ```
+   */
+  addPartBinding(name: `node:${string}` | undefined): this;
 }

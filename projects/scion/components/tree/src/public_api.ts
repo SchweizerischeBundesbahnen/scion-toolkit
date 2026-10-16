@@ -10,4 +10,5 @@
 
 export {tree} from './tree';
 export {SciTreeComponent} from './tree.component';
-export {type SciTree, type SciTreeDescriptor, type SciTreeNodeContext, provideTreeDatasource, provideAsyncTreeDatasource, type SciTreeIdsRequest} from './tree.model';
+export {type SciTree, type SciTreeDescriptor, type SciTreeNodeContext} from './tree.model';
+export {provideTreeDatasource, provideAsyncTreeDatasource, type SciTreeIdsRequest} from './tree-datasource';

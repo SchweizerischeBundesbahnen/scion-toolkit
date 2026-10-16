@@ -17,7 +17,6 @@ import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, setCaret, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
 import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
 import {firstValueFrom, Subject} from 'rxjs';
-import {SciTablePageResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
 import {BooleanColumnPO} from './boolean-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';

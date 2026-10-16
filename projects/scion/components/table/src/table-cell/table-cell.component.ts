@@ -80,17 +80,18 @@ export class SciTableCellComponent<T, ID> {
 
   private computePartAttribute(): Signal<string> {
     return computed(() => {
+      const isTree = this._table().isTreeDatasource();
       return Arrays.distinct([
         // Enable column styling based on column type.
         `column:${this.cell().column.type}`,
         // Enable column styling based on column name.
         this.cell().column.name,
         // Enable row styling based on selection state.
-        this.row().selected() ? 'row:selected' : 'row:not:selected',
+        this.row().selected() ? `${isTree ? 'node' : 'row'}:selected` : `${isTree ? 'node' : 'row'}:not:selected`,
         // Enable row styling based on active state.
-        this.row().active() ? 'row:active' : 'row:not:active',
+        this.row().active() ? `${isTree ? 'node' : 'row'}:active` : `${isTree ? 'node' : 'row'}:not:active`,
         // Enable row styling based on row bindings.
-        ...Arrays.coerce(this.row().bindings?.part()),
+        ...Arrays.coerce(this.row().bindings.part()),
       ]).join(' ');
     });
   }

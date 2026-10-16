@@ -52,10 +52,11 @@
   - Falls aufwändig, für den Anfang einfach nur auf der ersten Column
 
 # TODO
-- Test / Showcase pages ready machen (datasources, grouping, css variables)
-- Für den storage: muss der name mit table: anfangen? für tree komisch.
-  - Evtl. storage extrahieren in common
+- Test / Showcase pages ready machen (datasources, grouping)
 - Howto markdown für tree, für Tabelle erweitern
 - Tests
   - Für tree Tests: nur die API relevanten Sachen testen, der Rest soll über hierarchische Tabelle abgedeckt werden (z.B. keyboard navigation)
-- Review (v.a. Datasource) mit Dani
+- Dani
+  - Für den storage: muss der name mit table: anfangen? für tree komisch.
+    - Evtl. storage extrahieren in common
+  - Review (v.a. Datasource) mit Dani

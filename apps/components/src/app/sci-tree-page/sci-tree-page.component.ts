@@ -20,7 +20,7 @@ import {SciViewportComponent} from '@scion/components/viewport';
 import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
 import {VehicleNode} from '../sci-table-page/vehicle.model';
 import {VehicleService} from '../sci-table-page/vehicle.service';
-import {SciTableDataSourceProvider} from '@scion/components/table';
+import {SciTableDatasourceFactory} from '@scion/components/table';
 
 @Component({
   selector: 'app-table-page',
@@ -81,7 +81,7 @@ export default class SciTreePageComponent {
     return tree;
   }
 
-  private getDataSource(options: {slowDatasource: boolean}): SciTableDataSourceProvider<VehicleNode, string> {
+  private getDataSource(options: {slowDatasource: boolean}): SciTableDatasourceFactory<VehicleNode, string> {
     if (options.slowDatasource) {
       return provideAsyncTreeDatasource<VehicleNode, string>(
         request => this._vehicleService.getVehicleNodeIds$(request),

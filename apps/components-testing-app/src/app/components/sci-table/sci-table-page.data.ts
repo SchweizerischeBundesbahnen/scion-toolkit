@@ -1,4 +1,4 @@
-import {SciTableColumnFilter, SciTableColumnType, SciTableIdsRequest, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
+import {SciTableColumnFilter, SciTableColumnType, SciTableIdsRequest, SciTableSortCriterion} from '@scion/components/table';
 import {effect, inject, Injector, linkedSignal, Service, Signal, signal, untracked} from '@angular/core';
 import {defer, mergeWith, NEVER, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
