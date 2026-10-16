@@ -187,18 +187,6 @@ export default class SciTreePageComponent {
     });
   }
 
-  protected onExpand(): void {
-    const id = this.methodsForm.expandById().value();
-    this.tree()?.expand(id);
-    this.methodsForm.expandById().reset(0);
-  }
-
-  protected onCollapse(): void {
-    const id = this.methodsForm.collapseById().value();
-    this.tree()?.collapse(id);
-    this.methodsForm.collapseById().reset(0);
-  }
-
   protected onExpandAll(): void {
     this.tree()?.expandAll();
   }

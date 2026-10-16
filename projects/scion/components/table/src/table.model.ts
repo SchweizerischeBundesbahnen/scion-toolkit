@@ -118,10 +118,6 @@ export interface SciTable<ID = unknown> {
    */
   filter(text: string | null): void;
 
-  expand(id: ID): void;
-
-  collapse(id: ID): void;
-
   expandAll(): void;
 
   collapseAll(): void;

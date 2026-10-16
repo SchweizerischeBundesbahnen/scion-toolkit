@@ -45,10 +45,6 @@ export interface SciTree<ID> {
 
   select(id: MaybeArray<ID>): void;
 
-  expand(id: ID): void;
-
-  collapse(id: ID): void;
-
   expandAll(): void;
 
   collapseAll(): void;
