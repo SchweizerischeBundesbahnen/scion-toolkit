@@ -24,8 +24,8 @@ export class TablePO {
     this.body = this.element.querySelector('sci-table-body')!;
   }
 
-  public get header(): HeaderPO {
-    return new HeaderPO(this.element.querySelector('sci-table-header')!);
+  public get header(): TableHeaderPO {
+    return new TableHeaderPO(this.element.querySelector('sci-table-header')!);
   }
 
   public get viewport(): HTMLElement {
@@ -62,7 +62,7 @@ export class TablePO {
       if (locateBy.index !== undefined && column.index !== locateBy.index) {
         return false;
       }
-      if (locateBy.header !== undefined && column.header !== locateBy.header) {
+      if (locateBy.header !== undefined && column.header?.label !== locateBy.header) {
         return false;
       }
       return true;
@@ -92,18 +92,14 @@ export class ColumnPO {
 
   private readonly _columnElement: HTMLElement;
   private readonly _columnFilterElement: HTMLElement | null;
-  private readonly _columnHeaderElement: HTMLElement | null;
-  private readonly _columnSortButton: HTMLButtonElement | null;
+
+  public readonly header: ColumnHeaderPO | null;
 
   constructor(public name: `column:${string}`, public index: number, private _table: TablePO) {
     this._columnElement = this._table.element.querySelector(`sci-table-column[data-column="${this.name}"]`)!;
-    this._columnHeaderElement = this._table.element.querySelector(`sci-column-header[data-column="${this.name}"]`);
+    const columnHeaderElement = this._table.element.querySelector<HTMLElement>(`sci-column-header[data-column="${this.name}"]`);
+    this.header = columnHeaderElement && new ColumnHeaderPO(columnHeaderElement);
     this._columnFilterElement = this._table.element.querySelector(`sci-column-filter[data-column="${this.name}"]`);
-    this._columnSortButton = this._columnHeaderElement?.querySelector('button.e2e-sort') ?? null;
-  }
-
-  public get header(): string | undefined {
-    return this._columnHeaderElement?.querySelector('span.e2e-header')?.textContent.trim();
   }
 
   public get width(): number {
@@ -115,11 +111,11 @@ export class ColumnPO {
   }
 
   public async toggleSort(modifiers?: {ctrl?: true}): Promise<void> {
-    if (!this._columnSortButton) {
+    if (!this.header?.sortButton) {
       throw Error('[PageObjectError] Table without header cannot be sorted.');
     }
 
-    this._columnSortButton.dispatchEvent(new MouseEvent('click', {ctrlKey: modifiers?.ctrl ?? false}));
+    this.header.sortButton.dispatchEvent(new MouseEvent('click', {ctrlKey: modifiers?.ctrl ?? false}));
     await this._table.waitUntilStable();
   }
 
@@ -182,7 +178,7 @@ export class ColumnPO {
   }
 
   public get sortable(): boolean {
-    return this._columnSortButton !== null;
+    return this.header?.sortButton !== null;
   }
 
   public get filterable(): boolean {
@@ -251,12 +247,33 @@ export class CellPO {
   }
 }
 
-export class HeaderPO {
+export class TableHeaderPO {
 
   constructor(public element: HTMLElement) {
   }
 
   public get height(): number {
     return this.element.offsetHeight;
+  }
+}
+
+export class ColumnHeaderPO {
+
+  public sortButton: HTMLButtonElement | null;
+
+  constructor(public element: HTMLElement) {
+    this.sortButton = this.element.querySelector<HTMLButtonElement>('button.e2e-sort');
+  }
+
+  public get icon(): string | null {
+    return this.element.querySelector('sci-icon.e2e-label')?.getAttribute('icon') ?? null;
+  }
+
+  public get label(): string {
+    return this.element.textContent.trim();
+  }
+
+  public get tooltip(): string | null {
+    return this.element.getAttribute('title');
   }
 }

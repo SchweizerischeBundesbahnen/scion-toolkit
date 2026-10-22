@@ -173,7 +173,16 @@ export class TablePagePO {
   public async addColumn(options: ColumnOptions): Promise<void> {
     await this.tabbar.locator('button.e2e-columns').click();
     await this.properties.locator('input.e2e-name').fill(options.name);
-    await this.properties.locator('input.e2e-header').fill(options.header ?? options.name);
+
+    if (typeof options.header === 'string') {
+      await this.properties.locator('input.e2e-header-label').fill(options.header);
+    }
+    else if (options.header !== undefined) {
+      await this.properties.locator('input.e2e-header-label').fill(options.header.label ?? '');
+      await this.properties.locator('input.e2e-header-tooltip').fill(options.header.tooltip ?? '');
+      await this.properties.locator('input.e2e-header-icon').fill(options.header.icon ?? '');
+    }
+
     await this.properties.locator('select.e2e-type').selectOption(options.type);
     await this.properties.locator('input.e2e-resizable').setChecked(options.resizable ?? true);
     await this.properties.locator('input.e2e-width').fill(options.width ?? '');
@@ -223,7 +232,7 @@ export class TablePagePO {
 
 export interface ColumnOptions {
   name: `column:${string}`;
-  header?: string;
+  header?: string | {label?: string; tooltip?: string; icon?: string};
   type: SciTableColumnType;
   resizable?: boolean;
   width?: string;
