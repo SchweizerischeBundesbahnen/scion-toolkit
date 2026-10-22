@@ -12,6 +12,8 @@ import {Directive, effect, ElementRef, inject, input, IterableDiffers, Renderer2
 
 /**
  * Use to add specified attributes to the host element.
+ *
+ * @docs-private Not public API. For internal use only.
  */
 @Directive({selector: '[sciAttributes]'})
 export class SciAttributesDirective {
