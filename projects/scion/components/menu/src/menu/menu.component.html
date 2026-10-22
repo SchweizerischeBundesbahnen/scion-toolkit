@@ -140,7 +140,7 @@
 <!-- Renders the icon of the passed menu item. -->
 <ng-template #icon_template let-menuItem>
   @if (menuItem.checked !== undefined) {
-    <sci-icon>{{menuItem.checked() ? 'scion.checkmark' : undefined}}</sci-icon>
+    <sci-icon data-checkmark>{{menuItem.checked() ? 'scion.checkmark' : undefined}}</sci-icon>
   } @else if (menuItem.iconLigature) {
     <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
   } @else if (menuItem.iconComponent) {

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {inject, Injectable, InjectionToken, Injector, runInInjectionContext} from '@angular/core';
+import {assertNotInReactiveContext, inject, Injectable, InjectionToken, Injector, runInInjectionContext} from '@angular/core';
 import {materialIconProvider} from './material-icon-provider';
 import {scionIconProvider} from './scion-icon-provider';
 import {SciIconProviderFn} from './icon.provider';
@@ -36,6 +36,8 @@ export class IconProviders {
    * Icon providers are called in registration order. If a provider does not provide the icon, the next provider is called, and so on.
    */
   public provide(icon: string | undefined): SciComponentDescriptor | undefined {
+    assertNotInReactiveContext(this.provide, 'Call IconProviders.provide() in a non-reactive (non-tracking) context.');
+
     if (!icon) {
       return undefined;
     }

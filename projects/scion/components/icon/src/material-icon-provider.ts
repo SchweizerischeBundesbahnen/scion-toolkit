@@ -36,7 +36,10 @@ export const materialIconProvider: SciIconProviderFn = (ligature: string): SciCo
  */
 @Component({
   selector: 'sci-material-icon',
-  template: '{{ligature()}}',
+  template: '',
+  host: {
+    '[attr.data-ligature]': 'ligature()',
+  },
   styles: `
     :host {
       font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Symbols Sharp', 'Material Icons', 'Material Icons Outlined', 'Material Icons Round', 'Material Icons Sharp';
@@ -51,6 +54,11 @@ export const materialIconProvider: SciIconProviderFn = (ligature: string): SciCo
       direction: ltr;
       font-feature-settings: 'liga';
       -webkit-font-smoothing: antialiased;
+
+      /* Render ligature in ::before pseudo-element so it is excluded from the DOM tree (e.g., will not be returned by Element.textContent). */
+      &::before {
+        content: attr(data-ligature);
+      }
     }
   `,
 })

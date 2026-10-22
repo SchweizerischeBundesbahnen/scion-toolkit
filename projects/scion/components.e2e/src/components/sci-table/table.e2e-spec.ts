@@ -909,13 +909,13 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
 
       await table.column({name: 'column:boolean'}).filter(false);
-      await expectTable(table).toHaveContent([['clear']]);
+      await expectTable(table).toHaveContent([['false']]);
 
       await table.column({name: 'column:boolean'}).filter(true);
-      await expectTable(table).toHaveContent([['checkmark'], ['checkmark']]);
+      await expectTable(table).toHaveContent([['true'], ['true']]);
 
       await table.column({name: 'column:boolean'}).clearFilter();
-      await expectTable(table).toHaveContent([['checkmark'], ['clear'], ['checkmark']]);
+      await expectTable(table).toHaveContent([['true'], ['false'], ['true']]);
     });
 
     test('should filter date column', async ({page}) => {
@@ -1905,17 +1905,17 @@ test.describe('sci-table', () => {
       // Sort ascending.
       await table.column({name: 'column:boolean'}).sort();
       await expectTable(table).column({name: 'column:boolean'}).toHaveSortDirection('asc');
-      await expectTable(table).toHaveContent([['clear'], ['checkmark'], ['checkmark']]);
+      await expectTable(table).toHaveContent([['false'], ['true'], ['true']]);
 
       // Sort descending.
       await table.column({name: 'column:boolean'}).sort();
       await expectTable(table).column({name: 'column:boolean'}).toHaveSortDirection('desc');
-      await expectTable(table).toHaveContent([['checkmark'], ['checkmark'], ['clear']]);
+      await expectTable(table).toHaveContent([['true'], ['true'], ['false']]);
 
       // Unset sort.
       await table.column({name: 'column:boolean'}).sort();
       await expectTable(table).column({name: 'column:boolean'}).toHaveSortDirection(null);
-      await expectTable(table).toHaveContent([['checkmark'], ['clear'], ['checkmark']]);
+      await expectTable(table).toHaveContent([['true'], ['false'], ['true']]);
     });
 
     test('should sort date column ascending and descending', async ({page}) => {
