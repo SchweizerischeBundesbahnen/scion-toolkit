@@ -230,6 +230,11 @@ export class RowPO {
   public rowAction(locateBy: {cssClass: string}): HTMLElement {
     return this.element.querySelector(`sci-toolbar button.${locateBy.cssClass}`)!;
   }
+
+  public icon(): string[] {
+    const icons = Array.from(this.element.querySelectorAll(':scope > sci-icon:has(~ sci-table-cell)'));
+    return icons.map(icon => icon.getAttribute('icon')!);
+  }
 }
 
 export class CellPO {

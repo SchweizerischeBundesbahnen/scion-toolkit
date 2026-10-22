@@ -12,7 +12,10 @@
       @if (!table.error()) {
         <!-- Track index to reuse the table row elements -->
         @for (row of table.rows(); track $index) {
-          <sci-table-row [row]="row" (primaryAction)="onRowPrimaryAction($event)" [sciAttributes]="row.bindings?.attributes()"/>
+          <sci-table-row [row]="row"
+                         [sciAttributes]="row.bindings?.attributes()"
+                         [class]="row.bindings?.classes?.()"
+                         (primaryAction)="onRowPrimaryAction($event)"/>
         } @empty {
           <span class="message e2e-no-data">{{('%scion.components.no_items.message' | sciText)()}}</span>
         }
