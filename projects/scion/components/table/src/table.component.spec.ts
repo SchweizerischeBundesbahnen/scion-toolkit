@@ -3955,6 +3955,44 @@ describe('Table', () => {
       expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
       expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('column:string');
     });
+
+    it('should apply row bindings registered in injector hierarchy', async () => {
+      const injector1 = Injector.create({
+        parent: TestBed.inject(Injector),
+        providers: [
+          provideTableRowBinding(row => row.addAttributeBinding('data-attribute-1', 'value-1')),
+        ],
+      });
+      const injector2 = Injector.create({
+        parent: injector1,
+        providers: [
+          provideTableRowBinding(row => row.addAttributeBinding('data-attribute-2', 'value-2')),
+        ],
+      });
+      const injector3 = Injector.create({
+        parent: injector2,
+        providers: [
+          provideTableRowBinding(row => row.addAttributeBinding('data-attribute-3', 'value-3')),
+        ],
+      });
+
+      const data = signal([1]);
+
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        rowBindings: row => row.addAttributeBinding('data-attribute-4', 'value-4'),
+        columns: table => table.addNumberColumn(item => item),
+        injector: injector3,
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute-1')).toEqual('value-1');
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute-2')).toEqual('value-2');
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute-3')).toEqual('value-3');
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute-4')).toEqual('value-4');
+    });
   });
 
   describe('Column Bindings', () => {
