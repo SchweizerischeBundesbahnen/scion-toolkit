@@ -196,7 +196,7 @@ export class RowPO {
   }
 
   public get cells(): CellPO[] {
-    return this._table.columns.map(column => new CellPO(this.element.querySelector(`sci-table-cell[data-column="${column.name}"]`), this, column));
+    return this._table.columns.map(column => new CellPO(this.element.querySelector(`sci-table-cell[data-column="${column.name}"]`)!, this, column));
   }
 
   public hover(): void {
@@ -238,12 +238,12 @@ export class RowPO {
 
 export class CellPO {
 
-  constructor(public element: HTMLElement | null, public row: RowPO, public column: ColumnPO) {
+  constructor(public element: HTMLElement, public row: RowPO, public column: ColumnPO) {
   }
 
   public get value(): string | undefined {
-    // TODO [Vitest] Evaluate if still required to strip non-breaking spaces
-    return this.element?.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim(); // Strip non-breaking spaces (NBSP) and narrow non-breaking spaces (NNBSP)
+    // Strip non-breaking spaces (NBSP) and narrow non-breaking spaces (NNBSP)
+    return this.element.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim() || this.element.getAttribute('data-value') || ''; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
   }
 
   public isLoading(): boolean {

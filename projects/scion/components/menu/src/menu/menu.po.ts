@@ -118,8 +118,8 @@ export class MenuItemPO {
     return this.debugElement.nativeElement as HTMLButtonElement;
   }
 
-  public get icon(): string {
-    return (this.debugElement.query(By.css('sci-icon')).nativeElement as HTMLElement).innerText;
+  public get icon(): string | null {
+    return (this.debugElement.query(By.css('sci-icon:not([data-checkmark])')).nativeElement as HTMLElement | null)?.getAttribute('icon') ?? null;
   }
 
   public iconComponent(selector: string): DebugElement | undefined {
@@ -190,7 +190,7 @@ export class MenuGroupPO {
 
   public get collapsed(): boolean {
     const icon = this.header?.query(By.css('sci-icon')).nativeElement as HTMLElement | undefined;
-    return icon?.innerText === 'chevron_right';
+    return icon?.getAttribute('icon') === 'scion.chevron_right';
   }
 
   public get actions(): ToolbarGroupPO {
