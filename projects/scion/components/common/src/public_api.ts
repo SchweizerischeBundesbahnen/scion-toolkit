@@ -19,3 +19,4 @@ export {type SciComponentDescriptor, SciComponentOutletDirective} from './compon
 export {SciAttributesDirective} from './attributes.directive';
 export {type SciTemplateDescriptor} from './template-descriptor';
 export {SCI_LOCALE} from './locale';
+export {SciTooltipOnOverflowDirective, TOOLTIP_ON_OVERFLOW_DIRECTIVE_SOURCE_ELEMENT, TOOLTIP_ON_OVERFLOW_DIRECTIVE_ADDITIONAL_TEXT} from './tooltip-on-overflow.directive';
