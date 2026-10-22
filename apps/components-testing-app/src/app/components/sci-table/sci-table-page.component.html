@@ -15,9 +15,11 @@
             <input [formField]="$any(columnForm.name)" class="e2e-name" placeholder="column:<string>" appFieldValidation>
           </label>
 
-          <label>
+          <label class="column-header">
             Header
-            <input [formField]="columnForm.header" class="e2e-header" appFieldValidation>
+            <input [formField]="columnForm.header.label" class="e2e-header-label" placeholder="Label" appFieldValidation>
+            <input [formField]="columnForm.header.tooltip" class="e2e-header-tooltip" placeholder="Tooltip" appFieldValidation>
+            <input [formField]="columnForm.header.icon" class="e2e-header-icon" placeholder="Icon" appFieldValidation>
           </label>
 
           <label>

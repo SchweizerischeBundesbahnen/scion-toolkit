@@ -126,7 +126,11 @@ export default class SciTablePageComponent {
 
         const column: SciTableColumnDescriptor = {
           name: columnForm.name || undefined,
-          header: columnForm.header || undefined,
+          header: columnForm.header.icon || columnForm.header.tooltip ? {
+            icon: columnForm.header.icon || undefined,
+            label: columnForm.header.label || undefined,
+            tooltip: columnForm.header.tooltip || undefined,
+          } : columnForm.header.label || columnForm.name || undefined,
           width: columnForm.width || undefined,
           minWidth: columnForm.minWidth ?? undefined,
           resizable: columnForm.resizable,
@@ -241,7 +245,6 @@ export default class SciTablePageComponent {
         action: async form => {
           this.columns.update(columns => columns.concat({
             ...form().value(),
-            header: form.header().value() || form.name().value(),
             visible: signal(true),
           }));
           this.columnForm().reset(defaults());
@@ -253,7 +256,11 @@ export default class SciTablePageComponent {
       return {
         name: 'column:',
         type: 'string',
-        header: '',
+        header: {
+          label: '',
+          tooltip: '',
+          icon: '',
+        },
         resizable: true,
         width: '',
         minWidth: null,
@@ -341,7 +348,11 @@ export default class SciTablePageComponent {
 interface ColumnForm {
   name: `column:${string}` | '';
   type: SciTableColumnType;
-  header: string;
+  header: {
+    label: string;
+    tooltip: string;
+    icon: string;
+  };
   resizable: boolean;
   width: string;
   minWidth: number | null;

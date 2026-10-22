@@ -1,6 +1,7 @@
 :host {
   display: grid;
   align-items: center;
+  gap: .25em;
 
   &:not(:has(button.sort)) {
     padding-inline: var(--ɵsci-table-cell-padding-inline);
@@ -10,15 +11,23 @@
     --ɵsci-table-column-header-hover: true;
   }
 
+  &:has(> sci-icon.icon):has(> span.label) {
+    grid-template-columns: auto 1fr;
+  }
+
   > button.sort {
     all: unset;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: .5em;
+    gap: .25em;
     padding-inline: var(--ɵsci-table-cell-padding-inline);
     cursor: var(--sci-table-header-cursor);
     align-self: stretch;
+
+    &:has(> sci-icon.icon):has(> span.label) {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
 
     > sci-icon.no-sort {
       @container not style(--ɵsci-table-column-header-hover: true) {
@@ -31,7 +40,7 @@
     }
   }
 
-  span.header {
+  span.label {
     display: inline; // ellipsis is only supported on block or inline-block elements
     overflow: hidden;
     text-overflow: ellipsis;
