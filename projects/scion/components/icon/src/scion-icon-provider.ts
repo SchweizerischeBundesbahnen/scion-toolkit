@@ -32,7 +32,10 @@ export const scionIconProvider: SciIconProviderFn = (icon: string): SciComponent
  */
 @Component({
   selector: 'sci-icon-font-glyph',
-  template: '{{ligature()}}',
+  template: '',
+  host: {
+    '[attr.data-ligature]': 'ligature()',
+  },
   styles: `
     :host {
       font-family: 'scion-icons';
@@ -50,6 +53,11 @@ export const scionIconProvider: SciIconProviderFn = (icon: string): SciComponent
       /* Better Font Rendering */
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+
+      /* Render ligature in ::before pseudo-element so it is excluded from the DOM tree (e.g., will not be returned by Element.textContent). */
+      &::before {
+        content: attr(data-ligature);
+      }
     }
   `,
 })
