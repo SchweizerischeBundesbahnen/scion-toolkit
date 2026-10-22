@@ -19,7 +19,7 @@ import {arrayDatasource, isArrayDatasource} from './ɵtable-array-datasource';
 import {SciTableCache, SciTableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {combineLatestWith, concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, switchMap, tap, throwError, timer} from 'rxjs';
-import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFn} from './table-row-binding';
+import {coerceTableRowBindings, SCI_TABLE_ROW_BINDINGS, SciTableRowBindingFn} from './table-row-binding';
 import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {first, map, startWith} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
@@ -127,7 +127,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this.rowActions = descriptor.rowActions;
     this._rowBindings = [
       ...descriptor.rowBindings ? [descriptor.rowBindings] : [],
-      ...inject<SciTableRowBindingFn<T>[]>(SCI_TABLE_ROW_BINDING, {optional: true}) ?? [],
+      ...inject<SciTableRowBindingFn<T>[]>(SCI_TABLE_ROW_BINDINGS, {optional: true}) ?? [],
     ];
     this._trackBy = descriptor.trackBy;
     this._dataLoaderFn = isSignal(descriptor.ɵdatasource) ? arrayDatasource(descriptor.ɵdatasource, this.columns) : descriptor.ɵdatasource!;
