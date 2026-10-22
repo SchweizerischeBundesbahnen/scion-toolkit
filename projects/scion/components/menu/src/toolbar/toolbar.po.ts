@@ -139,8 +139,8 @@ export class ToolbarButtonPO {
     return this.debugElement.nativeElement as HTMLButtonElement;
   }
 
-  public get icon(): string {
-    return (this.debugElement.query(By.css('sci-icon')).nativeElement as HTMLElement).innerText;
+  public get icon(): string | null {
+    return (this.debugElement.query(By.css('sci-icon')).nativeElement as HTMLElement).getAttribute('icon');
   }
 
   public iconComponent(selector: string): DebugElement | undefined {

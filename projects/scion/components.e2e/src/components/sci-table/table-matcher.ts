@@ -26,10 +26,11 @@ export function expectTable(table: TablePO): TableMatcher {
       await expect(async () => {
         const actualColumnCount = await table.grid.locator('sci-table-column').count();
         const actualRowCount = await table.grid.locator('sci-table-row').count();
-        const actualCells = (await table.rows.locator('sci-table-cell').allTextContents()).map(content => content.trim());
 
+        const cells = table.rows.locator('sci-table-cell');
+        const cellTexts = await cells.evaluateAll(cells => cells.map(cell => cell.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim() || cell.getAttribute('data-value') || '')); // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
         const actual = Array.from({length: actualRowCount}, (_, row) => {
-          return actualCells.slice(row * actualColumnCount, row * actualColumnCount + actualColumnCount);
+          return cellTexts.slice(row * actualColumnCount, row * actualColumnCount + actualColumnCount);
         });
 
         expect(actual).toStrictEqual(expected);

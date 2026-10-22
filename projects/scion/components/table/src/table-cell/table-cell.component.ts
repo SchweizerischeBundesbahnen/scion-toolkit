@@ -23,6 +23,7 @@ import {SciNumberPipe} from './number.pipe';
   host: {
     '[attr.data-type]': 'cell().column.type',
     '[attr.data-column]': 'cell().column.name',
+    '[attr.data-value]': 'value()',
     '[attr.data-padding]': '!cell().column.padding ? false : null',
     '[attr.part]': 'partAttribute()',
   },
@@ -41,6 +42,7 @@ export class SciTableCellComponent<T> {
   protected readonly template = this.computeTemplate();
   protected readonly templateContext = this.computeTemplateContext();
   protected readonly partAttribute = this.computePartAttribute();
+  protected readonly value = this.computeValueAttribute();
 
   private computeTemplate(): Signal<TemplateRef<unknown> | null> {
     return computed(() => {
@@ -87,6 +89,25 @@ export class SciTableCellComponent<T> {
         // Enable row styling based on row bindings.
         ...Arrays.coerce(this.row().bindings?.part()),
       ]).join(' ');
+    });
+  }
+
+  private computeValueAttribute(): Signal<string | undefined> {
+    return computed(() => {
+      const cell = this.cell();
+      const value = (() => {
+        switch (cell.type) {
+          case 'string':
+          case 'number':
+          case 'boolean':
+            return cell.value();
+          case 'date':
+            return cell.value()?.isoString;
+          default:
+            return undefined;
+        }
+      })();
+      return value !== undefined ? `${value}` : undefined;
     });
   }
 }
