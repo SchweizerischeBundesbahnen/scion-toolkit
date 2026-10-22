@@ -23,6 +23,7 @@ import localeDeCH from '@angular/common/locales/de-CH';
 import localeEnCH from '@angular/common/locales/en-CH';
 import {SCI_LOCALE} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
+import {provideTextProvider} from '@scion/components/text';
 
 describe('Table', () => {
 
@@ -946,6 +947,59 @@ describe('Table', () => {
 
       expect(table.columns[0]!.width).toBe(100);
       expect(table.columns[1]!.width).toBe(300);
+    });
+  });
+
+  describe('Column Header', () => {
+
+    it('should translate header', async () => {
+      const texts = {
+        'header': signal('Header'),
+        'tooltip': signal('Tooltip'),
+      };
+
+      TestBed.configureTestingModule({
+        providers: [
+          provideTextProvider(key => texts[key as keyof typeof texts]),
+        ],
+      });
+
+      const {fixture} = createSciTableComponent<string>(sciTable({
+        datasource: signal([]),
+        columns: table => table
+          .addStringColumn('Header', item => item)
+          .addStringColumn('%header', item => item)
+          .addStringColumn({label: 'Header', tooltip: 'Tooltip'}, item => item)
+          .addStringColumn({label: '%header', tooltip: '%tooltip'}, item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(table.column({name: 'column:0'})!.header!.label).toEqual('Header');
+      expect(table.column({name: 'column:1'})!.header!.label).toEqual('Header');
+      expect(table.column({name: 'column:2'})!.header!.label).toEqual('Header');
+      expect(table.column({name: 'column:3'})!.header!.label).toEqual('Header');
+
+      expect(table.column({name: 'column:0'})!.header!.tooltip).toBeNull();
+      expect(table.column({name: 'column:1'})!.header!.tooltip).toBeNull();
+      expect(table.column({name: 'column:2'})!.header!.tooltip).toEqual('Tooltip');
+      expect(table.column({name: 'column:3'})!.header!.tooltip).toEqual('Tooltip');
+
+      // Change texts.
+      texts.header.set('Header (changed)');
+      texts.tooltip.set('Tooltip (changed)');
+      await table.waitUntilStable();
+
+      expect(table.column({name: 'column:0'})!.header!.label).toEqual('Header');
+      expect(table.column({name: 'column:1'})!.header!.label).toEqual('Header (changed)');
+      expect(table.column({name: 'column:2'})!.header!.label).toEqual('Header');
+      expect(table.column({name: 'column:3'})!.header!.label).toEqual('Header (changed)');
+
+      expect(table.column({name: 'column:0'})!.header!.tooltip).toBeNull();
+      expect(table.column({name: 'column:1'})!.header!.tooltip).toBeNull();
+      expect(table.column({name: 'column:2'})!.header!.tooltip).toEqual('Tooltip');
+      expect(table.column({name: 'column:3'})!.header!.tooltip).toEqual('Tooltip (changed)');
     });
   });
 

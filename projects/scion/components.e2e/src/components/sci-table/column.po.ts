@@ -1,25 +1,34 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 import {Locator} from '@playwright/test';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
 import {ColumnSplitterPO, TablePO} from './table.po';
 import {OneOf, RequireOne} from '@scion/toolkit/types';
 import {CellPO} from './cell.po';
+import {ColumnHeaderPO} from './column-header.po';
 
 export class ColumnPO {
 
   public readonly locator: Locator;
   public readonly splitter: ColumnSplitterPO;
-  public readonly columnHeader: Locator;
+  public readonly columnHeader: ColumnHeaderPO;
   public readonly columnFilter: Locator;
   public readonly cells: Locator;
-  public readonly sortButton: Locator;
   public readonly filterIcon: Locator;
   public readonly filterInput: Locator;
 
   constructor(public table: TablePO, public locateBy: RequireOne<{name: `column:${string}`; index: number}>) {
     this.locator = table.locator.locator('sci-table-columns > sci-table-column').locator(selectByColumn(locateBy));
-    this.columnHeader = table.locator.locator('sci-column-header').locator(selectByColumn(locateBy));
+    this.columnHeader = new ColumnHeaderPO(table.locator.locator('sci-column-header').locator(selectByColumn(locateBy)));
     this.columnFilter = table.locator.locator('sci-column-filter').locator(selectByColumn(locateBy));
-    this.sortButton = this.columnHeader.locator('button.e2e-sort');
     this.filterIcon = this.columnFilter.locator('sci-icon.e2e-filter');
     this.filterInput = this.columnFilter.locator('input');
     this.splitter = new ColumnSplitterPO(table.locator.locator('sci-table-columns > sci-splitter').locator(selectByColumn(locateBy)), table);
@@ -40,7 +49,7 @@ export class ColumnPO {
   }
 
   public async sort(options?: {modifiers?: Array<'Alt' | 'Control' | 'ControlOrMeta' | 'Meta' | 'Shift'>}): Promise<void> {
-    await this.sortButton.click({modifiers: options?.modifiers});
+    await this.columnHeader.sortButton.click({modifiers: options?.modifiers});
   }
 
   public async clearFilter(): Promise<void> {
@@ -59,7 +68,7 @@ export class ColumnPO {
   }
 
   public async sortDirection(): Promise<'asc' | 'desc' | null> {
-    return (await this.sortButton.getAttribute('data-sort-direction')) as 'asc' | 'desc' | null;
+    return (await this.columnHeader.sortButton.getAttribute('data-sort-direction')) as 'asc' | 'desc' | null;
   }
 }
 

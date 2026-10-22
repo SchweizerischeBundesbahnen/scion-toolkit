@@ -8,13 +8,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciDateLike, SciTableCellContext} from './table.model';
+import {SciColumnHeaderLike, SciDateLike, SciTableCellContext} from './table.model';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
-import {Translatable} from '@scion/components/text';
 
 export interface SciTableColumnFactory<T> {
 
-  addStringColumn(header: Translatable, value: (item: T) => MaybeSignal<string | undefined>): this;
+  addStringColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<string | undefined>): this;
 
   addStringColumn(value: (item: T) => MaybeSignal<string | undefined>): this;
 
@@ -42,7 +41,7 @@ export interface SciTableColumnFactory<T> {
    * }
    * ```
    */
-  addNumberColumn(header: Translatable, value: (item: T) => MaybeSignal<number | undefined>): this;
+  addNumberColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<number | undefined>): this;
 
   /**
    * Adds a number column to the table for displaying numeric values.
@@ -92,7 +91,7 @@ export interface SciTableColumnFactory<T> {
    */
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
-  addBooleanColumn(header: Translatable, value: (item: T) => MaybeSignal<boolean | undefined>): this;
+  addBooleanColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<boolean | undefined>): this;
 
   addBooleanColumn(value: (item: T) => MaybeSignal<boolean | undefined>): this;
 
@@ -124,7 +123,7 @@ export interface SciTableColumnFactory<T> {
    * }
    * ```
    */
-  addDateColumn(header: Translatable, value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
+  addDateColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
 
   /**
    * Adds a temporal column to the table for displaying dates, times, or both.
@@ -189,7 +188,7 @@ export interface SciTableColumnFactory<T> {
 
 export interface SciTableColumnDescriptor {
   name?: `column:${string}`;
-  header?: Translatable;
+  header?: SciColumnHeaderLike;
   resizable?: boolean;
   /**
    * Preferred column size.

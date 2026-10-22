@@ -16,6 +16,7 @@ import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-bind
 import {SciTableColumnFactoryFn} from './table.factory';
 import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
 import {SciDateValue} from './table-date-column.model';
+import {Translatable} from '@scion/components/text';
 
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'component' | 'template';
 
@@ -121,7 +122,11 @@ export interface SciTable<T> {
 export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
   type: SciTableColumnType;
   name: `column:${string}`;
-  header: Signal<string>;
+  header: {
+    icon: string | undefined;
+    label: Signal<string> | undefined;
+    tooltip: Signal<string> | undefined;
+  };
   sortable: Signal<boolean>;
   filterable: Signal<boolean>;
   resizable: Signal<boolean>;
@@ -250,6 +255,19 @@ export interface SciTableEvent<T> {
    */
   items: T[];
 }
+
+/**
+ * Represents the header of a table column, defined as a {@link Translatable} or an object with an optional icon, label, and tooltip.
+ *
+ * The label can be text or a translation key. A translation key starts with the percent symbol (`%`) and may include parameters in matrix notation for text interpolation.
+ * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+ *
+ * SCION uses icon providers to render icons. An icon provider can be registered using {@link provideIconProvider}.
+ *
+ * Defaults to a Material icon provider if the application has not registered an icon provider, interpreting the icon as a Material Icon font ligature.
+ * Refer to https://fonts.google.com/icons for available Material icons and instructions on including the Material icon font.
+ */
+export type SciColumnHeaderLike = Translatable | {icon?: string; label?: Translatable; tooltip?: Translatable};
 
 /**
  * Represents an ISO 8601 date/time string, milliseconds since the UTC epoch, or a `Date` object.
