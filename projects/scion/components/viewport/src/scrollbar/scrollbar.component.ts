@@ -39,6 +39,9 @@ import {clamp, isBetween} from '@scion/toolkit/util';
  *   --sci-scrollbar-color: blue;
  * }
  * ```
+ *
+ * To hide the scrollbar when not hovering the associated viewport, set its `opacity` to `0`.
+ * The `opacity` property animates for a fade-in and fade-out effect.
  */
 @Component({
   selector: 'sci-scrollbar',

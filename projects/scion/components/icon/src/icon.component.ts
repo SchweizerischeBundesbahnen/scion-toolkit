@@ -8,11 +8,12 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, Directive, effect, inject, signal, Signal, TemplateRef, untracked, viewChild} from '@angular/core';
+import {Component, computed, Directive, inject, ResourceRef, Signal, TemplateRef, untracked, viewChild} from '@angular/core';
 import {coerceSignal, SciComponentDescriptor, SciComponentOutletDirective} from '@scion/components/common';
 import {IconProviders} from './icon-providers';
 import {fromMutation$} from '@scion/toolkit/observable';
-import {concatWith, map, MonoTypeOperatorFunction, of} from 'rxjs';
+import {concatWith, map, Observable, of} from 'rxjs';
+import {rxResource} from '@angular/core/rxjs-interop';
 
 /**
  * Renders an icon based on registered icon providers.
@@ -24,7 +25,17 @@ import {concatWith, map, MonoTypeOperatorFunction, of} from 'rxjs';
  * <sci-icon>home</sci-icon>
  * ```
  *
- * An icon provider can be registered using {@link provideIconProvider}.
+ * Icons can be contributed via icon providers. Register an icon provider using the {@link provideIconProvider} function.
+ *
+ * ```ts
+ * import {provideIconProvider} from '@scion/components/icon';
+ * import {ComponentType} from '@angular/cdk/portal';
+ * import {SciComponentDescriptor} from '@scion/components/common';
+ *
+ * provideIconProvider((icon: string): ComponentType<unknown> | SciComponentDescriptor | undefined => {
+ *   return ...;
+ * });
+ * ```
  *
  * Providers are called in registration order. If a provider does not provide the icon, the next provider is called, and so on.
  * If no provider provides the icon, defaults to a Material icon provider, interpreting the icon as a Material icon font ligature.
@@ -49,76 +60,83 @@ import {concatWith, map, MonoTypeOperatorFunction, of} from 'rxjs';
   imports: [
     SciComponentOutletDirective,
   ],
+  host: {
+    '[attr.icon]': 'slottedContent.value()', // Public API: Enables selecting the icon by name in CSS (also if passed as slottet content or dynamic input binding)
+  },
 })
 export class SciIconComponent {
 
-  private readonly _slottedContent = viewChild.required<TemplateRef<void>>('slotted_content');
+  protected readonly slottedContent = this.computeSlottedContent();
+  protected readonly iconDescriptor = this.computeIconDescriptor();
 
-  protected readonly icon = this.computeIcon();
+  private readonly _slotTemplate = viewChild.required<TemplateRef<void>>('slot_template');
 
-  /**
-   * Reads the icon from slotted content and passes it to registered icon providers for resolution.
-   */
-  private computeIcon(): Signal<SciComponentDescriptor | undefined> {
-    const icon = signal<SciComponentDescriptor | undefined>(undefined);
+  private computeIconDescriptor(): Signal<SciComponentDescriptor | undefined> {
     const iconProviders = inject(IconProviders);
 
-    effect(onCleanup => {
-      const slottedContent = this._slottedContent();
+    return computed(() => {
+      const slottedContent = this.slottedContent.value();
 
-      untracked(() => {
-        // Instantiate template to "read" slotted content.
-        const view = slottedContent.createEmbeddedView(undefined);
-        onCleanup(() => view.destroy());
+      return untracked(() => {
+        const iconDescriptor = iconProviders.provide(slottedContent);
+
+        // Augment icon descriptor.
+        return iconDescriptor && {
+          ...iconDescriptor,
+          attributes: computed(() => ({
+            ...coerceSignal(iconDescriptor.attributes)?.(),
+            // Prevent user agent translating the icon.
+            translate: 'no',
+          })),
+          directives: [
+            ...iconDescriptor.directives ?? [],
+            // Set icon font size to 'var(--sci-icon-size, 1em)', required to inherit the location's font size for icons with a fixed font size.
+            // For example, Material sets a fixed font size of 24px.
+            IconFontSizeDirective,
+          ],
+        } satisfies SciComponentDescriptor;
+      });
+    });
+  }
+
+  /**
+   * Reads the icon from slotted content.
+   */
+  private computeSlottedContent(): ResourceRef<string | undefined> {
+    return rxResource({
+      params: () => this._slotTemplate(),
+      stream: ({params: slotTemplate}) => new Observable<string | undefined>(observer => {
+        // Instantiate template to read slotted content.
+        const view = slotTemplate.createEmbeddedView(undefined);
 
         // Return if empty, i.e., no icon to render.
         if (!view.rootNodes.length) {
-          icon.set(undefined);
+          observer.next(undefined);
           return;
         }
 
         // Ensure only text is provided as slotted content.
         if (view.rootNodes.length > 1 || (view.rootNodes[0] as Element).nodeType !== Node.TEXT_NODE) {
-          throw Error('[InvalidInputError] Only text (ligature) is allowed in slotted content of <sci-icon>.');
+          observer.error(Error('[InvalidInputError] Only text (ligature) is allowed in slotted content of <sci-icon>.'));
+          return;
         }
 
-        // Watch slotted content.
+        // Observe slotted content.
         const textNode = view.rootNodes[0] as Text;
         const subscription = of(textNode.textContent)
           .pipe(
             concatWith(fromMutation$(textNode, {characterData: true}).pipe(map(() => textNode.textContent))),
-            map(slottedContent => iconProviders.provide(slottedContent.trim() || undefined)),
-            augmentIconDescriptor(),
+            map(slottedContent => slottedContent.trim() || undefined),
           )
-          .subscribe(iconDescriptor => icon.set(iconDescriptor));
+          .subscribe(observer);
 
-        onCleanup(() => subscription.unsubscribe());
-      });
+        return () => {
+          subscription.unsubscribe();
+          view.destroy();
+        };
+      }),
     });
-
-    return icon;
   }
-}
-
-/**
- * Augments the icon descriptor:
- *
- * - Prevents the browser from translating the icon.
- * - Sets the icon's font size to 'var(--sci-icon-size, 1em)', required to inherit the location's font size for icons with a fixed font size.
- *   For example, Material sets a fixed font size of 24px.
- */
-function augmentIconDescriptor(): MonoTypeOperatorFunction<SciComponentDescriptor | undefined> {
-  return map((icon: SciComponentDescriptor | undefined) => icon && {
-    ...icon,
-    attributes: computed(() => ({
-      ...coerceSignal(icon.attributes)?.(),
-      translate: 'no',
-    })),
-    directives: [
-      ...icon.directives ?? [],
-      IconFontSizeDirective,
-    ],
-  } satisfies SciComponentDescriptor);
 }
 
 /**

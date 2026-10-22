@@ -42,9 +42,9 @@ export class MenuPO {
     let itemIndex = 0;
     let groupIndex = 0;
 
-    const viewport = this.debugElement.children.find(child => child.name === 'sci-viewport');
+    const viewport = this.debugElement.children.find(child => child.name === 'div' && 'e2e-viewport' in child.classes);
     const children = viewport?.children ?? this.debugElement.children;
-    const selector = viewport ? `${this._selector} > sci-viewport` : this._selector;
+    const selector = viewport ? `${this._selector} > div.e2e-viewport` : this._selector;
 
     return children.reduce((acc, child) => {
       const nativeElement = child.nativeElement as HTMLElement;
@@ -97,7 +97,7 @@ export class MenuPO {
   }
 
   public get viewport(): DebugElement | undefined {
-    return this.debugElement.query(By.css('sci-viewport'));
+    return this.debugElement.query(By.css('div.e2e-viewport'));
   }
 }
 
@@ -118,8 +118,8 @@ export class MenuItemPO {
     return this.debugElement.nativeElement as HTMLButtonElement;
   }
 
-  public get icon(): string {
-    return (this.debugElement.query(By.css('sci-icon')).nativeElement as HTMLElement).innerText;
+  public get icon(): string | null {
+    return (this.debugElement.nativeElement as HTMLElement).querySelector('sci-icon:not([data-checkbox])')?.getAttribute('icon') ?? null;
   }
 
   public iconComponent(selector: string): DebugElement | undefined {
@@ -190,7 +190,7 @@ export class MenuGroupPO {
 
   public get collapsed(): boolean {
     const icon = this.header?.query(By.css('sci-icon')).nativeElement as HTMLElement | undefined;
-    return icon?.innerText === 'chevron_right';
+    return icon?.getAttribute('icon') === 'scion.chevron_right';
   }
 
   public get actions(): ToolbarGroupPO {

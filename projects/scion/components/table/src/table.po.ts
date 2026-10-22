@@ -12,6 +12,7 @@ import {ComponentFixture} from '@angular/core/testing';
 import {OneOf, RequireOne} from '@scion/toolkit/types';
 import {Arrays} from '@scion/toolkit/util';
 import {waitUntilStable} from './testing/testing.util';
+import {SciEnumValueLike, SciTableColumnType} from './table.model';
 
 export class TablePO {
 
@@ -102,8 +103,12 @@ export class ColumnPO {
     this._columnSortButton = this._columnHeaderElement?.querySelector('button.e2e-sort') ?? null;
   }
 
+  public get type(): SciTableColumnType {
+    return this._columnElement.getAttribute('data-type') as SciTableColumnType;
+  }
+
   public get header(): string | undefined {
-    return this._columnHeaderElement?.querySelector('span.e2e-header')?.textContent.trim();
+    return this._columnHeaderElement?.querySelector('span.e2e-label')?.textContent.trim();
   }
 
   public get width(): number {
@@ -123,7 +128,7 @@ export class ColumnPO {
     await this._table.waitUntilStable();
   }
 
-  public async filter(value: string | number | boolean | null): Promise<void> {
+  public async filter(value: string | number | boolean | SciEnumValueLike[] | null): Promise<void> {
     if (!this._columnFilterElement) {
       throw Error('[PageObjectError] Table without column filters cannot be filtered.');
     }
@@ -131,11 +136,10 @@ export class ColumnPO {
     if (value === null) {
       this._columnFilterElement.querySelector<HTMLButtonElement>('button.e2e-clear')!.click();
     }
-    else if (typeof value === 'boolean') {
-      // TODO [dwi] Replace with menu API
+    else if (this.type === 'enum') {
       this._columnFilterElement.querySelector<HTMLButtonElement>('input[type="button"]')!.click();
       const menu = (await waitUntilStable(() => this._table.element.querySelector<HTMLElement>('sci-menu')))!;
-      menu.querySelector<HTMLButtonElement>(`button[data-option="${value}"]`)!.click();
+      Arrays.coerce(value).forEach(value => menu.querySelector<HTMLButtonElement>(`button[data-option="${value}"]`)!.click());
     }
     else {
       const filterInput = this._columnFilterElement.querySelector<HTMLInputElement>('input')!;
@@ -196,7 +200,7 @@ export class RowPO {
   }
 
   public get cells(): CellPO[] {
-    return this._table.columns.map(column => new CellPO(this.element.querySelector(`sci-table-cell[data-column="${column.name}"]`), this, column));
+    return this._table.columns.map(column => new CellPO(this.element.querySelector(`sci-table-cell[data-column="${column.name}"]`)!, this, column));
   }
 
   public hover(): void {
@@ -234,16 +238,22 @@ export class RowPO {
   public rowAction(locateBy: {cssClass: string}): HTMLElement {
     return this.element.querySelector(`sci-toolbar button.${locateBy.cssClass}`)!;
   }
+
+  public icon(): string[] {
+    const icons = Array.from(this.element.querySelectorAll(':scope > sci-icon:has(~ sci-table-cell)'));
+    return icons.map(icon => icon.getAttribute('icon')!);
+  }
 }
 
 export class CellPO {
 
-  constructor(public element: HTMLElement | null, public row: RowPO, public column: ColumnPO) {
+  constructor(public element: HTMLElement, public row: RowPO, public column: ColumnPO) {
   }
 
   public get value(): string | undefined {
     // TODO [Vitest] Evaluate if still required to strip non-breaking spaces
-    return this.element?.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim(); // Strip non-breaking spaces (NBSP) and narrow non-breaking spaces (NNBSP)
+    // Strip non-breaking spaces (NBSP) and narrow non-breaking spaces (NNBSP)
+    return this.element.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim() || (this.element.getAttribute('data-value') ?? '');
   }
 
   public isLoading(): boolean {

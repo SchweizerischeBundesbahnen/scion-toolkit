@@ -1409,6 +1409,67 @@ describe('Menu', () => {
       ]);
     });
 
+    it('should provide checked and icon', async () => {
+      TestBed.configureTestingModule({
+        providers: [
+          {provide: ComponentFixtureAutoDetect, useValue: true},
+        ],
+      });
+
+      const fixture = TestBed.createComponent(SpecRootComponent);
+
+      const icon = signal('icon-1');
+      const checked = signal(true);
+
+      // Contribute to menu.
+      contributeMenu('menu:testee', menu => menu
+        .addMenuItem({checked, icon, label: 'label', onSelect: noop}), {injector: TestBed.inject(Injector)});
+      await fixture.whenStable();
+
+      // Open menu.
+      TestBed.inject(SciMenuService).open('menu:testee', {anchor: {x: 0, y: 0}});
+      const menu = new MenuPO(fixture);
+
+      // Expect menu.
+      await expectAsync(menu).toEqualMenu([
+        {
+          type: 'menu-item',
+          checked: true,
+          icon: 'icon-1',
+        },
+      ]);
+
+      // Update checked.
+      checked.set(false);
+      await expectAsync(menu).toEqualMenu([
+        {
+          type: 'menu-item',
+          checked: false,
+          icon: 'icon-1',
+        },
+      ]);
+
+      // Update icon.
+      icon.set('icon-2');
+      await expectAsync(menu).toEqualMenu([
+        {
+          type: 'menu-item',
+          checked: false,
+          icon: 'icon-2',
+        },
+      ]);
+
+      // Update checked.
+      checked.set(true);
+      await expectAsync(menu).toEqualMenu([
+        {
+          type: 'menu-item',
+          checked: true,
+          icon: 'icon-2',
+        },
+      ]);
+    });
+
     it('should provide active', async () => {
       TestBed.configureTestingModule({
         providers: [
@@ -2421,9 +2482,8 @@ describe('Menu', () => {
         await fixture.whenStable();
 
         // Expect overflow.
-        const viewport = submenu.debugElement.query(By.css('sci-viewport'));
-        const viewportClient = viewport.query(By.css('div.viewport-client'));
-        expect((viewportClient.nativeElement as HTMLElement).clientHeight).toBeGreaterThan((viewport.nativeElement as HTMLElement).clientHeight);
+        const viewport = submenu.debugElement.query(By.css('div.e2e-viewport')).nativeElement as HTMLElement;
+        expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
 
         // Expect submenu viewport height to be 200.
         expect(submenu.viewport!.nativeElement.getBoundingClientRect().height).toEqual(200);

@@ -22,6 +22,7 @@ import {CustomColumnPO} from './custom-column.po';
 import {BooleanColumnPO} from './boolean-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';
 import {CustomButtonColumnPO} from './custom-button-column.po';
+import {expectScrollbar} from '../sci-scrollbar/scrollbar-matcher';
 
 test.describe('sci-table', () => {
 
@@ -172,7 +173,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:string', type: 'string'});
-        await expect(table.column({name: 'column:string'}).columnHeader).toBeVisible();
+        await expect(table.column({name: 'column:string'}).columnHeader.locator).toBeVisible();
       });
 
       test('should center text vertically', async ({page}) => {
@@ -258,7 +259,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:number', type: 'number'});
-        await expect(table.column({name: 'column:number'}).columnHeader).toBeVisible();
+        await expect(table.column({name: 'column:number'}).columnHeader.locator).toBeVisible();
       });
 
       test('should center text vertically', async ({page}) => {
@@ -344,7 +345,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
-        await expect(table.column({name: 'column:boolean'}).columnHeader).toBeVisible();
+        await expect(table.column({name: 'column:boolean'}).columnHeader.locator).toBeVisible();
       });
 
       test('should center checkmark vertically', async ({page}) => {
@@ -398,7 +399,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:date', type: 'date'});
-        await expect(table.column({name: 'column:date'}).columnHeader).toBeVisible();
+        await expect(table.column({name: 'column:date'}).columnHeader.locator).toBeVisible();
       });
 
       test('should center text vertically', async ({page}) => {
@@ -482,7 +483,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:template', type: 'template'});
-        await expect(table.column({name: 'column:template'}).columnHeader).toBeVisible();
+        await expect(table.column({name: 'column:template'}).columnHeader.locator).toBeVisible();
       });
 
       test('should center template vertically', async ({page}) => {
@@ -635,7 +636,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:component', type: 'component'});
-        await expect(table.column({name: 'column:component'}).columnHeader).toBeVisible();
+        await expect(table.column({name: 'column:component'}).columnHeader.locator).toBeVisible();
       });
 
       test('should center component vertically', async ({page}) => {
@@ -780,6 +781,138 @@ test.describe('sci-table', () => {
       });
     });
 
+    test.describe('Component Header', () => {
+
+      test('should have label', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.addColumn({name: 'column:header', header: 'Header', type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveText('Header');
+        await expect(table.column({name: 'column:header'}).columnHeader.icon).not.toBeAttached();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).not.toHaveAttribute('title');
+      });
+
+      test('should have label with tooltip', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.addColumn({name: 'column:header', header: {label: 'Header', tooltip: 'Tooltip'}, type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveText('Header');
+        await expect(table.column({name: 'column:header'}).columnHeader.icon).not.toBeAttached();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveAttribute('title', 'Tooltip');
+      });
+
+      test('should display label as tooltip on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.setWidth(300);
+        await tablePage.addColumn({name: 'column:header', header: 'This is a long header', type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).not.toHaveAttribute('title');
+
+        // Force overflow.
+        await table.column({name: 'column:header'}).splitter.drag({deltaX: -200});
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveAttribute('title', 'This is a long header');
+      });
+
+      test('should display label plus custom tooltip on overflow (column with label and tooltip)', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.setWidth(300);
+        await tablePage.addColumn({name: 'column:header', header: {label: 'This is a long header', tooltip: 'Tooltip'}, type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveAttribute('title', 'Tooltip');
+
+        // Force overflow.
+        await table.column({name: 'column:header'}).splitter.drag({deltaX: -200});
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveAttribute('title', 'This is a long header\n\nTooltip');
+      });
+
+      test('should have icon', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.addColumn({name: 'column:header', header: {icon: 'icon'}, type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveText('');
+        await expect(table.column({name: 'column:header'}).columnHeader.icon).toHaveAttribute('icon', 'icon');
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).not.toHaveAttribute('title');
+      });
+
+      test('should have icon with tooltip', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.addColumn({name: 'column:header', header: {icon: 'icon', tooltip: 'Tooltip'}, type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveText('');
+        await expect(table.column({name: 'column:header'}).columnHeader.icon).toHaveAttribute('icon', 'icon');
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveAttribute('title', 'Tooltip');
+      });
+
+      test('should have icon and label', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.addColumn({name: 'column:header', header: {icon: 'icon', label: 'Header'}, type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveText('Header');
+        await expect(table.column({name: 'column:header'}).columnHeader.icon).toHaveAttribute('icon', 'icon');
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).not.toHaveAttribute('title');
+      });
+
+      test('should have icon and label with tooltip', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.addColumn({name: 'column:header', header: {icon: 'icon', label: 'Header', tooltip: 'Tooltip'}, type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveText('Header');
+        await expect(table.column({name: 'column:header'}).columnHeader.icon).toHaveAttribute('icon', 'icon');
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveAttribute('title', 'Tooltip');
+      });
+
+      test('should display label plus custom tooltip on overflow (column with icon, label, and tooltip)', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.setWidth(300);
+        await tablePage.addColumn({name: 'column:header', header: {icon: 'icon', label: 'This is a long header', tooltip: 'Tooltip'}, type: 'string'});
+
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveAttribute('title', 'Tooltip');
+
+        // Force overflow.
+        await table.column({name: 'column:header'}).splitter.drag({deltaX: -200});
+        await table.column({name: 'column:header'}).columnHeader.hover();
+        await expect(table.column({name: 'column:header'}).columnHeader.locator).toHaveAttribute('title', 'This is a long header\n\nTooltip');
+      });
+    });
+
     test('should add a lot of columns', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -794,11 +927,11 @@ test.describe('sci-table', () => {
 
       const column19 = table.column({index: 19});
 
-      await expect(column19.columnHeader).not.toBeInViewport();
+      await expect(column19.columnHeader.locator).not.toBeInViewport();
       await table.scrollTo({x: 'end'});
-      await expect(column19.columnHeader).toBeInViewport();
+      await expect(column19.columnHeader.locator).toBeInViewport();
       await table.scrollTo({x: 'start'});
-      await expect(column19.columnHeader).not.toBeInViewport();
+      await expect(column19.columnHeader.locator).not.toBeInViewport();
     });
 
     test('should add and remove columns', async ({page}) => {
@@ -811,51 +944,51 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'column:3', type: 'string'});
 
       await expectTable(table).toHaveColumnCount(3);
-      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:1'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader.locator).toBeVisible();
 
       // Hide column 2.
       await tablePage.setColumnVisible('column:2', false);
       await expectTable(table).toHaveColumnCount(2);
-      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
-      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:1'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader.locator).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader.locator).toBeVisible();
 
       // Hide column 3.
       await tablePage.setColumnVisible('column:3', false);
       await expectTable(table).toHaveColumnCount(1);
-      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
-      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:1'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader.locator).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader.locator).not.toBeAttached();
 
       // Hide column 1.
       await tablePage.setColumnVisible('column:1', false);
       await expectTable(table).toHaveColumnCount(0);
-      await expect(table.column({name: 'column:1'}).columnHeader).not.toBeAttached();
-      await expect(table.column({name: 'column:2'}).columnHeader).not.toBeAttached();
-      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:1'}).columnHeader.locator).not.toBeAttached();
+      await expect(table.column({name: 'column:2'}).columnHeader.locator).not.toBeAttached();
+      await expect(table.column({name: 'column:3'}).columnHeader.locator).not.toBeAttached();
 
       // Show column 2.
       await tablePage.setColumnVisible('column:2', true);
       await expectTable(table).toHaveColumnCount(1);
-      await expect(table.column({name: 'column:1'}).columnHeader).not.toBeAttached();
-      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:1'}).columnHeader.locator).not.toBeAttached();
+      await expect(table.column({name: 'column:2'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader.locator).not.toBeAttached();
 
       // Show column 1.
       await tablePage.setColumnVisible('column:1', true);
       await expectTable(table).toHaveColumnCount(2);
-      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:3'}).columnHeader).not.toBeAttached();
+      await expect(table.column({name: 'column:1'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader.locator).not.toBeAttached();
 
       // Show column 3.
       await tablePage.setColumnVisible('column:3', true);
       await expectTable(table).toHaveColumnCount(3);
-      await expect(table.column({name: 'column:1'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:2'}).columnHeader).toBeVisible();
-      await expect(table.column({name: 'column:3'}).columnHeader).toBeVisible();
+      await expect(table.column({name: 'column:1'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:2'}).columnHeader.locator).toBeVisible();
+      await expect(table.column({name: 'column:3'}).columnHeader.locator).toBeVisible();
     });
   });
 
@@ -949,7 +1082,7 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'column:template', type: 'template'});
 
       const templateColumn = table.column({name: 'column:template'});
-      await expect(templateColumn.columnHeader).toBeAttached();
+      await expect(templateColumn.columnHeader.locator).toBeAttached();
       await expect(templateColumn.columnFilter).toHaveAttribute('data-disabled');
       await expect(templateColumn.columnFilter).toBeStrictEmpty();
     });
@@ -963,7 +1096,7 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'column:component', type: 'component'});
 
       const componentColumn = table.column({name: 'column:component'});
-      await expect(componentColumn.columnHeader).toBeAttached();
+      await expect(componentColumn.columnHeader.locator).toBeAttached();
       await expect(componentColumn.columnFilter).toHaveAttribute('data-disabled');
       await expect(componentColumn.columnFilter).toBeStrictEmpty();
     });
@@ -1495,7 +1628,7 @@ test.describe('sci-table', () => {
       // Move mouse up along the splitter to the header.
       await dragHandle.dragTo({y: headerBounds.vcenter});
       await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
-      await expect(table.column({name: 'column:1'}).sortButton).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.column({name: 'column:1'}).columnHeader.sortButton).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
 
       // Move mouse to the left. The splitter should not move because the column is already at its minimum width.
       await dragHandle.dragTo({deltaX: -10});
@@ -1503,7 +1636,7 @@ test.describe('sci-table', () => {
 
       // Expect header not to be hovered.
       await expect(table.row({nth: 0}).locator).toHaveCSS('background-color', 'rgb(0, 0, 255)');
-      await expect(table.column({name: 'column:1'}).sortButton).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.column({name: 'column:1'}).columnHeader.sortButton).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
       await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
 
       // Complete drag.
@@ -1511,7 +1644,7 @@ test.describe('sci-table', () => {
 
       // Expect current row to be hovered.
       await expect(table.row({nth: 0}).locator).not.toHaveCSS('background-color', 'rgb(0, 0, 255)');
-      await expect(table.column({name: 'column:1'}).sortButton).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+      await expect(table.column({name: 'column:1'}).columnHeader.sortButton).toHaveCSS('background-color', 'rgb(0, 0, 255)');
       await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
     });
   });
@@ -4819,6 +4952,90 @@ test.describe('sci-table', () => {
 
       // Expect vertical overflow.
       await expect(table.verticalScrollbar.locator).toBeVisible();
+    });
+
+    test('should not display scrollbars if no overflow', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', type: 'string'});
+
+      await expectTable(table).not.toHaveVerticalOverflow();
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      // Expect scrollbars not to display.
+      await expectScrollbar(table.verticalScrollbar.locator).not.toDisplay();
+      await expectScrollbar(table.horizontalScrollbar.locator).not.toDisplay();
+
+      // Hover the table.
+      await table.locator.hover();
+
+      // Expect scrollbars not to display.
+      await expectScrollbar(table.verticalScrollbar.locator).not.toDisplay();
+      await expectScrollbar(table.horizontalScrollbar.locator).not.toDisplay();
+    });
+
+    test('should display scrollbars when hovering table', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(500);
+      await tablePage.setRowCount(1000);
+      await tablePage.addColumn({name: 'column:1', width: '300px', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', width: '300px', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', width: '300px', type: 'string'});
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      // Expect scrollbars not to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 0});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 0});
+
+      // Hover the table.
+      await table.locator.hover();
+
+      // Expect scrollbars to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 1});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 1});
+    });
+
+    test('should not display scrollbars when hovering table header', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(500);
+      await tablePage.setRowCount(1000);
+      await tablePage.addColumn({name: 'column:1', width: '300px', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', width: '300px', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', width: '300px', type: 'string'});
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      // Expect scrollbars not to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 0});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 0});
+
+      // Hover the table header.
+      await table.header.locator.hover();
+      await page.waitForTimeout(500);
+
+      // Expect scrollbars not to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 0});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 0});
+
+      // Hover the table body.
+      await table.body.hover();
+
+      // Expect scrollbars to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 1});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 1});
     });
   });
 

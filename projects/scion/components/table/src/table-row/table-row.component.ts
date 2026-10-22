@@ -15,6 +15,7 @@ import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciTableSelectionService} from '../table-selection.service';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
+import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
   selector: 'sci-table-row',
@@ -23,12 +24,12 @@ import {UUID} from '@scion/toolkit/uuid';
   imports: [
     SciTableCellComponent,
     SciToolbarComponent,
+    SciIconComponent,
   ],
   host: {
     '[attr.data-active]': `row().active() ? '' : null`,
     '[attr.data-selected]': `row().selected() ? '' : null`,
     '[attr.data-hovered]': `row().hovered() ? '' : null`,
-    '[class]': 'row().bindings?.cssClass?.()',
     '(click)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick($event)',
     '(mouseenter)': 'onRowMouseEnter()',
@@ -85,9 +86,8 @@ export class SciTableRowComponent<T> {
 
   private contributeRowActions(): void {
     contributeMenu(this.rowActionsToolbarName, toolbar => {
-      const rowActionsFactoryFn = this.table().rowActions;
-      if (!this.row().loading && rowActionsFactoryFn) {
-        rowActionsFactoryFn(toolbar, this.row().item, this.row().index);
+      if (!this.row().loading) {
+        this.table().rowActions?.(toolbar, this.row().item, this.row().index);
       }
     });
   }

@@ -24,10 +24,7 @@ export const toEqualIconCustomMatcher: jasmine.CustomAsyncMatcherFactories = {
     return {
       async compare(actual: ComponentFixture<unknown> | DebugElement, expected: ExpectedIcon, failOutput: string | undefined): Promise<CustomMatcherResult> {
         try {
-          await retryOnError(() => {
-            assertIcon(actual, expected);
-          });
-
+          await retryOnError(() => assertIcon(actual, expected));
           return pass();
         }
         catch (error) {
@@ -56,26 +53,53 @@ function assertIcon(actual: ComponentFixture<unknown> | DebugElement, expected: 
 
   // Expect icon to be in the DOM.
   if (!actualIconDebugElement) {
-    throw Error(`Expected 'sci-icon' element to be in the DOM, but was not.`);
+    throw Error(`Expected 'sci-icon' element to be in the DOM, but is not.`);
   }
 
-  // Expect icon ligature.
-  const actualIconHtmlElement = actualIconDebugElement.nativeElement as HTMLElement;
-  if (actualIconHtmlElement.innerText !== expected.innerText) {
-    throw Error(`Expected icon ligature '${actualIconHtmlElement.innerText}' to equal '${expected.innerText}'.`);
+  // Expect icon attribute.
+  const actualIconElement = actualIconDebugElement.nativeElement as HTMLElement;
+  if (actualIconElement.getAttribute('icon') !== expected.icon) {
+    throw Error(`Expected 'sci-icon' to have icon attribute '${expected.icon}', but is '${actualIconElement.getAttribute('icon')}'.`);
   }
 
-  // Expect icon component.
+  // Expect component.
   if (expected.component && !(actualIconDebugElement.query(By.directive(expected.component)) as DebugElement | null)) {
-    throw Error(`Expected '${expected.component.name}' element to be in the DOM, but was not.`);
+    throw Error(`Expected '${expected.component.name}' element to be in the DOM, but is not.`);
   }
 
   if (expected.component === null && actualIconDebugElement.children.length) {
-    throw Error(`Expected 'sci-icon' element to be empty, but was not.`);
+    throw Error(`Expected 'sci-icon' to be empty, but is not.`);
+  }
+
+  // Expect text content.
+  if (expected.textContent !== undefined) {
+    const actualTextContent = actualIconElement.textContent;
+    if (actualTextContent !== expected.textContent) {
+      throw Error(`Expected 'sci-icon' to have text content '${expected.textContent ?? ''}', but is '${actualTextContent}'.`);
+    }
+  }
+
+  // Expect CSS context.
+  if (expected.cssContent !== undefined) {
+    const actualCssContent = getComputedStyle(actualIconElement.children[0]!, '::before').content;
+    if (actualCssContent !== expected.cssContent) {
+      throw Error(`Expected 'sci-icon' to have CSS content '${expected.cssContent ?? ''}', but is '${actualCssContent}'.`);
+    }
+  }
+
+  // Expect font family.
+  if (expected.fontFamily !== undefined) {
+    const actualFontFamily = getComputedStyle(actualIconElement.children[0]!).fontFamily;
+    if (expected.fontFamily !== actualFontFamily) {
+      throw Error(`Expected 'sci-icon' to have CSS font '${expected.fontFamily ?? ''}', but is '${actualFontFamily}'.`);
+    }
   }
 }
 
 export interface ExpectedIcon {
-  innerText: string;
+  icon: string | null;
+  textContent?: string;
+  cssContent?: string;
+  fontFamily?: string;
   component?: ComponentType<unknown> | null;
 }

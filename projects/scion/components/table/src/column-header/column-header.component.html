@@ -23,5 +23,13 @@
 }
 
 <ng-template #header_template>
-  <span class="header e2e-header" [class.wrap]="table().wrapHeader()">{{header()}}</span>
+  @if (column().header.icon) {
+    <sci-icon class="label e2e-label">{{column().header.icon}}</sci-icon>
+  }
+
+  @if (column().header.label) {
+    <span [class.wrap]="table().wrapHeader()" class="label e2e-label" #label>
+      {{column().header.label}}
+    </span>
+  }
 </ng-template>

@@ -42,9 +42,14 @@
 <!-- Menu Items -->
 @if (isGroupExpanded()) {
   @if (maxHeight()) {
-    <sci-viewport>
+    <div class="viewport e2e-viewport" #viewport>
       <ng-container *ngTemplateOutlet="menu_items_template"/>
-    </sci-viewport>
+    </div>
+    <sci-scrollbar direction="vscroll" [viewport]="viewport"/>
+    <!--    <div class="viewport" #viewport>-->
+      <!--      <ng-container *ngTemplateOutlet="menu_items_template"/>-->
+      <!--      <sci-scrollbar direction="vscroll" [viewport]="viewport"/>-->
+      <!--    </div>-->
   } @else {
     <ng-container *ngTemplateOutlet="menu_items_template"/>
   }
@@ -74,14 +79,28 @@
                 <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
               }
 
-              <!-- Render label, accelerator and action toolbar. -->
               <div class="content">
+                <!-- Render icon inline if checkable. -->
+                @if (menuItem.iconLigature && menuItem.checked) {
+                  <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
+                }
+
+                <!-- Render icon component inline if checkable. -->
+                @if (menuItem.iconComponent && menuItem.checked) {
+                  <sci-menu-item-icon>
+                    <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
+                  </sci-menu-item-icon>
+                }
+
+                <!-- Render label. -->
                 <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
 
+                <!-- Render accelerator. -->
                 @if (menuItem.accelerator) {
                   <span class="accelerator">{{menuItem.accelerator | sciFormatAccelerator}}</span>
                 }
 
+                <!-- Render actions. -->
                 @if (hasActionToolbar) {
                   <sci-toolbar-group [menuItems]="menuItem.actions!"
                                      [orientation]="'horizontal'"
@@ -127,7 +146,7 @@
       }
     } @empty {
       <!-- TODO [Angular 23] Replace with optional chaining operator once the Angular compiler no longer logs the NG8107 false-positive warning. -->
-      <!-- @let message = filter?.notFoundMessage?.() ?? '%scion.components.no_items.message'; -->
+        <!-- @let message = filter?.notFoundMessage?.() ?? '%scion.components.no_items.message'; -->
       @let message = (filter && filter.notFoundMessage?.()) ?? '%scion.components.no_items.message';
       <div class="message no-items e2e-no-items">{{(message | sciText)()}}</div>
     }
@@ -140,7 +159,7 @@
 <!-- Renders the icon of the passed menu item. -->
 <ng-template #icon_template let-menuItem>
   @if (menuItem.checked !== undefined) {
-    <sci-icon>{{menuItem.checked() ? 'scion.checkmark' : undefined}}</sci-icon>
+    <sci-icon data-checkbox>{{menuItem.checked() ? 'scion.checkmark' : undefined}}</sci-icon>
   } @else if (menuItem.iconLigature) {
     <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
   } @else if (menuItem.iconComponent) {

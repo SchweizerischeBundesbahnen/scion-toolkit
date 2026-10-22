@@ -10,7 +10,7 @@
 
 import {TestBed} from '@angular/core/testing';
 import {table, table as sciTable} from './table.factory';
-import {assertNotInReactiveContext, Component, computed, DEFAULT_CURRENCY_CODE, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
+import {assertNotInReactiveContext, Component, computed, DEFAULT_CURRENCY_CODE, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild} from '@angular/core';
 import {TablePO} from './table.po';
 import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
@@ -21,8 +21,9 @@ import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {DATE_PIPE_DEFAULT_OPTIONS, DatePipeConfig, registerLocaleData} from '@angular/common';
 import localeDeCH from '@angular/common/locales/de-CH';
 import localeEnCH from '@angular/common/locales/en-CH';
-import {SCI_LOCALE} from '@scion/components/common';
+import {MaybeSignal, SCI_LOCALE} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
+import {provideTextProvider, SciTextProviderFn} from '@scion/components/text';
 
 describe('Table', () => {
 
@@ -200,6 +201,65 @@ describe('Table', () => {
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['b']]);
       });
+
+      it('should translate and cache texts', async () => {
+        const texts = {
+          'key1': signal('Text 1'),
+          'key2': signal('Text 2'),
+        };
+
+        const textProviderFn = jasmine.createSpy<SciTextProviderFn>().and.callFake(key => {
+          return texts[key as keyof typeof texts];
+        });
+
+        TestBed.configureTestingModule({
+          providers: [
+            provideTextProvider(textProviderFn),
+          ],
+        });
+
+        const data = signal([{string: '%key1'}, {string: '%key2'}, {string: '%key1'}, {string: '%key2'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addStringColumn(item => item.string),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(textProviderFn).toHaveBeenCalledWith('key1', {});
+        expect(textProviderFn).toHaveBeenCalledWith('key2', {});
+        expect(textProviderFn).toHaveBeenCalledTimes(2);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Text 1'],
+          ['Text 2'],
+          ['Text 1'],
+          ['Text 2'],
+        ]);
+        textProviderFn.calls.reset();
+
+        texts.key1.set('Text 1 (changed)');
+        await table.waitUntilStable();
+        expect(textProviderFn).not.toHaveBeenCalled();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Text 1 (changed)'],
+          ['Text 2'],
+          ['Text 1 (changed)'],
+          ['Text 2'],
+        ]);
+        textProviderFn.calls.reset();
+
+        texts.key2.set('Text 2 (changed)');
+        await table.waitUntilStable();
+        expect(textProviderFn).not.toHaveBeenCalled();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Text 1 (changed)'],
+          ['Text 2 (changed)'],
+          ['Text 1 (changed)'],
+          ['Text 2 (changed)'],
+        ]);
+        textProviderFn.calls.reset();
+      });
     });
 
     describe('Number Column', () => {
@@ -358,7 +418,7 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('tabular-nums');
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element).fontVariantNumeric).toEqual('tabular-nums');
       });
 
       it('should disable tabular (monospaced) figures via CSS', async () => {
@@ -382,7 +442,7 @@ describe('Table', () => {
         document.adoptedStyleSheets.push(styleSheet);
         TestBed.inject(DestroyRef).onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
 
-        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('normal');
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element).fontVariantNumeric).toEqual('normal');
       });
     });
 
@@ -413,12 +473,12 @@ describe('Table', () => {
 
         const table = new TablePO(fixture);
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['checkmark']]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['true']]);
 
         // Update value.
         value.set(false);
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['clear']]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['false']]);
       });
     });
 
@@ -607,7 +667,7 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('tabular-nums');
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element).fontVariantNumeric).toEqual('tabular-nums');
       });
 
       it('should disable tabular (monospaced) figures via CSS', async () => {
@@ -631,7 +691,7 @@ describe('Table', () => {
         document.adoptedStyleSheets.push(styleSheet);
         TestBed.inject(DestroyRef).onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
 
-        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('normal');
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element).fontVariantNumeric).toEqual('normal');
       });
     });
 
@@ -827,7 +887,7 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('tabular-nums');
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element).fontVariantNumeric).toEqual('tabular-nums');
       });
 
       it('should disable tabular (monospaced) figures via CSS', async () => {
@@ -851,7 +911,7 @@ describe('Table', () => {
         document.adoptedStyleSheets.push(styleSheet);
         TestBed.inject(DestroyRef).onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
 
-        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element!).fontVariantNumeric).toEqual('normal');
+        expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element).fontVariantNumeric).toEqual('normal');
       });
     });
   });
@@ -946,6 +1006,95 @@ describe('Table', () => {
 
       expect(table.columns[0]!.width).toBe(100);
       expect(table.columns[1]!.width).toBe(300);
+    });
+  });
+
+  describe('Column Value Function', () => {
+
+    it('should call column value function in injection context', async () => {
+      const data = signal(['value']);
+
+      let injector: Injector | undefined;
+      const valueFn = (item: string): MaybeSignal<string | undefined> => {
+        injector = inject(Injector);
+        return item;
+      };
+
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table.addStringColumn(valueFn),
+        injector: TestBed.inject(Injector),
+      }));
+
+      await fixture.whenStable();
+      expect(injector).toBeDefined();
+    });
+
+    it('should not call column value function in reactive context', async () => {
+      const data = signal(['value']);
+      const valueFn = (item: string): MaybeSignal<string | undefined> => {
+        assertNotInReactiveContext(valueFn);
+        return item;
+      };
+
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table.addStringColumn(valueFn),
+        injector: TestBed.inject(Injector),
+      }));
+
+      await fixture.whenStable();
+      expect(model.error()).toBeUndefined();
+    });
+
+    it('should destroy previous column value function injection context', async () => {
+      const data = signal(['value 1']);
+
+      const destroyRefs = new Array<DestroyRef>();
+      const valueFn = (item: string): MaybeSignal<string | undefined> => {
+        destroyRefs.push(inject(DestroyRef));
+        return item;
+      };
+
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table.addStringColumn(valueFn),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(destroyRefs).toHaveSize(2);
+      expect(destroyRefs[0]!.destroyed).toBeFalse(); // array datasource
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // pageloader
+
+      // Force reload in page loader.
+      await table.column({name: 'column:0'})!.toggleSort();
+      await table.waitUntilStable();
+      expect(destroyRefs).toHaveSize(3);
+      expect(destroyRefs[0]!.destroyed).toBeTrue(); // array datasource
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // pageloader
+      expect(destroyRefs[2]!.destroyed).toBeFalse(); // pageloader
+
+      // Force reload in page loader.
+      await table.column({name: 'column:0'})!.toggleSort();
+      await table.waitUntilStable();
+      expect(destroyRefs).toHaveSize(4);
+      expect(destroyRefs[0]!.destroyed).toBeTrue(); // array datasource
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // pageloader
+      expect(destroyRefs[2]!.destroyed).toBeTrue(); // pageloader
+      expect(destroyRefs[3]!.destroyed).toBeFalse(); // pageloader
+
+      // Force reload in array datasource and pageloader.
+      data.set(['value 2']);
+      await table.waitUntilStable();
+      expect(destroyRefs).toHaveSize(6);
+      expect(destroyRefs[0]!.destroyed).toBeTrue(); // array datasource
+      expect(destroyRefs[1]!.destroyed).toBeTrue(); // pageloader
+      expect(destroyRefs[2]!.destroyed).toBeTrue(); // pageloader
+      expect(destroyRefs[3]!.destroyed).toBeTrue(); // pageloader
+      expect(destroyRefs[4]!.destroyed).toBeFalse(); // pageloader
+      expect(destroyRefs[5]!.destroyed).toBeFalse(); // pageloader
     });
   });
 
@@ -1167,13 +1316,13 @@ describe('Table', () => {
         const column = table.column({name: 'column:boolean'})!;
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['clear', 'checkmark', 'checkmark', '']);
+        expect(await column.values()).toEqual(['false', 'true', 'true', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['checkmark', 'checkmark', 'clear', '']);
+        expect(await column.values()).toEqual(['true', 'true', 'false', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['checkmark', 'clear', '', 'checkmark']);
+        expect(await column.values()).toEqual(['true', 'false', '', 'true']);
       });
 
       it('should sort date column', async () => {
@@ -1546,10 +1695,10 @@ describe('Table', () => {
         const column = table.column({name: 'column:boolean'})!;
 
         await column.filter(true);
-        expect(await column.values()).toEqual(['checkmark', 'checkmark']);
+        expect(await column.values()).toEqual(['true', 'true']);
 
         await column.filter(null);
-        expect(await column.values()).toEqual(['checkmark', 'clear', '', 'checkmark']);
+        expect(await column.values()).toEqual(['true', 'false', '', 'true']);
       });
 
       it('should filter date column', async () => {
@@ -1925,45 +2074,43 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        model.filter('true');
+        model.filter('yes');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'checkmark'],
-          ['3', 'checkmark'],
+          ['1', 'true'],
+          ['3', 'true'],
         ]);
 
-        model.filter('false');
+        model.filter('no');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'clear'],
-          ['4', 'clear'],
+          ['2', 'false'],
+          ['4', 'false'],
         ]);
 
-        model.filter('0');
+        model.filter('true'); // not supported
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'clear'],
-          ['4', 'clear'],
-        ]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
-        model.filter('1');
+        model.filter('false'); // not supported
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'checkmark'],
-          ['3', 'checkmark'],
-        ]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
-        model.filter('2');
+        model.filter('0'); // not supported
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
+
+        model.filter('1'); // not supported
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
         model.filter(null);
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'checkmark'],
-          ['2', 'clear'],
-          ['3', 'checkmark'],
-          ['4', 'clear'],
+          ['1', 'true'],
+          ['2', 'false'],
+          ['3', 'true'],
+          ['4', 'false'],
           ['5', ''],
         ]);
       });
@@ -2179,7 +2326,7 @@ describe('Table', () => {
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
       });
 
-      it('should filter cross-column using a global filter', async () => {
+      fit('should filter cross-column using a global filter', async () => {
         const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
         const data = signal([
           {row: '1', string: 'alpha', number: 2, boolean: true, undefined: undefined},
@@ -2235,64 +2382,60 @@ describe('Table', () => {
         model.filter('alpha');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', '', '', ''],
+          ['1', 'alpha', '2', 'true', '', '', ''],
         ]);
 
         model.filter('a');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', '', '', ''],
-          ['2', 'beta', '1', 'clear', '', '', ''],
-          ['3', 'gamma', '0', 'checkmark', '', '', ''],
-          ['4', 'delta', '10', 'clear', '', '', ''],
+          ['1', 'alpha', '2', 'true', '', '', ''],
+          ['2', 'beta', '1', 'false', '', '', ''],
+          ['3', 'gamma', '0', 'true', '', '', ''],
+          ['4', 'delta', '10', 'false', '', '', ''],
         ]);
 
         model.filter('b');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'clear', '', '', ''],
+          ['2', 'beta', '1', 'false', '', '', ''],
         ]);
 
-        model.filter('true');
+        model.filter('yes');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', '', '', ''],
-          ['3', 'gamma', '0', 'checkmark', '', '', ''],
+          ['1', 'alpha', '2', 'true', '', '', ''],
+          ['3', 'gamma', '0', 'true', '', '', ''],
         ]);
 
-        model.filter('false');
+        model.filter('no');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'clear', '', '', ''],
-          ['4', 'delta', '10', 'clear', '', '', ''],
+          ['2', 'beta', '1', 'false', '', '', ''],
+          ['4', 'delta', '10', 'false', '', '', ''],
         ]);
 
         model.filter('0');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'clear', '', '', ''],
-          ['3', 'gamma', '0', 'checkmark', '', '', ''],
-          ['4', 'delta', '10', 'clear', '', '', ''],
+          ['3', 'gamma', '0', 'true', '', '', ''],
         ]);
 
         model.filter('1');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', '', '', ''],
-          ['2', 'beta', '1', 'clear', '', '', ''],
-          ['3', 'gamma', '0', 'checkmark', '', '', ''],
+          ['2', 'beta', '1', 'false', '', '', ''],
         ]);
 
         model.filter('2');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'checkmark', '', '', ''],
+          ['1', 'alpha', '2', 'true', '', '', ''],
         ]);
 
         model.filter('10');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['4', 'delta', '10', 'clear', '', '', ''],
+          ['4', 'delta', '10', 'false', '', '', ''],
         ]);
 
         model.filter('11');
@@ -3341,7 +3484,7 @@ describe('Table', () => {
         await column.filter(true);
         expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
           columnFilters: [
-            {columnName: 'column:boolean', text: true},
+            {columnName: 'column:boolean', text: [true]}, // TODO [dwie] Discuss with team
           ],
         }));
         loader.calls.reset();
@@ -3620,6 +3763,34 @@ describe('Table', () => {
 
   describe('Row Bindings', () => {
 
+    it('should call row binding function in a reactive context', async () => {
+      const data = signal([undefined]);
+      const flag = signal(true);
+
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        rowBindings: bindings => {
+          if (flag()) {
+            bindings.addAttributeBinding('data-attribute', 'value');
+          }
+        },
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute')).toEqual('value');
+
+      flag.set(false);
+      await table.waitUntilStable();
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute')).toBeNull();
+
+      flag.set(true);
+      await table.waitUntilStable();
+    });
+
     it('should pass index to row binding function', async () => {
       const data = signal(generateData(100, i => `Row ${i}`));
 
@@ -3642,11 +3813,11 @@ describe('Table', () => {
 
       expect(table.row({nth: 0}).element.getAttribute('data-spec-index')).toEqual('0');
       expect(table.row({nth: 0}).element).toHaveClass('spec-index-0');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-0');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-0');
 
       expect(table.row({nth: 1}).element.getAttribute('data-spec-index')).toEqual('1');
       expect(table.row({nth: 1}).element).toHaveClass('spec-index-1');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-1');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-1');
 
       // Scroll down to load another page.
       await table.scrollY({y: 50 * 30});
@@ -3656,11 +3827,11 @@ describe('Table', () => {
 
       expect(table.row({nth: rowIndex}).element.getAttribute('data-spec-index')).toEqual('50');
       expect(table.row({nth: rowIndex}).element).toHaveClass('spec-index-50');
-      expect(table.row({nth: rowIndex}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-50');
+      expect(table.row({nth: rowIndex}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-50');
 
       expect(table.row({nth: rowIndex + 1}).element.getAttribute('data-spec-index')).toEqual('51');
       expect(table.row({nth: rowIndex + 1}).element).toHaveClass('spec-index-51');
-      expect(table.row({nth: rowIndex + 1}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-51');
+      expect(table.row({nth: rowIndex + 1}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-51');
 
       // Filter table.
       await table.column({index: 0})?.filter('1');
@@ -3668,19 +3839,19 @@ describe('Table', () => {
       // Expect index to start at 0 in ascending order without gaps.
       expect(table.row({nth: 0}).element.getAttribute('data-spec-index')).toEqual('0');
       expect(table.row({nth: 0}).element).toHaveClass('spec-index-0');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-0');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-0');
 
       expect(table.row({nth: 1}).element.getAttribute('data-spec-index')).toEqual('1');
       expect(table.row({nth: 1}).element).toHaveClass('spec-index-1');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-1');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-1');
 
       expect(table.row({nth: 2}).element.getAttribute('data-spec-index')).toEqual('2');
       expect(table.row({nth: 2}).element).toHaveClass('spec-index-2');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-2');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-2');
 
       expect(table.row({nth: 3}).element.getAttribute('data-spec-index')).toEqual('3');
       expect(table.row({nth: 3}).element).toHaveClass('spec-index-3');
-      expect(table.row({nth: 3}).cells[0]!.element!.getAttribute('part')).toContain('row:spec-index-3');
+      expect(table.row({nth: 3}).cells[0]!.element.getAttribute('part')).toContain('row:spec-index-3');
     });
 
     it('should bind attribute to row', async () => {
@@ -3701,43 +3872,7 @@ describe('Table', () => {
       expect(table.row({nth: 2}).element.getAttribute('data-spec-id')).toEqual('3');
     });
 
-    it('should bind reactive attribute to row', async () => {
-      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const attributes = new Map<number, WritableSignal<{name: string; value: string} | undefined>>([
-        [1, signal(undefined)],
-        [2, signal({name: 'data-spec-attribute', value: 'a'})],
-        [3, signal(undefined)],
-      ]);
-
-      const {fixture} = createSciTableComponent<{id: number}>(sciTable({
-        datasource: data,
-        rowBindings: (bindings, item) => {
-          const {name, value} = attributes.get(item.id)?.() ?? {};
-          if (name) {
-            bindings.addAttributeBinding(name, value);
-          }
-        },
-        columns: table => table.addNumberColumn(item => item.id),
-        injector: TestBed.inject(Injector),
-      }));
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).element.getAttribute('data-spec-attribute')).toBeNull();
-      expect(table.row({nth: 1}).element.getAttribute('data-spec-attribute')).toEqual('a');
-      expect(table.row({nth: 2}).element.getAttribute('data-spec-attribute')).toBeNull();
-
-      // Update attribute of row 2.
-      attributes.get(2)!.set({name: 'data-spec-attribute', value: 'b'});
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).element.getAttribute('data-spec-attribute')).toBeNull();
-      expect(table.row({nth: 1}).element.getAttribute('data-spec-attribute')).toEqual('b');
-      expect(table.row({nth: 2}).element.getAttribute('data-spec-attribute')).toBeNull();
-    });
-
-    it('should bind CSS class to row', async () => {
+    it('should bind class to row', async () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
 
       const {fixture} = createSciTableComponent<{id: number}>(sciTable({
@@ -3755,17 +3890,22 @@ describe('Table', () => {
       expect(table.row({nth: 2}).element).toHaveClass('spec-3');
     });
 
-    it('should bind reactive CSS class to row', async () => {
+    it('should bind icon to row', async () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const cssClasses = new Map<number, WritableSignal<string | undefined>>([
-        [1, signal(undefined)],
-        [2, signal('spec-a')],
-        [3, signal(undefined)],
-      ]);
 
       const {fixture} = createSciTableComponent<{id: number}>(sciTable({
         datasource: data,
-        rowBindings: (bindings, item) => bindings.addClassBinding(cssClasses.get(item.id)?.()),
+        rowBindings: (bindings, item, index) => {
+          switch (index) {
+            case 0:
+              bindings.addIconBinding(`icon-${item.id}`);
+              break;
+            case 2:
+              bindings.addIconBinding(`icon-${item.id}-a`);
+              bindings.addIconBinding(`icon-${item.id}-b`);
+              break;
+          }
+        },
         columns: table => table.addNumberColumn(item => item.id),
         injector: TestBed.inject(Injector),
       }));
@@ -3773,17 +3913,9 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).element).not.toHaveClass('spec-a');
-      expect(table.row({nth: 1}).element).toHaveClass('spec-a');
-      expect(table.row({nth: 2}).element).not.toHaveClass('spec-a');
-
-      // Update attribute of row 2.
-      cssClasses.get(2)!.set('spec-b');
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).element).not.toHaveClass('spec-b');
-      expect(table.row({nth: 1}).element).toHaveClass('spec-b');
-      expect(table.row({nth: 2}).element).not.toHaveClass('spec-b');
+      expect(table.row({nth: 0}).icon()).toEqual(['icon-1']);
+      expect(table.row({nth: 1}).icon()).toEqual([]);
+      expect(table.row({nth: 2}).icon()).toEqual(['icon-3-a', 'icon-3-b']);
     });
 
     it('should bind part-attribute to cell', async () => {
@@ -3799,40 +3931,9 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:1');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:2');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:3');
-    });
-
-    it('should bind reactive part-attribute to cell', async () => {
-      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const partAttributes = new Map<number, WritableSignal<`row:${string}` | undefined>>([
-        [1, signal(undefined)],
-        [2, signal('row:negative')],
-        [3, signal(undefined)],
-      ]);
-
-      const {fixture} = createSciTableComponent<{id: number}>(sciTable({
-        datasource: data,
-        rowBindings: (bindings, item) => bindings.addPartBinding(partAttributes.get(item.id)?.()),
-        columns: table => table.addNumberColumn(item => item.id),
-        injector: TestBed.inject(Injector),
-      }));
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:negative');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:negative');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:negative');
-
-      // Update part attribute of row 2.
-      partAttributes.get(2)!.set('row:positive');
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:positive');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:positive');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:positive');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:1');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:2');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:3');
     });
 
     it('should style rows based on row state (selected/unselected, active/inactive)', async () => {
@@ -3848,31 +3949,31 @@ describe('Table', () => {
       await table.waitUntilStable();
 
       // Expect state of row 1.
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('column:string');
 
       // Expect state of row 2.
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('column:string');
 
       // Expect state of row 3.
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('column:string');
 
       // Select row 2.
       table.row({nth: 1}).select();
@@ -3881,31 +3982,31 @@ describe('Table', () => {
       expect(table.row({nth: 1}).isActive()).toBeTrue();
 
       // Expect state of row 1.
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('column:string');
 
       // Expect state of row 2 (selected, active).
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:selected');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:active');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:not:selected');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:not:active');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:selected');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:active');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).not.toContain('row:not:selected');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).not.toContain('row:not:active');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('column:string');
 
       // Expect state of row 3.
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('column:string');
 
       // Activate row 3.
       table.body.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', ctrlKey: true}));
@@ -3916,31 +4017,69 @@ describe('Table', () => {
       expect(table.row({nth: 2}).isActive()).toBeTrue();
 
       // Expect state of row 1.
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('column:string');
 
       // Expect state of row 2 (selected).
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:selected');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:active');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).not.toContain('row:not:selected');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:not:active');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 1}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:selected');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).not.toContain('row:active');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).not.toContain('row:not:selected');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:not:active');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('column:string');
 
       // Expect state of row 3 (active).
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:selected');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:active');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:not:selected');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).not.toContain('row:not:active');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('row:row-binding');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
-      expect(table.row({nth: 2}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:selected');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:active');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:not:selected');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:not:active');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:row-binding');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('column:string');
+    });
+
+    it('should apply row bindings registered in injector hierarchy', async () => {
+      const injector1 = Injector.create({
+        parent: TestBed.inject(Injector),
+        providers: [
+          provideTableRowBinding(row => row.addAttributeBinding('data-attribute-1', 'value-1')),
+        ],
+      });
+      const injector2 = Injector.create({
+        parent: injector1,
+        providers: [
+          provideTableRowBinding(row => row.addAttributeBinding('data-attribute-2', 'value-2')),
+        ],
+      });
+      const injector3 = Injector.create({
+        parent: injector2,
+        providers: [
+          provideTableRowBinding(row => row.addAttributeBinding('data-attribute-3', 'value-3')),
+        ],
+      });
+
+      const data = signal([1]);
+
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        rowBindings: row => row.addAttributeBinding('data-attribute-4', 'value-4'),
+        columns: table => table.addNumberColumn(item => item),
+        injector: injector3,
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute-1')).toEqual('value-1');
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute-2')).toEqual('value-2');
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute-3')).toEqual('value-3');
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute-4')).toEqual('value-4');
     });
   });
 
@@ -3961,7 +4100,7 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:column-name');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('column:column-name');
     });
 
     it('should style column based on the column data type', async () => {
@@ -3983,12 +4122,12 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).cells[0]!.element!.getAttribute('part')).toContain('column:string');
-      expect(table.row({nth: 0}).cells[1]!.element!.getAttribute('part')).toContain('column:number');
-      expect(table.row({nth: 0}).cells[2]!.element!.getAttribute('part')).toContain('column:boolean');
-      expect(table.row({nth: 0}).cells[3]!.element!.getAttribute('part')).toContain('column:date');
-      expect(table.row({nth: 0}).cells[4]!.element!.getAttribute('part')).toContain('column:component');
-      expect(table.row({nth: 0}).cells[5]!.element!.getAttribute('part')).toContain('column:template');
+      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('column:string');
+      expect(table.row({nth: 0}).cells[1]!.element.getAttribute('part')).toContain('column:number');
+      expect(table.row({nth: 0}).cells[2]!.element.getAttribute('part')).toContain('column:boolean');
+      expect(table.row({nth: 0}).cells[3]!.element.getAttribute('part')).toContain('column:date');
+      expect(table.row({nth: 0}).cells[4]!.element.getAttribute('part')).toContain('column:component');
+      expect(table.row({nth: 0}).cells[5]!.element.getAttribute('part')).toContain('column:template');
     });
   });
 

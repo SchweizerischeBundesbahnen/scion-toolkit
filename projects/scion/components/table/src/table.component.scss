@@ -8,7 +8,9 @@
   --ɵsci-table-border-size: 1px;
   --ɵsci-table-border-color: var(--sci-color-border);
 
-  @include sci-scrollbar.scrollbar-hide-when-inactive();
+  //sci-table-cell::before {
+  //  content: 'before';
+  //}
 
   > sci-table-viewport {
     display: block; // required to set height
@@ -19,6 +21,11 @@
     isolation: isolate; // Scope z-indices to this component so subsequent DOM elements naturally render on top of the table.
     box-sizing: border-box; // must not be set on sci-table level for the application to control box sizing if setting a table border.
     anchor-name: --sci-table-viewport;
+
+    // Hide scrollbar when not hovering the viewport or hovering the table header.
+    &:is(:not(:hover), :has(sci-table-header:hover)) ~ sci-scrollbar {
+      opacity: 0;
+    }
 
     // Indicate if table header is visible.
     &:has(sci-table-header) {

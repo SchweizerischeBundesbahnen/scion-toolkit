@@ -24,10 +24,7 @@ export const toEqualMenuCustomMatcher: jasmine.CustomAsyncMatcherFactories = {
     return {
       async compare(actual: MenuPO, expected: ExpectedSciMenuItemLike[], failOutput: string | undefined): Promise<CustomMatcherResult> {
         try {
-          await retryOnError(() => {
-            assertMenu(expected, actual);
-          });
-
+          await retryOnError(() => assertMenuItems(expected, actual.items()));
           return pass();
         }
         catch (error) {
@@ -45,10 +42,6 @@ export const toEqualMenuCustomMatcher: jasmine.CustomAsyncMatcherFactories = {
     };
   },
 };
-
-function assertMenu(expected: ExpectedSciMenuItemLike[], actual: MenuPO): void {
-  assertMenuItems(expected, actual.items());
-}
 
 function assertMenuItems(expected: ExpectedSciMenuItemLike[], items: Array<MenuItemPO | MenuGroupPO>): void {
   if (items.length !== expected.length) {
@@ -111,6 +104,14 @@ function assertMenuItem(expected: ExpectedSciMenuItem, actual: MenuItemPO): void
   if (expected.checked !== undefined) {
     if (actual.checked !== expected.checked) {
       throw Error(`[DOMAssertError] Expected checked state of menu item to be ${expected.checked}, but was ${actual.checked}`);
+    }
+
+    const icon = (actual.debugElement.nativeElement as HTMLElement).querySelector('sci-icon[data-checkbox]')?.getAttribute('icon') ?? null;
+    if (expected.checked && icon !== 'scion.checkmark') {
+      throw Error(`[DOMAssertError] Expected 'sci-icon[data-checkbox]' to display 'scion.checkmark', but is displaying '${icon}'.`);
+    }
+    if (!expected.checked && icon !== null) {
+      throw Error(`[DOMAssertError] Expected 'sci-icon[data-checkbox]' not to display an icon, but is displaying '${icon}'.`);
     }
   }
 

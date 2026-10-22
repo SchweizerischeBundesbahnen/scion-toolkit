@@ -1,6 +1,7 @@
 <main>
   @for (table of tables(); track $index) {
     <sci-table [name]="`table:${$index}`" [table]="table"/>
+    <sci-filter-field (filter)="onTableFilter(table, $event)" placeholder="Type to filter"/>
   }
 </main>
 
@@ -9,15 +10,17 @@
     <!-- Columns -->
     <ng-template sciTab label="Columns" cssClass="e2e-columns">
       <div class="columns">
-        <form [formRoot]="columnForm" class="add-column" autocomplete="off">
+        <form [formRoot]="columnForm" autocomplete="off">
           <label>
             Name
             <input [formField]="$any(columnForm.name)" class="e2e-name" placeholder="column:<string>" appFieldValidation>
           </label>
 
-          <label>
+          <label class="column-header">
             Header
-            <input [formField]="columnForm.header" class="e2e-header" appFieldValidation>
+            <input [formField]="columnForm.header.label" class="e2e-header-label" placeholder="Label" appFieldValidation>
+            <input [formField]="columnForm.header.tooltip" class="e2e-header-tooltip" placeholder="Tooltip" appFieldValidation>
+            <input [formField]="columnForm.header.icon" class="e2e-header-icon" placeholder="Icon" appFieldValidation>
           </label>
 
           <label>
@@ -27,6 +30,8 @@
               <option value="number">Number</option>
               <option value="boolean">Boolean</option>
               <option value="date">Date</option>
+              <option value="enum">Enum</option>
+              <option value="icon">Icon</option>
               <option value="template">Template</option>
               <option value="component">Component</option>
             </select>
@@ -36,7 +41,7 @@
             @case ('number') {
               @let extras = columnForm.extras.numberColumn;
               <label>
-                style
+                Style
                 <select [formField]="extras.style" class="e2e-style" appFieldValidation>
                   <option value="decimal">decimal</option>
                   <option value="currency">currency</option>
@@ -116,6 +121,64 @@
               <label>
                 Timezone
                 <input [formField]="extras.timezone" class="e2e-timezone" placeholder="+0200"/>
+              </label>
+            }
+            @case ('enum') {
+              @let extras = columnForm.extras.enumColumn;
+              <section class="enum-column">
+                <label>
+                  <input [formField]="extras.format.enabled" type="checkbox"/>
+                  Format
+                </label>
+
+                @if (extras.format().value().enabled) {
+                  <label class="format option">
+                    <input [formField]="extras.format.icon" type="checkbox"/>
+                    Show Icon
+                  </label>
+
+                  <label class="format option">
+                    <input [formField]="extras.format.label" type="checkbox"/>
+                    Show Label
+                  </label>
+
+                  <label class="format option">
+                    <input [formField]="extras.format.filter.icon" type="checkbox"/>
+                    Show Icon in Filter
+                  </label>
+                }
+
+                <label>
+                  Filterable
+                  <select [formField]="extras.filterable" appFieldValidation>
+                    <option value="single">single</option>
+                    <option value="multi">multi</option>
+                    <option value="false">false</option>
+                    <option value=""></option>
+                  </select>
+                </label>
+
+                <label>
+                  <input [formField]="extras.showAllProductStatusOptions" type="checkbox"/>
+                  Show all product status options
+                </label>
+              </section>
+            }
+            @case ('icon') {
+              @let extras = columnForm.extras.iconColumn;
+              <label>
+                Filterable
+                <select [formField]="extras.filterable" appFieldValidation>
+                  <option value="single">single</option>
+                  <option value="multi">multi</option>
+                  <option value="false">false</option>
+                  <option value=""></option>
+                </select>
+              </label>
+
+              <label>
+                <input [formField]="extras.showAllProductStatusOptions" type="checkbox"/>
+                Show all product status options
               </label>
             }
             @case ('component') {
@@ -213,6 +276,11 @@
         <label>
           <input [formField]="settingsForm.showRowActions" type="checkbox" class="e2e-row-actions"/>
           Show Row Actions
+        </label>
+
+        <label>
+          <input [formField]="settingsForm.showRowIcon" type="checkbox"/>
+          Show Row Icon
         </label>
 
         <label>

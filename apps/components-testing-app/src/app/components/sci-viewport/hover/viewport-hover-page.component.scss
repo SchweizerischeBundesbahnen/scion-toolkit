@@ -1,5 +1,7 @@
 :host {
-  display: block;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
 
   > sci-viewport {
     height: 300px;

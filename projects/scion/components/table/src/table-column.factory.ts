@@ -8,20 +8,47 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciDateLike, SciTableCellContext} from './table.model';
+import {SciColumnHeaderLike, SciDateLike, SciEnumColumnValues, SciEnumValueLike, SciIconColumnValues, SciTableCellContext, SciTableColumnType} from './table.model';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
 
 export interface SciTableColumnFactory<T> {
 
-  addStringColumn(header: Translatable, value: (item: T) => MaybeSignal<string | undefined>): this;
+  /**
+   * Adds a column to the table for displaying text.
+   *
+   * The value can be plain text or a translation key. A translation key starts with the percent symbol (`%`)
+   * and may include parameters in matrix notation for text interpolation.
+   *
+   * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  addStringColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<Translatable | undefined>): this;
 
-  addStringColumn(value: (item: T) => MaybeSignal<string | undefined>): this;
+  /**
+   * Adds a column to the table for displaying text.
+   *
+   * The value can be plain text or a translation key. A translation key starts with the percent symbol (`%`)
+   * and may include parameters in matrix notation for text interpolation.
+   *
+   * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  addStringColumn(value: (item: T) => MaybeSignal<Translatable | undefined>): this;
 
+  /**
+   * Adds a column to the table for displaying text.
+   */
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
   /**
-   * Adds a number column to the table for displaying numeric values.
+   * Adds a column to the table for displaying numeric values.
    *
    * ### Tabular Figures
    * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
@@ -41,11 +68,15 @@ export interface SciTableColumnFactory<T> {
    *   font-variant-numeric: normal;
    * }
    * ```
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
-  addNumberColumn(header: Translatable, value: (item: T) => MaybeSignal<number | undefined>): this;
+  addNumberColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<number | undefined>): this;
 
   /**
-   * Adds a number column to the table for displaying numeric values.
+   * Adds a column to the table for displaying numeric values.
    *
    * ### Tabular Figures
    * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
@@ -65,11 +96,15 @@ export interface SciTableColumnFactory<T> {
    *   font-variant-numeric: normal;
    * }
    * ```
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   addNumberColumn(value: (item: T) => MaybeSignal<number | undefined>): this;
 
   /**
-   * Adds a number column to the table for displaying numeric values.
+   * Adds a column to the table for displaying numeric values.
    *
    * ### Tabular Figures
    * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
@@ -92,14 +127,40 @@ export interface SciTableColumnFactory<T> {
    */
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
-  addBooleanColumn(header: Translatable, value: (item: T) => MaybeSignal<boolean | undefined>): this;
+  /**
+   * Adds a column to the table for displaying boolean values.
+   *
+   * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   * For custom display or filter options, use {@link addEnumColumn} instead.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  addBooleanColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<boolean | undefined>): this;
 
+  /**
+   * Adds a column to the table for displaying boolean values.
+   *
+   * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   * For custom display or filter options, use {@link addEnumColumn} instead.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
   addBooleanColumn(value: (item: T) => MaybeSignal<boolean | undefined>): this;
 
+  /**
+   * Adds a column to the table for displaying boolean values.
+   *
+   * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   * For custom display or filter options, use {@link addEnumColumn} instead.
+   */
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
   /**
-   * Adds a temporal column to the table for displaying dates, times, or both.
+   * Adds a column to the table for displaying dates, times, or both.
    *
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
@@ -123,11 +184,15 @@ export interface SciTableColumnFactory<T> {
    *   font-variant-numeric: normal;
    * }
    * ```
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
-  addDateColumn(header: Translatable, value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
+  addDateColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
 
   /**
-   * Adds a temporal column to the table for displaying dates, times, or both.
+   * Adds a column to the table for displaying dates, times, or both.
    *
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
@@ -151,11 +216,15 @@ export interface SciTableColumnFactory<T> {
    *   font-variant-numeric: normal;
    * }
    * ```
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   addDateColumn(value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
 
   /**
-   * Adds a temporal column to the table for displaying dates, times, or both.
+   * Adds a column to the table for displaying dates, times, or both.
    *
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
@@ -182,14 +251,30 @@ export interface SciTableColumnFactory<T> {
    */
   addDateColumn(descriptor: SciDateColumnDescriptor<T>): this;
 
+  /**
+   * Adds a column to the table for displaying values of an enumeration.
+   */
+  addEnumColumn(descriptor: SciEnumColumnDescriptor<T>): this;
+
+  /**
+   * Adds a column to the table for displaying icons.
+   */
+  addIconColumn(descriptor: SciIconColumnDescriptor<T>): this;
+
+  /**
+   * Adds a column to the table for displaying custom content using a component.
+   */
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
+  /**
+   * Adds a column to the table for displaying custom content using a template.
+   */
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
 }
 
 export interface SciTableColumnDescriptor {
   name?: `column:${string}`;
-  header?: Translatable;
+  header?: SciColumnHeaderLike;
   resizable?: boolean;
   /**
    * Preferred column size.
@@ -203,8 +288,23 @@ export interface SciTableColumnDescriptor {
   minWidth?: number;
 }
 
+/**
+ * Configures a table column for displaying text.
+ */
 export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
-  value: (item: T) => MaybeSignal<string | undefined>;
+
+  /**
+   * Specifies the text to display for an item.
+   *
+   * Can be text or a translation key. A translation key starts with the percent symbol (`%`) and may include parameters in matrix notation for text interpolation.
+   *
+   * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  value: (item: T) => MaybeSignal<Translatable | undefined>;
   sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, string>};
   filterable?: boolean | {matcher: SciTableColumnFilterMatcherFn<T, string>};
 }
@@ -214,7 +314,11 @@ export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
  */
 export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
   /**
-   * Specifies the number to display in this column.
+   * Specifies the number to display for an item.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   value: (item: T) => MaybeSignal<number | undefined>;
   /**
@@ -306,9 +410,28 @@ export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
   locale?: MaybeSignal<string>;
 }
 
+/**
+ * Configures a table column for displaying boolean values.
+ */
 export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor {
+  /**
+   * Specifies the boolean value to display for an item.
+   *
+   * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   * For custom display or filter options, use {@link addEnumColumn} instead.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
   value: (item: T) => MaybeSignal<boolean | undefined>;
+  /**
+   * Controls whether the user can sort this column. Defaults to `true`.
+   */
   sortable?: boolean;
+  /**
+   * Controls whether the user can filter this column. Defaults to `true`.
+   */
   filterable?: boolean;
 }
 
@@ -317,9 +440,13 @@ export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor 
  */
 export interface SciDateColumnDescriptor<T> extends SciTableColumnDescriptor {
   /**
-   * Specifies the date value to display in this column.
+   * Specifies the date value to display for an item.
    *
    * Can be an ISO 8601 date/time string (e.g., `2026-10-06`, `2026-10-06T14:30:15Z`, `T14:30:15`), milliseconds since the UTC epoch, or a `Date` object.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   value: (item: T) => MaybeSignal<SciDateLike | undefined>;
   /**
@@ -362,6 +489,95 @@ export interface SciDateColumnDescriptor<T> extends SciTableColumnDescriptor {
   timezone?: string;
 }
 
+/**
+ * Configures a table column for displaying values of an enumeration.
+ */
+export interface SciEnumColumnDescriptor<T = unknown> extends SciTableColumnDescriptor {
+  /**
+   * Specifies the enumeration value to display for an item. Must be a value of an entry defined in {@link values}.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  value: (item: T) => MaybeSignal<SciEnumValueLike | undefined>;
+  /**
+   * Specifies the enumeration entries.
+   *
+   * Entries are displayed in array order in the column filter.
+   */
+  values: MaybeSignal<SciEnumColumnValues>;
+  /**
+   * Configures the display of enumeration values.
+   */
+  format?: {
+    /**
+     * Controls whether to display the icon.
+     */
+    icon?: true;
+    /**
+     * Controls whether to display the label.
+     */
+    label?: true;
+    /**
+     * Configures the display of entries in the column filter.
+     */
+    filter?: {
+      /**
+       * Controls whether to display the icon.
+       */
+      icon?: true;
+    };
+  };
+  /**
+   * Controls whether the user can sort this column. Defaults to `true`.
+   */
+  sortable?: boolean;
+  /**
+   * Controls whether the user can filter this column. Defaults to `multi`.
+   */
+  filterable?: 'single' | 'multi' | false;
+  /**
+   * Specifies the column data type to add to the HTML `part` attribute of column cells. Defaults to `enum`.
+   *
+   * @internal
+   */
+  referenceType?: SciTableColumnType;
+}
+
+/**
+ * Configures a table column for displaying icons.
+ */
+export interface SciIconColumnDescriptor<T = unknown> extends SciTableColumnDescriptor {
+  /**
+   * Specifies the icon to display for an item.
+   *
+   * SCION uses icon providers to render icons. An icon provider can be registered using {@link provideIconProvider}.
+   *
+   * Defaults to a Material icon provider if the application has not registered an icon provider, interpreting the icon as a Material Icon font ligature.
+   * Refer to https://fonts.google.com/icons for available Material icons and instructions on including the Material icon font.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  value: (item: T) => MaybeSignal<string | number | undefined>;
+  /**
+   * Controls whether the user can sort this column. Defaults to `true`.
+   */
+  sortable?: boolean;
+  /**
+   * Controls whether the user can filter this column. Defaults to `multi`.
+   */
+  filterable?: 'single' | 'multi' | false;
+  /**
+   * Specifies the icons displayed in this column.
+   *
+   * Icons are displayed in array order in the column filter.
+   */
+  values: MaybeSignal<SciIconColumnValues>;
+}
+
 export interface SciComponentColumnDescriptor<T> extends SciTableColumnDescriptor {
   component: (item: T) => SciComponentDescriptor;
   sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, void>};
@@ -387,9 +603,9 @@ export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor
 }
 
 /**
- * Represents a {@link SciStringColumnDescriptor}, {@link SciNumberColumnDescriptor}, {@link SciBooleanColumnDescriptor}, {@link SciComponentColumnDescriptor}, or {@link SciTemplateColumnDescriptor}.
+ * Represents a column descriptor.
  */
-export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciDateColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciEnumColumnDescriptor<T> | SciDateColumnDescriptor<T> | SciIconColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
 
 /**
  * Signature of a function used to configure a comparator for sorting a table column.

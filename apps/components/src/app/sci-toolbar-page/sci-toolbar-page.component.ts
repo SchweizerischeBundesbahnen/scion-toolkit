@@ -55,7 +55,7 @@ export default class SciToolbarPageComponent {
       .set('fetch_and_prune', 'Fetch and Prune All');
 
     const listStyleActive = signal(false);
-    const selectedListStyle = signal('number_list');
+    const selectedListStyle = signal<'bullet_list' | 'number_list'>('bullet_list');
     const listStyleIcons = new Map<string, string>()
       .set('number_list', 'format_list_numbered')
       .set('bullet_list', 'format_list_bulleted');
@@ -164,11 +164,13 @@ export default class SciToolbarPageComponent {
           .addMenuItem({icon: 'format_list_numbered', label: 'Number list', onSelect}),
         ),
       )
+      // .addToolbarMenu({icon: customToolbarIconComponent, visualMenuIndicator: false, menu: {filter: true, maxHeight: undefined}}, menu => {
       .addToolbarMenu({icon: customToolbarIconComponent, visualMenuIndicator: false, menu: {filter: true, maxHeight: '300px'}}, menu => {
         menuItems().forEach(menuItem => {
           menu.addMenuItem({
             label: `Tab ${menuItem}`,
             active: computed(() => activeMenuItem() === menuItem),
+            checked: true,
             actions: actions => actions
               .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
                 .addMenuItem({icon: 'scion.pin', label: 'Pin', onSelect})

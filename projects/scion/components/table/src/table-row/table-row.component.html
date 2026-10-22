@@ -1,5 +1,11 @@
 @let row = this.row();
+
 @for (cell of row.cells; track cell.column.name) {
+  @if ($index === 0) {
+    @for (icon of row.bindings?.icons(); track $index) {
+      <sci-icon>{{icon}}</sci-icon>
+    }
+  }
   <sci-table-cell [cell]="cell" [row]="row"/>
 } @empty {
   @for (column of table().columns(); track column.name) {

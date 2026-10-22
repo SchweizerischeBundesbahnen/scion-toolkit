@@ -8,18 +8,18 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, DestroyableInjector, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
-import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
+import {SciEnumValueLike, SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
-import {createDestroyableInjector, toLazyObservable} from '@scion/components/common';
+import {createDestroyableInjector, SingleActiveInjectorFactory, toLazyObservable} from '@scion/components/common';
 import {arrayDatasource, isArrayDatasource} from './ɵtable-array-datasource';
 import {SciTableCache, SciTableCacheEntry} from './table.cache';
 import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {combineLatestWith, concat, defaultIfEmpty, firstValueFrom, fromEvent, of, skip, switchMap, tap, throwError, timer} from 'rxjs';
-import {coerceTableRowBindings, SCI_TABLE_ROW_BINDING, SciTableRowBindingFactoryFn} from './table-row-binding';
+import {coerceTableRowBindings, SCI_TABLE_ROW_BINDINGS, SciTableRowBindingFn} from './table-row-binding';
 import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {first, map, startWith} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
@@ -34,7 +34,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   public readonly columns: Signal<SciTableColumnLike<T>[]>;
   public readonly rowActions?: SciTableRowActionFactoryFn<T>;
 
-  private readonly _rowBindings: SciTableRowBindingFactoryFn<T>[];
+  private readonly _rowBindings: SciTableRowBindingFn<T>[];
   private readonly _dataLoaderFn: SciTableDataLoaderFn<T>;
   private readonly _trackBy?: (item: T) => unknown;
 
@@ -127,7 +127,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     this.rowActions = descriptor.rowActions;
     this._rowBindings = [
       ...descriptor.rowBindings ? [descriptor.rowBindings] : [],
-      ...inject<SciTableRowBindingFactoryFn<T>[]>(SCI_TABLE_ROW_BINDING, {optional: true}) ?? [],
+      ...inject<SciTableRowBindingFn<T>[]>(SCI_TABLE_ROW_BINDINGS, {optional: true}) ?? [],
     ];
     this._trackBy = descriptor.trackBy;
     this._dataLoaderFn = isSignal(descriptor.ɵdatasource) ? arrayDatasource(descriptor.ɵdatasource, this.columns) : descriptor.ɵdatasource!;
@@ -150,18 +150,14 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
   }
 
   private computeColumns(descriptor: SciTableDescriptor<T>): Signal<SciTableColumnLike<T>[]> {
-    // Create separate injection context per factory invocation to clean up allocated resources, like RxJS subscriptions.
-    let injector: DestroyableInjector | undefined;
-    return computed(() => {
-      injector?.destroy();
-      injector = createDestroyableInjector({parent: this._injector});
+    // Create a factory to instantiate a new injector per column factory execution, releasing resources allocated in the previous execution.
+    const injectorFactory = new SingleActiveInjectorFactory();
 
-      return runInInjectionContext(injector, () => {
-        const tableColumnFactory = new ɵSciTableColumnFactory<T>(this);
-        descriptor.columns(tableColumnFactory);
-        return tableColumnFactory.columns;
-      });
-    });
+    return computed(() => runInInjectionContext(injectorFactory.create(), () => {
+      const tableColumnFactory = new ɵSciTableColumnFactory<T>(this);
+      descriptor.columns(tableColumnFactory);
+      return tableColumnFactory.columns;
+    }));
   }
 
   /**
@@ -328,13 +324,14 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
           error => throwError(() => error));
 
         const columns$ = toObservable(this.columns);
+        const injectorFactory = new SingleActiveInjectorFactory();
 
         // Create a resource to track loading and error states.
         return rxResource({
           stream: () => tableResponse$.pipe(
             combineLatestWith(columns$),
             map(([response, columns]) => ({
-              rows: this.mapItemsToRow(response.items, columns, pageStart),
+              rows: this.mapItemsToRow(response.items, columns, pageStart, injectorFactory.create()),
               totalCount: response.totalCount,
             })),
             tap({
@@ -396,14 +393,14 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
    * Applies a filter, either via global filter or on a specific column.
    */
   public filter(text: string | null): void;
-  public filter(text: string | number | boolean | null, options: {columnName: `column:${string}`}): void;
-  public filter(text: string | number | boolean | null, options?: {columnName: `column:${string}`}): void {
+  public filter(text: string | number | boolean | SciEnumValueLike[] | null, options: {columnName: `column:${string}`}): void;
+  public filter(text: string | number | boolean | SciEnumValueLike[] | null, options?: {columnName: `column:${string}`}): void {
     // Scroll to the top as soon as filter changes.
     // Done here explicitly to avoid race-conditions and pages being loaded unnecessarily.
     this.tableViewRef()?.scrollToTop();
 
     if (!options) {
-      this._tableFilter.set(text as string);
+      this._tableFilter.set(text as string | null);
       return;
     }
 
@@ -490,7 +487,7 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
     });
   }
 
-  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], pageStart: number): SciTableRow<T>[] {
+  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], pageStart: number, injector: Injector): SciTableRow<T>[] {
     return items.map((item, i) => {
       const id = this.trackBy(item);
       const index = pageStart + i;
@@ -504,13 +501,13 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
         selected: computed(() => this.selectedIds().has(id)),
         hovered: computed(() => this.hoveredRow()?.index === index),
         bindings: coerceTableRowBindings(this._rowBindings, item, pageStart + i),
-        cells: columns.map(column => ({
+        cells: runInInjectionContext(injector, () => columns.map(column => ({
           value: 'value' in column ? column.value(item) : undefined,
           component: column.type === 'component' ? column.component(item) : undefined,
           template: column.type === 'template' ? column.template(item) : undefined,
           type: column.type,
           column,
-        } as SciTableCellLike)),
+        } as SciTableCellLike))),
       };
     });
   }

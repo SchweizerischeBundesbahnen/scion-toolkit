@@ -50,6 +50,26 @@
     }
   }
 
+  // Place row icon(s) together with the first sci-table-cell in the first column track.
+  // The row icon(s) cannot be added as children to sci-table-cell to be independent of horizontal cell alignment.
+  > sci-icon:has(~ sci-table-cell) { // icons before first table cell
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    --sci-icon-size: 1em;
+    margin-left: calc(var(--ɵsci-table-cell-padding-inline) + (sibling-index() - 1) * 1.5em);
+
+    // Support icon to shrink below its minimum width, required when resizing the column.
+    max-width: var(--sci-icon-size, 1em);
+    width: auto;
+
+    + sci-table-cell { // first table cell after the last row icon
+      grid-column: 1;
+      grid-row: 1;
+      margin-left: calc((sibling-index() - 1) * 1.5em);
+    }
+  }
+
   > sci-toolbar.row-actions {
     position: sticky;
     right: 0;

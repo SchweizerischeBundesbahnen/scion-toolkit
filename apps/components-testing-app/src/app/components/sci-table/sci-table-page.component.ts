@@ -22,6 +22,7 @@ import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';
 import {CustomButtonColumnComponent} from './custom-button-column.component';
 import {DatePipe} from '@angular/common';
+import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 
 @Component({
   selector: 'app-table-page',
@@ -38,6 +39,7 @@ import {DatePipe} from '@angular/common';
     CustomColumnComponent,
     SciViewportComponent,
     DatePipe,
+    SciFilterFieldComponent,
   ],
   providers: [
     provideTableRowBinding((bindings, _item, index) => {
@@ -82,7 +84,7 @@ export default class SciTablePageComponent {
     this.bindTableSettings();
   }
 
-  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
     return table({
       ɵdatasource: (() => {
         switch (options.datasource) {
@@ -101,8 +103,13 @@ export default class SciTablePageComponent {
       })(),
       datasource: ɵillegaldatasource(),
       rowBindings: (bindings, product) => {
-        if (options.customRowStyling) {
+        if (this.settingsForm.customRowStyling().value()) {
           bindings.addPartBinding(product.id % 3 === 0 ? 'row:negative' : undefined);
+        }
+
+        if (this.settingsForm.showRowIcon().value()) {
+          bindings.addIconBinding('inventory_2');
+          bindings.addIconBinding('sell');
         }
       },
       rowActions: options.showRowActions ? (toolbar, product) => toolbar
@@ -126,7 +133,11 @@ export default class SciTablePageComponent {
 
         const column: SciTableColumnDescriptor = {
           name: columnForm.name || undefined,
-          header: columnForm.header || undefined,
+          header: columnForm.header.icon || columnForm.header.tooltip ? {
+            icon: columnForm.header.icon,
+            label: columnForm.header.label || undefined,
+            tooltip: columnForm.header.tooltip || undefined,
+          } : columnForm.header.label || columnForm.name || undefined,
           width: columnForm.width || undefined,
           minWidth: columnForm.minWidth ?? undefined,
           resizable: columnForm.resizable,
@@ -170,6 +181,67 @@ export default class SciTablePageComponent {
               timezone: columnForm.extras.dateColumn.timezone || undefined,
             });
             break;
+          case 'enum': {
+            const extras = columnForm.extras.enumColumn;
+            table.addEnumColumn({
+              ...column,
+              value: product => product.status,
+              values: [
+                {value: 'IN_STOCK', icon: 'check_circle', label: 'In Stock'},
+                {value: 'LOW_STOCK', icon: 'warning', label: 'Low Stock'},
+                {value: 'OUT_OF_STOCK', icon: 'cancel', label: 'Out of Stock'},
+              ].concat(extras.showAllProductStatusOptions ? [
+                {value: 'BACKORDERABLE', icon: 'production_quantity_limits', label: 'Available on Backorder'},
+                {value: 'PRE_ORDER', icon: 'shopping_cart', label: 'Pre-Order'},
+                {value: 'DISCONTINUED', icon: 'do_not_disturb_on', label: 'Discontinued'},
+              ] : []),
+              format: extras.format.enabled ? {
+                icon: extras.format.icon || undefined,
+                label: extras.format.label || undefined,
+                filter: {
+                  icon: extras.format.filter.icon || undefined,
+                },
+              } : undefined,
+              filterable: (() => {
+                switch (extras.filterable) {
+                  case 'false':
+                    return false;
+                  case '':
+                    return undefined;
+                  default:
+                    return extras.filterable
+                }
+              })(),
+            });
+            break;
+          }
+          case 'icon': {
+            const extras = columnForm.extras.iconColumn;
+            table.addIconColumn({
+              ...column,
+              value: product => product.status,
+              values: [
+                {value: 'IN_STOCK', icon: 'check_circle', label: 'In Stock'},
+                {value: 'LOW_STOCK', icon: 'warning', label: 'Low Stock'},
+                {value: 'OUT_OF_STOCK', icon: 'cancel', label: 'Out of Stock'},
+              ].concat(extras.showAllProductStatusOptions ? [
+                {value: 'BACKORDERABLE', icon: 'production_quantity_limits', label: 'Available on Backorder'},
+                {value: 'PRE_ORDER', icon: 'shopping_cart', label: 'Pre-Order'},
+                {value: 'DISCONTINUED', icon: 'do_not_disturb_on', label: 'Discontinued'},
+              ] : []),
+              filterable: (() => {
+                switch (extras.filterable) {
+                  case 'false':
+                    return false;
+                  case '':
+                    return undefined;
+                  default:
+                    return extras.filterable
+                }
+              })(),
+            });
+            break;
+          }
           case 'component':
             table.addComponentColumn({
               ...column,
@@ -211,14 +283,13 @@ export default class SciTablePageComponent {
       const tableCount = this.settingsForm.tableCount().value();
       const datasource = this.datasourceForm.datasource().value();
       const showRowActions = this.settingsForm.showRowActions().value();
-      const customRowStyling = this.settingsForm.customRowStyling().value();
       const bufferSize = this.datasourceForm.bufferSize().value();
       const pageSize = this.datasourceForm.pageSize().value();
 
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, customRowStyling, bufferSize, pageSize}))));
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, bufferSize, pageSize}))));
       });
     });
 
@@ -241,7 +312,6 @@ export default class SciTablePageComponent {
         action: async form => {
           this.columns.update(columns => columns.concat({
             ...form().value(),
-            header: form.header().value() || form.name().value(),
             visible: signal(true),
           }));
           this.columnForm().reset(defaults());
@@ -253,7 +323,11 @@ export default class SciTablePageComponent {
       return {
         name: 'column:',
         type: 'string',
-        header: '',
+        header: {
+          label: '',
+          tooltip: '',
+          icon: '',
+        },
         resizable: true,
         width: '',
         minWidth: null,
@@ -274,6 +348,22 @@ export default class SciTablePageComponent {
             locale: '',
             timezone: '',
           },
+          enumColumn: {
+            format: {
+              enabled: false,
+              icon: false,
+              label: false,
+              filter: {
+                icon: false,
+              },
+            },
+            filterable: '',
+            showAllProductStatusOptions: true,
+          },
+          iconColumn: {
+            filterable: '',
+            showAllProductStatusOptions: true,
+          },
           componentColumn: {
             component: 'component:custom-column',
             padding: true,
@@ -288,7 +378,7 @@ export default class SciTablePageComponent {
 
   private createSettingsForm(): FieldTree<SettingsForm> {
     return form(signal<SettingsForm>({
-      filterable: false,
+      filterable: true,
       sortable: true,
       resizable: true,
       selectable: 'multi',
@@ -296,6 +386,7 @@ export default class SciTablePageComponent {
       wrapHeader: false,
       showGridlines: false,
       showRowActions: false,
+      showRowIcon: false,
       customRowStyling: false,
       headerHeight: 30,
       rowHeight: 30,
@@ -336,12 +427,20 @@ export default class SciTablePageComponent {
       });
     });
   }
+
+  protected onTableFilter(table: SciTable<Product>, filter: string): void {
+    table.filter(filter);
+  }
 }
 
 interface ColumnForm {
   name: `column:${string}` | '';
   type: SciTableColumnType;
-  header: string;
+  header: {
+    label: string;
+    tooltip: string;
+    icon: string;
+  };
   resizable: boolean;
   width: string;
   minWidth: number | null;
@@ -362,6 +461,22 @@ interface ColumnForm {
       locale: string | '';
       timezone: string | '';
     };
+    enumColumn: {
+      format: {
+        enabled: boolean;
+        icon: boolean;
+        label: boolean;
+        filter: {
+          icon: boolean;
+        }
+      };
+      filterable: 'single' | 'multi' | 'false' | '';
+      showAllProductStatusOptions: boolean;
+    };
+    iconColumn: {
+      filterable: 'single' | 'multi' | 'false' | '';
+      showAllProductStatusOptions: boolean;
+    };
     componentColumn: {
       component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';
       padding: boolean;
@@ -381,6 +496,7 @@ interface SettingsForm {
   wrapHeader: boolean;
   showGridlines: boolean;
   showRowActions: boolean;
+  showRowIcon: boolean;
   customRowStyling: boolean;
   headerHeight: number | null;
   rowHeight: number | null;

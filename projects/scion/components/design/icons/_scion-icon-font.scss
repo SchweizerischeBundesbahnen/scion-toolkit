@@ -39,12 +39,22 @@ $-icon-font-defaults: (
 
   @font-face {
     font-family: 'scion-icons';
-    src: url($path + '.ttf?' + $version) format('truetype'),
-    url($path + '.woff?' + $version) format('woff'),
+    src: url($path + '.woff?' + $version) format('woff'),
+    url($path + '.ttf?' + $version) format('truetype'),
     url($path + '.svg?' + $version + '#scion-icons') format('svg');
     font-weight: normal;
     font-style: normal;
     // Prevent a flash of unstyled text content (FOUC) showing the ligatures until the font loads.
     font-display: block;
   }
+  //@font-face {
+  //  font-family: 'scion-icons';
+  //  src: url($path + '.ttf?' + $version) format('truetype'),
+  //  url($path + '.woff?' + $version) format('woff'),
+  //  url($path + '.svg?' + $version + '#scion-icons') format('svg');
+  //  font-weight: normal;
+  //  font-style: normal;
+  //  // Prevent a flash of unstyled text content (FOUC) showing the ligatures until the font loads.
+  //  font-display: block;
+  //}
 }

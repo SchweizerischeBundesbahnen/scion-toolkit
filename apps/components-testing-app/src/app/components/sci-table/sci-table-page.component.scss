@@ -63,6 +63,21 @@
         display: flex;
         flex-direction: column;
         gap: 2em;
+
+        label.column-header {
+          display: grid;
+          grid-template-columns: 1fr 150px;
+          gap: .25em;
+          position: relative;
+
+          > input:first-of-type {
+            grid-column: 1/-1;
+          }
+        }
+
+        section.enum-column > label.format.option {
+          margin-left: 1em;
+        }
       }
 
       header {

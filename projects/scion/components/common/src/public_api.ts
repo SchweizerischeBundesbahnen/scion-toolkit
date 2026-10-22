@@ -14,8 +14,9 @@
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
 export {coerceSignal, type MaybeSignal, toLazyObservable} from './signal.util';
-export {createDestroyableInjector, assertInInjectionContext} from './injector.util';
+export {createDestroyableInjector, assertInInjectionContext, SingleActiveInjectorFactory} from './injector.util';
 export {type SciComponentDescriptor, SciComponentOutletDirective} from './component-outlet.directive';
 export {SciAttributesDirective} from './attributes.directive';
 export {type SciTemplateDescriptor} from './template-descriptor';
 export {SCI_LOCALE} from './locale';
+export {SciTooltipOnOverflowDirective, TOOLTIP_ON_OVERFLOW_DIRECTIVE_SOURCE_ELEMENT, TOOLTIP_ON_OVERFLOW_DIRECTIVE_ADDITIONAL_TEXT} from './tooltip-on-overflow.directive';
