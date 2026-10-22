@@ -8,15 +8,33 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {computed, InjectionToken, Provider, Signal} from '@angular/core';
+import {computed, inject, InjectionToken, Provider, Signal} from '@angular/core';
 import {Objects} from '@scion/toolkit/util';
 
-export function provideTableRowBinding<T = unknown>(bindings: SciTableRowBindingFactoryFn<T>): Provider {
-  return {
-    provide: SCI_TABLE_ROW_BINDING,
-    useValue: bindings,
-    multi: true,
-  };
+/**
+ * Provides row bindings to tables in the scope of the injector providing the bindings.
+ *
+ * Multiple providers can be registered. Providers at different injector tree levels form a hierarchy.
+ */
+export function provideTableRowBinding<T = unknown>(bindings: SciTableRowBindingFactoryFn<T>): Provider[] {
+  return [
+    {
+      provide: SCI_TABLE_ROW_BINDING,
+      useValue: bindings,
+      multi: true,
+    },
+    {
+      provide: SCI_TABLE_ROW_BINDINGS,
+      useFactory: (): SciTableRowBindingFactoryFn<unknown>[] => {
+        return [
+          // Collect bindings registered in parent injectors.
+          ...inject<SciTableRowBindingFactoryFn<unknown>[]>(SCI_TABLE_ROW_BINDINGS, {skipSelf: true, optional: true}) ?? [],
+          // Collect bindings registered in this injector.
+          ...inject<SciTableRowBindingFactoryFn<unknown>[]>(SCI_TABLE_ROW_BINDING),
+        ];
+      },
+    },
+  ];
 }
 
 /**
@@ -169,3 +187,8 @@ export interface SciTableRowBindings {
  * Multi-DI token for registering a {@link SciTableRowBindingFactory}.
  */
 export const SCI_TABLE_ROW_BINDING = new InjectionToken<SciTableRowBindingFactory[]>('SCI_TABLE_ROW_BINDING');
+
+/**
+ * DI token to inject {@link SciTableRowBindingFactory} functions provided in the current and parent injectors.
+ */
+export const SCI_TABLE_ROW_BINDINGS = new InjectionToken<SciTableRowBindingFactory[]>('SCI_TABLE_ROW_BINDINGS');
