@@ -2,7 +2,8 @@
 
 :host {
   display: flex;
-  gap: .5em;
+  gap: 0; // Applied via inline margin on input element, conditionally based on host width
+  container-type: inline-size; // containment context for input element to set margin based on host size
   align-items: center;
   padding-inline: var(--ɵsci-table-cell-padding-inline);
   border-bottom: var(--ɵsci-table-border-size) solid transparent;
@@ -38,12 +39,24 @@
     color: var(--sci-color-text);
     appearance: auto;
     box-sizing: border-box;
+    margin-inline: .5em;
 
     // Remove native steppers in Chromium and Safari.
     &[type="number"]::-webkit-outer-spin-button,
     &[type="number"]::-webkit-inner-spin-button {
       appearance: none;
       margin: 0;
+    }
+
+    &[type="button"] {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    // Hide input and remove gap when host is under 50px.
+    @container (width < 50px) {
+      margin-inline: 0;
+      visibility: hidden;
     }
   }
 

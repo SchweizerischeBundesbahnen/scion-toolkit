@@ -179,6 +179,40 @@ export default class SciTablePageComponent {
               timezone: columnForm.extras.dateColumn.timezone || undefined,
             });
             break;
+          case 'enum': {
+            const extras = columnForm.extras.enumColumn;
+            table.addEnumColumn({
+              ...column,
+              value: product => product.status,
+              values: [
+                {value: 'IN_STOCK', icon: 'check_circle', label: 'In Stock'},
+                {value: 'LOW_STOCK', icon: 'warning', label: 'Low Stock'},
+                {value: 'OUT_OF_STOCK', icon: 'cancel', label: 'Out of Stock'},
+              ].concat(extras.showAllProductStatusOptions ? [
+                {value: 'BACKORDERABLE', icon: 'production_quantity_limits', label: 'Available on Backorder'},
+                {value: 'PRE_ORDER', icon: 'shopping_cart', label: 'Pre-Order'},
+                {value: 'DISCONTINUED', icon: 'do_not_disturb_on', label: 'Discontinued'},
+              ] : []),
+              format: extras.format.enabled ? {
+                icon: extras.format.icon || undefined,
+                label: extras.format.label || undefined,
+                filter: {
+                  icon: extras.format.filter.icon || undefined,
+                },
+              } : undefined,
+              filterable: (() => {
+                switch (extras.filterable) {
+                  case 'false':
+                    return false;
+                  case '':
+                    return undefined;
+                  default:
+                    return extras.filterable;
+                }
+              })(),
+            });
+            break;
+          }
           case 'component':
             table.addComponentColumn({
               ...column,
@@ -285,6 +319,18 @@ export default class SciTablePageComponent {
             locale: '',
             timezone: '',
           },
+          enumColumn: {
+            format: {
+              enabled: false,
+              icon: false,
+              label: false,
+              filter: {
+                icon: false,
+              },
+            },
+            filterable: '',
+            showAllProductStatusOptions: true,
+          },
           componentColumn: {
             component: 'component:custom-column',
             padding: true,
@@ -377,6 +423,18 @@ interface ColumnForm {
       format: string | '';
       locale: string | '';
       timezone: string | '';
+    };
+    enumColumn: {
+      format: {
+        enabled: boolean;
+        icon: boolean;
+        label: boolean;
+        filter: {
+          icon: boolean;
+        };
+      };
+      filterable: 'single' | 'multi' | 'false' | '';
+      showAllProductStatusOptions: boolean;
     };
     componentColumn: {
       component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';

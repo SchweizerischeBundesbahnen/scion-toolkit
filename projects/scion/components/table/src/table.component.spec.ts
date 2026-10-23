@@ -2127,35 +2127,33 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        model.filter('true');
+        model.filter('yes');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['1', 'true'],
           ['3', 'true'],
         ]);
 
-        model.filter('false');
+        model.filter('no');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['2', 'false'],
           ['4', 'false'],
         ]);
 
-        model.filter('0');
+        model.filter('true'); // not supported
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'false'],
-          ['4', 'false'],
-        ]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
-        model.filter('1');
+        model.filter('false'); // not supported
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'true'],
-          ['3', 'true'],
-        ]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
-        model.filter('2');
+        model.filter('0'); // not supported
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
+
+        model.filter('1'); // not supported
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
@@ -2455,14 +2453,14 @@ describe('Table', () => {
           ['2', 'beta', '1', 'false', '', '', ''],
         ]);
 
-        model.filter('true');
+        model.filter('yes');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['1', 'alpha', '2', 'true', '', '', ''],
           ['3', 'gamma', '0', 'true', '', '', ''],
         ]);
 
-        model.filter('false');
+        model.filter('no');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['2', 'beta', '1', 'false', '', '', ''],
@@ -2472,17 +2470,13 @@ describe('Table', () => {
         model.filter('0');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'false', '', '', ''],
           ['3', 'gamma', '0', 'true', '', '', ''],
-          ['4', 'delta', '10', 'false', '', '', ''],
         ]);
 
         model.filter('1');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '', '', ''],
           ['2', 'beta', '1', 'false', '', '', ''],
-          ['3', 'gamma', '0', 'true', '', '', ''],
         ]);
 
         model.filter('2');
@@ -3543,7 +3537,7 @@ describe('Table', () => {
         await column.filter(true);
         expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
           columnFilters: [
-            {columnName: 'column:boolean', text: true},
+            {columnName: 'column:boolean', text: [true]}, // TODO [dwie] Discuss with team
           ],
         }));
         loader.calls.reset();
