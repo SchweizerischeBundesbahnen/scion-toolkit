@@ -24,6 +24,8 @@ import {assertInInjectionContext as ngAssertInInjectionContext, DestroyableInjec
  * @param options.parent - Specifies the parent injector. Defaults to the current injector.
  * @param options.providers - Specifies providers to associate with the injector.
  * @param options.name - Names the injector, useful for debugging the injector hierarchy.
+ *
+ * TODO [dwie] Consider prefixing with theta
  */
 export function createDestroyableInjector(options?: {parent?: Injector; providers?: Provider[]; name?: string}): DestroyableInjector {
   const parentInjector = options?.parent ?? inject(Injector);
@@ -46,6 +48,8 @@ export function createDestroyableInjector(options?: {parent?: Injector; provider
  * Delegates to `assertInInjectionContext` from @angular/core, adding the given message to the error if the assertion fails.
  *
  * @docs-private Not public API. For internal use only.
+ *
+ * TODO [dwie] Consider prefixing with theta
  */
 export function assertInInjectionContext(debugFn: Function, message: string): void { // eslint-disable-line @typescript-eslint/no-unsafe-function-type
   try {
@@ -53,5 +57,37 @@ export function assertInInjectionContext(debugFn: Function, message: string): vo
   }
   catch {
     throw Error([`${debugFn.name}() can only be used within an injection context.`].concat(message ? message : []).join(' '));
+  }
+}
+
+/**
+ * Factory for creating new injectors.
+ *
+ * Creating a new injector automatically destroys the previous injector created by this factory.
+ *
+ * @docs-private Not public API. For internal use only.
+ *
+ * TODO [dwie] Consider prefixing with theta
+ */
+export class SingleActiveInjectorFactory {
+
+  private _injector: DestroyableInjector | undefined;
+  private _options: {parent?: Injector; providers?: Provider[]; name?: string};
+
+  constructor(options?: {parent?: Injector; providers?: Provider[]; name?: string}) {
+    this._options = {
+      parent: options?.parent ?? inject(Injector),
+      providers: options?.providers,
+      name: options?.name,
+    };
+  }
+
+  /**
+   * Creates a new injector, destroying the previously created one, if any.
+   */
+  public create(): Injector {
+    this._injector?.destroy();
+    this._injector = createDestroyableInjector({parent: this._options.parent, providers: this._options.providers, name: this._options.name});
+    return this._injector;
   }
 }
