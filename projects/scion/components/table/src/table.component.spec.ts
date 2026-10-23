@@ -21,7 +21,7 @@ import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {DATE_PIPE_DEFAULT_OPTIONS, DatePipeConfig, registerLocaleData} from '@angular/common';
 import localeDeCH from '@angular/common/locales/de-CH';
 import localeEnCH from '@angular/common/locales/en-CH';
-import {SCI_LOCALE} from '@scion/components/common';
+import {MaybeSignal, SCI_LOCALE} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
 import {provideTextProvider} from '@scion/components/text';
 
@@ -1000,6 +1000,95 @@ describe('Table', () => {
       expect(table.column({name: 'column:1'})!.header!.tooltip).toBeNull();
       expect(table.column({name: 'column:2'})!.header!.tooltip).toEqual('Tooltip');
       expect(table.column({name: 'column:3'})!.header!.tooltip).toEqual('Tooltip (changed)');
+    });
+  });
+
+  describe('Column Value Function', () => {
+
+    it('should call column value function in injection context', async () => {
+      const data = signal(['value']);
+
+      let injector: Injector | undefined;
+      const valueFn = (item: string): MaybeSignal<string | undefined> => {
+        injector = inject(Injector);
+        return item;
+      };
+
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table.addStringColumn(valueFn),
+        injector: TestBed.inject(Injector),
+      }));
+
+      await fixture.whenStable();
+      expect(injector).toBeDefined();
+    });
+
+    it('should not call column value function in reactive context', async () => {
+      const data = signal(['value']);
+      const valueFn = (item: string): MaybeSignal<string | undefined> => {
+        assertNotInReactiveContext(valueFn);
+        return item;
+      };
+
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table.addStringColumn(valueFn),
+        injector: TestBed.inject(Injector),
+      }));
+
+      await fixture.whenStable();
+      expect(model.error()).toBeUndefined();
+    });
+
+    it('should destroy previous column value function injection context', async () => {
+      const data = signal(['value 1']);
+
+      const destroyRefs = new Array<DestroyRef>();
+      const valueFn = (item: string): MaybeSignal<string | undefined> => {
+        destroyRefs.push(inject(DestroyRef));
+        return item;
+      };
+
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        columns: table => table.addStringColumn(valueFn),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      expect(destroyRefs).toHaveSize(2);
+      expect(destroyRefs[0]!.destroyed).toBeFalse(); // array datasource
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // pageloader
+
+      // Force reload in page loader.
+      await table.column({name: 'column:0'})!.toggleSort();
+      await table.waitUntilStable();
+      expect(destroyRefs).toHaveSize(3);
+      expect(destroyRefs[0]!.destroyed).toBeTrue(); // array datasource
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // pageloader
+      expect(destroyRefs[2]!.destroyed).toBeFalse(); // pageloader
+
+      // Force reload in page loader.
+      await table.column({name: 'column:0'})!.toggleSort();
+      await table.waitUntilStable();
+      expect(destroyRefs).toHaveSize(4);
+      expect(destroyRefs[0]!.destroyed).toBeTrue(); // array datasource
+      expect(destroyRefs[1]!.destroyed).toBeFalse(); // pageloader
+      expect(destroyRefs[2]!.destroyed).toBeTrue(); // pageloader
+      expect(destroyRefs[3]!.destroyed).toBeFalse(); // pageloader
+
+      // Force reload in array datasource and pageloader.
+      data.set(['value 2']);
+      await table.waitUntilStable();
+      expect(destroyRefs).toHaveSize(6);
+      expect(destroyRefs[0]!.destroyed).toBeTrue(); // array datasource
+      expect(destroyRefs[1]!.destroyed).toBeTrue(); // pageloader
+      expect(destroyRefs[2]!.destroyed).toBeTrue(); // pageloader
+      expect(destroyRefs[3]!.destroyed).toBeTrue(); // pageloader
+      expect(destroyRefs[4]!.destroyed).toBeFalse(); // pageloader
+      expect(destroyRefs[5]!.destroyed).toBeFalse(); // pageloader
     });
   });
 
