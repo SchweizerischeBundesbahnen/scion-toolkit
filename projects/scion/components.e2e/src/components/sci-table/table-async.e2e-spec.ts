@@ -140,7 +140,7 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
     await table.rows.last().click({modifiers: ['Shift']});
 
-    await expect(tablePage.selectionCount).toHaveText('1000', {timeout: 5000});
+    await expect(tablePage.selectionCount).toHaveText('1000', {timeout: 15_000}); // takes longer if under load on CI
   });
 
   test('should select all items with ctrl+a', async ({page}) => {
@@ -156,6 +156,6 @@ test.describe('sci-table async datasource', () => {
     await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
     await table.locator.click();
     await page.keyboard.press('Control+A');
-    await expect(tablePage.selectionCount).toHaveText('10000');
+    await expect(tablePage.selectionCount).toHaveText('10000', {timeout: 15_000}); // takes longer if under load on CI
   });
 });
