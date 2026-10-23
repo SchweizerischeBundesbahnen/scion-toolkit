@@ -1,0 +1,23 @@
+:host {
+  cdk-virtual-scroll-viewport {
+    scrollbar-width: none; // Prevent rendering native scrollbar.
+    anchor-name: --viewport;
+
+    // Hide scrollbar when not hovering the viewport.
+    &:not(:hover) + sci-scrollbar {
+      opacity: 0;
+    }
+
+    // Styling is illustrative
+    width: 500px;
+    height: 300px;
+    border: 1px solid lightgray;
+  }
+
+  > sci-scrollbar {
+    position: absolute;
+    top: anchor(--viewport top);
+    right: anchor(--viewport right);
+    bottom: anchor(--viewport bottom);
+  }
+}

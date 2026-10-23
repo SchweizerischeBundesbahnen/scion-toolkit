@@ -35,6 +35,7 @@ export class AppComponent {
     contributeMenu('menubar:main', menubar => {
       menubar
         .addMenu({label: 'Components', menu: {filter: {focus: true}}}, menu => menu
+          .addMenuItem({label: 'testee', onSelect: () => void router.navigate(['components/testee'])})
           .addMenuItem({label: 'sci-table', onSelect: () => void router.navigate(['components/sci-table'])})
           .addMenu({label: 'sci-sashbox'}, menu => menu
             .addMenuItem({label: 'sci-sashbox', onSelect: () => void router.navigate(['components/sci-sashbox'])})
