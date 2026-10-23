@@ -12,6 +12,7 @@ import {expect} from '@playwright/test';
 import {test} from '../../fixtures';
 import {ScrollbarPagePO} from './scrollbar-page.po';
 import {waitUntilStable} from '../../helper/testing.utils';
+import {expectScrollbar} from './scrollbar-matcher';
 
 test.describe('sci-scrollbar', () => {
 
@@ -30,18 +31,15 @@ test.describe('sci-scrollbar', () => {
 
         // Simulate viewport overflow.
         await pagePO.setOverflow({vertical: true});
-        await expect(scrollbar.locator).toBeVisible();
-        await expect(scrollbar.locator).toHaveCSS('opacity', '0');
+        await expectScrollbar(scrollbar.locator).toDisplay({opacity: 0});
 
         // Hover viewport.
         await viewport.hover();
-        await expect(scrollbar.locator).toBeVisible();
-        await expect(scrollbar.locator).toHaveCSS('opacity', '1');
+        await expectScrollbar(scrollbar.locator).toDisplay({opacity: 1});
 
         // Move mouse out of the viewport.
         await viewport.moveMouseOutsideViewport();
-        await expect(scrollbar.locator).toBeVisible();
-        await expect(scrollbar.locator).toHaveCSS('opacity', '0');
+        await expectScrollbar(scrollbar.locator).toDisplay({opacity: 0});
       });
 
       test('should not display scrollbar if no overflow', async ({page}) => {
@@ -56,14 +54,14 @@ test.describe('sci-scrollbar', () => {
         await viewport.hover();
 
         // Expect scrollbar to display.
-        await expect(scrollbar.locator).toBeVisible();
+        await expectScrollbar(scrollbar.locator).toDisplay();
 
         // Simulate no viewport overflow.
         await pagePO.setOverflow({vertical: false});
         await viewport.hover();
 
         // Expect scrollbar not to display.
-        await expect(scrollbar.locator).not.toBeVisible();
+        await expectScrollbar(scrollbar.locator).not.toDisplay();
       });
 
       test('should enlarge thumb on hover and scroll', async ({page}) => {
@@ -78,7 +76,7 @@ test.describe('sci-scrollbar', () => {
 
         // Hover viewport.
         await viewport.hover();
-        await expect(scrollbar.locator).toBeVisible();
+        await expectScrollbar(scrollbar.locator).toDisplay();
 
         // Capture scrollbar thumb width.
         const thumbWidth = await scrollbar.thumb.width();
@@ -128,7 +126,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture viewport and viewport client height.
           const viewportHeight = await viewport.viewportHeight();
@@ -177,7 +175,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture viewport and viewport client height.
           const viewportHeight = await viewport.viewportHeight();
@@ -237,7 +235,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture viewport and viewport client height.
           const viewportHeight = await viewport.viewportHeight();
@@ -304,7 +302,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture scrollbar bounds.
           const scrollbarBounds = await scrollbar.innerBounds();
@@ -372,7 +370,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture viewport and viewport client width.
           const viewportHeight = 50;
@@ -418,7 +416,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Hover thumb and wait until its size is stable.
           await scrollbar.thumb.hover();
@@ -540,7 +538,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture viewport and viewport client width.
           const viewportWidth = await viewport.viewportWidth();
@@ -589,7 +587,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture viewport and viewport client width.
           const viewportWidth = await viewport.viewportWidth();
@@ -648,7 +646,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture viewport and viewport client height.
           const viewportWidth = await viewport.viewportWidth();
@@ -715,7 +713,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture scrollbar bounds.
           const scrollbarBounds = await scrollbar.innerBounds();
@@ -783,7 +781,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Capture viewport and viewport client width.
           const viewportWidth = 50;
@@ -829,7 +827,7 @@ test.describe('sci-scrollbar', () => {
 
           // Hover viewport to display scrollbars.
           await viewport.hover();
-          await expect(scrollbar.locator).toBeVisible();
+          await expectScrollbar(scrollbar.locator).toDisplay();
 
           // Hover thumb and wait until its size is stable.
           await scrollbar.thumb.hover();
