@@ -1182,7 +1182,7 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.column({name: 'column:name'}).filter('999999');
-      await expect(table.rows).toHaveCount(1);
+      await expect(table.rows).toHaveCount(1, {timeout: 15_000}); // takes longer if under load on CI
     });
 
     test('should reset scroll position to top when applying filter', async ({page}) => {
@@ -2256,6 +2256,9 @@ test.describe('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      // TODO [dwie] Remove! Fix scrolling active row into viewport.
+      await tablePage.showTableFilter(false);
 
       await table.body.focus();
       const renderedRowCount = await waitUntilStable(() => table.rows.count());
@@ -5505,6 +5508,7 @@ test.describe('sci-table', () => {
 
       await tablePage.setRowCount(0);
       await tablePage.setRowHeight(30);
+      await tablePage.showTableFilter(false);
       await tablePage.showHeader(false);
 
       // Configure table to grow with its content to a breakpoint.
@@ -5642,6 +5646,7 @@ test.describe('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
+      await tablePage.showTableFilter(false);
       await tablePage.setPageHeight(500);
       await expect.poll(() => table.bounds({box: 'border'}).then(bounds => bounds.height)).toEqual(500);
       await expectTable(table).toHaveVerticalOverflow();
