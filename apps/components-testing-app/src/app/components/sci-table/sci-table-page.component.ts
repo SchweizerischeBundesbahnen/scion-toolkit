@@ -213,6 +213,33 @@ export default class SciTablePageComponent {
             });
             break;
           }
+          case 'icon': {
+            const extras = columnForm.extras.iconColumn;
+            table.addIconColumn({
+              ...column,
+              value: product => product.status,
+              values: [
+                {value: 'IN_STOCK', icon: 'check_circle', label: 'In Stock'},
+                {value: 'LOW_STOCK', icon: 'warning', label: 'Low Stock'},
+                {value: 'OUT_OF_STOCK', icon: 'cancel', label: 'Out of Stock'},
+              ].concat(extras.showAllProductStatusOptions ? [
+                {value: 'BACKORDERABLE', icon: 'production_quantity_limits', label: 'Available on Backorder'},
+                {value: 'PRE_ORDER', icon: 'shopping_cart', label: 'Pre-Order'},
+                {value: 'DISCONTINUED', icon: 'do_not_disturb_on', label: 'Discontinued'},
+              ] : []),
+              filterable: (() => {
+                switch (extras.filterable) {
+                  case 'false':
+                    return false;
+                  case '':
+                    return undefined;
+                  default:
+                    return extras.filterable;
+                }
+              })(),
+            });
+            break;
+          }
           case 'component':
             table.addComponentColumn({
               ...column,
@@ -331,6 +358,10 @@ export default class SciTablePageComponent {
             filterable: '',
             showAllProductStatusOptions: true,
           },
+          iconColumn: {
+            filterable: '',
+            showAllProductStatusOptions: true,
+          },
           componentColumn: {
             component: 'component:custom-column',
             padding: true,
@@ -433,6 +464,10 @@ interface ColumnForm {
           icon: boolean;
         };
       };
+      filterable: 'single' | 'multi' | 'false' | '';
+      showAllProductStatusOptions: boolean;
+    };
+    iconColumn: {
       filterable: 'single' | 'multi' | 'false' | '';
       showAllProductStatusOptions: boolean;
     };
