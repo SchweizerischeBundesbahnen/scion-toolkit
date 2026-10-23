@@ -50,6 +50,28 @@
     }
   }
 
+  // Place row icons and the first <sci-table-cell> in the first grid column track.
+  // Row icons must not be children of <sci-table-cell> to be independent of horizontal cell alignment.
+  > sci-icon:has(~ sci-table-cell:first-of-type) {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    --sci-icon-size: 1em;
+    margin-left: calc(var(--ɵsci-table-cell-padding-inline) + (sibling-index() - 1) * 1.5em);
+
+    // Allow the icon to shrink below its minimal size when resizing the column.
+    width: auto;
+    max-width: var(--sci-icon-size, 1em); // to not fill grid column track
+
+    + sci-table-cell { // first <sci-table-cell>, only if row icons are present
+      grid-column: 1;
+      grid-row: 1;
+      // Use border-left instead of margin-left so background colors fill the entire element area when styled via the ::part selector.
+      // Because <sci-table-cell> uses border-inline for padding, the padding must be added here.
+      border-left: calc(var(--ɵsci-table-cell-padding-inline) + (sibling-index() - 1) * 1.5em) solid transparent;
+    }
+  }
+
   > sci-toolbar.row-actions {
     position: sticky;
     right: 0;
