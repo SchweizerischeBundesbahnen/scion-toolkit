@@ -1,4 +1,5 @@
 @use './menu.component.mixin' as mixin;
+@use '@scion/components/scrollbar' as sci-scrollbar;
 
 :host {
   --sci-icon-size: var(--sci-menu-item-size);
@@ -139,35 +140,34 @@
     }
   }
 
-  // Style viewport.
-  &:has(> sci-viewport) {
-    padding: var(--ɵsci-menu-padding-block) 0;
-
-    > header.group-header, > button.group-header, > div.filter, > hr {
-      margin: 0 var(--ɵsci-menu-padding-inline);
-    }
-  }
-
-  > sci-viewport {
+  // To inherit grid column tracks and right-align the vertical scrollbar on the menu boundary, do not use <sci-viewport>.
+  > div.viewport {
     grid-column: 1/-1; // span all columns
+    display: inline-grid;
+    grid-template-columns: subgrid; // inherit grid
+    overflow: auto;
+    scrollbar-width: none; // never display native scrollbar
     max-height: var(--ɵsci-menu-max-height);
     box-sizing: border-box; // prevent different interpretation of height constraint
 
-    &::part(content) {
-      grid-column: 1/-1; // span all columns
-      display: grid;
-      gap: var(--ɵsci-menu-item-gap-block) var(--ɵsci-menu-item-gap-inline);
-      grid-template-columns:
-        // === Menu subgrid ===
-        var(--sci-menu-item-size) // glyph column (icons and check marks)
-        minmax(0, 1fr); // label column - `minmax(0, 1fr)` to display ellipsis on label overflow
-      padding: 2px var(--ɵsci-menu-padding-inline); // 2px to not clip menu item outline
+    // Prevent clipping menu item outline and active marker.
+    margin-block: calc(-1 * var(--sci-button-outline-width));
+    padding-block: var(--sci-button-outline-width);
+    margin-inline: calc(-1 * var(--ɵsci-menu-padding-inline));
+    padding-inline: var(--ɵsci-menu-padding-inline);
+    anchor-name: --sci-menu-viewport;
 
-      @container style(--ɵsci-menu-glyph-area: false) {
-        grid-template-columns:
-          // === Menu subgrid ===
-          minmax(0, 1fr); // label column
-      }
+    // Hide scrollbar when not hovering the viewport.
+    &:not(:hover) + sci-scrollbar:not(:hover):not(.scrolling) {
+      opacity: 0;
+    }
+
+    // Position scrollbar along the viewport's right edge.
+    + sci-scrollbar {
+      position: absolute;
+      top: calc(anchor(--sci-menu-viewport top) + var(--sci-button-outline-width));
+      right: calc(anchor(--sci-menu-viewport right));
+      bottom: calc(anchor(--sci-menu-viewport bottom) + var(--sci-button-outline-width));
     }
   }
 

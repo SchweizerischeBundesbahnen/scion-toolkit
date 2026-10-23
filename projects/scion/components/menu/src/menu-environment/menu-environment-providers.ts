@@ -105,7 +105,6 @@ export const SCI_MENU_ACCELERATOR_TARGET_PROVIDER = new InjectionToken<SciMenuAc
 /**
  * DI token to inject {@link SciMenuAcceleratorTargetProviderFn} functions provided in the current and parent injectors.
  *
- *
  * @see injectMenuAcceleratorTargets
  */
 export const SCI_MENU_ACCELERATOR_TARGET_PROVIDERS = new InjectionToken<SciMenuAcceleratorTargetProviderFn[]>('SCI_MENU_ACCELERATOR_TARGET_PROVIDERS');

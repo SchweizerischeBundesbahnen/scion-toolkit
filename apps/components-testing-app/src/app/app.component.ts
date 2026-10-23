@@ -42,6 +42,9 @@ export class AppComponent {
               .addMenuItem({label: 'Animation Test Page', onSelect: () => void router.navigate(['components/sci-sashbox/animation'])}),
             ),
           )
+          .addMenu({label: 'sci-menu'}, menu => menu
+            .addMenuItem({label: 'Viewport Hover Test Page', onSelect: () => void router.navigate(['components/sci-menu/viewport-hover'])}),
+          )
           .addMenu({label: 'sci-viewport'}, menu => menu
             .addMenuItem({label: 'Focus Test Page', onSelect: () => void router.navigate(['components/sci-viewport/focus'])})
             .addMenuItem({label: 'Overlap Test Page', onSelect: () => void router.navigate(['components/sci-viewport/overlap'])})
