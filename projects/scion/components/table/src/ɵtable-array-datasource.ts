@@ -10,12 +10,13 @@
 
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
 import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
-import {computed, inject, signal, Signal, untracked} from '@angular/core';
+import {computed, inject, runInInjectionContext, signal, Signal, untracked} from '@angular/core';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {Objects} from '@scion/toolkit/util';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {SciDateValue} from './table-date-column.model';
+import {SingleActiveInjectorFactory} from '@scion/components/common';
 
 export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
   const dataset = new Dataset(data, columns);
@@ -54,17 +55,23 @@ class Dataset<T> {
   constructor(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>) {
     const tableCellValuePreloader = inject(SciTableCellValuePreloader);
 
-    const dataset = computed((): DatasetRow<T>[] => data().map(item => ({
-      item,
-      cells: columns().reduce((cells, column) => untracked(() => {
-        // PERF: Cell values are computed lazily (on idle or first use) to defer expensive computations like date formatting.
-        const tableCellValue = 'value' in column ? new eSciTableCellValue(tableCellValuePreloader, () => column.value(item)()) : undefined;
-        return cells.set(column.name, {
-          column: column as SciTableColumn,
-          value: () => tableCellValue?.value(),
-        });
-      }), new Map<`column:${string}`, DatasetCell>()),
-    })));
+    // Create a factory to instantiate a new injector per dataset run, releasing resources allocated in column value functions.
+    const injectorFactory = new SingleActiveInjectorFactory();
+
+    const dataset = computed((): DatasetRow<T>[] => {
+      const injector = injectorFactory.create();
+      return data().map(item => ({
+        item,
+        cells: columns().reduce((cells, column) => untracked(() => {
+          // PERF: Cell values are computed lazily (on idle or first use) to defer expensive computations like date formatting.
+          const tableCellValue = 'value' in column ? new eSciTableCellValue(tableCellValuePreloader, () => runInInjectionContext(injector, () => column.value(item)())) : undefined;
+          return cells.set(column.name, {
+            column: column as SciTableColumn,
+            value: () => tableCellValue?.value(),
+          });
+        }), new Map<`column:${string}`, DatasetCell>()),
+      }));
+    });
 
     // Memoize filtered/sorted view; recomputes only when dataset or criteria change, not when scrolling through the view, as sorting is an expensive operation.
     this._dataview = computed(() => {
