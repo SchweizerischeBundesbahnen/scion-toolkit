@@ -14,6 +14,7 @@
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
 export {SciMenuService, type SciMenuRef, type SciMenuOptions, type SciMenuOrigin} from './menu.service';
+export {provideMenuService} from './menu-service.provider';
 export {ɵSciMenuService} from './ɵmenu.service';
 export {SciMenuAdapter, type SciMenuAdapterChain} from './menu-adapter.model';
 export {contributeMenu} from './menu-contribution';
