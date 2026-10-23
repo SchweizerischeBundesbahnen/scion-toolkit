@@ -22,7 +22,7 @@ import {SciEnumValue} from './table-enum-column.model';
 /**
  * Represents supported column types of {@link SciTableComponent}.
  */
-export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'component' | 'template';
+export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'icon' | 'component' | 'template';
 
 export interface SciTableDescriptor<T> {
   datasource: Signal<T[]>;
