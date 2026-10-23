@@ -1,6 +1,10 @@
 <main>
   @for (table of tables(); track $index) {
     <sci-table [name]="`table:${$index}`" [table]="table"/>
+
+    @if (settingsForm.showTableFilter().value()) {
+      <sci-filter-field (filter)="onTableFilter(table, $event)" placeholder="Type to filter"/>
+    }
   }
 </main>
 
@@ -273,13 +277,18 @@
         </label>
 
         <label>
-          <input [formField]="settingsForm.showRowActions" type="checkbox" class="e2e-row-actions"/>
+          <input [formField]="settingsForm.showRowActions" type="checkbox" class="e2e-show-row-actions"/>
           Show Row Actions
         </label>
 
         <label>
           <input [formField]="settingsForm.showRowIcon" type="checkbox"/>
           Show Row Icon
+        </label>
+
+        <label>
+          <input [formField]="settingsForm.showTableFilter" type="checkbox" class="e2e-show-table-filter"/>
+          Show Table Filter
         </label>
 
         <label>

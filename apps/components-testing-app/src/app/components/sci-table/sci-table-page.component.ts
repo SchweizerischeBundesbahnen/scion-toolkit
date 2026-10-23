@@ -22,6 +22,7 @@ import {SciViewportComponent} from '@scion/components/viewport';
 import {CustomInputColumnComponent} from './custom-input-column.component';
 import {CustomButtonColumnComponent} from './custom-button-column.component';
 import {DatePipe} from '@angular/common';
+import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 
 @Component({
   selector: 'app-table-page',
@@ -38,6 +39,7 @@ import {DatePipe} from '@angular/common';
     CustomColumnComponent,
     SciViewportComponent,
     DatePipe,
+    SciFilterFieldComponent,
   ],
   providers: [
     provideTableRowBinding((bindings, _item, index) => {
@@ -386,6 +388,7 @@ export default class SciTablePageComponent {
       showGridlines: false,
       showRowActions: false,
       showRowIcon: false,
+      showTableFilter: true,
       customRowStyling: false,
       headerHeight: 30,
       rowHeight: 30,
@@ -425,6 +428,10 @@ export default class SciTablePageComponent {
         table.selectable.set(selectable === 'false' ? false : selectable);
       });
     });
+  }
+
+  protected onTableFilter(table: SciTable<Product>, filter: string): void {
+    table.filter(filter);
   }
 }
 
@@ -496,6 +503,7 @@ interface SettingsForm {
   showGridlines: boolean;
   showRowActions: boolean;
   showRowIcon: boolean;
+  showTableFilter: boolean;
   customRowStyling: boolean;
   headerHeight: number | null;
   rowHeight: number | null;
