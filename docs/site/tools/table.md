@@ -582,6 +582,8 @@ effect(() => {
 
 #### Row Actions
 
+TODO [DWIE] Rewrite
+
 Row actions enable interaction with a row and appear when the user hovers over a row. Row actions can be buttons or menus.
 
 Row actions are configured via the `rowActions` property on the table descriptor that is passed to the `table()` function.

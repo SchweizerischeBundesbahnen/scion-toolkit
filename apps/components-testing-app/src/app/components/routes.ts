@@ -9,8 +9,13 @@
  */
 
 import {Routes} from '@angular/router';
+import {TesteeComponent} from './testee/testee.component';
 
 export default [
+  {
+    path: 'testee',
+    component: TesteeComponent,
+  },
   {
     path: 'sci-table',
     loadChildren: () => import('./sci-table/routes'),
