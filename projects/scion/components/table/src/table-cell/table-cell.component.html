@@ -7,17 +7,22 @@
   @case ('component') {
     <ng-container *sciComponentOutlet="cell.component"/>
   }
-  @case ('boolean') {
-    @if (cell.value() !== undefined) {
-      <!-- TODO [dwi] Use another ligature for icon scion.clear -->
-      <sci-icon class="checkbox">{{cell.value() ? 'scion.checkmark' : 'scion.clear'}}</sci-icon>
-    }
-  }
   @case ('date') {
     {{cell.value()?.formatted}}
   }
   @case ('number') {
     {{cell.value() | sciNumber:cell.column.format()}}
+  }
+  @case ('enum') {
+    @let value = cell.value();
+    @if (value !== undefined) {
+      @if (cell.column.format.icon && value.icon !== undefined) {
+        <sci-icon [attr.title]="value.tooltip">{{value.icon}}</sci-icon>
+      }
+      @if (cell.column.format.label) {
+        {{value.label}}
+      }
+    }
   }
   @default {
     {{cell.value()}}

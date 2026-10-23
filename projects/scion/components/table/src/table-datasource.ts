@@ -10,10 +10,11 @@
 
 import {MaybeAsync} from './common';
 import {computed, Signal} from '@angular/core';
+import {SciEnumValueLike} from './table.model';
 
 export interface SciTableColumnFilter {
   columnName: `column:${string}`;
-  text: string | boolean | number;
+  text: string | number | boolean | SciEnumValueLike[];
 }
 
 export interface SciTableSortCriterion {

@@ -8,13 +8,14 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciDateColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
-import {SciBooleanColumn, SciColumnHeaderLike, SciComponentColumn, SciDateColumn, SciDateLike, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
+import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciDateColumnDescriptor, SciEnumColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
+import {SciColumnHeaderLike, SciComponentColumn, SciDateColumn, SciDateLike, SciEnumColumn, SciEnumValueLike, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
 import {computed, DEFAULT_CURRENCY_CODE, inject, signal, untracked} from '@angular/core';
 import {ɵSciTable} from './ɵtable.model';
 import {coerceSignal, MaybeSignal, SCI_LOCALE} from '@scion/components/common';
 import {coerceDateValue} from './table-date-column.model';
 import {DATE_PIPE_DEFAULT_OPTIONS} from '@angular/common';
+import {coerceEnumValue} from './table-enum-column.model';
 import {text, Translatable} from '@scion/components/text';
 
 export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
@@ -74,18 +75,19 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
   public addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
   public addBooleanColumn(descriptorLike: ((item: T) => MaybeSignal<boolean | undefined>) | SciColumnHeaderLike | SciBooleanColumnDescriptor<T>, value?: (item: T) => MaybeSignal<boolean | undefined>): this {
     const descriptor = coerceColumnDescriptor(descriptorLike, value);
-    const column = this.mapToColumn(descriptor);
 
-    this.columns.push({
-      ...column,
-      type: 'boolean',
+    this.addEnumColumn({
+      ...descriptor,
       value: item => coerceSignal(descriptor.value(item), {coerceUndefined: true}),
-      sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
-      filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? true)),
-      compare: (a, b) => a.value === b.value ? 0 : (a.value ? 1 : -1),
-      matches: (text, context) => context.value === text,
-    } satisfies SciBooleanColumn<T>);
-
+      values: [
+        // TODO [dwi] Use another ligature for icon scion.clear
+        {value: false, icon: 'scion.clear', label: '%scion.components.no.value', tooltip: null},
+        {value: true, icon: 'scion.checkmark', label: '%scion.components.yes.value', tooltip: null},
+      ],
+      format: {icon: true},
+      filterable: descriptor.filterable === false ? false : 'single',
+      referenceType: 'boolean',
+    });
     return this;
   }
 
@@ -113,6 +115,37 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       compare: (a, b) => a.value.millis - b.value.millis,
       matches: (text, context) => context.value.formatted.toLowerCase().includes(text.toLowerCase()),
     } satisfies SciDateColumn<T>);
+
+    return this;
+  }
+
+  public addEnumColumn(descriptor: SciEnumColumnDescriptor<T>): this {
+    const column = this.mapToColumn(descriptor);
+    const enumeration = coerceSignal(descriptor.values);
+    const positionByEnumValue = computed(() => enumeration().reduce((acc, entry, index) => acc.set(entry.value, index), new Map<SciEnumValueLike, number>()));
+    const format: SciEnumColumn['format'] = descriptor.format
+      ? {icon: descriptor.format.icon ?? false, label: descriptor.format.label ?? false, filter: {icon: descriptor.format.filter?.icon ?? false}} // eslint-disable-line @stylistic/operator-linebreak
+      : {icon: false, label: true, filter: {icon: true}}; // eslint-disable-line @stylistic/operator-linebreak
+
+    this.columns.push({
+      ...column,
+      type: 'enum',
+      referenceType: descriptor.referenceType,
+      value: item => coerceEnumValue(descriptor.value(item), {enumeration, format}),
+      sortable: computed(() => this._table.sortable() && (descriptor.sortable ?? true)),
+      filterable: computed(() => this._table.filterable() && (descriptor.filterable ?? 'multi')),
+      enumeration,
+      compare: (a, b) => untracked(() => (positionByEnumValue().get(a.value.value) ?? 0) - (positionByEnumValue().get(b.value.value) ?? 0)),
+      matches: (filter, context) => {
+        if (typeof filter === 'string') { // table filter
+          return context.value.label.toLowerCase().includes(filter.toLowerCase());
+        }
+        else {
+          return filter.includes(context.value.value); // column filter
+        }
+      },
+      format,
+    } satisfies SciEnumColumn<T>);
 
     return this;
   }
