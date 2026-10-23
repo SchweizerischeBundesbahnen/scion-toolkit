@@ -248,6 +248,25 @@ test.describe('sci-table', () => {
         expect(cellBounds.height).toEqual(rowBounds.height);
         expect(cellBounds.width).toEqual(columnBounds.width);
       });
+
+      test('should display cell content as tooltip on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.setWidth(300);
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+        await provideHttpDatasource(page, [{name: 'Lorem ipsum dolor sit amet'}]);
+
+        const cell = table.column({name: 'column:string'}).cell({nth: 0});
+        await cell.hover();
+        await expect(cell.locator).not.toHaveAttribute('title');
+
+        // Force overflow.
+        await cell.column.splitter.drag({deltaX: -200});
+        await cell.hover();
+        await expect(cell.locator).toHaveAttribute('title', 'Lorem ipsum dolor sit amet');
+      });
     });
 
     test.describe('Number column', () => {
@@ -333,6 +352,25 @@ test.describe('sci-table', () => {
 
         expect(cellBounds.height).toEqual(rowBounds.height);
         expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should display cell content as tooltip on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.setWidth(300);
+        await tablePage.addColumn({name: 'column:number', type: 'number', extras: {numberColumn: {locale: 'de-CH'}}});
+        await provideHttpDatasource(page, [{price: 1_000_000_000}]);
+
+        const cell = table.column({name: 'column:number'}).cell({nth: 0});
+        await cell.hover();
+        await expect(cell.locator).not.toHaveAttribute('title');
+
+        // Force overflow.
+        await cell.column.splitter.drag({deltaX: -200});
+        await cell.hover();
+        await expect(cell.locator).toHaveAttribute('title', `1'000'000'000`);
       });
     });
 
@@ -471,6 +509,25 @@ test.describe('sci-table', () => {
 
         expect(cellBounds.height).toEqual(rowBounds.height);
         expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should display cell content as tooltip on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.setWidth(300);
+        await tablePage.addColumn({name: 'column:date', type: 'date', extras: {dateColumn: {format: 'dd.MM.yyyy HH:mm:ss', timezone: 'UTC'}}});
+        await provideHttpDatasource(page, [{expirationDate: '2026-02-17T16:20:45Z'}]);
+
+        const cell = table.column({name: 'column:date'}).cell({nth: 0});
+        await cell.hover();
+        await expect(cell.locator).not.toHaveAttribute('title');
+
+        // Force overflow.
+        await cell.column.splitter.drag({deltaX: -200});
+        await cell.hover();
+        await expect(cell.locator).toHaveAttribute('title', '17.02.2026 16:20:45');
       });
     });
 

@@ -5,7 +5,10 @@ import {ColumnPO} from './column.po';
 
 export class CellPO {
 
+  public readonly icon: Locator;
+
   constructor(public locator: Locator, public row: RowPO, public column: ColumnPO) {
+    this.icon = this.locator.locator('sci-icon');
   }
 
   public textContent(): Promise<string | null> {
@@ -26,5 +29,9 @@ export class CellPO {
 
   public async bounds(): Promise<DomRect> {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
+  }
+
+  public async hover(): Promise<void> {
+    await this.locator.hover();
   }
 }
