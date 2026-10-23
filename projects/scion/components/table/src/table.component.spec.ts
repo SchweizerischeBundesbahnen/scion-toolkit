@@ -10,7 +10,7 @@
 
 import {TestBed} from '@angular/core/testing';
 import {table, table as sciTable} from './table.factory';
-import {assertNotInReactiveContext, Component, computed, DEFAULT_CURRENCY_CODE, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild, WritableSignal} from '@angular/core';
+import {assertNotInReactiveContext, Component, computed, DEFAULT_CURRENCY_CODE, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild} from '@angular/core';
 import {TablePO} from './table.po';
 import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
@@ -3674,6 +3674,35 @@ describe('Table', () => {
 
   describe('Row Bindings', () => {
 
+    it('should call row binding function in a reactive context', async () => {
+      const data = signal([undefined]);
+      const flag = signal(true);
+
+      const {fixture} = createSciTableComponent(sciTable({
+        datasource: data,
+        rowBindings: bindings => {
+          if (flag()) {
+            bindings.addAttributeBinding('data-attribute', 'value');
+          }
+        },
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute')).toEqual('value');
+
+      flag.set(false);
+      await table.waitUntilStable();
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute')).toBeNull();
+
+      flag.set(true);
+      await table.waitUntilStable();
+      expect(table.row({nth: 0}).element.getAttribute('data-attribute')).toEqual('value');
+    });
+
     it('should pass index to row binding function', async () => {
       const data = signal(generateData(100, i => `Row ${i}`));
 
@@ -3755,43 +3784,7 @@ describe('Table', () => {
       expect(table.row({nth: 2}).element.getAttribute('data-spec-id')).toEqual('3');
     });
 
-    it('should bind reactive attribute to row', async () => {
-      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const attributes = new Map<number, WritableSignal<{name: string; value: string} | undefined>>([
-        [1, signal(undefined)],
-        [2, signal({name: 'data-spec-attribute', value: 'a'})],
-        [3, signal(undefined)],
-      ]);
-
-      const {fixture} = createSciTableComponent<{id: number}>(sciTable({
-        datasource: data,
-        rowBindings: (bindings, item) => {
-          const {name, value} = attributes.get(item.id)?.() ?? {};
-          if (name) {
-            bindings.addAttributeBinding(name, value);
-          }
-        },
-        columns: table => table.addNumberColumn(item => item.id),
-        injector: TestBed.inject(Injector),
-      }));
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).element.getAttribute('data-spec-attribute')).toBeNull();
-      expect(table.row({nth: 1}).element.getAttribute('data-spec-attribute')).toEqual('a');
-      expect(table.row({nth: 2}).element.getAttribute('data-spec-attribute')).toBeNull();
-
-      // Update attribute of row 2.
-      attributes.get(2)!.set({name: 'data-spec-attribute', value: 'b'});
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).element.getAttribute('data-spec-attribute')).toBeNull();
-      expect(table.row({nth: 1}).element.getAttribute('data-spec-attribute')).toEqual('b');
-      expect(table.row({nth: 2}).element.getAttribute('data-spec-attribute')).toBeNull();
-    });
-
-    it('should bind CSS class to row', async () => {
+    it('should bind class to row', async () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
 
       const {fixture} = createSciTableComponent<{id: number}>(sciTable({
@@ -3809,17 +3802,22 @@ describe('Table', () => {
       expect(table.row({nth: 2}).element).toHaveClass('spec-3');
     });
 
-    it('should bind reactive CSS class to row', async () => {
+    it('should bind icon to row', async () => {
       const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const cssClasses = new Map<number, WritableSignal<string | undefined>>([
-        [1, signal(undefined)],
-        [2, signal('spec-a')],
-        [3, signal(undefined)],
-      ]);
 
       const {fixture} = createSciTableComponent<{id: number}>(sciTable({
         datasource: data,
-        rowBindings: (bindings, item) => bindings.addClassBinding(cssClasses.get(item.id)?.()),
+        rowBindings: (bindings, item, index) => {
+          switch (index) {
+            case 0:
+              bindings.addIconBinding(`icon-${item.id}`);
+              break;
+            case 2:
+              bindings.addIconBinding(`icon-${item.id}-a`);
+              bindings.addIconBinding(`icon-${item.id}-b`);
+              break;
+          }
+        },
         columns: table => table.addNumberColumn(item => item.id),
         injector: TestBed.inject(Injector),
       }));
@@ -3827,17 +3825,9 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).element).not.toHaveClass('spec-a');
-      expect(table.row({nth: 1}).element).toHaveClass('spec-a');
-      expect(table.row({nth: 2}).element).not.toHaveClass('spec-a');
-
-      // Update attribute of row 2.
-      cssClasses.get(2)!.set('spec-b');
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).element).not.toHaveClass('spec-b');
-      expect(table.row({nth: 1}).element).toHaveClass('spec-b');
-      expect(table.row({nth: 2}).element).not.toHaveClass('spec-b');
+      expect(table.row({nth: 0}).icon()).toEqual(['icon-1']);
+      expect(table.row({nth: 1}).icon()).toEqual([]);
+      expect(table.row({nth: 2}).icon()).toEqual(['icon-3-a', 'icon-3-b']);
     });
 
     it('should bind part-attribute to cell', async () => {
@@ -3856,37 +3846,6 @@ describe('Table', () => {
       expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).toContain('row:1');
       expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:2');
       expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).toContain('row:3');
-    });
-
-    it('should bind reactive part-attribute to cell', async () => {
-      const data = signal([{id: 1}, {id: 2}, {id: 3}]);
-      const partAttributes = new Map<number, WritableSignal<`row:${string}` | undefined>>([
-        [1, signal(undefined)],
-        [2, signal('row:negative')],
-        [3, signal(undefined)],
-      ]);
-
-      const {fixture} = createSciTableComponent<{id: number}>(sciTable({
-        datasource: data,
-        rowBindings: (bindings, item) => bindings.addPartBinding(partAttributes.get(item.id)?.()),
-        columns: table => table.addNumberColumn(item => item.id),
-        injector: TestBed.inject(Injector),
-      }));
-
-      const table = new TablePO(fixture);
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:negative');
-      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:negative');
-      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:negative');
-
-      // Update part attribute of row 2.
-      partAttributes.get(2)!.set('row:positive');
-      await table.waitUntilStable();
-
-      expect(table.row({nth: 0}).cells[0]!.element.getAttribute('part')).not.toContain('row:positive');
-      expect(table.row({nth: 1}).cells[0]!.element.getAttribute('part')).toContain('row:positive');
-      expect(table.row({nth: 2}).cells[0]!.element.getAttribute('part')).not.toContain('row:positive');
     });
 
     it('should style rows based on row state (selected/unselected, active/inactive)', async () => {

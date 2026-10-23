@@ -20,8 +20,6 @@ import {Translatable} from '@scion/components/text';
 
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'component' | 'template';
 
-export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
-
 export interface SciTableDescriptor<T> {
   datasource: Signal<T[]>;
   /**
@@ -48,39 +46,62 @@ export interface SciTableDescriptor<T> {
   /**
    * Configures actions to show when hovering over a row.
    *
-   * Example usage:
+   * @example
    * ```ts
+   * import {table} from '@scion/components/table';
+   *
    * table({
    *   datasource: data,
+   *   columns: table => ...,
    *   rowActions: (toolbar, item) => toolbar.addToolbarButton({
    *     icon: 'delete',
    *     onSelect: () => ...,
    *   }),
-   *   columns: table => ...,
    * });
    * ```
+   *
+   * The function:
+   * - Is called per item with a {@link SciToolbarFactory} to contribute actions.
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
    */
   rowActions?: SciTableRowActionFactoryFn<T>;
   /**
-   * Adds bindings to a table row, enabling custom styling, HTML attributes, and CSS classes.
+   * Configures row bindings for table rows.
    *
-   * Example usage:
+   * Row bindings enable associating metadata and icons with a row. Metadata includes CSS shadow parts, CSS classes, and HTML attributes.
+   *
+   * @example
    * ```ts
+   * import {table} from '@scion/components/table';
+   *
    * table({
    *   datasource: data,
+   *   columns: table => ...,
    *   rowBindings: (bindings, item, index) => bindings
+   *     .addIconBinding('account_circle')
    *     .addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd')
    *     .addAttributeBinding('data-id', item.id)
    *     .addClassBinding(item.inactive ? 'inactive' : undefined),
-   *   columns: table => ...,
    * });
    * ```
+   *
+   * Part attribute bindings make a row stylable by associating its cells with one or more HTML part attributes that can be referenced in CSS using the `::part()` CSS pseudo-element selector.
    *
    * ```scss
    * sci-table::part(row\:even row\:not\:selected) {
    *   background-color: lightgray;
    * }
    * ```
+   *
+   * The function:
+   * - Is called per item with a {@link SciTableRowBindingFactory} to register bindings.
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
+   *
+   * @param bindings - Factory providing methods to register row bindings.
+   * @param item - Item associated with the row.
+   * @param index - Index of the row, zero-based.
    */
   rowBindings?: SciTableRowBindingFactoryFn<T>;
   /**
@@ -241,6 +262,17 @@ export interface SciTableCellContext<T = unknown, VALUE = unknown> {
   item: T;
   value: VALUE;
 }
+
+/**
+ * Signature of a function to contribute row actions.
+ *
+ * Called per item with a {@link SciToolbarFactory} to contribute actions.
+ *
+ * The function:
+ * - Runs in a reactive context and re-evaluates when tracked signals change.
+ * - Can call `inject` to get required dependencies.
+ */
+export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
 
 /**
  * Represents an event emitted by {@link SciTableComponent}.

@@ -20,6 +20,7 @@ The NPM sub-module `@scion/components/table` provides an Angular component for d
     - [Sorting](#sorting)
     - [Selection](#selection)
     - [Row Actions](#row-actions)
+    - [Row Icon](#row-icon)
     - [Row Bindings](#row-bindings)
 - [Table Events](#table-events)
 - [User Settings](#user-settings)
@@ -612,28 +613,43 @@ table({
 > Icon ligatures are interpreted as Material icon font ligatures if no icon provider is configured. \
 > Refer to the [Icon Documentation][link-scion-icons] for more information on how to provide an icon provider.
 
-#### Row Bindings
-
-Table row bindings enable custom row styling or associating HTML attributes or CSS classes with a row.
+#### Row Icon
+A row can display an icon in its first column by configuring a row binding.
 
 ```ts
 import {table} from '@scion/components/table';
 
 table({
-  datasource: users.value,
-  columns: table => table
-    .addNumberColumn('ID', user => user.id)
-    .addStringColumn('Name', user => user.name)
-    .addBooleanColumn('Inactive', user => user.inactive)
-    .addDateColumn('Expiration', user => user.expiration),
-  rowBindings: (bindings, user, index) => bindings
-    .addPartBinding(user.inactive ? 'row:inactive' : 'row:active') // <--- ::part binding
-    .addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd')
-    .addAttributeBinding('data-userid', user.id), // <--- attribute binding
+  datasource: data,
+  columns: table => ...,
+  rowBindings: bindings => bindings.addIconBinding('account_circle'),
 });
 ```
 
-Part bindings make a row stylable by associating its cells with an [HTML part attribute][link-mdn-part-attribute] that can be referenced in CSS using the [`::part()` CSS pseudo-element selector][link-mdn-part-selector]. A single row can have multiple part bindings.
+> [!NOTE]
+> Icon ligatures are interpreted as Material icon font ligatures if no icon provider is configured. \
+> Refer to the [Icon Documentation][link-scion-icons] for more information on how to provide an icon provider.
+
+
+#### Row Bindings
+
+Row bindings enable associating metadata and icons with a row. Metadata includes CSS shadow parts, CSS classes, and HTML attributes.
+
+```ts
+import {table} from '@scion/components/table';
+
+table({
+  datasource: data,
+  columns: table => ...,
+  rowBindings: (bindings, item, index) => bindings
+    .addIconBinding('account_circle')
+    .addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd')
+    .addAttributeBinding('data-id', item.id)
+    .addClassBinding(item.inactive ? 'inactive' : undefined),
+});
+```
+
+Part attribute bindings make a row stylable by associating its cells with one or more [HTML part attributes][link-mdn-part-attribute] that can be referenced in CSS using the [`::part()` CSS pseudo-element selector][link-mdn-part-selector].
 
 ```scss
 sci-table::part(row\:negative) {
@@ -648,6 +664,7 @@ HTML attribute bindings are useful for end-to-end testing. For example, they can
 ```ts
 document.querySelector('sci-table[name="table:testee"] sci-table-row[data-userid="123"]');
 ```
+
 
 ### Table Events
 

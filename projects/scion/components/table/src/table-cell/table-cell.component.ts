@@ -87,7 +87,7 @@ export class SciTableCellComponent<T> {
         // Enable row styling based on active state.
         this.row().active() ? 'row:active' : 'row:not:active',
         // Enable row styling based on row bindings.
-        ...Arrays.coerce(this.row().bindings?.part()),
+        ...Arrays.coerce(this.row().bindings?.parts()),
       ]).join(' ');
     });
   }
