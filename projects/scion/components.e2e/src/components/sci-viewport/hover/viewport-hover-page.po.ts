@@ -15,40 +15,31 @@ const PATH = '/#/components/sci-viewport/hover';
 export class ViewportHoverPagePO {
 
   private readonly _locator: Locator;
-  private readonly _verticalViewportLocator: Locator;
-  private readonly _horizontalViewportLocator: Locator;
+
+  public readonly viewport: Locator;
+  public readonly verticalScrollbar: Locator;
+  public readonly horizontalScrollbar: Locator;
+  public readonly verticalScrollThumb: Locator;
+  public readonly horizontalScrollThumb: Locator;
 
   constructor(private _page: Page) {
     this._locator = _page.locator('app-viewport-hover-page');
-    this._verticalViewportLocator = this._locator.locator('> sci-viewport.e2e-vertical-viewport');
-    this._horizontalViewportLocator = this._locator.locator('> sci-viewport.e2e-horizontal-viewport');
+    this.viewport = this._locator.locator('sci-viewport');
+    this.verticalScrollbar = this.viewport.locator('sci-scrollbar[direction="vscroll"]');
+    this.horizontalScrollbar = this.viewport.locator('sci-scrollbar[direction="hscroll"]');
+    this.verticalScrollThumb = this.verticalScrollbar.locator('div.e2e-thumb');
+    this.horizontalScrollThumb = this.horizontalScrollbar.locator('div.e2e-thumb');
   }
 
   public async navigate(): Promise<void> {
     await this._page.goto(PATH);
   }
 
-  public async moveMouseOverViewport(selector: {viewport: 'vertical' | 'horizontal'}): Promise<void> {
-    const viewportBounds = (await this.locateViewport(selector.viewport).boundingBox())!;
-    await this._page.mouse.move(viewportBounds.x + viewportBounds.width / 2, viewportBounds.y + viewportBounds.height / 2);
+  public async setVerticalOverflow(overflow: boolean): Promise<void> {
+    await this._locator.locator('fieldset input.e2e-vertical-overflow').setChecked(overflow);
   }
 
-  public async moveMouseOutsideViewport(selector: {viewport: 'vertical' | 'horizontal'}): Promise<void> {
-    const viewportBounds = (await this.locateViewport(selector.viewport).boundingBox())!;
-    await this._page.mouse.move(viewportBounds.x + viewportBounds.width + 10, viewportBounds.y + viewportBounds.height + 10);
-  }
-
-  private locateViewport(selector: 'vertical' | 'horizontal'): Locator {
-    return selector === 'vertical' ? this._verticalViewportLocator : this._horizontalViewportLocator;
-  }
-
-  public locateScrollbar(selector: {viewport: 'vertical' | 'horizontal'; scrollbar: 'vertical' | 'horizontal'}): Locator {
-    const viewport = this.locateViewport(selector.viewport);
-    if (selector.scrollbar === 'vertical') {
-      return viewport.locator('> sci-scrollbar[direction="vscroll"]');
-    }
-    else {
-      return viewport.locator('> sci-scrollbar[direction="hscroll"]');
-    }
+  public async setHorizontalOverflow(overflow: boolean): Promise<void> {
+    await this._locator.locator('fieldset input.e2e-horizontal-overflow').setChecked(overflow);
   }
 }

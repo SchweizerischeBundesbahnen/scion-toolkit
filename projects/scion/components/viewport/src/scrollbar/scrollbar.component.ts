@@ -17,24 +17,40 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {clamp, isBetween} from '@scion/toolkit/util';
 
 /**
- * Renders a vertical or horizontal scrollbar.
+ * Renders a vertical or horizontal scrollbar to scroll an associated viewport by moving the thumb or clicking the scrolltrack.
  *
- * The scrollbar features the following functionality:
- * - allows to move the thumb by mouse
- * - enlarges the thumb if the mouse pointer is near the thumb
- * - allows paging on mousedown on the scroll track
+ * Usage:
+ * ```html
+ * <div class="viewport" #viewport>
+ *   ...
+ * </div>
+ * <sci-scrollbar [viewport]="viewport"/>
+ * ```
+ *
+ * To hide the scrollbar when not hovering the associated viewport, set `opacity` to `0`. Transitions on `opacity` fade the scrollbar in and out.
+ *
+ * ```html
+ * <div class="viewport" #viewport>
+ *   ...
+ * </div>
+ * <sci-scrollbar [viewport]="viewport"/>
+ * ```
+ *
+ * ```scss
+ * div.viewport:not(:hover) + sci-scrollbar {
+ *   opacity: 0;
+ * }
+ * ```
  *
  * ### Styling:
  *
  * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
  * To style a specific `sci-scrollbar` component, the following CSS variables can be set directly on the component.
  *
- * - --sci-scrollbar-color:    Sets the color of the scrollbar.
+ * - --sci-scrollbar-color: Sets the color of the scrollbar.
  *
  * Example:
- *
- * ```css
- *
+ * ```scss
  * sci-scrollbar {
  *   --sci-scrollbar-color: blue;
  * }

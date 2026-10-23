@@ -1,12 +1,21 @@
-@use '@scion/components/scrollbar' as sci-scrollbar;
-
 :host {
   display: grid;
-  position: relative; // positioned anchor for the scrollbar
+  position: relative; // positioning context for scrollbars
   overflow: hidden;
-  @include sci-scrollbar.scrollbar-hide-when-inactive();
+
+  > div.viewport:not(:hover) ~ sci-scrollbar {
+    opacity: 0;
+  }
 
   > sci-scrollbar {
-    @include sci-scrollbar.scrollbar-position();
+    position: absolute;
+
+    &[direction="vscroll"] {
+      inset: 0 0 0 auto;
+    }
+
+    &[direction="hscroll"] {
+      inset: auto 0 0 0;
+    }
   }
 }
