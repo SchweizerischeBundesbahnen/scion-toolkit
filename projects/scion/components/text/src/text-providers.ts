@@ -8,16 +8,19 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {assertNotInReactiveContext, computed, inject, Injectable, InjectionToken, Injector, isSignal, runInInjectionContext, Signal, signal} from '@angular/core';
+import {assertNotInReactiveContext, computed, inject, Injectable, InjectionToken, Injector, isSignal, Signal, signal} from '@angular/core';
 import {SciTextProviderFn, Translatable} from './text.provider';
 import {scionComponentsTextProvider} from './scion-components-text-provider';
-import {Maps, runSafe} from '@scion/toolkit/util';
+import {Maps, Objects, runSafe} from '@scion/toolkit/util';
+import {TextCache} from './text-cache';
 
 /**
  * Provides texts based on registered text providers.
  */
 @Injectable({providedIn: 'root'})
 export class TextProviders {
+
+  private readonly _cache = new TextCache();
 
   private readonly _textProviders: SciTextProviderFn[] = [
     // Provide app-specific texts.
@@ -43,23 +46,25 @@ export class TextProviders {
 
     // Parse translatable into key and params.
     const {key, params} = parseTranslatable(translatable as `%${string}`, {params: options?.params});
+    const cacheKey = `${key};${Objects.toMatrixNotation(params)}`;
 
-    const injector = options?.injector ?? inject(Injector);
-    const errorHandler = (error: unknown): string => {
-      // Prefix the key with an additional `%` character to escape the leading `%` character. See console formatting rules: https://developer.mozilla.org/en-US/docs/Web/API/console
-      console.error(`[TextProviderError] Failed to get text for '%${translatable}'. Caused by:`, error);
-      return translatable;
-    };
+    return this._cache.computeIfAbsent(cacheKey, () => {
+      const errorHandler = (error: unknown): string => {
+        // Prefix the key with an additional `%` character to escape the leading `%` character. See console formatting rules: https://developer.mozilla.org/en-US/docs/Web/API/console
+        console.error(`[TextProviderError] Failed to get text for '%${translatable}'. Caused by:`, error);
+        return translatable;
+      };
 
-    for (const textProvider of this._textProviders) {
-      // If `textProvider` throws an error, `runSafe` catches it and delegates execution to the error handler, logging the error and returning the translatable.
-      const text = runInInjectionContext(injector, () => runSafe(() => textProvider(key, Object.fromEntries(params)), errorHandler));
-      if (text !== undefined) {
-        // If signal, wrap it in `computed` to handle errors.
-        return isSignal(text) ? computed(() => runSafe(() => text(), errorHandler)) : signal(text);
+      for (const textProvider of this._textProviders) {
+        // If `textProvider` throws an error, `runSafe` catches it and delegates execution to the error handler, logging the error and returning the translatable.
+        const text = runSafe(() => textProvider(key, Object.fromEntries(params)), errorHandler);
+        if (text !== undefined) {
+          // If signal, wrap it in `computed` to handle errors.
+          return isSignal(text) ? computed(() => runSafe(() => text(), errorHandler)) : signal(text);
+        }
       }
-    }
-    return signal(translatable);
+      return signal(translatable);
+    }, {injector: options?.injector});
   }
 }
 

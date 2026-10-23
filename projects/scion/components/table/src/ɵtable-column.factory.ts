@@ -15,7 +15,7 @@ import {ɵSciTable} from './ɵtable.model';
 import {coerceSignal, MaybeSignal, SCI_LOCALE} from '@scion/components/common';
 import {coerceDateValue} from './table-date-column.model';
 import {DATE_PIPE_DEFAULT_OPTIONS} from '@angular/common';
-import {text} from '@scion/components/text';
+import {text, Translatable} from '@scion/components/text';
 
 export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
 
@@ -24,10 +24,10 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
   constructor(private readonly _table: ɵSciTable<T>) {
   }
 
-  public addStringColumn(value: (item: T) => MaybeSignal<string | undefined>): this;
-  public addStringColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<string | undefined>): this;
+  public addStringColumn(value: (item: T) => MaybeSignal<Translatable | undefined>): this;
+  public addStringColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<Translatable | undefined>): this;
   public addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
-  public addStringColumn(descriptorLike: ((item: T) => MaybeSignal<string | undefined>) | SciColumnHeaderLike | SciStringColumnDescriptor<T>, value?: (item: T) => MaybeSignal<string | undefined>): this {
+  public addStringColumn(descriptorLike: ((item: T) => MaybeSignal<string | undefined>) | SciColumnHeaderLike | SciStringColumnDescriptor<T>, value?: (item: T) => MaybeSignal<Translatable | undefined>): this {
     const descriptor = coerceColumnDescriptor(descriptorLike, value);
     const column = this.mapToColumn(descriptor);
     const sortable = descriptor.sortable ?? true;
@@ -36,7 +36,7 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
     this.columns.push({
       ...column,
       type: 'string',
-      value: item => coerceSignal(descriptor.value(item), {coerceUndefined: true}),
+      value: item => text(coerceSignal(descriptor.value(item))),
       sortable: computed(() => this._table.sortable() && !!sortable),
       filterable: computed(() => this._table.filterable() && !!filterable),
       compare: typeof sortable === 'object' ? sortable.comparator : (a, b) => a.value.localeCompare(b.value),

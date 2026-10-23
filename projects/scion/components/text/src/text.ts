@@ -8,9 +8,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {assertNotInReactiveContext, computed, DestroyableInjector, inject, Injector, isSignal, Signal, untracked} from '@angular/core';
+import {assertNotInReactiveContext, computed, Injector, isSignal, Signal, untracked} from '@angular/core';
 import {Translatable} from './text.provider';
-import {assertInInjectionContext, createDestroyableInjector, MaybeSignal} from '@scion/components/common';
+import {assertInInjectionContext, MaybeSignal, SingleActiveInjectorFactory} from '@scion/components/common';
 import {TextProviders} from './text-providers';
 
 /**
@@ -59,21 +59,17 @@ export function text(translatable: MaybeSignal<Translatable | undefined | null>,
     assertInInjectionContext(text, 'Call text() in an injection context. It may allocate resources that are not released until the injection context is destroyed.');
   }
 
-  const injector = options?.injector ?? inject(Injector);
-  // Use a separate injection context per translatable to clean up allocated resources when it changes.
-  let textInjector: DestroyableInjector | undefined;
+  // Create a factory to instantiate a new injector per translatable to release resources allocated by text providers (e.g., RxJS subscriptions).
+  const injectorFactory = new SingleActiveInjectorFactory({parent: options?.injector});
 
   // Call the text provider function.
   const translation = computed(() => {
     const keyOrText = isSignal(translatable) ? translatable() : translatable;
 
+    // Call text providers.
     return untracked(() => {
-      // Destroy previous injection context, if any, to clean up allocated resources, like RxJS subscriptions.
-      textInjector?.destroy();
-      // Create new injection context.
-      textInjector = createDestroyableInjector({parent: injector});
-      // Call text providers.
-      return textInjector.get(TextProviders).provide(keyOrText, {params: options?.params, injector: textInjector});
+      const injector = injectorFactory.create();
+      return injector.get(TextProviders).provide(keyOrText, {params: options?.params, injector});
     });
   });
 
