@@ -10,10 +10,10 @@
 
 import {expect, Locator} from '@playwright/test';
 
-export function expectScrollbar(locator: Locator): {toDisplay(options: {opacity: 0 | 1}): Promise<void>; not: {toDisplay(): Promise<void>}} {
+export function expectScrollbar(locator: Locator): {toDisplay(options?: {opacity?: 0 | 1}): Promise<void>; not: {toDisplay(): Promise<void>}} {
   return {
-    async toDisplay(options: {opacity: 0 | 1}): Promise<void> {
-      await expect(locator).toHaveCSS('opacity', `${options.opacity}`);
+    async toDisplay(options?: {opacity?: 0 | 1}): Promise<void> {
+      await expect(locator).toHaveCSS('opacity', `${options?.opacity ?? 1}`);
       await expect(locator).toBeVisible();
     },
     not: {

@@ -1,5 +1,4 @@
 @use './menu.component.mixin' as mixin;
-@use '@scion/components/scrollbar' as sci-scrollbar;
 
 :host {
   --sci-icon-size: var(--sci-menu-item-size);
@@ -158,7 +157,7 @@
     anchor-name: --sci-menu-viewport;
 
     // Hide scrollbar when not hovering the viewport.
-    &:not(:hover) + sci-scrollbar:not(:hover):not(.scrolling) {
+    &:not(:hover) + sci-scrollbar {
       opacity: 0;
     }
 
