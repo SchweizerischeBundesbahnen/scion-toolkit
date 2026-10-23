@@ -16,6 +16,7 @@ import {toObservable} from '@angular/core/rxjs-interop';
 import {Objects} from '@scion/toolkit/util';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {SciDateValue} from './table-date-column.model';
+import {SciEnumValue} from './table-enum-column.model';
 import {SingleActiveInjectorFactory} from '@scion/components/common';
 
 export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
@@ -103,7 +104,7 @@ interface DatasetRow<T> {
 
 interface DatasetCell {
   column: SciTableColumn;
-  value: () => string | number | boolean | SciDateValue | undefined;
+  value: () => string | number | boolean | SciDateValue | SciEnumValue | undefined;
 }
 
 /**
@@ -170,6 +171,10 @@ function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: 
     }
     if (value2 === undefined && value1 !== undefined) {
       return -1;
+    }
+
+    if (value1 === undefined && value2 === undefined && 'value' in cell1.column) {
+      return 0;
     }
 
     const comparison = cell1.column.compare({item: row1.item, value: value1}, {item: row2.item, value: value2});

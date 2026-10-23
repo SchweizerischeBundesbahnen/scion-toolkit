@@ -1,11 +1,12 @@
 import {formatDate} from '@angular/common';
+import {SciDateLike} from './table.model';
 
 /**
  * Creates a {@link SciDateValue} from the given date-like input.
  *
  * Calling this function is expensive due to date parsing and formatting.
  */
-export function coerceDateValue(dateLike: string | number | Date | undefined, options: {format: string; locale: string; timezone?: string}): SciDateValue | undefined {
+export function coerceDateValue(dateLike: SciDateLike | undefined, options: {format: string; locale: string; timezone?: string}): SciDateValue | undefined {
   const {format, locale, timezone} = options;
 
   switch (typeof dateLike) {

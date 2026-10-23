@@ -12,6 +12,7 @@ import {ComponentFixture} from '@angular/core/testing';
 import {OneOf, RequireOne} from '@scion/toolkit/types';
 import {Arrays} from '@scion/toolkit/util';
 import {waitUntilStable} from './testing/testing.util';
+import {SciEnumValueLike, SciTableColumnType} from './table.model';
 
 export class TablePO {
 
@@ -102,6 +103,10 @@ export class ColumnPO {
     this._columnFilterElement = this._table.element.querySelector(`sci-column-filter[data-column="${this.name}"]`);
   }
 
+  public get type(): SciTableColumnType {
+    return this._columnElement.getAttribute('data-type') as SciTableColumnType;
+  }
+
   public get width(): number {
     return this._columnElement.getBoundingClientRect().width;
   }
@@ -119,7 +124,7 @@ export class ColumnPO {
     await this._table.waitUntilStable();
   }
 
-  public async filter(value: string | number | boolean | null): Promise<void> {
+  public async filter(value: string | number | boolean | SciEnumValueLike[] | null): Promise<void> {
     if (!this._columnFilterElement) {
       throw Error('[PageObjectError] Table without column filters cannot be filtered.');
     }
@@ -127,11 +132,10 @@ export class ColumnPO {
     if (value === null) {
       this._columnFilterElement.querySelector<HTMLButtonElement>('button.e2e-clear')!.click();
     }
-    else if (typeof value === 'boolean') {
-      // TODO [dwi] Replace with menu API
+    else if (this.type === 'enum') {
       this._columnFilterElement.querySelector<HTMLButtonElement>('input[type="button"]')!.click();
       const menu = (await waitUntilStable(() => this._table.element.querySelector<HTMLElement>('sci-menu')))!;
-      menu.querySelector<HTMLButtonElement>(`button[data-option="${value}"]`)!.click();
+      Arrays.coerce(value).forEach(value => menu.querySelector<HTMLButtonElement>(`button[data-option="${value}"]`)!.click());
     }
     else {
       const filterInput = this._columnFilterElement.querySelector<HTMLInputElement>('input')!;

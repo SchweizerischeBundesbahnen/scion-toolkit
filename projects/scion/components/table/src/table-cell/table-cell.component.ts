@@ -9,7 +9,7 @@
  */
 
 import {Component, computed, input, Signal, TemplateRef} from '@angular/core';
-import {SciTableCellLike, SciTableRow} from '../table.model';
+import {SciTableCellLike, SciTableColumnType, SciTableRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective, SciTooltipOnOverflowDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
@@ -22,6 +22,7 @@ import {SciNumberPipe} from './number.pipe';
   styleUrl: './table-cell.component.scss',
   host: {
     '[attr.data-type]': 'cell().column.type',
+    '[attr.data-reference-type]': 'referenceType()',
     '[attr.data-column]': 'cell().column.name',
     '[attr.data-value]': 'value()',
     '[attr.data-padding]': '!cell().column.padding ? false : null',
@@ -46,6 +47,7 @@ export class SciTableCellComponent<T> {
   protected readonly templateContext = this.computeTemplateContext();
   protected readonly partAttribute = this.computePartAttribute();
   protected readonly value = this.computeValueAttribute();
+  protected readonly referenceType = this.computeReferenceType();
 
   private computeTemplate(): Signal<TemplateRef<unknown> | null> {
     return computed(() => {
@@ -80,11 +82,13 @@ export class SciTableCellComponent<T> {
 
   private computePartAttribute(): Signal<string> {
     return computed(() => {
+      const cell = this.cell();
+
       return Arrays.distinct([
-        // Enable column styling based on column type.
-        `column:${this.cell().column.type}`,
+        // Enable column styling based on column type. For enum columns, resolves to the reference type, if any, i.e., boolean or icon.
+        `column:${this.referenceType() ?? cell.column.type}`,
         // Enable column styling based on column name.
-        this.cell().column.name,
+        cell.column.name,
         // Enable row styling based on selection state.
         this.row().selected() ? 'row:selected' : 'row:not:selected',
         // Enable row styling based on active state.
@@ -95,6 +99,13 @@ export class SciTableCellComponent<T> {
     });
   }
 
+  private computeReferenceType(): Signal<SciTableColumnType | undefined> {
+    return computed(() => {
+      const cell = this.cell();
+      return cell.type === 'enum' ? cell.column.referenceType : undefined;
+    });
+  }
+
   private computeValueAttribute(): Signal<string | undefined> {
     return computed(() => {
       const cell = this.cell();
@@ -102,8 +113,9 @@ export class SciTableCellComponent<T> {
         switch (cell.type) {
           case 'string':
           case 'number':
-          case 'boolean':
             return cell.value();
+          case 'enum':
+            return cell.value()?.value;
           case 'date':
             return cell.value()?.isoString;
           default:

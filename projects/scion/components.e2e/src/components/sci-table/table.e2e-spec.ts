@@ -19,7 +19,6 @@ import {generateData, Product, provideHttpDatasource} from './datasource/table-h
 import {firstValueFrom, Subject} from 'rxjs';
 import {SciTablePageResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
-import {BooleanColumnPO} from './boolean-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';
 import {CustomButtonColumnPO} from './custom-button-column.po';
 import {expectScrollbar} from '../sci-scrollbar/scrollbar-matcher';
@@ -395,10 +394,13 @@ test.describe('sci-table', () => {
 
         const cell = table.row({nth: 0}).cell('column:boolean');
         const cellBounds = await cell.bounds();
-        const checkmarkBounds = await new BooleanColumnPO(cell).bounds();
+        const rowBounds = await cell.row.bounds();
 
-        expect(checkmarkBounds.vcenter).toEqual(cellBounds.vcenter);
-        expect(checkmarkBounds.height).toBeLessThan(cellBounds.height);
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
+
+        const iconBounds = fromRect(await cell.icon.boundingBox());
+        expect(iconBounds.vcenter).toBeBetween(iconBounds.vcenter - 1, iconBounds.vcenter + 1);
       });
 
       test('should have horizontal padding', async ({page}) => {
@@ -426,6 +428,18 @@ test.describe('sci-table', () => {
 
         expect(cellBounds.height).toEqual(rowBounds.height);
         expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should not display label as tooltip when hovering checkmark', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+        const icon = table.column({name: 'column:boolean'}).cell({nth: 0}).icon;
+        await icon.hover();
+        await expect(icon).not.toHaveAttribute('title');
       });
     });
 

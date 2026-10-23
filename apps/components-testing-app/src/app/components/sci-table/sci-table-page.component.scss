@@ -74,6 +74,10 @@
             grid-column: 1/-1;
           }
         }
+
+        section.enum-column > label.format.option {
+          margin-left: 1em;
+        }
       }
 
       header {

@@ -65,7 +65,7 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-resizable').setChecked(checked);
   }
 
-  public async setSelectable(selectable: false | 'single' | 'multi'): Promise<void> {
+  public async setSelectable(selectable: 'single' | 'multi' | false): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('select.e2e-selectable').selectOption(selectable === false ? 'false' : selectable);
   }
