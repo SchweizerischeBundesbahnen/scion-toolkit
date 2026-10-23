@@ -10,4 +10,4 @@
   - Evtl. storage extrahieren in common
 - Selection scrollActiveRowIntoViewport 1px daneben (ganzer Border sollte sichtbar sein)
 
-- activeitem und selection in table-tree.model
+- chevron wie icon

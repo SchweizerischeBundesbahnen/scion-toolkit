@@ -19,7 +19,7 @@ import {SciTableCache} from './table.cache';
 import {rxResource, toObservable} from '@angular/core/rxjs-interop';
 import {combineLatestWith, concat, fromEvent, of, switchMap, throwError, timer} from 'rxjs';
 import {coerceTableRowBindings, SCI_TABLE_ROW_BINDINGS, SciTableRowBindingFn} from './table-row-binding';
-import {Arrays, clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
+import {clamp, Objects, Observables, runSafe} from '@scion/toolkit/util';
 import {catchError, map, startWith} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
@@ -72,13 +72,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   private readonly _cache = new SciTableCache<T, ID>();
   private readonly _tableCellValuePreloader = inject(SciTableCellValuePreloader);
   private readonly _tableFilter = signal<string | null>(null);
-  private readonly _selectedItems = signal(new Set<ID>());
   private readonly _tableTree: TableTree<ID>;
-
-  public readonly activeItem = linkedSignal({
-    source: () => this.criteria(),
-    computation: (): ID | undefined => undefined,
-  });
 
   public readonly hoveredIndex = linkedSignal({
     source: () => {
@@ -93,12 +87,13 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public readonly error = computed(() => this._cache.error() || this._tableTree.error());
   public readonly activeRow: Signal<SciTableRow<T, ID> | undefined>;
   public readonly hoveredRow = computed(() => this.getRowByIndex(this.hoveredIndex()));
-  public readonly selectedItems = computed(() => [...this._selectedItems().values()]);
+  public readonly selectedItems = computed(() => [...this._tableTree.selectedNodes().values()]);
   public readonly rowsById = this._cache.rowsById;
   public readonly rows = this.computeRows();
   public readonly visibleRowCount: Signal<number>;
   public readonly visibleRows: Signal<SciTableTreeNode<ID>[] | undefined>;
   public readonly rowIndexById: Signal<Map<ID, number>>;
+  public readonly activeItem: Signal<ID | undefined>;
 
   constructor(descriptor: SciTableDescriptor<T, ID>) {
     // TODO [table] Remove after datasource is final. See ɵillegaldatasource.
@@ -147,6 +142,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     this.visibleRowCount = this._tableTree.visibleNodeCount;
     this.rowIndexById = this._tableTree.nodeIndexById;
     this.visibleRows = this._tableTree.visibleNodes;
+    this.activeItem = this._tableTree.activeNode;
 
     this.installPageLoader();
   }
@@ -426,8 +422,12 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     });
   }
 
+  public setActiveItem(id: ID | undefined): void {
+    this._tableTree.setActiveNode(id);
+  }
+
   public updateSelectedItems(updateFn: (ids: Set<ID>) => Set<ID>): void {
-    this._selectedItems.update(updateFn);
+    this._tableTree.updateSelectedNodes(updateFn);
   }
 
   /**
@@ -503,9 +503,9 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
         index,
         item,
         active: computed(() => this.activeItem() === id),
-        selected: computed(() => this._selectedItems().has(id)),
+        selected: computed(() => this._tableTree.selectedNodes().has(id)),
         hovered: computed(() => this.hoveredRow()?.id === id),
-        expanded: computed(() => this._tableTree.expandedNodeIds().has(id)),
+        expanded: computed(() => this._tableTree.expandedNodes().has(id)),
         level,
         parentId: node.parent,
         hasChildren,
@@ -580,29 +580,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   }
 
   public select(ids: MaybeArray<ID>): void {
-    const nodesById = this._tableTree.nodesById();
-    const nodeIds = Arrays.coerce(ids).filter(id => nodesById.has(id));
-
-    // Expand nodes.
-    nodeIds.forEach(id => {
-      const node = nodesById.get(id);
-
-      if (node?.parent !== undefined && nodesById.has(node.parent)) {
-        // Expand all nodes before the selected ones.
-        this.expand(findNodePath(nodesById, nodesById.get(node.parent)!));
-      }
-    });
-
-    // Wait for viewport height to update after expanding nodes.
-    // Else scrollActiveRowIntoViewport operates on an old viewport height.
-    requestAnimationFrame(() => {
-      this._selectedItems.set(new Set(nodeIds));
-
-      // Find and activate last item based on the visual index.
-      const lastItemIndex = Math.max(...nodeIds.map(id => this.rowIndexById().get(id) ?? -1));
-      const lastItem = this.visibleRows()?.[lastItemIndex]?.item;
-      this.activeItem.set(lastItem);
-    });
+    this._tableTree.select(ids);
   }
 
   public expand(ids: MaybeArray<ID>): void {
@@ -624,17 +602,6 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public toggleRow(id: ID): void {
     this._tableTree.toggleRow(id);
   }
-}
-
-export function findNodePath<ID>(nodesById: Map<ID, SciTableTreeNode<ID>>, node: SciTableTreeNode<ID>, path: ID[] = []): ID[] {
-  path.push(node.item);
-  const parentId = node.parent;
-  const parent = parentId !== undefined ? nodesById.get(parentId) : undefined;
-  if (!parent) {
-    return path;
-  }
-
-  return findNodePath(nodesById, parent, path);
 }
 
 /**

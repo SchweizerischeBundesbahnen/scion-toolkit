@@ -1,11 +1,10 @@
-import {computed, DestroyableInjector, effect, inject, Injector, ResourceRef, runInInjectionContext, signal, Signal, untracked} from '@angular/core';
+import {computed, DestroyableInjector, effect, inject, Injector, linkedSignal, ResourceRef, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {isArrayDatasource, isTreeDatasource, SciTableColumnFilter, SciTableDatasource, SciTableIdsRequest, SciTableSortCriterion, SciTableTreeDatasource, SciTableTreeNode} from './table-datasource';
 import {catchError, Observable, of, OperatorFunction} from 'rxjs';
 import {Arrays, Observables} from '@scion/toolkit/util';
 import {map} from 'rxjs/operators';
 import {rxResource} from '@angular/core/rxjs-interop';
 import {createDestroyableInjector} from '@scion/components/common';
-import {findNodePath} from './ɵtable.model';
 import {MaybeArray} from '@scion/toolkit/types';
 
 export class TableTree<ID> {
@@ -17,41 +16,29 @@ export class TableTree<ID> {
   private readonly _columnFilters: Signal<SciTableColumnFilter[]>;
   private readonly _tableFilter: Signal<string | null>;
 
-  // TODO [tree]: Cleanup on new unsortedNodes
-  private readonly _expandedNodes = signal(new Set<ID>());
-  // private readonly _expandedNodes = linkedSignal({
-  //   source: () => this._unfilteredNodes.status() === 'error' ? [] : this._unfilteredNodes.value(),
-  //   computation: (source, previous): Set<ID> => {
-  //     console.log('previous', previous?.value);
-  //     console.log('source', source);
-  //
-  //     if (!source?.length) {
-  //       return new Set<ID>();
-  //     }
-  //
-  //     const expandedNodeIds = previous?.value ?? new Set<ID>();
-  //
-  //     for (const id of expandedNodeIds.values()) {
-  //       if (!source.some(node => node.item === id)) {
-  //         expandedNodeIds.delete(id);
-  //       }
-  //     }
-  //
-  //     console.log('>>> expandedNodeIds', expandedNodeIds);
-  //     return expandedNodeIds;
-  //   },
-  // });
+  private readonly _activeNode = linkedSignal({
+    source: () => this._criteria(),
+    computation: (): ID | undefined => undefined,
+  });
+  private readonly _selectedNodes = signal(new Set<ID>());
+  private readonly _expandedNodes = this.computeExpandedNodes();
 
   private readonly _unfilteredNodes = this.computeUnfilteredNodes();
   private readonly _tree = this.computeTree();
 
-  public readonly expandedNodeIds = this._expandedNodes.asReadonly();
+  private readonly _criteria = computed(() => ({sort: this._sortCriteria(), filter: this._columnFilters(), tableFilter: this._tableFilter()}));
+
+  public readonly expandedNodes = this._expandedNodes.asReadonly();
+  public readonly selectedNodes = this._selectedNodes.asReadonly();
+  public readonly activeNode = this._activeNode.asReadonly();
+
+  public readonly error = computed(() => this._tree.status() === 'error');
+  public readonly loading = computed(() => this._tree.isLoading());
+  public readonly unfilteredNodesById = computed(() => this._unfilteredNodes.status() === 'error' ? new Map<ID, SciTableTreeNode<ID>>() : this._unfilteredNodes.value()?.reduce((acc, node) => acc.set(node.item, node), new Map<ID, SciTableTreeNode<ID>>()) ?? new Map<ID, SciTableTreeNode<ID>>());
   public readonly nodesById = computed(() => this.error() ? new Map<ID, SciTableTreeNode<ID>>() : this._tree.value().nodesById);
   public readonly visibleNodes = this.computeVisibleNodes();
   public readonly childrenIdsByParent = computed(() => this.error() ? new Map<ID | undefined, ID[]>() : this._tree.value().childrenIdsByParent);
 
-  public readonly error = computed(() => this._tree.status() === 'error');
-  public readonly loading = computed(() => this._tree.isLoading());
   public readonly nodeIndexById = computed(() => this.visibleNodes().reduce((map, node, index) => map.set(node.item, index), new Map<ID, number>()));
   public readonly visibleNodeCount = computed(() => this.visibleNodes().length);
 
@@ -65,27 +52,6 @@ export class TableTree<ID> {
     this._columnFilters = options.columnFilters;
     this._tableFilter = options.tableFilter;
     this._sortCriteria = options.sortCriteria;
-
-    effect(() => {
-      if (this._unfilteredNodes.status() === 'error') {
-        return;
-      }
-
-      const nodes = this._unfilteredNodes.value();
-      if (!nodes) {
-        return;
-      }
-      untracked(() => {
-        const expandedNodeIds = new Set(this._expandedNodes());
-        for (const id of expandedNodeIds.values()) {
-          if (!nodes.some(node => node.item === id)) {
-            expandedNodeIds.delete(id);
-          }
-        }
-
-        this._expandedNodes.set(expandedNodeIds);
-      });
-    });
   }
 
   public reload(): void {
@@ -135,6 +101,42 @@ export class TableTree<ID> {
       else {
         return new Set(toggledRows).add(id);
       }
+    });
+  }
+
+  public setActiveNode(id: ID | undefined): void {
+    this._activeNode.set(id);
+  }
+
+  public updateSelectedNodes(updateFn: (ids: Set<ID>) => Set<ID>): void {
+    this._selectedNodes.update(updateFn);
+  }
+
+  public select(ids: MaybeArray<ID>): void {
+    // Prevents selecting nodes which do not exist.
+    // Check against unfiltered nodes, to allow selecting nodes, which are filtered out.
+    const nodesById = this.unfilteredNodesById();
+    const nodeIds = Arrays.coerce(ids).filter(id => nodesById.has(id));
+
+    // Expand nodes.
+    nodeIds.forEach(id => {
+      const node = nodesById.get(id);
+
+      if (node?.parent !== undefined && nodesById.has(node.parent)) {
+        // Expand all nodes before the selected ones.
+        this.expand(findNodePath(nodesById, nodesById.get(node.parent)!));
+      }
+    });
+
+    // Wait for viewport height to update after expanding nodes.
+    // Else scrollActiveRowIntoViewport operates on an old viewport height.
+    requestAnimationFrame(() => {
+      this._selectedNodes.set(new Set(nodeIds));
+
+      // Find and activate last item based on the visual index.
+      const lastItemIndex = Math.max(...nodeIds.map(id => this.nodeIndexById().get(id) ?? -1));
+      const lastItem = this.visibleNodes()[lastItemIndex]?.item;
+      this._activeNode.set(lastItem);
     });
   }
 
@@ -197,6 +199,27 @@ export class TableTree<ID> {
         );
       },
       defaultValue: {nodes: [], nodesById: new Map<ID, SciTableTreeNode<ID>>(), childrenIdsByParent: new Map<ID | undefined, ID[]>()},
+    });
+  }
+
+  private computeExpandedNodes(): WritableSignal<Set<ID>> {
+    return linkedSignal({
+      source: () => this._unfilteredNodes.status() === 'error' ? [] : this._unfilteredNodes.value(),
+      computation: (source, previous): Set<ID> => {
+        if (!source) {
+          return previous?.value ?? new Set<ID>();
+        }
+
+        const expandedNodeIds = previous?.value ?? new Set<ID>();
+
+        for (const id of expandedNodeIds.values()) {
+          if (!source.some(node => node.item === id)) {
+            expandedNodeIds.delete(id);
+          }
+        }
+
+        return expandedNodeIds;
+      },
     });
   }
 
@@ -305,4 +328,15 @@ function flattenTree<ID>(nodesById: Map<ID, SciTableTreeNode<ID>>, childrenIdsBy
   };
 
   return getChildren(undefined);
+}
+
+export function findNodePath<ID>(nodesById: Map<ID, SciTableTreeNode<ID>>, node: SciTableTreeNode<ID>, path: ID[] = []): ID[] {
+  path.push(node.item);
+  const parentId = node.parent;
+  const parent = parentId !== undefined ? nodesById.get(parentId) : undefined;
+  if (!parent) {
+    return path;
+  }
+
+  return findNodePath(nodesById, parent, path);
 }

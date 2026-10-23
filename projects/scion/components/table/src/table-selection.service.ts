@@ -26,7 +26,7 @@ export class SciTableSelectionService<T, ID> {
     const previousActiveItem = table.activeItem();
     const previousActiveIndex = previousActiveItem !== undefined ? (table.rowIndexById().get(previousActiveItem) ?? -1) : -1;
 
-    table.activeItem.set(rowId);
+    table.setActiveItem(rowId);
 
     if (rowId === undefined || !table.selectable()) {
       return;
@@ -65,7 +65,7 @@ export class SciTableSelectionService<T, ID> {
     // Set active item.
     const startIndex = activeIndex - 1;
     const startItem = table.visibleRows()?.[startIndex]?.item;
-    table.activeItem.set(startItem);
+    table.setActiveItem(startItem);
 
     if (!table.selectable()) {
       return;
@@ -103,7 +103,7 @@ export class SciTableSelectionService<T, ID> {
 
     // Set active item.
     const endItem = table.visibleRows()?.[endIndex]?.item;
-    table.activeItem.set(endItem);
+    table.setActiveItem(endItem);
 
     if (!table.selectable()) {
       return;
@@ -145,7 +145,7 @@ export class SciTableSelectionService<T, ID> {
 
       // Set active item.
       const item = table.visibleRows()?.[parentIndex]?.item;
-      table.activeItem.set(item);
+      table.setActiveItem(item);
 
       if (table.selectable()) {
         await this.selectItems(parentIndex, parentIndex);
@@ -157,7 +157,7 @@ export class SciTableSelectionService<T, ID> {
 
       if (row !== undefined && row.id !== skeletonRowId) {
         const index = table.rowIndexById().get(row.id) ?? -1;
-        table.activeItem.set(row.id);
+        table.setActiveItem(row.id);
 
         if (table.selectable()) {
           await this.selectItems(index, index);
@@ -199,7 +199,7 @@ export class SciTableSelectionService<T, ID> {
     }
 
     const activeIndex = table.rowIndexById().get(activeRow.id) ?? -1;
-    const endIndex = Math.min(activeIndex + 1, table.visibleRowCount()! - 1);
+    const endIndex = Math.min(activeIndex + 1, table.visibleRowCount() - 1);
 
     if (endIndex === activeIndex) {
       return;
@@ -207,7 +207,7 @@ export class SciTableSelectionService<T, ID> {
 
     // Set active item.
     const endItem = table.visibleRows()?.[endIndex]?.item;
-    table.activeItem.set(endItem);
+    table.setActiveItem(endItem);
 
     if (!table.selectable()) {
       return;
@@ -230,7 +230,7 @@ export class SciTableSelectionService<T, ID> {
     // Set active item.
     const startIndex = Math.max(activeIndex - table.viewportPageSize() + 1, 0);
     const startItem = table.visibleRows()?.[startIndex]?.item;
-    table.activeItem.set(startItem);
+    table.setActiveItem(startItem);
 
     if (!table.selectable()) {
       return;
@@ -260,7 +260,7 @@ export class SciTableSelectionService<T, ID> {
     const table = this._table();
     const activeItem = table.activeItem();
     const activeIndex = activeItem !== undefined ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
-    const endIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.visibleRowCount()! - 1);
+    const endIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.visibleRowCount() - 1);
 
     if (endIndex === activeIndex) {
       return;
@@ -268,7 +268,7 @@ export class SciTableSelectionService<T, ID> {
 
     // Set active item.
     const endItem = table.visibleRows()?.[endIndex]?.item;
-    table.activeItem.set(endItem);
+    table.setActiveItem(endItem);
 
     if (!table.selectable()) {
       return;
@@ -306,7 +306,7 @@ export class SciTableSelectionService<T, ID> {
     // Set active item.
     const startIndex = 0;
     const startItem = table.visibleRows()?.[startIndex]?.item;
-    table.activeItem.set(startItem);
+    table.setActiveItem(startItem);
 
     if (!table.selectable()) {
       return;
@@ -337,7 +337,7 @@ export class SciTableSelectionService<T, ID> {
     const activeItem = table.activeItem();
     const activeIndex = activeItem !== undefined ? (table.rowIndexById().get(activeItem) ?? -1) : -1;
 
-    const endIndex = table.visibleRowCount()! - 1;
+    const endIndex = table.visibleRowCount() - 1;
 
     if (endIndex === activeIndex) {
       return;
@@ -348,7 +348,7 @@ export class SciTableSelectionService<T, ID> {
 
     // Set active item.
     const endItem = table.visibleRows()![endIndex]!.item;
-    table.activeItem.set(endItem);
+    table.setActiveItem(endItem);
 
     if (!table.selectable()) {
       return;
@@ -400,7 +400,7 @@ export class SciTableSelectionService<T, ID> {
     event.preventDefault();
 
     const table = this._table();
-    const totalCount = table.visibleRowCount() ?? 0;
+    const totalCount = table.visibleRowCount();
 
     if (table.selectable() === 'multi' && totalCount >= 0) {
       await this.selectItems(0, totalCount - 1);

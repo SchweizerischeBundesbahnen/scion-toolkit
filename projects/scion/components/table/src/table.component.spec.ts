@@ -1023,7 +1023,7 @@ describe('Table', () => {
         ],
       });
 
-      const {fixture} = createSciTableComponent<string>(sciTable({
+      const {fixture} = createSciTableComponent<string>(sciTable<string>({
         datasource: signal([]),
         columns: table => table
           .addStringColumn('Header', item => item)
@@ -2539,9 +2539,9 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      expect(table.row({nth: 0}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).not.toBeNull();
-      expect(table.row({nth: 0}).cells[1]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
-      expect(table.row({nth: 1}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
+      expect(table.row({nth: 0}).cells[0]!.element.querySelector('button.e2e-toggle-children')).not.toBeNull();
+      expect(table.row({nth: 0}).cells[1]!.element.querySelector('button.e2e-toggle-children')).toBeNull();
+      expect(table.row({nth: 1}).cells[0]!.element.querySelector('button.e2e-toggle-children')).toBeNull();
     });
 
     it('should show the chevron in the configured column and toggle the row', async () => {
@@ -2558,14 +2558,14 @@ describe('Table', () => {
       await table.waitUntilStable();
 
       expect(model.columns().map(column => column.showExpansionControl)).toEqual([false, true]);
-      expect(table.row({nth: 0}).cells[0]!.element!.querySelector('button.e2e-toggle-children')).toBeNull();
-      const toggle = table.row({nth: 0}).cells[1]!.element!.querySelector<HTMLButtonElement>('button.e2e-toggle-children');
+      expect(table.row({nth: 0}).cells[0]!.element.querySelector('button.e2e-toggle-children')).toBeNull();
+      const toggle = table.row({nth: 0}).cells[1]!.element.querySelector<HTMLButtonElement>('button.e2e-toggle-children');
       expect(toggle).not.toBeNull();
 
       toggle!.click();
       await table.waitUntilStable();
       expect(table.rows).toHaveSize(2);
-      expect(table.row({nth: 0}).cells[1]!.element!.querySelector('sci-icon.e2e-expanded')).not.toBeNull();
+      expect(table.row({nth: 0}).cells[1]!.element.querySelector('sci-icon.e2e-expanded')).not.toBeNull();
     });
 
     it('should expand and collapse nested rows', async () => {
@@ -2606,10 +2606,42 @@ describe('Table', () => {
       expect(await column?.values()).toEqual(['1', '1.1', '1.2', '2', '3']);
     });
 
+    it('should clean up expanded nodes removed from the datasource', async () => {
+      const data = signal(['1', '2']);
+      const children = new Map([
+        ['1', ['1.1']],
+        ['2', ['2.1']],
+      ]);
+      const {fixture, model} = createSciTableComponent(sciTable<string>({
+        ɵdatasource: provideTableTreeDatasource(data, item => children.get(item) ?? []),
+        datasource: ɵillegaldatasource(),
+        columns: table => table.addStringColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      const column = table.column({index: 0})!;
+
+      model.expand(['1', '2']);
+      await table.waitUntilStable();
+      expect(await column.values()).toEqual(['1', '1.1', '2', '2.1']);
+
+      // Remove an expanded branch, preserving the expansion of nodes still in the datasource.
+      data.set(['2']);
+      await table.waitUntilStable();
+      expect(await column.values()).toEqual(['2', '2.1']);
+
+      // Re-added nodes must no longer be expanded.
+      data.set(['1', '2']);
+      await table.waitUntilStable();
+      expect(await column.values()).toEqual(['1', '2', '2.1']);
+    });
+
     it(`should expand and collapse descendants with falsy parents`, async () => {
       interface TestItem {
         id: string | number;
-        children?: TestItem[]
+        children?: TestItem[];
       }
 
       const data: TestItem[] = [{
@@ -2640,7 +2672,7 @@ describe('Table', () => {
       model.expand(0);
       await table.waitUntilStable();
       expect(await column.values()).toEqual(['', 'child', '0', 'other child']);
-      expect(table.rows.map(row => row.cells[0]!.element!.getAttribute('data-level'))).toEqual(['0', '1', '0', '1']);
+      expect(table.rows.map(row => row.cells[0]!.element.getAttribute('data-level'))).toEqual(['0', '1', '0', '1']);
 
       model.collapse('');
       await table.waitUntilStable();
@@ -2700,7 +2732,7 @@ describe('Table', () => {
     it('should expand path to selected item', async () => {
       interface TestItem {
         item: string;
-        children?: TestItem[]
+        children?: TestItem[];
       }
 
       const items: TestItem[] = [
@@ -2735,7 +2767,7 @@ describe('Table', () => {
     it('should expand all items on filter', async () => {
       interface TestItem {
         item: string;
-        children?: TestItem[]
+        children?: TestItem[];
       }
 
       const items: TestItem[] = [
@@ -2770,7 +2802,7 @@ describe('Table', () => {
     it('should expand all items on falsy filter', async () => {
       interface TestItem {
         number: number;
-        children?: TestItem[]
+        children?: TestItem[];
       }
 
       const items: TestItem[] = [
@@ -2796,11 +2828,11 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
       // TODO [tree]: remove chevron after icon column rebase
-      expect(await table.column({index: 0})?.values()).toEqual(['chevron_right 1', 'chevron_right 2', '3']);
+      expect(await table.column({index: 0})?.values()).toEqual(['1', '2', '3']);
 
       model.filter(0, {columnName: 'column:0'});
       await table.waitUntilStable();
-      expect(await table.column({index: 0})?.values()).toEqual(['chevron_down 1', 'chevron_down 1.2', '0']);
+      expect(await table.column({index: 0})?.values()).toEqual(['1', '1.2', '0']);
     });
   });
 
@@ -4912,7 +4944,7 @@ describe('Table', () => {
       expect(table.row({index: 66}).isActive()).toBeTrue(); // last item should be active.
     });
 
-   it('should not select unknown item', async () => {
+    it('should not select unknown item', async () => {
       const {fixture, model} = createSciTableComponent(sciTable({
         datasource: signal<number[]>([1, 2, 3]),
         columns: table => table.addNumberColumn(item => item),
@@ -4933,7 +4965,31 @@ describe('Table', () => {
       expect(model.selectedItems()).toEqual([]);
     });
 
-    // TODO [tree] should select item not included in filter
+    it('should select filtered out item', async () => {
+      const {fixture, model} = createSciTableComponent(sciTable({
+        datasource: signal<number[]>([1, 2, 3]),
+        columns: table => table.addNumberColumn({
+          name: 'column:number',
+          value: item => item,
+        }),
+        filterable: true,
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      await table.column({name: 'column:number'})?.filter(1);
+
+      // Select filtered out item.
+      model.select([3]);
+      await table.waitUntilStable();
+      expect(model.selectedItems()).toEqual([3]);
+
+      // Row should be selected when it's back in the filter.
+      await table.column({name: 'column:number'})?.filter(null);
+      expect(table.row({index: 2}).isSelected()).toBeTrue();
+    });
   });
 
   describe('Miscellaneous', () => {

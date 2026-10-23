@@ -94,7 +94,7 @@ export class SciTableRowComponent<T, ID> {
       return;
     }
     event.stopPropagation(); // prevent selecting the row
-    this.table().activeItem.set(row.id);
+    this.table().setActiveItem(row.id);
   }
 
   private contributeRowActions(): void {
