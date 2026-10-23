@@ -82,7 +82,7 @@ export default class SciTablePageComponent {
     this.bindTableSettings();
   }
 
-  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; bufferSize: number; pageSize: number}): SciTable<Product> {
     return table({
       ɵdatasource: (() => {
         switch (options.datasource) {
@@ -101,8 +101,13 @@ export default class SciTablePageComponent {
       })(),
       datasource: ɵillegaldatasource(),
       rowBindings: (bindings, product) => {
-        if (options.customRowStyling) {
+        if (this.settingsForm.customRowStyling().value()) {
           bindings.addPartBinding(product.id % 3 === 0 ? 'row:negative' : undefined);
+        }
+
+        if (this.settingsForm.showRowIcon().value()) {
+          bindings.addIconBinding('inventory_2');
+          bindings.addIconBinding('sell');
         }
       },
       rowActions: options.showRowActions ? (toolbar, product) => toolbar
@@ -215,14 +220,13 @@ export default class SciTablePageComponent {
       const tableCount = this.settingsForm.tableCount().value();
       const datasource = this.datasourceForm.datasource().value();
       const showRowActions = this.settingsForm.showRowActions().value();
-      const customRowStyling = this.settingsForm.customRowStyling().value();
       const bufferSize = this.datasourceForm.bufferSize().value();
       const pageSize = this.datasourceForm.pageSize().value();
 
       untracked(() => {
         const injector = createDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, customRowStyling, bufferSize, pageSize}))));
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, bufferSize, pageSize}))));
       });
     });
 
@@ -303,6 +307,7 @@ export default class SciTablePageComponent {
       wrapHeader: false,
       showGridlines: false,
       showRowActions: false,
+      showRowIcon: false,
       customRowStyling: false,
       headerHeight: 30,
       rowHeight: 30,
@@ -392,6 +397,7 @@ interface SettingsForm {
   wrapHeader: boolean;
   showGridlines: boolean;
   showRowActions: boolean;
+  showRowIcon: boolean;
   customRowStyling: boolean;
   headerHeight: number | null;
   rowHeight: number | null;
