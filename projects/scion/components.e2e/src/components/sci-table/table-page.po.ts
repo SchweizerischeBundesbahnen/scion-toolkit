@@ -147,7 +147,12 @@ export class TablePagePO {
 
   public async showRowActions(checked: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
-    await this.properties.locator('input.e2e-row-actions').setChecked(checked);
+    await this.properties.locator('input.e2e-show-row-actions').setChecked(checked);
+  }
+
+  public async showTableFilter(checked: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-show-table-filter').setChecked(checked);
   }
 
   public async setTableCount(tableCount: number): Promise<void> {
