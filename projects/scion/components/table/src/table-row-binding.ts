@@ -19,24 +19,56 @@ export function provideTableRowBinding<T = unknown>(bindings: SciTableRowBinding
   };
 }
 
-export type SciTableRowBindingFactoryFn<T> = (bindings: SciTableRowBindingFactory, item: T, index: number) => void;
+/**
+ * Signature of a function to configure row bindings.
+ *
+ * Called per item with a {@link SciTableRowBindingFactory} to register bindings.
+ *
+ * The function:
+ * - Runs in a reactive context and re-evaluates when tracked signals change.
+ * - Can call `inject` to get required dependencies.
+ */
+export type SciTableRowBindingFactoryFn<T> = (row: SciTableRowBindingFactory, item: T, index: number) => void;
 
+/**
+ * Factory for configuring row bindings.
+ *
+ * Row bindings enable associating metadata and icons with a row. Metadata includes CSS shadow parts, CSS classes, and HTML attributes.
+ */
 export interface SciTableRowBindingFactory {
-  addAttributeBinding(name: string, value: unknown | undefined): this;
-
-  addClassBinding(name: string | undefined): this;
+  /**
+   * Binds an icon to the row, displayed in the first column.
+   *
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table({
+   *   datasource: data,
+   *   columns: table => ...,
+   *   rowBindings: bindings => bindings.addIconBinding('account_circle'),
+   * });
+   * ```
+   *
+   * SCION uses icon providers to render icons. An icon provider can be registered using {@link provideIconProvider}.
+   *
+   * Defaults to a Material icon provider if the application has not registered an icon provider, interpreting the icon as a Material Icon font ligature.
+   * Refer to https://fonts.google.com/icons for available Material icons and instructions on including the Material icon font.
+   */
+  addIconBinding(icon: string): this;
 
   /**
-   * Adds the specified values as part attributes to the row, enabling for custom styling of the row, e.g., based on a condition.
+   * Binds a CSS shadow part to the row for custom row/cell styling using the `::part()` CSS pseudo-element selector.
    *
    * Example usage:
    * ```ts
+   * import {table} from '@scion/components/table';
+   *
    * table({
    *   datasource: data,
+   *   columns: table => ...,
    *   rowBindings: (bindings, item, index) => bindings
    *     .addPartBinding(index % 2 === 0 ? 'row:even' : 'row:odd')
    *     .addPartBinding(item.active ? 'row:active' : undefined),
-   *   columns: table => ...,
    * });
    * ```
    *
@@ -51,31 +83,61 @@ export interface SciTableRowBindingFactory {
    * ```
    */
   addPartBinding(name: `row:${string}` | undefined): this;
+
+  /**
+   * Binds an HTML attribute to the row.
+   *
+   * Useful for end-to-end testing, such as associating a row with an item's primary key.
+   *
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table({
+   *   datasource: data,
+   *   columns: table => ...,
+   *   rowBindings: (bindings, item) => bindings.addAttributeBinding('data-id', item.id),
+   * });
+   * ```
+   */
+  addAttributeBinding(name: string, value: unknown | undefined): this;
+
+  /**
+   * Binds a CSS class to the row.
+   */
+  addClassBinding(name: string | undefined): this;
 }
 
 class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
 
-  public readonly attributeBindings = new Array<[string, unknown]>();
-  public readonly classBindings = new Array<string>();
-  public readonly partBindings = new Array<`row:${string}`>();
+  public readonly icons = new Array<string>();
+  public readonly parts = new Array<`row:${string}`>();
+  public readonly attributes = new Array<[string, unknown]>();
+  public readonly classes = new Array<string>();
 
-  public addAttributeBinding(name: string, value: unknown | undefined): this {
-    if (value !== undefined) {
-      this.attributeBindings.push([name, value]);
-    }
-    return this;
-  }
-
-  public addClassBinding(name: string | undefined): this {
-    if (name) {
-      this.classBindings.push(name);
+  public addIconBinding(icon: string | undefined): this {
+    if (icon) {
+      this.icons.push(icon);
     }
     return this;
   }
 
   public addPartBinding(name: `row:${string}` | undefined): this {
     if (name) {
-      this.partBindings.push(name);
+      this.parts.push(name);
+    }
+    return this;
+  }
+
+  public addAttributeBinding(name: string, value: unknown | undefined): this {
+    if (value !== undefined) {
+      this.attributes.push([name, value]);
+    }
+    return this;
+  }
+
+  public addClassBinding(name: string | undefined): this {
+    if (name) {
+      this.classes.push(name);
     }
     return this;
   }
@@ -89,16 +151,21 @@ export function coerceTableRowBindings<T>(bindingsFn: SciTableRowBindingFactoryF
   });
 
   return {
-    attributes: computed(() => Object.fromEntries(factory().attributeBindings), {equal: Objects.isEqual}),
-    cssClass: computed(() => factory().classBindings, {equal: Objects.isEqual}),
-    part: computed(() => factory().partBindings, {equal: Objects.isEqual}),
+    icons: computed(() => factory().icons, {equal: Objects.isEqual}),
+    parts: computed(() => factory().parts, {equal: Objects.isEqual}),
+    attributes: computed(() => Object.fromEntries(factory().attributes), {equal: Objects.isEqual}),
+    classes: computed(() => factory().classes, {equal: Objects.isEqual}),
   };
 }
 
 export interface SciTableRowBindings {
-  cssClass: Signal<string[]>;
+  icons: Signal<string[]>;
+  parts: Signal<`row:${string}`[]>;
   attributes: Signal<{[name: string]: unknown}>;
-  part: Signal<`row:${string}`[]>;
+  classes: Signal<string[]>;
 }
 
+/**
+ * Multi-DI token for registering a {@link SciTableRowBindingFactory}.
+ */
 export const SCI_TABLE_ROW_BINDING = new InjectionToken<SciTableRowBindingFactory[]>('SCI_TABLE_ROW_BINDING');
