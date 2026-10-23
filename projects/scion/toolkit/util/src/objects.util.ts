@@ -8,6 +8,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import {Dictionaries} from './dictionaries.util';
+
 /**
  * Provides helper functions for working with objects.
  */
@@ -98,8 +100,8 @@ export const Objects = {
   /**
    * Stringifies given object to matrix notation: a=b;c=d;e=f
    */
-  toMatrixNotation: (object: Record<string, unknown> | null | undefined): string => {
-    return Object.entries(object ?? {}).map(([key, value]) => `${key}=${value}`).join(';');
+  toMatrixNotation: (object: Record<string, unknown> | Map<string, unknown> | null | undefined): string => {
+    return Object.entries(Dictionaries.coerce(object)).map(([key, value]) => `${key}=${value}`).join(';');
   },
 
   /**

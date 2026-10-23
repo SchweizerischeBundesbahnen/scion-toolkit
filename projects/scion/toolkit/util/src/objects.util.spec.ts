@@ -45,6 +45,11 @@ describe('Objects.toMatrixNotation', () => {
     expect(Objects.toMatrixNotation(object)).toEqual('key1=value1;key2=undefined;key3=value3;key4=null');
   });
 
+  it('should stringify a Map to matrix notation', () => {
+    const object = new Map().set('key1', 'value1').set('key2', undefined).set('key3', 'value3').set('key4', null);
+    expect(Objects.toMatrixNotation(object)).toEqual('key1=value1;key2=undefined;key3=value3;key4=null');
+  });
+
   it('should stringify `null` to matrix notation', () => {
     expect(Objects.toMatrixNotation(null)).toEqual('');
   });

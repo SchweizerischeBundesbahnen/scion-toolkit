@@ -10,13 +10,41 @@
 
 import {SciColumnHeaderLike, SciDateLike, SciTableCellContext} from './table.model';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
+import {Translatable} from '@scion/components/text';
 
 export interface SciTableColumnFactory<T> {
 
-  addStringColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<string | undefined>): this;
+  /**
+   * Adds a column to the table for displaying text.
+   *
+   * The value can be plain text or a translation key. A translation key starts with the percent symbol (`%`)
+   * and may include parameters in matrix notation for text interpolation.
+   *
+   * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  addStringColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<Translatable | undefined>): this;
 
-  addStringColumn(value: (item: T) => MaybeSignal<string | undefined>): this;
+  /**
+   * Adds a column to the table for displaying text.
+   *
+   * The value can be plain text or a translation key. A translation key starts with the percent symbol (`%`)
+   * and may include parameters in matrix notation for text interpolation.
+   *
+   * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  addStringColumn(value: (item: T) => MaybeSignal<Translatable | undefined>): this;
 
+  /**
+   * Adds a column to the table for displaying text.
+   */
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
   /**
@@ -247,8 +275,23 @@ export interface SciTableColumnDescriptor {
   minWidth?: number;
 }
 
+/**
+ * Configures a table column for displaying text.
+ */
 export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
-  value: (item: T) => MaybeSignal<string | undefined>;
+
+  /**
+   * Specifies the text to display for an item.
+   *
+   * Can be text or a translation key. A translation key starts with the percent symbol (`%`) and may include parameters in matrix notation for text interpolation.
+   *
+   * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  value: (item: T) => MaybeSignal<Translatable | undefined>;
   sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, string>};
   filterable?: boolean | {matcher: SciTableColumnFilterMatcherFn<T, string>};
 }
