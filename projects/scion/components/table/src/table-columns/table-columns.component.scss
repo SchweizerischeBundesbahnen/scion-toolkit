@@ -27,7 +27,12 @@
 
     // Place splitters at the end of cell content and enable interaction with splitters.
     justify-self: end;
-    pointer-events: auto;
+
+    // Splitter is still rendered for non-resizable columns, but non-interactive, as a visual divider between column headers.
+    // Uses zero specificity (:where) so pointer-events can be disabled during scroll or resize.
+    &:where(:not([data-non-resizable])) {
+      pointer-events: auto;
+    }
 
     // Render splitter handles as column header dividers (splitters still span full viewport height).
     @container style(--ɵsci-table-header-column-divider-visible: true) {
@@ -45,12 +50,13 @@
     // Expand splitter handle to full viewport height on hover or resize.
     &:is(:hover, .resizing) {
       --sci-splitter-background-color: rgb(from var(--ɵsci-table-border-color) r g b / .5); // subtler color
-      --sci-splitter-cross-axis-size: 100%;
+      --sci-splitter-cross-axis-start: .5em;
+      --sci-splitter-cross-axis-size: auto;
+      --sci-splitter-cross-axis-end: 0;
 
-      // Expand divider down to the viewport bottom.
-      @container style(--ɵsci-table-header-column-divider-visible: true) {
-        --sci-splitter-cross-axis-size: auto;
-        --sci-splitter-cross-axis-end: 0;
+      // Render no gap if not displayed as column header dividers.
+      @container not style(--ɵsci-table-header-column-divider-visible: true) {
+        --sci-splitter-cross-axis-start: 0;
       }
     }
 

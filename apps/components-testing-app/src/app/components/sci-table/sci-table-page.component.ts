@@ -68,7 +68,7 @@ export default class SciTablePageComponent {
   protected readonly datasourceForm: FieldTree<DatasourceForm> = this.createDatasourceForm();
   protected readonly layoutForm: FieldTree<LayoutForm> = this.createLayoutForm();
   protected readonly columnForm: FieldTree<ColumnForm> = this.createColumnForm();
-  protected readonly columns = signal<ColumnForm[]>([]);
+  protected readonly columns = signal<ColumnDefinition[]>([]);
 
   protected readonly tables = this.computeTables();
   protected readonly rowCount = inject(ProductService).productCount;
@@ -310,6 +310,7 @@ export default class SciTablePageComponent {
         action: async form => {
           this.columns.update(columns => columns.concat({
             ...form().value(),
+            resizable: form.resizable().dirty() ? form.resizable().value() : undefined,
             visible: signal(true),
           }));
           this.columnForm().reset(defaults());
@@ -481,6 +482,10 @@ interface ColumnForm {
   };
 }
 
+type ColumnDefinition = Omit<ColumnForm, 'resizable'> & {
+  resizable: boolean | undefined;
+};
+
 interface SettingsForm {
   filterable: boolean;
   sortable: boolean;
@@ -512,6 +517,6 @@ interface LayoutForm {
   pageHeight: number | null;
 }
 
-function columnDataTypes(columns: ColumnForm[]): Map<`column:${string}`, SciTableColumnType> {
+function columnDataTypes(columns: ColumnDefinition[]): Map<`column:${string}`, SciTableColumnType> {
   return columns.reduce((map, column) => map.set(column.name as `column:${string}`, column.type), new Map<`column:${string}`, SciTableColumnType>());
 }

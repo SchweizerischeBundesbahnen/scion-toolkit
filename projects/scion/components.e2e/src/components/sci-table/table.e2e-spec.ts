@@ -88,11 +88,14 @@ test.describe('sci-table', () => {
       await tablePage.navigate();
 
       await tablePage.setResizable(false);
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-      await expect(table.column({name: 'column:name'}).splitter.locator).not.toBeAttached();
+      await tablePage.setWidth(600);
+      await tablePage.addColumn({name: 'column:name', type: 'string', width: '100px'});
+      await expect.poll(() => table.column({name: 'column:name'}).splitter.isInteractive()).toBe(false);
+      await expect.poll(() => table.column({name: 'column:name'}).splitter.getDisplayMode()).toEqual('column-header-divider');
 
       await tablePage.setResizable(true);
-      await expect(table.column({name: 'column:name'}).splitter.locator).toBeAttached();
+      await expect.poll(() => table.column({name: 'column:name'}).splitter.isInteractive()).toBe(true);
+      await expect.poll(() => table.column({name: 'column:name'}).splitter.getDisplayMode()).toEqual('column-header-divider');
     });
 
     test('should adapt to container size', async ({page}) => {
@@ -1378,10 +1381,10 @@ test.describe('sci-table', () => {
       // Add resizable column.
       await tablePage.addColumn({name: 'column:4', type: 'string', resizable: true, width: '100px'});
 
-      await expect(table.column({name: 'column:1'}).splitter.locator).toBeAttached();
-      await expect(table.column({name: 'column:2'}).splitter.locator).not.toBeAttached();
-      await expect(table.column({name: 'column:3'}).splitter.locator).toBeAttached();
-      await expect(table.column({name: 'column:4'}).splitter.locator).toBeAttached();
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:4'}).splitter.getDisplayMode()).toEqual('column-header-divider');
 
       // Verify splitters to be at correct position.
       const tableLeft = await table.bounds().then(bounds => bounds.x) - 1; // -1 because splitters are positioned at the end of cell content
@@ -1392,18 +1395,29 @@ test.describe('sci-table', () => {
       // Resize 'column:1'.
       await table.column({name: 'column:1'}).splitter.drag({deltaX: 10});
       expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:2'}).splitter.bounds()).left).toEqual(tableLeft + 200 + 10);
+      expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10);
+      expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10);
+
+      // Resize 'column:2'.
+      await table.column({name: 'column:2'}).splitter.drag({deltaX: 10}); // NOOP as not resizable
+      await page.waitForTimeout(250);
+      expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:2'}).splitter.bounds()).left).toEqual(tableLeft + 200 + 10);
       expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10);
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10);
 
       // Resize 'column:3'.
       await table.column({name: 'column:3'}).splitter.drag({deltaX: 10});
       expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:2'}).splitter.bounds()).left).toEqual(tableLeft + 200 + 10);
       expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10 + 10);
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10);
 
       // Resize 'column:4'.
       await table.column({name: 'column:4'}).splitter.drag({deltaX: 10});
       expect((await table.column({name: 'column:1'}).splitter.bounds()).left).toEqual(tableLeft + 100 + 10);
+      expect((await table.column({name: 'column:2'}).splitter.bounds()).left).toEqual(tableLeft + 200 + 10);
       expect((await table.column({name: 'column:3'}).splitter.bounds()).left).toEqual(tableLeft + 300 + 10 + 10);
       expect((await table.column({name: 'column:4'}).splitter.bounds()).left).toEqual(tableLeft + 400 + 10 + 10 + 10);
     });
@@ -1784,6 +1798,37 @@ test.describe('sci-table', () => {
       await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('hidden');
       await table.column({name: 'column:1'}).splitter.hover();
       await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-splitter');
+    });
+
+    test('should display column header divider for non-resizable column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.showHeader(true);
+      await tablePage.setFilterable(false);
+      await tablePage.setWidth(600);
+
+      await tablePage.addColumn({name: 'column:1', type: 'string', resizable: false, width: '150px'});
+      await tablePage.addColumn({name: 'column:2', type: 'string', width: '150px'});
+      await tablePage.addColumn({name: 'column:3', type: 'string', width: '150px'});
+
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+
+      await table.column({name: 'column:1'}).splitter.hover();
+      await page.waitForTimeout(250);
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+      await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(false);
+
+      await table.column({name: 'column:2'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-splitter');
+      await expect.poll(() => table.column({name: 'column:2'}).splitter.isInteractive()).toBe(true);
+
+      await table.column({name: 'column:3'}).splitter.hover();
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-splitter');
+      await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(true);
     });
 
     test('should hide column header dividers if configured', async ({page}) => {
