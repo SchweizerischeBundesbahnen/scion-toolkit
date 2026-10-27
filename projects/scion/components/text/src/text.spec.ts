@@ -11,10 +11,11 @@
 import {computed, createEnvironmentInjector, DestroyRef, EnvironmentInjector, EnvironmentProviders, inject, Injector, makeEnvironmentProviders, signal, WritableSignal} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
 import {text} from './text';
-import {Observable, Subscriber} from 'rxjs';
+import {Observable} from 'rxjs';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {SciTextProviderFn} from './text.provider';
 import {SCI_TEXT_PROVIDER} from './text-providers';
+import {Objects} from '@scion/toolkit/util';
 
 describe('Text Provider', () => {
 
@@ -257,66 +258,80 @@ describe('Text Provider', () => {
       ],
     });
 
-    const textCaptor1: {subscriber?: Subscriber<string>; destroyed?: true} = {};
-    const textCaptor2: {subscriber?: Subscriber<string>; destroyed?: true} = {};
+    const textObservable1: {next?(text: string): void; subscriberCount: number} = {subscriberCount: 0};
+    const textObservable2: {next?(text: string): void; subscriberCount: number} = {subscriberCount: 0};
 
     const texts: Record<string, Observable<string>> = {
       'key-1': new Observable(observer => {
-        observer.next('text-1a');
-        textCaptor1.subscriber = observer;
-        return () => textCaptor1.destroyed = true;
+        textObservable1.subscriberCount++;
+        textObservable1.next = observer.next.bind(observer);
+        textObservable1.next('text-1a');
+        return () => textObservable1.subscriberCount--;
       }),
       'key-2': new Observable(observer => {
-        observer.next('text-2a');
-        textCaptor2.subscriber = observer;
-        return () => textCaptor2.destroyed = true;
+        textObservable2.subscriberCount++;
+        textObservable2.next = observer.next.bind(observer);
+        textObservable2.next('text-2a');
+        return () => textObservable2.subscriberCount--;
       }),
     };
 
     const key = signal('%key-1');
+    const injector = Injector.create({parent: TestBed.inject(Injector), providers: []});
 
     // Get text-1.
-    const translation = text(key, {injector: TestBed.inject(Injector)});
+    const translation = text(key, {injector});
     expect(translation()).toEqual('text-1a');
-    expect(textCaptor1.destroyed).toBeUndefined();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(0);
 
     // Update text-1.
-    textCaptor1.subscriber!.next('text-1b');
+    textObservable1.next!('text-1b');
     expect(translation()).toEqual('text-1b');
-    expect(textCaptor1.destroyed).toBeUndefined();
-    expect(textCaptor2.destroyed).toBeUndefined();
-
-    // Update text-1.
-    textCaptor1.subscriber!.next('text-1c');
-    expect(translation()).toEqual('text-1c');
-    expect(textCaptor1.destroyed).toBeUndefined();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(0);
 
     // Change key to text-2.
     key.set('%key-2');
     expect(translation()).toEqual('text-2a');
-    expect(textCaptor1.destroyed).toBeTrue();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
 
     // Update text-2.
-    textCaptor2.subscriber!.next('text-2b');
+    textObservable2.next!('text-2b');
     expect(translation()).toEqual('text-2b');
-    expect(textCaptor1.destroyed).toBeTrue();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
+
+    // Change key to text-1.
+    key.set('%key-1');
+    expect(translation()).toEqual('text-1b');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
+
+    // Update text-1.
+    textObservable1.next!('text-1c');
+    expect(translation()).toEqual('text-1c');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
 
     // Update text-2.
-    textCaptor2.subscriber!.next('text-2c');
-    expect(translation()).toEqual('text-2c');
-    expect(textCaptor1.destroyed).toBeTrue();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    textObservable2.next!('text-2c');
+    expect(translation()).toEqual('text-1c');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
 
-    // Provide text from previous observable.
-    // Update text-1.
-    textCaptor1.subscriber!.next('text-1d');
+    // Change key to text-2.
+    key.set('%key-2');
     expect(translation()).toEqual('text-2c');
-    expect(textCaptor1.destroyed).toBeTrue();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
+
+    // Destroy injector.
+    injector.destroy();
+    expect(translation()).toEqual('text-2c');
+    expect(textObservable1.subscriberCount).toBe(0);
+    expect(textObservable2.subscriberCount).toBe(0);
   });
 
   it('should return text as is if `undefined`', () => {
@@ -554,6 +569,131 @@ describe('Text Provider', () => {
     expect(translated()).toEqual('%key');
     // Expected error to be logged.
     expect(console.error).toHaveBeenCalledWith(jasmine.stringContaining('[TextProviderError] Failed to get text for \'%%key\'. Caused by:'), error);
+  });
+
+  it('should cache texts per injection context', () => {
+    let destroyRef: DestroyRef | undefined;
+
+    const textProviderFn = jasmine.createSpy<SciTextProviderFn>().and.callFake(() => {
+      destroyRef = inject(Injector).get(DestroyRef);
+      return 'Text';
+    });
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideTextProvider(textProviderFn),
+      ],
+    });
+
+    // Get text in injector 1.
+    const injector1 = Injector.create({parent: TestBed.inject(Injector), providers: []});
+    const text1 = text('%key1', {injector: injector1});
+    expect(text1()).toEqual('Text');
+    expect(textProviderFn).toHaveBeenCalledWith('key1', {});
+    textProviderFn.calls.reset();
+
+    // Get text again in injector 1.
+    const text2 = text('%key1', {injector: injector1});
+    expect(text2()).toEqual('Text');
+    expect(textProviderFn).not.toHaveBeenCalled();
+    textProviderFn.calls.reset();
+
+    // Get text in injector 2.
+    const injector2 = Injector.create({parent: TestBed.inject(Injector), providers: []});
+    const text3 = text('%key1', {injector: injector2});
+    expect(text3()).toEqual('Text');
+    expect(textProviderFn).not.toHaveBeenCalled();
+    textProviderFn.calls.reset();
+
+    // Destroy injector 1.
+    injector1.destroy();
+    expect(destroyRef!.destroyed).toBeFalse();
+
+    // Get text in injector 3.
+    const injector3 = Injector.create({parent: TestBed.inject(Injector), providers: []});
+    const text4 = text('%key1', {injector: injector3});
+    expect(text4()).toEqual('Text');
+    expect(textProviderFn).not.toHaveBeenCalled();
+    textProviderFn.calls.reset();
+
+    // Destroy injector 3.
+    injector3.destroy();
+    expect(destroyRef!.destroyed).toBeFalse();
+
+    // Destroy injector 2.
+    // Expect text injector to be destroyed.
+    injector2.destroy();
+    expect(destroyRef!.destroyed).toBeTrue();
+
+    // Get text in injector 4.
+    const injector4 = Injector.create({parent: TestBed.inject(Injector), providers: []});
+    const text5 = text('%key1', {injector: injector4});
+    expect(text5()).toEqual('Text');
+    expect(textProviderFn).toHaveBeenCalledWith('key1', {});
+    textProviderFn.calls.reset();
+  });
+
+  it('should cache texts by key and params', () => {
+    const destroyRefs = new Array<DestroyRef>();
+
+    const textProviderFn = jasmine.createSpy<SciTextProviderFn>().and.callFake((key, params) => {
+      destroyRefs.push(inject(Injector).get(DestroyRef));
+      return `${key} {${Objects.toMatrixNotation(params)}}`;
+    });
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideTextProvider(textProviderFn),
+      ],
+    });
+
+    const injector = Injector.create({parent: TestBed.inject(Injector), providers: []});
+
+    // Get text for %key1.
+    expect(text('%key1', {injector: injector})()).toEqual('key1 {}');
+    expect(textProviderFn).toHaveBeenCalledWith('key1', {});
+    expect(destroyRefs.map(destroyRef => destroyRef.destroyed)).toEqual([false]);
+    textProviderFn.calls.reset();
+
+    // Get text for %key1.
+    expect(text('%key1', {injector: injector})()).toEqual('key1 {}');
+    expect(textProviderFn).not.toHaveBeenCalled();
+    expect(destroyRefs.map(destroyRef => destroyRef.destroyed)).toEqual([false]);
+    textProviderFn.calls.reset();
+
+    // Get text for %key2.
+    expect(text('%key2', {injector: injector})()).toEqual('key2 {}');
+    expect(textProviderFn).toHaveBeenCalledWith('key2', {});
+    expect(destroyRefs.map(destroyRef => destroyRef.destroyed)).toEqual([false, false]);
+    textProviderFn.calls.reset();
+
+    // Get text for %key2.
+    expect(text('%key2', {injector: injector})()).toEqual('key2 {}');
+    expect(textProviderFn).not.toHaveBeenCalled();
+    expect(destroyRefs.map(destroyRef => destroyRef.destroyed)).toEqual([false, false]);
+    textProviderFn.calls.reset();
+
+    // Get text for %key2;a=b.
+    expect(text('%key2;a=b', {injector: injector})()).toEqual('key2 {a=b}');
+    expect(textProviderFn).toHaveBeenCalledWith('key2', {a: 'b'});
+    expect(destroyRefs.map(destroyRef => destroyRef.destroyed)).toEqual([false, false, false]);
+    textProviderFn.calls.reset();
+
+    // Get text for %key2;a=b.
+    expect(text('%key2;a=b', {injector: injector})()).toEqual('key2 {a=b}');
+    expect(textProviderFn).not.toHaveBeenCalled();
+    expect(destroyRefs.map(destroyRef => destroyRef.destroyed)).toEqual([false, false, false]);
+    textProviderFn.calls.reset();
+
+    // Get text for %key2;a=c.
+    expect(text('%key2;a=c', {injector: injector})()).toEqual('key2 {a=c}');
+    expect(textProviderFn).toHaveBeenCalledWith('key2', {a: 'c'});
+    expect(destroyRefs.map(destroyRef => destroyRef.destroyed)).toEqual([false, false, false, false]);
+    textProviderFn.calls.reset();
+
+    // Destroy injector.
+    injector.destroy();
+    expect(destroyRefs.map(destroyRef => destroyRef.destroyed)).toEqual([true, true, true, true]);
   });
 });
 

@@ -11,7 +11,7 @@
 import {Component, EnvironmentProviders, input, makeEnvironmentProviders, signal, WritableSignal} from '@angular/core';
 import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {toSignal} from '@angular/core/rxjs-interop';
-import {Observable, Subscriber} from 'rxjs';
+import {Observable} from 'rxjs';
 import {SciTextPipe} from './text.pipe';
 import {SciTextProviderFn} from './text.provider';
 import {SCI_TEXT_PROVIDER} from './text-providers';
@@ -86,25 +86,21 @@ describe('Text Pipe', () => {
 
     const fixture = TestBed.createComponent(SpecRootComponent);
 
-    const textCaptor1 = {
-      subscriber: undefined as unknown as Subscriber<string>,
-      destroyed: undefined as true | undefined,
-    };
-    const textCaptor2 = {
-      subscriber: undefined as unknown as Subscriber<string>,
-      destroyed: undefined as true | undefined,
-    };
+    const textObservable1: {next?(text: string): void; subscriberCount: number} = {subscriberCount: 0};
+    const textObservable2: {next?(text: string): void; subscriberCount: number} = {subscriberCount: 0};
 
     const texts: Record<string, Observable<string>> = {
       'key-1': new Observable(observer => {
-        observer.next('text-1a');
-        textCaptor1.subscriber = observer;
-        return () => textCaptor1.destroyed = true;
+        textObservable1.subscriberCount++;
+        textObservable1.next = observer.next.bind(observer);
+        textObservable1.next('text-1a');
+        return () => textObservable1.subscriberCount--;
       }),
       'key-2': new Observable(observer => {
-        observer.next('text-2a');
-        textCaptor2.subscriber = observer;
-        return () => textCaptor2.destroyed = true;
+        textObservable2.subscriberCount++;
+        textObservable2.next = observer.next.bind(observer);
+        textObservable2.next('text-2a');
+        return () => textObservable2.subscriberCount--;
       }),
     };
 
@@ -112,52 +108,58 @@ describe('Text Pipe', () => {
     await fixture.whenStable();
 
     // Get text-1.
-    expect(fixture.debugElement.nativeElement.innerText).toEqual('text-1a');
-    expect(textCaptor1.destroyed).toBeUndefined();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(fixture.debugElement.nativeElement.textContent).toEqual('text-1a');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(0);
 
     // Update text-1.
-    textCaptor1.subscriber.next('text-1b');
+    textObservable1.next!('text-1b');
     await fixture.whenStable();
-    expect(fixture.debugElement.nativeElement.innerText).toEqual('text-1b');
-    expect(textCaptor1.destroyed).toBeUndefined();
-    expect(textCaptor2.destroyed).toBeUndefined();
-
-    // Update text-1.
-    textCaptor1.subscriber.next('text-1c');
-    await fixture.whenStable();
-    expect(fixture.debugElement.nativeElement.innerText).toEqual('text-1c');
-    expect(textCaptor1.destroyed).toBeUndefined();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(fixture.debugElement.nativeElement.textContent).toEqual('text-1b');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(0);
 
     // Change key to text-2.
     fixture.componentRef.setInput('key', '%key-2');
     await fixture.whenStable();
-    expect(fixture.debugElement.nativeElement.innerText).toEqual('text-2a');
-    expect(textCaptor1.destroyed).toBeTrue();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(fixture.debugElement.nativeElement.textContent).toEqual('text-2a');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
 
     // Update text-2.
-    textCaptor2.subscriber.next('text-2b');
+    textObservable2.next!('text-2b');
     await fixture.whenStable();
-    expect(fixture.debugElement.nativeElement.innerText).toEqual('text-2b');
-    expect(textCaptor1.destroyed).toBeTrue();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(fixture.debugElement.nativeElement.textContent).toEqual('text-2b');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
 
-    // Update text-2.
-    textCaptor2.subscriber.next('text-2c');
+    // Change key to text-1.
+    fixture.componentRef.setInput('key', '%key-1');
     await fixture.whenStable();
-    expect(fixture.debugElement.nativeElement.innerText).toEqual('text-2c');
-    expect(textCaptor1.destroyed).toBeTrue();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(fixture.debugElement.nativeElement.textContent).toEqual('text-1b');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
 
-    // Provide text from previous observable.
     // Update text-1.
-    textCaptor1.subscriber.next('text-1d');
+    textObservable1.next!('text-1c');
     await fixture.whenStable();
-    expect(fixture.debugElement.nativeElement.innerText).toEqual('text-2c');
-    expect(textCaptor1.destroyed).toBeTrue();
-    expect(textCaptor2.destroyed).toBeUndefined();
+    expect(fixture.debugElement.nativeElement.textContent).toEqual('text-1c');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
+
+    // Update text-2.
+    textObservable2.next!('text-2c');
+    await fixture.whenStable();
+    expect(fixture.debugElement.nativeElement.textContent).toEqual('text-1c');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
+
+    // Change key to text-2.
+    fixture.componentRef.setInput('key', '%key-2');
+    await fixture.whenStable();
+    expect(fixture.debugElement.nativeElement.textContent).toEqual('text-2c');
+    expect(textObservable1.subscriberCount).toBe(1);
+    expect(textObservable2.subscriberCount).toBe(1);
   });
 
   it('should not propagate error', async () => {

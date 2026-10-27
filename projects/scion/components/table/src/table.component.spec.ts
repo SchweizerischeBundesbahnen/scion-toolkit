@@ -23,7 +23,7 @@ import localeDeCH from '@angular/common/locales/de-CH';
 import localeEnCH from '@angular/common/locales/en-CH';
 import {MaybeSignal, SCI_LOCALE} from '@scion/components/common';
 import {Arrays} from '@scion/toolkit/util';
-import {provideTextProvider} from '@scion/components/text';
+import {provideTextProvider, SciTextProviderFn} from '@scion/components/text';
 
 describe('Table', () => {
 
@@ -200,6 +200,65 @@ describe('Table', () => {
         value.set('b');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['b']]);
+      });
+
+      it('should translate and cache texts', async () => {
+        const texts = {
+          'key1': signal('Text 1'),
+          'key2': signal('Text 2'),
+        };
+
+        const textProviderFn = jasmine.createSpy<SciTextProviderFn>().and.callFake(key => {
+          return texts[key as keyof typeof texts];
+        });
+
+        TestBed.configureTestingModule({
+          providers: [
+            provideTextProvider(textProviderFn),
+          ],
+        });
+
+        const data = signal([{string: '%key1'}, {string: '%key2'}, {string: '%key1'}, {string: '%key2'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addStringColumn(item => item.string),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(textProviderFn).toHaveBeenCalledWith('key1', {});
+        expect(textProviderFn).toHaveBeenCalledWith('key2', {});
+        expect(textProviderFn).toHaveBeenCalledTimes(2);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Text 1'],
+          ['Text 2'],
+          ['Text 1'],
+          ['Text 2'],
+        ]);
+        textProviderFn.calls.reset();
+
+        texts.key1.set('Text 1 (changed)');
+        await table.waitUntilStable();
+        expect(textProviderFn).not.toHaveBeenCalled();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Text 1 (changed)'],
+          ['Text 2'],
+          ['Text 1 (changed)'],
+          ['Text 2'],
+        ]);
+        textProviderFn.calls.reset();
+
+        texts.key2.set('Text 2 (changed)');
+        await table.waitUntilStable();
+        expect(textProviderFn).not.toHaveBeenCalled();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Text 1 (changed)'],
+          ['Text 2 (changed)'],
+          ['Text 1 (changed)'],
+          ['Text 2 (changed)'],
+        ]);
+        textProviderFn.calls.reset();
       });
     });
 
