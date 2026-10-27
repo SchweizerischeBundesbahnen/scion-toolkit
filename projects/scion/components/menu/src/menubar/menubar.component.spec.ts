@@ -772,8 +772,8 @@ describe('Menubar', () => {
     await fixture.whenStable();
 
     // Expect overflow.
-    const viewportClient = menu.viewport!.query(By.css('div.viewport-client'));
-    expect((viewportClient.nativeElement as HTMLElement).clientHeight).toBeGreaterThan((menu.viewport!.nativeElement as HTMLElement).clientHeight);
+    const viewport = menu.viewport!.nativeElement as HTMLElement;
+    expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
 
     // Expect menu viewport height to be 200.
     expect(menu.viewport!.nativeElement.getBoundingClientRect().height).toEqual(200);
