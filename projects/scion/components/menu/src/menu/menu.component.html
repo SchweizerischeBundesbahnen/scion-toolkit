@@ -74,14 +74,28 @@
                 <ng-container *ngTemplateOutlet="icon_template; context: {$implicit: menuItem}"/>
               }
 
-              <!-- Render label, accelerator and action toolbar. -->
               <div class="content">
+                <!-- Render icon inline if checkable. -->
+                @if (menuItem.iconLigature && menuItem.checked) {
+                  <sci-icon>{{menuItem.iconLigature()}}</sci-icon>
+                }
+
+                <!-- Render icon component inline if checkable. -->
+                @if (menuItem.iconComponent && menuItem.checked) {
+                  <sci-menu-item-icon>
+                    <ng-container *sciComponentOutlet="menuItem.iconComponent"/>
+                  </sci-menu-item-icon>
+                }
+
+                <!-- Render label. -->
                 <ng-container *ngTemplateOutlet="label_template; context: {$implicit: menuItem}"/>
 
+                <!-- Render accelerator. -->
                 @if (menuItem.accelerator) {
                   <span class="accelerator">{{menuItem.accelerator | sciFormatAccelerator}}</span>
                 }
 
+                <!-- Render actions. -->
                 @if (hasActionToolbar) {
                   <sci-toolbar-group [menuItems]="menuItem.actions!"
                                      [orientation]="'horizontal'"
