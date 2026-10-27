@@ -12,7 +12,7 @@ import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColu
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
-import {createDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
+import {ɵcreateDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
 import {FieldValidationDirective} from '../field-validation.directive';
 import {Product, ProductService, simulateError$} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
@@ -224,7 +224,7 @@ export default class SciTablePageComponent {
       const pageSize = this.datasourceForm.pageSize().value();
 
       untracked(() => {
-        const injector = createDestroyableInjector({parent: this._injector});
+        const injector = ɵcreateDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
         tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, bufferSize, pageSize}))));
       });

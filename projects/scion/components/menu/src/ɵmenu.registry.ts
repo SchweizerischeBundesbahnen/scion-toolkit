@@ -18,7 +18,7 @@ import {ɵSciMenuFactory} from './menu/ɵmenu.factory';
 import {ɵSciToolbarFactory} from './toolbar/ɵtoolbar.factory';
 import {sortMenuItems} from './menu-item-sorter';
 import {SciMenubarFactoryFn, SciMenuContribution, SciMenuContributionLocationLike, SciMenuContributionOptions, SciMenuContributionPositionLike, SciMenuFactoryFn, SciMenuFactoryFnLike, SciToolbarFactoryFn} from './menu-contribution.model';
-import {assertInInjectionContext, createDestroyableInjector} from '@scion/components/common';
+import {ɵassertInInjectionContext, ɵcreateDestroyableInjector} from '@scion/components/common';
 import {SciMenuAdapter} from './menu-adapter.model';
 import {SciMenuContributionInstantProvider} from './menu-contribution-instant.provider';
 import {ɵSciMenuService} from './ɵmenu.service';
@@ -107,7 +107,7 @@ export class ɵSciMenuRegistry implements SciMenuRegistry, SciMenuAdapter {
   public menuItems(location: Signal<`menu:${string}` | `toolbar:${string}` | `menubar:${string}`>, context: Signal<Map<string, unknown>>, options: {injector?: Injector; metadata?: {[key: string]: unknown}}): Signal<SciMenuItemLike[]> {
     assertNotInReactiveContext(this.menuItems, 'Call menuItems() in a non-reactive (non-tracking) context, such as within the untracked() function.');
     if (!options.injector) {
-      assertInInjectionContext(this.menuItems, 'Call menuItems() in an injection context. It may allocate resources that are not released until the injection context is destroyed.');
+      ɵassertInInjectionContext(this.menuItems, 'Call menuItems() in an injection context. It may allocate resources that are not released until the injection context is destroyed.');
     }
 
     const callingContextInjector = options.injector ?? inject(Injector);
@@ -148,7 +148,7 @@ export class ɵSciMenuRegistry implements SciMenuRegistry, SciMenuAdapter {
 
         // Inject dependency injection providers for the given menu context.
         const menuEnvironmentInjectionContextProviders = injectMenuInjectionContextProviders(context, {injector: callingContextInjector});
-        const menuEnvironmentInjectionContext = createDestroyableInjector({parent: inject(Injector), providers: menuEnvironmentInjectionContextProviders});
+        const menuEnvironmentInjectionContext = ɵcreateDestroyableInjector({parent: inject(Injector), providers: menuEnvironmentInjectionContextProviders});
 
         return computed(() => {
           const menuItems = (() => {
@@ -356,7 +356,7 @@ class MenuItemsCache {
 
     const cacheEntry = this._cacheByContribution().get(contribution)?.find(cacheEntry => Objects.isEqual(cacheEntry.context, context)) ?? (() => {
       const rootInjector = options.injector.get(ApplicationRef).injector;
-      const cacheEntryInjector = createDestroyableInjector({parent: rootInjector});
+      const cacheEntryInjector = ɵcreateDestroyableInjector({parent: rootInjector});
       const cacheEntry: CacheEntry = {
         injector: cacheEntryInjector,
         contribution,
