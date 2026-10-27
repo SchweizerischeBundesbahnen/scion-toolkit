@@ -14,7 +14,7 @@
  * @see https://github.com/ng-packagr/ng-packagr/blob/master/docs/secondary-entrypoints.md
  */
 export {coerceSignal, type MaybeSignal, toLazyObservable} from './signal.util';
-export {createDestroyableInjector, assertInInjectionContext} from './injector.util';
+export {ɵcreateDestroyableInjector, ɵassertInInjectionContext, ɵSingleActiveInjectorFactory} from './injector.util';
 export {type SciComponentDescriptor, SciComponentOutletDirective} from './component-outlet.directive';
 export {SciAttributesDirective} from './attributes.directive';
 export {type SciTemplateDescriptor} from './template-descriptor';

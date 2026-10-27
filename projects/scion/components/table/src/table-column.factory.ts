@@ -20,7 +20,7 @@ export interface SciTableColumnFactory<T> {
   addStringColumn(descriptor: SciStringColumnDescriptor<T>): this;
 
   /**
-   * Adds a number column to the table for displaying numeric values.
+   * Adds a column to the table for displaying numeric values.
    *
    * ### Tabular Figures
    * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
@@ -40,11 +40,15 @@ export interface SciTableColumnFactory<T> {
    *   font-variant-numeric: normal;
    * }
    * ```
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   addNumberColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<number | undefined>): this;
 
   /**
-   * Adds a number column to the table for displaying numeric values.
+   * Adds a column to the table for displaying numeric values.
    *
    * ### Tabular Figures
    * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
@@ -64,11 +68,15 @@ export interface SciTableColumnFactory<T> {
    *   font-variant-numeric: normal;
    * }
    * ```
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   addNumberColumn(value: (item: T) => MaybeSignal<number | undefined>): this;
 
   /**
-   * Adds a number column to the table for displaying numeric values.
+   * Adds a column to the table for displaying numeric values.
    *
    * ### Tabular Figures
    * Numbers are rendered using tabular (fixed-width) figures to align digits vertically in fonts with varying character widths. Has no effect on monospaced fonts.
@@ -91,14 +99,37 @@ export interface SciTableColumnFactory<T> {
    */
   addNumberColumn(descriptor: SciNumberColumnDescriptor<T>): this;
 
+  /**
+   * Adds a column to the table for displaying boolean values.
+   *
+   * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
   addBooleanColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<boolean | undefined>): this;
 
+  /**
+   * Adds a column to the table for displaying boolean values.
+   *
+   * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
   addBooleanColumn(value: (item: T) => MaybeSignal<boolean | undefined>): this;
 
+  /**
+   * Adds a column to the table for displaying boolean values.
+   *
+   * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   */
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
   /**
-   * Adds a temporal column to the table for displaying dates, times, or both.
+   * Adds a column to the table for displaying dates, times, or both.
    *
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
@@ -122,11 +153,15 @@ export interface SciTableColumnFactory<T> {
    *   font-variant-numeric: normal;
    * }
    * ```
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   addDateColumn(header: SciColumnHeaderLike, value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
 
   /**
-   * Adds a temporal column to the table for displaying dates, times, or both.
+   * Adds a column to the table for displaying dates, times, or both.
    *
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
@@ -150,11 +185,15 @@ export interface SciTableColumnFactory<T> {
    *   font-variant-numeric: normal;
    * }
    * ```
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   addDateColumn(value: (item: T) => MaybeSignal<SciDateLike | undefined>): this;
 
   /**
-   * Adds a temporal column to the table for displaying dates, times, or both.
+   * Adds a column to the table for displaying dates, times, or both.
    *
    * Supports ISO 8601 date/time strings, milliseconds since the UTC epoch, and `Date` objects.
    *
@@ -181,8 +220,14 @@ export interface SciTableColumnFactory<T> {
    */
   addDateColumn(descriptor: SciDateColumnDescriptor<T>): this;
 
+  /**
+   * Adds a column to the table for displaying custom content using a component.
+   */
   addComponentColumn(descriptor: SciComponentColumnDescriptor<T>): this;
 
+  /**
+   * Adds a column to the table for displaying custom content using a template.
+   */
   addTemplateColumn(descriptor: SciTemplateColumnDescriptor<T>): this;
 }
 
@@ -213,7 +258,11 @@ export interface SciStringColumnDescriptor<T> extends SciTableColumnDescriptor {
  */
 export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
   /**
-   * Specifies the number to display in this column.
+   * Specifies the number to display for an item.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   value: (item: T) => MaybeSignal<number | undefined>;
   /**
@@ -305,9 +354,27 @@ export interface SciNumberColumnDescriptor<T> extends SciTableColumnDescriptor {
   locale?: MaybeSignal<string>;
 }
 
+/**
+ * Configures a table column for displaying boolean values.
+ */
 export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor {
+  /**
+   * Specifies the boolean value to display for an item.
+   *
+   * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
   value: (item: T) => MaybeSignal<boolean | undefined>;
+  /**
+   * Controls whether the user can sort this column. Defaults to `true`.
+   */
   sortable?: boolean;
+  /**
+   * Controls whether the user can filter this column. Defaults to `true`.
+   */
   filterable?: boolean;
 }
 
@@ -316,9 +383,13 @@ export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor 
  */
 export interface SciDateColumnDescriptor<T> extends SciTableColumnDescriptor {
   /**
-   * Specifies the date value to display in this column.
+   * Specifies the date value to display for an item.
    *
    * Can be an ISO 8601 date/time string (e.g., `2026-10-06`, `2026-10-06T14:30:15Z`, `T14:30:15`), milliseconds since the UTC epoch, or a `Date` object.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
    */
   value: (item: T) => MaybeSignal<SciDateLike | undefined>;
   /**

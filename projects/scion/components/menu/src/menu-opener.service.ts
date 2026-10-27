@@ -15,7 +15,7 @@ import {coerceElement} from '@angular/cdk/coercion';
 import {provideMenuComponentRole, SciMenuComponent} from './menu/menu.component';
 import {dimension} from '@scion/components/dimension';
 import {UUID} from '@scion/toolkit/uuid';
-import {coerceSignal, createDestroyableInjector} from '@scion/components/common';
+import {coerceSignal, ɵcreateDestroyableInjector} from '@scion/components/common';
 import {ɵSciMenuService} from './ɵmenu.service';
 import {Arrays} from '@scion/toolkit/util';
 import {Translatable} from '@scion/components/text';
@@ -30,7 +30,7 @@ export class SciMenuOpener {
    * Opens the specified menu at the specified position.
    */
   public openMenu(menu: `menu:${string}` | SciMenuItemLike[], options: SciMenuOptions): SciMenuRef {
-    const injector = createDestroyableInjector({parent: this._injector});
+    const injector = ɵcreateDestroyableInjector({parent: this._injector});
     const menuItems = Array.isArray(menu) ? signal(menu) : this.menuService.menuItems(menu, options.context ?? new Map(), {injector, metadata: options.metadata});
 
     return runInInjectionContext(injector, () => {

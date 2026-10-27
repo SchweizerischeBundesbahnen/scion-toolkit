@@ -17,7 +17,7 @@ import {firstValueFrom, skip, timer} from 'rxjs';
 import {contributeMenu, SciMenuRef, ɵSciMenuService} from '@scion/components/menu';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {SciTextPipe} from '@scion/components/text';
-import {createDestroyableInjector} from '@scion/components/common';
+import {ɵcreateDestroyableInjector} from '@scion/components/common';
 import {SciColumnFilterBooleanLabelPipe} from './column-filter-boolean-label.pipe';
 
 @Component({
@@ -93,7 +93,7 @@ export class SciColumnFilterComponent<T> {
       return;
     }
 
-    const injector = createDestroyableInjector({parent: this._injector});
+    const injector = ɵcreateDestroyableInjector({parent: this._injector});
     runInInjectionContext(injector, () => {
       // Contribute menu items.
       contributeMenu('menu:column-filter', menu => menu
