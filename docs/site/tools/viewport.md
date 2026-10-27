@@ -166,108 +166,83 @@ sci-viewport {
 <details>
   <summary><strong>Using the SCION scrollbar in other viewport implementations</strong></summary>
 
-The module `@scion/components/viewport` exports the scrollbar component `<sci-scrollbar>` used internally by `<sci-viewport>`, allowing you to use it with other viewports as well, like for example with the `<cdk-virtual-scroll-viewport>` component of Angular CDK.
+The following example illustrates how to use `<sci-scrollbar>` in a `<cdk-virtual-scroll-viewport>` of Angular CDK.
 
-**The following example illustrates how to use `<sci-scrollbar>` in combination with `<cdk-virtual-scroll-viewport>`.**
-
-1. Install `@scion/components` using the NPM command-line tool: 
+1. Install `@scion/components` and required dependencies from NPM: 
    ```
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
 
-1. Import SCION Design Tokens in `styles.scss` to style the scrollbar:
+1. Import [SCION Design Tokens][link-scion-design-tokens] in `styles.scss` to provide required styles for the scrollbar.
    ```scss
    @use '@scion/components';
-   ```
-   See [SCION Design Tokens][link-scion-design-tokens] for more information.
-
-1. Import `SciScrollbarComponent` in the component where to use the scrollbar. 
-   Added lines are marked with `[+]`.
-
-   ```ts
-       import {Component} from '@angular/core';
-   [+] import {SciScrollableDirective, SciScrollbarComponent} from '@scion/components/viewport';
-   [+] import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
-    
-       @Component({
-         // other metadata skipped
-         imports: [
-   [+]     SciScrollableDirective,
-   [+]     SciScrollbarComponent,
-   [+]     CdkVirtualScrollViewport,
-   [+]     CdkFixedSizeVirtualScroll,
-   [+]     CdkVirtualForOf,
-         ],
-       })
-       export class YourComponent {
-       }
    ```
 
 1. Add the following code to the HTML template:
 
    ```html
-   <main>
-     <cdk-virtual-scroll-viewport #cdkViewport
-                                  [itemSize]="25"
-                                  sciScrollable #sciScrollable="sciScrollable">
-       <div *cdkVirtualFor="let item of items" [style.height.px]="25">
-         {{item}}
-       </div>
-     </cdk-virtual-scroll-viewport>
+   <cdk-virtual-scroll-viewport #cdkViewport [itemSize]="25">
+     <div *cdkVirtualFor="let item of items" [style.height.px]="25">
+       {{item}}
+     </div>
+   </cdk-virtual-scroll-viewport>
 
-     <!-- Vertical scrollbar rendered on top of the CDK viewport -->
-     @if (sciScrollable.isNativeScrollbarCropped()) {
-       <sci-scrollbar direction="vscroll" [viewport]="cdkViewport.getElementRef().nativeElement"/>
-     }
-   </main>
+   <!-- Add the scrollbar and bind it to the viewport -->
+   <sci-scrollbar direction="vscroll" [viewport]="cdkViewport.getElementRef().nativeElement"/>
    ```
-   
-   **Explanation:**
 
-    - Adds the `<cdk-virtual-scroll-viewport>` element as child element to the `<main>` element. Instead of the `<main>` element, you could use any other container element.
-    - Creates the local template variable `#cdkViewport` to hold the reference to the CDK viewport component.
-    - Decorates the CDK viewport with the `sciScrollable` directive, which crops native scrollbars if not rendered on top.
-    - Adds the vertical `<sci-scrollbar>` and connects it to the CDK viewport, but only if the native scrollbar is cropped.
-
-1. Add the following code to the component:
+1. Add the following code to the component class:
 
    ```ts
-   export class YourComponent {
-
-     public items: string[] = [];
-
-     constructor() {
-       for (let i = 0; i < 100000; i++) {
-         this.items.push(`${i}`);
-       }
-     }
+   import {Component} from '@angular/core';
+   import {CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
+   import {SciScrollbarComponent} from '@scion/components/viewport';
+   
+   @Component({
+     // metadata skipped
+     imports: [
+       CdkVirtualScrollViewport,
+       CdkFixedSizeVirtualScroll,
+       CdkVirtualForOf,
+       SciScrollbarComponent,
+     ],
+   })
+   export class TesteeComponent {
+     // Create an array with 100'000 items.
+     protected items = Array.from({length: 100_000}, (_, i) => `${i + 1}`);
    }
-   ````
-
-   The code snippet above populates the items array with 100'000 items.
+   ```
 
 1. Add the following code to the style template of the component:
 
    ```scss
-     @use '@scion/components/scrollbar' as sci-scrollbar;
-   
-     main {
-       display: grid; // stretches content vertically and horizontally
-       position: relative; // positioned anchor for the scrollbars
-       overflow: hidden; // hides native scrollbars (shifted out of the visible viewport area)
-       @include sci-scrollbar.scrollbar-hide-when-inactive(); // hide scrollbars when the user is not hovering the viewport.
-       height: 500px;
-   
-       > sci-scrollbar {
-         @include sci-scrollbar.scrollbar-position(); // positions scrollbars
+   :host {
+     > cdk-virtual-scroll-viewport {
+       // Prevent rendering native scrollbar.
+       scrollbar-width: none;
+       
+       // Define an anchor to position the scrollbar
+       anchor-name: --viewport;
+     
+       // Hide the scrollbar when not hovering over the viewport.
+       &:not(:hover) + sci-scrollbar {
+         opacity: 0;
        }
+     
+       // Style the viewport (illustrative).
+       width: 500px;
+       height: 300px;
+       border: 1px solid lightgray;
      }
+     
+     > sci-scrollbar {
+       position: absolute;
+       top: anchor(--viewport top);
+       right: anchor(--viewport right);
+       bottom: anchor(--viewport bottom);
+     }
+   }
    ```
-   
-   **Explanation:**
-
-    > The directive `sciScrollable` makes the host element, which is `<cdk-virtual-scroll-viewport>` in our example, natively scrollable. It shifts native scrollbars out of the visible area of the host element, unless they sit on top of the viewport, e.g., in OS X. This directive expects its host element to be the only child in document flow in its parent DOM element, which is `<main>` in our example. It makes the host element fill up the entire space (width and height set to 100%). The parent element should set `overflow: hidden` and `display: grid` or `display: flex` in combination with `flex: auto` to make the host element filling remaining space vertically and horizontally.
-
 </details>
 
 [menu-home]: /README.md

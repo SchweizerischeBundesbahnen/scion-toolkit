@@ -4,8 +4,14 @@
  * Positions scrollbars absolutely relative to the bounding box of the nearest positioned parent.
  *
  * Invoke from within the 'sci-scrollbar' selector.
+ *
+ * TODO [Angular 23] Marked for removal.
+ *
+ * @deprecated Since version 22.6.0. Marked for removal in 23.0.0. No replacement. Position the scrollbar using CSS properties (e.g., top, right, bottom, left) based on the scroll direction.
  */
 @mixin position() {
+  @warn 'Deprecated since 22.6.0. Marked for removal in 23.0.0. No replacement. Position the scrollbar using CSS properties (e.g., top, right, bottom, left) based on the scroll direction.';
+
   position: absolute;
 
   &.vertical {
@@ -28,8 +34,14 @@
  * - not scrolling (ensures the scrollbar to be visible even if dragging the thumb outside of the host element, :active pseudo-class not working in IE and Firefox)
  *
  * Invoke from within the viewport selector.
+ *
+ * TODO [Angular 23] Marked for removal.
+ *
+ * @deprecated Since version 22.6.0. Marked for removal in 23.0.0. No replacement. To hide the scrollbar, set its opacity to 0, e.g., when the viewport is not hovered.
  */
 @mixin hide-when-inactive() {
+  @warn 'Deprecated since 22.6.0. Marked for removal in 23.0.0. No replacement. To hide the scrollbar, set its opacity to 0, e.g., when the viewport is not hovered.';
+
   &:is(
     :not(:hover):not(:active), // Support "regular" host
     :host(:not(:hover):not(:active)) // Support "shadow" host

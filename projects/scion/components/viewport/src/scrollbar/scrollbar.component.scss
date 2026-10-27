@@ -31,6 +31,12 @@ $thumb-hover-size: 100%;
     display: none;
   }
 
+  // Ensure scrollbar is visible on hover or while scrolling.
+  // Prefixed with #sci-reset to override higher-specificity viewport rule to not hide the scrollbar if the viewport is not hovered.
+  &:is(:hover, .scrolling, #sci-reset) {
+    opacity: 1;
+  }
+
   // Enlarge thumb on hover or scroll.
   &:hover, &.scrolling {
     > div.thumb-handle > div.thumb {

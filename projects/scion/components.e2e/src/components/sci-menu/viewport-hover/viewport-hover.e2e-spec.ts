@@ -26,7 +26,7 @@ test.describe('sci-menu/viewport-hover', () => {
     await pagePO.menuViewport.hover();
     await expectScrollbar(pagePO.menuScrollbar).toDisplay({opacity: 1});
 
-    // Do not hover the viewport.
+    // Stop hovering viewport.
     await page.mouse.move(0, 0);
     await expectScrollbar(pagePO.menuScrollbar).toDisplay({opacity: 0});
 
@@ -39,7 +39,7 @@ test.describe('sci-menu/viewport-hover', () => {
     await page.waitForTimeout(500);
     await expectScrollbar(pagePO.menuScrollbar).toDisplay({opacity: 1});
 
-    // Scroll outside viewport.
+    // Stop hovering viewport.
     await page.mouse.move(0, 0);
     await page.waitForTimeout(500);
     await expectScrollbar(pagePO.menuScrollbar).toDisplay({opacity: 1});

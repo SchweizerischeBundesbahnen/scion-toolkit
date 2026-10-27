@@ -42,6 +42,7 @@
 <!-- Menu Items -->
 @if (isGroupExpanded()) {
   @if (maxHeight()) {
+    <!-- TODO [#384] Replace with sci-viewport -->
     <div class="viewport e2e-viewport" #viewport>
       <ng-container *ngTemplateOutlet="menu_items_template"/>
     </div>

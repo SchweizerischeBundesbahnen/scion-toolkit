@@ -22,6 +22,7 @@ import {CustomColumnPO} from './custom-column.po';
 import {BooleanColumnPO} from './boolean-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';
 import {CustomButtonColumnPO} from './custom-button-column.po';
+import {expectScrollbar} from '../sci-scrollbar/scrollbar-matcher';
 
 test.describe('sci-table', () => {
 
@@ -5008,6 +5009,76 @@ test.describe('sci-table', () => {
 
       // Expect vertical overflow.
       await expect(table.verticalScrollbar.locator).toBeVisible();
+    });
+
+    test('should not display scrollbars if no overflow', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setRowCount(1);
+      await tablePage.addColumn({name: 'column:1', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', type: 'string'});
+
+      await expectTable(table).not.toHaveVerticalOverflow();
+      await expectTable(table).not.toHaveHorizontalOverflow();
+
+      // Expect scrollbars not to display.
+      await expectScrollbar(table.verticalScrollbar.locator).not.toDisplay();
+      await expectScrollbar(table.horizontalScrollbar.locator).not.toDisplay();
+
+      // Hover the table.
+      await table.locator.hover();
+
+      // Expect scrollbars not to display.
+      await expectScrollbar(table.verticalScrollbar.locator).not.toDisplay();
+      await expectScrollbar(table.horizontalScrollbar.locator).not.toDisplay();
+    });
+
+    test('should display scrollbars when hovering table', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.setWidth(500);
+      await tablePage.setRowCount(1000);
+      await tablePage.addColumn({name: 'column:1', width: '300px', type: 'string'});
+      await tablePage.addColumn({name: 'column:2', width: '300px', type: 'string'});
+      await tablePage.addColumn({name: 'column:3', width: '300px', type: 'string'});
+
+      await expectTable(table).toHaveVerticalOverflow();
+      await expectTable(table).toHaveHorizontalOverflow();
+
+      // Expect scrollbars not to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 0});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 0});
+
+      // Hover the table.
+      await table.locator.hover();
+
+      // Expect scrollbars to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 1});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 1});
+
+      // Hover the table header.
+      await table.header.locator.hover();
+      await page.waitForTimeout(500);
+
+      // Expect scrollbars not to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 0});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 0});
+
+      // Hover the table.
+      await table.locator.hover();
+
+      // Expect scrollbars to be visible.
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 1});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 1});
+
+      // Stop hovering table.
+      await page.mouse.move(0, 0);
+      await expectScrollbar(table.verticalScrollbar.locator).toDisplay({opacity: 0});
+      await expectScrollbar(table.horizontalScrollbar.locator).toDisplay({opacity: 0});
     });
   });
 
