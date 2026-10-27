@@ -9,14 +9,14 @@
  */
 
 import {DestroyRef, inject, InjectionToken, Injector, runInInjectionContext} from '@angular/core';
-import {createDestroyableInjector} from './injector.util';
+import {ɵcreateDestroyableInjector, ɵSingleActiveInjectorFactory} from './injector.util';
 import {TestBed} from '@angular/core/testing';
 
-describe('Injector', () => {
+describe('ɵcreateDestroyableInjector', () => {
 
   it('should destroy injector when parent injector is destroyed', async () => {
     const parentInjector = Injector.create({providers: []});
-    const childInjector = createDestroyableInjector({providers: [], parent: parentInjector});
+    const childInjector = ɵcreateDestroyableInjector({providers: [], parent: parentInjector});
     const parentDestroyRef = parentInjector.get(DestroyRef);
     const childDestroyRef = childInjector.get(DestroyRef);
 
@@ -33,7 +33,7 @@ describe('Injector', () => {
 
     let providerDestroyed = false;
     const TOKEN = new InjectionToken<string>('TOKEN');
-    const childInjector = createDestroyableInjector({
+    const childInjector = ɵcreateDestroyableInjector({
       parent: parentInjector,
       providers: [
         {
@@ -56,7 +56,7 @@ describe('Injector', () => {
   it('should destroy providers when injector is destroyed', async () => {
     let providerDestroyed = false;
     const TOKEN = new InjectionToken<string>('TOKEN');
-    const injector = createDestroyableInjector({
+    const injector = ɵcreateDestroyableInjector({
       parent: TestBed.inject(Injector),
       providers: [
         {
@@ -77,7 +77,7 @@ describe('Injector', () => {
   });
 
   it('should not error when destroying already destroyed injector', async () => {
-    const injector = createDestroyableInjector({providers: [], parent: TestBed.inject(Injector)});
+    const injector = ɵcreateDestroyableInjector({providers: [], parent: TestBed.inject(Injector)});
 
     // Destroy injector.
     injector.destroy();
@@ -89,7 +89,7 @@ describe('Injector', () => {
   it('should use current injector as parent injector', async () => {
     const currentInjector = Injector.create({providers: []});
 
-    const injector = runInInjectionContext(currentInjector, () => createDestroyableInjector({providers: []}));
+    const injector = runInInjectionContext(currentInjector, () => ɵcreateDestroyableInjector({providers: []}));
     const currentDestroyRef = currentInjector.get(DestroyRef);
     const childDestroyRef = injector.get(DestroyRef);
 
@@ -117,5 +117,33 @@ describe('Injector', () => {
 
     // Expect error when destroying already destroyed injector.
     expect(() => parentInjector.destroy()).toThrow();
+  });
+});
+
+describe('ɵSingleActiveInjectorFactory', () => {
+
+  it('should destroy previous injector', async () => {
+    const parentInjector = Injector.create({providers: []});
+
+    const factory = new ɵSingleActiveInjectorFactory({parent: parentInjector});
+    const destroyRefInjector1 = factory.create().get(DestroyRef);
+    expect(destroyRefInjector1.destroyed).toBeFalse();
+
+    // Create new injector.
+    const destroyRefInjector2 = factory.create().get(DestroyRef);
+    expect(destroyRefInjector1.destroyed).toBeTrue();
+    expect(destroyRefInjector2.destroyed).toBeFalse();
+
+    // Create new injector.
+    const destroyRefInjector3 = factory.create().get(DestroyRef);
+    expect(destroyRefInjector1.destroyed).toBeTrue();
+    expect(destroyRefInjector2.destroyed).toBeTrue();
+    expect(destroyRefInjector3.destroyed).toBeFalse();
+
+    // Destroy parent injector.
+    parentInjector.destroy();
+    expect(destroyRefInjector1.destroyed).toBeTrue();
+    expect(destroyRefInjector2.destroyed).toBeTrue();
+    expect(destroyRefInjector3.destroyed).toBeTrue();
   });
 });

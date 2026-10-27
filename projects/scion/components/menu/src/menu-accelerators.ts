@@ -16,7 +16,7 @@ import {subscribeIn} from '@scion/toolkit/operators';
 import {Arrays} from '@scion/toolkit/util';
 import {ɵSciMenuService} from './ɵmenu.service';
 import {coerceElement} from '@angular/cdk/coercion';
-import {createDestroyableInjector} from '@scion/components/common';
+import {ɵcreateDestroyableInjector} from '@scion/components/common';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {injectMenuAcceleratorTargets, injectMenuContext} from './menu-environment/menu-environment-providers';
 
@@ -37,7 +37,7 @@ import {injectMenuAcceleratorTargets, injectMenuContext} from './menu-environmen
  * @experimental since 22.3.0; API and behavior may change in any version without notice.
  */
 export function installMenuAccelerators(location: `menu:${string}` | `toolbar:${string}` | `menubar:${string}`, options?: SciMenuAcceleratorOptions): Disposable {
-  const injector = createDestroyableInjector({parent: options?.injector ?? inject(Injector)});
+  const injector = ɵcreateDestroyableInjector({parent: options?.injector ?? inject(Injector)});
 
   return runInInjectionContext(injector, () => {
     const environmentContext = injectMenuContext();
@@ -78,7 +78,7 @@ export function ɵinstallMenuAccelerators(menuItems: SciMenuItemLike[], options?
     return {dispose: noop};
   }
 
-  const injector = createDestroyableInjector({parent: options?.injector ?? inject(Injector)});
+  const injector = ɵcreateDestroyableInjector({parent: options?.injector ?? inject(Injector)});
   const zone = injector.get(NgZone);
   const targets = coerceElements(options?.targets) ?? coerceElements(options?.environmentTargets) ?? [injector.get(DOCUMENT)];
   const onSelectFn = options?.onSelect ?? (menuItem => menuItem.onSelect?.());

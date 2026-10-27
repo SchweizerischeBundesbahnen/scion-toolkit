@@ -12,7 +12,7 @@ import {assertNotInReactiveContext, computed, effect, inject, Injector, untracke
 import {Disposable} from '@scion/toolkit/types';
 import {ɵSciMenuService} from './ɵmenu.service';
 import {SciMenubarContributionLocation, SciMenubarFactoryFn, SciMenuContributionLocation, SciMenuContributionLocationLike, SciMenuContributionOptions, SciMenuFactoryFn, SciMenuFactoryFnLike, SciToolbarContributionLocation, SciToolbarFactoryFn} from './menu-contribution.model';
-import {assertInInjectionContext, createDestroyableInjector} from '@scion/components/common';
+import {ɵassertInInjectionContext, ɵcreateDestroyableInjector} from '@scion/components/common';
 import {SciMenuContributionInstantProvider} from './menu-contribution-instant.provider';
 import {injectMenuContext} from './menu-environment/menu-environment-providers';
 
@@ -126,10 +126,10 @@ export function contributeMenu(location: `menu:${string}` | SciMenuContributionL
 export function contributeMenu(locationLike: string | SciMenuContributionLocationLike, factoryFn: SciMenuFactoryFnLike, options?: SciMenuContributionOptions): Disposable {
   assertNotInReactiveContext(contributeMenu, 'Call contributeMenu in a non-reactive (non-tracking) context, such as within the untracked() function.');
   if (!options?.injector) {
-    assertInInjectionContext(contributeMenu, 'Must be called within an injection context, or an explicit `Injector` passed via options. Disposes the contribution when the injection context is destroyed.');
+    ɵassertInInjectionContext(contributeMenu, 'Must be called within an injection context, or an explicit `Injector` passed via options. Disposes the contribution when the injection context is destroyed.');
   }
 
-  const injector = createDestroyableInjector({parent: options?.injector ?? inject(Injector)});
+  const injector = ɵcreateDestroyableInjector({parent: options?.injector ?? inject(Injector)});
   const location = typeof locationLike === 'string' ? {location: locationLike} as SciMenuContributionLocationLike : locationLike;
   const menuService = injector.get(ɵSciMenuService);
 

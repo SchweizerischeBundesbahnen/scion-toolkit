@@ -14,7 +14,7 @@ import {coerceElement} from '@angular/cdk/coercion';
 import {Objects} from '@scion/toolkit/util';
 import {fromResize$} from '@scion/toolkit/observable';
 import {observeIn, subscribeIn} from '@scion/toolkit/operators';
-import {assertInInjectionContext} from '@scion/components/common';
+import {ɵassertInInjectionContext} from '@scion/components/common';
 
 /**
  * Creates a signal observing the size of an element.
@@ -32,7 +32,7 @@ export function dimension(elementLike: HTMLElement | ElementRef<HTMLElement> | S
 export function dimension(elementLike: HTMLElement | ElementRef<HTMLElement> | Signal<HTMLElement | ElementRef<HTMLElement> | undefined>, options?: {injector?: Injector}): Signal<SciDimension | undefined> {
   assertNotInReactiveContext(dimension, 'Invoking `dimension` causes new subscriptions every time. Move `dimension` outside of the reactive context and read the signal value where needed.');
   if (!options?.injector) {
-    assertInInjectionContext(dimension, 'Must be called within an injection context, or an explicit `Injector` passed via options. Stops tracking the dimension when the injection context is destroyed.');
+    ɵassertInInjectionContext(dimension, 'Must be called within an injection context, or an explicit `Injector` passed via options. Stops tracking the dimension when the injection context is destroyed.');
   }
 
   const injector = options?.injector ?? inject(Injector);

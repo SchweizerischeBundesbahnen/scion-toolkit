@@ -10,7 +10,7 @@
 
 import {assertNotInReactiveContext, computed, DestroyableInjector, inject, Injector, isSignal, Signal, untracked} from '@angular/core';
 import {Translatable} from './text.provider';
-import {assertInInjectionContext, createDestroyableInjector, MaybeSignal} from '@scion/components/common';
+import {ɵassertInInjectionContext, ɵcreateDestroyableInjector, MaybeSignal} from '@scion/components/common';
 import {TextProviders} from './text-providers';
 
 /**
@@ -56,7 +56,7 @@ export function text<T extends Translatable | null | undefined>(translatable: Ma
 export function text(translatable: MaybeSignal<Translatable | undefined | null>, options?: {injector?: Injector; params?: Record<string, unknown> | Map<string, unknown>}): Signal<Translatable | undefined | null> {
   assertNotInReactiveContext(text, 'Call text() in a non-reactive (non-tracking) context, such as within the untracked() function.');
   if (!options?.injector) {
-    assertInInjectionContext(text, 'Call text() in an injection context. It may allocate resources that are not released until the injection context is destroyed.');
+    ɵassertInInjectionContext(text, 'Call text() in an injection context. It may allocate resources that are not released until the injection context is destroyed.');
   }
 
   const injector = options?.injector ?? inject(Injector);
@@ -71,7 +71,7 @@ export function text(translatable: MaybeSignal<Translatable | undefined | null>,
       // Destroy previous injection context, if any, to clean up allocated resources, like RxJS subscriptions.
       textInjector?.destroy();
       // Create new injection context.
-      textInjector = createDestroyableInjector({parent: injector});
+      textInjector = ɵcreateDestroyableInjector({parent: injector});
       // Call text providers.
       return textInjector.get(TextProviders).provide(keyOrText, {params: options?.params, injector: textInjector});
     });

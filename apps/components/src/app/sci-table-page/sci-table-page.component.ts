@@ -11,7 +11,7 @@ import {Component, computed, effect, ElementRef, inject, Injector, linkedSignal,
 import {SciTable, SciTableComponent, table, ɵillegaldatasource} from '@scion/components/table';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
-import {createDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
+import {ɵcreateDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
 import {contributeMenu, SciToolbarFactory} from '@scion/components/menu';
 import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
@@ -293,7 +293,7 @@ export default class SciTablePageComponent {
       const slowDatasource = this.settingsForm.slowDatasource().value();
 
       untracked(() => {
-        const injector = createDestroyableInjector({parent: this._injector});
+        const injector = ɵcreateDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
         table.set(runInInjectionContext(injector, () => this.createTable({slowDatasource: slowDatasource})));
       });
