@@ -27,4 +27,8 @@ export class CellPO {
   public async bounds(): Promise<DomRect> {
     return waitUntilStable(async () => fromRect(await this.locator.boundingBox()), {isStable: (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height});
   }
+
+  public async hover(): Promise<void> {
+    await this.locator.hover();
+  }
 }

@@ -11,7 +11,7 @@
 import {Component, computed, input, Signal, TemplateRef} from '@angular/core';
 import {SciTableCellLike, SciTableRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
-import {coerceSignal, SciComponentOutletDirective} from '@scion/components/common';
+import {coerceSignal, SciComponentOutletDirective, SciTooltipOnOverflowDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
 import {SciNumberPipe} from './number.pipe';
@@ -32,6 +32,9 @@ import {SciNumberPipe} from './number.pipe';
     SciIconComponent,
     SciComponentOutletDirective,
     SciNumberPipe,
+  ],
+  hostDirectives: [
+    SciTooltipOnOverflowDirective,
   ],
 })
 export class SciTableCellComponent<T> {
