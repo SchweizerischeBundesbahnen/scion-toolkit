@@ -8,9 +8,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {assertNotInReactiveContext, computed, DestroyableInjector, inject, Injector, isSignal, Signal, untracked} from '@angular/core';
+import {assertNotInReactiveContext, computed, inject, Injector, isSignal, Signal, untracked} from '@angular/core';
 import {Translatable} from './text.provider';
-import {ɵassertInInjectionContext, ɵcreateDestroyableInjector, MaybeSignal} from '@scion/components/common';
+import {MaybeSignal, ɵassertInInjectionContext} from '@scion/components/common';
 import {TextProviders} from './text-providers';
 
 /**
@@ -60,21 +60,12 @@ export function text(translatable: MaybeSignal<Translatable | undefined | null>,
   }
 
   const injector = options?.injector ?? inject(Injector);
-  // Use a separate injection context per translatable to clean up allocated resources when it changes.
-  let textInjector: DestroyableInjector | undefined;
+  const textProviders = injector.get(TextProviders);
 
-  // Call the text provider function.
+  // Call text providers.
   const translation = computed(() => {
     const keyOrText = isSignal(translatable) ? translatable() : translatable;
-
-    return untracked(() => {
-      // Destroy previous injection context, if any, to clean up allocated resources, like RxJS subscriptions.
-      textInjector?.destroy();
-      // Create new injection context.
-      textInjector = ɵcreateDestroyableInjector({parent: injector});
-      // Call text providers.
-      return textInjector.get(TextProviders).provide(keyOrText, {params: options?.params, injector: textInjector});
-    });
+    return untracked(() => textProviders.provide(keyOrText, {params: options?.params, injector}));
   });
 
   // Track translation in separate reactive context to not call the text provider function on translation change.
