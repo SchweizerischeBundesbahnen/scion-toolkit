@@ -47,7 +47,7 @@ export function provideTextProvider(textProviderFn: SciTextProviderFn | undefine
  * A text provider can be registered via {@link provideTextProvider} function.
  *
  * The function:
- * - Can call `inject` to get any required dependencies.
+ * - Can call `inject` to get required dependencies from the root injector.
  * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
  *
  * @param key - Translation key of the text.
