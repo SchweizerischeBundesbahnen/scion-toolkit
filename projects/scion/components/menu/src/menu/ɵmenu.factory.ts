@@ -53,10 +53,6 @@ export class ɵSciMenuFactory implements SciMenuFactory {
       onSelect: async () => await descriptor.onSelect() as boolean | undefined ?? descriptor.checked === undefined, // Returning `true` will close the popover. Non-checkable items close by default.
     }));
 
-    if (descriptor.checked && descriptor.icon) {
-      throw Error('[MenuDefinitionError] Cannot use `checked` and `icon` together.');
-    }
-
     return this;
   }
 
