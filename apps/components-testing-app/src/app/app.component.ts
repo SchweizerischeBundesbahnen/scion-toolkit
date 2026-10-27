@@ -49,6 +49,9 @@ export class AppComponent {
           )
           .addMenuItem({label: 'sci-scrollbar', onSelect: () => void router.navigate(['components/sci-scrollbar'])})
           .addMenuItem({label: 'sci-splitter', onSelect: () => void router.navigate(['components/sci-splitter'])})
+          .addMenu({label: 'sci-menu'}, menu => menu
+            .addMenuItem({label: 'Viewport Hover Test Page', onSelect: () => void router.navigate(['components/sci-menu/viewport-hover'])}),
+          )
           .addMenuItem({label: 'sci-icon', onSelect: () => void router.navigate(['components/sci-icon'])}),
         )
         .addMenu({label: 'Toolkit', menu: {filter: {focus: true}}}, menu => menu

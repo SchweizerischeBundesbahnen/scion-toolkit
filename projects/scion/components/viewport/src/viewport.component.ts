@@ -15,7 +15,8 @@ import {SciScrollbarComponent} from './scrollbar/scrollbar.component';
 import {concat, fromEvent, map, of, switchMap, tap, timer} from 'rxjs';
 import {CdkScrollable} from '@angular/cdk/scrolling';
 import {subscribeIn} from '@scion/toolkit/operators';
-import {toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {rxResource} from '@angular/core/rxjs-interop';
+import {startWith} from 'rxjs/operators';
 
 /**
  * Represents a viewport with slotted content (`<ng-content>`) used as scrollable content. By default, content is added to a CSS grid layout.
@@ -289,12 +290,17 @@ export class SciViewportComponent {
   private computeScrolling(viewport: Signal<ElementRef<HTMLElement>>): Signal<boolean> {
     const zone = inject(NgZone);
 
-    return toSignal(toObservable(viewport)
-      .pipe(
-        switchMap(viewport => fromEvent(viewport.nativeElement, 'scroll', {passive: true}).pipe(subscribeIn(fn => zone.runOutsideAngular(fn)))),
-        tap(event => this.scroll.emit(event)),
-        switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
-      ), {initialValue: false});
+    return rxResource({
+      defaultValue: false,
+      params: () => viewport().nativeElement,
+      stream: ({params: viewport}) => fromEvent(viewport, 'scroll', {passive: true})
+        .pipe(
+          tap(event => this.scroll.emit(event)),
+          switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
+          startWith(false),
+          subscribeIn(fn => zone.runOutsideAngular(fn)),
+        ),
+    }).value;
   }
 }
 

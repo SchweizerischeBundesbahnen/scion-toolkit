@@ -42,9 +42,9 @@ export class MenuPO {
     let itemIndex = 0;
     let groupIndex = 0;
 
-    const viewport = this.debugElement.children.find(child => child.name === 'sci-viewport');
+    const viewport = this.debugElement.children.find(child => child.name === 'div' && (child.nativeElement as HTMLElement).classList.contains('e2e-viewport'));
     const children = viewport?.children ?? this.debugElement.children;
-    const selector = viewport ? `${this._selector} > sci-viewport` : this._selector;
+    const selector = viewport ? `${this._selector} > div.e2e-viewport` : this._selector;
 
     return children.reduce((acc, child) => {
       const nativeElement = child.nativeElement as HTMLElement;
@@ -97,7 +97,7 @@ export class MenuPO {
   }
 
   public get viewport(): DebugElement | undefined {
-    return this.debugElement.query(By.css('sci-viewport'));
+    return this.debugElement.query(By.css('div.e2e-viewport'));
   }
 }
 

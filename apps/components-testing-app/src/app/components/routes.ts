@@ -32,6 +32,10 @@ export default [
     loadChildren: () => import('./sci-splitter/routes'),
   },
   {
+    path: 'sci-menu',
+    loadChildren: () => import('./sci-menu/routes'),
+  },
+  {
     path: 'sci-icon',
     loadChildren: () => import('./sci-icon/routes'),
   },
