@@ -344,12 +344,12 @@ class MenuItemsCache {
   });
 
   /**
-   * Gets the menu items of the given contribution used in the given context. Menu items are constructed via the passed factory function if absent (on cache miss).
+   * Gets the menu items of the given contribution used in the given context. Menu items are constructed via the passed computation function if absent (on cache miss).
    *
-   * Menu items are cached. Cached menu items are evicted when no longer used, tracked via a reference count based on the provided injector;
+   * Cached menu items are evicted when no longer used, tracked via a reference count based on the provided injector;
    * once all tracked injectors for a cache entry are destroyed, the cache entry is evicted.
    *
-   * The factory function is invoked in the root injection context. The injection context is destroyed when the last consumer (location) is disposed.
+   * The computation function is invoked in the root injection context. The injection context is destroyed when the last consumer (location) is disposed.
    */
   public computeIfAbsent(contribution: SciMenuContribution, context: Map<string, unknown>, computeFn: () => Signal<SciMenuItemLike[]>, options: {injector: Injector}): Signal<SciMenuItemLike[]> {
     assertNotInReactiveContext(this.computeIfAbsent, 'Call computeIfAbsent() in a non-reactive (non-tracking) context, such as within the untracked() function.');

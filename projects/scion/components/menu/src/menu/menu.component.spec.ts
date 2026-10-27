@@ -2482,9 +2482,8 @@ describe('Menu', () => {
         await fixture.whenStable();
 
         // Expect overflow.
-        const viewport = submenu.debugElement.query(By.css('sci-viewport'));
-        const viewportClient = viewport.query(By.css('div.viewport-client'));
-        expect((viewportClient.nativeElement as HTMLElement).clientHeight).toBeGreaterThan((viewport.nativeElement as HTMLElement).clientHeight);
+        const viewport = submenu.debugElement.query(By.css('div.e2e-viewport')).nativeElement as HTMLElement;
+        expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
 
         // Expect submenu viewport height to be 200.
         expect(submenu.viewport!.nativeElement.getBoundingClientRect().height).toEqual(200);

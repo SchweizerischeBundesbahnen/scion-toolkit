@@ -17,7 +17,7 @@ import {NgTemplateOutlet} from '@angular/common';
 import {SciMenuGroup, SciMenuItem, SciMenuItemLike} from '../menu.model';
 import {ɵSciMenuService} from '../ɵmenu.service';
 import {SciToolbarGroupComponent} from '../toolbar/toolbar-group.component';
-import {SciViewportComponent} from '@scion/components/viewport';
+import {SciScrollbarComponent} from '@scion/components/viewport';
 import {SciTextPipe, Translatable} from '@scion/components/text';
 import {SciAttributesDirective, SciComponentOutletDirective} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
@@ -26,9 +26,9 @@ import {SciMenuGroupLabelComponent} from './menu-group-label.component';
 import {SciMenuItemLabelComponent} from './menu-item-label.component';
 import {SciMenuItemIconComponent} from './menu-item-icon.component';
 import {PopoverRef} from './popover-ref';
-import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {filter, observeOn, raceWith, switchMap, take} from 'rxjs/operators';
-import {animationFrameScheduler, EMPTY, fromEvent} from 'rxjs';
+import {rxResource, takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
+import {filter, map, observeOn, raceWith, startWith, switchMap, take} from 'rxjs/operators';
+import {animationFrameScheduler, concat, EMPTY, fromEvent, of, timer} from 'rxjs';
 import {observeIn, subscribeIn} from '@scion/toolkit/operators';
 import {ɵinstallMenuAccelerators} from '../menu-accelerators';
 import {SciMenuFilterConfig} from './menu.factory';
@@ -44,7 +44,6 @@ import {SciMenuFilterConfig} from './menu.factory';
     SciMenuGroupComponent,
     SciMenuFilterComponent,
     SciToolbarGroupComponent,
-    SciViewportComponent,
     SciTextPipe,
     SciComponentOutletDirective,
     SciAttributesDirective,
@@ -54,6 +53,7 @@ import {SciMenuFilterConfig} from './menu.factory';
     SciMenuItemIconComponent,
     SciFormatAcceleratorPipe,
     NgTemplateOutlet,
+    SciScrollbarComponent,
   ],
   providers: [
     providePopoverRef(),
@@ -156,12 +156,12 @@ export class SciMenuComponent {
   private readonly _menuFilter = inject(MenuFilter);
   private readonly _popoverRef = inject(PopoverRef);
   private readonly _filterField = viewChild(SciMenuFilterComponent);
-  private readonly _viewport = viewChild(SciViewportComponent);
+  private readonly _viewport = viewChild<ElementRef<HTMLElement>>('viewport');
 
   protected readonly hasGlyphArea = computed(() => this.glyphArea() ?? requiresGlyphArea(this.menuItems()));
   protected readonly menuItemsFiltered = computed(() => this.menuItems().filter(menuItem => this.matchesFilter(menuItem)()));
   protected readonly popoverViewContainerRef = viewChild.required('popover_view_container_ref', {read: ViewContainerRef});
-  protected readonly scrolling = computed(() => this._viewport()?.scrolling());
+  protected readonly scrolling = this.computeScrolling();
   protected readonly activeSubmenuItem = linkedSignal<SciMenuItemLike[], {menuItem: SciMenuItem; element: HTMLElement} | null>({
     source: this.menuItemsFiltered, // Unset when filtered menu items change. Otherwise, popopver may lose anchor and render left-top of the page viewport.
     computation: () => null,
@@ -468,6 +468,24 @@ export class SciMenuComponent {
         };
       });
     });
+  }
+
+  /**
+   * Tracks whether currently scrolling the viewport.
+   */
+  private computeScrolling(): Signal<boolean> {
+    const zone = inject(NgZone);
+
+    return rxResource({
+      defaultValue: false,
+      params: () => this._viewport()?.nativeElement,
+      stream: ({params: viewport}) => fromEvent(viewport, 'scroll', {passive: true})
+        .pipe(
+          switchMap(() => concat(of(true), timer(150).pipe(map(() => false)))),
+          startWith(false),
+          subscribeIn(fn => zone.runOutsideAngular(fn)),
+        ),
+    }).value;
   }
 
   /**
