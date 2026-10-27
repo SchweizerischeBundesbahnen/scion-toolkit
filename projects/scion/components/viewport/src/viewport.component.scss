@@ -1,5 +1,3 @@
-@use '../scrollbar';
-
 :host {
   // Note: We do not position the internal viewport `DIV` absolutely to allow this component to adapt its size to the
   // width and height of its content. i.e., the viewport will grow/shrink with its content, allowing for implementing
@@ -13,7 +11,6 @@
   position: relative; // positioned anchor for scrollbars
   overflow: hidden;
   outline: none;
-  @include scrollbar.scrollbar-hide-when-inactive();
 
   > div.viewport {
     // On this element, we have installed the `sciScrollable` directive, making it natively scrollable and shifting native
@@ -29,10 +26,23 @@
     > div.viewport-client {
       display: grid; // public API
     }
+
+    // Hide scrollbar when not hovering the viewport.
+    &:not(:hover) ~ sci-scrollbar {
+      opacity: 0;
+    }
   }
 
   > sci-scrollbar {
     --sci-scrollbar-color: var(--sci-viewport-scrollbar-color);
-    @include scrollbar.scrollbar-position();
+    position: absolute;
+
+    &[direction="vscroll"] {
+      inset: 2px 1px 2px auto;
+    }
+
+    &[direction="hscroll"] {
+      inset: auto 2px 1px 2px;
+    }
   }
 }

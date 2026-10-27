@@ -9,8 +9,8 @@
  */
 
 import {test} from '../../../fixtures';
-import {expect} from '@playwright/test';
 import {ViewportHoverPagePO} from './viewport-hover-page.po';
+import {expectScrollbar} from '../../sci-scrollbar/scrollbar-matcher';
 
 test.describe('sci-viewport/hover', () => {
 
@@ -18,43 +18,149 @@ test.describe('sci-viewport/hover', () => {
     const pagePO = new ViewportHoverPagePO(page);
     await pagePO.navigate();
 
-    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'vertical'})).toHaveCSS('opacity', '0');
-    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'horizontal'})).toHaveCSS('opacity', '0');
+    await pagePO.setVerticalOverflow(true);
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+    await expectScrollbar(pagePO.horizontalScrollbar).not.toDisplay();
 
-    // WHEN hovering viewport
-    await pagePO.moveMouseOverViewport({viewport: 'vertical'});
-    // THEN expect scrollbar to show
-    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'vertical'})).toHaveCSS('opacity', '1');
-    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'horizontal'})).toHaveCSS('opacity', '1');
-    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'vertical'})).toBeVisible();
-    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'horizontal'})).not.toBeVisible();
+    // Hover the viewport.
+    await pagePO.viewport.hover();
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.horizontalScrollbar).not.toDisplay();
 
-    // WHEN not hovering viewport
-    await pagePO.moveMouseOutsideViewport({viewport: 'vertical'});
-    // THEN expect scrollbar not to show
-    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'vertical'})).toHaveCSS('opacity', '0');
-    await expect(pagePO.locateScrollbar({viewport: 'vertical', scrollbar: 'horizontal'})).toHaveCSS('opacity', '0');
+    // Do not hover the viewport.
+    await page.mouse.move(0, 0);
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+    await expectScrollbar(pagePO.horizontalScrollbar).not.toDisplay();
+
+    // Hover scroll thumb.
+    await pagePO.verticalScrollThumb.hover();
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.horizontalScrollbar).not.toDisplay();
+
+    // Click scroll thumb.
+    await page.mouse.down();
+    await page.waitForTimeout(500);
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.horizontalScrollbar).not.toDisplay();
+
+    // Scroll outside viewport.
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(500);
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.horizontalScrollbar).not.toDisplay();
+
+    // Release mouse.
+    await page.mouse.up();
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+    await expectScrollbar(pagePO.horizontalScrollbar).not.toDisplay();
   });
 
   test('should display horizontal scrollbar when hovering the viewport', async ({page}) => {
     const pagePO = new ViewportHoverPagePO(page);
     await pagePO.navigate();
 
-    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'vertical'})).toHaveCSS('opacity', '0');
-    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'horizontal'})).toHaveCSS('opacity', '0');
+    await pagePO.setHorizontalOverflow(true);
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+    await expectScrollbar(pagePO.verticalScrollbar).not.toDisplay();
 
-    // WHEN hovering viewport
-    await pagePO.moveMouseOverViewport({viewport: 'horizontal'});
-    // THEN expect scrollbar to show
-    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'vertical'})).toHaveCSS('opacity', '1');
-    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'horizontal'})).toHaveCSS('opacity', '1');
-    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'vertical'})).not.toBeVisible();
-    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'horizontal'})).toBeVisible();
+    // Hover the viewport.
+    await pagePO.viewport.hover();
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.verticalScrollbar).not.toDisplay();
 
-    // WHEN not hovering viewport
-    await pagePO.moveMouseOutsideViewport({viewport: 'horizontal'});
-    // THEN expect scrollbar not to show
-    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'vertical'})).toHaveCSS('opacity', '0');
-    await expect(pagePO.locateScrollbar({viewport: 'horizontal', scrollbar: 'horizontal'})).toHaveCSS('opacity', '0');
+    // Do not hover the viewport.
+    await page.mouse.move(0, 0);
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+    await expectScrollbar(pagePO.verticalScrollbar).not.toDisplay();
+
+    // Hover scroll thumb.
+    await pagePO.horizontalScrollThumb.hover();
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.verticalScrollbar).not.toDisplay();
+
+    // Click scroll thumb.
+    await page.mouse.down();
+    await page.waitForTimeout(500);
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.verticalScrollbar).not.toDisplay();
+
+    // Scroll outside viewport.
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(500);
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.verticalScrollbar).not.toDisplay();
+
+    // Release mouse.
+    await page.mouse.up();
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+    await expectScrollbar(pagePO.verticalScrollbar).not.toDisplay();
+  });
+
+  test('should display scrollbars when hovering the viewport', async ({page}) => {
+    const pagePO = new ViewportHoverPagePO(page);
+    await pagePO.navigate();
+
+    await pagePO.setVerticalOverflow(true);
+    await pagePO.setHorizontalOverflow(true);
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+
+    // Hover the viewport.
+    await pagePO.viewport.hover();
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 1});
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 1});
+
+    // Do not hover the viewport.
+    await page.mouse.move(0, 0);
+    await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+    await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+
+    await test.step('Vertical Scroll Thumb', async () => {
+      // Hover vertical scroll thumb.
+      await pagePO.verticalScrollThumb.hover();
+      await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 1});
+      await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+
+      // Click vertical scroll thumb.
+      await page.mouse.down();
+      await page.waitForTimeout(500);
+      await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 1});
+      await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+
+      // Scroll outside viewport.
+      await page.mouse.move(0, 0);
+      await page.waitForTimeout(500);
+      await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 1});
+      await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+
+      // Release mouse.
+      await page.mouse.up();
+      await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+      await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+    });
+
+    await test.step('Horizontal Scroll Thumb', async () => {
+      // Hover vertical scroll thumb.
+      await pagePO.horizontalScrollThumb.hover();
+      await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+      await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 1});
+
+      // Click vertical scroll thumb.
+      await page.mouse.down();
+      await page.waitForTimeout(500);
+      await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+      await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 1});
+
+      // Scroll outside viewport.
+      await page.mouse.move(0, 0);
+      await page.waitForTimeout(500);
+      await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+      await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 1});
+
+      // Release mouse.
+      await page.mouse.up();
+      await expectScrollbar(pagePO.verticalScrollbar).toDisplay({opacity: 0});
+      await expectScrollbar(pagePO.horizontalScrollbar).toDisplay({opacity: 0});
+    });
   });
 });
