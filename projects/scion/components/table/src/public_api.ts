@@ -10,9 +10,8 @@
 
 export {table, type SciTableColumnFactoryFn} from './table.factory';
 export {SciTableComponent} from './table.component';
-export {type SciTable, type SciTableDescriptor, type SciTableRowActionFactoryFn, type SciTableColumnType, type SciTableEvent, type SciTableCellContext, type SciColumnHeaderLike} from './table.model';
+export {type SciTable, type SciTableDescriptor, type SciTableRowActionFactoryFn, type SciTableColumnType, type SciTableEvent, type SciTableCellContext, type SciColumnHeaderLike, type SciDateLike, type SciEnumValueLike, type SciEnumColumnValues} from './table.model';
 export {type SciTableRowBindingFactoryFn, type SciTableRowBindingFactory, provideTableRowBinding} from './table-row-binding';
 export {type SciTableDataLoaderFn, type SciTablePageResponse, type SciTablePageRequest, type SciTableColumnFilter, type SciTableSortCriterion, ɵillegaldatasource} from './table-datasource';
-export {type SciTableColumnFactory, type SciTableColumnDescriptor, type SciStringColumnDescriptor, type SciNumberColumnDescriptor, type SciBooleanColumnDescriptor, type SciDateColumnDescriptor, type SciComponentColumnDescriptor, type SciTemplateColumnDescriptor, type SciTableColumnSortComparatorFn, type SciTableColumnFilterMatcherFn} from './table-column.factory';
+export {type SciTableColumnFactory, type SciTableColumnDescriptor, type SciStringColumnDescriptor, type SciNumberColumnDescriptor, type SciBooleanColumnDescriptor, type SciEnumColumnDescriptor, type SciDateColumnDescriptor, type SciComponentColumnDescriptor, type SciTemplateColumnDescriptor, type SciTableColumnSortComparatorFn, type SciTableColumnFilterMatcherFn} from './table-column.factory';
 export {type SciTableStorage, provideTableStorage} from './table-storage';
-export {type SciDateLike} from './table.model';

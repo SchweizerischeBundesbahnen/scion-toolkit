@@ -5,7 +5,10 @@ import {ColumnPO} from './column.po';
 
 export class CellPO {
 
+  public readonly icon: Locator;
+
   constructor(public locator: Locator, public row: RowPO, public column: ColumnPO) {
+    this.icon = this.locator.locator('sci-icon');
   }
 
   public textContent(): Promise<string | null> {

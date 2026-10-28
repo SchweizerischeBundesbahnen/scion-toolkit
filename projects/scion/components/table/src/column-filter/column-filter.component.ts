@@ -8,17 +8,18 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, debounced, effect, ElementRef, inject, Injector, input, runInInjectionContext, signal, untracked, viewChild} from '@angular/core';
+import {Component, computed, debounced, effect, ElementRef, inject, Injector, input, Provider, runInInjectionContext, signal, untracked, viewChild} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {SciTableColumnLike} from '../table.model';
+import {SciEnumColumn, SciEnumValueLike, SciTableColumnLike} from '../table.model';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciIconComponent} from '@scion/components/icon';
 import {firstValueFrom, skip, timer} from 'rxjs';
 import {contributeMenu, SciMenuRef, ɵSciMenuService} from '@scion/components/menu';
 import {toObservable} from '@angular/core/rxjs-interop';
+import {SciTooltipOnOverflowDirective, TOOLTIP_ON_OVERFLOW_DIRECTIVE_SOURCE_ELEMENT, ɵcreateDestroyableInjector} from '@scion/components/common';
+import {SciEnumLabelPipe} from './enum-label.pipe';
+import {UUID} from '@scion/toolkit/uuid';
 import {SciTextPipe} from '@scion/components/text';
-import {ɵcreateDestroyableInjector} from '@scion/components/common';
-import {SciColumnFilterBooleanLabelPipe} from './column-filter-boolean-label.pipe';
 
 @Component({
   selector: 'sci-column-filter',
@@ -27,50 +28,58 @@ import {SciColumnFilterBooleanLabelPipe} from './column-filter-boolean-label.pip
   imports: [
     FormsModule,
     SciIconComponent,
+    SciEnumLabelPipe,
     SciTextPipe,
-    SciColumnFilterBooleanLabelPipe,
+  ],
+  hostDirectives: [
+    SciTooltipOnOverflowDirective,
   ],
   host: {
     '[attr.data-column]': 'column().name',
     '[attr.data-disabled]': `!column().filterable() ? '' : null`,
     '(click)': 'column().filterable() && onFilterClick()',
   },
+  providers: [
+    configureTooltip(),
+  ],
 })
 export class SciColumnFilterComponent<T> {
 
   public readonly column = input.required<SciTableColumnLike<T>>();
+  public readonly inputElement = viewChild<ElementRef<HTMLElement>>('input'); // public visibility required to be accessible in `configureTooltip` function
 
-  protected readonly filter = signal<string | boolean | number | null>(null);
-  protected readonly input = viewChild<ElementRef<HTMLElement>>('input');
+  protected readonly filter = signal<string | number | boolean | SciEnumValueLike | SciEnumValueLike[] | null>(null);
 
   private readonly _table = inject(ɵSCI_TABLE);
   private readonly _menuService = inject(ɵSciMenuService);
   private readonly _injector = inject(Injector);
   private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
 
-  private _menu: SciMenuRef | undefined;
+  protected menu: SciMenuRef | undefined;
 
   constructor() {
     this.bindToModel();
   }
 
   protected onFilterClick(): void {
-    if (this.column().type === 'boolean') {
-      this.toggleBooleanMenu();
+    if (this.column().type === 'enum') {
+      this.toggleEnumChooser();
     }
-    this.input()!.nativeElement.focus();
+    else {
+      this.inputElement()!.nativeElement.focus();
+    }
   }
 
   protected onReset(event: PointerEvent): void {
     this.filter.set(null);
-    this.input()!.nativeElement.focus();
+    this.inputElement()!.nativeElement.focus();
     event.stopPropagation(); // prevent opening menu
   }
 
   private bindToModel(): void {
     const filterDebounced = debounced(computed(() => trim(this.filter())), async value => {
-      // Debounce only if not empty.
-      if (value !== null && typeof value !== 'boolean') {
+      // Debounce only if not empty and not an enum.
+      if (value !== null && this.column().type !== 'enum') {
         await firstValueFrom(timer(200));
       }
     });
@@ -86,44 +95,77 @@ export class SciColumnFilterComponent<T> {
     });
   }
 
-  private toggleBooleanMenu(): void {
+  private toggleEnumChooser(): void {
     // Close menu if already opened.
-    if (this._menu) {
-      this._menu.close();
+    if (this.menu) {
+      this.menu.close();
       return;
     }
 
+    const column = this.column() as SciEnumColumn;
     const injector = ɵcreateDestroyableInjector({parent: this._injector});
+
     runInInjectionContext(injector, () => {
+      const menuId = `menu:column-filter-${UUID.randomUUID()}` as const;
+
       // Contribute menu items.
-      contributeMenu('menu:column-filter', menu => menu
-        .addMenuItem({label: '%scion.components.yes.value', attributes: {'data-option': 'true'}, onSelect: () => this.filter.set(true)})
-        .addMenuItem({label: '%scion.components.no.value', attributes: {'data-option': 'false'}, onSelect: () => this.filter.set(false)}),
-      );
+      contributeMenu(menuId, menu => {
+        const multi = column.filterable() === 'multi';
+
+        column.enumeration().forEach(entry => menu.addMenuItem({
+          label: entry.label,
+          checked: multi ? computed(() => (this.filter() as SciEnumValueLike[] | null)?.includes(entry.value) ?? false) : undefined,
+          icon: column.format.filter.icon ? entry.icon : undefined,
+          attributes: {'data-option': `${entry.value}`},
+          onSelect: () => this.filter.update(filter => {
+            if (multi) {
+              const values = new Set<SciEnumValueLike>(filter as SciEnumValueLike[] | null ?? []);
+              values.has(entry.value) ? values.delete(entry.value) : values.add(entry.value);
+              return values.size ? Array.from(values) : null;
+            }
+            else {
+              return entry.value;
+            }
+          }),
+        }));
+      });
 
       // Open menu.
-      this._menu = this._menuService.open('menu:column-filter', {
+      this.menu = this._menuService.open(menuId, {
         anchor: this._host,
         minWidth: `${this._host.offsetWidth}px`,
+        maxHeight: '300px',
+        cssClass: 'e2e-filter',
+        filter: column.enumeration().length >= 8 ? {focus: true} : false,
+        maxWidth: `max(300px, ${this._host.offsetWidth}px)`, // overflow long enumeration labels
         offset: {y: -1},
       });
 
       // Close menu when start resizing a column. By default, closes the menu only on mouse up.
       toObservable(this._table().resizing)
         .pipe(skip(1))
-        .subscribe(() => this._menu?.close());
+        .subscribe(() => this.menu?.close());
 
-      this._menu.onClose(() => {
+      this.menu.onClose(() => {
         injector.destroy();
         // Restore focus manually as it is not restored automatically since opening the popover inside Shadow DOM.
         // TODO [menu] Consider restore focus manually in Menu API due to restriction in shadow DOM.
-        this.input()!.nativeElement.focus();
-        this._menu = undefined;
+        this.inputElement()!.nativeElement.focus();
+        this.menu = undefined;
       });
     });
   }
 }
 
-function trim(value: string | number | boolean | null): string | number | boolean | null {
+function trim(value: string | number | boolean | SciEnumValueLike | SciEnumValueLike[] | null): string | number | boolean | SciEnumValueLike | SciEnumValueLike[] | null {
   return typeof value === 'string' ? value.trim() || null : value;
+}
+
+function configureTooltip(): Provider[] {
+  return [
+    {
+      provide: TOOLTIP_ON_OVERFLOW_DIRECTIVE_SOURCE_ELEMENT,
+      useFactory: () => inject(SciColumnFilterComponent).inputElement,
+    },
+  ];
 }

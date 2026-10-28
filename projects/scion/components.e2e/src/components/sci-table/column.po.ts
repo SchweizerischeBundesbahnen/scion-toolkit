@@ -14,6 +14,8 @@ import {ColumnSplitterPO, TablePO} from './table.po';
 import {OneOf, RequireOne} from '@scion/toolkit/types';
 import {CellPO} from './cell.po';
 import {ColumnHeaderPO} from './column-header.po';
+import {SciEnumValueLike} from '@scion/components/table';
+import {Arrays} from '@scion/toolkit/util';
 
 export class ColumnPO {
 
@@ -56,11 +58,14 @@ export class ColumnPO {
     await this.columnFilter.locator('button.e2e-clear').click();
   }
 
-  public async filter(value: string | number | boolean): Promise<void> {
-    if (typeof value === 'boolean') {
+  public async filter(value: string | number | boolean | SciEnumValueLike | SciEnumValueLike[]): Promise<void> {
+    const input = this.columnFilter.locator('input');
+    if ((await input.getAttribute('type')) === 'button') {
       await this.columnFilter.locator('input[type="button"]').click();
       await this.table.locator.locator('sci-menu').waitFor({state: 'visible'});
-      await this.table.locator.locator(`sci-menu button[data-option="${value}"]`).click();
+      for (const enumValue of Arrays.coerce(value)) {
+        await this.table.locator.locator(`sci-menu button[data-option="${enumValue}"]`).click();
+      }
     }
     else {
       await this.columnFilter.locator('input').fill(`${value}`);
