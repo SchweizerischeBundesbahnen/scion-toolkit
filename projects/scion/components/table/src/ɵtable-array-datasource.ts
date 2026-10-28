@@ -172,6 +172,11 @@ function compareRows<T>(row1: DatasetRow<T>, row2: DatasetRow<T>, sortCriteria: 
       return -1;
     }
 
+    // Prevent calling comparator for value columns where both values are undefined. Note that component and template columns have no value.
+    if (value1 === undefined && value2 === undefined && 'value' in cell1.column) {
+      return 0;
+    }
+
     const comparison = cell1.column.compare({item: row1.item, value: value1}, {item: row2.item, value: value2});
     if (comparison !== 0) {
       return criterion.direction === 'asc' ? comparison : -comparison;
