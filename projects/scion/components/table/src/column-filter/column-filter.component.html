@@ -1,15 +1,16 @@
-@if (column().filterable()) {
+@let column = this.column();
+@if (column.filterable()) {
   @let active = filter() !== null && filter() !== '';
 
   <sci-icon class="filter e2e-filter" [class.active]="active">scion.filter</sci-icon>
 
-  @switch (column().type) {
+  @switch (column.type) {
     @case ('number') {
       <input [(ngModel)]="filter" type="number" #input/>
     }
-    @case ('boolean') {
-      <input [ngModel]="(filter() | sciColumnFilterBooleanLabel | sciText)()" type="button" #input>
-      <sci-icon class="chevron">scion.chevron_down</sci-icon>
+    @case ('enum') {
+      <input [ngModel]="(filter() | sciEnumLabel:column.enumeration())()" type="button" #input>
+      <sci-icon class="chevron">{{menu ? 'scion.chevron_up' : 'scion.chevron_down'}}</sci-icon>
     }
     @default {
       <input [(ngModel)]="filter" type="text" #input/>
@@ -17,7 +18,7 @@
   }
 
   @if (active) {
-    <button class="clear e2e-clear" (click)="onReset($event)">
+    <button class="clear e2e-clear" (click)="onReset($event)" [attr.title]="('%scion.components.clear.tooltip' | sciText)()">
       <sci-icon>scion.clear</sci-icon>
     </button>
   }

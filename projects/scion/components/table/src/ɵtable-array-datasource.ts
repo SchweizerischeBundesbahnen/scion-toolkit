@@ -9,13 +9,14 @@
  */
 
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from './table-datasource';
-import {SciTableColumn, SciTableColumnLike, SciTableColumnType} from './table.model';
+import {SciTableColumn, SciTableColumnLike} from './table.model';
 import {computed, inject, runInInjectionContext, signal, Signal, untracked} from '@angular/core';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {Objects} from '@scion/toolkit/util';
+import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {SciDateValue} from './table-date-column.model';
+import {SciEnumValue} from './table-enum-column.model';
 import {ɵSingleActiveInjectorFactory} from '@scion/components/common';
 
 export function arrayDatasource<T>(data: Signal<T[]>, columns: Signal<SciTableColumnLike<T>[]>): SciTableDataLoaderFn<T> {
@@ -82,7 +83,7 @@ class Dataset<T> {
 
       // PERF: Do not track signals inside `Array.sort` to avoid Angular signal tracking overhead as the comparator runs repeatedly, degrading performance otherwise.
       return untracked(() => rows
-        .filter(row => matchesRow(row, columnFilters) && matchesGlobalFilter(row, tableFilter))
+        .filter(row => matchesRow(row, columnFilters, {coerceEnumValueToArray: true}) && matchesGlobalFilter(row, tableFilter, {coerceEnumValueToArray: false}))
         .sort((a, b) => compareRows(a, b, sortCriteria))
         .map(row => row.item));
     });
@@ -103,24 +104,24 @@ interface DatasetRow<T> {
 
 interface DatasetCell {
   column: SciTableColumn;
-  value: () => string | number | boolean | SciDateValue | undefined;
+  value: () => string | number | boolean | SciDateValue | SciEnumValue | undefined;
 }
 
 /**
  * Tests whether a row matches the given global filter.
  */
-function matchesGlobalFilter<T>(row: DatasetRow<T>, filter?: string): boolean {
+function matchesGlobalFilter<T>(row: DatasetRow<T>, filter: string | undefined, options: {coerceEnumValueToArray: boolean}): boolean {
   if (!filter?.trim()) {
     return true;
   }
 
   for (const cell of row.cells.values()) {
-    const text = coerceFilterText(filter, {to: cell.column.type});
+    const text = cell.column.type === 'number' ? toNumber(filter) : filter;
     if (text === undefined) {
       continue;
     }
 
-    if (matchesRow(row, [{text, columnName: cell.column.name} satisfies SciTableColumnFilter])) {
+    if (matchesRow(row, [{text, columnName: cell.column.name} satisfies SciTableColumnFilter], options)) {
       return true;
     }
   }
@@ -131,7 +132,7 @@ function matchesGlobalFilter<T>(row: DatasetRow<T>, filter?: string): boolean {
 /**
  * Tests whether a row matches the given column filters.
  */
-function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[]): boolean {
+function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[], options: {coerceEnumValueToArray: boolean}): boolean {
   if (!columnFilters.length) {
     return true;
   }
@@ -142,7 +143,8 @@ function matchesRow<T>(row: DatasetRow<T>, columnFilters: SciTableColumnFilter[]
       return false;
     }
 
-    if (!cell.column.matches(columnFilter.text, {item: row.item, value: cell.value()})) {
+    const filter = cell.column.type === 'enum' && options.coerceEnumValueToArray ? Arrays.coerce(columnFilter.text) : columnFilter.text;
+    if (!cell.column.matches(filter, {item: row.item, value: cell.value()})) {
       return false;
     }
   }
@@ -207,27 +209,11 @@ function markAsArrayDatasource<TABLE_DATA_LOADER extends SciTableDataLoaderFn<un
 const ARRAY_DATASOURCE_MARKER = Symbol('ARRAY_DATASOURCE_HINT');
 
 /**
- * Coerces the given filter text into the specified column data type.
+ * Converts the given string to a number, or `undefined` if it cannot be parsed.
  */
-function coerceFilterText(text: string, options: {to: SciTableColumnType}): string | number | boolean | undefined {
-  switch (options.to) {
-    case 'number': {
-      const number = Number.parseFloat(text);
-      return !Number.isNaN(number) ? number : undefined;
-    }
-    case 'boolean': {
-      if (text === 'true' || text === '1') {
-        return true;
-      }
-      if (text === 'false' || text === '0') {
-        return false;
-      }
-      return undefined;
-    }
-    default: {
-      return text;
-    }
-  }
+function toNumber(numberLike: string): number | undefined {
+  const number = Number.parseFloat(numberLike);
+  return !Number.isNaN(number) ? number : undefined;
 }
 
 /**

@@ -12,6 +12,7 @@ import {ComponentFixture} from '@angular/core/testing';
 import {OneOf, RequireOne} from '@scion/toolkit/types';
 import {Arrays} from '@scion/toolkit/util';
 import {waitUntilStable} from './testing/testing.util';
+import {SciEnumValueLike} from './table.model';
 
 export class TablePO {
 
@@ -94,12 +95,14 @@ export class ColumnPO {
   private readonly _filterElement: HTMLElement | null;
 
   public readonly header: ColumnHeaderPO | null;
+  public readonly filterInput: HTMLInputElement | null;
 
   constructor(public name: `column:${string}`, public index: number, private _table: TablePO) {
     const columnHeaderElement = this._table.element.querySelector<HTMLElement>(`sci-column-header[data-column="${this.name}"]`);
     this.header = columnHeaderElement && new ColumnHeaderPO(columnHeaderElement);
     this._columnElement = this._table.element.querySelector(`sci-table-column[data-column="${this.name}"]`)!;
     this._filterElement = this._table.element.querySelector(`sci-column-filter[data-column="${this.name}"]`);
+    this.filterInput = this._filterElement?.querySelector<HTMLInputElement>('input') ?? null;
   }
 
   public get width(): number {
@@ -119,24 +122,26 @@ export class ColumnPO {
     await this._table.waitUntilStable();
   }
 
-  public async filter(value: string | number | boolean | null): Promise<void> {
+  public async filter(value: string | number | boolean | SciEnumValueLike | SciEnumValueLike[] | null): Promise<void> {
     if (!this._filterElement) {
       throw Error('[PageObjectError] Table without column filters cannot be filtered.');
     }
 
+    const input = this.filterInput!;
     if (value === null) {
       this._filterElement.querySelector<HTMLButtonElement>('button.e2e-clear')!.click();
     }
-    else if (typeof value === 'boolean') {
-      // TODO [dwi] Replace with menu API
-      this._filterElement.querySelector<HTMLButtonElement>('input[type="button"]')!.click();
-      const menu = (await waitUntilStable(() => this._table.element.querySelector<HTMLElement>('sci-menu')))!;
-      menu.querySelector<HTMLButtonElement>(`button[data-option="${value}"]`)!.click();
+    else if (input.type === 'button') {
+      const menu = new EnumFilterMenuPO(this._table);
+      if (!menu.isOpen()) {
+        input.click();
+        await menu.waitForMenu();
+      }
+      menu.select(Arrays.coerce(value));
     }
     else {
-      const filterInput = this._filterElement.querySelector<HTMLInputElement>('input')!;
-      filterInput.value = `${value}`;
-      filterInput.dispatchEvent(new Event('input'));
+      input.value = `${value}`;
+      input.dispatchEvent(new Event('input'));
     }
 
     // Wait for debounce.
@@ -243,8 +248,18 @@ export class CellPO {
   }
 
   public get value(): string | undefined {
-    // Strip non-breaking spaces (NBSP) and narrow non-breaking spaces (NNBSP)
-    return this.element.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim() || this.element.getAttribute('data-value') || ''; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+    const {label, value} = this.data ?? {};
+    return label || value || ''; // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+  }
+
+  public get data(): {label: string; icon: string | null; value: string | null; iconTooltip: string | null} | undefined {
+    return {
+      // Strip non-breaking spaces (NBSP) and narrow non-breaking spaces (NNBSP)
+      label: this.element.textContent.replace(/[\u00a0\u202f]+/g, ' ').trim(),
+      value: this.element.getAttribute('data-value'),
+      icon: this.element.querySelector('sci-icon')?.getAttribute('icon') ?? null,
+      iconTooltip: this.element.querySelector('sci-icon')?.getAttribute('title') ?? null,
+    };
   }
 
   public isLoading(): boolean {
@@ -280,5 +295,59 @@ export class ColumnHeaderPO {
 
   public get tooltip(): string | null {
     return this.element.getAttribute('title');
+  }
+}
+
+export class EnumFilterMenuPO {
+
+  constructor(private _table: TablePO) {
+  }
+
+  public select(values: SciEnumValueLike[]): void {
+    values.forEach(value => this.menuItem(value).click());
+  }
+
+  public menuItem(value: SciEnumValueLike): EnumFilterMenuItemPO {
+    return new EnumFilterMenuItemPO(this.menu()!.querySelector<HTMLButtonElement>(`button[data-option="${value}"]`)!);
+  }
+
+  public menuItems(): Array<{value: string; label: string; icon: string | null}> {
+    return Array.from(this.menu()!.querySelectorAll<HTMLButtonElement>(`button[data-option]`))
+      .map(menuItem => new EnumFilterMenuItemPO(menuItem))
+      .map(menuItem => ({value: menuItem.value, label: menuItem.label, icon: menuItem.icon}));
+  }
+
+  public isOpen(): boolean {
+    return this.menu() !== null;
+  }
+
+  public async waitForMenu(): Promise<void> {
+    await waitUntilStable(() => this.menu());
+  }
+
+  private menu(): HTMLElement | null {
+    return this._table.element.querySelector<HTMLElement>('sci-menu.e2e-filter')!;
+  }
+}
+
+export class EnumFilterMenuItemPO {
+
+  constructor(public menuItem: HTMLButtonElement) {
+  }
+
+  public get value(): string {
+    return this.menuItem.getAttribute('data-option')!;
+  }
+
+  public get icon(): string | null {
+    return this.menuItem.querySelector('sci-icon:not([data-checkmark])')?.getAttribute('icon') ?? null;
+  }
+
+  public get label(): string {
+    return this.menuItem.querySelector('sci-menu-item-label')!.textContent.trim();
+  }
+
+  public click(): void {
+    this.menuItem.click();
   }
 }

@@ -17,8 +17,12 @@ import {SciTableColumnFactoryFn} from './table.factory';
 import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
 import {SciDateValue} from './table-date-column.model';
 import {Translatable} from '@scion/components/text';
+import {SciEnumValue} from './table-enum-column.model';
 
-export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'component' | 'template';
+/**
+ * Represents supported column types of {@link SciTableComponent}.
+ */
+export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'component' | 'template';
 
 export interface SciTableDescriptor<T> {
   datasource: Signal<T[]>;
@@ -31,7 +35,7 @@ export interface SciTableDescriptor<T> {
   sortable?: boolean;
   resizable?: boolean;
   filterable?: boolean;
-  selectable?: false | 'single' | 'multi';
+  selectable?: 'single' | 'multi' | false;
   showHeader?: boolean;
   /**
    * Defaults to false.
@@ -163,47 +167,45 @@ export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
 export interface SciStringColumn<T = unknown> extends SciTableColumn<T, string> {
   type: 'string';
   value: (item: T) => Signal<string | undefined>;
-  compare: SciTableColumnSortComparatorFn<T, string>;
-  matches: SciTableColumnFilterMatcherFn<T, string>;
 }
 
 export interface SciNumberColumn<T = unknown> extends SciTableColumn<T, number> {
   type: 'number';
   value: (item: T) => Signal<number | undefined>;
-  compare: SciTableColumnSortComparatorFn<T, number>;
-  matches: SciTableColumnFilterMatcherFn<T, number>;
   format: Signal<Intl.NumberFormat>;
-}
-
-export interface SciBooleanColumn<T = unknown> extends SciTableColumn<T, boolean> {
-  type: 'boolean';
-  value: (item: T) => Signal<boolean | undefined>;
-  compare: SciTableColumnSortComparatorFn<T, boolean>;
-  matches: SciTableColumnFilterMatcherFn<T, boolean>;
 }
 
 export interface SciDateColumn<T = unknown> extends SciTableColumn<T, SciDateValue, string> {
   type: 'date';
   value: (item: T) => Signal<SciDateValue | undefined>;
-  compare: SciTableColumnSortComparatorFn<T, SciDateValue>;
-  matches: SciTableColumnFilterMatcherFn<T, SciDateValue, string>;
+}
+
+export interface SciEnumColumn<T = unknown> extends Omit<SciTableColumn<T, SciEnumValue, SciEnumValueLike[] | string>, 'filterable'> { // `string` for table filter
+  type: 'enum';
+  value: (item: T) => Signal<SciEnumValue | undefined>;
+  filterable: Signal<'single' | 'multi' | false>;
+  enumeration: Signal<SciEnumColumnValues>;
+  format: {
+    icon: boolean;
+    label: boolean;
+    filter: {
+      icon: boolean;
+    };
+  };
+  referenceType: SciTableColumnType | undefined;
 }
 
 export interface SciComponentColumn<T = unknown> extends SciTableColumn<T, void, string> {
   type: 'component';
   component: (item: T) => SciComponentDescriptor;
-  compare: SciTableColumnSortComparatorFn<T, void>;
-  matches: SciTableColumnFilterMatcherFn<T, void, string>;
 }
 
 export interface SciTemplateColumn<T = unknown> extends SciTableColumn<T, void, string> {
   type: 'template';
   template: (item: T) => SciTemplateDescriptor;
-  compare: SciTableColumnSortComparatorFn<T, void>;
-  matches: SciTableColumnFilterMatcherFn<T, void, string>;
 }
 
-export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciBooleanColumn<T> | SciDateColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
+export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciDateColumn<T> | SciEnumColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
 
 /**
  * Mapped row, used as display state.
@@ -232,16 +234,16 @@ export interface SciNumberCell {
   value: Signal<number | undefined>;
 }
 
-export interface SciBooleanCell {
-  type: 'boolean';
-  column: SciBooleanColumn;
-  value: Signal<boolean | undefined>;
-}
-
 export interface SciDateCell {
   type: 'date';
   column: SciDateColumn;
   value: Signal<SciDateValue | undefined>;
+}
+
+export interface SciEnumCell {
+  type: 'enum';
+  column: SciEnumColumn;
+  value: Signal<SciEnumValue | undefined>;
 }
 
 export interface SciComponentCell {
@@ -256,7 +258,7 @@ export interface SciTemplateCell {
   template: SciTemplateDescriptor;
 }
 
-export type SciTableCellLike = SciStringCell | SciNumberCell | SciBooleanCell | SciDateCell | SciComponentCell | SciTemplateCell;
+export type SciTableCellLike = SciStringCell | SciNumberCell | SciDateCell | SciEnumCell | SciComponentCell | SciTemplateCell;
 
 export interface SciTableCellContext<T = unknown, VALUE = unknown> {
   item: T;
@@ -302,6 +304,25 @@ export interface SciTableEvent<T> {
 export type SciColumnHeaderLike = Translatable | {icon?: string; label?: Translatable; tooltip?: Translatable};
 
 /**
- * Represents an ISO 8601 date/time string, milliseconds since the UTC epoch, or a `Date` object.
+ * An ISO 8601 date/time string, milliseconds since the UTC epoch, or a {@link Date} object.
  */
 export type SciDateLike = string | number | Date;
+
+/**
+ * Supported data types for enumeration values used in an enum column.
+ */
+export type SciEnumValueLike = string | number | boolean;
+
+/**
+ * Defines the enumeration entries of an enum column.
+ *
+ * The array order determines the sort order of the enumeration.
+ *
+ * A label can be text or a translation key. A translation key starts with the percent symbol (`%`) and may include parameters in matrix notation for text interpolation.
+ * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+ *
+ * SCION uses icon providers to render icons. An icon provider can be registered using {@link provideIconProvider}.
+ * Defaults to a Material icon provider if the application has not registered an icon provider, interpreting the icon as a Material Icon font ligature.
+ * Refer to https://fonts.google.com/icons for available Material icons and instructions on including the Material icon font.
+ */
+export type SciEnumColumnValues = {value: SciEnumValueLike; label: Translatable; icon?: string; tooltip?: Translatable | null}[];

@@ -13,7 +13,12 @@ The NPM sub-module `@scion/components/table` provides an Angular component for d
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
 - [Columns](#columns)
-- [Custom Columns](#custom-columns)
+    - [String Column](#string-column)
+    - [Number Column](#number-column)
+    - [Boolean Column](#boolean-column)
+    - [Date Column](#date-column)
+    - [Enum Column](#enum-column)
+    - [Custom Columns](#custom-columns)
 - [Column Width](#column-width)
 - [Table Configuration](#table-configuration)
     - [Filtering](#filtering)
@@ -105,7 +110,7 @@ table(users.value, table => table.addStringColumn({
 
 ### Columns
 
-The table provides built-in columns for the following data types: `string`, `number`, `boolean`, and `Date`. Columns for other data types or custom cell rendering can be added as custom columns. See the [Custom Columns](#custom-columns) section for details.
+The table provides built-in columns for the following data types: `string`, `number`, `boolean`, `Date`, and `enum`. Columns for other data types or custom cell rendering can be added as custom columns. See the [Custom Columns](#custom-columns) section for details.
 
 #### String Column
 
@@ -367,6 +372,68 @@ sci-table::part(column\:date) {
 sci-table::part(column\:column-name) {
   font-variant-numeric: normal;
 }
+```
+
+#### Enum Column
+
+Displays values of an enumeration.
+
+An enumeration defines a fixed set of values, each with a label and an optional icon and tooltip.
+
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addEnumColumn({
+  header: 'Account Status',
+  value: user => user.accountStatus,
+  values: [
+    {
+      value: 'active',
+      label: 'Active',
+      icon: 'check_circle',
+      tooltip: 'Account is active.',
+    },
+    {
+      value: 'inactive',
+      label: 'Inactive',
+      icon: 'pause_circle',
+      tooltip: 'Account is deactivated.',
+    },
+    {
+      value: 'locked',
+      label: 'Locked',
+      icon: 'lock',
+      tooltip: 'Account is temporarily locked.',
+    },
+    {
+      value: 'expired',
+      label: 'Expired',
+      icon: 'lock_clock',
+      tooltip: 'Account has expired.',
+    },
+  ],
+}));
+```
+
+##### Enumeration
+Use the `values` property to define the enumeration. The array order determines the sort order of the enumeration.
+
+##### Display Options
+
+Use the `format` property to configure the display of enumeration values. Defaults to displaying the label in cells, and both icon and label in the column filter menu. Defaults are unset when using a custom format.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addEnumColumn({
+  header: 'Account Status',
+  value: user => user.accountStatus,
+  values: [...],
+  format: {
+    label: true, icon: true, filter: {icon: true},
+  },
+}));
 ```
 
 ### Custom Columns

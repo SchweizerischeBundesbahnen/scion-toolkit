@@ -12,7 +12,7 @@ import {provideTableRowBinding, SciTable, SciTableColumnDescriptor, SciTableColu
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, hidden, pattern, required} from '@angular/forms/signals';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
-import {ɵcreateDestroyableInjector, SCI_LOCALE} from '@scion/components/common';
+import {SCI_LOCALE, ɵcreateDestroyableInjector} from '@scion/components/common';
 import {FieldValidationDirective} from '../field-validation.directive';
 import {Product, ProductService, simulateError$} from './sci-table-page.data';
 import {HttpClient} from '@angular/common/http';
@@ -179,6 +179,43 @@ export default class SciTablePageComponent {
               timezone: columnForm.extras.dateColumn.timezone || undefined,
             });
             break;
+          case 'enum': {
+            const extras = columnForm.extras.enumColumn;
+            table.addEnumColumn({
+              ...column,
+              value: product => product.status,
+              values: [
+                {value: 'in-stock', icon: 'check_circle', label: 'In Stock'},
+                {value: 'low-stock', icon: 'warning', label: 'Low Stock'},
+                {value: 'out-of-stock', icon: 'cancel', label: 'Out of Stock'},
+                {value: 'backorderable', icon: 'inventory_2', label: 'Backorderable'},
+                {value: 'preorder', icon: 'edit_calendar', label: 'Pre-order'},
+                {value: 'discontinued', icon: 'block', label: 'Discontinued'},
+                {value: 'clearance', icon: 'sell', label: 'Clearance'},
+              ].concat(extras.showAllProductStatusOptions ? [
+                {value: 'coming-soon', icon: 'schedule', label: 'Coming Soon'},
+                {value: 'on-sale', icon: 'local_offer', label: 'On Sale'},
+              ] : []),
+              format: extras.format.enabled ? {
+                icon: extras.format.icon || undefined,
+                label: extras.format.label || undefined,
+                filter: {
+                  icon: extras.format.filter.icon || undefined,
+                },
+              } : undefined,
+              filterable: (() => {
+                switch (extras.filterable) {
+                  case 'false':
+                    return false;
+                  case '':
+                    return undefined;
+                  default:
+                    return extras.filterable;
+                }
+              })(),
+            });
+            break;
+          }
           case 'component':
             table.addComponentColumn({
               ...column,
@@ -285,6 +322,18 @@ export default class SciTablePageComponent {
             locale: '',
             timezone: '',
           },
+          enumColumn: {
+            format: {
+              enabled: false,
+              icon: false,
+              label: false,
+              filter: {
+                icon: false,
+              },
+            },
+            filterable: '',
+            showAllProductStatusOptions: true,
+          },
           componentColumn: {
             component: 'component:custom-column',
             padding: true,
@@ -377,6 +426,18 @@ interface ColumnForm {
       format: string | '';
       locale: string | '';
       timezone: string | '';
+    };
+    enumColumn: {
+      format: {
+        enabled: boolean;
+        icon: boolean;
+        label: boolean;
+        filter: {
+          icon: boolean;
+        };
+      };
+      filterable: 'single' | 'multi' | 'false' | '';
+      showAllProductStatusOptions: boolean;
     };
     componentColumn: {
       component: 'component:custom-column' | 'component:custom-input-column' | 'component:custom-button-column' | '';

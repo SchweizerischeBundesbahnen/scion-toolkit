@@ -13,12 +13,14 @@ export async function provideHttpDatasource(page: Page, productLike: Partial<Pro
   const datasource = options?.datasource ?? 'loader-http';
 
   // Populate missing properties with random values.
+  const statusEnumeration = ['in-stock', 'low-stock', 'out-of-stock', 'backorderable', 'preorder', 'discontinued', 'clearance', 'coming-soon', 'on-sale'] as const;
   const products: Product[] = productLike.map((product, i) => ({
     id: product.id ?? i,
     name: product.name ?? `Product ${i + 1}`,
     price: product.price ?? Math.floor(Math.random() * 1000) + 1,
     inStock: product.inStock ?? Math.random() > 0.5,
     expirationDate: product.expirationDate ?? randomDate().toISOString(),
+    status: product.status ?? statusEnumeration[Math.floor(Math.random() * statusEnumeration.length)]!,
   }));
 
   // Install HTTP endpoint.
@@ -34,7 +36,6 @@ export async function provideHttpDatasource(page: Page, productLike: Partial<Pro
           totalCount: products.length,
         } satisfies SciTablePageResponse<Product>,
       });
-
     }
   });
 
@@ -56,6 +57,7 @@ export interface Product {
   price: number;
   inStock: boolean;
   expirationDate: string;
+  status: 'in-stock' | 'low-stock' | 'out-of-stock' | 'backorderable' | 'preorder' | 'discontinued' | 'clearance' | 'coming-soon' | 'on-sale';
 }
 
 /**

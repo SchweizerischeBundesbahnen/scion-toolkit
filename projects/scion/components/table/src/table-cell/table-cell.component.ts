@@ -80,11 +80,14 @@ export class SciTableCellComponent<T> {
 
   private computePartAttribute(): Signal<string> {
     return computed(() => {
+      const cell = this.cell();
+      const referenceType = cell.type === 'enum' ? cell.column.referenceType : undefined;
+
       return Arrays.distinct([
-        // Enable column styling based on column type.
-        `column:${this.cell().column.type}`,
+        // Enable column styling based on column type. For enum columns, resolves to the reference type, if any, i.e., boolean or icon.
+        `column:${referenceType ?? cell.column.type}`,
         // Enable column styling based on column name.
-        this.cell().column.name,
+        cell.column.name,
         // Enable row styling based on selection state.
         this.row().selected() ? 'row:selected' : 'row:not:selected',
         // Enable row styling based on active state.
@@ -102,8 +105,9 @@ export class SciTableCellComponent<T> {
         switch (cell.type) {
           case 'string':
           case 'number':
-          case 'boolean':
             return cell.value();
+          case 'enum':
+            return cell.value()?.value;
           case 'date':
             return cell.value()?.isoString;
           default:

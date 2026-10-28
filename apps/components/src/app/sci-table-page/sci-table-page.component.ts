@@ -119,11 +119,18 @@ export default class SciTablePageComponent {
           header: 'Depot / Maintenance',
           value: vehicle => vehicle.depot,
         });
-        visibleColumns.status && table.addStringColumn({
+        visibleColumns.status && table.addEnumColumn({
           name: 'column:status',
           header: 'Status',
           value: vehicle => vehicle.status,
-          width: '150px',
+          width: '175px',
+          values: [
+            {value: 'Ready for Service', icon: 'check_circle', label: 'Ready for Service'},
+            {value: 'In Operation', icon: 'play_circle', label: 'In Operation'},
+            {value: 'Maintenance', icon: 'engineering', label: 'Maintenance'},
+            {value: 'Stabled', icon: 'pause_circle', label: 'Stabled'},
+          ],
+          format: {icon: true, label: true, filter: {icon: true}},
         });
         visibleColumns.tps && table.addStringColumn({
           name: 'column:tps',

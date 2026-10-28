@@ -19,7 +19,6 @@ import {generateData, Product, provideHttpDatasource} from './datasource/table-h
 import {firstValueFrom, Subject} from 'rxjs';
 import {SciTablePageResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
-import {BooleanColumnPO} from './boolean-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';
 import {CustomButtonColumnPO} from './custom-button-column.po';
 import {expectScrollbar} from '../sci-scrollbar/scrollbar-matcher';
@@ -392,13 +391,17 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
 
         await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+        await tablePage.setRowHeight(30);
 
         const cell = table.row({nth: 0}).cell('column:boolean');
         const cellBounds = await cell.bounds();
-        const checkmarkBounds = await new BooleanColumnPO(cell).bounds();
+        const rowBounds = await cell.row.bounds();
 
-        expect(checkmarkBounds.vcenter).toEqual(cellBounds.vcenter);
-        expect(checkmarkBounds.height).toBeLessThan(cellBounds.height);
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
+
+        const iconBounds = fromRect(await cell.icon.boundingBox());
+        expect(iconBounds.vcenter).toBeBetween(cellBounds.vcenter - 1, cellBounds.vcenter + 1);
       });
 
       test('should have horizontal padding', async ({page}) => {
@@ -426,6 +429,18 @@ test.describe('sci-table', () => {
 
         expect(cellBounds.height).toEqual(rowBounds.height);
         expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should not display label as tooltip when hovering checkmark', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
+
+        const icon = table.column({name: 'column:boolean'}).cell({nth: 0}).icon;
+        await icon.hover();
+        await expect(icon).not.toHaveAttribute('title');
       });
     });
 
@@ -529,6 +544,112 @@ test.describe('sci-table', () => {
         await cell.column.splitter.drag({deltaX: -200});
         await cell.hover();
         await expect(cell.locator).toHaveAttribute('title', '17.02.2026 16:20:45');
+      });
+    });
+
+    test.describe('Enum column', () => {
+
+      test('should add enum column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:enum', type: 'enum'});
+        await expect(table.column({name: 'column:enum'}).columnHeader.locator).toBeVisible();
+      });
+
+      test('should center text vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:enum', type: 'enum'});
+        await tablePage.setRowHeight(30);
+
+        const cell = table.row({nth: 0}).cell('column:enum');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+
+        expect(cellBounds.vcenter).toEqual(rowBounds.vcenter);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:enum', type: 'enum'});
+
+        const cell = table.row({nth: 0}).cell('column:enum');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align text to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:enum', type: 'enum'});
+
+        const cell = table.row({nth: 0}).cell('column:enum');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should have ellipsis on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await provideHttpDatasource(page, [{status: 'discontinued'}]);
+
+        await tablePage.setWidth(600);
+        await tablePage.addColumn({name: 'column:enum', type: 'enum', minWidth: 50});
+        const cell = table.row({nth: 0}).cell('column:enum');
+        await expect(cell.locator).not.toHaveEllipsis();
+
+        await cell.column.splitter.drag({deltaX: -550});
+        await expect(cell.locator).toHaveEllipsis();
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:enum', type: 'enum'});
+
+        const cell = table.row({nth: 0}).cell('column:enum');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should display cell content as tooltip on overflow', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+
+        await tablePage.navigate();
+        await provideHttpDatasource(page, [{status: 'discontinued'}]);
+        await tablePage.setWidth(300);
+
+        await tablePage.addColumn({name: 'column:enum', type: 'enum', minWidth: 50});
+
+        const cell = table.column({name: 'column:enum'}).cell({nth: 0});
+        await cell.hover();
+        await expect(cell.locator).not.toHaveAttribute('title');
+
+        // Force overflow.
+        await cell.column.splitter.drag({deltaX: -250});
+        await cell.hover();
+        await expect(cell.locator).toHaveAttribute('title', 'Discontinued');
       });
     });
 
@@ -1130,6 +1251,28 @@ test.describe('sci-table', () => {
       ]);
     });
 
+    test('should filter enum column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      const data = [{status: 'in-stock'}, {status: 'low-stock'}, {status: 'out-of-stock'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:enum', type: 'enum'});
+
+      await table.column({name: 'column:enum'}).filter(['in-stock']);
+      await expectTable(table).toHaveContent([['In Stock']]);
+
+      await table.column({name: 'column:enum'}).clearFilter();
+      await expectTable(table).toHaveContent([
+        ['In Stock'],
+        ['Low Stock'],
+        ['Out of Stock'],
+      ]);
+    });
+
     test('should not filter template column', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
@@ -1241,10 +1384,10 @@ test.describe('sci-table', () => {
       await tablePage.setFilterable(true);
       await tablePage.addColumn({name: 'column:boolean', type: 'boolean'});
 
-      await table.column({name: 'column:boolean'}).filter(true);
+      await table.column({name: 'column:boolean'}).filter([true]);
       await expect(table.column({name: 'column:boolean'}).filterInput).toBeFocused();
 
-      await table.column({name: 'column:boolean'}).filter(false);
+      await table.column({name: 'column:boolean'}).filter([false]);
       await expect(table.column({name: 'column:boolean'}).filterInput).toBeFocused();
     });
   });
@@ -2095,12 +2238,12 @@ test.describe('sci-table', () => {
       // Sort ascending.
       await table.column({name: 'column:boolean'}).sort();
       await expectTable(table).column({name: 'column:boolean'}).toHaveSortDirection('asc');
-      await expectTable(table).toHaveContent([['false'], ['true'], ['true']]);
+      await expectTable(table).toHaveContent([['true'], ['true'], ['false']]);
 
       // Sort descending.
       await table.column({name: 'column:boolean'}).sort();
       await expectTable(table).column({name: 'column:boolean'}).toHaveSortDirection('desc');
-      await expectTable(table).toHaveContent([['true'], ['true'], ['false']]);
+      await expectTable(table).toHaveContent([['false'], ['true'], ['true']]);
 
       // Unset sort.
       await table.column({name: 'column:boolean'}).sort();
@@ -2132,6 +2275,32 @@ test.describe('sci-table', () => {
       await table.column({name: 'column:date'}).sort();
       await expectTable(table).column({name: 'column:date'}).toHaveSortDirection(null);
       await expectTable(table).toHaveContent([['01.05.2026'], ['03.05.2026'], ['02.05.2026']]);
+    });
+
+    test('should sort enum column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      const data = [{status: 'low-stock'}, {status: 'in-stock'}, {status: 'out-of-stock'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
+      await tablePage.addColumn({name: 'column:enum', type: 'enum'});
+
+      // Sort ascending.
+      await table.column({name: 'column:enum'}).sort();
+      await expectTable(table).column({name: 'column:enum'}).toHaveSortDirection('asc');
+      await expectTable(table).toHaveContent([['In Stock'], ['Low Stock'], ['Out of Stock']]);
+
+      // Sort descending.
+      await table.column({name: 'column:enum'}).sort();
+      await expectTable(table).column({name: 'column:enum'}).toHaveSortDirection('desc');
+      await expectTable(table).toHaveContent([['Out of Stock'], ['Low Stock'], ['In Stock']]);
+
+      // Unset sort.
+      await table.column({name: 'column:enum'}).sort();
+      await expectTable(table).column({name: 'column:enum'}).toHaveSortDirection(null);
+      await expectTable(table).toHaveContent([['Low Stock'], ['In Stock'], ['Out of Stock']]);
     });
 
     test('should sort multiple columns with ctrl or meta', async ({page}) => {

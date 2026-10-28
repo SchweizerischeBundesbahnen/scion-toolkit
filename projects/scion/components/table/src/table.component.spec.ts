@@ -11,7 +11,7 @@
 import {TestBed} from '@angular/core/testing';
 import {table, table as sciTable} from './table.factory';
 import {assertNotInReactiveContext, Component, computed, DEFAULT_CURRENCY_CODE, DestroyRef, EnvironmentProviders, inject, Injector, input, inputBinding, linkedSignal, LOCALE_ID, signal, TemplateRef, viewChild} from '@angular/core';
-import {TablePO} from './table.po';
+import {EnumFilterMenuPO, TablePO} from './table.po';
 import {BehaviorSubject, map, NEVER, noop, Observable, Subject, take, tap} from 'rxjs';
 import {provideTableStorage} from './table-storage';
 import {provideTableRowBinding} from './table-row-binding';
@@ -41,133 +41,31 @@ describe('Table', () => {
 
   describe('Columns', () => {
 
-    // TODO [dwie] Move after Time column
-    describe('Component Column', () => {
-
-      it('should render custom component column', async () => {
-        const data = signal(['1', '2', '3']);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          columns: table => table.addComponentColumn({
-            name: 'column:component',
-            component: item => ({
-              component: CustomColumnComponent,
-              bindings: [inputBinding('value', () => item)],
-            }),
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:component'})!.values()).toEqual(['1', '2', '3']);
-      });
-    });
-
-    // TODO [dwie] Move after Time column
-    describe('Template Column', () => {
-
-      it('should render custom template column', async () => {
-        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-
-        const data = signal([1, 2, 3]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          columns: table => table.addTemplateColumn({
-            name: 'column:template',
-            template: () => ({template}),
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:template'})?.values()).toEqual(['1', '2', '3']);
-      });
-
-      it('should pass context to template', async () => {
-        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-
-        const data = signal([1, 2, 3]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          columns: table => table.addTemplateColumn({
-            name: 'column:template',
-            template: item => ({
-              template: template,
-              context: {context: `[context="${item}"]`},
-            }),
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:template'})!.values()).toEqual([
-          '1 [context="1"]',
-          '2 [context="2"]',
-          '3 [context="3"]',
-        ]);
-      });
-
-      it('should pass context to template as signal', async () => {
-        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-        const context = signal('a');
-
-        const data = signal([1, 2, 3]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          columns: table => table.addTemplateColumn({
-            name: 'column:template',
-            template: item => ({
-              template: template,
-              context: {context: computed(() => `[context="${context()}", item="${item}"]`)},
-            }),
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:template'})!.values()).toEqual([
-          '1 [context="a", item="1"]',
-          '2 [context="a", item="2"]',
-          '3 [context="a", item="3"]',
-        ]);
-
-        // Change context signal.
-        context.set('b');
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:template'})!.values()).toEqual([
-          '1 [context="b", item="1"]',
-          '2 [context="b", item="2"]',
-          '3 [context="b", item="3"]',
-        ]);
-      });
-
-      it('should not fail if context value is undefined', async () => {
-        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
-
-        const data = signal([1, 2, 3]);
-        const {fixture} = createSciTableComponent(sciTable({
-          datasource: data,
-          columns: table => table.addTemplateColumn({
-            name: 'column:template',
-            template: () => ({
-              template: template,
-              context: {context: undefined},
-            }),
-          }),
-          injector: TestBed.inject(Injector),
-        }));
-
-        const table = new TablePO(fixture);
-        await table.waitUntilStable();
-        expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
-      });
-    });
-
     describe('String Column', () => {
+
+      it('should display value', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            provideTextProvider(() => 'Translated'),
+          ],
+        });
+
+        const data = signal([{string: 'Text'}, {string: '%text'}, {string: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addStringColumn(item => item.string),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: 'Text', label: 'Text'})],
+          [jasmine.objectContaining({value: 'Translated', label: 'Translated'})],
+          [jasmine.objectContaining({value: null, label: ''})],
+        ]);
+      });
 
       it('should have empty cell for `undefined` value', async () => {
         const data = signal([{string: undefined}]);
@@ -263,6 +161,23 @@ describe('Table', () => {
     });
 
     describe('Number Column', () => {
+
+      it('should display value', async () => {
+        const data = signal([{number: 123}, {number: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addNumberColumn(item => item.number),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '123', label: '123'})],
+          [jasmine.objectContaining({value: null, label: ''})],
+        ]);
+      });
 
       it('should have empty cell for `undefined` value', async () => {
         const data = signal([{number: undefined}]);
@@ -448,6 +363,37 @@ describe('Table', () => {
 
     describe('Boolean Column', () => {
 
+      it('should display value', async () => {
+        const data = signal([{boolean: true}, {boolean: false}, {boolean: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addBooleanColumn({
+            name: 'column:boolean',
+            value: item => item.boolean,
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: 'true', label: '', icon: 'scion.checkmark', iconTooltip: null})],
+          [jasmine.objectContaining({value: 'false', icon: 'scion.clear', iconTooltip: null})],
+          [jasmine.objectContaining({value: null, icon: null, iconTooltip: null})],
+        ]);
+
+        // Assert filter menu.
+        const menu = new EnumFilterMenuPO(table);
+        const column = table.column({name: 'column:boolean'})!;
+        column.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: 'true', label: 'Yes', icon: null},
+          {value: 'false', label: 'No', icon: null},
+        ]);
+      });
+
       it('should have empty cell for `undefined` value', async () => {
         const data = signal([{boolean: undefined}]);
         const {fixture} = createSciTableComponent(sciTable({
@@ -483,6 +429,26 @@ describe('Table', () => {
     });
 
     describe('Date Column', () => {
+
+      it('should display value', async () => {
+        const data = signal([{date: '2026-02-17'}, {number: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addDateColumn({
+            value: item => item.date,
+            format: 'dd.MM.yyyy',
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '2026-02-17', label: '17.02.2026'})],
+          [jasmine.objectContaining({value: null, label: ''})],
+        ]);
+      });
 
       it('should have empty cell for `undefined` value', async () => {
         const data = signal([{date: undefined}]);
@@ -696,6 +662,27 @@ describe('Table', () => {
     });
 
     describe('Date Column (Time)', () => {
+
+      it('should display value', async () => {
+        const data = signal([{time: 'T16:20:45Z'}, {number: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addDateColumn({
+            value: item => item.time,
+            format: 'HH:mm:ss',
+            timezone: 'UTC',
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '1970-01-01T16:20:45Z', label: '16:20:45'})],
+          [jasmine.objectContaining({value: null, label: ''})],
+        ]);
+      });
 
       it('should support different time input formats', async () => {
         const data = signal([
@@ -912,6 +899,620 @@ describe('Table', () => {
         TestBed.inject(DestroyRef).onDestroy(() => Arrays.remove(document.adoptedStyleSheets, styleSheet));
 
         expect(getComputedStyle(table.row({nth: 0}).cells[0]!.element).fontVariantNumeric).toEqual('normal');
+      });
+    });
+
+    describe('Enum Column', () => {
+
+      it('should display value', async () => {
+        const data = signal([{value: '1'}, {value: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addEnumColumn({
+            value: item => item.value,
+            values: [
+              {value: '1', label: 'Entry'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '1', label: 'Entry'})],
+          [jasmine.objectContaining({value: null, label: ''})],
+        ]);
+      });
+
+      it('should have empty cell for `undefined` value', async () => {
+        const data = signal([{value: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addEnumColumn({
+            value: item => item.value,
+            values: [
+              {value: '1', label: 'Entry'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['']]);
+      });
+
+      it('should accept signal as value', async () => {
+        const value = signal('2');
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: signal([undefined]),
+          filterable: true,
+          columns: table => table.addEnumColumn({
+            value: () => value,
+            values: [
+              {value: '1', label: 'Entry 1'},
+              {value: '2', label: 'Entry 2'},
+              {value: '3', label: 'Entry 3'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['Entry 2']]);
+
+        // Update value.
+        value.set('3');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([['Entry 3']]);
+      });
+
+      it('should support different enum value types', async () => {
+        const data = signal([
+          {
+            value1: '0',
+            value2: 0,
+            value3: false,
+          },
+          {
+            value1: '1',
+            value2: 1,
+            value3: true,
+          },
+          {
+            value1: '2',
+            value2: 2,
+            value3: undefined,
+          },
+        ]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addEnumColumn({
+              value: item => item.value1,
+              values: [
+                {value: '0', label: 'Entry "0"'},
+                {value: '1', label: 'Entry "1"'},
+                {value: '2', label: 'Entry "2"'},
+              ],
+            })
+            .addEnumColumn({
+              value: item => item.value2,
+              values: [
+                {value: 0, label: 'Entry 0'},
+                {value: 1, label: 'Entry 1'},
+                {value: 2, label: 'Entry 2'},
+              ],
+            })
+            .addEnumColumn({
+              value: item => item.value3,
+              values: [
+                {value: true, label: 'True'},
+                {value: false, label: 'False'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Entry "0"', 'Entry 0', 'False'],
+          ['Entry "1"', 'Entry 1', 'True'],
+          ['Entry "2"', 'Entry 2', ''],
+        ]);
+      });
+
+      it('should display enum in specified format', async () => {
+        const data = signal([{value: 1}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon'},
+              ],
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon'},
+              ],
+              format: {label: true},
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon'},
+              ],
+              format: {icon: true},
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon'},
+              ],
+              format: {label: true, icon: true},
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon'},
+              ],
+              format: {},
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [
+            jasmine.objectContaining({label: 'Label', icon: null}), // format: default
+            jasmine.objectContaining({label: 'Label', icon: null}), // format: {label: true}
+            jasmine.objectContaining({label: '', icon: 'Icon'}), // format: {icon: true}
+            jasmine.objectContaining({label: 'Label', icon: 'Icon'}), // format: {label: true, icon: true}
+            jasmine.objectContaining({label: '', icon: null}), // format: {}
+          ],
+        ]);
+      });
+
+      it('should ignore unkown enum values', async () => {
+        const data = signal([{value: 1}, {value: 999}, {value: 3}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label 1'},
+                {value: 2, label: 'Label 2'},
+                {value: 3, label: 'Label 3'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Label 1'],
+          [''],
+          ['Label 3'],
+        ]);
+      });
+
+      it('should display icon tooltip', async () => {
+        const data = signal([{value: 1}, {value: 2}, {value: 3}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon', tooltip: 'Tooltip'},
+                {value: 2, label: 'Label', icon: 'Icon', tooltip: null},
+                {value: 3, label: 'Label', icon: 'Icon'},
+              ],
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon', tooltip: 'Tooltip'},
+                {value: 2, label: 'Label', icon: 'Icon', tooltip: null},
+                {value: 3, label: 'Label', icon: 'Icon'},
+              ],
+              format: {icon: true},
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon', tooltip: 'Tooltip'},
+                {value: 2, label: 'Label', icon: 'Icon', tooltip: null},
+                {value: 3, label: 'Label', icon: 'Icon'},
+              ],
+              format: {label: true, icon: true},
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon', tooltip: 'Tooltip'},
+                {value: 2, label: 'Label', icon: 'Icon', tooltip: null},
+                {value: 3, label: 'Label', icon: 'Icon'},
+              ],
+              format: {label: true},
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: 'Label', icon: 'Icon', tooltip: 'Tooltip'},
+                {value: 2, label: 'Label', icon: 'Icon', tooltip: null},
+                {value: 3, label: 'Label', icon: 'Icon'},
+              ],
+              format: {},
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [
+            jasmine.objectContaining({label: 'Label', icon: null, iconTooltip: null}), // format: default
+            jasmine.objectContaining({label: '', icon: 'Icon', iconTooltip: 'Tooltip'}), // format: {icon: true}
+            jasmine.objectContaining({label: 'Label', icon: 'Icon', iconTooltip: 'Tooltip'}), // format: {label: true, icon: true}
+            jasmine.objectContaining({label: 'Label', iconTooltip: null}), // format: {label: true}
+            jasmine.objectContaining({label: '', icon: null, iconTooltip: null}), // format: {}
+          ],
+          [
+            jasmine.objectContaining({label: 'Label', icon: null, iconTooltip: null}), // format: default
+            jasmine.objectContaining({label: '', icon: 'Icon', iconTooltip: null}), // format: {icon: true}
+            jasmine.objectContaining({label: 'Label', icon: 'Icon', iconTooltip: null}), // format: {label: true, icon: true}
+            jasmine.objectContaining({label: 'Label', iconTooltip: null}), // format: {label: true}
+            jasmine.objectContaining({label: '', icon: null, iconTooltip: null}), // format: {}
+          ],
+          [
+            jasmine.objectContaining({label: 'Label', icon: null, iconTooltip: null}), // format: default
+            jasmine.objectContaining({label: '', icon: 'Icon', iconTooltip: 'Label'}), // format: {icon: true}
+            jasmine.objectContaining({label: 'Label', icon: 'Icon', iconTooltip: null}), // format: {label: true, icon: true}
+            jasmine.objectContaining({label: 'Label', iconTooltip: null}), // format: {label: true}
+            jasmine.objectContaining({label: '', icon: null, iconTooltip: null}), // format: {}
+          ],
+        ]);
+      });
+
+      it('should sort enum in filter menu', async () => {
+        const data = signal([{value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addEnumColumn({
+            name: 'column:enum',
+            value: item => item.value,
+            values: [
+              {value: '2', label: 'Entry 2'},
+              {value: '1', label: 'Entry 1'},
+              {value: '3', label: 'Entry 3'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['Entry 1'],
+        ]);
+
+        // Assert filter menu.
+        const menu = new EnumFilterMenuPO(table);
+        const column = table.column({name: 'column:enum'})!;
+        column.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: '2', label: 'Entry 2', icon: null},
+          {value: '1', label: 'Entry 1', icon: null},
+          {value: '3', label: 'Entry 3', icon: null},
+        ]);
+      });
+
+      it('should localize enum', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            provideTextProvider(key => {
+              switch (key) {
+                case 'text':
+                  return 'Text';
+                case 'tooltip':
+                  return 'Tooltip';
+                default:
+                  return undefined;
+              }
+            }),
+          ],
+        });
+
+        const data = signal([{value: 1}, {value: 2}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: '%text', icon: 'icon'},
+                {value: 2, label: '%text', tooltip: '%tooltip', icon: 'icon'},
+              ],
+            })
+            .addEnumColumn({
+              value: item => item.value,
+              values: [
+                {value: 1, label: '%text', icon: 'icon'},
+                {value: 2, label: '%text', tooltip: '%tooltip', icon: 'icon'},
+              ],
+              format: {icon: true},
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [
+            jasmine.objectContaining({value: '1', label: 'Text', icon: null, iconTooltip: null}), // format: default
+            jasmine.objectContaining({value: '1', label: '', icon: 'icon', iconTooltip: 'Text'}), // format: {icon: true}
+          ],
+          [
+            jasmine.objectContaining({value: '2', label: 'Text', icon: null, iconTooltip: null}), // format: default
+            jasmine.objectContaining({value: '2', label: '', icon: 'icon', iconTooltip: 'Tooltip'}), // format: {icon: true}
+          ],
+        ]);
+      });
+
+      it('should localize filter menu', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            provideTextProvider(() => 'Translated'),
+          ],
+        });
+
+        const data = signal([{value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table
+            .addEnumColumn({
+              name: 'column:enum',
+              value: item => item.value,
+              values: [
+                {value: '1', label: '%label'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const menu = new EnumFilterMenuPO(table);
+
+        const column = table.column({name: 'column:enum'})!;
+        column.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: '1', label: 'Translated', icon: null},
+        ]);
+      });
+
+      it('should configure display of filter menu', async () => {
+        const data = signal([{value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table
+            .addEnumColumn({
+              name: 'column:enum1',
+              value: item => item.value,
+              values: [
+                {value: '1', label: 'Label', icon: 'Icon'},
+              ],
+            })
+            .addEnumColumn({
+              name: 'column:enum2',
+              value: item => item.value,
+              values: [
+                {value: '1', label: 'Label', icon: 'Icon'},
+              ],
+              format: {label: true},
+            })
+            .addEnumColumn({
+              name: 'column:enum3',
+              value: item => item.value,
+              values: [
+                {value: '1', label: 'Label', icon: 'Icon'},
+              ],
+              format: {
+                label: true,
+                filter: {icon: true},
+              },
+            })
+            .addEnumColumn({
+              name: 'column:enum4',
+              value: item => item.value,
+              values: [
+                {value: '1', label: 'Label'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const menu = new EnumFilterMenuPO(table);
+
+        // Format: Default
+        const column1 = table.column({name: 'column:enum1'})!;
+        column1.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: '1', label: 'Label', icon: 'Icon'},
+        ]);
+
+        // Format: {label: true}
+        const column2 = table.column({name: 'column:enum2'})!;
+        column2.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: '1', label: 'Label', icon: null},
+        ]);
+
+        // Format: {label: true, filter: {icon: true}}
+        const column3 = table.column({name: 'column:enum3'})!;
+        column3.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: '1', label: 'Label', icon: 'Icon'},
+        ]);
+
+        // Enum without icon
+        const column4 = table.column({name: 'column:enum4'})!;
+        column4.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: '1', label: 'Label', icon: null},
+        ]);
+      });
+    });
+
+    describe('Component Column', () => {
+
+      it('should render custom component column', async () => {
+        const data = signal(['1', '2', '3']);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addComponentColumn({
+            name: 'column:component',
+            component: item => ({
+              component: CustomColumnComponent,
+              bindings: [inputBinding('value', () => item)],
+            }),
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:component'})!.values()).toEqual(['1', '2', '3']);
+      });
+    });
+
+    describe('Template Column', () => {
+
+      it('should render custom template column', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addTemplateColumn({
+            name: 'column:template',
+            template: () => ({template}),
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})?.values()).toEqual(['1', '2', '3']);
+      });
+
+      it('should pass context to template', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addTemplateColumn({
+            name: 'column:template',
+            template: item => ({
+              template: template,
+              context: {context: `[context="${item}"]`},
+            }),
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})!.values()).toEqual([
+          '1 [context="1"]',
+          '2 [context="2"]',
+          '3 [context="3"]',
+        ]);
+      });
+
+      it('should pass context to template as signal', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+        const context = signal('a');
+
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addTemplateColumn({
+            name: 'column:template',
+            template: item => ({
+              template: template,
+              context: {context: computed(() => `[context="${context()}", item="${item}"]`)},
+            }),
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})!.values()).toEqual([
+          '1 [context="a", item="1"]',
+          '2 [context="a", item="2"]',
+          '3 [context="a", item="3"]',
+        ]);
+
+        // Change context signal.
+        context.set('b');
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})!.values()).toEqual([
+          '1 [context="b", item="1"]',
+          '2 [context="b", item="2"]',
+          '3 [context="b", item="3"]',
+        ]);
+      });
+
+      it('should not fail if context value is undefined', async () => {
+        const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
+
+        const data = signal([1, 2, 3]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addTemplateColumn({
+            name: 'column:template',
+            template: () => ({
+              template: template,
+              context: {context: undefined},
+            }),
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(await table.column({name: 'column:template'})!.values()).toEqual(['1', '2', '3']);
       });
     });
   });
@@ -1369,13 +1970,43 @@ describe('Table', () => {
         const column = table.column({name: 'column:boolean'})!;
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['false', 'true', 'true', '', '']);
-
-        await column.toggleSort();
         expect(await column.values()).toEqual(['true', 'true', 'false', '', '']);
 
         await column.toggleSort();
+        expect(await column.values()).toEqual(['false', 'true', 'true', '', '']);
+
+        await column.toggleSort();
         expect(await column.values()).toEqual(['true', 'false', '', '', 'true']);
+      });
+
+      it('should sort enum column', async () => {
+        const data = signal([{value: '1'}, {value: '3'}, {value: undefined}, {value: undefined}, {value: '2'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addEnumColumn({
+            name: 'column:enum',
+            value: item => item.value,
+            values: [
+              {value: '1', label: 'Entry 1'},
+              {value: '2', label: 'Entry 2'},
+              {value: '3', label: 'Entry 3'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:enum'})!;
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['Entry 1', 'Entry 2', 'Entry 3', '', '']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['Entry 3', 'Entry 2', 'Entry 1', '', '']);
+
+        await column.toggleSort();
+        expect(await column.values()).toEqual(['Entry 1', 'Entry 3', '', '', 'Entry 2']);
       });
 
       it('should sort date column', async () => {
@@ -1805,6 +2436,75 @@ describe('Table', () => {
         expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '', '04.10.2026']);
       });
 
+      it('should filter enum column (single)', async () => {
+        const data = signal([{value: '1'}, {value: '3'}, {value: undefined}, {value: undefined}, {value: '2'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addEnumColumn({
+            name: 'column:enum',
+            value: item => item.value,
+            values: [
+              {value: '1', label: 'Entry 1'},
+              {value: '2', label: 'Entry 2'},
+              {value: '3', label: 'Entry 3'},
+            ],
+            filterable: 'single',
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:enum'})!;
+
+        await column.filter('1');
+        expect(await column.values()).toEqual(['Entry 1']);
+
+        await column.filter('3');
+        expect(await column.values()).toEqual(['Entry 3']);
+
+        await column.filter(null);
+        expect(await column.values()).toEqual(['Entry 1', 'Entry 3', '', '', 'Entry 2']);
+      });
+
+      it('should filter enum column (multi)', async () => {
+        const data = signal([{value: '1'}, {value: '3'}, {value: undefined}, {value: undefined}, {value: '2'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addEnumColumn({
+            name: 'column:enum',
+            value: item => item.value,
+            values: [
+              {value: '1', label: 'Entry 1'},
+              {value: '2', label: 'Entry 2'},
+              {value: '3', label: 'Entry 3'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:enum'})!;
+
+        await column.filter(['1']);
+        expect(await column.values()).toEqual(['Entry 1']);
+
+        await column.filter(['3']);
+        expect(await column.values()).toEqual(['Entry 1', 'Entry 3']);
+
+        await column.filter(['1']);
+        expect(await column.values()).toEqual(['Entry 3']);
+
+        await column.filter(null);
+        expect(await column.values()).toEqual(['Entry 1', 'Entry 3', '', '', 'Entry 2']);
+
+        await column.filter(['1', '3']);
+        expect(await column.values()).toEqual(['Entry 1', 'Entry 3']);
+      });
+
       it('should filter string column with custom filter matcher', async () => {
         const data = signal([{name: 'alpha'}, {name: 'beta'}, {name: undefined}, {name: 'gamma'}]);
         const {fixture} = createSciTableComponent(sciTable({
@@ -2132,35 +2832,33 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
-        model.filter('true');
+        model.filter('yes');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['1', 'true'],
           ['3', 'true'],
         ]);
 
-        model.filter('false');
+        model.filter('no');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
           ['2', 'false'],
           ['4', 'false'],
         ]);
 
-        model.filter('0');
+        model.filter('true'); // not supported
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'false'],
-          ['4', 'false'],
-        ]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
-        model.filter('1');
+        model.filter('false'); // not supported
         await table.waitUntilStable();
-        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'true'],
-          ['3', 'true'],
-        ]);
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
-        model.filter('2');
+        model.filter('0'); // not supported
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
+
+        model.filter('1'); // not supported
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([]);
 
@@ -2259,6 +2957,60 @@ describe('Table', () => {
           ['4', '17.02.2026'],
           ['5', '04.10.2026'],
           ['6', ''],
+        ]);
+      });
+
+      it('should filter enum column using a global filter', async () => {
+        const data = signal([{row: '1', value: '1'}, {row: '2', value: '3'}, {row: '3', value: '2'}, {row: '4', value: undefined}]);
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addEnumColumn({
+              name: 'column:enum',
+              value: item => item.value,
+              values: [
+                {value: '1', label: 'Entry 1 (x)'},
+                {value: '2', label: 'Entry 2 (y)'},
+                {value: '3', label: 'Entry 3 (x)'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('Entry 1');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'Entry 1 (x)'],
+        ]);
+
+        model.filter('Entry 2');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['3', 'Entry 2 (y)'],
+        ]);
+
+        model.filter('x');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'Entry 1 (x)'],
+          ['2', 'Entry 3 (x)'],
+        ]);
+
+        model.filter(null);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'Entry 1 (x)'],
+          ['2', 'Entry 3 (x)'],
+          ['3', 'Entry 2 (y)'],
+          ['4', ''],
         ]);
       });
 
@@ -2389,10 +3141,10 @@ describe('Table', () => {
       it('should filter cross-column using a global filter', async () => {
         const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
         const data = signal([
-          {row: '1', string: 'alpha', number: 2, boolean: true, undefined: undefined},
-          {row: '2', string: 'beta', number: 1, boolean: false, undefined: undefined},
-          {row: '3', string: 'gamma', number: 0, boolean: true, undefined: undefined},
-          {row: '4', string: 'delta', number: 10, boolean: false, undefined: undefined},
+          {row: '1', string: 'alpha', number: 2, boolean: true, date: '2026-07-01', enumValue: 'enum-1', undefined: undefined},
+          {row: '2', string: 'beta', number: 1, boolean: false, date: '2026-07-02', enumValue: 'enum-1', undefined: undefined},
+          {row: '3', string: 'gamma', number: 0, boolean: true, date: '2026-07-03', enumValue: 'enum-2', undefined: undefined},
+          {row: '4', string: 'delta', number: 10, boolean: false, date: '2026-07-04', enumValue: 'enum-2', undefined: undefined},
         ]);
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
@@ -2413,6 +3165,19 @@ describe('Table', () => {
             .addBooleanColumn({
               name: 'column:boolean',
               value: item => item.boolean,
+            })
+            .addDateColumn({
+              name: 'column:date',
+              value: item => item.date,
+              format: 'dd.MM.yyyy',
+            })
+            .addEnumColumn({
+              name: 'column:enum',
+              value: item => item.enumValue,
+              values: [
+                {value: 'enum-1', label: 'x'},
+                {value: 'enum-2', label: 'y'},
+              ],
             })
             .addStringColumn({
               name: 'column:undefined',
@@ -2439,67 +3204,84 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
 
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
+        ]);
+
         model.filter('alpha');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
         ]);
 
         model.filter('a');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '', '', ''],
-          ['2', 'beta', '1', 'false', '', '', ''],
-          ['3', 'gamma', '0', 'true', '', '', ''],
-          ['4', 'delta', '10', 'false', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
         ]);
 
         model.filter('b');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'false', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
         ]);
 
-        model.filter('true');
+        model.filter('yes');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '', '', ''],
-          ['3', 'gamma', '0', 'true', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
         ]);
 
-        model.filter('false');
+        model.filter('no');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'false', '', '', ''],
-          ['4', 'delta', '10', 'false', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
         ]);
 
         model.filter('0');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'false', '', '', ''],
-          ['3', 'gamma', '0', 'true', '', '', ''],
-          ['4', 'delta', '10', 'false', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
         ]);
 
         model.filter('1');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '', '', ''],
-          ['2', 'beta', '1', 'false', '', '', ''],
-          ['3', 'gamma', '0', 'true', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
         ]);
 
         model.filter('2');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
         ]);
 
         model.filter('10');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['4', 'delta', '10', 'false', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
+        ]);
+
+        model.filter('X');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
         ]);
 
         model.filter('11');
@@ -3594,6 +4376,108 @@ describe('Table', () => {
         }));
       });
 
+      it('should filter enum column (single)', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{enumValue: string}> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<{enumValue: string}>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addEnumColumn({
+            name: 'column:enum',
+            value: item => item.enumValue,
+            filterable: 'single',
+            values: [
+              {value: 'enum-1', label: 'Entry 1'},
+              {value: 'enum-2', label: 'Entry 2'},
+              {value: 'enum-3', label: 'Entry 3'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:enum'})!;
+        loader.calls.reset();
+
+        await column.filter('enum-1');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:enum', text: 'enum-1'},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter('enum-2');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:enum', text: 'enum-2'},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
+      it('should filter enum column (multi)', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{enumValue: string}> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<{enumValue: string}>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addEnumColumn({
+            name: 'column:enum',
+            value: item => item.enumValue,
+            values: [
+              {value: 'enum-1', label: 'Entry 1'},
+              {value: 'enum-2', label: 'Entry 2'},
+              {value: 'enum-3', label: 'Entry 3'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:enum'})!;
+        loader.calls.reset();
+
+        await column.filter(['enum-1']);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:enum', text: ['enum-1']},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+
+        await column.filter(['enum-1', 'enum-2']);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:enum', text: ['enum-1', 'enum-2']},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
       it('should filter component column', async () => {
         const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<string> => {
           return {items: [], totalCount: 0};
@@ -4171,7 +5055,7 @@ describe('Table', () => {
     it('should style column based on the column data type', async () => {
       const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
 
-      const data = signal([{string: 'abc', number: 123, boolean: true, date: '2026-10-06'}]);
+      const data = signal([{string: 'abc', number: 123, boolean: true, date: '2026-10-06', enumValue: '1'}]);
       const {fixture} = createSciTableComponent(sciTable({
         datasource: data,
         columns: table => table
@@ -4179,6 +5063,10 @@ describe('Table', () => {
           .addNumberColumn(item => item.number)
           .addBooleanColumn(item => item.boolean)
           .addDateColumn(item => item.date)
+          .addEnumColumn({
+            value: item => item.enumValue,
+            values: [{value: '1', label: 'Entry'}],
+          })
           .addComponentColumn({component: item => ({component: CustomColumnComponent, bindings: [inputBinding('value', () => item)]})})
           .addTemplateColumn({template: () => ({template})}),
         injector: TestBed.inject(Injector),
@@ -4191,8 +5079,9 @@ describe('Table', () => {
       expect(table.row({nth: 0}).cells[1]!.element.getAttribute('part')).toContain('column:number');
       expect(table.row({nth: 0}).cells[2]!.element.getAttribute('part')).toContain('column:boolean');
       expect(table.row({nth: 0}).cells[3]!.element.getAttribute('part')).toContain('column:date');
-      expect(table.row({nth: 0}).cells[4]!.element.getAttribute('part')).toContain('column:component');
-      expect(table.row({nth: 0}).cells[5]!.element.getAttribute('part')).toContain('column:template');
+      expect(table.row({nth: 0}).cells[4]!.element.getAttribute('part')).toContain('column:enum');
+      expect(table.row({nth: 0}).cells[5]!.element.getAttribute('part')).toContain('column:component');
+      expect(table.row({nth: 0}).cells[6]!.element.getAttribute('part')).toContain('column:template');
     });
   });
 

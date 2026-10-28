@@ -51,17 +51,21 @@ export interface Product {
   price: number;
   inStock: boolean;
   expirationDate: string;
+  status: 'in-stock' | 'low-stock' | 'out-of-stock' | 'backorderable' | 'preorder' | 'discontinued' | 'clearance' | 'coming-soon' | 'on-sale';
 }
 
 export namespace Products {
 
   export function generate(count: number): Product[] {
+    const statusEnumeration = ['in-stock', 'low-stock', 'out-of-stock', 'backorderable', 'preorder', 'discontinued', 'clearance', 'coming-soon', 'on-sale'] as const;
+
     return Array.from(Array(count), (_, i) => ({
       id: i + 1,
       name: `Product ${i + 1}`,
       price: randomNumber({integerDigits: 4, fractionDigits: 2}),
       inStock: Math.random() > 0.5,
       expirationDate: randomDate().toISOString(),
+      status: statusEnumeration[Math.floor(Math.random() * statusEnumeration.length)]!,
     }));
   }
 

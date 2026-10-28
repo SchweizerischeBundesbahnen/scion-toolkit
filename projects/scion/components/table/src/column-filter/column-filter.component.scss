@@ -45,6 +45,11 @@
       appearance: none;
       margin: 0;
     }
+
+    &[type="button"] {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
   }
 
   > button.clear {
