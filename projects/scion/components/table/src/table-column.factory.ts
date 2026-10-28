@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciColumnHeaderLike, SciDateLike, SciTableCellContext} from './table.model';
+import {SciColumnHeaderLike, SciDateLike, SciEnumColumnValues, SciEnumValueLike, SciTableCellContext, SciTableColumnType} from './table.model';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
 
@@ -131,6 +131,7 @@ export interface SciTableColumnFactory<T> {
    * Adds a column to the table for displaying boolean values.
    *
    * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   * For custom display or filter options, use {@link addEnumColumn} instead.
    *
    * The function:
    * - Can call `inject` to get required dependencies.
@@ -142,6 +143,7 @@ export interface SciTableColumnFactory<T> {
    * Adds a column to the table for displaying boolean values.
    *
    * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   * For custom display or filter options, use {@link addEnumColumn} instead.
    *
    * The function:
    * - Can call `inject` to get required dependencies.
@@ -153,6 +155,7 @@ export interface SciTableColumnFactory<T> {
    * Adds a column to the table for displaying boolean values.
    *
    * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   * For custom display or filter options, use {@link addEnumColumn} instead.
    */
   addBooleanColumn(descriptor: SciBooleanColumnDescriptor<T>): this;
 
@@ -247,6 +250,13 @@ export interface SciTableColumnFactory<T> {
    * ```
    */
   addDateColumn(descriptor: SciDateColumnDescriptor<T>): this;
+
+  /**
+   * Adds a column to the table for displaying values of an enumeration.
+   *
+   * An enumeration defines a fixed set of values, each with a label and an optional icon and tooltip.
+   */
+  addEnumColumn(descriptor: SciEnumColumnDescriptor<T>): this;
 
   /**
    * Adds a column to the table for displaying custom content using a component.
@@ -405,6 +415,7 @@ export interface SciBooleanColumnDescriptor<T> extends SciTableColumnDescriptor 
    * Specifies the boolean value to display for an item.
    *
    * Cells display `true` as a checkmark and `false` as an 'X'. Filter options are labeled as 'Yes'/'No'.
+   * For custom display or filter options, use {@link addEnumColumn} instead.
    *
    * The function:
    * - Can call `inject` to get required dependencies.
@@ -475,6 +486,66 @@ export interface SciDateColumnDescriptor<T> extends SciTableColumnDescriptor {
   timezone?: string;
 }
 
+/**
+ * Configures a table column for displaying values of an enumeration.
+ *
+ * An enumeration defines a fixed set of values, each with a label and an optional icon and tooltip.
+ */
+export interface SciEnumColumnDescriptor<T = unknown> extends SciTableColumnDescriptor {
+  /**
+   * Specifies the enumeration value to display for an item. Must be a value of an entry defined in {@link values}.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  value: (item: T) => MaybeSignal<SciEnumValueLike | undefined>;
+  /**
+   * Specifies the enumeration entries.
+   *
+   * The array order determines the sort order of the enumeration.
+   */
+  values: MaybeSignal<SciEnumColumnValues>;
+  /**
+   * Configures the display of enumeration values.
+   *
+   * Defaults to displaying the label in cells, and both icon and label in the column filter menu. Defaults are unset when using a custom format.
+   */
+  format?: {
+    /**
+     * Controls whether to display the icon in cells.
+     */
+    icon?: true;
+    /**
+     * Controls whether to display the label in cells.
+     */
+    label?: true;
+    /**
+     * Configures the display of entries in the column filter menu.
+     */
+    filter?: {
+      /**
+       * Controls whether to display the icon in the column filter menu.
+       */
+      icon?: true;
+    };
+  };
+  /**
+   * Controls whether the user can sort this column. Defaults to `true`.
+   */
+  sortable?: boolean;
+  /**
+   * Controls whether the user can filter this column. Defaults to `multi`.
+   */
+  filterable?: 'single' | 'multi' | false;
+  /**
+   * Specifies the column data type to add to the HTML `part` attribute of column cells. Defaults to `enum`.
+   *
+   * @internal
+   */
+  referenceType?: SciTableColumnType;
+}
+
 export interface SciComponentColumnDescriptor<T> extends SciTableColumnDescriptor {
   component: (item: T) => SciComponentDescriptor;
   sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, void>};
@@ -500,9 +571,9 @@ export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor
 }
 
 /**
- * Represents a {@link SciStringColumnDescriptor}, {@link SciNumberColumnDescriptor}, {@link SciBooleanColumnDescriptor}, {@link SciComponentColumnDescriptor}, or {@link SciTemplateColumnDescriptor}.
+ * Represents a column descriptor.
  */
-export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciDateColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciDateColumnDescriptor<T> | SciEnumColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
 
 /**
  * Signature of a function used to configure a comparator for sorting a table column.

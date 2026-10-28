@@ -10,7 +10,7 @@
 
 import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciTableColumnFilter, SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
-import {SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
+import {SciEnumValueLike, SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {rangeInclusive} from './common';
 import {SCI_TABLE_STORAGE} from './table-storage';
@@ -393,14 +393,14 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
    * Applies a filter, either via global filter or on a specific column.
    */
   public filter(text: string | null): void;
-  public filter(text: string | number | boolean | null, options: {columnName: `column:${string}`}): void;
-  public filter(text: string | number | boolean | null, options?: {columnName: `column:${string}`}): void {
+  public filter(text: string | number | boolean | SciEnumValueLike | SciEnumValueLike[] | null, options: {columnName: `column:${string}`}): void;
+  public filter(text: string | number | boolean | SciEnumValueLike | SciEnumValueLike[] | null, options?: {columnName: `column:${string}`}): void {
     // Scroll to the top as soon as filter changes.
     // Done here explicitly to avoid race-conditions and pages being loaded unnecessarily.
     this.tableViewRef()?.scrollToTop();
 
     if (!options) {
-      this._tableFilter.set(text as string);
+      this._tableFilter.set(text as string | null);
       return;
     }
 
@@ -409,13 +409,9 @@ export class ɵSciTable<T = unknown> implements SciTable<T> {
       throw Error(`[NullColumnError] Column '${options.columnName}' not found in table '${this.name()}'.`);
     }
 
-    this.filterCriteria.update(filterCriterion => {
-      const otherFilterCriteria = filterCriterion.filter(filterCriterion => filterCriterion.columnName !== options.columnName);
-      if (text === null) {
-        return otherFilterCriteria;
-      }
-
-      return otherFilterCriteria.concat({columnName: column.name, text});
+    this.filterCriteria.update(filterCriteria => {
+      const newFilterCriteria = filterCriteria.filter(filterCriterion => filterCriterion.columnName !== options.columnName);
+      return text === null ? newFilterCriteria : newFilterCriteria.concat({columnName: column.name, text});
     });
   }
 
