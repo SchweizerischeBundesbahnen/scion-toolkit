@@ -1303,7 +1303,7 @@ describe('Table', () => {
       });
 
       it('should sort string column', async () => {
-        const data = signal([{string: 'b'}, {string: 'c'}, {string: undefined}, {string: 'a'}]);
+        const data = signal([{string: 'b'}, {string: 'c'}, {string: undefined}, {string: undefined}, {string: 'a'}]);
 
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
@@ -1319,17 +1319,17 @@ describe('Table', () => {
         const column = table.column({name: 'column:string'})!;
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['a', 'b', 'c', '']);
+        expect(await column.values()).toEqual(['a', 'b', 'c', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['c', 'b', 'a', '']);
+        expect(await column.values()).toEqual(['c', 'b', 'a', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['b', 'c', '', 'a']);
+        expect(await column.values()).toEqual(['b', 'c', '', '', 'a']);
       });
 
       it('should sort number column', async () => {
-        const data = signal([{number: 1}, {number: 3}, {number: undefined}, {number: 2}]);
+        const data = signal([{number: 1}, {number: 3}, {number: undefined}, {number: undefined}, {number: 2}]);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           columns: table => table.addNumberColumn({
@@ -1344,17 +1344,17 @@ describe('Table', () => {
         const column = table.column({name: 'column:number'})!;
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['1', '2', '3', '']);
+        expect(await column.values()).toEqual(['1', '2', '3', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['3', '2', '1', '']);
+        expect(await column.values()).toEqual(['3', '2', '1', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['1', '3', '', '2']);
+        expect(await column.values()).toEqual(['1', '3', '', '', '2']);
       });
 
       it('should sort boolean column', async () => {
-        const data = signal([{boolean: true}, {boolean: false}, {boolean: undefined}, {boolean: true}]);
+        const data = signal([{boolean: true}, {boolean: false}, {boolean: undefined}, {boolean: undefined}, {boolean: true}]);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           columns: table => table.addBooleanColumn({
@@ -1369,13 +1369,13 @@ describe('Table', () => {
         const column = table.column({name: 'column:boolean'})!;
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['false', 'true', 'true', '']);
+        expect(await column.values()).toEqual(['false', 'true', 'true', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['true', 'true', 'false', '']);
+        expect(await column.values()).toEqual(['true', 'true', 'false', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['true', 'false', '', 'true']);
+        expect(await column.values()).toEqual(['true', 'false', '', '', 'true']);
       });
 
       it('should sort date column', async () => {
@@ -1385,7 +1385,7 @@ describe('Table', () => {
         const date4 = '2026-02-17T08:16:00.000Z';
         const date5 = '2026-10-04T11:54:43+02:00';
 
-        const data = signal([{date: date1}, {date: date2}, {date: date3}, {date: date4}, {date: undefined}, {date: date5}]);
+        const data = signal([{date: date1}, {date: date2}, {date: date3}, {date: date4}, {date: undefined}, {date: undefined}, {date: date5}]);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           filterable: true,
@@ -1400,16 +1400,16 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:date'})!;
-        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '', '04.10.2026']);
+        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '', '', '04.10.2026']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['15.04.2025', '17.02.2026', '30.05.2026', '15.06.2026', '04.10.2026', '']);
+        expect(await column.values()).toEqual(['15.04.2025', '17.02.2026', '30.05.2026', '15.06.2026', '04.10.2026', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['04.10.2026', '15.06.2026', '30.05.2026', '17.02.2026', '15.04.2025', '']);
+        expect(await column.values()).toEqual(['04.10.2026', '15.06.2026', '30.05.2026', '17.02.2026', '15.04.2025', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '', '04.10.2026']);
+        expect(await column.values()).toEqual(['30.05.2026', '15.06.2026', '15.04.2025', '17.02.2026', '', '', '04.10.2026']);
       });
 
       it('should sort time column', async () => {
@@ -1424,7 +1424,8 @@ describe('Table', () => {
           {row: '8', time: '2025-02-17T09:15:43Z'},
           {row: '9', time: '2024-02-17T09:15:43Z'},
           {row: '10', time: undefined},
-          {row: '11', time: '2024-10-13:20:00+02:00'},
+          {row: '11', time: undefined},
+          {row: '12', time: '2024-10-13:20:00+02:00'},
         ]);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
@@ -1462,7 +1463,8 @@ describe('Table', () => {
           ['8', '09:15:43', '2025-02-17T09:15:43Z'],
           ['9', '09:15:43', '2024-02-17T09:15:43Z'],
           ['10', '', ''],
-          ['11', '18:00:00', '2024-10-13:20:00+02:00'],
+          ['11', '', ''],
+          ['12', '18:00:00', '2024-10-13:20:00+02:00'],
         ]);
 
         await column.toggleSort();
@@ -1471,13 +1473,14 @@ describe('Table', () => {
           ['3', '15:15:08', '15:15:08Z'],
           ['4', '15:15:08', 'T15:15:08Z'],
           ['9', '09:15:43', '2024-02-17T09:15:43Z'],
-          ['11', '18:00:00', '2024-10-13:20:00+02:00'],
+          ['12', '18:00:00', '2024-10-13:20:00+02:00'],
           ['8', '09:15:43', '2025-02-17T09:15:43Z'],
           ['6', '09:16:43', '2025-02-17T09:16:43Z'],
           ['7', '09:16:43', '2025-02-17T09:16:43.000Z'],
           ['5', '10:16:43', '2025-02-17T10:16:43Z'],
           ['1', '08:16:43', '2025-02-20T08:16:43Z'],
           ['10', '', ''],
+          ['11', '', ''],
         ]);
 
         await column.toggleSort();
@@ -1487,12 +1490,13 @@ describe('Table', () => {
           ['6', '09:16:43', '2025-02-17T09:16:43Z'],
           ['7', '09:16:43', '2025-02-17T09:16:43.000Z'],
           ['8', '09:15:43', '2025-02-17T09:15:43Z'],
-          ['11', '18:00:00', '2024-10-13:20:00+02:00'],
+          ['12', '18:00:00', '2024-10-13:20:00+02:00'],
           ['9', '09:15:43', '2024-02-17T09:15:43Z'],
           ['3', '15:15:08', '15:15:08Z'],
           ['4', '15:15:08', 'T15:15:08Z'],
           ['2', '09:55:29', 'T11:55:29+02:00'],
           ['10', '', ''],
+          ['11', '', ''],
         ]);
 
         await column.toggleSort();
@@ -1507,12 +1511,13 @@ describe('Table', () => {
           ['8', '09:15:43', '2025-02-17T09:15:43Z'],
           ['9', '09:15:43', '2024-02-17T09:15:43Z'],
           ['10', '', ''],
-          ['11', '18:00:00', '2024-10-13:20:00+02:00'],
+          ['11', '', ''],
+          ['12', '18:00:00', '2024-10-13:20:00+02:00'],
         ]);
       });
 
       it('should sort string column with custom sort comparator', async () => {
-        const data = signal(['1', '3', undefined, '2']);
+        const data = signal(['1', '3', undefined, undefined, '2']);
         const {fixture} = createSciTableComponent(sciTable({
           datasource: data,
           columns: table => table.addStringColumn({
@@ -1527,16 +1532,16 @@ describe('Table', () => {
         await table.waitUntilStable();
         const column = table.column({name: 'column:string'})!;
 
-        expect(await column.values()).toEqual(['1', '3', '', '2']);
+        expect(await column.values()).toEqual(['1', '3', '', '', '2']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['3', '2', '1', '']);
+        expect(await column.values()).toEqual(['3', '2', '1', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['1', '2', '3', '']);
+        expect(await column.values()).toEqual(['1', '2', '3', '', '']);
 
         await column.toggleSort();
-        expect(await column.values()).toEqual(['1', '3', '', '2']);
+        expect(await column.values()).toEqual(['1', '3', '', '', '2']);
       });
 
       it('should sort component column with custom sort comparator', async () => {
