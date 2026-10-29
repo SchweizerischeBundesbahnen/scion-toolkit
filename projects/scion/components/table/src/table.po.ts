@@ -19,9 +19,9 @@ export class TablePO {
   public readonly element: ShadowRoot;
   public readonly body: HTMLElement;
 
-  constructor(fixture: ComponentFixture<unknown>) {
+  constructor(fixture: ComponentFixture<unknown>, tagName: string = 'sci-table') {
     const element = fixture.debugElement.nativeElement as Element;
-    this.element = element.tagName === 'SCI-TABLE' ? element.shadowRoot! : element.querySelector('sci-table')!.shadowRoot!;
+    this.element = element.tagName === tagName.toLocaleUpperCase() ? element.shadowRoot! : element.querySelector(tagName)!.shadowRoot!;
     this.body = this.element.querySelector('sci-table-body')!;
   }
 
@@ -182,7 +182,7 @@ export class ColumnPO {
   }
 
   public get sortable(): boolean {
-    return this.header?.sortButton !== null;
+    return this.header?.sortButton !== null && this.header?.sortButton !== undefined;
   }
 
   public get filterable(): boolean {
@@ -213,6 +213,10 @@ export class RowPO {
 
   public select(): void {
     this.element.click();
+  }
+
+  public toggle(): void {
+    this.element.querySelector<HTMLButtonElement>('button.e2e-toggle-children')!.click();
   }
 
   public isSelected(): boolean {

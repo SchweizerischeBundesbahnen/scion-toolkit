@@ -9,13 +9,14 @@
  */
 
 import {Injector, Signal, WritableSignal} from '@angular/core';
-import {SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
+import {SciTableDatasourceFactory, SciTableSortCriterion} from './table-datasource';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFn, ɵSciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
-import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
 import {SciDateValue} from './table-date-column.model';
+import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
+import {MaybeArray} from '@scion/toolkit/types';
 import {Translatable} from '@scion/components/text';
 import {SciEnumValue} from './table-enum-column.model';
 
@@ -24,13 +25,13 @@ import {SciEnumValue} from './table-enum-column.model';
  */
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'icon' | 'component' | 'template';
 
-export interface SciTableDescriptor<T> {
+export interface SciTableDescriptor<T, ID = unknown> {
   datasource: Signal<T[]>;
   /**
    * @docs-private Not public API. For internal use only.
    * @experimental since 22.3.0; API and behavior may change in any version without notice.
    */
-  ɵdatasource?: Signal<T[]> | SciTableDataLoaderFn<T>;
+  ɵdatasource?: Signal<T[]> | SciTableDatasourceFactory<T, ID>;
   columns: SciTableColumnFactoryFn<T>;
   sortable?: boolean;
   resizable?: boolean;
@@ -114,20 +115,20 @@ export interface SciTableDescriptor<T> {
    * Specifies the number of items to load per page. Defaults to 50.
    */
   pageSize?: number;
-  trackBy?: (item: T) => unknown;
+  trackBy?: (item: T) => ID;
   injector?: Injector;
 }
 
-export interface SciTable<T> {
+export interface SciTable<ID = unknown> {
   /**
-   * Currently active item.
+   * Currently active item id.
    */
-  readonly activeItem: Signal<T | undefined>;
+  readonly activeItem: Signal<ID | undefined>;
 
   /**
    * Selected items.
    */
-  readonly selectedItems: Signal<Array<T>>;
+  readonly selectedItems: Signal<Array<ID>>;
 
   readonly filterable: WritableSignal<boolean>;
   readonly showHeader: WritableSignal<boolean>;
@@ -140,11 +141,18 @@ export interface SciTable<T> {
    * Filters items cross-column, ignoring {@link SciTableDescriptor.filterable} and {@link SciTableColumnDescriptor.filterable} settings.
    */
   filter(text: string | null): void;
+
+  select(id: MaybeArray<ID>): void;
+
+  expandAll(): void;
+
+  collapseAll(): void;
 }
 
 export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
   type: SciTableColumnType;
   name: `column:${string}`;
+  showExpansionControl: boolean;
   header: {
     icon: string | undefined;
     label: Signal<string> | undefined;
@@ -205,31 +213,38 @@ export interface SciTemplateColumn<T = unknown> extends SciTableColumn<T, void, 
 
 export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciDateColumn<T> | SciEnumColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
 
+export const skeletonRowId = Symbol('SKELETON_ROW');
+
 /**
  * Mapped row, used as display state.
  */
-export interface SciTableRow<T> {
+export interface SciTableRow<T, ID> {
   index: number;
-  item?: T;
-  id?: unknown;
-  cells?: SciTableCellLike[];
-  bindings?: ɵSciTableRowBindings;
-  loading: boolean;
+  item: T;
+  id: ID | typeof skeletonRowId;
+  level: number;
+  parentId?: ID;
+  cells: SciTableCellLike[];
+  bindings: ɵSciTableRowBindings;
   active: Signal<boolean>;
   selected: Signal<boolean>;
   hovered: Signal<boolean>;
+  expanded: Signal<boolean>;
+  hasChildren: Signal<boolean>;
 }
 
 export interface SciStringCell {
   type: 'string';
   column: SciStringColumn;
   value: Signal<string | undefined>;
+  padding: boolean;
 }
 
 export interface SciNumberCell {
   type: 'number';
   column: SciNumberColumn;
   value: Signal<number | undefined>;
+  padding: boolean;
 }
 
 export interface SciDateCell {
@@ -277,7 +292,7 @@ export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T
 /**
  * Represents an event emitted by {@link SciTableComponent}.
  */
-export interface SciTableEvent<T> {
+export interface SciTableEvent<ID> {
   /**
    * The native browser event (`MouseEvent` or `KeyboardEvent`) that triggered the action.
    */
@@ -285,7 +300,7 @@ export interface SciTableEvent<T> {
   /**
    * The items associated with the action.
    */
-  items: T[];
+  items: ID[];
 }
 
 /**

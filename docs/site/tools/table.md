@@ -676,15 +676,15 @@ userTable.showHeader.set(false);
 userTable.wrapHeader.set(true);
 ```
 
-User settings, such as the width of resized columns, are stored in local storage. A different storage can be configured using the `provideTableStorage()` function, for example, to write user settings to a database or disable storage.
+User settings, such as the width of resized columns, are stored in local storage. A different storage can be configured using the `provideComponentsStorage()` function, for example, to write user settings to a database or disable storage.
 
 ```ts
 import {bootstrapApplication} from '@angular/platform-browser';
-import {provideTableStorage} from '@scion/components/table';
+import {provideComponentsStorage} from '@scion/components/common';
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideTableStorage(CustomTableStorage),
+    provideComponentsStorage(CustomTableStorage),
   ],
 });
 ```

@@ -28,7 +28,7 @@ export class TablePagePO {
   constructor(public page: Page) {
     this.locator = this.page.locator('app-table-page');
     this.properties = this.locator.locator('aside.e2e-properties');
-    this.tableState = this.properties.locator('section.e2e-table-state ');
+    this.tableState = this.properties.locator('section.e2e-table-state');
     this.tabbar = this.properties.locator('sci-tabbar');
     this.table = this.locator.locator('sci-table');
     this.activeItemId = this.tableState.locator('output.e2e-active-item-id');
@@ -150,6 +150,11 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-show-row-actions').setChecked(checked);
   }
 
+  public async showRowIcon(checked: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-show-row-icon').setChecked(checked);
+  }
+
   public async showTableFilter(checked: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('input.e2e-show-table-filter').setChecked(checked);
@@ -173,6 +178,27 @@ export class TablePagePO {
   public async simulateDatasourceError(simulateError: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-datasource').click();
     await this.properties.locator('input.e2e-simulate-error').setChecked(simulateError);
+  }
+
+  public async setHierarchical(hierarchical: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-hierarchical').setChecked(hierarchical);
+  }
+
+  public async expandAll(): Promise<void> {
+    await this.tabbar.locator('button.e2e-methods').click();
+    await this.tabbar.locator('button.e2e-expand-all').click();
+  }
+
+  public async collapseAll(): Promise<void> {
+    await this.tabbar.locator('button.e2e-methods').click();
+    await this.tabbar.locator('button.e2e-collapse-all').click();
+  }
+
+  public async selectIds(ids: number[]): Promise<void> {
+    await this.tabbar.locator('button.e2e-methods').click();
+    await this.tabbar.locator('input.e2e-select-ids').fill(ids.join(' '));
+    await this.tabbar.locator('button.e2e-select').click();
   }
 
   public async addColumn(options: ColumnOptions): Promise<void> {

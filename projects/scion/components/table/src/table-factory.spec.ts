@@ -14,7 +14,7 @@ import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/c
 import {createSciTableComponent} from './testing/testing.util';
 import {table, table as sciTable} from './table.factory';
 import {TablePO} from './table.po';
-import {ɵillegaldatasource} from './table-datasource';
+import {provideAsyncTableDatasource, ɵillegaldatasource} from './table-datasource';
 
 describe('Table Factory', () => {
 
@@ -174,7 +174,7 @@ describe('Table Factory', () => {
 
     it('should disallow sort comparator if using custom datasource', done => {
       createSciTableComponent(table({
-        ɵdatasource: () => ({totalCount: 0, items: []}),
+        ɵdatasource: provideAsyncTableDatasource(() => [], () => []),
         datasource: ɵillegaldatasource(),
         columns: table => {
           expect(() => table.addStringColumn({
@@ -189,7 +189,7 @@ describe('Table Factory', () => {
 
     it('should disallow filter matcher if using custom datasource', done => {
       createSciTableComponent(table({
-        ɵdatasource: () => ({totalCount: 0, items: []}),
+        ɵdatasource: provideAsyncTableDatasource(() => [], () => []),
         datasource: ɵillegaldatasource(),
         columns: table => {
           expect(() => table.addStringColumn({

@@ -1,5 +1,5 @@
-import {provideTableStorage} from '@scion/components/table';
 import {booleanAttribute, EnvironmentProviders, makeEnvironmentProviders} from '@angular/core';
+import {provideComponentsStorage} from '@scion/components/common';
 
 /**
  * Provides a {@link SciTableStorage} which does nothing.
@@ -9,7 +9,7 @@ export function provideNullTableStorage(): EnvironmentProviders {
   if (!tableStorageEnabled) {
     console.info(`[SciTable] Storage disabled. Storage can be enabled by setting the 'sci-table-storage' query parameter.`);
 
-    return provideTableStorage(class {
+    return provideComponentsStorage(class {
       public load(): null {
         return null;
       }

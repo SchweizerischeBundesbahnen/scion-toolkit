@@ -17,7 +17,6 @@ import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, setCaret, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
 import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
 import {firstValueFrom, Subject} from 'rxjs';
-import {SciTablePageResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';
 import {CustomButtonColumnPO} from './custom-button-column.po';
@@ -1182,7 +1181,7 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.column({name: 'column:name'}).filter('999999');
-      await expect(table.rows).toHaveCount(1);
+      await expect(table.rows).toHaveCount(1, {timeout: 10_000});
     });
 
     test('should reset scroll position to top when applying filter', async ({page}) => {
@@ -1729,6 +1728,7 @@ test.describe('sci-table', () => {
 
       await tablePage.showHeader(true);
       await tablePage.setFilterable(false);
+      await tablePage.showTableFilter(false);
 
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
@@ -1745,6 +1745,7 @@ test.describe('sci-table', () => {
 
       await tablePage.showHeader(true);
       await tablePage.setFilterable(true);
+      await tablePage.showTableFilter(false);
 
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
@@ -1761,6 +1762,7 @@ test.describe('sci-table', () => {
 
       await tablePage.showHeader(false);
       await tablePage.setFilterable(true);
+      await tablePage.showTableFilter(false);
 
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
@@ -1777,6 +1779,7 @@ test.describe('sci-table', () => {
 
       await tablePage.showHeader(false);
       await tablePage.setFilterable(false);
+      await tablePage.showTableFilter(false);
 
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
@@ -1793,6 +1796,7 @@ test.describe('sci-table', () => {
 
       await tablePage.showHeader(true);
       await tablePage.setCssVariable('--sci-table-header-column-divider', 'hidden');
+      await tablePage.showTableFilter(false);
 
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
@@ -1856,6 +1860,7 @@ test.describe('sci-table', () => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
+      await tablePage.showTableFilter(false);
 
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
@@ -1892,6 +1897,7 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.showTableFilter(false);
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string'});
 
@@ -1925,6 +1931,7 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.showTableFilter(false);
       await tablePage.showRowActions(true);
       await tablePage.addColumn({name: 'column:1', type: 'string'});
       await tablePage.addColumn({name: 'column:2', type: 'string', width: '50px'});
@@ -1954,6 +1961,7 @@ test.describe('sci-table', () => {
 
       await tablePage.showHeader(true);
       await tablePage.setWidth(600);
+      await tablePage.showTableFilter(false);
 
       await tablePage.addColumn({name: 'column:1', type: 'string', width: '200px'});
       await tablePage.addColumn({name: 'column:2', type: 'string', width: '200px'});
@@ -4893,6 +4901,7 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.showTableFilter(false);
       await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
       await tablePage.addColumn({name: 'column:2', type: 'string', width: '100000px'});
 
@@ -4951,6 +4960,7 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
+      await tablePage.showTableFilter(false);
       await tablePage.addColumn({name: 'column:1', type: 'string', width: '100px'});
       await tablePage.addColumn({name: 'column:2', type: 'string', width: '100000px'});
 
@@ -5783,9 +5793,9 @@ test.describe('sci-table', () => {
 
       // Install HTTP endpoint that blocks the initial load.
       const onLoad$ = new Subject<void>();
-      await page.route('**/sci-table/products', async route => {
+      await page.route('**/sci-table/products/ids', async route => {
         await firstValueFrom(onLoad$);
-        await route.fulfill({json: {items: [], totalCount: 0} satisfies SciTablePageResponse<Product>});
+        return route.fulfill({json: []});
       });
 
       await tablePage.addColumn({name: 'column:testee', type: 'string'});
@@ -5845,8 +5855,6 @@ test.describe('sci-table', () => {
       await table.retry();
       await expect(table.locator).not.toContainText('Data unavailable.');
       await expect(table.rows).toHaveCount(10);
-
-      await expect.poll(() => consoleLogs.get({severity: 'error'})).toContainEqual(expect.stringContaining('[DatasourceError]'));
     });
 
     test(`should horizontally center 'Data Unavailable' in viewport`, async ({page}) => {

@@ -1,15 +1,26 @@
 @let row = this.row();
 
+<!-- Expansion Control -->
+@if (row.hasChildren()) {
+  <button class="toggle-children e2e-toggle-children" (click)="onToggleChildrenClick($event)">
+    @if (row.expanded()) {
+      <sci-icon class="e2e-expanded">scion.chevron_down</sci-icon>
+    } @else {
+      <sci-icon class="e2e-collapsed">scion.chevron_right</sci-icon>
+    }
+  </button>
+}
+
 <!-- Row Icons -->
-@if (row.cells?.length) {
-  @for (icon of row.bindings?.icons(); track $index) {
+@if (row.cells.length) {
+  @for (icon of row.bindings.icons(); track $index) {
     <sci-icon>{{icon}}</sci-icon>
   }
 }
 
 <!-- Table Cells -->
 @for (cell of row.cells; track cell.column.name) {
-  <sci-table-cell [cell]="cell" [row]="row"/>
+  <sci-table-cell [cell]="cell" [row]="row" #cell/>
 } @empty {
   @for (column of table().columns(); track column.name) {
     <div class="skeleton e2e-skeleton" [attr.data-column]="column.name"></div>
