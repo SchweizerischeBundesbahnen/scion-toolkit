@@ -224,6 +224,10 @@ export class ColumnSplitterPO {
 
     throw Error('[PageObjectError] Cannot determine column splitter display mode.');
   }
+
+  public async isInteractive(): Promise<boolean> {
+    return this.locator.evaluate(splitter => getComputedStyle(splitter).pointerEvents !== 'none');
+  }
 }
 
 export class DrageHandlePO {
