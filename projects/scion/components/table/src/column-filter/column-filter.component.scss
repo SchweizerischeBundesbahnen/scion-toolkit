@@ -2,7 +2,6 @@
 
 :host {
   display: flex;
-  gap: .5em;
   align-items: center;
   padding-inline: var(--ɵsci-table-cell-padding-inline);
   border-bottom: var(--ɵsci-table-border-size) solid transparent;
@@ -38,6 +37,7 @@
     color: var(--sci-color-text);
     appearance: auto;
     box-sizing: border-box;
+    margin-inline: .5em;
 
     // Remove native steppers in Chromium and Safari.
     &[type="number"]::-webkit-outer-spin-button,
@@ -49,6 +49,12 @@
     &[type="button"] {
       white-space: nowrap;
       text-overflow: ellipsis;
+    }
+
+    // Hide input and remove margin (gap) when host drops below 60px.
+    &.hidden {
+      margin-inline: 0;
+      visibility: hidden;
     }
   }
 

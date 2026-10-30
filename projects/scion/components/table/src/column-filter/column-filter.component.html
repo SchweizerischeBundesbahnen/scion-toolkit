@@ -9,7 +9,7 @@
       <input [(ngModel)]="filter" type="number" #input/>
     }
     @case ('enum') {
-      <input [ngModel]="(filter() | sciEnumLabel:column.enumeration())()" type="button" #input>
+      <input [ngModel]="(filter() | sciEnumLabel:column.enumeration())()" [class.hidden]="dimension()!.clientWidth < 60" type="button" #input>
       <sci-icon class="chevron">{{menu ? 'scion.chevron_up' : 'scion.chevron_down'}}</sci-icon>
     }
     @default {
