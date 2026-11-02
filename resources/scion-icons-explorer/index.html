@@ -39,171 +39,38 @@
         margin: 0 auto;
       }
 
-      header {
-        margin-bottom: 1.5rem;
-        background: var(--card-bg);
-        padding: 1.5rem 2rem;
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        border: 1px solid var(--border-color);
-      }
-
-      .header-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-      }
-
-      h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-main);
-      }
-
-      .json-url-display {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        word-break: break-all;
-      }
-
-      .json-url-display a {
-        color: var(--primary);
-        text-decoration: none;
-      }
-
-      .json-url-display a:hover {
-        text-decoration: underline;
-      }
-
-      /* Collapsible Details Styling */
-      details.file-settings {
-        margin-top: 1rem;
-        border-top: 1px solid var(--border-color);
-        padding-top: 1rem;
-      }
-
-      details.file-settings summary {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        cursor: pointer;
-        user-select: none;
-        outline: none;
-        transition: color 0.2s;
-      }
-
-      details.file-settings summary:hover {
-        color: var(--primary);
-      }
-
-      .controls-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.25rem;
-        margin-top: 1rem;
-      }
-
-      @media (max-width: 768px) {
-        .controls-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .input-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      .input-group label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      .url-input-wrapper {
-        display: flex;
-        gap: 0.5rem;
-      }
-
-      input[type="text"] {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        font-size: 0.95rem;
-        outline: none;
-        transition: border-color 0.2s, box-shadow 0.2s;
-      }
-
-      input[type="text"]:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-      }
-
-      .btn {
-        padding: 0.75rem 1.25rem;
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: background-color 0.2s;
-      }
-
-      .btn:hover {
-        background-color: var(--primary-hover);
-      }
-
-      .file-label {
-        display: inline-block;
-        padding: 0.75rem 1rem;
-        background: var(--bg-color);
-        border: 1px dashed var(--border-color);
-        border-radius: 8px;
-        cursor: pointer;
-        width: 100%;
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 0.95rem;
-        transition: border-color 0.2s, background-color 0.2s;
-      }
-
-      .file-label:hover {
-        border-color: var(--primary);
-        background-color: var(--accent-bg);
-        color: var(--primary);
-      }
-
-      input[type="file"] {
-        display: none;
-      }
-
-      /* Search Section */
-      .search-section {
-        background: var(--card-bg);
-        padding: 1.25rem 2rem;
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        border: 1px solid var(--border-color);
-        margin-bottom: 1.5rem;
-      }
-
       .search-wrapper {
         position: relative;
         display: flex;
         align-items: center;
         width: 100%;
+        margin-bottom: 1rem;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 1rem;
+        display: flex;
+        align-items: center;
+        color: var(--text-muted);
+        pointer-events: none;
       }
 
       .search-input {
-        font-size: 1.05rem !important;
-        padding-right: 2.75rem !important;
+        width: 100%;
+        font-size: 1rem;
+        padding: 0.85rem 2.75rem 0.85rem 2.75rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      .search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
       }
 
       .clear-search-btn {
@@ -234,10 +101,24 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 0.5rem;
         margin-bottom: 1.5rem;
         padding: 0 0.5rem;
         color: var(--text-muted);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+      }
+
+      .source-separator {
+        color: var(--border-color);
+      }
+
+      .source-link {
+        color: var(--primary);
+        text-decoration: none;
+      }
+
+      .source-link:hover {
+        text-decoration: underline;
       }
 
       .icon-grid {
@@ -362,57 +243,25 @@
   <body>
 
     <div class="container">
-      <header>
-        <div class="header-top">
-          <h1>SCION Icon Explorer</h1>
-        </div>
-
-        <div class="json-url-display" id="jsonUrlDisplay">
-          Source: <a id="headerUrlLink" href="#" target="_blank" rel="noopener">Loading...</a>
-        </div>
-
-        <!-- Collapsible Section (Collapsed by default) -->
-        <details class="file-settings">
-          <summary>⚙️ Change Definition File Source</summary>
-          <div class="controls-grid">
-            <div class="input-group">
-              <label for="urlInput">Definition File Location (JSON)</label>
-              <div class="url-input-wrapper">
-                <input type="text" id="urlInput" value="https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.json" placeholder="Enter path or URL to icon JSON file...">
-                <button class="btn" id="loadUrlBtn">Load</button>
-              </div>
-            </div>
-
-            <div class="input-group">
-              <label>Or Load Local File</label>
-              <label class="file-label" id="dropZone">
-                📁 Choose local file or drop JSON here
-                <input type="file" id="fileInput" accept=".json">
-              </label>
-            </div>
-          </div>
-        </details>
-      </header>
-
-      <!-- Full-Width Search Bar Section -->
-      <div class="search-section">
-        <div class="input-group">
-          <label for="searchInput">Filter / Search Icons</label>
-          <div class="search-wrapper">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search by icon name or ligature (e.g., bin, edit, chevron)...">
-            <button class="clear-search-btn" id="clearSearchBtn" title="Clear search">✕</button>
-          </div>
-        </div>
+      <div class="search-wrapper">
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search SCION icons..." autofocus>
+        <button class="clear-search-btn" id="clearSearchBtn" title="Clear search">✕</button>
       </div>
 
       <div class="stats-bar">
-        <span id="setInfo">Loading default icon set...</span>
         <span id="countInfo">0 icons</span>
+        <a class="source-link" href="https://cdn.jsdelivr.net/npm/@scion/icons/" target="_blank" rel="noopener">https://cdn.jsdelivr.net/npm/@scion/icons/</a>
       </div>
 
       <div class="icon-grid" id="iconGrid">
         <div class="empty-state">
-          <p>Loading default icon set...</p>
+          <p>Loading icons...</p>
         </div>
       </div>
     </div>
@@ -421,38 +270,19 @@
 
     <script>
       let allIcons = [];
-      const DEFAULT_JSON_PATH = 'https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.json';
+      const JSON_URL = 'https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.json';
       const LIGATURE_PREFIX = 'scion:';
 
-      const urlInput = document.getElementById('urlInput');
-      const loadUrlBtn = document.getElementById('loadUrlBtn');
-      const fileInput = document.getElementById('fileInput');
-      const dropZone = document.getElementById('dropZone');
       const searchInput = document.getElementById('searchInput');
       const clearSearchBtn = document.getElementById('clearSearchBtn');
       const iconGrid = document.getElementById('iconGrid');
-      const setInfo = document.getElementById('setInfo');
       const countInfo = document.getElementById('countInfo');
       const toast = document.getElementById('toast');
-      const headerUrlLink = document.getElementById('headerUrlLink');
 
       function showToast(msg) {
         toast.textContent = msg;
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 2000);
-      }
-
-      function updateHeaderUrlDisplay(url, isLocalFile = false) {
-        if (isLocalFile) {
-          headerUrlLink.textContent = `Local file: ${url}`;
-          headerUrlLink.removeAttribute('href');
-          headerUrlLink.style.cursor = 'default';
-        }
-        else {
-          headerUrlLink.textContent = url;
-          headerUrlLink.href = url;
-          headerUrlLink.style.cursor = 'pointer';
-        }
       }
 
       function formatLigatures(rawLigatures) {
@@ -470,13 +300,8 @@
       function parseIcoMoonJSON(data) {
         allIcons = [];
         const iconSets = data.iconSets || [data];
-        let setName = data.metadata?.name || 'Icon Set';
 
         iconSets.forEach(set => {
-          if (set.metadata?.name) {
-            setName = set.metadata.name;
-          }
-
           const fontEmSize = set.preferences?.fontPref?.metrics?.emSize || set.height || 1024;
 
           const selectionMap = new Map();
@@ -498,7 +323,6 @@
               }
 
               const ligatures = formatLigatures(rawLigatures);
-
               const paths = iconObj.paths || [];
               const attrs = iconObj.attrs || [];
 
@@ -514,7 +338,6 @@
           }
         });
 
-        setInfo.textContent = `Set: ${setName}`;
         renderGrid();
       }
 
@@ -523,8 +346,7 @@
 
         if (searchInput.value.length > 0) {
           clearSearchBtn.classList.add('visible');
-        }
-        else {
+        } else {
           clearSearchBtn.classList.remove('visible');
         }
 
@@ -539,9 +361,9 @@
 
         if (filtered.length === 0) {
           iconGrid.innerHTML = `
-          <div class="empty-state">
-            <p>${allIcons.length === 0 ? 'No icon set loaded.' : 'No icons match your search criteria.'}</p>
-          </div>`;
+            <div class="empty-state">
+              <p>${allIcons.length === 0 ? 'No icons found.' : 'No icons match your search criteria.'}</p>
+            </div>`;
           return;
         }
 
@@ -559,18 +381,18 @@
           });
 
           const svgHtml = `
-          <svg viewBox="0 0 ${icon.grid} ${icon.grid}" xmlns="http://www.w3.org/2000/svg">
-            <g>
-              ${pathsHtml}
-            </g>
-          </svg>`;
+            <svg viewBox="0 0 ${icon.grid} ${icon.grid}" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                ${pathsHtml}
+              </g>
+            </svg>`;
 
           card.innerHTML = `
-          <div class="icon-preview">${svgHtml}</div>
-          <div class="icon-name" title="${icon.name}">${icon.name}</div>
-          <div class="ligature-tag" title="Ligatures: ${icon.ligatures}">${icon.ligatures}</div>
-          <button class="copy-btn">Copy Ligature</button>
-        `;
+            <div class="icon-preview">${svgHtml}</div>
+            <div class="icon-name" title="${icon.name}">${icon.name}</div>
+            <div class="ligature-tag" title="Ligatures: ${icon.ligatures}">${icon.ligatures}</div>
+            <button class="copy-btn">Copy Ligature</button>
+          `;
 
           const copyBtn = card.querySelector('.copy-btn');
           copyBtn.addEventListener('click', () => {
@@ -590,30 +412,8 @@
         });
       }
 
-      function loadFile(file) {
-        if (!file) {
-          return;
-        }
-        updateHeaderUrlDisplay(file.name, true);
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const json = JSON.parse(e.target.result);
-            parseIcoMoonJSON(json);
-          }
-          catch (err) {
-            alert('Invalid JSON file format.');
-          }
-        };
-        reader.readAsText(file);
-      }
-
-      function loadUrl(url) {
-        if (!url) {
-          return;
-        }
-        updateHeaderUrlDisplay(url);
-        fetch(url)
+      function loadIcons() {
+        fetch(JSON_URL)
         .then(res => {
           if (!res.ok) {
             throw new Error('Network response was not ok');
@@ -622,23 +422,13 @@
         })
         .then(data => parseIcoMoonJSON(data))
         .catch(err => {
-          setInfo.textContent = 'Failed to load default JSON file';
+          countInfo.textContent = 'Failed to load icons';
           iconGrid.innerHTML = `
-            <div class="empty-state">
-              <p>Could not fetch JSON file from path: <strong>${url}</strong>.</p>
-              <p style="margin-top: 0.5rem; font-size: 0.85rem;">Ensure the URL is correct and available.</p>
-            </div>`;
+              <div class="empty-state">
+                <p>Could not fetch icon definitions from <strong>${JSON_URL}</strong>.</p>
+              </div>`;
         });
       }
-
-      loadUrlBtn.addEventListener('click', () => loadUrl(urlInput.value.trim()));
-      urlInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          loadUrl(urlInput.value.trim());
-        }
-      });
-
-      fileInput.addEventListener('change', (e) => loadFile(e.target.files[0]));
 
       searchInput.addEventListener('input', renderGrid);
 
@@ -648,29 +438,7 @@
         renderGrid();
       });
 
-      dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = 'var(--primary)';
-        dropZone.style.backgroundColor = 'var(--accent-bg)';
-      });
-
-      dropZone.addEventListener('dragleave', () => {
-        dropZone.style.borderColor = 'var(--border-color)';
-        dropZone.style.backgroundColor = 'var(--bg-color)';
-      });
-
-      dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = 'var(--border-color)';
-        dropZone.style.backgroundColor = 'var(--bg-color)';
-        if (e.dataTransfer.files.length > 0) {
-          loadFile(e.dataTransfer.files[0]);
-        }
-      });
-
-      window.addEventListener('DOMContentLoaded', () => {
-        loadUrl(DEFAULT_JSON_PATH);
-      });
+      window.addEventListener('DOMContentLoaded', loadIcons);
     </script>
   </body>
 </html>
