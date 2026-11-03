@@ -733,7 +733,7 @@ test.describe('sci-table', () => {
         await tablePage.setSortable(true);
         await tablePage.setFilterable(false);
 
-        await tablePage.addColumn({name: 'column:icon', type: 'icon', header: {icon: 'scion.folder'}});
+        await tablePage.addColumn({name: 'column:icon', type: 'icon', header: {icon: 'scion:folder'}});
         await tablePage.addColumn({name: 'column:string', type: 'string'});
 
         await expectTable(table).column({name: 'column:icon'}).toHaveSortDirection(null);
@@ -760,9 +760,9 @@ test.describe('sci-table', () => {
         const table = new TablePO(tablePage.table);
         await tablePage.navigate();
 
-        await tablePage.addColumn({name: 'column:1', type: 'icon', header: {icon: 'scion.folder'}});
-        await tablePage.addColumn({name: 'column:2', type: 'icon', header: {icon: 'scion.folder'}, resizable: true}); // resizable
-        await tablePage.addColumn({name: 'column:3', type: 'icon', header: {icon: 'scion.folder'}, width: '150px'}); // explicit width
+        await tablePage.addColumn({name: 'column:1', type: 'icon', header: {icon: 'scion:folder'}});
+        await tablePage.addColumn({name: 'column:2', type: 'icon', header: {icon: 'scion:folder'}, resizable: true}); // resizable
+        await tablePage.addColumn({name: 'column:3', type: 'icon', header: {icon: 'scion:folder'}, width: '150px'}); // explicit width
 
         // Sortable and Filterable defaults.
         await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
@@ -844,7 +844,7 @@ test.describe('sci-table', () => {
         await tablePage.navigate();
         await tablePage.setWidth(600);
 
-        await tablePage.addColumn({name: 'column:1', type: 'icon', header: {icon: 'scion.folder', label: 'Icon'}});
+        await tablePage.addColumn({name: 'column:1', type: 'icon', header: {icon: 'scion:folder', label: 'Icon'}});
         await tablePage.addColumn({name: 'column:2', type: 'icon', header: {label: 'Icon'}});
         await tablePage.addColumn({name: 'column:3', type: 'icon', header: 'Icon'});
         await tablePage.addColumn({name: 'column:4', type: 'string'});

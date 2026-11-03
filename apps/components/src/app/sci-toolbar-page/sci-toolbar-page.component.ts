@@ -65,9 +65,9 @@ export default class SciToolbarPageComponent {
 
     contributeMenu('toolbar:demo', toolbar => toolbar
       .addToolbarMenu({label: 'File', disabled: false, cssClass: 'file-menu'}, menu => menu
-        .addMenuItem({label: 'New', icon: 'scion.add', onSelect})
+        .addMenuItem({label: 'New', icon: 'scion:add', onSelect})
         .addMenuItem({label: 'Open', icon: 'folder_open', onSelect})
-        .addMenuItem({label: 'Make a Copy', icon: 'scion.duplicate', onSelect}),
+        .addMenuItem({label: 'Make a Copy', icon: 'scion:duplicate', onSelect}),
       )
       .addToolbarSplitButton({
         icon: computed(() => gitIcons.get(gitAction())!),
@@ -170,18 +170,18 @@ export default class SciToolbarPageComponent {
             label: `Tab ${menuItem}`,
             active: computed(() => activeMenuItem() === menuItem),
             actions: actions => actions
-              .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
-                .addMenuItem({icon: 'scion.pin', label: 'Pin', onSelect})
-                .addMenuItem({icon: 'scion.close', label: 'Close', onSelect: () => menuItems.update(menuItems => menuItems.filter(it => it !== menuItem))})
+              .addToolbarMenu({icon: 'scion:more_vertical', visualMenuIndicator: false}, menu => menu
+                .addMenuItem({icon: 'scion:pin', label: 'Pin', onSelect})
+                .addMenuItem({icon: 'scion:close', label: 'Close', onSelect: () => menuItems.update(menuItems => menuItems.filter(it => it !== menuItem))})
                 .addGroup(group => group
-                  .addMenuItem({icon: 'scion.chevron_up', label: 'Move up', onSelect})
-                  .addMenuItem({icon: 'scion.chevron_down', label: 'Move down', onSelect}),
+                  .addMenuItem({icon: 'scion:chevron_up', label: 'Move up', onSelect})
+                  .addMenuItem({icon: 'scion:chevron_down', label: 'Move down', onSelect}),
                 )
                 .addMenuItem({label: 'Close other tabs', onSelect})
                 .addMenuItem({label: 'Close tabs below', onSelect}),
               )
               .addToolbarButton({
-                icon: 'scion.close',
+                icon: 'scion:close',
                 tooltip: 'Close',
                 onSelect: () => menuItems.update(menuItems => menuItems.filter(it => it !== menuItem)),
               }),
@@ -213,7 +213,7 @@ export default class SciToolbarPageComponent {
 function contributeHeadingGroupActions(toolbar: SciToolbarFactory): void {
   toolbar
     .addToolbarButton({icon: 'favorite', accelerator: {ctrl: true, shift: true, key: 'Enter'}, onSelect})
-    .addToolbarMenu({icon: 'scion.scion.more_verticalical', visualMenuIndicator: false}, menu => menu
+    .addToolbarMenu({icon: 'scion:more_vertical', visualMenuIndicator: false}, menu => menu
       .addMenuItem({label: 'Don\'t Show Again For This Project', onSelect})
       .addMenuItem({label: 'Don\'t Show Again', accelerator: {ctrl: true, shift: true, key: 'S'}, onSelect}),
     );

@@ -10,7 +10,7 @@
       <div class="input-field" [class.overriden]="field().dirty()">
         <input [formField]="field"/>
         <button (click)="onFieldReset(name, field())" [disabled]="!field().dirty()" title="Reset">
-          <sci-icon>scion.reset</sci-icon>
+          <sci-icon>scion:reset</sci-icon>
         </button>
       </div>
     </label>

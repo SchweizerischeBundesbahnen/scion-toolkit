@@ -190,7 +190,7 @@ export class MenuGroupPO {
 
   public get collapsed(): boolean {
     const icon = this.header?.query(By.css('sci-icon')).nativeElement as HTMLElement | undefined;
-    return icon?.getAttribute('icon') === 'scion.chevron_right';
+    return icon?.getAttribute('icon') === 'scion:chevron_right';
   }
 
   public get actions(): ToolbarGroupPO {

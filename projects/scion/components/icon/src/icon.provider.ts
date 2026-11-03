@@ -31,7 +31,7 @@ import {SciComponentDescriptor} from '@scion/components/common';
  * @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..24,400,0&display=block');
  * ```
  *
- * Built-in SCION icons start with the `scion.` prefix. To not replace SCION icons, the icon provider can return `undefined` for icons starting with the `scion.` prefix.
+ * Built-in SCION icons start with the `scion:` prefix. To not replace SCION icons, the icon provider can return `undefined` for icons starting with the `scion:` prefix.
  * Refer to https://icons.scion.vercel.app for available SCION icons.
  *
  * The function can call `inject` to get any required dependencies.
@@ -57,8 +57,8 @@ export function provideIconProvider(iconProviderFn: SciIconProviderFn | undefine
  * Alternatively, the icon provider can return a descriptor, allowing for additional configuration such as inputs.
  * Inputs are available as input properties in the component. The component can use the inputs to render the icon.
  *
- * Icon keys used by SCION start with the `scion.` prefix. To not replace SCION icons, the icon provider can
- * return `undefined` for icons starting with the `scion.` prefix.
+ * Icon keys used by SCION start with the `scion:` prefix. To not replace SCION icons, the icon provider can
+ * return `undefined` for icons starting with the `scion:` prefix.
  *
  * An icon provider can be registered via {@link provideIconProvider} function.
  *

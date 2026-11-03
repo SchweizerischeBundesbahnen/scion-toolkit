@@ -80,8 +80,8 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       ...descriptor,
       value: item => coerceSignal(descriptor.value(item), {coerceUndefined: true}),
       values: [
-        {value: true, icon: 'scion.true', label: '%scion.components.yes.value', tooltip: null},
-        {value: false, icon: 'scion.false', label: '%scion.components.no.value', tooltip: null},
+        {value: true, icon: 'scion:true', label: '%scion.components.yes.value', tooltip: null},
+        {value: false, icon: 'scion:false', label: '%scion.components.no.value', tooltip: null},
       ],
       format: {icon: true},
       filterable: descriptor.filterable === false ? false : 'single',

@@ -12,7 +12,7 @@ import {SciIconComponent} from '@scion/components/icon';
 
 @Component({
   selector: 'app-icon-page',
-  template: '<sci-icon>scion.close</sci-icon>',
+  template: '<sci-icon>scion:close</sci-icon>',
   imports: [
     SciIconComponent,
   ],

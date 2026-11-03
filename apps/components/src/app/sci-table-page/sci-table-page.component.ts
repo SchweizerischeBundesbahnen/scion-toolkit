@@ -243,7 +243,7 @@ export default class SciTablePageComponent {
     function addRowActions(toolbar: SciToolbarFactory, vehicle: Vehicle): void {
       toolbar
         .addToolbarButton({
-          icon: 'scion.edit',
+          icon: 'scion:edit',
           tooltip: 'Edit',
           onSelect: () => {
             vehicleForm().reset(vehicle);
@@ -253,8 +253,8 @@ export default class SciTablePageComponent {
             });
           },
         })
-        .addToolbarButton({icon: 'scion.duplicate', tooltip: 'Duplicate', onSelect: () => vehicleService.addVehicle(vehicle)})
-        .addToolbarButton({icon: 'scion.delete', tooltip: 'Delete', onSelect: () => vehicleService.deleteVehicle(vehicle.id)})
+        .addToolbarButton({icon: 'scion:duplicate', tooltip: 'Duplicate', onSelect: () => vehicleService.addVehicle(vehicle)})
+        .addToolbarButton({icon: 'scion:delete', tooltip: 'Delete', onSelect: () => vehicleService.deleteVehicle(vehicle.id)})
         .addGroup(group => group
           .addToolbarButton({icon: 'play_circle', tooltip: 'In Operation', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'In Operation'}), disabled: computed(() => vehicle.status === 'In Operation')})
           .addToolbarButton({icon: 'pause_circle', tooltip: 'Stabled', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'Stabled'}), disabled: computed(() => vehicle.status === 'Stabled')}),
@@ -264,7 +264,7 @@ export default class SciTablePageComponent {
           .addMenuItem({icon: 'code', label: 'Copy as JSON', onSelect: () => console.log('copy as json', vehicle)})
           .addMenuItem({icon: 'picture_as_pdf', label: 'Vehicle Datasheet (PDF)', onSelect: () => console.log('download as pdf', vehicle)}),
         )
-        .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false}, menu => menu
+        .addToolbarMenu({icon: 'scion:more_vertical', visualMenuIndicator: false}, menu => menu
           .addMenu({icon: 'alt_route', label: 'Change Status'}, menu => menu
             .addMenuItem({icon: 'play_circle', label: 'In Operation', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'In Operation'}), disabled: computed(() => vehicle.status === 'In Operation')})
             .addGroup(group => group
