@@ -1017,7 +1017,6 @@ sci-table::part(row\:some-row column\:some-column) {
 
 [link-scion-components]: /docs/site/scion-components.md
 [link-scion-design-tokens]: /docs/site/scion-design-tokens.md
-[link-scion-localization]: /docs/site/scion-localization.md
 [link-scion-icons]: /docs/site/scion-icons.md
 [link-mdn-part-attribute]: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/part
 [link-mdn-part-selector]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/::part

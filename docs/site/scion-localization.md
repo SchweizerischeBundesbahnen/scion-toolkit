@@ -64,7 +64,7 @@ import {provideTextProvider} from '@scion/components/text';
 import {MaybeSignal} from '@scion/components/common';
 
 provideTextProvider((key: string, params: Record<string, string>): MaybeSignal<string> | undefined => {
-  if (key.startsWith('scion.')) {
+  if (key.startsWith('scion:')) {
     return undefined; // <--- Return `undefined` to not translate built-in texts
   }
   return inject(TranslateService).translate(key, params); // The `TranslateService` is illustrative.
@@ -75,7 +75,7 @@ provideTextProvider((key: string, params: Record<string, string>): MaybeSignal<s
 > - The function can call `inject` to get any required dependencies, such as a translation service.
 > - The function can use `toSignal` to convert an `Observable` to a `Signal`.
 > - The function can return `undefined` to skip translating a key, e.g., to use the default text for built-in texts.
-> - Built-in texts start with the `scion.` prefix.
+> - Built-in texts start with the `scion:` prefix.
 
 > [!IMPORTANT]
 > Applications using the SCION Workbench should register a text provider via configuration passed to the `provideWorkbench` function. Refer to the [workbench documentation][link-scion-workbench-texts] for details.
@@ -144,16 +144,16 @@ SCION Components use the following built-in texts:
 
 | Translation Key                           | Text                 |
 |-------------------------------------------|----------------------|
-| scion.components.clear.tooltip            | Clear                |
-| scion.components.datasource_error.message | Unable to load data. |
-| scion.components.no.value                 | No                   |
-| scion.components.no_items.message         | No items found.      |
-| scion.components.retry.action             | Retry                |
-| scion.components.type_to_filter.action    | Type to filter       |
-| scion.components.yes.value                | Yes                  |
+| scion:components:clear.tooltip            | Clear                |
+| scion:components:datasource_error.message | Unable to load data. |
+| scion:components:no.value                 | No                   |
+| scion:components:no_items.message         | No items found.      |
+| scion:components:retry.action             | Retry                |
+| scion:components:type_to_filter.action    | Type to filter       |
+| scion:components:yes.value                | Yes                  |
 
 > [!TIP]
-> Applications using the SCION Workbench also include workbench-related texts. Built-in workbench texts start with the `scion.workbench.` prefix. Refer to the [workbench documentation][link-scion-workbench-texts] for details.
+> Applications using the SCION Workbench also include workbench-related texts. Built-in workbench texts start with the `scion:workbench:` prefix. Refer to the [workbench documentation][link-scion-workbench-texts] for details.
 
 > [!NOTE]
 > The application can register a text provider to replace built-in SCION texts.
