@@ -2,7 +2,7 @@
   "metadata": {
     "name": "scion-icons",
     "lastOpened": 0,
-    "created": 1793365148712
+    "created": 1793615862087
   },
   "iconSets": [
     {
@@ -761,7 +761,7 @@
           "prevSize": 24,
           "code": 59668,
           "tempChar": "",
-          "ligatures": "checkmark"
+          "ligatures": "checkmark, true"
         },
         {
           "order": 85,
@@ -824,7 +824,7 @@
           "prevSize": 24,
           "code": 59656,
           "tempChar": "",
-          "ligatures": "close, clear, remove, x"
+          "ligatures": "close, clear, remove, x, false"
         },
         {
           "order": 83,
