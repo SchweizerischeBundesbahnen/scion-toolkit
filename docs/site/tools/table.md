@@ -18,6 +18,7 @@ The NPM sub-module `@scion/components/table` provides an Angular component for d
     - [Boolean Column](#boolean-column)
     - [Date Column](#date-column)
     - [Enum Column](#enum-column)
+    - [Icon Column](#icon-column)
     - [Custom Columns](#custom-columns)
 - [Column Width](#column-width)
 - [Table Configuration](#table-configuration)
@@ -110,7 +111,7 @@ table(users.value, table => table.addStringColumn({
 
 ### Columns
 
-The table provides built-in columns for the following data types: `string`, `number`, `boolean`, `Date`, and `enum`. Columns for other data types or custom cell rendering can be added as custom columns. See the [Custom Columns](#custom-columns) section for details.
+The table provides built-in columns for the following data types: `string`, `number`, `boolean`, `Date`, `enum`, and `icon`. Columns for other data types or custom cell rendering can be added as custom columns. See the [Custom Columns](#custom-columns) section for details.
 
 #### String Column
 
@@ -435,6 +436,51 @@ table(users.value, table => table.addEnumColumn({
   },
 }));
 ```
+
+#### Icon Column
+
+Displays icons.
+
+An icon column is a standardized enum column for displaying icons. If configured with only a header icon and no label, it defaults to non-resizable and sizes to fit the icon.
+
+```ts
+import {table} from '@scion/components/table';
+
+table(users.value, table => table.addIconColumn({
+  header: {icon: 'account_circle', tooltip: 'Account Status'},
+  value: user => user.accountStatus,
+  values: [
+    {
+      value: 'active',
+      label: 'Active',
+      icon: 'check_circle',
+      tooltip: 'Account is active.',
+    },
+    {
+      value: 'inactive',
+      label: 'Inactive',
+      icon: 'pause_circle',
+      tooltip: 'Account is deactivated.',
+    },
+    {
+      value: 'locked',
+      label: 'Locked',
+      icon: 'lock',
+      tooltip: 'Account is temporarily locked.',
+    },
+    {
+      value: 'expired',
+      label: 'Expired',
+      icon: 'lock_clock',
+      tooltip: 'Account has expired.',
+    },
+  ],
+}));
+```
+
+##### Icons
+Use the `values` property to specify the icons displayed in this column. The array order determines the sort order.
+
 
 ### Custom Columns
 

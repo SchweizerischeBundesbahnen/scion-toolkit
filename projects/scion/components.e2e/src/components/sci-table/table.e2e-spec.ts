@@ -656,6 +656,274 @@ test.describe('sci-table', () => {
       });
     });
 
+    test.describe('Icon column', () => {
+
+      test('should add icon column', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:icon', type: 'icon'});
+        await expect(table.column({name: 'column:icon'}).columnHeader.locator).toBeVisible();
+      });
+
+      test('should center icon vertically', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:icon', type: 'icon'});
+        await tablePage.setRowHeight(30);
+
+        const cell = table.row({nth: 0}).cell('column:icon');
+        const cellBounds = await cell.bounds();
+        const iconBounds = fromRect(await cell.icon.boundingBox());
+
+        expect(iconBounds.vcenter).toBeBetween(cellBounds.vcenter - 2, cellBounds.vcenter + 2);
+        await expect.poll(() => cell.lineHeight()).toEqual('30px');
+      });
+
+      test('should have horizontal padding', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:icon', type: 'icon'});
+
+        const cell = table.row({nth: 0}).cell('column:icon');
+        await expect.poll(() => cell.paddingInline()).toBeGreaterThan(0);
+      });
+
+      test('should align icon to the left', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:icon', type: 'icon'});
+
+        const cell = table.row({nth: 0}).cell('column:icon');
+        const cellBounds = await cell.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        await expect.poll(() => cell.textAlign()).toEqual('start');
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should stretch cell to row/column bounds to enable custom cell styling', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:icon', type: 'icon'});
+
+        const cell = table.row({nth: 0}).cell('column:icon');
+        const cellBounds = await cell.bounds();
+        const rowBounds = await cell.row.bounds();
+        const columnBounds = await cell.column.bounds();
+
+        expect(cellBounds.height).toEqual(rowBounds.height);
+        expect(cellBounds.width).toEqual(columnBounds.width);
+      });
+
+      test('should have stable width on sort', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.setSortable(true);
+        await tablePage.setFilterable(false);
+
+        await tablePage.addColumn({name: 'column:icon', type: 'icon', header: {icon: 'scion.folder'}});
+        await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+        await expectTable(table).column({name: 'column:icon'}).toHaveSortDirection(null);
+        await expect.poll(() => table.column({name: 'column:icon'}).width()).toBe(45.5);
+
+        // Sort ascending.
+        await table.column({name: 'column:icon'}).sort();
+        await expectTable(table).column({name: 'column:icon'}).toHaveSortDirection('asc');
+        await expect.poll(() => table.column({name: 'column:icon'}).width()).toBe(45.5);
+
+        // Sort descending.
+        await table.column({name: 'column:icon'}).sort();
+        await expectTable(table).column({name: 'column:icon'}).toHaveSortDirection('desc');
+        await expect.poll(() => table.column({name: 'column:icon'}).width()).toBe(45.5);
+
+        // Unset sort.
+        await table.column({name: 'column:icon'}).sort();
+        await expectTable(table).column({name: 'column:icon'}).toHaveSortDirection(null);
+        await expect.poll(() => table.column({name: 'column:icon'}).width()).toBe(45.5);
+      });
+
+      test('should be non-resizable and size to fit the icon if configured with only a header icon and no label, unless overriden', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+
+        await tablePage.addColumn({name: 'column:1', type: 'icon', header: {icon: 'scion.folder'}});
+        await tablePage.addColumn({name: 'column:2', type: 'icon', header: {icon: 'scion.folder'}, resizable: true}); // resizable
+        await tablePage.addColumn({name: 'column:3', type: 'icon', header: {icon: 'scion.folder'}, width: '150px'}); // explicit width
+
+        // Sortable and Filterable defaults.
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(45.5);
+
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(45.5);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+
+        // Sortable and Filterable
+        await tablePage.setSortable(true);
+        await tablePage.setFilterable(true);
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(45.5);
+
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(45.5);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+
+        // Sortable and Non-Filterable
+        await tablePage.setSortable(true);
+        await tablePage.setFilterable(false);
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(45.5);
+
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(45.5);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+
+        // Non-Sortable and Filterable
+        await tablePage.setSortable(false);
+        await tablePage.setFilterable(true);
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(42);
+
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(42);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+
+        // Non-Sortable and Non-Filterable
+        await tablePage.setSortable(false);
+        await tablePage.setFilterable(false);
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(32);
+
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:2'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:2'}).width()).toBe(32);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(false);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+      });
+
+      test('should be resizable and not size to fit the icon if configured with a header', async ({page}) => {
+        const tablePage = new TablePagePO(page);
+        const table = new TablePO(tablePage.table);
+        await tablePage.navigate();
+        await tablePage.setWidth(600);
+
+        await tablePage.addColumn({name: 'column:1', type: 'icon', header: {icon: 'scion.folder', label: 'Icon'}});
+        await tablePage.addColumn({name: 'column:2', type: 'icon', header: {label: 'Icon'}});
+        await tablePage.addColumn({name: 'column:3', type: 'icon', header: 'Icon'});
+        await tablePage.addColumn({name: 'column:4', type: 'string'});
+
+        // Sortable and Filterable defaults.
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+
+        // Sortable and Filterable
+        await tablePage.setSortable(true);
+        await tablePage.setFilterable(true);
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+
+        // Sortable and Non-Filterable
+        await tablePage.setSortable(true);
+        await tablePage.setFilterable(false);
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+
+        // Non-Sortable and Filterable
+        await tablePage.setSortable(false);
+        await tablePage.setFilterable(true);
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+
+        // Non-Sortable and Non-Filterable
+        await tablePage.setSortable(false);
+        await tablePage.setFilterable(false);
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:1'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:1'}).width()).toBe(150);
+
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('column-header-divider');
+        await expect.poll(() => table.column({name: 'column:3'}).splitter.isInteractive()).toBe(true);
+        await expect.poll(() => table.column({name: 'column:3'}).width()).toBe(150);
+      });
+    });
+
     test.describe('Template column', () => {
 
       test('should add template column', async ({page}) => {
@@ -1273,6 +1541,28 @@ test.describe('sci-table', () => {
         ['In Stock'],
         ['Low Stock'],
         ['Out of Stock'],
+      ]);
+    });
+
+    test('should filter icon column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      const data = [{status: 'in-stock'}, {status: 'low-stock'}, {status: 'out-of-stock'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
+      await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:icon', type: 'icon'});
+
+      await table.column({name: 'column:icon'}).filter(['in-stock']);
+      await expectTable(table).toHaveContent([['in-stock']]);
+
+      await table.column({name: 'column:icon'}).clearFilter();
+      await expectTable(table).toHaveContent([
+        ['in-stock'],
+        ['low-stock'],
+        ['out-of-stock'],
       ]);
     });
 
@@ -2348,6 +2638,32 @@ test.describe('sci-table', () => {
       await table.column({name: 'column:enum'}).sort();
       await expectTable(table).column({name: 'column:enum'}).toHaveSortDirection(null);
       await expectTable(table).toHaveContent([['Low Stock'], ['In Stock'], ['Out of Stock']]);
+    });
+
+    test('should sort icon column', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      const data = [{status: 'low-stock'}, {status: 'in-stock'}, {status: 'out-of-stock'}] satisfies Partial<Product>[];
+      await provideHttpDatasource(page, data, {datasource: 'array-http'});
+
+      await tablePage.addColumn({name: 'column:icon', type: 'icon'});
+
+      // Sort ascending.
+      await table.column({name: 'column:icon'}).sort();
+      await expectTable(table).column({name: 'column:icon'}).toHaveSortDirection('asc');
+      await expectTable(table).toHaveContent([['in-stock'], ['low-stock'], ['out-of-stock']]);
+
+      // Sort descending.
+      await table.column({name: 'column:icon'}).sort();
+      await expectTable(table).column({name: 'column:icon'}).toHaveSortDirection('desc');
+      await expectTable(table).toHaveContent([['out-of-stock'], ['low-stock'], ['in-stock']]);
+
+      // Unset sort.
+      await table.column({name: 'column:icon'}).sort();
+      await expectTable(table).column({name: 'column:icon'}).toHaveSortDirection(null);
+      await expectTable(table).toHaveContent([['low-stock'], ['in-stock'], ['out-of-stock']]);
     });
 
     test('should sort multiple columns with ctrl or meta', async ({page}) => {

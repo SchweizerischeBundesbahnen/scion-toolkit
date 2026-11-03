@@ -1392,6 +1392,319 @@ describe('Table', () => {
       });
     });
 
+    describe('Icon Column', () => {
+
+      it('should display icon', async () => {
+        const data = signal([{value: '1'}, {value: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addIconColumn({
+            value: item => item.value,
+            values: [
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+        ]);
+      });
+
+      it('should have empty cell for `undefined` value', async () => {
+        const data = signal([{value: undefined}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addIconColumn({
+            value: item => item.value,
+            values: [
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+        ]);
+      });
+
+      it('should accept signal as value', async () => {
+        const value = signal('1');
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: signal([undefined]),
+          filterable: true,
+          columns: table => table.addIconColumn({
+            value: () => value,
+            values: [
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: ''})],
+        ]);
+
+        // Update value.
+        value.set('2');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+        ]);
+      });
+
+      it('should support different enum value types', async () => {
+        const data = signal([
+          {
+            value1: '0',
+            value2: 0,
+            value3: false,
+          },
+          {
+            value1: '1',
+            value2: 1,
+            value3: true,
+          },
+          {
+            value1: '2',
+            value2: 2,
+            value3: undefined,
+          },
+        ]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addIconColumn({
+              value: item => item.value1,
+              values: [
+                {value: '0', icon: 'info', label: 'Info'},
+                {value: '1', icon: 'warning', label: 'Warning'},
+                {value: '2', icon: 'error', label: 'Error'},
+              ],
+            })
+            .addIconColumn({
+              value: item => item.value2,
+              values: [
+                {value: 0, icon: 'info', label: 'Info'},
+                {value: 1, icon: 'warning', label: 'Warning'},
+                {value: 2, icon: 'error', label: 'Error'},
+              ],
+            })
+            .addIconColumn({
+              value: item => item.value3,
+              values: [
+                {value: true, icon: 'yes', label: 'Yes'},
+                {value: false, icon: 'no', label: 'No'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [
+            jasmine.objectContaining({value: '0', icon: 'info', label: ''}),
+            jasmine.objectContaining({value: '0', icon: 'info', label: ''}),
+            jasmine.objectContaining({value: 'false', icon: 'no', label: ''}),
+          ],
+          [
+            jasmine.objectContaining({value: '1', icon: 'warning', label: ''}),
+            jasmine.objectContaining({value: '1', icon: 'warning', label: ''}),
+            jasmine.objectContaining({value: 'true', icon: 'yes', label: ''}),
+          ],
+          [
+            jasmine.objectContaining({value: '2', icon: 'error', label: ''}),
+            jasmine.objectContaining({value: '2', icon: 'error', label: ''}),
+            jasmine.objectContaining({value: null, icon: null, label: ''}),
+          ],
+        ]);
+      });
+
+      it('should ignore unkown icon values', async () => {
+        const data = signal([{value: '0'}, {value: 999}, {value: '2'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addIconColumn({
+              value: item => item.value,
+              values: [
+                {value: '0', icon: 'info', label: 'Info'},
+                {value: '1', icon: 'warning', label: 'Warning'},
+                {value: '2', icon: 'error', label: 'Error'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+        ]);
+      });
+
+      it('should display icon tooltip', async () => {
+        const data = signal([{value: '0'}, {value: '1'}, {value: '2'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addIconColumn({
+              value: item => item.value,
+              values: [
+                {value: '0', icon: 'info', label: 'Info', tooltip: 'Tooltip'},
+                {value: '1', icon: 'warning', label: 'Warning', tooltip: null},
+                {value: '2', icon: 'error', label: 'Error'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: '', iconTooltip: 'Tooltip'})],
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: '', iconTooltip: null})],
+          [jasmine.objectContaining({value: '2', icon: 'error', label: '', iconTooltip: 'Error'})],
+        ]);
+      });
+
+      it('should sort icons in filter menu', async () => {
+        const data = signal([{value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addIconColumn({
+            name: 'column:icon',
+            value: item => item.value,
+            values: [
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: ''})],
+        ]);
+
+        // Assert filter menu.
+        const menu = new EnumFilterMenuPO(table);
+        const column = table.column({name: 'column:icon'})!;
+        column.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: '1', icon: 'warning', label: 'Warning'},
+          {value: '0', icon: 'info', label: 'Info'},
+          {value: '2', icon: 'error', label: 'Error'},
+        ]);
+      });
+
+      it('should localize icon tooltip', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            provideTextProvider(key => {
+              switch (key) {
+                case 'info.label':
+                  return 'Info (Label)';
+                case 'info.tooltip':
+                  return 'Info (Tooltip)';
+                case 'warning.label':
+                  return 'Warning (Label)';
+                case 'warning.tooltip':
+                  return 'warning (Tooltip)';
+                default:
+                  return undefined;
+              }
+            }),
+          ],
+        });
+
+        const data = signal([{value: '0'}, {value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addIconColumn({
+              value: item => item.value,
+              values: [
+                {value: '0', icon: 'info', label: '%info.label', tooltip: '%info.tooltip'},
+                {value: '1', icon: 'warning', label: '%warning.label'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', label: '', icon: 'info', iconTooltip: 'Info (Tooltip)'})],
+          [jasmine.objectContaining({value: '1', label: '', icon: 'warning', iconTooltip: 'Warning (Label)'})],
+        ]);
+      });
+
+      it('should localize filter menu', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            provideTextProvider(() => 'Translated'),
+          ],
+        });
+
+        const data = signal([{value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table
+            .addIconColumn({
+              name: 'column:icon',
+              value: item => item.value,
+              values: [
+                {value: '0', icon: 'info', label: '%info'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const menu = new EnumFilterMenuPO(table);
+
+        const column = table.column({name: 'column:icon'})!;
+        column.filterInput!.click();
+        await menu.waitForMenu();
+        expect(menu.menuItems()).toEqual([
+          {value: '0', icon: 'info', label: 'Translated'},
+        ]);
+      });
+    });
+
     describe('Component Column', () => {
 
       it('should render custom component column', async () => {
@@ -2009,6 +2322,54 @@ describe('Table', () => {
         expect(await column.values()).toEqual(['Entry 1', 'Entry 3', '', '', 'Entry 2']);
       });
 
+      it('should sort icon column', async () => {
+        const data = signal([{value: '0'}, {value: '2'}, {value: undefined}, {value: undefined}, {value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table.addIconColumn({
+            name: 'column:icon',
+            value: item => item.value,
+            values: [
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:icon'})!;
+
+        await column.toggleSort();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: ''})],
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+        ]);
+
+        await column.toggleSort();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: ''})],
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+        ]);
+
+        await column.toggleSort();
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: ''})],
+        ]);
+      });
+
       it('should sort date column', async () => {
         const date1 = new Date('2026-05-30').getTime();
         const date2 = new Date('2026-06-15');
@@ -2503,6 +2864,101 @@ describe('Table', () => {
 
         await column.filter(['1', '3']);
         expect(await column.values()).toEqual(['Entry 1', 'Entry 3']);
+      });
+
+      it('should filter icon column (single)', async () => {
+        const data = signal([{value: '0'}, {value: '2'}, {value: undefined}, {value: undefined}, {value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addIconColumn({
+            name: 'column:icon',
+            value: item => item.value,
+            values: [
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+            filterable: 'single',
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:icon'})!;
+
+        await column.filter('0');
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+        ]);
+
+        await column.filter('2');
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+        ]);
+
+        await column.filter(null);
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: ''})],
+        ]);
+      });
+
+      it('should filter icon column (multi)', async () => {
+        const data = signal([{value: '0'}, {value: '2'}, {value: undefined}, {value: undefined}, {value: '1'}]);
+        const {fixture} = createSciTableComponent(sciTable({
+          datasource: data,
+          filterable: true,
+          columns: table => table.addIconColumn({
+            name: 'column:icon',
+            value: item => item.value,
+            values: [
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:icon'})!;
+
+        await column.filter(['0']);
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+        ]);
+
+        await column.filter(['2']);
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+        ]);
+
+        await column.filter(['0']);
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+        ]);
+
+        await column.filter(null);
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: null, icon: null, label: ''})],
+          [jasmine.objectContaining({value: '1', icon: 'warning', label: ''})],
+        ]);
+
+        await column.filter(['0', '2']);
+        expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
+          [jasmine.objectContaining({value: '0', icon: 'info', label: ''})],
+          [jasmine.objectContaining({value: '2', icon: 'error', label: ''})],
+        ]);
       });
 
       it('should filter string column with custom filter matcher', async () => {
@@ -3014,6 +3470,61 @@ describe('Table', () => {
         ]);
       });
 
+      it('should filter icon column using a global filter', async () => {
+        const data = signal([{row: '1', value: '0'}, {row: '2', value: '2'}, {row: '3', value: '1'}, {row: '4', value: undefined}]);
+
+        const {fixture, model} = createSciTableComponent(sciTable({
+          datasource: data,
+          columns: table => table
+            .addStringColumn({
+              name: 'column:row',
+              value: item => item.row,
+              filterable: {matcher: () => false}, // exclude from filtering
+            })
+            .addIconColumn({
+              name: 'column:icon',
+              value: item => item.value,
+              values: [
+                {value: '0', icon: 'info', label: 'Info (x)'},
+                {value: '1', icon: 'warning', label: 'Warning (y)'},
+                {value: '2', icon: 'error', label: 'Error (x)'},
+              ],
+            }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+
+        model.filter('Info');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '0'],
+        ]);
+
+        model.filter('warn');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['3', '1'],
+        ]);
+
+        model.filter('x');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '0'],
+          ['2', '2'],
+        ]);
+
+        model.filter(null);
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['1', '0'],
+          ['2', '2'],
+          ['3', '1'],
+          ['4', ''],
+        ]);
+      });
+
       it('should filter component column using a global filter (without comparator)', async () => {
         const data = signal([{row: '1', string: 'alpha'}, {row: '2', string: 'beta'}, {row: '3', string: 'gamma'}, {row: '4', string: undefined}]);
         const {fixture, model} = createSciTableComponent(sciTable({
@@ -3141,10 +3652,10 @@ describe('Table', () => {
       it('should filter cross-column using a global filter', async () => {
         const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
         const data = signal([
-          {row: '1', string: 'alpha', number: 2, boolean: true, date: '2026-07-01', enumValue: 'enum-1', undefined: undefined},
-          {row: '2', string: 'beta', number: 1, boolean: false, date: '2026-07-02', enumValue: 'enum-1', undefined: undefined},
-          {row: '3', string: 'gamma', number: 0, boolean: true, date: '2026-07-03', enumValue: 'enum-2', undefined: undefined},
-          {row: '4', string: 'delta', number: 10, boolean: false, date: '2026-07-04', enumValue: 'enum-2', undefined: undefined},
+          {row: '1', string: 'alpha', number: 2, boolean: true, date: '2026-07-01', enumValue: 'enum-1', iconValue: 'icon-1', undefined: undefined},
+          {row: '2', string: 'beta', number: 1, boolean: false, date: '2026-07-02', enumValue: 'enum-1', iconValue: 'icon-1', undefined: undefined},
+          {row: '3', string: 'gamma', number: 0, boolean: true, date: '2026-07-03', enumValue: 'enum-2', iconValue: 'icon-2', undefined: undefined},
+          {row: '4', string: 'delta', number: 10, boolean: false, date: '2026-07-04', enumValue: 'enum-2', iconValue: 'icon-2', undefined: undefined},
         ]);
         const {fixture, model} = createSciTableComponent(sciTable({
           datasource: data,
@@ -3179,6 +3690,14 @@ describe('Table', () => {
                 {value: 'enum-2', label: 'y'},
               ],
             })
+            .addIconColumn({
+              name: 'column:icon',
+              value: item => item.iconValue,
+              values: [
+                {value: 'icon-1', icon: 'icon-1', label: 'y'},
+                {value: 'icon-2', icon: 'icon-2', label: 'z'},
+              ],
+            })
             .addStringColumn({
               name: 'column:undefined',
               value: item => item.undefined,
@@ -3205,83 +3724,90 @@ describe('Table', () => {
         await table.waitUntilStable();
 
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
-          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
-          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
-          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', 'icon-1', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', 'icon-1', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', 'icon-2', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', 'icon-2', '', '', ''],
         ]);
 
         model.filter('alpha');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', 'icon-1', '', '', ''],
         ]);
 
         model.filter('a');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
-          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
-          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
-          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', 'icon-1', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', 'icon-1', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', 'icon-2', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', 'icon-2', '', '', ''],
         ]);
 
         model.filter('b');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', 'icon-1', '', '', ''],
         ]);
 
         model.filter('yes');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
-          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', 'icon-1', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', 'icon-2', '', '', ''],
         ]);
 
         model.filter('no');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
-          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', 'icon-1', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', 'icon-2', '', '', ''],
         ]);
 
         model.filter('0');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
-          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
-          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
-          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', 'icon-1', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', 'icon-1', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', 'icon-2', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', 'icon-2', '', '', ''],
         ]);
 
         model.filter('1');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
-          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', 'icon-1', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', 'icon-1', '', '', ''],
         ]);
 
         model.filter('2');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
-          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
-          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', '', '', ''],
-          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', 'icon-1', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', 'icon-1', '', '', ''],
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', 'icon-2', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', 'icon-2', '', '', ''],
         ]);
 
         model.filter('10');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['4', 'delta', '10', 'false', '04.07.2026', 'y', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', 'icon-2', '', '', ''],
         ]);
 
         model.filter('X');
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
-          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', '', '', ''],
-          ['2', 'beta', '1', 'false', '02.07.2026', 'x', '', '', ''],
+          ['1', 'alpha', '2', 'true', '01.07.2026', 'x', 'icon-1', '', '', ''],
+          ['2', 'beta', '1', 'false', '02.07.2026', 'x', 'icon-1', '', '', ''],
+        ]);
+
+        model.filter('Z');
+        await table.waitUntilStable();
+        expect(table.rows.map(row => row.cells.map(cell => cell.value))).toEqual([
+          ['3', 'gamma', '0', 'true', '03.07.2026', 'y', 'icon-2', '', '', ''],
+          ['4', 'delta', '10', 'false', '04.07.2026', 'y', 'icon-2', '', '', ''],
         ]);
 
         model.filter('11');
@@ -4478,6 +5004,108 @@ describe('Table', () => {
         }));
       });
 
+      it('should filter icon column (single)', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{iconValue: string}> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<{iconValue: string}>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addIconColumn({
+            name: 'column:icon',
+            value: item => item.iconValue,
+            filterable: 'single',
+            values: [
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:icon'})!;
+        loader.calls.reset();
+
+        await column.filter('0');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:icon', text: '0'},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter('2');
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:icon', text: '2'},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
+      it('should filter icon column (multi)', async () => {
+        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{enumValue: string}> => {
+          return {items: [], totalCount: 0};
+        });
+
+        const {fixture} = createSciTableComponent<{enumValue: string}>(sciTable({
+          ɵdatasource: loader,
+          datasource: ɵillegaldatasource(),
+          filterable: true,
+          columns: table => table.addIconColumn({
+            name: 'column:icon',
+            value: item => item.enumValue,
+            values: [
+              {value: '0', icon: 'info', label: 'Info'},
+              {value: '1', icon: 'warning', label: 'Warning'},
+              {value: '2', icon: 'error', label: 'Error'},
+            ],
+          }),
+          injector: TestBed.inject(Injector),
+        }));
+
+        const table = new TablePO(fixture);
+        await table.waitUntilStable();
+        const column = table.column({name: 'column:icon'})!;
+        loader.calls.reset();
+
+        await column.filter(['0']);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:icon', text: ['0']},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+
+        await column.filter(['1', '2']);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [
+            {columnName: 'column:icon', text: ['1', '2']},
+          ],
+        }));
+        loader.calls.reset();
+
+        await column.filter(null);
+        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+          columnFilters: [],
+        }));
+      });
+
       it('should filter component column', async () => {
         const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<string> => {
           return {items: [], totalCount: 0};
@@ -5055,7 +5683,7 @@ describe('Table', () => {
     it('should style column based on the column data type', async () => {
       const template = TestBed.createComponent(CustomColumnTemplateProviderComponent).componentInstance.template();
 
-      const data = signal([{string: 'abc', number: 123, boolean: true, date: '2026-10-06', enumValue: '1'}]);
+      const data = signal([{string: 'abc', number: 123, boolean: true, date: '2026-10-06', enumValue: '1', iconValue: '1'}]);
       const {fixture} = createSciTableComponent(sciTable({
         datasource: data,
         columns: table => table
@@ -5066,6 +5694,10 @@ describe('Table', () => {
           .addEnumColumn({
             value: item => item.enumValue,
             values: [{value: '1', label: 'Entry'}],
+          })
+          .addIconColumn({
+            value: item => item.iconValue,
+            values: [{value: '1', icon: 'info', label: 'Info'}],
           })
           .addComponentColumn({component: item => ({component: CustomColumnComponent, bindings: [inputBinding('value', () => item)]})})
           .addTemplateColumn({template: () => ({template})}),
@@ -5080,8 +5712,9 @@ describe('Table', () => {
       expect(table.row({nth: 0}).cells[2]!.element.getAttribute('part')).toContain('column:boolean');
       expect(table.row({nth: 0}).cells[3]!.element.getAttribute('part')).toContain('column:date');
       expect(table.row({nth: 0}).cells[4]!.element.getAttribute('part')).toContain('column:enum');
-      expect(table.row({nth: 0}).cells[5]!.element.getAttribute('part')).toContain('column:component');
-      expect(table.row({nth: 0}).cells[6]!.element.getAttribute('part')).toContain('column:template');
+      expect(table.row({nth: 0}).cells[5]!.element.getAttribute('part')).toContain('column:icon');
+      expect(table.row({nth: 0}).cells[6]!.element.getAttribute('part')).toContain('column:component');
+      expect(table.row({nth: 0}).cells[7]!.element.getAttribute('part')).toContain('column:template');
     });
   });
 

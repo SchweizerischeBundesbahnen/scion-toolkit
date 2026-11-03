@@ -184,7 +184,7 @@ export class TablePagePO {
     }
 
     await this.properties.locator('select.e2e-type').selectOption(options.type);
-    await this.properties.locator('input.e2e-resizable').setChecked(options.resizable ?? true);
+    await this.properties.locator('select.e2e-resizable').selectOption(`${options.resizable ?? ''}`);
     await this.properties.locator('input.e2e-width').fill(options.width ?? '');
     await this.properties.locator('input.e2e-min-width').fill(`${options.minWidth ?? ''}`);
 

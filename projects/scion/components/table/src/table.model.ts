@@ -22,7 +22,7 @@ import {SciEnumValue} from './table-enum-column.model';
 /**
  * Represents supported column types of {@link SciTableComponent}.
  */
-export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'component' | 'template';
+export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'icon' | 'enum' | 'component' | 'template';
 
 export interface SciTableDescriptor<T> {
   datasource: Signal<T[]>;
@@ -326,3 +326,17 @@ export type SciEnumValueLike = string | number | boolean;
  * Refer to https://fonts.google.com/icons for available Material icons and instructions on including the Material icon font.
  */
 export type SciEnumColumnValues = {value: SciEnumValueLike; label: Translatable; icon?: string; tooltip?: Translatable | null}[];
+
+/**
+ * Defines icons of an icon column.
+ *
+ * The array order determines the sort order.
+ *
+ * A label can be text or a translation key. A translation key starts with the percent symbol (`%`) and may include parameters in matrix notation for text interpolation.
+ * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+ *
+ * SCION uses icon providers to render icons. An icon provider can be registered using {@link provideIconProvider}.
+ * Defaults to a Material icon provider if the application has not registered an icon provider, interpreting the icon as a Material Icon font ligature.
+ * Refer to https://fonts.google.com/icons for available Material icons and instructions on including the Material icon font.
+ */
+export type SciIconColumnValues = {value: string | number | boolean; label: Translatable; icon: string; tooltip?: Translatable | null}[];
