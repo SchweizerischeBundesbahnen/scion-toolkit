@@ -15,15 +15,15 @@
         @for (row of table.rows(); track $index) {
           <sci-table-row [row]="row" [sciAttributes]="row.bindings?.attributes()" [class]="row.bindings?.classes?.()" (primaryAction)="onRowPrimaryAction($event)"/>
         } @empty {
-          <span class="message e2e-no-data">{{('%scion.components.no_items.message' | sciText)()}}</span>
+          <span class="message e2e-no-data">{{('%scion:components:no_items.message' | sciText)()}}</span>
         }
       } @else {
         <span class="message e2e-datasource">
-          {{('%scion.components.datasource_error.message' | sciText)()}}
+          {{('%scion:components:datasource_error.message' | sciText)()}}
 
           <button (click)="onRetry()" class="action e2e-datasource-retry">
             <sci-icon>scion:reload</sci-icon>
-            <span>{{('%scion.components.retry.action' | sciText)()}}</span>
+            <span>{{('%scion:components:retry.action' | sciText)()}}</span>
           </button>
         </span>
       }

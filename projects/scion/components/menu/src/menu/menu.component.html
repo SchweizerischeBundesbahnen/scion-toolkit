@@ -3,7 +3,7 @@
 @if (filter) {
   <div class="filter e2e-filter">
     <sci-icon>scion:search</sci-icon>
-    @let message = filter.placeholder?.() ?? '%scion.components.type_to_filter.action';
+    @let message = filter.placeholder?.() ?? '%scion:components:type_to_filter.action';
     <sci-menu-filter (textChange)="onFilterChange($event)" [placeholder]="(message | sciText)()"/>
   </div>
   <hr>
@@ -143,8 +143,8 @@
       }
     } @empty {
       <!-- TODO [Angular 23] Replace with optional chaining operator once the Angular compiler no longer logs the NG8107 false-positive warning. -->
-        <!-- @let message = filter?.notFoundMessage?.() ?? '%scion.components.no_items.message'; -->
-      @let message = (filter && filter.notFoundMessage?.()) ?? '%scion.components.no_items.message';
+        <!-- @let message = filter?.notFoundMessage?.() ?? '%scion:components:no_items.message'; -->
+      @let message = (filter && filter.notFoundMessage?.()) ?? '%scion:components:no_items.message';
       <div class="message no-items e2e-no-items">{{(message | sciText)()}}</div>
     }
   </ng-template>

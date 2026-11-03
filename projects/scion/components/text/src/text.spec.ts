@@ -700,7 +700,7 @@ describe('Text Provider', () => {
 describe('Built-in Text Provider', () => {
 
   it('should provide built-in text', () => {
-    const translated = text('%scion.components.no_items.message', {injector: TestBed.inject(Injector)});
+    const translated = text('%scion:components:no_items.message', {injector: TestBed.inject(Injector)});
     expect(translated()).toEqual('No items found.');
   });
 
@@ -708,7 +708,7 @@ describe('Built-in Text Provider', () => {
     TestBed.configureTestingModule({
       providers: [
         provideTextProvider((key: string) => {
-          if (key.startsWith('scion.')) {
+          if (key.startsWith('scion:')) {
             return undefined;
           }
           return `Custom Text for "${key}"`;
@@ -719,7 +719,7 @@ describe('Built-in Text Provider', () => {
     const text1 = text('%custom_text', {injector: TestBed.inject(Injector)});
     expect(text1()).toEqual('Custom Text for "custom_text"');
 
-    const text2 = text('%scion.components.no_items.message', {injector: TestBed.inject(Injector)});
+    const text2 = text('%scion:components:no_items.message', {injector: TestBed.inject(Injector)});
     expect(text2()).toEqual('No items found.');
   });
 });
