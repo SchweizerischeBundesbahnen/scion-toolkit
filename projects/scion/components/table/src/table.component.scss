@@ -125,8 +125,10 @@
 
           > button.action {
             @include common.icon-button-element-states() {
+              display: flex;
+              gap: .5em;
               border: 1px solid var(--sci-color-border);
-              padding: .25em 1em;
+              padding: .35em 1em;
             }
           }
 
