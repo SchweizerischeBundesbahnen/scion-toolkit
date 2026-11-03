@@ -2775,6 +2775,9 @@ test.describe('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
+      // TODO [dwie] Remove! Fix scrolling active row into viewport.
+      await tablePage.showTableFilter(false);
+
       await table.body.focus();
       const renderedRowCount = await waitUntilStable(() => table.rows.count());
 
@@ -6009,6 +6012,7 @@ test.describe('sci-table', () => {
 
       await tablePage.setRowCount(0);
       await tablePage.setRowHeight(30);
+      await tablePage.showTableFilter(false);
       await tablePage.showHeader(false);
 
       // Configure table to grow with its content to a breakpoint.
@@ -6146,6 +6150,7 @@ test.describe('sci-table', () => {
 
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
+      await tablePage.showTableFilter(false);
       await tablePage.setPageHeight(500);
       await expect.poll(() => table.bounds({box: 'border'}).then(bounds => bounds.height)).toEqual(500);
       await expectTable(table).toHaveVerticalOverflow();
