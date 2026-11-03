@@ -45,10 +45,12 @@ provideIconProvider((icon: string): ComponentType<unknown> | undefined => {
 > - The function can return `undefined` to not provide a requested icon, e.g., to use the built-in SCION icons.
 > - SCION icons start with the `scion.` prefix.
 
-> [!IMPORTANT]
+> [!NOTE]
 > Applications using the SCION Workbench should register an icon provider via configuration passed to the `provideWorkbench` function. Refer to the [workbench documentation][link-scion-workbench-icons] for details.
 
-Alternatively, the icon provider can return a descriptor, allowing for additional configuration such as inputs.
+**Passing Inputs Using a Descriptor**
+
+If your icon component requires inputs, return an `SciComponentDescriptor` instead of the icon component type:
 
 ```ts
 import {provideIconProvider} from '@scion/components/icon';
@@ -56,6 +58,10 @@ import {SciComponentDescriptor} from '@scion/components/common';
 import {inputBinding} from '@angular/core';
 
 provideIconProvider((icon: string): SciComponentDescriptor | undefined => {
+  if (icon.startsWith('scion.')) {
+    return undefined;
+  }
+
   return {
     component: YourIconComponent, // `YourIconComponent` is illustrative
     bindings: [inputBinding('icon', () => icon)], // pass inputs to the icon component
@@ -63,14 +69,38 @@ provideIconProvider((icon: string): SciComponentDescriptor | undefined => {
 });
 ```
 
-Inputs are available as input properties in the component.
+Inputs are available as input properties in the component:
 
 ```ts
 public readonly icon = input.required<string>();
 ```
 
+**Using an Icon Font**
+
+To render icons from an icon font, you can use `SciIconFontComponent`, passing the `fontFamily` and `ligature` inputs:
+
+```ts
+import {provideIconProvider, SciIconFontComponent} from '@scion/components/icon';
+import {SciComponentDescriptor} from '@scion/components/common';
+import {inputBinding} from '@angular/core';
+
+provideIconProvider((icon: string): SciComponentDescriptor | undefined => {
+  if (icon.startsWith('scion.')) {
+    return undefined;
+  }
+
+  return {
+    component: SciIconFontComponent,
+    bindings: [
+      inputBinding('fontFamily', () => 'your-icon-font-name'),
+      inputBinding('ligature', () => icon),
+    ],
+  };
+});
+```
+
 ### Icon Component
-The `SciIconComponent` (`<sci-icon>`) from `@scion/components/icon` displays icons based on registered [icon providers](#icon-provider).
+The `<sci-icon>` component from `@scion/components/icon` displays icons based on registered [icon providers](#icon-provider).
 
 Set the icon name as the slotted content of the `<sci-icon>` component.
 

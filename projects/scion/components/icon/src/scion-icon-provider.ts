@@ -8,63 +8,30 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, input, inputBinding} from '@angular/core';
+import {inputBinding} from '@angular/core';
 import {SciIconProviderFn} from './icon.provider';
 import {SciComponentDescriptor} from '@scion/components/common';
+import {SciIconFontComponent} from './icon-font.component';
 
 /**
  * Provides icons used in SCION libraries.
  *
  * Register this provider as the last icon provider, enabling replacement of built-in SCION icons.
+ *
+ * This component requires the SCION icon font 'scion-icons' to be included in the HTML.
+ *
+ * TODO [dwie] Add link to icon font.
  */
 export const scionIconProvider: SciIconProviderFn = (icon: string): SciComponentDescriptor | undefined => {
   const ligature = icon.startsWith('scion.') ? icon.substring('scion.'.length) : undefined;
   if (ligature) {
-    return {component: SciIconFontGlyphComponent, bindings: [inputBinding('ligature', () => ligature)]};
+    return {
+      component: SciIconFontComponent,
+      bindings: [
+        inputBinding('fontFamily', () => 'scion-icons'),
+        inputBinding('ligature', () => ligature),
+      ],
+    };
   }
   return undefined;
 };
-
-/**
- * Renders the icon for a ligature of the SCION icon font.
- *
- * This component requires the SCION icon font 'scion-icons' to be included in the HTML.
- */
-@Component({
-  selector: 'sci-icon-font-glyph',
-  template: '',
-  host: {
-    '[attr.data-ligature]': 'ligature()',
-  },
-  styles: `
-    :host {
-      font-family: 'scion-icons';
-      font-style: normal;
-      font-weight: normal;
-      font-variant: normal;
-      text-transform: none;
-      line-height: 1;
-
-      /* Enable Ligatures */
-      letter-spacing: 0;
-      font-feature-settings: "liga";
-      font-variant-ligatures: discretionary-ligatures;
-
-      /* Better Font Rendering */
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-
-      /* Render ligature in ::before pseudo-element so it is excluded from the DOM tree (e.g., will not be returned by Element.textContent). */
-      &::before {
-        content: attr(data-ligature);
-      }
-    }
-  `,
-})
-export class SciIconFontGlyphComponent {
-
-  /**
-   * Specifies the ligature of the icon.
-   */
-  public readonly ligature = input.required<string>();
-}

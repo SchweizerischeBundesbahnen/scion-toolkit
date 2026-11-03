@@ -12,10 +12,9 @@ import {Component, DestroyRef, inject, InjectionToken, Injector, input, inputBin
 import {ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {SciIconComponent} from './icon.component';
 import {By} from '@angular/platform-browser';
-import {MaterialIconComponent} from './material-icon-provider';
-import {SciIconFontGlyphComponent} from './scion-icon-provider';
 import {provideIconProvider} from './icon.provider';
 import {toEqualIconCustomMatcher} from './testing/jasmine/matcher/to-equal-icon.matcher';
+import {SciIconFontComponent} from './icon-font.component';
 
 describe('IconComponent', () => {
 
@@ -539,7 +538,13 @@ describe('Built-in Icon Providers', () => {
     const fixture = TestBed.createComponent(SpecRootComponent);
 
     fixture.componentInstance.icon.set('ligature');
-    await expectAsync(fixture).toEqualIcon({icon: 'ligature', component: MaterialIconComponent, cssContent: '"ligature"'});
+    await expectAsync(fixture).toEqualIcon({
+      icon: 'ligature',
+      component: SciIconFontComponent,
+      textContent: '',
+      cssContent: '"ligature"',
+      fontFamily: '"Material Symbols Rounded", "Material Symbols Outlined", "Material Symbols Sharp", "Material Icons", "Material Icons Outlined", "Material Icons Round", "Material Icons Sharp"',
+    });
   });
 
   it('should render Material icon if not provided by application provider', async () => {
@@ -553,7 +558,13 @@ describe('Built-in Icon Providers', () => {
     const fixture = TestBed.createComponent(SpecRootComponent);
 
     fixture.componentInstance.icon.set('ligature');
-    await expectAsync(fixture).toEqualIcon({icon: 'ligature', component: MaterialIconComponent, cssContent: '"ligature"'});
+    await expectAsync(fixture).toEqualIcon({
+      icon: 'ligature',
+      component: SciIconFontComponent,
+      textContent: '',
+      cssContent: '"ligature"',
+      fontFamily: '"Material Symbols Rounded", "Material Symbols Outlined", "Material Symbols Sharp", "Material Icons", "Material Icons Outlined", "Material Icons Round", "Material Icons Sharp"',
+    });
   });
 
   it('should render Material icon', async () => {
@@ -570,7 +581,7 @@ describe('Built-in Icon Providers', () => {
     // Expect Material icon to be rendered.
     await expectAsync(fixture).toEqualIcon({
       icon: 'icon',
-      component: MaterialIconComponent,
+      component: SciIconFontComponent,
       textContent: '',
       cssContent: '"icon"',
       fontFamily: '"Material Symbols Rounded", "Material Symbols Outlined", "Material Symbols Sharp", "Material Icons", "Material Icons Outlined", "Material Icons Round", "Material Icons Sharp"',
@@ -591,7 +602,7 @@ describe('Built-in Icon Providers', () => {
     // Expect SCION icon to be rendered.
     await expectAsync(fixture).toEqualIcon({
       icon: 'scion.close',
-      component: SciIconFontGlyphComponent,
+      component: SciIconFontComponent,
       textContent: '',
       cssContent: '"close"',
       fontFamily: 'scion-icons',
