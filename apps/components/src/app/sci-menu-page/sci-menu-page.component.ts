@@ -40,13 +40,13 @@ export default class SciMenuPageComponent {
     contributeMenu('menu:contextmenu', menu => menu
       .addGroup(group => group
         .addMenuItem({
-          icon: 'scion.copy',
+          icon: 'scion:copy',
           label: 'Copy',
           accelerator: {ctrl: true, key: 'C'},
           onSelect: () => console.log('Copy'),
         })
         .addMenuItem({
-          icon: 'scion.paste',
+          icon: 'scion:paste',
           label: 'Paste',
           accelerator: {ctrl: true, key: 'V'},
           onSelect: () => console.log('Paste'),
@@ -60,12 +60,12 @@ export default class SciMenuPageComponent {
       )
       .addGroup(group => group
         .addMenuItem({
-          icon: 'scion.duplicate',
+          icon: 'scion:duplicate',
           label: 'Duplicate',
           onSelect: () => console.log('Duplicate'),
         })
         .addMenuItem({
-          icon: 'scion.delete',
+          icon: 'scion:delete',
           label: 'Delete',
           onSelect: () => console.log('Delete'),
         }),
@@ -85,14 +85,14 @@ export default class SciMenuPageComponent {
     );
 
     contributeMenu(`menu:contextmenu1`, menu => menu
-      .addMenuItem({icon: 'scion.expand_all', label: 'Expand All', accelerator: {ctrl: true, key: '+', location: 'numpad'}, onSelect: () => console.log('>>> Expand All')})
-      .addMenuItem({icon: 'scion.collapse_all', label: 'Collapse All', accelerator: {ctrl: true, key: '-', location: 'numpad'}, onSelect: () => console.log('>>> Collapse All')})
+      .addMenuItem({icon: 'scion:expand_all', label: 'Expand All', accelerator: {ctrl: true, key: '+', location: 'numpad'}, onSelect: () => console.log('>>> Expand All')})
+      .addMenuItem({icon: 'scion:collapse_all', label: 'Collapse All', accelerator: {ctrl: true, key: '-', location: 'numpad'}, onSelect: () => console.log('>>> Collapse All')})
       .addGroup(group => group
         .addMenuItem({label: 'Navigate with Single Click', checked: navigateWithSingleClick, onSelect: () => navigateWithSingleClick.update(navigateWithSingleClick => !navigateWithSingleClick)})
         .addMenuItem({label: 'Always Select Opened Element', checked: alwaysSelectOpenedElement, onSelect: () => alwaysSelectOpenedElement.update(alwaysSelectOpenedElement => !alwaysSelectOpenedElement)},
         )
         .addGroup(group => group
-          .addMenuItem({label: 'Speed Search', icon: 'scion.search', onSelect}),
+          .addMenuItem({label: 'Speed Search', icon: 'scion:search', onSelect}),
         )
         .addGroup(group => group
           .addMenu({label: 'View Mode'}, menu => menu

@@ -113,11 +113,11 @@ export default class SciTablePageComponent {
         }
       },
       rowActions: options.showRowActions ? (toolbar, product) => toolbar
-        .addToolbarButton({icon: 'scion.edit', onSelect: noop})
-        .addToolbarButton({icon: 'scion.delete', onSelect: noop})
-        .addToolbarButton({icon: 'scion.pin', onSelect: noop})
-        .addToolbarButton({icon: 'scion.search', onSelect: noop})
-        .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false, cssClass: 'e2e-more'}, menu => menu
+        .addToolbarButton({icon: 'scion:edit', onSelect: noop})
+        .addToolbarButton({icon: 'scion:delete', onSelect: noop})
+        .addToolbarButton({icon: 'scion:pin', onSelect: noop})
+        .addToolbarButton({icon: 'scion:search', onSelect: noop})
+        .addToolbarMenu({icon: 'scion:more_vertical', visualMenuIndicator: false, cssClass: 'e2e-more'}, menu => menu
           .addMenuItem({
             label: 'Edit',
             onSelect: () => console.log('edit', product.id),

@@ -23,7 +23,7 @@ import {SciIconFontComponent} from './icon-font.component';
  * TODO [dwie] Add link to icon font.
  */
 export const scionIconProvider: SciIconProviderFn = (icon: string): SciComponentDescriptor | undefined => {
-  const ligature = icon.startsWith('scion.') ? icon.substring('scion.'.length) : undefined;
+  const ligature = icon.startsWith('scion:') ? icon.substring('scion:'.length) : undefined;
   if (ligature) {
     return {
       component: SciIconFontComponent,

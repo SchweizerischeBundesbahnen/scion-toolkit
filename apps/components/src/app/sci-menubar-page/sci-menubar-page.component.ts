@@ -50,9 +50,9 @@ export default class SciMenubarPageComponent {
 
     contributeMenu({location: 'menubar:demo', position: 'start'}, menu => menu
       .addMenu({label: 'File', menu: {name: 'menu:file', filter: {placeholder: 'Filter files', notFoundMessage: 'No file found'}}}, menu => menu
-        .addMenuItem({label: 'New', icon: 'scion.add', onSelect})
+        .addMenuItem({label: 'New', icon: 'scion:add', onSelect})
         .addMenuItem({label: 'Open', icon: 'folder_open', onSelect})
-        .addMenuItem({label: 'Make a Copy', icon: 'scion.duplicate', onSelect}),
+        .addMenuItem({label: 'Make a Copy', icon: 'scion:duplicate', onSelect}),
       ),
     );
 

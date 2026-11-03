@@ -25,7 +25,7 @@ import {SciIconFontComponent} from './icon-font.component';
  * - https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp
  */
 export const materialIconProvider: SciIconProviderFn = (ligature: string): SciComponentDescriptor | undefined => {
-  if (ligature.startsWith('scion.')) {
+  if (ligature.startsWith('scion:')) {
     return undefined; // delegate to next provider
   }
 

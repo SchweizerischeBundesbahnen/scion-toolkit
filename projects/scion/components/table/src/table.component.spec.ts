@@ -378,8 +378,8 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
-          [jasmine.objectContaining({value: 'true', label: '', icon: 'scion.true', iconTooltip: null})],
-          [jasmine.objectContaining({value: 'false', icon: 'scion.false', iconTooltip: null})],
+          [jasmine.objectContaining({value: 'true', label: '', icon: 'scion:true', iconTooltip: null})],
+          [jasmine.objectContaining({value: 'false', icon: 'scion:false', iconTooltip: null})],
           [jasmine.objectContaining({value: null, icon: null, iconTooltip: null})],
         ]);
 
@@ -5291,15 +5291,15 @@ describe('Table', () => {
       const {fixture} = createSciTableComponent(sciTable({
         datasource: data,
         rowActions: toolbar => toolbar
-          .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false, cssClass: 'testee'}, menu => menu
+          .addToolbarMenu({icon: 'scion:more_vertical', visualMenuIndicator: false, cssClass: 'testee'}, menu => menu
             .addGroup(group => group.addMenuItem({
-              icon: 'scion.folder',
+              icon: 'scion:folder',
               label: 'Menu item 1',
               cssClass: 'testee',
               onSelect: noop,
             }))
             .addGroup(group => group.addMenuItem({
-              icon: 'scion.folder',
+              icon: 'scion:folder',
               label: 'Menu item 2',
               onSelect: noop,
             })),

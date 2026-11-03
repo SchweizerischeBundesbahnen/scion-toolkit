@@ -597,11 +597,11 @@ describe('Built-in Icon Providers', () => {
 
     // Render icon.
     const fixture = TestBed.createComponent(SpecRootComponent);
-    fixture.componentInstance.icon.set('scion.close');
+    fixture.componentInstance.icon.set('scion:close');
 
     // Expect SCION icon to be rendered.
     await expectAsync(fixture).toEqualIcon({
-      icon: 'scion.close',
+      icon: 'scion:close',
       component: SciIconFontComponent,
       textContent: '',
       cssContent: '"close"',

@@ -107,8 +107,8 @@ function assertMenuItem(expected: ExpectedSciMenuItem, actual: MenuItemPO): void
     }
 
     const icon = (actual.debugElement.nativeElement as HTMLElement).querySelector('sci-icon[data-checkmark]')?.getAttribute('icon') ?? null;
-    if (expected.checked && icon !== 'scion.checkmark') {
-      throw Error(`[DOMAssertError] Expected 'sci-icon[data-checkmark]' to display 'scion.checkmark', but is displaying '${icon}'.`);
+    if (expected.checked && icon !== 'scion:checkmark') {
+      throw Error(`[DOMAssertError] Expected 'sci-icon[data-checkmark]' to display 'scion:checkmark', but is displaying '${icon}'.`);
     }
     if (!expected.checked && icon !== null) {
       throw Error(`[DOMAssertError] Expected 'sci-icon[data-checkmark]' not to display an icon, but is displaying '${icon}'.`);

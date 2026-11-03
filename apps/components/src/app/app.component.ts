@@ -65,7 +65,7 @@ export class AppComponent {
     contributeMenu({location: 'toolbar:main', position: 'end'}, toolbar => toolbar
       .addToolbarControl({component: ThemeSwitcherComponent})
       .addToolbarMenu({
-        icon: 'scion.more_vertical',
+        icon: 'scion:more_vertical',
         visualMenuIndicator: false,
         menu: {name: 'menu:toolbar.main'},
       }),

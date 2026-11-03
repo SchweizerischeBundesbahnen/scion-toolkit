@@ -30,7 +30,7 @@ import {provideIconProvider} from '@scion/components/icon';
 import {ComponentType} from '@angular/cdk/portal';
 
 provideIconProvider((icon: string): ComponentType<unknown> | undefined => {
-  if (icon.startsWith('scion.')) {
+  if (icon.startsWith('scion:')) {
     return undefined; // <--- Return `undefined` to not replace SCION icons
   }
   if (icon === 'your-icon') {
@@ -43,7 +43,7 @@ provideIconProvider((icon: string): ComponentType<unknown> | undefined => {
 > [!TIP]
 > - The function can call `inject` to get any required dependencies.
 > - The function can return `undefined` to not provide a requested icon, e.g., to use the built-in SCION icons.
-> - SCION icons start with the `scion.` prefix.
+> - SCION icons start with the `scion:` prefix.
 
 > [!NOTE]
 > Applications using the SCION Workbench should register an icon provider via configuration passed to the `provideWorkbench` function. Refer to the [workbench documentation][link-scion-workbench-icons] for details.
@@ -58,7 +58,7 @@ import {SciComponentDescriptor} from '@scion/components/common';
 import {inputBinding} from '@angular/core';
 
 provideIconProvider((icon: string): SciComponentDescriptor | undefined => {
-  if (icon.startsWith('scion.')) {
+  if (icon.startsWith('scion:')) {
     return undefined;
   }
 
@@ -85,7 +85,7 @@ import {SciComponentDescriptor} from '@scion/components/common';
 import {inputBinding} from '@angular/core';
 
 provideIconProvider((icon: string): SciComponentDescriptor | undefined => {
-  if (icon.startsWith('scion.')) {
+  if (icon.startsWith('scion:')) {
     return undefined;
   }
 
@@ -133,7 +133,7 @@ SCION requires icons from https://cdn.jsdelivr.net/npm/@scion/icons, loaded by i
 @use '@scion/components';
 ```
 
-SCION icon ligatures start with the `scion.` prefix. Applications can register an icon provider to replace the built-in SCION icons. 
+SCION icon ligatures start with the `scion:` prefix. Applications can register an icon provider to replace the built-in SCION icons. 
 
 Refer to https://icons.scion.vercel.app for available SCION icons.
 
