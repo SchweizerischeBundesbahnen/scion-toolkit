@@ -17,16 +17,16 @@ Click [here](https://components.scion.vercel.app/#/sci-viewport) for a demo of t
 <details>
   <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/components` using the NPM command-line tool: 
+1. Install `@scion/components` and required dependencies from NPM: 
    ```
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
- 
-1. Import SCION Design Tokens in `styles.scss` to style the viewport:
+
+1. Import required styles and icons in `src/styles.scss`.
    ```scss
    @use '@scion/components';
-   ```
-   See [SCION Design Tokens][link-scion-design-tokens] for more information. 
+   @import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
+   ``` 
 
 1. Import `SciViewportComponent` in your component.
 
@@ -149,7 +149,7 @@ sci-viewport::part(content) {
 <details>
   <summary><strong>Styling</strong></summary>
 
-To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-viewport` component, the following CSS variables can be set directly on the component.
+To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `src/styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-viewport` component, the following CSS variables can be set directly on the component.
 
 - `--sci-viewport-scrollbar-color`\
   Sets the color of the scrollbar. 
@@ -173,9 +173,10 @@ The following example illustrates how to use `<sci-scrollbar>` in a `<cdk-virtua
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
 
-1. Import [SCION Design Tokens][link-scion-design-tokens] in `styles.scss` to provide required styles for the scrollbar.
+1. Import required styles and icons in `src/styles.scss`.
    ```scss
    @use '@scion/components';
+   @import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
    ```
 
 1. Add the following code to the HTML template:

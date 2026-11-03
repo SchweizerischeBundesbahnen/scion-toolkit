@@ -17,13 +17,12 @@ import {MaybeSignal} from '@scion/components/common';
  *
  * A text provider is a function that returns the text for a translation key.
  *
- * Multiple text providers can be registered. Providers are called in registration order. If a provider does not provide the text,
- * the next provider is called, and so on.
+ * Multiple text providers can be registered. Providers are called in registration order. Returning `undefined` delegates to the next provider.
  *
  * The translation keys of built-in SCION texts start with the `scion:` prefix. To not localize built-in SCION texts, the text provider can return `undefined` instead.
  *
  * The function:
- * - Can call `inject` to get any required dependencies.
+ * - Can call `inject` to get required dependencies.
  * - Can use `toSignal` to convert an {@link Observable} to a {@link Signal}.
  *
  * For a list of built-in SCION texts, refer to https://github.com/SchweizerischeBundesbahnen/scion-toolkit/blob/master/docs/site/scion-localization.md#built-in-texts.

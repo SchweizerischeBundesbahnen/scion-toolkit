@@ -4,10 +4,14 @@
  * An application can define a custom theme to change the default look of the SCION components. Multiple themes are supported.
  * A theme is a collection of design tokens, defining specific design aspects such as colors, spacings, etc. A design token can have a different value per theme.
  *
- * An application typically loads this module in the `styles.scss` file.
+ * An application typically loads this module and required SCION icons in the `src/styles.scss`.
  *
  * ```scss
+ * // Load required styles.
  * @use '@scion/components';
+ *
+ * // Load SCION icon font.
+ * @import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
  * ```
  *
  * ## Themes
@@ -59,6 +63,33 @@
  * <html sci-theme="scion-dark">
  * ```
  *
+  * ## SCION Icons
+ * SCION requires the SCION icon font, which can be loaded from the CDN by importing `scion-icon-font.css` in `src/styles.scss`:
+ *
+ * ```scss
+ * @import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
+ * ```
+ *
+ * Applications enforcing a Content Security Policy must whitelist the CDN using the `font-src` and `style-src` directives.
+ *
+ * ```
+ * Content-Security-Policy: font-src 'self' https://cdn.jsdelivr.net/npm/@scion/icons/; style-src 'self' https://cdn.jsdelivr.net/npm/@scion/icons/;
+ * ```
+ *
+ * ### Self-Hosting the SCION Icon Font
+ * As an alternative to loading SCION icons from the CDN, you can host the SCION icon font directly within your application.
+ *
+ * To self-host the SCION icon font:
+ *
+ * Install the `@scion/icons` NPM package to get the required icon font files:
+ * ```shell
+ * npm install @scion/icons
+ * ```
+ * Include the SCION icon font in `src/styles.scss`.
+ * ```scss
+ * @use '@scion/icons/scion-icon-font.css';
+ * ```
+ *
  * ## SCION Design Tokens
  * SCION uses the following design tokens:
  *
@@ -84,94 +115,11 @@
  *
  * [Semantic Tokens (light theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/themes/_scion-light-theme.scss)
  * [Semantic Tokens (dark theme)](https://raw.githubusercontent.com/SchweizerischeBundesbahnen/scion-toolkit/master/projects/scion/components/design/themes/_scion-dark-theme.scss)
- *
- *
- * ## SCION Icon Font
- * This module provides the standard icon font used by SCION components.
- *
- * By default, SCION icons are loaded from the CDN: https://cdn.jsdelivr.net/npm/@scion/icons.
- *
- * ### Content Security Policy (CSP)
- * Applications enforcing a Content Security Policy must whitelist the CDN using the `font-src` directive.
- *
- * ```
- * Content-Security-Policy: font-src 'self' https://cdn.jsdelivr.net/npm/@scion/icons/;
- * ```
- *
- * ### Self-Hosting the SCION Icon Font
- * As an alternative to loading SCION icons from the CDN, you can host the SCION icon font directly within your application.
- *
- * To self-host the SCION icon font:
- *
- * 1. Install the `@scion/icons` NPM module:
- *    ```
- *    npm install @scion/icons
- *    ```
- * 2. Register the icon font files in `assets` in `angular.json`.
- *    ```
- *    "assets": [
- *      {
- *        "glob": "**\/*",
- *        "input": "node_modules/@scion/icons",
- *        "output": "/scion-icons"
- *      }
- *    ]
- *    ```
- * 3. Configure `@scion/components` SCSS module to load the icon font from `/scion-icons` (leading slash required):
- *    ```scss
- *    @use '@scion/components' with (
- *      $icon-font: (
- *        directory: '/scion-icons'
- *      )
- *    );
- *    ```
- *
- * As an alternative to steps 1 and 2, you can manually download the icon font files from the CDN and place them directly into your application's public assets folder (`public/scion-icons/`):
- * - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.ttf
- * - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.svg
- * - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.woff
- *
- * ### Loading Self-Hosted Icon Font Relative to Document Base
- * Applications deployed in a subdirectory must configure the `@scion/components` SCSS module to load the self-hosted icon font relative to the document base URL (defined by the `<base>` HTML tag) and exclude the icon font files from the application build.
- *
- * Different steps are required depending on whether building the application with esbuild or Webpack.
- *
- * **Using `@angular/build:application` (esbuild, default since Angular 20)**
- *
- * 1. Configure `@scion/components` SCSS module to load the icon font from `scion-icons` (no leading slash to be relative to the document base URL):
- *    ```scss
- *    @use '@scion/components' with (
- *      $icon-font: (
- *        directory: 'scion-icons'
- *      )
- *    );
- *    ```
- * 2. Exclude the icon font files from the application build via `externalDependencies` in `angular.json`:
- *    ```
- *    "externalDependencies": [
- *      "scion-icons/*"
- *    ]
- *    ```
- *
- * **Using `@angular-devkit/build-angular:browser` (Webpack, deprecated since Angular 22)**
- *
- * Configure `@scion/components` SCSS module to load the icon font from `^scion-icons` (no leading slash to be relative to the document base URL):
- *
- * The leading caret (`^`) instructs Webpack to exclude the icon font files from the application build.
- *
- * ```scss
- * @use '@scion/components' with (
- *   $icon-font: (
- *     directory: '^scion-icons'
- *   )
- * );
- * ```
  */
 
 @use './design/theming' as sci-theming;
 @use './design/themes/scion-light-theme';
 @use './design/themes/scion-dark-theme';
-@use './design/icons/scion-icon-font' as sci-icon-font;
 @use 'sass:map';
 
 // Install theme
@@ -182,7 +130,3 @@ $-built-in-themes: (
 $themes: $-built-in-themes !default;
 $themes: sci-theming.augment($themes, $-built-in-themes);
 @include sci-theming.install($themes);
-
-// Install icon font
-$icon-font: null !default;
-@include sci-icon-font.install-icon-font($icon-font);

@@ -18,15 +18,14 @@ import {SciComponentDescriptor} from '@scion/components/common';
  *
  * An icon provider is a function that returns a component for an icon. The component renders the icon.
  *
- * Multiple icon providers can be registered. Providers are called in registration order. If a provider does not provide the icon,
- * the next provider is called, and so on.
+ * Multiple icon providers can be registered. Providers are called in registration order. Returning `undefined` delegates to the next provider.
  *
  * Defaults to a Material icon provider, interpreting the icon as a Material icon ligature.
  *
  * Refer to https://fonts.google.com/icons for available Material icons and https://developers.google.com/fonts/docs/material_symbols#use_in_web
  * for instructions on including the Material icon font.
  *
- * @example - Importing the Material icon font in `styles.scss`
+ * @example - Importing the Material icon font in `src/styles.scss`
  * ```scss
  * @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..24,400,0&display=block');
  * ```
@@ -34,7 +33,7 @@ import {SciComponentDescriptor} from '@scion/components/common';
  * Built-in SCION icons start with the `scion:` prefix. To not replace SCION icons, the icon provider can return `undefined` for icons starting with the `scion:` prefix.
  * Refer to https://icons.scion.vercel.app for available SCION icons.
  *
- * The function can call `inject` to get any required dependencies.
+ * The function can call `inject` to get required dependencies.
  *
  * @see SciIconProviderFn
  * @see SciIconComponent
@@ -62,7 +61,7 @@ export function provideIconProvider(iconProviderFn: SciIconProviderFn | undefine
  *
  * An icon provider can be registered via {@link provideIconProvider} function.
  *
- * The function can call `inject` to get any required dependencies.
+ * The function can call `inject` to get required dependencies.
  *
  * @param icon - The key of the icon for which to provide the icon component.
  * @returns ComponentType or {@link SciComponentDescriptor} to render the icon, or `undefined` if not provided by the icon provider.

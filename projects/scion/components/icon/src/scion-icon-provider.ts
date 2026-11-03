@@ -18,9 +18,12 @@ import {SciIconFontComponent} from './icon-font.component';
  *
  * Register this provider as the last icon provider, enabling replacement of built-in SCION icons.
  *
- * This component requires the SCION icon font 'scion-icons' to be included in the HTML.
+ * This provider requires the SCION icon font 'scion-icons' to be included in the HTML:
  *
- * TODO [dwie] Add link to icon font.
+ * scss
+ * ```
+ * @import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
+ * ```
  */
 export const scionIconProvider: SciIconProviderFn = (icon: string): SciComponentDescriptor | undefined => {
   const ligature = icon.startsWith('scion:') ? icon.substring('scion:'.length) : undefined;

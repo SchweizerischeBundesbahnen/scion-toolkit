@@ -140,7 +140,7 @@ export type SciMenuContextProviderFn = (callingInjector: Injector) => MaybeSigna
  *
  * Register this provider using the {@link provideMenuInjectionContextProvider} function.
  *
- * The function can call `inject` to get any required dependencies.
+ * The function can call `inject` to get required dependencies.
  */
 export type SciMenuInjectionContextProviderFn = (context: Map<string, unknown>) => Provider[];
 

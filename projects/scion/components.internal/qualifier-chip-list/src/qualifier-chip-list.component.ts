@@ -16,7 +16,7 @@ import {KeyValue, KeyValuePipe} from '@angular/common';
  *
  * ## Styling
  *
- * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
+ * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `src/styles.scss`.
  * To style a specific `sci-qualifier-chip-list` component, the following CSS variables can be set directly on the component.
  *
  * - --sci-qualifier-chip-list-type-background-color: Sets the background color of the type chip

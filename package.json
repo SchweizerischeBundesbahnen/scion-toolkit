@@ -18,7 +18,10 @@
     "test:headless": "cross-env HEADLESS=true run-p \"**:*:test* -- {@}\" --",
     "e2e": "run-s \"**:*:e2e:run -- {@}\" --",
     "e2e:headless": "cross-env HEADLESS=true run-s \"**:*:e2e:run -- {@}\" --",
-    "postinstall": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium",
+    "postinstall": "run-p **:*:postinstall",
+
+    "playwright-chromium:postinstall": "cross-env PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium",
+    "scion-icons:postinstall": "npm install --no-save ./resources/scion-icons",
 
     "toolkit:lint": "ng lint @scion/toolkit",
     "toolkit:test": "ng test @scion/toolkit",

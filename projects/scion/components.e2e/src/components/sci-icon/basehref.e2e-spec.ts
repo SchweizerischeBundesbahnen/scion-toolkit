@@ -25,7 +25,7 @@ test.describe('HTML base HREF', () => {
    * ```
    */
   test('should fetch the icon font if deployed in a subdirectory (esbuild)', async ({page}) => {
-    const response = page.waitForResponse(/http:\/\/localhost:4300\/subdir\/browser\/scion-icons\/scion-icons\.(ttf|woff)/);
+    const response = page.waitForResponse(/http:\/\/localhost:4300\/subdir\/browser\/media\/scion-icons(?<hash>-[^.]+)?\.(woff|ttf)/); // hash only present in prod build
     await page.goto('http://localhost:4300/subdir/browser/#/components/sci-icon');
 
     // Expect the icon font to be loaded.
@@ -47,7 +47,7 @@ test.describe('HTML base HREF', () => {
    * TODO [Angular 23] remove when Angular does not support `@angular-devkit/build-angular:browser` builder anymore
    */
   test('should fetch the icon font if deployed in a subdirectory (webpack)', async ({page}) => {
-    const response = page.waitForResponse(/http:\/\/localhost:4400\/subdir\/scion-icons\/scion-icons\.(ttf|woff)/);
+    const response = page.waitForResponse(/http:\/\/localhost:4400\/subdir\/scion-icons(?<hash>\.[^.]+)?\.(woff|ttf)/); // hash only present in prod build
     await page.goto('http://localhost:4400/subdir/#/components/sci-icon');
 
     // Expect the icon font to be loaded.

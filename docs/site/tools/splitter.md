@@ -15,16 +15,15 @@ Click [here](https://components.scion.vercel.app/#/sci-sashbox) for a demo of th
 <details>
   <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/components` using the NPM command-line tool: 
+1. Install `@scion/components` and required dependencies from NPM: 
    ```
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
-
-1. Import SCION Design Tokens in `styles.scss` to style the splitter:
+1. Import required styles and icons in `src/styles.scss`.
    ```scss
    @use '@scion/components';
+   @import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
    ```
-   See [SCION Design Tokens][link-scion-design-tokens] for more information.   
 
 1. Import `SciSplitterComponent` in your component.
 
@@ -88,7 +87,7 @@ Note that this control neither does change the size of adjacent elements nor doe
 <details>
   <summary><strong>Styling</strong></summary>
 
-To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-splitter` component, the following CSS variables can be set directly on the component.
+To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `src/styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-splitter` component, the following CSS variables can be set directly on the component.
 
 - `--sci-splitter-background-color`\
  Sets the background color of the splitter.

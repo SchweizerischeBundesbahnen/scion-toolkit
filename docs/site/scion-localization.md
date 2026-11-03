@@ -54,7 +54,7 @@ bootstrapApplication(AppComponent, {
 ### Text Provider
 Text providers are used to provide texts to SCION components. A text provider is a function that returns the text for a translation key.
 
-Multiple text providers can be registered. Providers are called in registration order. If a provider does not provide the text, the next provider is called, and so on.
+Multiple text providers can be registered. Providers are called in registration order. Returning `undefined` delegates to the next provider.
 
 A text provider can be registered using the `provideTextProvider` function.
 
@@ -72,10 +72,9 @@ provideTextProvider((key: string, params: Record<string, string>): MaybeSignal<s
 ```
 
 > [!TIP]
-> - The function can call `inject` to get any required dependencies, such as a translation service.
+> - The function can call `inject` to get required dependencies, such as a translation service.
 > - The function can use `toSignal` to convert an `Observable` to a `Signal`.
-> - The function can return `undefined` to skip translating a key, e.g., to use the default text for built-in texts.
-> - Built-in texts start with the `scion:` prefix.
+> - Built-in SCION texts start with the `scion:` prefix.
 
 > [!IMPORTANT]
 > Applications using the SCION Workbench should register a text provider via configuration passed to the `provideWorkbench` function. Refer to the [workbench documentation][link-scion-workbench-texts] for details.
@@ -153,10 +152,10 @@ SCION Components use the following built-in texts:
 | scion:components:yes.value                | Yes                  |
 
 > [!TIP]
-> Applications using the SCION Workbench also include workbench-related texts. Built-in workbench texts start with the `scion:workbench:` prefix. Refer to the [workbench documentation][link-scion-workbench-texts] for details.
+> The application can register a text provider to replace built-in SCION texts.
 
 > [!NOTE]
-> The application can register a text provider to replace built-in SCION texts.
+> Applications using the SCION Workbench also include workbench-related texts. Built-in workbench texts start with the `scion:workbench:` prefix. Refer to the [workbench documentation][link-scion-workbench-texts] for details.
 
 
 [menu-how-to]: /docs/site/howto/how-to.md

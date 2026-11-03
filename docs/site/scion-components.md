@@ -8,7 +8,22 @@
 Provides Angular-based components and directives with a focus on SCION requirements.
 
 > [!NOTE]
-> `@scion/components` still requires `@angular/animations`. Removal is planned for 2026.
+> `@scion/components` still requires `@angular/animations`. Removal is planned for 2027.
+
+***
+**Installation:**
+
+Install `@scion/components` and required dependencies from NPM:
+```shell
+npm install @scion/components @scion/toolkit @angular/cdk
+```
+
+Import required styles and icons in `src/styles.scss`.
+```scss
+@use '@scion/components';
+@import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
+```
+***
 
 - [**Table**][link-tool-table]\
   Provides a table for displaying tabular data.

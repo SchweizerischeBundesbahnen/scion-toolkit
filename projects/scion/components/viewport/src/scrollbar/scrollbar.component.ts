@@ -37,7 +37,7 @@ import {clamp, isBetween} from '@scion/toolkit/util';
  *
  * ### Styling:
  *
- * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
+ * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `src/styles.scss`.
  * To style a specific `sci-scrollbar` component, the following CSS variables can be set directly on the component.
  *
  * - --sci-scrollbar-color: Sets the color of the scrollbar.

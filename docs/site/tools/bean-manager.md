@@ -13,7 +13,7 @@ The bean manager provides operations for obtaining references for beans. A bean 
 <details>
   <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
+1. Install `@scion/toolkit` from NPM: 
     ```
     npm install @scion/toolkit
     ```

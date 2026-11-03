@@ -9,7 +9,7 @@ The NPM sub-module `@scion/toolkit/uuid` provides a pseudo-random identifier gen
 
 #### Installation and Usage
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
+1. Install `@scion/toolkit` from NPM: 
     ```
     npm install @scion/toolkit
     ```
