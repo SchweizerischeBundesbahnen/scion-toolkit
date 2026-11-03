@@ -2,7 +2,7 @@
 
 :host {
   display: flex;
-  gap: .5em;
+  gap: .25em;
   align-items: center;
   padding-inline: var(--ɵsci-table-cell-padding-inline);
   border-bottom: var(--ɵsci-table-border-size) solid transparent;
@@ -17,16 +17,17 @@
     color: var(--sci-color-accent);
   }
 
-  > sci-icon.chevron {
-    --sci-icon-size: var(--sci-button-icon-size);
-  }
-
   &:has(input[type="button"]) {
     cursor: var(--sci-button-cursor);
 
     &:has(button.clear) > sci-icon.chevron {
       display: none;
     }
+  }
+
+  // Remove gap when host drops below 50px.
+  &.collapsed {
+    gap: 0;
   }
 
   > input {

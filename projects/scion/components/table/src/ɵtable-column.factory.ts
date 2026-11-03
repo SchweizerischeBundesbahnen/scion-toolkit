@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciDateColumnDescriptor, SciEnumColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
+import {SciBooleanColumnDescriptor, SciComponentColumnDescriptor, SciDateColumnDescriptor, SciEnumColumnDescriptor, SciIconColumnDescriptor, SciNumberColumnDescriptor, SciStringColumnDescriptor, SciTableColumnDescriptorLike, SciTableColumnFactory, SciTemplateColumnDescriptor} from './table-column.factory';
 import {SciColumnHeaderLike, SciComponentColumn, SciDateColumn, SciDateLike, SciEnumColumn, SciEnumValueLike, SciNumberColumn, SciStringColumn, SciTableColumn, SciTableColumnLike, SciTemplateColumn} from './table.model';
 import {computed, DEFAULT_CURRENCY_CODE, inject, signal, untracked} from '@angular/core';
 import {ɵSciTable} from './ɵtable.model';
@@ -147,6 +147,21 @@ export class ɵSciTableColumnFactory<T> implements SciTableColumnFactory<T> {
       format,
     } satisfies SciEnumColumn<T>);
 
+    return this;
+  }
+
+  public addIconColumn(descriptor: SciIconColumnDescriptor<T>): this {
+    const resizable = typeof descriptor.header === 'string' || !!descriptor.header?.label?.length;
+
+    this.addEnumColumn({
+      ...descriptor,
+      value: item => coerceSignal(descriptor.value(item), {coerceUndefined: true}),
+      format: {icon: true, filter: {icon: true}},
+      resizable: descriptor.resizable ?? resizable,
+      width: descriptor.width ?? (resizable ? undefined : 'max-content'), // adapt width to intrinsic size
+      minWidth: descriptor.minWidth ?? (resizable ? undefined : 32),
+      referenceType: 'icon',
+    });
     return this;
   }
 

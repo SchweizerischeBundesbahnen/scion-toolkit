@@ -30,6 +30,7 @@
               <option value="boolean">Boolean</option>
               <option value="date">Date</option>
               <option value="enum">Enum</option>
+              <option value="icon">Icon</option>
               <option value="template">Template</option>
               <option value="component">Component</option>
             </select>
@@ -162,6 +163,23 @@
                 </label>
               </section>
             }
+            @case ('icon') {
+              @let extras = columnForm.extras.iconColumn;
+              <label>
+                Filterable
+                <select [formField]="extras.filterable" appFieldValidation>
+                  <option value="single">single</option>
+                  <option value="multi">multi</option>
+                  <option value="false">false</option>
+                  <option value=""></option>
+                </select>
+              </label>
+
+              <label>
+                <input [formField]="extras.showAllProductStatusOptions" type="checkbox"/>
+                Show all product status options
+              </label>
+            }
             @case ('component') {
               @let extras = columnForm.extras.componentColumn;
               <label>
@@ -198,8 +216,12 @@
           </label>
 
           <label>
-            <input [formField]="columnForm.resizable" type="checkbox" class="e2e-resizable"/>
             Resizable
+            <select [formField]="columnForm.resizable" class="e2e-resizable" appFieldValidation>
+              <option value="true">true</option>
+              <option value="false">false</option>
+              <option value=""></option>
+            </select>
           </label>
 
           <button class="e2e-column-add" type="submit" [disabled]="columnForm().invalid()">Add</button>

@@ -138,7 +138,7 @@ export default class SciTablePageComponent {
           } : columnForm.header.label || columnForm.name || undefined,
           width: columnForm.width || undefined,
           minWidth: columnForm.minWidth ?? undefined,
-          resizable: columnForm.resizable,
+          resizable: columnForm.resizable === '' ? undefined : columnForm.resizable === 'true',
         };
 
         switch (columnForm.type) {
@@ -203,6 +203,36 @@ export default class SciTablePageComponent {
                   icon: extras.format.filter.icon || undefined,
                 },
               } : undefined,
+              filterable: (() => {
+                switch (extras.filterable) {
+                  case 'false':
+                    return false;
+                  case '':
+                    return undefined;
+                  default:
+                    return extras.filterable;
+                }
+              })(),
+            });
+            break;
+          }
+          case 'icon': {
+            const extras = columnForm.extras.iconColumn;
+            table.addIconColumn({
+              ...column,
+              value: product => product.status,
+              values: [
+                {value: 'in-stock', icon: 'check_circle', label: 'In Stock'},
+                {value: 'low-stock', icon: 'warning', label: 'Low Stock'},
+                {value: 'out-of-stock', icon: 'cancel', label: 'Out of Stock'},
+                {value: 'backorderable', icon: 'inventory_2', label: 'Backorderable'},
+                {value: 'preorder', icon: 'edit_calendar', label: 'Pre-order'},
+                {value: 'discontinued', icon: 'block', label: 'Discontinued'},
+                {value: 'clearance', icon: 'sell', label: 'Clearance'},
+              ].concat(extras.showAllProductStatusOptions ? [
+                {value: 'coming-soon', icon: 'schedule', label: 'Coming Soon'},
+                {value: 'on-sale', icon: 'local_offer', label: 'On Sale'},
+              ] : []),
               filterable: (() => {
                 switch (extras.filterable) {
                   case 'false':
@@ -302,7 +332,7 @@ export default class SciTablePageComponent {
           tooltip: '',
           icon: '',
         },
-        resizable: true,
+        resizable: '',
         width: '',
         minWidth: null,
         visible: signal(true),
@@ -331,6 +361,10 @@ export default class SciTablePageComponent {
                 icon: false,
               },
             },
+            filterable: '',
+            showAllProductStatusOptions: true,
+          },
+          iconColumn: {
             filterable: '',
             showAllProductStatusOptions: true,
           },
@@ -407,7 +441,7 @@ interface ColumnForm {
     tooltip: string;
     icon: string;
   };
-  resizable: boolean;
+  resizable: 'true' | 'false' | '';
   width: string;
   minWidth: number | null;
   visible: WritableSignal<boolean>;
@@ -436,6 +470,10 @@ interface ColumnForm {
           icon: boolean;
         };
       };
+      filterable: 'single' | 'multi' | 'false' | '';
+      showAllProductStatusOptions: boolean;
+    };
+    iconColumn: {
       filterable: 'single' | 'multi' | 'false' | '';
       showAllProductStatusOptions: boolean;
     };

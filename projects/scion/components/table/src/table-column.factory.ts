@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciColumnHeaderLike, SciDateLike, SciEnumColumnValues, SciEnumValueLike, SciTableCellContext, SciTableColumnType} from './table.model';
+import {SciColumnHeaderLike, SciDateLike, SciEnumColumnValues, SciEnumValueLike, SciIconColumnValues, SciTableCellContext, SciTableColumnType} from './table.model';
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Translatable} from '@scion/components/text';
 
@@ -257,6 +257,14 @@ export interface SciTableColumnFactory<T> {
    * An enumeration defines a fixed set of values, each with a label and an optional icon and tooltip.
    */
   addEnumColumn(descriptor: SciEnumColumnDescriptor<T>): this;
+
+  /**
+   * Adds a column to the table for displaying icons.
+   *
+   * An icon column is a standardized enum column for displaying icons. If configured with only a header icon and no label,
+   * it defaults to non-resizable and sizes to fit the icon.
+   */
+  addIconColumn(descriptor: SciIconColumnDescriptor<T>): this;
 
   /**
    * Adds a column to the table for displaying custom content using a component.
@@ -546,6 +554,42 @@ export interface SciEnumColumnDescriptor<T = unknown> extends SciTableColumnDesc
   referenceType?: SciTableColumnType;
 }
 
+/**
+ * Configures a table column for displaying icons.
+ *
+ * An icon column is a standardized enum column for displaying icons. If configured with only a header icon and no label,
+ * it defaults to non-resizable and sizes to fit the icon.
+ */
+export interface SciIconColumnDescriptor<T = unknown> extends SciTableColumnDescriptor {
+  /**
+   * Specifies the icon to display for an item.
+   *
+   * SCION uses icon providers to render icons. An icon provider can be registered using {@link provideIconProvider}.
+   *
+   * Defaults to a Material icon provider if the application has not registered an icon provider, interpreting the icon as a Material Icon font ligature.
+   * Refer to https://fonts.google.com/icons for available Material icons and instructions on including the Material icon font.
+   *
+   * The function:
+   * - Can call `inject` to get required dependencies.
+   * - Can call `toSignal` to convert an {@link Observable} to a {@link Signal}.
+   */
+  value: (item: T) => MaybeSignal<string | number | boolean | undefined>;
+  /**
+   * Specifies the icons displayed in this column.
+   *
+   * The array order determines the sort order.
+   */
+  values: MaybeSignal<SciIconColumnValues>;
+  /**
+   * Controls whether the user can sort this column. Defaults to `true`.
+   */
+  sortable?: boolean;
+  /**
+   * Controls whether the user can filter this column. Defaults to `multi`.
+   */
+  filterable?: 'single' | 'multi' | false;
+}
+
 export interface SciComponentColumnDescriptor<T> extends SciTableColumnDescriptor {
   component: (item: T) => SciComponentDescriptor;
   sortable?: boolean | {comparator: SciTableColumnSortComparatorFn<T, void>};
@@ -573,7 +617,7 @@ export interface SciTemplateColumnDescriptor<T> extends SciTableColumnDescriptor
 /**
  * Represents a column descriptor.
  */
-export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciDateColumnDescriptor<T> | SciEnumColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
+export type SciTableColumnDescriptorLike<T> = SciStringColumnDescriptor<T> | SciNumberColumnDescriptor<T> | SciBooleanColumnDescriptor<T> | SciDateColumnDescriptor<T> | SciIconColumnDescriptor<T> | SciEnumColumnDescriptor<T> | SciComponentColumnDescriptor<T> | SciTemplateColumnDescriptor<T>;
 
 /**
  * Signature of a function used to configure a comparator for sorting a table column.

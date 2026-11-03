@@ -20,6 +20,7 @@ import {SciTooltipOnOverflowDirective, TOOLTIP_ON_OVERFLOW_DIRECTIVE_SOURCE_ELEM
 import {SciEnumLabelPipe} from './enum-label.pipe';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciTextPipe} from '@scion/components/text';
+import {dimension} from '@scion/components/dimension';
 
 @Component({
   selector: 'sci-column-filter',
@@ -37,6 +38,7 @@ import {SciTextPipe} from '@scion/components/text';
   host: {
     '[attr.data-column]': 'column().name',
     '[attr.data-disabled]': `!column().filterable() ? '' : null`,
+    '[class.collapsed]': 'dimension().clientWidth < 50',
     '(click)': 'column().filterable() && onFilterClick()',
   },
   providers: [
@@ -49,6 +51,7 @@ export class SciColumnFilterComponent<T> {
   public readonly inputElement = viewChild<ElementRef<HTMLElement>>('input'); // public visibility required to be accessible in `configureTooltip` function
 
   protected readonly filter = signal<string | number | boolean | SciEnumValueLike | SciEnumValueLike[] | null>(null);
+  protected readonly dimension = dimension(inject(ElementRef));
 
   private readonly _table = inject(ɵSCI_TABLE);
   private readonly _menuService = inject(ɵSciMenuService);
