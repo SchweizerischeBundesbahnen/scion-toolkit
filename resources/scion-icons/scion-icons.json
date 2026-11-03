@@ -2,7 +2,7 @@
   "metadata": {
     "name": "scion-icons",
     "lastOpened": 0,
-    "created": 1789745212584
+    "created": 1793365148712
   },
   "iconSets": [
     {
@@ -19,8 +19,7 @@
           ],
           "grid": 24,
           "tags": [
-            "bin",
-            "delete"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -37,7 +36,7 @@
           ],
           "grid": 24,
           "tags": [
-            "checkmark"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -54,7 +53,7 @@
           ],
           "grid": 24,
           "tags": [
-            "chevron_down"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -71,7 +70,7 @@
           ],
           "grid": 24,
           "tags": [
-            "chevron_left"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -88,7 +87,7 @@
           ],
           "grid": 24,
           "tags": [
-            "chevron_right"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -105,7 +104,7 @@
           ],
           "grid": 24,
           "tags": [
-            "chevron_up"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -126,7 +125,7 @@
           ],
           "grid": 24,
           "tags": [
-            "collapse_all"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -159,7 +158,7 @@
           ],
           "grid": 24,
           "tags": [
-            "copy"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -176,9 +175,7 @@
           ],
           "grid": 24,
           "tags": [
-            "close",
-            "clear",
-            "remove"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -195,7 +192,7 @@
           ],
           "grid": 24,
           "tags": [
-            "drag_handle"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -224,7 +221,7 @@
           ],
           "grid": 24,
           "tags": [
-            "duplicate"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -241,8 +238,7 @@
           ],
           "grid": 24,
           "tags": [
-            "emdash",
-            "remove_minus"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -259,8 +255,7 @@
           ],
           "grid": 24,
           "tags": [
-            "envelope",
-            "envelope_closed"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -277,7 +272,7 @@
           ],
           "grid": 24,
           "tags": [
-            "envelope_opened"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -298,7 +293,7 @@
           ],
           "grid": 24,
           "tags": [
-            "expand_all"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -315,7 +310,7 @@
           ],
           "grid": 24,
           "tags": [
-            "external_link"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -332,7 +327,7 @@
           ],
           "grid": 24,
           "tags": [
-            "filter"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -349,7 +344,7 @@
           ],
           "grid": 24,
           "tags": [
-            "folder"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -370,7 +365,7 @@
           ],
           "grid": 24,
           "tags": [
-            "help"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -387,9 +382,7 @@
           ],
           "grid": 24,
           "tags": [
-            "find",
-            "magnifier",
-            "search"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -406,9 +399,7 @@
           ],
           "grid": 24,
           "tags": [
-            "hide",
-            "minimize",
-            "minus"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -425,7 +416,7 @@
           ],
           "grid": 24,
           "tags": [
-            "more_horizontal"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -442,7 +433,7 @@
           ],
           "grid": 24,
           "tags": [
-            "more_vertical"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -471,7 +462,7 @@
           ],
           "grid": 24,
           "tags": [
-            "paste"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -488,10 +479,7 @@
           ],
           "grid": 24,
           "tags": [
-            "dirty",
-            "edit",
-            "modified",
-            "pen"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -508,8 +496,7 @@
           ],
           "grid": 24,
           "tags": [
-            "pin",
-            "pinned"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -526,7 +513,7 @@
           ],
           "grid": 24,
           "tags": [
-            "placeholder_frame"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -547,7 +534,7 @@
           ],
           "grid": 24,
           "tags": [
-            "placeholder_image"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -564,9 +551,7 @@
           ],
           "grid": 24,
           "tags": [
-            "add",
-            "new",
-            "plus"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -583,9 +568,7 @@
           ],
           "grid": 24,
           "tags": [
-            "add_large",
-            "new_large",
-            "plus_large"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -602,10 +585,25 @@
           ],
           "grid": 24,
           "tags": [
-            "reset"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
+        },
+        {
+          "id": 47,
+          "paths": [
+            "M121.617 512c0-212.077 171.923-384 384-384 133.709 0.001 251.26 68.445 320.002 172v-204c0-17.673 14.323-32 32-32 17.67 0.001 32 14.328 32 32v288h-288.002c-17.673 0-32-14.327-32-32s14.327-32 32-32h159.81c-58.413-77.704-151.2-127.999-255.81-128-176.732 0-320 143.269-320 320 0 176.73 143.268 320 320 320 124.307 0 232.117-70.874 285.122-174.56 8.045-15.738 27.328-21.984 43.066-13.939 15.731 8.045 21.978 27.328 13.939 43.059-63.52 124.256-192.858 209.44-342.127 209.44-212.077 0-384-171.923-384-384z"
+          ],
+          "attrs": [
+            {}
+          ],
+          "isMulticolor": false,
+          "isMulticolor2": false,
+          "grid": 24,
+          "tags": [
+            ""
+          ]
         },
         {
           "id": 43,
@@ -619,7 +617,7 @@
           ],
           "grid": 24,
           "tags": [
-            "sort_ascending"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -636,7 +634,7 @@
           ],
           "grid": 24,
           "tags": [
-            "sort_by"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -653,7 +651,7 @@
           ],
           "grid": 24,
           "tags": [
-            "sort_descending"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -674,7 +672,7 @@
           ],
           "grid": 24,
           "tags": [
-            "sort_indicator"
+            ""
           ],
           "isMulticolor": false,
           "isMulticolor2": false
@@ -697,7 +695,7 @@
           "isMulticolor2": false,
           "grid": 24,
           "tags": [
-            "scion-icon-user"
+            ""
           ]
         }
       ],
@@ -826,7 +824,7 @@
           "prevSize": 24,
           "code": 59656,
           "tempChar": "",
-          "ligatures": "close, clear, remove"
+          "ligatures": "close, clear, remove, x"
         },
         {
           "order": 83,
@@ -1027,12 +1025,21 @@
           "ligatures": "reset"
         },
         {
+          "order": 86,
+          "id": 47,
+          "name": "scion-icon-reload",
+          "prevSize": 24,
+          "code": 59649,
+          "tempChar": "",
+          "ligatures": "reload, refresh"
+        },
+        {
           "order": 79,
           "id": 43,
           "name": "scion-icon-sort-ascending",
           "prevSize": 24,
           "code": 59683,
-          "tempChar": "",
+          "tempChar": "",
           "ligatures": "sort_ascending"
         },
         {
@@ -1041,7 +1048,7 @@
           "name": "scion-icon-sort-by",
           "prevSize": 24,
           "code": 59682,
-          "tempChar": "",
+          "tempChar": "",
           "ligatures": "sort_by"
         },
         {
@@ -1050,7 +1057,7 @@
           "name": "scion-icon-sort-descending",
           "prevSize": 24,
           "code": 59681,
-          "tempChar": "",
+          "tempChar": "",
           "ligatures": "sort_descending"
         },
         {
@@ -1059,7 +1066,7 @@
           "name": "scion-icon-sort-indicator",
           "prevSize": 24,
           "code": 59684,
-          "tempChar": "",
+          "tempChar": "",
           "ligatures": "sort_indicator"
         },
         {
@@ -1068,7 +1075,7 @@
           "name": "user",
           "prevSize": 24,
           "code": 59685,
-          "tempChar": "",
+          "tempChar": "",
           "ligatures": "user"
         }
       ],

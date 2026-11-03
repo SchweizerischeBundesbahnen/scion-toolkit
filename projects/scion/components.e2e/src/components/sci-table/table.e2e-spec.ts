@@ -6329,7 +6329,7 @@ test.describe('sci-table', () => {
 
   test.describe('Datasource Error', () => {
 
-    test(`should display 'Data Unavailable' on datasource error`, async ({page, consoleLogs}) => {
+    test(`should display 'Unable to load data' on datasource error`, async ({page, consoleLogs}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -6338,22 +6338,22 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'column:testee', type: 'string'});
 
       await tablePage.setRowCount(10);
-      await expect(table.locator).not.toContainText('Data unavailable.');
+      await expect(table.locator).not.toContainText('Unable to load data.');
       await expect(table.rows).toHaveCount(10);
 
       await tablePage.simulateDatasourceError(true);
-      await expect(table.locator).toContainText('Data unavailable.');
+      await expect(table.locator).toContainText('Unable to load data.');
       await expect(table.rows).toHaveCount(0);
 
       await tablePage.simulateDatasourceError(false);
       await table.retry();
-      await expect(table.locator).not.toContainText('Data unavailable.');
+      await expect(table.locator).not.toContainText('Unable to load data.');
       await expect(table.rows).toHaveCount(10);
 
       await expect.poll(() => consoleLogs.get({severity: 'error'})).toContainEqual(expect.stringContaining('[DatasourceError]'));
     });
 
-    test(`should horizontally center 'Data Unavailable' in viewport`, async ({page}) => {
+    test(`should horizontally center 'Unable to load data' in viewport`, async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -6381,7 +6381,7 @@ test.describe('sci-table', () => {
       await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toBeCloseTo(tableBounds.hcenter, 0);
     });
 
-    test(`should horizontally center 'Data Unavailable' in table-body if no overflow`, async ({page}) => {
+    test(`should horizontally center 'Unable to load data' in table-body if no overflow`, async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -6402,13 +6402,13 @@ test.describe('sci-table', () => {
       // Shrink column so the table does not fill the viewport.
       await table.column({name: 'column:1'}).splitter.drag({deltaX: -300});
 
-      // Expect 'Data Unavailable' message to be horizontally centered within the column.
+      // Expect 'Unable to load data' message to be horizontally centered within the column.
       const columnBounds = await table.column({name: 'column:1'}).bounds();
       await expect(table.message.datasourceError).toBeInViewport({ratio: 1});
       await expect.poll(async () => fromRect(await table.message.datasourceError.boundingBox()).hcenter).toBeCloseTo(columnBounds.hcenter, 0);
     });
 
-    test(`should display 'Data Unavailable' if table grows with its content`, async ({page}) => {
+    test(`should display 'Unable to load data' if table grows with its content`, async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -6423,8 +6423,8 @@ test.describe('sci-table', () => {
       // Configure table to grow with its content.
       await tablePage.setGrowToBreakpoint(true);
 
-      // Expect table to grow with "Data Unavailable" message.
-      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(4 * 30); // "Data Unavailable" message
+      // Expect table to grow with "Unable to load data" message.
+      await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(4 * 30); // "Unable to load data" message
     });
   });
 });

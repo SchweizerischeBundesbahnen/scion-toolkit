@@ -22,9 +22,8 @@
           {{('%scion.components.datasource_error.message' | sciText)()}}
 
           <button (click)="onRetry()" class="action e2e-datasource-retry">
-            <!-- TODO [dwi] Replace with SCION icon -->
-            <sci-icon>refresh</sci-icon>
-            <span>{{('%scion.components.retry.label' | sciText)()}}</span>
+            <sci-icon>scion.reload</sci-icon>
+            <span>{{('%scion.components.retry.action' | sciText)()}}</span>
           </button>
         </span>
       }
