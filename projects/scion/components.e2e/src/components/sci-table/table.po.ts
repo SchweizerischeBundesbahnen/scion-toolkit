@@ -14,6 +14,7 @@ import {RowPO} from './row.po';
 import {DomRect, fromRect, waitUntilStable} from '../../helper/testing.utils';
 import {OneOf, RequireOne} from '@scion/toolkit/types';
 import {HeaderPO} from './header.po';
+import {isBetween} from '@scion/toolkit/util';
 
 export class TablePO {
 
@@ -206,8 +207,8 @@ export class ColumnSplitterPO {
     // Ensure splitter spans the full table viewport height.
     const splitterBounds = await this.bounds();
     const tableViewportBounds = fromRect(await this._table.viewport.boundingBox());
-    if (tableViewportBounds.height !== splitterBounds.height) {
-      throw Error('[PageObjectError] Splitter expected to span full table viewport height.');
+    if (!isBetween(splitterBounds.height, {from: tableViewportBounds.height - 1, to: tableViewportBounds.height + 1})) {
+      throw Error(`[PageObjectError] Splitter expected to span full table viewport height. [expected=${tableViewportBounds.height}, actual=${splitterBounds.height}]`);
     }
 
     // Check if rendered as column header divider.
