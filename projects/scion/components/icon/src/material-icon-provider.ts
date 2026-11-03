@@ -8,25 +8,15 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, input, inputBinding} from '@angular/core';
+import {inputBinding} from '@angular/core';
 import {SciIconProviderFn} from './icon.provider';
 import {SciComponentDescriptor} from '@scion/components/common';
+import {SciIconFontComponent} from './icon-font.component';
 
 /**
  * Provides Material icons for non-scion icons.
- */
-export const materialIconProvider: SciIconProviderFn = (ligature: string): SciComponentDescriptor | undefined => {
-  if (ligature.startsWith('scion.')) {
-    return undefined; // delegate to next provider
-  }
-
-  return {component: MaterialIconComponent, bindings: [inputBinding('ligature', () => ligature)]};
-};
-
-/**
- * Renders a Material icon based on its ligature.
  *
- * This component requires a Material icon font to be included in the HTML.
+ * This provider requires a Material icon font to be included in the HTML.
  *
  * Supported fonts:
  * - https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded
@@ -34,37 +24,16 @@ export const materialIconProvider: SciIconProviderFn = (ligature: string): SciCo
  * - https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp
  * - https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp
  */
-@Component({
-  selector: 'sci-material-icon',
-  template: '',
-  host: {
-    '[attr.data-ligature]': 'ligature()',
-  },
-  styles: `
-    :host {
-      font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Symbols Sharp', 'Material Icons', 'Material Icons Outlined', 'Material Icons Round', 'Material Icons Sharp';
-      font-weight: normal;
-      font-style: normal;
-      line-height: 1;
-      letter-spacing: normal;
-      text-transform: none;
-      display: inline-block;
-      white-space: nowrap;
-      word-wrap: normal;
-      direction: ltr;
-      font-feature-settings: 'liga';
-      -webkit-font-smoothing: antialiased;
+export const materialIconProvider: SciIconProviderFn = (ligature: string): SciComponentDescriptor | undefined => {
+  if (ligature.startsWith('scion.')) {
+    return undefined; // delegate to next provider
+  }
 
-      /* Render ligature in ::before pseudo-element so it is excluded from the DOM tree (e.g., will not be returned by Element.textContent). */
-      &::before {
-        content: attr(data-ligature);
-      }
-    }
-  `,
-})
-export class MaterialIconComponent {
-  /**
-   * Specifies the ligature of the Material icon.
-   */
-  public readonly ligature = input.required<string>();
-}
+  return {
+    component: SciIconFontComponent,
+    bindings: [
+      inputBinding('fontFamily', () => `'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Symbols Sharp', 'Material Icons', 'Material Icons Outlined', 'Material Icons Round', 'Material Icons Sharp'`),
+      inputBinding('ligature', () => ligature),
+    ],
+  };
+};

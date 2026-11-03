@@ -15,3 +15,4 @@
  */
 export {SciIconComponent} from './icon.component';
 export {provideIconProvider, type SciIconProviderFn} from './icon.provider';
+export {SciIconFontComponent} from './icon-font.component';
