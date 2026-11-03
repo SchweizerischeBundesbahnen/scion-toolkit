@@ -361,8 +361,8 @@ Instructions for releasing the `@scion/icons` module.
    - Enter the following URLs:
      - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.woff
      - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.ttf
-     - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.svg
      - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icons.json
+     - https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css
 6. Verify that:
     - `@scion/icons` is published to: https://www.npmjs.com/package/@scion/icons
     - `@scion/icons` is available on CDN: https://cdn.jsdelivr.net/npm/@scion/icons

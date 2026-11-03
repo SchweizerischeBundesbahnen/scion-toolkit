@@ -12,7 +12,7 @@ The NPM sub-module `@scion/toolkit/storage` allows the observation of values con
 <details>
   <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/toolkit` using the NPM command-line tool: 
+1. Install `@scion/toolkit` from NPM: 
     ```
     npm install @scion/toolkit
     ```

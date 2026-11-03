@@ -33,7 +33,7 @@ export class IconProviders {
   /**
    * Provides the icon descriptor for the given icon based on icon providers registered under the {@link SCI_ICON_PROVIDER} DI token.
    *
-   * Icon providers are called in registration order. If a provider does not provide the icon, the next provider is called, and so on.
+   * Icon providers are called in registration order. Returning `undefined` delegates to the next provider.
    */
   public provide(icon: string | undefined): SciComponentDescriptor | undefined {
     assertNotInReactiveContext(this.provide, 'Call IconProviders.provide() in a non-reactive (non-tracking) context.');

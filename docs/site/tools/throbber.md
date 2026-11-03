@@ -15,16 +15,16 @@ Click [here](https://components.scion.vercel.app/#/sci-throbber) for a demo of t
 <details>
   <summary><strong>Installation and Usage</strong></summary>
 
-1. Install `@scion/components` using the NPM command-line tool: 
+1. Install `@scion/components` and required dependencies from NPM: 
    ```
    npm install @scion/components @scion/toolkit @angular/cdk
    ```
 
-1. Import SCION Design Tokens in `styles.scss` to style the throbber:
+1. Import required styles and icons in `src/styles.scss`.
    ```scss
    @use '@scion/components';
+   @import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
    ```
-   See [SCION Design Tokens][link-scion-design-tokens] for more information.
 
 1. Import `SciViewportComponent` in your component.
 
@@ -71,7 +71,7 @@ Example:
 <details>
   <summary><strong>Styling</strong></summary>
 
-To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-throbber` component, the following CSS variables can be set directly on the component.
+To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `src/styles.scss`. See [SCION Design Tokens][link-scion-design-tokens] for more information. To style a specific `sci-throbber` component, the following CSS variables can be set directly on the component.
 
 - `--sci-throbber-color`\
   Sets the color of the throbber.

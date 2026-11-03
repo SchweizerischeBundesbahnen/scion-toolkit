@@ -42,15 +42,14 @@ Click [here](https://components.scion.vercel.app/#/sci-table) for a demo of the 
 ### Installation
 
 Install `@scion/components` and required dependencies from NPM:
-
 ```
 npm install @scion/components @scion/toolkit @angular/cdk
 ```
 
-Import [SCION Design Tokens][link-scion-design-tokens] in `styles.scss` to provide required styles for the table.
-
+Import required styles and icons in `src/styles.scss`.
 ```scss
 @use '@scion/components';
+@import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
 ```
 
 ### Basic Usage

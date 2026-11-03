@@ -9,7 +9,7 @@ SCION provides a set of design tokens to enable consistent design of components 
 
 An application can define a custom theme to change the default look of the SCION components. Multiple themes are supported. A theme is a collection of design tokens, defining specific design aspects such as colors, spacings, etc. A design token can have a different value per theme.
 
-An application typically loads the SCSS module `@scion/components` in the `styles.scss` file.
+An application typically loads the SCSS module `@scion/components` in the `src/styles.scss` file.
 
 ```scss
 @use '@scion/components';

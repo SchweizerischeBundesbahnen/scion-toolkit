@@ -1,0 +1,9 @@
+@font-face {
+  font-family: 'scion-icons';
+  src: url('scion-icons.woff') format('woff'),
+  url('scion-icons.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  /* Prevent FOUT (Flash of Unstyled Text) from displaying unstyled ligatures until the font loads. */
+  font-display: block;
+}

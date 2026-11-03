@@ -33,7 +33,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
  *
  * ### Styling
  *
- * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `styles.scss`.
+ * To customize the default look of SCION components or support different themes, configure the `@scion/components` SCSS module in `src/styles.scss`.
  * To style a specific `sci-splitter` component, the following CSS variables can be set directly on the component.
  *
  * - --sci-splitter-background-color: Sets the background color of the splitter.
