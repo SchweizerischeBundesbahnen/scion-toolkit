@@ -378,8 +378,8 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         expect(table.rows.map(row => row.cells.map(cell => cell.data))).toEqual([
-          [jasmine.objectContaining({value: 'true', label: '', icon: 'scion.checkmark', iconTooltip: null})],
-          [jasmine.objectContaining({value: 'false', icon: 'scion.clear', iconTooltip: null})],
+          [jasmine.objectContaining({value: 'true', label: '', icon: 'scion.true', iconTooltip: null})],
+          [jasmine.objectContaining({value: 'false', icon: 'scion.false', iconTooltip: null})],
           [jasmine.objectContaining({value: null, icon: null, iconTooltip: null})],
         ]);
 
