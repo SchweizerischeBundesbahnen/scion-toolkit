@@ -468,7 +468,7 @@ export default class SciTablePageComponent {
     });
   }
 
-  protected onTableFilter(table: SciTable<Product>, filter: string): void {
+  protected onTableFilter(table: SciTable<number>, filter: string): void {
     table.filter(filter);
   }
 

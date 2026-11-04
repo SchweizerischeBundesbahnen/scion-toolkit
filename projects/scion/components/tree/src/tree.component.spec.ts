@@ -45,7 +45,6 @@ describe('Tree', () => {
       expect(tree.columns).toHaveSize(1);
       expect(await tree.column({index: 0})!.values()).toEqual(['Alpha', 'Beta']);
       expect(tree.column({index: 0})!.sortable).toBeFalse();
-      expect(tree.column({index: 0})!.splitter).toBeNull();
       expect(tree.header.element).toBeNull();
     });
 

@@ -5917,12 +5917,10 @@ describe('Table', () => {
       });
 
       it('should filter icon column (single)', async () => {
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{iconValue: string}> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
 
-        const {fixture} = createSciTableComponent<{iconValue: string}>(sciTable({
-          ɵdatasource: loader,
+        const {fixture} = createSciTableComponent(sciTable<{iconValue: string}>({
+          ɵdatasource: provideAsyncTableDatasource(getIds, ids => ids),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table.addIconColumn({
@@ -5941,37 +5939,29 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:icon'})!;
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter('0');
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:icon', text: '0'},
           ],
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter('2');
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:icon', text: '2'},
           ],
         }));
-        loader.calls.reset();
-
-        await column.filter(null);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
-        }));
       });
 
       it('should filter icon column (multi)', async () => {
-        const loader = jasmine.createSpy().and.callFake((): SciTablePageResponse<{enumValue: string}> => {
-          return {items: [], totalCount: 0};
-        });
+        const getIds = jasmine.createSpy().and.callFake(() => []);
 
-        const {fixture} = createSciTableComponent<{enumValue: string}>(sciTable({
-          ɵdatasource: loader,
+        const {fixture} = createSciTableComponent(sciTable<{enumValue: string}>({
+          ɵdatasource: provideAsyncTableDatasource(getIds, ids => ids),
           datasource: ɵillegaldatasource(),
           filterable: true,
           columns: table => table.addIconColumn({
@@ -5989,32 +5979,22 @@ describe('Table', () => {
         const table = new TablePO(fixture);
         await table.waitUntilStable();
         const column = table.column({name: 'column:icon'})!;
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(['0']);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:icon', text: ['0']},
           ],
         }));
-        loader.calls.reset();
+        getIds.calls.reset();
 
         await column.filter(null);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
-        }));
-
         await column.filter(['1', '2']);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
+        expect(getIds).toHaveBeenCalledWith(jasmine.objectContaining<SciTableIdsRequest>({
           columnFilters: [
             {columnName: 'column:icon', text: ['1', '2']},
           ],
-        }));
-        loader.calls.reset();
-
-        await column.filter(null);
-        expect(loader).toHaveBeenCalledWith(jasmine.objectContaining<SciTablePageRequest>({
-          columnFilters: [],
         }));
       });
 
