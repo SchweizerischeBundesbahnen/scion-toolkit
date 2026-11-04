@@ -114,6 +114,32 @@ export class ɵSciAsyncTableTreeDatasource<T, ID> implements SciTableTreeDatasou
   }
 }
 
+/**
+ * Provides a datasource for a table using an array signal.
+ *
+ * Updates the table when the signal changes.
+ * Sorting and filtering are performed locally using the column configurations.
+ *
+ * @example
+ * ```ts
+ * table({
+ *   datasource: provideTableDatasource(users.value),
+ *   columns: table => table.addStringColumn('Name', user => user.name),
+ * });
+ * ```
+ *
+ * The table supports using an array signal directly, without  {@link provideTableDatasource}
+ *
+ * @example
+ * ```ts
+ * table({
+ *   datasource: users.value,
+ *   columns: table => table.addStringColumn('Name', user => user.name),
+ * });
+ * ```
+ *
+ * @param data - Signal containing the table items.
+ */
 export function provideTableDatasource<T, ID>(data: Signal<T[]>): SciTableDatasourceFactory<T, ID> {
   return (columns, trackBy) => new ɵSciTableArrayDatasource(data, {columns, trackBy});
 }
@@ -122,6 +148,23 @@ export function provideAsyncTableDatasource<T, ID>(getIds: (request: SciTableIds
   return () => new ɵSciAsyncTableDatasource(getIds, getItems);
 }
 
+/**
+ * Provides a datasource for a table with hierarchical rows using an array signal.
+ *
+ * Materializes the entire hierarchy using `getChildren` during initialization and on updates of the root signal or signals read by `getChildren`.
+ * Sorting and filtering are performed locally the column configurations.
+ *
+ * @example
+ * ```ts
+ * table({
+ *   datasource: provideTableTreeDatasource(users.value, user => user.children),
+ *   columns: table => table.addStringColumn('Name', user => user.name),
+ * });
+ * ```
+ *
+ * @param root - Signal containing the root items of the hierarchy.
+ * @param getChildren - Function returning an item's children, or an empty array or `undefined` if the item has no children.
+ */
 export function provideTableTreeDatasource<T, ID>(root: Signal<T[]>, getChildren: (item: T) => T[] | undefined): SciTableDatasourceFactory<T, ID> {
   return (columns, trackBy) => new ɵSciTableTreeDatasource(root, {columns, trackBy, getChildren});
 }

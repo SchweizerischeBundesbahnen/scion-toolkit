@@ -7,6 +7,8 @@ export type SciTreeDatasourceFactory<T, ID> = SciTableDatasourceFactory<T, ID>;
 /**
  * Provides a datasource for a tree.
  *
+ * Materializes the entire tree using `getChildren` during initialization and on updates of the root signal or signals read by `getChildren`.
+ *
  * @example
  * ```ts
  * const filesystem = signal([
@@ -20,18 +22,18 @@ export type SciTreeDatasourceFactory<T, ID> = SciTableDatasourceFactory<T, ID>;
  * });
  * ```
  *
- * @param root - Specifies the roots (top level nodes) of the tree.
- * @param getChildren - Specifies the function to get children based on an item. The function is called during initialization and when the root nodes change for each item in the tree.
+ * @param root - Signal containing the root items of the tree.
+ * @param getChildren - Function returning a node's children, or an empty array or `undefined` if the node has no children.
  */
 export function provideTreeDatasource<T, ID>(root: Signal<T[]>, getChildren: (item: T) => T[] | undefined): SciTreeDatasourceFactory<T, ID> {
   return (columns, trackBy) => new ɵSciTableTreeDatasource(root, {columns, trackBy, getChildren});
 }
 
 /**
- * Provides an asynchronous datasource for a tree.
+ * Provides a datasource for a tree that loads items on demand.
  *
- * An asynchronous datasource creates the provides a way to create large trees without loading all the data upfront.
- * If your whole dataset is small enough to be fetched at once, it is recommended to use {@link provideTreeDatasource}.
+ * Separates loading item IDs from loading the full items, allowing large datasets to be displayed without loading all items upfront.
+ * If the entire dataset is available locally, use {@link provideTreeDatasource}.
  *
  * This datasource uses two kinds of request:
  *  1. Initially and each time the filter changes, `getIds` is called with optional filters.

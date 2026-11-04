@@ -5,24 +5,107 @@ import {MaybeArray} from '@scion/toolkit/types';
 import {SciTreeDatasourceFactory} from './tree-datasource';
 import {Translatable} from '@scion/components/text';
 
+/**
+ * Configures a tree.
+ * @experimental since 22.3.0; API and behavior may change in any version without notice.
+ */
 export interface SciTreeDescriptor<T, ID> {
+  /**
+   * Function, {@link SciTreeNodeComponentDescriptor} or {@link SciTreeNodeTemplateDescriptor} which specifies how tree data should be displayed.
+   *
+   * The function return value can be plain text or a translation key. A translation key starts with the percent symbol (`%`)
+   * and may include parameters in matrix notation for text interpolation.
+   *
+   * SCION uses text providers to resolve translation keys. A text provider can be registered using {@link provideTextProvider}.
+   */
   label: ((item: T) => Translatable | undefined) | SciTreeNodeComponentDescriptor<T> | SciTreeNodeTemplateDescriptor<T>;
   datasource: SciTreeDatasourceFactory<T, ID>;
+
   filterable?: boolean | {matcher: (text: string, context: SciTreeNodeContext<T>) => boolean};
+
+  /**
+   * Specifies the selection mode for the tree. Defaults to `multi`.
+   */
   selectable?: false | 'single' | 'multi';
+
+  /**
+   * Configures actions to show when hovering over a node.
+   *
+   * @example
+   * ```ts
+   * import {tree} from '@scion/components/tree';
+   *
+   * tree({
+   *   datasource: provideTreeDatasource(data, item => item.children),
+   *   label: item => item.name,
+   *   rowActions: (toolbar, item) => toolbar.addToolbarButton({
+   *     icon: 'delete',
+   *     onSelect: () => ...,
+   *   }),
+   * });
+   * ```
+   *
+   * The function:
+   * - Is called per item with a {@link SciToolbarFactory} to contribute actions.
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
+   */
   nodeActions?: SciTreeNodeActionFactoryFn<T>;
+
+  /**
+   * Configures node bindings for table nodes.
+   *
+   * Node bindings enable associating metadata and icons with a node. Metadata includes CSS shadow parts, CSS classes, and HTML attributes.
+   *
+   * @example
+   * ```ts
+   * import {tree} from '@scion/components/tree';
+   *
+   * tree({
+   *   datasource: provideTreeDatasource(data, item => item.children),
+   *   label: item => item.name,
+   *   nodeBindings: (bindings, item, index) => bindings
+   *     .addIconBinding(item.type === 'file' ? 'format_align_left' : 'folder')
+   *     .addPartBinding(item.active ? 'node:active' : undefined),
+   *     .addAttributeBinding('data-id', item.id)
+   *     .addClassBinding(item.inactive ? 'inactive' : undefined),
+   * });
+   * ```
+   *
+   * Part attribute bindings make a node stylable by associating its cells with one or more HTML part attributes that can be referenced in CSS using the `::part()` CSS pseudo-element selector.
+   *
+   * ```scss
+   * sci-tree::part(node\:active node\:not\:selected) {
+   *   background-color: lightgray;
+   * }
+   * ```
+   *
+   * The function:
+   * - Is called per item with a {@link SciTreeNodeBindingFactory} to register bindings.
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
+   *
+   * @param bindings - Factory providing methods to register node bindings.
+   * @param item - Item associated with the node.
+   * @param index - Index of the node, zero-based.
+   */
   nodeBindings?: SciTreeNodeBindingFactoryFn<T>;
+
   /**
    * Amount of items to render before and after the viewport during virtual scrolling. Defaults to 10.
    */
   bufferSize?: number;
+
+  /**
+   * Specifies the number of items to load per page. Defaults to 50.
+   */
   pageSize?: number;
   trackBy?: (item: T) => ID;
 }
 
 export interface SciTree<ID> {
-  // TODO [tree]: does this need to be public?
   /**
+   * TODO [tree]: does this need to be public?
    * The ID of the active node, or `undefined` if no node is active.
    *
    * The active node is the target of keyboard navigation and may differ from the selected nodes.
