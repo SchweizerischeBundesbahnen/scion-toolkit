@@ -12,8 +12,8 @@
       flex: 1 1 0;
     }
 
-    > sci-tree::part(row\:even) {
-      background-color: light-dark(rgb(211 211 211 / 0.25), rgb(66 66 66 / 0.25));
+    > sci-tree::part(node\:locked) {
+      color: grey;
     }
   }
 

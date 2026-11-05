@@ -55,15 +55,68 @@ export default class SciTreePageComponent {
   protected readonly selection = computed(() => this.tree()?.selectedItems().sort((a, b) => a.localeCompare(b)).join(' '));
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
 
+  constructor() {
+    // const fileTree = tree({
+    //   label: file => file.name,
+    //   datasource: provideTreeDatasource<FileNode, string>(this._files, file => file.children ?? []),
+    //   filterable: {matcher: (text, context) => matchesFile(context.item, text)}, // `matchesFile` is illustrative
+    // });
+
+    // const fileTree = tree({
+    //   label: {
+    //     component: file => ({
+    //       component: FileComponent,
+    //       bindings: [
+    //         inputBinding('name', () => file.name),
+    //       ],
+    //     }),
+    //   },
+    //   datasource: provideTreeDatasource<FileNode, string>(this._files, file => file.children ?? []),
+    //   filterable: {matcher: (text, context) => matchesFile(context.item, text)}, // `matchesFile` is illustrative
+    // });
+    // const fileTree = tree({
+    //   label: file => file.name,
+    //   datasource: provideTreeDatasource<FileNode, string>(this._files, file => file.children ?? []),
+    //   nodeActions: (toolbar, file) => toolbar
+    //     .addToolbarButton({icon: 'download', tooltip: 'Download', visible: file.type === 'file', onSelect: () => downloadFile(file)}) // `downloadFile` is illustrative
+    //     .addToolbarMenu({icon: 'more_vert', visualMenuIndicator: false}, menu => menu
+    //       .addMenuItem({icon: 'edit', label: 'Rename', onSelect: () => renameFile(file)}) // `renameFile` is illustrative
+    //       .addMenuItem({icon: 'share', label: 'Share', onSelect: () => shareFile(file)}) // `shareFile` is illustrative
+    //       .addGroup(group => group
+    //         .addMenuItem({icon: 'delete', label: 'Delete', onSelect: () => deleteFile(file)}), // `deleteFile` is illustrative
+    //       ),
+    //     ),
+    // });
+    const fileTree = tree({
+      label: file => file.name,
+      datasource: provideTreeDatasource<FileNode, string>(this._files, file => file.children ?? []),
+      nodeBindings: (bindings, file, index) => bindings
+        .addPartBinding(file.locked ? 'node:locked' : undefined) // <--- ::part binding
+        .addPartBinding('node:abc') // <--- ::part binding
+        .addAttributeBinding('data-filename', file.name), // <--- attribute binding
+    });
+  }
+
   private createTree(options: {slowDatasource: boolean}): SciTree<string> {
     return tree<FileNode, string>({
       label: item => item.name,
       datasource: this.getDataSource(options),
       trackBy: item => item.id,
-      nodeBindings: (node, item) => {
+      nodeBindings: (bindings, item) => {
         const extension = item.name.split('.').pop()!.toLowerCase();
-        node.addIconBinding(item.children ? 'folder' : fileExtensionIcons.get(extension) ?? 'format_align_left');
+        bindings.addIconBinding(item.children ? 'folder' : fileExtensionIcons.get(extension) ?? 'format_align_left');
+        bindings.addPartBinding(item.locked ? 'node:locked' : undefined);
+        bindings.addAttributeBinding('data-filename', item.name);
       },
+      nodeActions: (toolbar, file) => toolbar
+        .addToolbarButton({icon: 'download', tooltip: 'Download', visible: file.type === 'file', onSelect: () => downloadFile(file)}) // `downloadFile` is illustrative
+        .addToolbarMenu({icon: 'more_vert', visualMenuIndicator: false}, menu => menu
+          .addMenuItem({icon: 'edit', label: 'Rename', onSelect: () => renameFile(file)}) // `renameFile` is illustrative
+          .addMenuItem({icon: 'share', label: 'Share', onSelect: () => shareFile(file)}) // `shareFile` is illustrative
+          .addGroup(group => group
+            .addMenuItem({icon: 'delete', label: 'Delete', onSelect: () => deleteFile(file)}), // `deleteFile` is illustrative
+          ),
+        ),
     });
   }
 
@@ -165,4 +218,27 @@ interface SettingsForm {
 
 interface MethodsForm {
   selectId: string;
+}
+
+function matchesFile(a: FileNode, text: string): boolean {
+  return true;
+}
+
+function downloadFile(file: FileNode): void {
+
+}
+
+function renameFile(file: FileNode): void {
+
+}
+
+function shareFile(file: FileNode): void {
+
+}
+
+function deleteFile(file: FileNode): void {
+
+}
+
+class FileComponent {
 }

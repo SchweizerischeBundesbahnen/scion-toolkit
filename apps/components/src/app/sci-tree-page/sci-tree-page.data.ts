@@ -11,6 +11,8 @@
 export interface FileNode {
   id: string;
   name: string;
+  type: 'file' | 'folder';
+  locked?: boolean;
   children?: FileNode[];
 }
 
@@ -174,6 +176,6 @@ function createFileNodes(entries: FileEntry[], parent: string = ''): FileNode[] 
   return entries.map(entry => {
     const name = typeof entry === 'string' ? entry : entry.name;
     const id = `${parent}/${name}`;
-    return typeof entry === 'string' ? {id, name} : {id, name, children: createFileNodes(entry.children, id)};
+    return typeof entry === 'string' ? {id, name, type: 'file'} : {id, name, type: 'folder', children: createFileNodes(entry.children, id)};
   });
 }
