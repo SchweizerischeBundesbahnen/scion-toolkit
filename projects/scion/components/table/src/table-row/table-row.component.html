@@ -4,9 +4,9 @@
 @if (row.hasChildren()) {
   <button class="toggle-children e2e-toggle-children" (click)="onToggleChildrenClick($event)">
     @if (row.expanded()) {
-      <sci-icon class="e2e-expanded">scion.chevron_down</sci-icon>
+      <sci-icon class="e2e-expanded">scion:chevron_down</sci-icon>
     } @else {
-      <sci-icon class="e2e-collapsed">scion.chevron_right</sci-icon>
+      <sci-icon class="e2e-collapsed">scion:chevron_right</sci-icon>
     }
   </button>
 }

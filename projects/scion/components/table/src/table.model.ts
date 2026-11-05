@@ -144,10 +144,23 @@ export interface SciTable<ID = unknown> {
    */
   filter(text: string | null): void;
 
+  /**
+   * Selects the specified rows, replacing the current selection.
+   *
+   * Expands parent rows for table tree (hierarchical) datasource.
+   *
+   * @param id - ID or IDs of the rows to select, or an empty array to clear the selection.
+   */
   select(id: MaybeArray<ID>): void;
 
+  /**
+   * Expands all rows in the tree. Only for table tree (hierarchical) datasource.
+   */
   expandAll(): void;
 
+  /**
+   * Collapses all rows in the tree. Only for table tree (hierarchical) datasource.
+   */
   collapseAll(): void;
 }
 

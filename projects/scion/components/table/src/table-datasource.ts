@@ -128,7 +128,7 @@ export class ɵSciAsyncTableTreeDatasource<T, ID> implements SciTableTreeDatasou
  * });
  * ```
  *
- * The table supports using an array signal directly, without  {@link provideTableDatasource}
+ * The table supports using an array signal directly, without {@link provideTableDatasource}
  *
  * @example
  * ```ts
@@ -163,7 +163,7 @@ export function provideAsyncTableDatasource<T, ID>(getIds: (request: SciTableIds
  * ```
  *
  * @param root - Signal containing the root items of the hierarchy.
- * @param getChildren - Function returning an item's children, or an empty array or `undefined` if the item has no children.
+ * @param getChildren - Function returning an item's children, or an empty array or `undefined` if the item has no children. Runs in a reactive context and re-evaluates when tracked signals change.
  */
 export function provideTableTreeDatasource<T, ID>(root: Signal<T[]>, getChildren: (item: T) => T[] | undefined): SciTableDatasourceFactory<T, ID> {
   return (columns, trackBy) => new ɵSciTableTreeDatasource(root, {columns, trackBy, getChildren});

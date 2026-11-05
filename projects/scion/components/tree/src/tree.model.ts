@@ -7,7 +7,7 @@ import {Translatable} from '@scion/components/text';
 
 /**
  * Configures a tree.
- * @experimental since 22.3.0; API and behavior may change in any version without notice.
+ * @experimental since 22.4.0; API and behavior may change in any version without notice.
  */
 export interface SciTreeDescriptor<T, ID> {
   /**
@@ -21,6 +21,9 @@ export interface SciTreeDescriptor<T, ID> {
   label: ((item: T) => Translatable | undefined) | SciTreeNodeComponentDescriptor<T> | SciTreeNodeTemplateDescriptor<T>;
   datasource: SciTreeDatasourceFactory<T, ID>;
 
+  /**
+   * TODO: external filter only with matcher, how?
+   */
   filterable?: boolean | {matcher: (text: string, context: SciTreeNodeContext<T>) => boolean};
 
   /**
@@ -146,7 +149,7 @@ export interface SciTree<ID> {
   /**
    * Selects the specified nodes, replacing the current selection.
    *
-   * Expands parent nodes and activates the last selected node that is not filtered out.
+   * Expands parent nodes of the selected nodes.
    *
    * @param id - ID or IDs of the nodes to select, or an empty array to clear the selection.
    */
