@@ -16,7 +16,6 @@ import {map, switchMap} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
 import {ClassTypeGroup, DepotGroup, OperatorGroup, Vehicle, VehicleNode} from './vehicle.model';
 import {filterArray, mapArray} from '@scion/toolkit/operators';
-import {SciTreeIdsRequest} from '@scion/components/tree';
 
 @Service()
 export class VehicleService {
@@ -77,16 +76,11 @@ export class VehicleService {
     );
   }
 
-  public getVehicleNodeIds$(request: SciTableIdsRequest | SciTreeIdsRequest): Observable<SciTableTreeNode<string>[]> {
+  public getVehicleNodeIds$(request: SciTableIdsRequest): Observable<SciTableTreeNode<string>[]> {
     return this.getOperatorGroups$(request).pipe(
       map(operatorGroups => createVehicleNodes(operatorGroups)),
       filterArray(vehicleNode => {
-        // No Table Filter
-        if ('columnFilters' in request && !request.tableFilter && request.columnFilters.length === 0)  {
-          return true;
-        }
-        // No Table Filter
-        else if (!('filter' in request) || request.filter === undefined) {
+        if (!request.tableFilter && request.columnFilters.length === 0) {
           return true;
         }
 
@@ -110,7 +104,7 @@ export class VehicleService {
       );
   }
 
-  private getOperatorGroups$(request: SciTableIdsRequest | SciTreeIdsRequest): Observable<OperatorGroup[]> {
+  private getOperatorGroups$(request: SciTableIdsRequest): Observable<OperatorGroup[]> {
     const vehicles$ = toObservable(this.vehicles);
     return defer(() => timer(1000))
       .pipe(
@@ -197,135 +191,129 @@ export namespace Vehicles {
     });
   }
 
-  export function matches(vehicle: Vehicle, request: SciTableIdsRequest | SciTreeIdsRequest): boolean {
-    if ('columnFilters' in request) {
-      for (const filterCriterion of request.columnFilters) {
-        const filterText = `${filterCriterion.text}`.toLowerCase();
-        switch (filterCriterion.columnName) {
-          case 'column:vehicle':
-            if (!vehicle.vehicleId.toLowerCase().includes(filterText) && !vehicle.operator.toLowerCase().includes(filterText) && !vehicle.classType.toLowerCase().includes(filterText) && !vehicle.depot.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:id':
-            if (!vehicle.id.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:vehicleId':
-            if (!vehicle.vehicleId.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:classType':
-            if (!vehicle.classType.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:operator':
-            if (!vehicle.operator.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:depot':
-            if (!vehicle.depot.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:status':
-            if (!vehicle.status.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:tps':
-            if (!vehicle.tps.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:operatingHours':
-            if (!vehicle.operatingHours.toString().toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:mileage':
-            if (!vehicle.mileageKm.toString().toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:maxSpeed':
-            if (!vehicle.maxSpeedKmh.toString().toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:serviceWeight':
-            if (!vehicle.serviceWeightT.toString().toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:seatingCapacity':
-            if (!vehicle.seatingCapacity.toString().toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:buildYear':
-            if (!vehicle.buildYear.toString().toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:isOperational':
-            if (filterCriterion.text !== (vehicle.status === 'In Operation')) {
-              return false;
-            }
-            continue;
-          case 'column:hasWifi':
-            if (filterCriterion.text !== vehicle.hasWifi) {
-              return false;
-            }
-            continue;
-          case 'column:isMultiSystem':
-            if (filterCriterion.text !== vehicle.isMultiSystem) {
-              return false;
-            }
-            continue;
-          case 'column:isTpsActive':
-            if (filterCriterion.text !== vehicle.isTpsActive) {
-              return false;
-            }
-            continue;
-          case 'column:isOverhaulDue':
-            if (filterCriterion.text !== vehicle.isOverhaulDue) {
-              return false;
-            }
-            continue;
-          case 'column:isNarrowGauge':
-            if (filterCriterion.text !== vehicle.isNarrowGauge) {
-              return false;
-            }
-            continue;
-          case 'column:lastR2Expiry':
-            if (!vehicle.lastR2Expiry.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:nextRevision':
-            if (!vehicle.nextRevision.toLowerCase().includes(filterText)) {
-              return false;
-            }
-            continue;
-          case 'column:price':
-            if (!vehicle.price.toString().toLowerCase().includes(filterText)) {
-              return false;
-            }
-        }
-      }
-
-      if (request.tableFilter) {
-        return Object.values(vehicle).some(value => `${value}`.toLowerCase().includes(request.tableFilter!.toLowerCase()));
+  export function matches(vehicle: Vehicle, request: SciTableIdsRequest): boolean {
+    for (const filterCriterion of request.columnFilters) {
+      const filterText = `${filterCriterion.text}`.toLowerCase();
+      switch (filterCriterion.columnName) {
+        case 'column:vehicle':
+          if (!vehicle.vehicleId.toLowerCase().includes(filterText) && !vehicle.operator.toLowerCase().includes(filterText) && !vehicle.classType.toLowerCase().includes(filterText) && !vehicle.depot.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:id':
+          if (!vehicle.id.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:vehicleId':
+          if (!vehicle.vehicleId.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:classType':
+          if (!vehicle.classType.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:operator':
+          if (!vehicle.operator.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:depot':
+          if (!vehicle.depot.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:status':
+          if (!vehicle.status.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:tps':
+          if (!vehicle.tps.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:operatingHours':
+          if (!vehicle.operatingHours.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:mileage':
+          if (!vehicle.mileageKm.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:maxSpeed':
+          if (!vehicle.maxSpeedKmh.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:serviceWeight':
+          if (!vehicle.serviceWeightT.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:seatingCapacity':
+          if (!vehicle.seatingCapacity.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:buildYear':
+          if (!vehicle.buildYear.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:isOperational':
+          if (filterCriterion.text !== (vehicle.status === 'In Operation')) {
+            return false;
+          }
+          continue;
+        case 'column:hasWifi':
+          if (filterCriterion.text !== vehicle.hasWifi) {
+            return false;
+          }
+          continue;
+        case 'column:isMultiSystem':
+          if (filterCriterion.text !== vehicle.isMultiSystem) {
+            return false;
+          }
+          continue;
+        case 'column:isTpsActive':
+          if (filterCriterion.text !== vehicle.isTpsActive) {
+            return false;
+          }
+          continue;
+        case 'column:isOverhaulDue':
+          if (filterCriterion.text !== vehicle.isOverhaulDue) {
+            return false;
+          }
+          continue;
+        case 'column:isNarrowGauge':
+          if (filterCriterion.text !== vehicle.isNarrowGauge) {
+            return false;
+          }
+          continue;
+        case 'column:lastR2Expiry':
+          if (!vehicle.lastR2Expiry.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:nextRevision':
+          if (!vehicle.nextRevision.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:price':
+          if (!vehicle.price.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
       }
     }
-    else {
-      const filterTexts = Array.isArray(request.filter) ? request.filter.map(filter => filter.toLowerCase()) : [request.filter];
-      return filterTexts.every(filter => vehicle.label.toLowerCase().includes(filter) || vehicle.operator.toLowerCase().includes(filter) || vehicle.classType.toLowerCase().includes(filter) || vehicle.depot.toLowerCase().includes(filter));
+
+    if (request.tableFilter) {
+      return Object.values(vehicle).some(value => `${value}`.toLowerCase().includes(request.tableFilter!.toLowerCase()));
     }
     return true;
   }
