@@ -81,16 +81,15 @@ export class VehicleService {
     return this.getOperatorGroups$(request).pipe(
       map(operatorGroups => createVehicleNodes(operatorGroups)),
       filterArray(vehicleNode => {
-        // No Tree Filter
-        if ('filter' in request) {
-          if (request.filter.length === 0) {
-            return true;
-          }
-        }
         // No Table Filter
-        else if (!request.tableFilter && request.columnFilters.length === 0) {
+        if ('columnFilters' in request && !request.tableFilter && request.columnFilters.length === 0)  {
           return true;
         }
+        // No Table Filter
+        else if (!('filter' in request) || request.filter === undefined) {
+          return true;
+        }
+
         if (vehicleNode.item.kind === 'vehicle') {
           return Vehicles.matches(vehicleNode.item, request);
         }
@@ -325,7 +324,7 @@ export namespace Vehicles {
       }
     }
     else {
-      const filterTexts = request.filter.map(filter => filter.toLowerCase());
+      const filterTexts = Array.isArray(request.filter) ? request.filter.map(filter => filter.toLowerCase()) : [request.filter];
       return filterTexts.every(filter => vehicle.label.toLowerCase().includes(filter) || vehicle.operator.toLowerCase().includes(filter) || vehicle.classType.toLowerCase().includes(filter) || vehicle.depot.toLowerCase().includes(filter));
     }
     return true;

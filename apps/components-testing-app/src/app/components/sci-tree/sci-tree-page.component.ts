@@ -85,7 +85,7 @@ export default class SciTreePageComponent {
             const delayed = options.datasource === 'loader-delayed';
             return provideAsyncTreeDatasource(
               request => this._productService.getHierarchicalProductIds$(
-                {columnFilters: request.filter.map(filter => ({columnName: 'column:0', text: filter})), sortCriteria: []},
+                {columnFilters: request.filter ? [{columnName: 'column:0', text: request.filter}] : [], sortCriteria: []},
                 new Map([['column:0', 'string']]),
                 {slowDatasource: delayed, simulateError: this.datasourceForm.simulateError().value},
               ),
@@ -101,7 +101,7 @@ export default class SciTreePageComponent {
             return provideTreeDatasource(this._productService.products, product => this._productService.products().filter(p => p.parentId === product.id));
         }
       })(),
-      filterable: this.settingsForm.customFilter().value() ? {matcher: customFilter} : undefined,
+      matcher: this.settingsForm.customFilter().value() ? customFilter : undefined,
       nodeActions: options.showNodeActions ? (toolbar, product) => toolbar
         .addToolbarButton({icon: 'scion.edit', onSelect: noop})
         .addToolbarButton({icon: 'scion.delete', onSelect: noop})
@@ -180,8 +180,6 @@ export default class SciTreePageComponent {
   private bindTreeSettings(): void {
     effect(() => {
       this.trees().forEach(tree => {
-        tree.filterable.set(this.settingsForm.filterable().value());
-
         const selectable = this.settingsForm.selectable().value();
         tree.selectable.set(selectable === 'false' ? false : selectable);
       });

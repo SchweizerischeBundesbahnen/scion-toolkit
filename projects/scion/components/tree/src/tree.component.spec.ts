@@ -232,11 +232,13 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree<string, string>({
         datasource: provideTreeDatasource(signal(['Alpha', 'Beta']), () => []),
         label: item => item,
-        filterable: {matcher: (text, context) => text === 'test' && context.value === 'Alpha'},
+        matcher: (text, context) => text === 'test' && context.value === 'Alpha',
       }, {injector: TestBed.inject(Injector)}));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
+
+      expect(tree.column({index: 0})!.filterable).toBeFalse();
 
       model.filter('Alpha');
       await tree.waitUntilStable();
@@ -251,30 +253,6 @@ describe('Tree', () => {
       expect(await tree.column({index: 0})!.values()).toEqual(['Alpha', 'Beta']);
     });
 
-    it('should enable the node filter through the public filterable signal', async () => {
-      const {fixture, model} = createSciTreeComponent(sciTree<string, string>({
-        datasource: provideTreeDatasource(signal(['Alpha', 'Beta']), () => []),
-        label: item => item,
-      }, {injector: TestBed.inject(Injector)}));
-
-      const tree = new TablePO(fixture, 'sci-tree');
-      await tree.waitUntilStable();
-      expect(model.filterable()).toBeFalse();
-      expect(tree.column({index: 0})!.filterable).toBeFalse();
-
-      model.filterable.set(true);
-      await tree.waitUntilStable();
-      expect(tree.column({index: 0})!.filterable).toBeTrue();
-      expect(tree.column({index: 0})!.sortable).toBeFalse();
-
-      await tree.column({index: 0})!.filter('Beta');
-      expect(await tree.column({index: 0})!.values()).toEqual(['Beta']);
-
-      model.filterable.set(false);
-      await tree.waitUntilStable();
-      expect(tree.column({index: 0})!.filterable).toBeFalse();
-    });
-
     it('should pass the item and label to the tree filter matcher', async () => {
       const alpha = {name: 'Alpha'};
       const beta = {name: 'Beta'};
@@ -282,12 +260,11 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree<{name: string}, {name: string}>({
         datasource: provideTreeDatasource(signal([alpha, beta]), () => []),
         label: item => item.name,
-        filterable: {matcher},
+        matcher,
       }, {injector: TestBed.inject(Injector)}));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
-      expect(model.filterable()).toBeTrue();
 
       model.filter('Beta');
       await tree.waitUntilStable();
@@ -368,27 +345,22 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree<string, string>({
         datasource: provideAsyncTreeDatasource(getIds, getItems),
         label: item => item,
-        filterable: true,
       }, {injector: TestBed.inject(Injector)}));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
-      expect(getIds).toHaveBeenCalledOnceWith({filter: []});
+      expect(getIds).toHaveBeenCalledOnceWith({filter: undefined});
       expect(getItems).toHaveBeenCalledOnceWith(['parent']);
       getIds.calls.reset();
 
       model.filter('global');
       await tree.waitUntilStable();
-      expect(getIds).toHaveBeenCalledOnceWith({filter: ['global']});
-      getIds.calls.reset();
-
-      await tree.column({index: 0})!.filter('node');
-      expect(getIds).toHaveBeenCalledOnceWith({filter: ['node', 'global']});
+      expect(getIds).toHaveBeenCalledOnceWith({filter: 'global'});
       getIds.calls.reset();
 
       model.filter(null);
       await tree.waitUntilStable();
-      expect(getIds).toHaveBeenCalledOnceWith({filter: ['node']});
+      expect(getIds).not.toHaveBeenCalled();
     });
 
     it('should expand and collapse async tree', async () => {

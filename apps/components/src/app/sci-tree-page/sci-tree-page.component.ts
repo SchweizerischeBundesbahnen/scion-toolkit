@@ -19,6 +19,7 @@ import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '
 import {SciTableDatasourceFactory, SciTableTreeNode} from '@scion/components/table';
 import {fileExtensionIcons, FileNode, files} from './sci-tree-page.data';
 import {map, timer} from 'rxjs';
+import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
 
 @Component({
   selector: 'app-tree-page',
@@ -32,6 +33,7 @@ import {map, timer} from 'rxjs';
     SciViewportComponent,
     SciTreeComponent,
     DesignTokenFormComponent,
+    SciFilterFieldComponent,
   ],
 })
 export default class SciTreePageComponent {
@@ -86,7 +88,7 @@ export default class SciTreePageComponent {
       const nodes = this.getFileNodes(this._files());
       return provideAsyncTreeDatasource<FileNode, string>(
         request => timer(1000).pipe(map(() => nodes
-          .filter(node => request.filter.every(filter => node.item.name.toLowerCase().includes(filter.toLowerCase())))
+          .filter(node => request.filter ? node.item.name.toLowerCase().includes(request.filter.toLowerCase()) : true)
           .map(node => ({item: node.item.id, parent: node.parent})))),
         ids => timer(1000).pipe(map(() => nodes.filter(node => ids.includes(node.item.id)).map(node => node.item))),
       );
@@ -150,6 +152,10 @@ export default class SciTreePageComponent {
 
   protected onCollapseAll(): void {
     this.tree()?.collapseAll();
+  }
+
+  protected onTreeFilter(filter: string): void {
+    this.tree()!.filter(filter);
   }
 }
 

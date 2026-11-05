@@ -22,9 +22,12 @@ export interface SciTreeDescriptor<T, ID> {
   datasource: SciTreeDatasourceFactory<T, ID>;
 
   /**
-   * TODO: external filter only with matcher, how?
+   * Custom matcher used by {@link SciTree.filter}.
+   *
+   * When using {@link provideTreeDatasource}, defaults to matching node labels. Component and template labels require a custom matcher.
+   * When using {@link provideAsyncTreeDatasource}, filtering is delegated to the datasource and this matcher is not used.
    */
-  filterable?: boolean | {matcher: (text: string, context: SciTreeNodeContext<T>) => boolean};
+  matcher?: (text: string, context: SciTreeNodeContext<T>) => boolean;
 
   /**
    * Specifies the selection mode for the tree. Defaults to `multi`.
@@ -121,13 +124,6 @@ export interface SciTree<ID> {
   readonly selectedItems: Signal<Array<ID>>;
 
   /**
-   * Controls whether the built-in filter is enabled.
-   *
-   * Initialized from {@link SciTreeDescriptor.filterable}. Defaults to `false`.
-   */
-  readonly filterable: WritableSignal<boolean>;
-
-  /**
    * Controls whether the user can select a single node, multiple nodes, or nothing.
    *
    * Initialized from {@link SciTreeDescriptor.selectable}. Defaults to `multi`.
@@ -139,7 +135,7 @@ export interface SciTree<ID> {
    *
    * Can be used to connect an external filter field to the tree.
    *
-   * When using {@link provideTreeDatasource}, matches node labels, or uses the custom matcher, if one is configured in {@link SciTreeDescriptor.filterable}. Component and template labels require a custom matcher.
+   * When using {@link provideTreeDatasource}, matches node labels, or uses the custom matcher, if one is configured in {@link SciTreeDescriptor.matcher}. Component and template labels require a custom matcher.
    * When using {@link provideAsyncTreeDatasource}, filtering is delegated to the datasource.
    *
    * @param text - Text to filter by, or `null` to clear the filter.

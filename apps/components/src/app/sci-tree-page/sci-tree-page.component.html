@@ -1,6 +1,7 @@
 @if (tree(); as tree) {
   <main>
     <sci-tree [tree]="tree" name="tree:files"/>
+    <sci-filter-field (filter)="onTreeFilter($event)" placeholder="Type to filter"/>
   </main>
 
   <aside>
@@ -8,11 +9,6 @@
       <!-- Settings -->
       <ng-template sciTab label="Settings" name="settings">
         <section>
-          <label>
-            <input [(ngModel)]="tree.filterable" type="checkbox"/>
-            Filterable
-          </label>
-
           <label>
             Selectable
             <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)">

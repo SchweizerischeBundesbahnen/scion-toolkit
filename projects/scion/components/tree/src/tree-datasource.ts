@@ -49,16 +49,12 @@ export function provideTreeDatasource<T, ID>(root: Signal<T[]>, getChildren: (it
  * ```
  *
  * @param getIds - Specifies the function, which loads all matching ids based on optional filters.
- * @param getChildren - Specifies the function, which loads the full objects belonging to the passed ids.
+ * @param getItems - Specifies the function, which loads the full objects belonging to the passed ids.
  */
 export function provideAsyncTreeDatasource<T, ID>(getIds: (request: SciTreeIdsRequest) => MaybeAsync<SciTableTreeNode<ID>[]>, getItems: (ids: ID[]) => MaybeAsync<T[]>): SciTreeDatasourceFactory<T, ID> {
-  return () => new ɵSciAsyncTableTreeDatasource(request => {
-    const columnFilter = request.columnFilters[0];
-    const filter = [String(columnFilter?.text ?? ''), request.tableFilter ?? ''].filter(Boolean);
-    return getIds({filter});
-  }, getItems);
+  return () => new ɵSciAsyncTableTreeDatasource(request => getIds({filter: request.tableFilter}), getItems);
 }
 
 export interface SciTreeIdsRequest {
-  filter: string[];
+  filter?: string;
 }

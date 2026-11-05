@@ -17,7 +17,6 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
 
   public readonly activeItem: Signal<ID | undefined>;
   public readonly selectedItems: Signal<Array<ID>>;
-  public readonly filterable: WritableSignal<boolean>;
   public readonly selectable: WritableSignal<'single' | 'multi' | false>;
 
   private readonly _table: ɵSciTable<T, ID>;
@@ -26,7 +25,6 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
     const tableDescriptor: SciTableDescriptor<T, ID> = {
       datasource: ɵillegaldatasource(),
       ɵdatasource: descriptor.datasource,
-      filterable: !!descriptor.filterable,
       selectable: descriptor.selectable,
       sortable: false,
       resizable: false,
@@ -40,7 +38,7 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
         if (typeof descriptor.label === 'function') {
           return table.addStringColumn({
             value: descriptor.label,
-            filterable: descriptor.filterable,
+            filterable: descriptor.matcher ? {matcher: descriptor.matcher} : undefined,
           });
         }
 
@@ -48,7 +46,7 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
           return table.addComponentColumn({
             component: descriptor.label.component,
             padding: descriptor.label.padding,
-            filterable: descriptor.filterable,
+            filterable: descriptor.matcher ? {matcher: descriptor.matcher} : undefined,
           });
         }
 
@@ -56,7 +54,7 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
           return table.addTemplateColumn({
             template: descriptor.label.template,
             padding: descriptor.label.padding,
-            filterable: descriptor.filterable,
+            filterable: descriptor.matcher ? {matcher: descriptor.matcher} : undefined,
           });
         }
 
@@ -68,7 +66,6 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
 
     this.activeItem = this._table.activeItem;
     this.selectedItems = this._table.selectedItems;
-    this.filterable = this._table.filterable;
     this.selectable = this._table.selectable;
   }
 
