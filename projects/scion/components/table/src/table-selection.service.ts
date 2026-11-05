@@ -243,12 +243,12 @@ export class SciTableSelectionService<T, ID> {
       return this.selectItems(startIndex, endIndex);
     }
 
-    // Moving down form a blocks start shrinks the selection inside and extends it outside the block.
+    // Moving down from the block start shrinks the selection until the block end, then extends it.
     if (direction === 'down' && this.isSelectionAtBlockStart(activeIndex)) {
       return this.selectFromBlockStart(startIndex, endIndex);
     }
 
-    // Moving up form a blocks end shrinks the selection inside and extends it outside the block.
+    // Moving up from the block end shrinks the selection until the block start, then extends it.
     if (direction === 'up' && this.isSelectionAtBlockEnd(activeIndex)) {
       return this.selectFromBlockEnd(startIndex, endIndex);
     }
@@ -301,6 +301,7 @@ export class SciTableSelectionService<T, ID> {
 
     table.updateSelectedItems(selection => {
       const newSelection = new Set(selection);
+      let shrinking = true;
 
       for (let i = 0; i < indices.length; i++) {
         const currentIndex = indices[i]!;
@@ -312,10 +313,12 @@ export class SciTableSelectionService<T, ID> {
         }
 
         const nextItemId = table.visibleRows()?.[nextIndex]?.item;
-        if (nextItemId !== undefined && selection.has(nextItemId)) {
+        if (shrinking && nextItemId !== undefined && selection.has(nextItemId)) {
           newSelection.delete(itemId);
         }
         else {
+          // Once outside the active block, only add items, even when crossing another selected block.
+          shrinking = false;
           newSelection.add(itemId);
         }
       }
@@ -329,6 +332,7 @@ export class SciTableSelectionService<T, ID> {
 
     table.updateSelectedItems(selection => {
       const newSelection = new Set(selection);
+      let shrinking = true;
 
       for (let i = indices.length - 1; i >= 0; i--) {
         const currentIndex = indices[i]!;
@@ -340,10 +344,12 @@ export class SciTableSelectionService<T, ID> {
         }
 
         const previousItemId = table.visibleRows()?.[previousIndex]?.item;
-        if (previousItemId !== undefined && selection.has(previousItemId)) {
+        if (shrinking && previousItemId !== undefined && selection.has(previousItemId)) {
           newSelection.delete(itemId);
         }
         else {
+          // Once outside the active block, only add items, even when crossing another selected block.
+          shrinking = false;
           newSelection.add(itemId);
         }
       }
