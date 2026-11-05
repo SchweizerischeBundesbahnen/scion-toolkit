@@ -4304,6 +4304,56 @@ test.describe('sci-table', () => {
           await expect(tablePage.activeItemId).toHaveText('0');
         });
 
+        test('should shrink then expand selection on Shift+PageDown at start of block  (multiple blocks)', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 3}).click();
+          await table.row({nth: 1}).click(['ControlOrMeta']);
+          await table.row({nth: 0}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('0 1 3');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          // Press Shift+PageDown at block start
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('1 2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+        });
+
+        test('should shrink then expand selection on Shift+PageUp at end of block (multiple blocks)', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 0}).click();
+          await table.row({nth: 2}).click(['ControlOrMeta']);
+          await table.row({nth: 3}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('0 2 3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+PageUp at block end
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
         test('should retain selection on Shift+PageDown in middle of block', async ({page}) => {
           const tablePage = new TablePagePO(page);
           const table = new TablePO(tablePage.table);
@@ -4608,6 +4658,56 @@ test.describe('sci-table', () => {
           await page.keyboard.press('Shift+ArrowDown');
           await page.keyboard.press('Shift+ArrowDown');
           await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Press Shift+Home at block end
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should shrink then expand selection on Shift+End at start of block (multiple blocks)', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 3}).click();
+          await table.row({nth: 1}).click(['ControlOrMeta']);
+          await table.row({nth: 0}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('0 1 3');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          // Press Shift+End at block start
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('1 2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should shrink then expand selection on Shift+Home at end of block  (multiple blocks)', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 0}).click();
+          await table.row({nth: 2}).click(['ControlOrMeta']);
+          await table.row({nth: 3}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('0 2 3');
+          await expect(tablePage.activeItemId).toHaveText('3');
 
           // Press Shift+Home at block end
           await page.keyboard.press('Shift+Home');
