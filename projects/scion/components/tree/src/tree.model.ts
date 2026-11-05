@@ -30,7 +30,9 @@ export interface SciTreeDescriptor<T, ID> {
   matcher?: (text: string, context: SciTreeNodeContext<T>) => boolean;
 
   /**
-   * Specifies the selection mode for the tree. Defaults to `multi`.
+   * Controls whether the user can select a single row (`single`), multiple rows (`multi`), or no rows (`false`). Defaults to `multi`.
+   *
+   * Does not affect selection via {@link SciTree.select}.
    */
   selectable?: false | 'single' | 'multi';
 

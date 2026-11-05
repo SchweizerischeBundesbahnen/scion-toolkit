@@ -32,22 +32,71 @@ export interface SciTableDescriptor<T, ID = unknown> {
    * @experimental since 22.3.0; API and behavior may change in any version without notice.
    */
   ɵdatasource?: Signal<T[]> | SciTableDatasourceFactory<T, ID>;
-  columns: SciTableColumnFactoryFn<T>;
-  sortable?: boolean;
-  resizable?: boolean;
-  filterable?: boolean;
-  selectable?: 'single' | 'multi' | false;
-  showHeader?: boolean;
+
   /**
-   * Defaults to false.
+   * Configures the table columns.
+   *
+   * @example
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table({
+   *   datasource: data,
+   *   columns: table => table
+   *     .addStringColumn('Name', item => item.name)
+   *     .addNumberColumn('Age', item => item.age),
+   * });
+   * ```
+   *
+   * The function:
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
+   */
+  columns: SciTableColumnFactoryFn<T>;
+
+  /**
+   * Controls whether the user can sort rows by clicking column headers. Defaults to `true`.
+   */
+  sortable?: boolean;
+
+  /**
+   * Controls whether the user can resize columns. Defaults to `true`.
+   */
+  resizable?: boolean;
+
+  /**
+   * Controls whether the column filters are displayed. Defaults to `false`.
+   *
+   * Does not affect filtering via {@link SciTable.filter}.
+   */
+  filterable?: boolean;
+
+  /**
+   * Controls whether the user can select a single row (`single`), multiple rows (`multi`), or no rows (`false`). Defaults to `multi`.
+   *
+   * Does not affect selection via {@link SciTable.select}.
+   */
+  selectable?: 'single' | 'multi' | false;
+
+  /**
+   * Controls whether column headers are displayed. Defaults to `true`.
+   */
+  showHeader?: boolean;
+
+  /**
+   * Controls whether column headers are wrapped if they overflow. Defaults to `false`.
+   *
+   * If not wrapped, the headers are truncated and ellipsis are shown on overflow.
    */
   wrapHeader?: boolean;
+
   /**
    * @internal Not Public API yet
    *
    * TODO [dwi] Consider renaming to initialSortOrder
    */
   sortBy?: Array<`column:${string}` | SciTableSortCriterion>;
+
   /**
    * Configures actions to show when hovering over a row.
    *
@@ -71,6 +120,7 @@ export interface SciTableDescriptor<T, ID = unknown> {
    * - Can call `inject` to get required dependencies.
    */
   rowActions?: SciTableRowActionFactoryFn<T>;
+
   /**
    * Configures row bindings for table rows.
    *
@@ -109,10 +159,12 @@ export interface SciTableDescriptor<T, ID = unknown> {
    * @param index - Index of the row, zero-based.
    */
   rowBindings?: SciTableRowBindingFactoryFn<T>;
+
   /**
    * Specifies the number of items to render before and after the viewport. Defaults to 10.
    */
   bufferSize?: number;
+
   /**
    * Specifies the number of items to load per page. Defaults to 50.
    */

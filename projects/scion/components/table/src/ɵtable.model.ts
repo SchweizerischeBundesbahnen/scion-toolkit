@@ -25,6 +25,9 @@ import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 import {TableTree} from './table-tree.model';
 import {MaybeArray} from '@scion/toolkit/types';
 
+/**
+ * @docs-private Not public API. For internal use only.
+ */
 export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
 
   private readonly _tableStorage = inject(SCI_COMPONENTS_STORAGE);
