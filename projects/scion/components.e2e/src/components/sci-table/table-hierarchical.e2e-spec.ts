@@ -559,6 +559,141 @@ test.describe('sci-table hierarchical', () => {
         [{state: 'collapsed', label: 'Button'}],
       ]);
     });
+
+    test('should expand / collapse with NumpadAdd / NumpadSubtract', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.setHierarchical(true);
+      await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+      await provideHttpDatasource(page, [
+        {id: 1, name: 'Item 1'},
+        {id: 2, name: 'Item 2'},
+        {id: 3, name: 'Item 3', parentId: 2},
+        {id: 4, name: 'Item 4', parentId: 3},
+        {id: 5, name: 'Item 5', parentId: 4},
+        {id: 6, name: 'Item 6', parentId: 3},
+        {id: 7, name: 'Item 7'},
+        {id: 8, name: 'Item 8', parentId: 7},
+        {id: 9, name: 'Item 9'},
+      ], {datasource: 'array-http'});
+
+      await expectTable(table).toHaveContent([
+        [{label: 'Item 1', state: null}],
+        [{label: 'Item 2', state: 'collapsed'}],
+        [{label: 'Item 7', state: 'collapsed'}],
+        [{label: 'Item 9', state: null}],
+      ]);
+
+      // Select Item 2
+      await table.row({index: 1}).click();
+      await expect(tablePage.activeItemId).toHaveText('2');
+      await expect(tablePage.selection).toHaveText('2');
+
+      // Press NumpadAdd
+      await page.keyboard.press('NumpadAdd');
+      await expectTable(table).toHaveContent([
+        [{label: 'Item 1', state: null}],
+        [{label: 'Item 2', state: 'expanded'}],
+        [{label: 'Item 3', state: 'collapsed'}],
+        [{label: 'Item 7', state: 'collapsed'}],
+        [{label: 'Item 9', state: null}],
+      ]);
+      await expect(tablePage.activeItemId).toHaveText('2');
+      await expect(tablePage.selection).toHaveText('2');
+
+      // Press NumpadSubtract
+      await page.keyboard.press('NumpadSubtract');
+      await expectTable(table).toHaveContent([
+        [{label: 'Item 1', state: null}],
+        [{label: 'Item 2', state: 'collapsed'}],
+        [{label: 'Item 7', state: 'collapsed'}],
+        [{label: 'Item 9', state: null}],
+      ]);
+      await expect(tablePage.activeItemId).toHaveText('2');
+      await expect(tablePage.selection).toHaveText('2');
+
+      // Move active item down.
+      await page.keyboard.press('ControlOrMeta+ArrowDown');
+      await expect(tablePage.activeItemId).toHaveText('7');
+      await expect(tablePage.selection).toHaveText('2');
+
+      // Press NumpadAdd
+      await page.keyboard.press('NumpadAdd');
+      await expectTable(table).toHaveContent([
+        [{label: 'Item 1', state: null}],
+        [{label: 'Item 2', state: 'collapsed'}],
+        [{label: 'Item 7', state: 'expanded'}],
+        [{label: 'Item 8', state: null}],
+        [{label: 'Item 9', state: null}],
+      ]);
+      await expect(tablePage.activeItemId).toHaveText('7');
+      await expect(tablePage.selection).toHaveText('2');
+
+      // Press NumpadSubtract
+      await page.keyboard.press('NumpadSubtract');
+      await expectTable(table).toHaveContent([
+        [{label: 'Item 1', state: null}],
+        [{label: 'Item 2', state: 'collapsed'}],
+        [{label: 'Item 7', state: 'collapsed'}],
+        [{label: 'Item 9', state: null}],
+      ]);
+      await expect(tablePage.activeItemId).toHaveText('7');
+      await expect(tablePage.selection).toHaveText('2');
+    });
+
+    test('should expandAll / collapseAll with ControlOrMeta+NumpadAdd / ControlOrMeta+NumpadSubtract', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.setHierarchical(true);
+      await tablePage.addColumn({name: 'column:string', type: 'string'});
+
+      await provideHttpDatasource(page, [
+        {id: 1, name: 'Item 1'},
+        {id: 2, name: 'Item 2'},
+        {id: 3, name: 'Item 3', parentId: 2},
+        {id: 4, name: 'Item 4', parentId: 3},
+        {id: 5, name: 'Item 5', parentId: 4},
+        {id: 6, name: 'Item 6', parentId: 3},
+        {id: 7, name: 'Item 7'},
+        {id: 8, name: 'Item 8', parentId: 7},
+        {id: 9, name: 'Item 9'},
+      ], {datasource: 'array-http'});
+
+      await expectTable(table).toHaveContent([
+        [{label: 'Item 1', state: null}],
+        [{label: 'Item 2', state: 'collapsed'}],
+        [{label: 'Item 7', state: 'collapsed'}],
+        [{label: 'Item 9', state: null}],
+      ]);
+
+      await table.body.focus();
+
+      // Press ControlOrMeta+NumpadAdd
+      await page.keyboard.press('ControlOrMeta+NumpadAdd');
+      await expectTable(table).toHaveContent([
+        [{label: 'Item 1', state: null}],
+        [{label: 'Item 2', state: 'expanded'}],
+        [{label: 'Item 3', state: 'expanded'}],
+        [{label: 'Item 4', state: 'expanded'}],
+        [{label: 'Item 5', state: null}],
+        [{label: 'Item 6', state: null}],
+        [{label: 'Item 7', state: 'expanded'}],
+        [{label: 'Item 8', state: null}],
+        [{label: 'Item 9', state: null}],
+      ]);
+
+      // Press ControlOrMeta+NumpadSubtract
+      await page.keyboard.press('ControlOrMeta+NumpadSubtract');
+      await expectTable(table).toHaveContent([
+        [{label: 'Item 1', state: null}],
+        [{label: 'Item 2', state: 'collapsed'}],
+        [{label: 'Item 7', state: 'collapsed'}],
+        [{label: 'Item 9', state: null}],
+      ]);
+    });
   });
 
   test.describe('Selection', () => {

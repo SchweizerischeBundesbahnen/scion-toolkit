@@ -3008,6 +3008,26 @@ test.describe('sci-table', () => {
         await page.keyboard.press('B');
         await expect(component.input).toHaveValue('A B');
       });
+
+      await test.step('Pressing NumpadAdd', async () => {
+        await component.input.clear();
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('A');
+        await page.keyboard.press('NumpadAdd');
+        await page.keyboard.press('B');
+        await expect(component.input).toHaveValue('A+B');
+      });
+
+      await test.step('Pressing NumpadSubtract', async () => {
+        await component.input.clear();
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('A');
+        await page.keyboard.press('NumpadSubtract');
+        await page.keyboard.press('B');
+        await expect(component.input).toHaveValue('A-B');
+      });
     });
 
     test('should not prevent native keystrokes (Home, End, Ctrl+A, ...) in buttons of custom column', async ({page, consoleLogs}) => {

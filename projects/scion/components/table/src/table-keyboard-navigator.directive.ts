@@ -8,9 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, inject} from '@angular/core';
+import {Directive, inject, Signal} from '@angular/core';
 import {SciTableSelectionService} from './table-selection.service';
 import {isFromButton, isFromInput} from './common';
+import {skeletonRowId} from './table.model';
+import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 
 @Directive({
   selector: '[sciTableKeyboardNavigator]',
@@ -69,12 +71,57 @@ import {isFromButton, isFromInput} from './common';
     '(keydown.meta.end)': 'isFromInput($event) || selectionService.onEnd($event)',
     '(keydown.shift.control.end)': 'isFromInput($event) || selectionService.onEnd($event)',
     '(keydown.shift.meta.end)': 'isFromInput($event) || selectionService.onEnd($event)',
+
+    '(keydown)': 'isFromInput($event) || onKeydown($event)',
   },
 })
-export class SciTableKeyboardNavigatorDirective {
+export class SciTableKeyboardNavigatorDirective<T, ID> {
+
+  private readonly _table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
 
   protected readonly selectionService = inject(SciTableSelectionService);
 
   protected readonly isFromInput = isFromInput;
   protected readonly isFromButton = isFromButton;
+
+  public async onKeydown(event: KeyboardEvent): Promise<void> {
+    if (event.key === '+' && event.location === 3) { // NumpadAdd
+      void this.onNumpadAdd(event);
+    }
+    else if (event.key === '-' && event.location === 3) { // NumpadSubtract
+      void this.onNumpadSubtract(event);
+    }
+  }
+
+  public async onNumpadAdd(event: KeyboardEvent): Promise<void> {
+    event.preventDefault();
+
+    const table = this._table();
+
+    if (event.ctrlKey || event.metaKey) {
+      table.expandAll();
+      return;
+    }
+
+    const activeRow = table.activeRow();
+    if (activeRow?.id !== skeletonRowId && activeRow?.hasChildren()) {
+      table.expand(activeRow.id);
+    }
+  }
+
+  public async onNumpadSubtract(event: KeyboardEvent): Promise<void> {
+    event.preventDefault();
+
+    const table = this._table();
+
+    if (event.ctrlKey || event.metaKey) {
+      table.collapseAll();
+      return;
+    }
+
+    const activeRow = table.activeRow();
+    if (activeRow?.id !== skeletonRowId && activeRow?.hasChildren()) {
+      table.collapse(activeRow.id);
+    }
+  }
 }
