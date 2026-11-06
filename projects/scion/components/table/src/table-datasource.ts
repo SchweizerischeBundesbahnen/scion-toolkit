@@ -185,10 +185,6 @@ export function ɵillegaldatasource<T>(): Signal<T[]> {
   });
 }
 
-export function isArrayDatasource(datasource: SciTableDatasource<unknown, unknown>): boolean {
-  return datasource instanceof ɵSciTableArrayDatasource || datasource instanceof ɵSciAsyncTableDatasource;
-}
-
 export function isTreeDatasource(datasource: SciTableDatasource<unknown, unknown>): boolean {
   return datasource instanceof ɵSciTableTreeDatasource || datasource instanceof ɵSciAsyncTableTreeDatasource;
 }

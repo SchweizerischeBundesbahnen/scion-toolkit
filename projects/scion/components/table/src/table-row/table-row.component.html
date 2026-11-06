@@ -29,7 +29,7 @@
 
 <!--Row Actions -->
 @let hasRowActions = !!table().rowActions;
-@let isRowHovered = table().hoveredRow() === row;
+@let isRowHovered = table().hoveredIndex() === row.index;
 @let isRowActionMenuOpen = rowActionToolbar()?.menuOpen();
 
 @if (hasRowActions && (isRowHovered || isRowActionMenuOpen)) {

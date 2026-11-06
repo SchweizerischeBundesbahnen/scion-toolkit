@@ -89,7 +89,6 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public readonly loading = computed(() => this._tableTree.loading() || this._cache.loading() || this._tableCellValuePreloader.loading());
   public readonly error = computed(() => this._cache.error() || this._tableTree.error());
   public readonly activeRow: Signal<SciTableRow<T, ID> | undefined>;
-  public readonly hoveredRow = computed(() => this.getRowByIndex(this.hoveredIndex()));
   public readonly selectedItems = computed(() => [...this._tableTree.selectedNodes().values()]);
   public readonly rowsById = this._cache.rowsById;
   public readonly rows = this.computeRows();
@@ -307,14 +306,6 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
           subscribeIn(fn => zone.runOutsideAngular(fn)),
         ),
     }).value;
-  }
-
-  /**
-   * Looks up a cached row by its visual index, including rows outside the viewport.
-   */
-  public getRowByIndex(index: number): SciTableRow<T, ID> | undefined {
-    const node = this._tableTree.visibleNodes()[index];
-    return node === undefined ? undefined : this.rowsById().get(node.item);
   }
 
   /**

@@ -180,15 +180,53 @@ export interface SciTable<ID = unknown> {
   readonly activeItem: Signal<ID | undefined>;
 
   /**
-   * Selected items.
+   * Selected item ids.
    */
   readonly selectedItems: Signal<Array<ID>>;
 
+  /**
+   * Controls whether the column filters are displayed.
+   *
+   * Initialized from {@link SciTableDescriptor.filterable}. Defaults to `false`.
+   * Does not affect filtering via {@link SciTable.filter}.
+   */
   readonly filterable: WritableSignal<boolean>;
+
+  /**
+   * Controls whether column headers are displayed.
+   *
+   * Initialized from {@link SciTableDescriptor.showHeader}. Defaults to `true`.
+   */
   readonly showHeader: WritableSignal<boolean>;
+
+  /**
+   * Controls whether column headers are wrapped if they overflow.
+   *
+   * If not wrapped, the headers are truncated with an ellipsis on overflow.
+   * Initialized from {@link SciTableDescriptor.wrapHeader}. Defaults to `false`.
+   */
   readonly wrapHeader: WritableSignal<boolean>;
+
+  /**
+   * Controls whether the user can sort rows by clicking column headers.
+   *
+   * Initialized from {@link SciTableDescriptor.sortable}. Defaults to `true`.
+   */
   readonly sortable: WritableSignal<boolean>;
+
+  /**
+   * Controls whether the user can resize columns.
+   *
+   * Initialized from {@link SciTableDescriptor.resizable}. Defaults to `true`.
+   */
   readonly resizable: WritableSignal<boolean>;
+
+  /**
+   * Controls whether the user can select a single row (`single`), multiple rows (`multi`), or no rows (`false`).
+   *
+   * Initialized from {@link SciTableDescriptor.selectable}. Defaults to `multi`.
+   * Does not affect selection via {@link SciTable.select}.
+   */
   readonly selectable: WritableSignal<'single' | 'multi' | false>;
 
   /**
