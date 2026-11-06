@@ -22,7 +22,8 @@ describe('Tree Factory', () => {
     const {fixture} = createSciTreeComponent(sciTree<string, string>({
       datasource: provideTreeDatasource(signal(['parent']), () => []),
       label: item => item,
-    }, {injector: TestBed.inject(Injector)}));
+      injector: TestBed.inject(Injector),
+    }));
 
     const tree = new TablePO(fixture, 'sci-tree');
     await tree.waitUntilStable();
@@ -42,7 +43,8 @@ describe('Tree Factory', () => {
       expect(() => sciTree({
         label: () => '',
         datasource: provideTreeDatasource(signal([]), () => []),
-      }, {injector: TestBed.inject(Injector)})).toThrowError(/NG0602:/i);
+        injector: TestBed.inject(Injector),
+      })).toThrowError(/NG0602:/i);
       done();
     }, {injector: TestBed.inject(Injector)});
   });

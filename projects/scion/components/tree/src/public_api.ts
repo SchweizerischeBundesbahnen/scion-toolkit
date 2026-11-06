@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-export {tree} from './tree';
+export {tree} from './tree.factory';
 export {SciTreeComponent} from './tree.component';
 export {type SciTree, type SciTreeDescriptor, type SciTreeNodeContext} from './tree.model';
 export {provideTreeDatasource, provideAsyncTreeDatasource, type SciTreeIdsRequest} from './tree-datasource';

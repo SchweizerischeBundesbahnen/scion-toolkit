@@ -1,5 +1,5 @@
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
-import {Signal, WritableSignal} from '@angular/core';
+import {Injector, Signal, WritableSignal} from '@angular/core';
 import {SciTableCellContext, SciTableEvent, SciTableRowActionFactoryFn} from '@scion/components/table';
 import {MaybeArray} from '@scion/toolkit/types';
 import {SciTreeDatasourceFactory} from './tree-datasource';
@@ -109,6 +109,7 @@ export interface SciTreeDescriptor<T, ID> {
    */
   pageSize?: number;
   trackBy?: (item: T) => ID;
+  injector?: Injector;
 }
 
 export interface SciTree<ID> {

@@ -12,12 +12,15 @@ import {assertInInjectionContext, DestroyRef, inject, Injector, runInInjectionCo
 import {SciTree, SciTreeDescriptor} from './tree.model';
 import {ɵSciTree} from './ɵtree.model';
 
-export function tree<T, ID>(descriptor: SciTreeDescriptor<T, ID>, options?: {injector?: Injector}): SciTree<ID> {
-  if (!options?.injector) {
+/**
+ * @experimental since 22.4.0; API and behavior may change in any version without notice.
+ */
+export function tree<T, ID>(descriptor: SciTreeDescriptor<T, ID>): SciTree<ID> {
+  if (!descriptor.injector) {
     assertInInjectionContext(tree);
   }
 
-  const injector = options?.injector ?? inject(Injector);
+  const injector = descriptor.injector ?? inject(Injector);
 
   const sciTree = runInInjectionContext(injector, () => new ɵSciTree(descriptor));
   injector.get(DestroyRef).onDestroy(() => sciTree.dispose());

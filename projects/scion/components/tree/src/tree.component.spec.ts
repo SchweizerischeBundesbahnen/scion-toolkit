@@ -11,7 +11,7 @@
 import {TestBed} from '@angular/core/testing';
 import {provideTableRowBinding} from '@scion/components/table';
 import {Component, DestroyRef, inject, Injector, input, inputBinding, signal, TemplateRef, viewChild} from '@angular/core';
-import {tree as sciTree} from './tree';
+import {tree as sciTree} from './tree.factory';
 import {provideAsyncTreeDatasource, provideTreeDatasource} from './tree-datasource';
 import {TablePO} from '../../table/src/table.po';
 import {createSciTreeComponent, provideNullTableStorage} from './testing/testing.util';
@@ -37,7 +37,8 @@ describe('Tree', () => {
       const {fixture} = createSciTreeComponent(sciTree<{name: string}, {name: string}>({
         datasource: provideTreeDatasource(signal([{name: 'Alpha'}, {name: 'Beta'}]), () => []),
         label: item => item.name,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -68,7 +69,8 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree({
         datasource: provideTreeDatasource(data, ({string}) => string === '%key1' ? [{string: '%key2'}] : []),
         label: ({string}: {string: Translatable}) => string,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -85,7 +87,8 @@ describe('Tree', () => {
         label: {
           component: item => ({component: NodeLabelComponent, bindings: [inputBinding('label', () => item)]}),
         },
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -100,7 +103,8 @@ describe('Tree', () => {
         label: {
           template: item => ({template, context: {suffix: `(${item.length})`}}),
         },
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -116,7 +120,8 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree<string, string>({
         datasource: provideTreeDatasource(signal(['parent', 'leaf']), item => children.get(item)),
         label: item => item,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -138,7 +143,8 @@ describe('Tree', () => {
         datasource: provideTreeDatasource(signal([parent]), item => item.id === 'parent' ? [child] : []),
         label: item => item.name,
         trackBy: item => item.id,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -159,7 +165,8 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree<string, string>({
         datasource: provideTreeDatasource(signal(['Alpha', 'Beta', 'Gamma']), () => []),
         label: item => item,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
 
@@ -176,7 +183,8 @@ describe('Tree', () => {
         datasource: provideTreeDatasource(signal(['Alpha']), () => []),
         label: item => item,
         selectable: false,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -191,7 +199,8 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree<string, string>({
         datasource: provideTreeDatasource(signal(['Alpha', 'Beta']), () => []),
         label: item => item,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -214,7 +223,8 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree<string, string>({
         datasource: provideTreeDatasource(signal(['Alpha', 'Beta']), () => []),
         label: item => item,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -233,7 +243,8 @@ describe('Tree', () => {
         datasource: provideTreeDatasource(signal(['Alpha', 'Beta']), () => []),
         label: item => item,
         matcher: (text, context) => text === 'test' && context.value === 'Alpha',
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -261,7 +272,8 @@ describe('Tree', () => {
         datasource: provideTreeDatasource(signal([alpha, beta]), () => []),
         label: item => item.name,
         matcher,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -285,7 +297,8 @@ describe('Tree', () => {
             onSelect(item);
           },
         }),
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
 
@@ -307,7 +320,8 @@ describe('Tree', () => {
           .addPartBinding(`node:${item}`)
           .addIconBinding('icon')
           .addIconBinding(item),
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
 
@@ -326,7 +340,8 @@ describe('Tree', () => {
       const {fixture} = createSciTreeComponent(sciTree<string, string>({
         datasource: provideTreeDatasource(signal(['parent']), item => item === 'parent' ? ['child'] : []),
         label: item => item,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
 
@@ -345,7 +360,8 @@ describe('Tree', () => {
       const {fixture, model} = createSciTreeComponent(sciTree<string, string>({
         datasource: provideAsyncTreeDatasource(getIds, getItems),
         label: item => item,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -370,7 +386,8 @@ describe('Tree', () => {
           ids => ids,
         ),
         label: item => item,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -395,7 +412,8 @@ describe('Tree', () => {
         label: item => item,
         bufferSize: 0,
         pageSize: 2,
-      }, {injector: TestBed.inject(Injector)}), {designTokens: {'--sci-tree-node-height': '50px'}, height: '100px'});
+        injector: TestBed.inject(Injector),
+      }), {designTokens: {'--sci-tree-node-height': '50px'}, height: '100px'});
 
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
@@ -422,7 +440,8 @@ describe('Tree', () => {
       const {fixture} = createSciTreeComponent(sciTree<{id: string}, {id: string}>({
         datasource: provideTreeDatasource(signal([item]), () => []),
         label: item => item.id,
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
       const onPrimaryAction = jasmine.createSpy();
       fixture.componentInstance.primaryAction.subscribe(onPrimaryAction);
       const tree = new TablePO(fixture, 'sci-tree');
@@ -443,7 +462,8 @@ describe('Tree', () => {
             bindings: [inputBinding('label', () => item), inputBinding('onDestroy', () => onDestroy)],
           }),
         },
-      }, {injector: TestBed.inject(Injector)}));
+        injector: TestBed.inject(Injector),
+      }));
       const tree = new TablePO(fixture, 'sci-tree');
       await tree.waitUntilStable();
       expect(await tree.column({index: 0})!.values()).toEqual(['Alpha']);
