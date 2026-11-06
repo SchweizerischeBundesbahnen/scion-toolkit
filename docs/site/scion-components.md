@@ -28,6 +28,9 @@ Import required styles and icons in `src/styles.scss`.
 - [**Table**][link-tool-table]\
   Provides a table for displaying tabular data.
 
+- [**Tree**][link-tool-tree]\
+  Provides a tree for displaying hierarchical data.
+
 - [**Viewport**][link-tool-viewport]\
   Provides a viewport component with scrollbars that sit on top of the viewport client.
 
@@ -60,6 +63,7 @@ Import required styles and icons in `src/styles.scss`.
 [menu-sponsoring]: /docs/site/sponsoring.md
 
 [link-tool-table]: /docs/site/tools/table.md
+[link-tool-tree]: /docs/site/tools/tree.md
 [link-tool-viewport]: /docs/site/tools/viewport.md
 [link-tool-sashbox]: /docs/site/tools/sashbox.md
 [link-tool-splitter]: /docs/site/tools/splitter.md
