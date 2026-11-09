@@ -12,7 +12,7 @@ import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
 import {skeletonRowId} from './table.model';
-import {SciTreeTableNode} from './table-datasource';
+import {ɵSciTreeNode} from './table-tree.model';
 
 @Injectable()
 export class SciTableSelectionService<T, ID> {
@@ -21,7 +21,7 @@ export class SciTableSelectionService<T, ID> {
 
   public async onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();
-    const rowId = table.visibleRows()?.[index]?.id;
+    const rowId = table.visibleRows()[index]?.id;
     const previousActiveIndex = table.activeIndex();
 
     table.setActiveItem(rowId);
@@ -69,6 +69,7 @@ export class SciTableSelectionService<T, ID> {
     await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
 
+  // TODO [marc] Mix zwischen rows und nodes
   public async onArrowLeft(event: Event): Promise<void> {
     event.preventDefault();
 
@@ -92,22 +93,21 @@ export class SciTableSelectionService<T, ID> {
       const row = findPreviousExpandedRow(activeRow.index - 1);
 
       if (row !== undefined) {
-        const index = table.rowIndexById().get(row.id) ?? -1;
-        await this.selectOnKeyboardNavigation(index, {shiftKey: false, ctrlKey: false, metaKey: false});
+        await this.selectOnKeyboardNavigation(row.index(), {shiftKey: false, ctrlKey: false, metaKey: false});
       }
 
-      function findPreviousExpandedRow(index: number): SciTreeTableNode<ID> | undefined {
+      function findPreviousExpandedRow(index: number): ɵSciTreeNode<ID> | undefined {
         while (index > 0) {
-          const row = rows?.[index];
+          const row = rows[index];
           // Get the row expansion state whether the row is already loaded or not.
-          if (row !== undefined && table.isExpanded(row.id)) {
+          if (row?.expanded()) {
             return row;
           }
           index--;
         }
 
         // Return the first row if no previous row is expanded.
-        return rows?.[index];
+        return rows[index];
       }
     }
   }
@@ -200,7 +200,7 @@ export class SciTableSelectionService<T, ID> {
 
   private async selectOnKeyboardNavigation(targetIndex: number, event: {shiftKey: boolean; ctrlKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();
-    const targetItem = table.visibleRows()?.[targetIndex]?.id;
+    const targetItem = table.visibleRows()[targetIndex]?.id;
     const activeIndex = table.activeIndex();
     const direction = activeIndex > targetIndex ? 'up' : 'down';
     const [startIndex, endIndex] = direction === 'up' ? [targetIndex, activeIndex] : [activeIndex, targetIndex];
@@ -261,8 +261,8 @@ export class SciTableSelectionService<T, ID> {
     const table = this._table();
     const selectedIds = table.selectedItems();
 
-    const previousItemId = table.visibleRows()?.[activeIndex - 1]?.id;
-    const nextItemId = table.visibleRows()?.[activeIndex + 1]?.id;
+    const previousItemId = table.visibleRows()[activeIndex - 1]?.id;
+    const nextItemId = table.visibleRows()[activeIndex + 1]?.id;
 
     return (previousItemId === undefined || !selectedIds.includes(previousItemId)) && nextItemId !== undefined && selectedIds.includes(nextItemId);
   }
@@ -271,8 +271,8 @@ export class SciTableSelectionService<T, ID> {
     const table = this._table();
     const selectedIds = table.selectedItems();
 
-    const previousItemId = table.visibleRows()?.[activeIndex - 1]?.id;
-    const nextItemId = table.visibleRows()?.[activeIndex + 1]?.id;
+    const previousItemId = table.visibleRows()[activeIndex - 1]?.id;
+    const nextItemId = table.visibleRows()[activeIndex + 1]?.id;
 
     return previousItemId !== undefined && selectedIds.includes(previousItemId) && (nextItemId === undefined || !selectedIds.includes(nextItemId));
   }
@@ -285,12 +285,12 @@ export class SciTableSelectionService<T, ID> {
 
     const indices = rangeInclusive(startIndex, endIndex);
     const add = options?.add ?? false;
-    const rows = indices.map(i => table.visibleRows()?.[i]);
+    const rows = indices.map(i => table.visibleRows()[i]);
 
     table.updateSelectedItems(existing => new Set<ID>([
       ...(add ? existing : []),
       ...rows
-        .filter((row): row is Required<SciTreeTableNode<ID>> => !!row)
+        .filter((row): row is Required<ɵSciTreeNode<ID>> => !!row)
         .map(row => row.id),
     ]));
   }
@@ -306,13 +306,13 @@ export class SciTableSelectionService<T, ID> {
       for (let i = 0; i < indices.length; i++) {
         const currentIndex = indices[i]!;
         const nextIndex = indices[i + 1]!;
-        const itemId = table.visibleRows()?.[currentIndex]?.id;
+        const itemId = table.visibleRows()[currentIndex]?.id;
 
         if (itemId === undefined) {
           continue;
         }
 
-        const nextItemId = table.visibleRows()?.[nextIndex]?.id;
+        const nextItemId = table.visibleRows()[nextIndex]?.id;
         if (shrinking && nextItemId !== undefined && selection.has(nextItemId)) {
           newSelection.delete(itemId);
         }
@@ -337,13 +337,13 @@ export class SciTableSelectionService<T, ID> {
       for (let i = indices.length - 1; i >= 0; i--) {
         const currentIndex = indices[i]!;
         const previousIndex = indices[i - 1]!;
-        const itemId = table.visibleRows()?.[currentIndex]?.id;
+        const itemId = table.visibleRows()[currentIndex]?.id;
 
         if (itemId === undefined) {
           continue;
         }
 
-        const previousItemId = table.visibleRows()?.[previousIndex]?.id;
+        const previousItemId = table.visibleRows()[previousIndex]?.id;
         if (shrinking && previousItemId !== undefined && selection.has(previousItemId)) {
           newSelection.delete(itemId);
         }

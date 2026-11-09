@@ -1,10 +1,12 @@
-import {computed, inject, Injector, linkedSignal, ResourceRef, runInInjectionContext, Signal, untracked, WritableSignal} from '@angular/core';
+import {computed, Injector, linkedSignal, ResourceRef, runInInjectionContext, Signal, untracked, WritableSignal} from '@angular/core';
 import {SciTableColumnFilter, SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableDatasource, SciTreeTableNode} from './table-datasource';
-import {catchError, Observable} from 'rxjs';
+import {catchError, Observable, of} from 'rxjs';
 import {Arrays, Observables} from '@scion/toolkit/util';
-import {rxResource, toObservable} from '@angular/core/rxjs-interop';
+import {rxResource} from '@angular/core/rxjs-interop';
 import {ɵSingleActiveInjectorFactory} from '@scion/components/common';
 import {MaybeArray} from '@scion/toolkit/types';
+import {map} from 'rxjs/operators';
+import {mapArray} from '@scion/toolkit/operators';
 
 /**
  * Loads and builds the table's hierarchy using item IDs and parent relationships, without loading full items.
@@ -40,8 +42,6 @@ import {MaybeArray} from '@scion/toolkit/types';
  */
 export class SciTableTree<ID> {
 
-  private readonly _injector = inject(Injector);
-
   private readonly _datasource: SciTreeTableDatasource<unknown, ID>;
   private readonly _sortCriteria: Signal<SciTableSortCriterion[]>;
   private readonly _columnFilters: Signal<SciTableColumnFilter[]>;
@@ -49,26 +49,16 @@ export class SciTableTree<ID> {
 
   private readonly _activeNode = this.computeActiveNode();
   private readonly _selectedNodes = this.computeSelectedNodes();
-  private readonly _expandedNodes = this.computeExpandedNodes();
+  private readonly _tree: Signal<ɵSciTree<ID>>;
 
-  private readonly _unfilteredNodes = this.computeUnfilteredNodes();
-  private readonly _filteredNodes = this.computeFilteredNodes();
-  private readonly _tree = this.computeTree();
-
-  public readonly expandedNodes = this._expandedNodes.asReadonly();
   public readonly selectedNodes = this._selectedNodes.asReadonly();
   public readonly activeNode = this._activeNode.asReadonly();
 
-  public readonly error = computed(() => this._unfilteredNodes.status() === 'error' || this._filteredNodes.status() === 'error');
-  public readonly loading = computed(() => this._unfilteredNodes.isLoading() || this._filteredNodes.isLoading());
-  public readonly unfilteredNodesById = computed(() => this._unfilteredNodes.status() === 'error' ? new Map<ID, SciTreeTableNode<ID>>() : this._unfilteredNodes.value().reduce((acc, node) => acc.set(node.id, node), new Map<ID, SciTreeTableNode<ID>>()));
-  public readonly nodes = computed(() => this._tree().nodes);
-  public readonly nodesById = computed(() => this._tree().nodesById);
-  public readonly childrenIdsByParent = computed(() => this._tree().childrenIdsByParent);
-
-  public readonly visibleNodes = this.computeVisibleNodes();
-  public readonly nodeIndexById = computed(() => this.visibleNodes().reduce((map, node, index) => map.set(node.id, index), new Map<ID, number>()));
-  public readonly visibleNodeCount = computed(() => this.visibleNodes().length);
+  public readonly error = computed(() => this._tree().hasError());
+  public readonly loading = computed(() => this._tree().isLoading());
+  public readonly nodeById = computed(() => this._tree().nodeById);
+  public readonly nodeIndexById = computed(() => this._tree().indexById());
+  public readonly visibleNodes = computed(() => this._tree().nodeList.filter(node => node.visible()));
 
   constructor(options: {
     sortCriteria: Signal<SciTableSortCriterion[]>;
@@ -80,55 +70,42 @@ export class SciTableTree<ID> {
     this._columnFilters = options.columnFilters;
     this._tableFilter = options.tableFilter;
     this._sortCriteria = options.sortCriteria;
+    this._tree = this.computeTree();
   }
 
   public reload(): void {
-    this._unfilteredNodes.reload();
+    untracked(() => this._tree().reload());
   }
 
   public reloadFailed(): void {
-    if (this._unfilteredNodes.status() === 'error') {
-      this._unfilteredNodes.reload();
-    }
-
-    if (this._filteredNodes.status() === 'error') {
-      this._filteredNodes.reload();
-    }
+    untracked(() => this._tree().reloadFailed());
   }
 
   public expand(id: MaybeArray<ID>): void {
-    const ids = Arrays.coerce(id);
-    this._expandedNodes.update(toggledRows => new Set([...toggledRows, ...ids]));
+    const nodes = untracked(() => this._tree().nodeById);
+    Arrays.coerce(id).forEach(id => nodes.get(id)?.expanded.set(true));
   }
 
   public expandAll(): void {
-    this._expandedNodes.set(new Set([...this.childrenIdsByParent().keys()].filter((id): id is ID => id !== undefined)));
+    const nodes = untracked(() => this._tree().nodeById);
+    nodes.forEach(node => node.expanded.set(true));
   }
 
   public collapse(id: MaybeArray<ID>): void {
-    const ids = Arrays.coerce(id);
-    this._expandedNodes.update(toggledRows => {
-      const newToggledRows = new Set(toggledRows);
-      ids.forEach(id => newToggledRows.delete(id));
-      return newToggledRows;
-    });
+    const nodes = untracked(() => this._tree().nodeById);
+    Arrays.coerce(id).forEach(id => nodes.get(id)?.expanded.set(false));
   }
 
   public collapseAll(): void {
-    this._expandedNodes.set(new Set());
+    const nodes = untracked(() => this._tree().nodeById);
+    nodes.forEach(node => node.expanded.set(false));
   }
 
   public toggleRow(id: ID): void {
-    this._expandedNodes.update(toggledRows => {
-      if (toggledRows.has(id)) {
-        const newToggledRows = new Set(toggledRows);
-        newToggledRows.delete(id);
-        return newToggledRows;
-      }
-      else {
-        return new Set(toggledRows).add(id);
-      }
-    });
+    const node = untracked(() => this._tree().nodeById.get(id));
+    if (node) {
+      node.expanded.update(expanded => !expanded);
+    }
   }
 
   public setActiveNode(id: ID | undefined): void {
@@ -140,21 +117,16 @@ export class SciTableTree<ID> {
   }
 
   public select(ids: MaybeArray<ID>): void {
-    // Prevents selecting nodes which do not exist.
-    // Check against unfiltered nodes, to allow selecting nodes, which are filtered out.
-    const nodesById = this.unfilteredNodesById();
-    const nodeIds = Arrays.coerce(ids).filter(id => nodesById.has(id));
+    const nodes = untracked(() => this._tree().nodeById);
 
-    // Expand nodes.
-    nodeIds.forEach(id => {
-      const node = nodesById.get(id);
+    // Prevent selecting nodes which do not exist.
+    const nodeIds = Arrays.coerce(ids).filter(id => nodes.has(id));
 
-      if (node?.parentId !== undefined && nodesById.has(node.parentId)) {
-        // Expand all nodes before the selected ones.
-        this.expand(getPathFromRoot(nodesById.get(node.parentId)!, nodesById));
-      }
-    });
+    // Expand all nodes before the selected ones.
+    // nodeIds.forEach(id => nodes.get(id)?.getPathFromRoot().forEach(node => node.expanded.set(true)));
+    nodeIds.forEach(id => nodes.get(id)?.visitParents(node => node.expanded.set(true)));
 
+    // TODO [ask team] Why should the viewport height change?
     // Wait for viewport height to update after expanding nodes.
     // Else scrollActiveRowIntoViewport operates on an old viewport height.
     requestAnimationFrame(() => {
@@ -167,223 +139,213 @@ export class SciTableTree<ID> {
     });
   }
 
-  private getTableTreeNodes$(query: Partial<SciTableDatasourceQuery>, options: {injector: Injector}): Observable<SciTreeTableNode<ID>[]> {
-    return runInInjectionContext(options.injector, () => Observables.coerce(this._datasource.getTreeTableNodes({
-      columnFilters: query.columnFilters ?? [],
-      sortCriteria: query.sortCriteria ?? [],
-      tableFilter: query.tableFilter,
-    })).pipe(catchError(error => {
-      console.error(error);
-      throw error;
-    })));
-  }
+  private computeTree(): Signal<ɵSciTree<ID>> {
+    const nodes = computeNodes(this._datasource, this._sortCriteria);
+    const filteredNodes = computeFilteredNodes(this._datasource, this._columnFilters, this._tableFilter);
 
-  private computeUnfilteredNodes(): ResourceRef<SciTreeTableNode<ID>[]> {
-    // Create separate injection context per resource invocation to clean up allocated resources.
-    const injectorFactory = new ɵSingleActiveInjectorFactory({parent: this._injector});
-
-    return rxResource({
-      params: () => this._sortCriteria(),
-      stream: ({params: sortCriteria}) => this.getTableTreeNodes$({sortCriteria}, {injector: injectorFactory.create()}),
-      defaultValue: [],
-    });
-  }
-
-  private computeFilteredNodes(): ResourceRef<SciTreeTableNode<ID>[]> {
-    // Create separate injection context per resource invocation to clean up allocated resources.
-    const injectorFactory = new ɵSingleActiveInjectorFactory({parent: this._injector});
-
-    return rxResource({
-      params: () => ({
-        columnFilters: this._columnFilters(),
-        tableFilter: this._tableFilter() ?? undefined,
-      }),
-      stream: ({params}) => {
-        const injector = injectorFactory.create();
-        if (params.columnFilters.length === 0 && params.tableFilter === undefined) {
-          return runInInjectionContext(injector, () => toObservable(this._unfilteredNodes.value));
-        }
-        return this.getTableTreeNodes$({columnFilters: params.columnFilters, tableFilter: params.tableFilter}, {injector});
-      },
-      defaultValue: [],
-    });
-  }
-
-  private computeTree(): Signal<TreeData<ID>> {
-    return computed(() => {
-      if (this.error()) {
-        return {
-          nodes: [],
-          nodesById: new Map(),
-          childrenIdsByParent: new Map(),
-        };
-      }
-
-      const filteredNodes = this._filteredNodes.value();
-      const unfilteredNodes = this._unfilteredNodes.value();
-
-      return untracked(() => createTree(filteredNodes, unfilteredNodes));
-    });
-  }
-
-  private computeExpandedNodes(): WritableSignal<Set<ID>> {
     return linkedSignal({
-      source: () => ({unfilteredNodesById: this.unfilteredNodesById(), loading: this._unfilteredNodes.isLoading(), columnFilters: this._columnFilters(), tableFilter: this._tableFilter()}),
-      computation: ({unfilteredNodesById, loading, tableFilter, columnFilters}, previous): Set<ID> => {
-        // Wait until resource finished loading before changing the expanded nodes.
-        if (loading) {
-          return previous?.value ?? new Set<ID>();
+      source: () => undefined, // Linked signal to preserve node expansion state across tree updates
+      computation: (_source, previous) => {
+        const previousTree = previous?.value;
+
+        const tree: ɵSciTree<ID> = {
+          rootNodes: [],
+          nodeById: new Map<ID, ɵSciTreeNode<ID>>(),
+          indexById: computed(() => tree.visibleNodes().reduce((map, node, index) => map.set(node.id, index), new Map<ID, number>())),
+          nodeList: new Array<ɵSciTreeNode<ID>>(),
+          visibleNodes: computed(() => tree.nodeList.filter(node => node.visible())),
+          isLoading: computed(() => nodes.isLoading() || filteredNodes.isLoading()),
+          hasError: computed(() => nodes.status() === 'error' || filteredNodes.status() === 'error'),
+          reload: () => nodes.reload(),
+          reloadFailed: () => {
+            if (nodes.status() === 'error') {
+              nodes.reload();
+            }
+            if (filteredNodes.status() === 'error') {
+              filteredNodes.reload();
+            }
+          },
+        };
+
+        if (tree.hasError()) {
+          return tree;
         }
 
-        // Expand all items if filter is set.
-        if (columnFilters.length > 0 || tableFilter?.trim()) {
-          return new Set(unfilteredNodesById.keys());
-        }
+        // Materialize tree.
+        nodes.value().forEach(node => {
+          const parentNode: ɵSciTreeNode<ID> | undefined = node.parentId !== undefined ? tree.nodeById.get(node.parentId) ?? createTreeNode(node.parentId, previousTree) : undefined;
+          const treeNode: ɵSciTreeNode<ID> = tree.nodeById.get(node.id) ?? createTreeNode(node.id, previousTree);
+          tree.nodeById.set(treeNode.id, treeNode);
 
-        const expandedNodeIds = previous?.value ?? new Set<ID>();
-        return new Set([...expandedNodeIds].filter(id => unfilteredNodesById.has(id)));
+          if (parentNode) {
+            parentNode.children.push(treeNode);
+            treeNode.parent = parentNode;
+            tree.nodeById.set(parentNode.id, parentNode);
+          }
+          else {
+            tree.rootNodes.push(treeNode);
+          }
+        });
+
+        // Compute flat node list.
+        tree.rootNodes.forEach(rootNode => rootNode.visitChildren(node => tree.nodeList.push(node), {includeSelf: true}));
+
+        return tree;
+
+        function createTreeNode(id: ID, previousTree: ɵSciTree<ID> | undefined): ɵSciTreeNode<ID> {
+          const treeNode: ɵSciTreeNode<ID> = {
+            id,
+            children: [],
+            visible: computed(() => {
+              if (treeNode.parent && !treeNode.parent.visible()) {
+                return false;
+              }
+              if (treeNode.parent && !treeNode.parent.expanded()) {
+                return false;
+              }
+              if (!treeNode.matchesFilter()) {
+                return false;
+              }
+              return true;
+            }),
+            matchesFilter: computed(() => {
+              const filtered = filteredNodes.error() ? null : filteredNodes.value();
+              return !filtered || filtered.has(id) || treeNode.getPathFromRoot().some(node => filtered.has(node.id)) || treeNode.children.some(child => child.matchesFilter());
+            }),
+            expanded: linkedSignal({
+              source: () => filteredNodes.error() ? null : filteredNodes.value(),
+              computation: (filteredNodes, previous): boolean => {
+                // Expand node on filter.
+                if (filteredNodes) {
+                  return true;
+                }
+
+                // Preserve node expansion state across tree updates.
+                return previous?.value ?? previousTree?.nodeById.get(id)?.expanded() ?? false;
+              },
+            }),
+            level: computed(() => {
+              if (!treeNode.parent) {
+                const isHierarchic = tree.rootNodes.some(rootNode => rootNode.children.length);
+                return isHierarchic ? 0 : undefined;
+              }
+              return treeNode.parent.level()! + 1;
+            }),
+            index: computed(() => tree.indexById().get(id)!),
+            getPathFromRoot: () => (treeNode.parent?.getPathFromRoot() ?? []).concat(treeNode),
+            visitParents: (visitor, options) => {
+              if (options?.includeSelf) {
+                visitor(treeNode);
+              }
+              treeNode.parent?.visitParents(visitor, {includeSelf: true});
+            },
+            visitChildren: (visitor, options) => {
+              if (options?.includeSelf) {
+                visitor(treeNode);
+              }
+              treeNode.children.forEach(child => child.visitChildren(visitor, {includeSelf: true}));
+            },
+          };
+          return treeNode;
+        }
       },
     });
+
+    function computeNodes(datasource: SciTreeTableDatasource<unknown, ID>, sortCriteria: Signal<SciTableSortCriterion[]>): ResourceRef<SciTreeTableNode<ID>[]> {
+      // Create separate injection context per resource invocation to clean up allocated resources.
+      const injectorFactory = new ɵSingleActiveInjectorFactory();
+
+      return rxResource({
+        params: () => sortCriteria(),
+        stream: ({params: sortCriteria}) => getTreeNodes$(datasource, {sortCriteria}, {injector: injectorFactory.create()}),
+        defaultValue: [],
+      });
+    }
+
+    function computeFilteredNodes(datasource: SciTreeTableDatasource<unknown, ID>, columnFilters: Signal<SciTableColumnFilter[]>, tableFilter: Signal<string | null>): ResourceRef<Set<ID> | null> {
+      // Create separate injection context per resource invocation to clean up allocated resources.
+      const injectorFactory = new ɵSingleActiveInjectorFactory();
+
+      return rxResource({
+        params: () => ({
+          columnFilters: columnFilters(),
+          tableFilter: tableFilter() ?? undefined,
+        }),
+        stream: ({params}) => {
+          const injector = injectorFactory.create();
+          if (params.columnFilters.length === 0 && params.tableFilter === undefined) {
+            return of(null);
+          }
+          return getTreeNodes$(datasource, {columnFilters: params.columnFilters, tableFilter: params.tableFilter}, {injector}).pipe(mapArray(node => node.id), map(nodes => new Set(nodes)));
+        },
+        defaultValue: null,
+      });
+    }
+
+    function getTreeNodes$(datasource: SciTreeTableDatasource<unknown, ID>, query: Partial<SciTableDatasourceQuery>, options: {injector: Injector}): Observable<SciTreeTableNode<ID>[]> {
+      return runInInjectionContext(options.injector, () => Observables.coerce(datasource.getTreeTableNodes({
+        columnFilters: query.columnFilters ?? [],
+        sortCriteria: query.sortCriteria ?? [],
+        tableFilter: query.tableFilter,
+      })).pipe(catchError(error => {
+        console.error(error);
+        throw error;
+      })));
+    }
   }
 
   private computeSelectedNodes(): WritableSignal<Set<ID>> {
     return linkedSignal({
-      source: () => ({unfilteredNodesById: this.unfilteredNodesById(), loading: this._unfilteredNodes.isLoading()}),
-      computation: ({unfilteredNodesById, loading}, previous): Set<ID> => {
+      source: () => this._tree(),
+      computation: (tree, previous): Set<ID> => {
         // Wait until resource finished loading before changing the selected nodes.
-        if (loading) {
+        if (tree.isLoading()) {
           return previous?.value ?? new Set<ID>();
         }
 
         const selectedNodeIds = previous?.value ?? new Set<ID>();
-        return new Set([...selectedNodeIds].filter(id => unfilteredNodesById.has(id)));
+        return new Set([...selectedNodeIds].filter(id => tree.nodeById.has(id)));
       },
     });
   }
 
   private computeActiveNode(): WritableSignal<ID | undefined> {
     return linkedSignal({
-      source: () => ({unfilteredNodesById: this.unfilteredNodesById(), loading: this._unfilteredNodes.isLoading()}),
-      computation: ({unfilteredNodesById, loading}, previous): ID | undefined => {
+      source: () => this._tree(),
+      computation: (tree, previous): ID | undefined => {
         // Wait until resource finished loading before changing the active nodes.
-        if (loading) {
+        if (tree.isLoading()) {
           return previous?.value;
         }
 
-        return previous?.value !== undefined && unfilteredNodesById.has(previous.value) ? previous.value : undefined;
+        return previous?.value !== undefined && tree.nodeById.has(previous.value) ? previous.value : undefined;
       },
     });
   }
-
-  private computeVisibleNodes(): Signal<SciTreeTableNode<ID>[]> {
-    return computed(() => {
-      if (this.error()) {
-        return [];
-      }
-
-      const expandedNodes = this._expandedNodes();
-      const nodesById = this.nodesById();
-      const nodes = this.nodes();
-
-      const allAncestorsExpanded = (node?: SciTreeTableNode<ID>): boolean => {
-        if (node?.parentId === undefined) {
-          return true;
-        }
-
-        if (!expandedNodes.has(node.parentId)) {
-          return false;
-        }
-
-        return allAncestorsExpanded(nodesById.get(node.parentId));
-      };
-
-      return untracked(() => nodes.filter(allAncestorsExpanded));
-    });
-  }
 }
 
-export interface TreeData<ID> {
-  nodes: SciTreeTableNode<ID>[];
-  nodesById: Map<ID, SciTreeTableNode<ID>>;
-  childrenIdsByParent: Map<ID | undefined, ID[]>;
+export interface ɵSciTree<ID> {
+  rootNodes: ɵSciTreeNode<ID>[];
+  nodeById: Map<ID, ɵSciTreeNode<ID>>;
+  nodeList: ɵSciTreeNode<ID>[];
+  indexById: Signal<Map<ID, number>>;
+  visibleNodes: Signal<ɵSciTreeNode<ID>[]>;
+  isLoading: Signal<boolean>;
+  hasError: Signal<boolean>;
+  reload: () => void;
+  reloadFailed: () => void;
 }
 
-function createTree<ID>(filteredNodes: SciTreeTableNode<ID>[], unfilteredNodes: SciTreeTableNode<ID>[]): TreeData<ID> {
-  const nodesById = includeParentsAndChildren(unfilteredNodes, filteredNodes);
-  const sortedNodes = unfilteredNodes.filter(node => nodesById.has(node.id));
-
-  const childrenIdsByParent = groupChildrenByParent(sortedNodes);
-  const nodes = flattenTree(nodesById, childrenIdsByParent);
-
-  return ({nodes, nodesById, childrenIdsByParent});
-}
-
-function includeParentsAndChildren<ID>(unfilteredNodes: SciTreeTableNode<ID>[], filteredNodes: SciTreeTableNode<ID>[]): Map<ID, SciTreeTableNode<ID>> {
-  const nodesById = new Map(unfilteredNodes.map(node => [node.id, node]));
-  const filteredIds = new Set(filteredNodes.map(node => node.id));
-
-  return unfilteredNodes.reduce((acc, node) => {
-    const path = getPathFromRoot(node, nodesById);
-
-    // Include the full path (parents and children) of any filtered node.
-    // This ensures that all parents and children are displayed, even if they don't match the filter.
-    if (path.some(id => filteredIds.has(id))) {
-      path.forEach(id => acc.set(id, nodesById.get(id)!));
-    }
-
-    return acc;
-  }, new Map<ID, SciTreeTableNode<ID>>());
-}
-
-function groupChildrenByParent<ID>(nodes: SciTreeTableNode<ID>[]): Map<ID | undefined, ID[]> {
-  return nodes.reduce((acc, node) => {
-    const values = acc.get(node.parentId) ?? [];
-    values.push(node.id);
-    return acc.set(node.parentId, values);
-  }, new Map<ID | undefined, ID[]>());
-}
-
-/**
- * Flattens the tree in depth-first order, placing each parent before its descendants and preserving sibling order.
- * Includes all nodes regardless of expansion state.
- *
- * Example:
- * ```
- * [
- *   {id: '1'},
- *   {id: '1.1', parentId: '1'},
- *   {id: '1.2', parentId: '1'},
- *   {id: '1.2.1', parentId: '1.2'},
- *   {id: '1.3', parentId: '1'},
- *   {id: '2'},
- * ]
- * ```
- */
-function flattenTree<ID>(nodesById: Map<ID, SciTreeTableNode<ID>>, childrenIdsByParent: Map<ID | undefined, ID[]>): SciTreeTableNode<ID>[] {
-  const nodes: SciTreeTableNode<ID>[] = [];
-  const roots = childrenIdsByParent.get(undefined) ?? [];
-  const stack = roots.slice().reverse();
-
-  // Don't use recursion, to avoid stack overflow on large amount of root nodes (e.g. flat table).
-  while (stack.length > 0) {
-    const id = stack.pop()!;
-
-    nodes.push(nodesById.get(id)!);
-
-    // Push children in reverse order so the first child is visited next.
-    const children = childrenIdsByParent.get(id) ?? [];
-    for (let i = children.length - 1; i >= 0; i--) {
-      if (children[i] !== undefined) {
-        stack.push(children[i]!);
-      }
-    }
-  }
-
-  return nodes;
-}
-
-export function getPathFromRoot<ID>(node: SciTreeTableNode<ID>, nodesById: Map<ID, SciTreeTableNode<ID>>): ID[] {
-  const parent = node.parentId !== undefined ? nodesById.get(node.parentId) : undefined;
-  const pathFromRoot = parent ? getPathFromRoot(parent, nodesById) : [];
-  return pathFromRoot.concat(node.id);
+export interface ɵSciTreeNode<ID> {
+  id: ID;
+  parent?: ɵSciTreeNode<ID>;
+  getPathFromRoot: () => ɵSciTreeNode<ID>[];
+  visitParents: (visitor: (node: ɵSciTreeNode<ID>) => void, options?: {includeSelf?: true}) => void;
+  visitChildren: (visitor: (node: ɵSciTreeNode<ID>) => void, options?: {includeSelf?: true}) => void;
+  children: ɵSciTreeNode<ID>[];
+  visible: Signal<boolean>;
+  matchesFilter: Signal<boolean>;
+  expanded: WritableSignal<boolean>;
+  index: Signal<number>;
+  level: Signal<number | undefined>;
 }

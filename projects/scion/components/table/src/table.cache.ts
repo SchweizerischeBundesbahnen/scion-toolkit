@@ -56,10 +56,9 @@ export class SciTableCache<T, ID> {
       // Dispose pages which have no ids left pointing to them.
       // TODO [ask etienne] Zusammenführen mit oben?
       for (const page of pages) {
-        if (!page || !page.isLoading()) {
+        if (!page?.isLoading()) {
           continue;
         }
-
 
         // if ([...(this._idsByPage().get(page) ?? [])].every(id => ids.includes(id))) {
         // page.value().map(row => row.id)

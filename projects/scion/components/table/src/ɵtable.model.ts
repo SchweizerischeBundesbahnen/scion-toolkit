@@ -9,7 +9,7 @@
  */
 
 import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
-import {eSCI_TABLE_DATASOURCE_PROVIDER, provideTableDatasource, SciTableColumnFilter, SciTableSortCriterion, SciTreeTableNode, SciTreeTableDatasource} from './table-datasource';
+import {eSCI_TABLE_DATASOURCE_PROVIDER, provideTableDatasource, SciTableColumnFilter, SciTableSortCriterion, SciTreeTableDatasource} from './table-datasource';
 import {SciEnumValueLike, SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn, skeletonRowId} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {SCI_COMPONENTS_STORAGE, toLazyObservable, ɵcreateDestroyableInjector, ɵSingleActiveInjectorFactory} from '@scion/components/common';
@@ -21,7 +21,7 @@ import {clamp, Objects, Observables} from '@scion/toolkit/util';
 import {map, startWith} from 'rxjs/operators';
 import {subscribeIn} from '@scion/toolkit/operators';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
-import {SciTableTree} from './table-tree.model';
+import {SciTableTree, ɵSciTreeNode} from './table-tree.model';
 import {MaybeArray} from '@scion/toolkit/types';
 import {SciInMemoryTableDatasource} from './in-memory-table-datasource';
 
@@ -93,7 +93,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public readonly rowsById = this._cache.rowsById;
   public readonly rows = this.computeRows();
   public readonly visibleRowCount: Signal<number>;
-  public readonly visibleRows: Signal<SciTreeTableNode<ID>[] | undefined>;
+  public readonly visibleRows: Signal<ɵSciTreeNode<ID>[]>;
   public readonly rowIndexById: Signal<Map<ID, number>>;
   public readonly activeItem: Signal<ID | undefined>;
   public readonly activeIndex = computed(() => this.activeItem() !== undefined ? (this.rowIndexById().get(this.activeItem()!) ?? -1) : -1);
@@ -133,7 +133,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
       columnFilters: this.columnFilters,
       tableFilter: this._tableFilter,
     });
-    this.visibleRowCount = this._tableTree.visibleNodeCount;
+    this.visibleRowCount = computed(() => this._tableTree.visibleNodes().length);
     this.rowIndexById = this._tableTree.nodeIndexById;
     this.visibleRows = this._tableTree.visibleNodes;
     this.activeItem = this._tableTree.activeNode;
@@ -315,9 +315,9 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     // Don't use the rowMapping data as resource params, since it should not refetch from the datasource on change.
     const snapshot = computed(() => {
       const columns = this.columns();
-      const nodesById = this._tableTree.nodesById();
+      const nodeById = this._tableTree.nodeById();
       const nodeIndexById = this._tableTree.nodeIndexById();
-      return {columns, nodesById, nodeIndexById};
+      return {columns, nodeById, nodeIndexById};
     });
 
     // Create a resource to track loading and error states.
@@ -332,7 +332,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
         return runInInjectionContext(datasourceInjector, () => Observables.coerce(this._datasource.getItems(nodeIdsToLoad)))
           .pipe(
             combineLatestWith(toLazyObservable(snapshot, {injector: datasourceInjector})),
-            map(([response, {columns, nodesById, nodeIndexById}]) => runInInjectionContext(itemsInjectorFactory.create(), () => this.mapItemsToRow(response, columns, nodesById, nodeIndexById))),
+            map(([response, {columns, nodeById, nodeIndexById}]) => runInInjectionContext(itemsInjectorFactory.create(), () => this.mapItemsToRow(response, columns, nodeById, nodeIndexById))),
             catchError(error => { // TODO [ask etienne] required? Wouldn't it be better to have an effect on error at a single place
               console.error(error);
               throw error;
@@ -461,14 +461,11 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     });
   }
 
-  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], nodesById: Map<ID, SciTreeTableNode<ID>>, nodeIndexById: Map<ID, number>): SciTableRow<T, ID>[] {
-    // Indicates whether there are nodes with children.
-    const isTree = Array.from(nodesById.values()).some(node => node.parentId !== undefined);
-
+  private mapItemsToRow(items: T[], columns: SciTableColumnLike<T>[], nodeById: Map<ID, ɵSciTreeNode<ID>>, nodeIndexById: Map<ID, number>): SciTableRow<T, ID>[] {
     return items.map((item): SciTableRow<T, ID> | undefined => {
       const id = this.trackBy(item);
       const index = nodeIndexById.get(id);
-      const node = nodesById.get(id);
+      const node = nodeById.get(id);
       if (node === undefined || index === undefined) {
         return undefined;
       }
@@ -480,10 +477,10 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
         hovered: computed(() => this.hoveredIndex() === index),
         active: computed(() => this.activeItem() === id),
         selected: computed(() => this._tableTree.selectedNodes().has(id)),
-        expanded: computed(() => this._tableTree.expandedNodes().has(id)),
-        level: isTree ? calculateLevel(node) : undefined,
-        parentId: node.parentId,
-        hasChildren: computed(() => (this._tableTree.childrenIdsByParent().get(id)?.length ?? 0) > 0),
+        expanded: node.expanded,
+        level: node.level(),
+        parentId: node.parent?.id,
+        hasChildren: computed(() => node.children.length > 0),
         bindings: coerceTableRowBindings(this._rowBindings, item, index),
         cells: columns.map(column => ({
           value: 'value' in column ? column.value(item) : undefined,
@@ -494,14 +491,6 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
         } as SciTableCellLike)),
       };
     }).filter((node): node is SciTableRow<T, ID> => !!node);
-
-    function calculateLevel(node: SciTreeTableNode<ID>): number {
-      if (node.parentId === undefined) {
-        return 0;
-      }
-
-      return calculateLevel(nodesById.get(node.parentId)!) + 1;
-    }
   }
 
   /**
@@ -560,10 +549,6 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
 
   public expand(ids: MaybeArray<ID>): void {
     this._tableTree.expand(ids);
-  }
-
-  public isExpanded(id: ID): boolean {
-    return this._tableTree.expandedNodes().has(id);
   }
 
   public expandAll(): void {
