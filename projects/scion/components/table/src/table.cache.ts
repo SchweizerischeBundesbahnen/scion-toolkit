@@ -14,41 +14,38 @@ import {Objects} from '@scion/toolkit/util';
 
 export class SciTableCache<T, ID> {
 
-  private readonly _entriesById = signal(new Map<ID, ResourceRef<SciTableRow<T, ID>[]>>());
+  private readonly _cache = signal(new Map<ID, ResourceRef<SciTableRow<T, ID>[]>>());
 
-  private readonly _idsByEntry = computed(() => [...this._entriesById().entries()].reduce((map, [id, entry]) => {
-    const ids = map.get(entry) ?? new Set();
-    ids.add(id);
-    return map.set(entry, ids);
+  private readonly _idsByPage = computed(() => [...this._cache().entries()].reduce((map, [id, page]) => {
+    const ids = map.get(page) ?? new Set<ID>();
+    return map.set(page, ids.add(id));
   }, new Map<ResourceRef<SciTableRow<T, ID>[]>, Set<ID>>()));
 
-  public readonly rowsById: Signal<Map<ID, SciTableRow<T, ID>>> = computed(() => this._entries()
-    .flatMap(entry => entry.status() === 'error' ? [] : entry.value())
+  public readonly rowsById: Signal<Map<ID, SciTableRow<T, ID>>> = computed(() => this._pages()
+    .flatMap(page => page.status() === 'error' ? [] : page.value())
     .reduce((acc, row) => row.id !== skeletonRowId ? acc.set(row.id, row) : acc, new Map<ID, SciTableRow<T, ID>>()), {equal: Objects.isEqual});
 
-  private readonly _entries = computed(() => [...new Set(this._entriesById().values())]);
+  private readonly _pages = computed(() => [...new Set(this._cache().values())]);
 
-  public readonly loading: Signal<boolean> = computed(() => this._entries().some(entry => entry.isLoading()));
-  public readonly error: Signal<boolean> = computed(() => this._entries().some(entry => entry.status() === 'error'));
+  public readonly loading: Signal<boolean> = computed(() => this._pages().some(page => page.isLoading()));
+  public readonly error: Signal<boolean> = computed(() => this._pages().some(page => page.status() === 'error'));
 
-  public has(key: ID): boolean {
-    return this._entriesById().has(key);
+  public has(id: ID): boolean {
+    return this._cache().has(id);
   }
 
-  public set(ids: ID[], entry: ResourceRef<SciTableRow<T, ID>[]>): void {
-    this._entriesById.update(cache => {
+  public set(ids: ID[], page: ResourceRef<SciTableRow<T, ID>[]>): void {
+    this._cache.update(cache => {
       const newCache = new Map(cache);
-      for (const id of ids) {
-        newCache.set(id, entry);
-      }
+      ids.forEach(id => newCache.set(id, page));
       return newCache;
     });
   }
 
   public deleteIfLoading(ids: ID[]): void {
-    this._entriesById.update(cache => {
+    this._cache.update(cache => {
       const cacheCopy = new Map(cache);
-      const entries = new Set(ids.map(id => cacheCopy.get(id)));
+      const pages = new Set(ids.map(id => cacheCopy.get(id)));
 
       for (const id of ids) {
         if (cacheCopy.get(id)?.isLoading()) {
@@ -56,14 +53,18 @@ export class SciTableCache<T, ID> {
         }
       }
 
-      // Dispose entries, which have no ids left pointing to them.
-      for (const entry of entries) {
-        if (!entry) {
+      // Dispose pages which have no ids left pointing to them.
+      // TODO [ask etienne] Zusammenführen mit oben?
+      for (const page of pages) {
+        if (!page || !page.isLoading()) {
           continue;
         }
-        const idsByEntry = this._idsByEntry().get(entry);
-        if (entry.isLoading() && [...(idsByEntry ?? [])].every(id => ids.includes(id))) {
-          entry.destroy();
+
+
+        // if ([...(this._idsByPage().get(page) ?? [])].every(id => ids.includes(id))) {
+        // page.value().map(row => row.id)
+        if (Objects.isEqual(this._idsByPage().get(page), new Set(ids))) {
+          page.destroy();
         }
       }
 
@@ -72,17 +73,17 @@ export class SciTableCache<T, ID> {
   }
 
   public reloadFailed(): void {
-    for (const entry of this._entries()) {
-      if (entry.status() === 'error') {
-        entry.reload();
+    for (const page of this._pages()) {
+      if (page.status() === 'error') {
+        page.reload();
       }
     }
   }
 
   public clear(): void {
-    this._entriesById.update(cache => {
-      for (const entry of new Set(cache.values())) {
-        entry.destroy();
+    this._cache.update(cache => {
+      for (const page of cache.values()) {
+        page.destroy();
       }
       return new Map();
     });

@@ -1,5 +1,5 @@
 import {computed, inject, Injector, linkedSignal, ResourceRef, runInInjectionContext, Signal, untracked, WritableSignal} from '@angular/core';
-import {SciTableColumnFilter, SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableNode, SciTreeTableDatasource} from './table-datasource';
+import {SciTableColumnFilter, SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableDatasource, SciTreeTableNode} from './table-datasource';
 import {catchError, Observable} from 'rxjs';
 import {Arrays, Observables} from '@scion/toolkit/util';
 import {rxResource, toObservable} from '@angular/core/rxjs-interop';
@@ -167,7 +167,7 @@ export class SciTableTree<ID> {
     });
   }
 
-  private getIds$(query: Partial<SciTableDatasourceQuery>, options: {injector: Injector}): Observable<SciTreeTableNode<ID>[]> {
+  private getTableTreeNodes$(query: Partial<SciTableDatasourceQuery>, options: {injector: Injector}): Observable<SciTreeTableNode<ID>[]> {
     return runInInjectionContext(options.injector, () => Observables.coerce(this._datasource.getTreeTableNodes({
       columnFilters: query.columnFilters ?? [],
       sortCriteria: query.sortCriteria ?? [],
@@ -184,7 +184,7 @@ export class SciTableTree<ID> {
 
     return rxResource({
       params: () => this._sortCriteria(),
-      stream: ({params: sortCriteria}) => this.getIds$({sortCriteria}, {injector: injectorFactory.create()}),
+      stream: ({params: sortCriteria}) => this.getTableTreeNodes$({sortCriteria}, {injector: injectorFactory.create()}),
       defaultValue: [],
     });
   }
@@ -203,7 +203,7 @@ export class SciTableTree<ID> {
         if (params.columnFilters.length === 0 && params.tableFilter === undefined) {
           return runInInjectionContext(injector, () => toObservable(this._unfilteredNodes.value));
         }
-        return this.getIds$({columnFilters: params.columnFilters, tableFilter: params.tableFilter}, {injector});
+        return this.getTableTreeNodes$({columnFilters: params.columnFilters, tableFilter: params.tableFilter}, {injector});
       },
       defaultValue: [],
     });
