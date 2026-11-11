@@ -8,12 +8,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, input, Signal, TemplateRef} from '@angular/core';
+import {Component, computed, inject, input, Signal, TemplateRef} from '@angular/core';
 import {SciTableCellLike, SciTableRow} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective, SciTooltipOnOverflowDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
+import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciNumberPipe} from './number.pipe';
 
 @Component({
@@ -41,6 +42,8 @@ export class SciTableCellComponent<T, ID> {
 
   public readonly cell = input.required<SciTableCellLike>();
   public readonly row = input.required<SciTableRow<T, ID>>();
+
+  private readonly _table = inject(ɵSCI_TABLE);
 
   protected readonly template = this.computeTemplate();
   protected readonly templateContext = this.computeTemplateContext();
@@ -81,6 +84,7 @@ export class SciTableCellComponent<T, ID> {
   private computePartAttribute(): Signal<string> {
     return computed(() => {
       const cell = this.cell();
+      const partType = this._table().type === 'tree' ? 'node' : 'row';
       const referenceType = cell.type === 'enum' ? cell.column.referenceType : undefined;
 
       return Arrays.distinct([
@@ -89,9 +93,9 @@ export class SciTableCellComponent<T, ID> {
         // Enable column styling based on column name.
         cell.column.name,
         // Enable row styling based on selection state.
-        this.row().selected() ? 'row:selected' : 'row:not:selected',
+        this.row().selected() ? `${partType}:selected` : `${partType}:not:selected`,
         // Enable row styling based on active state.
-        this.row().active() ? 'row:active' : 'row:not:active',
+        this.row().active() ? `${partType}:active` : `${partType}:not:active`,
         // Enable row styling based on row bindings.
         ...Arrays.coerce(this.row().bindings.parts()),
       ]).join(' ');
