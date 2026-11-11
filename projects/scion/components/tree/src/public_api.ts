@@ -1,0 +1,14 @@
+/*
+ * Copyright (c) 2018-2026 Swiss Federal Railways
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
+export {tree} from './tree.factory';
+export {SciTreeComponent} from './tree.component';
+export {type SciTree, type SciTreeDescriptor, type SciTreeNodeContext} from './tree.model';
+export {provideTreeDatasource, ɵprovideTreeDatasource, type SciTreeDatasourceQuery, type SciTreeDatasourceProvider, type SciTreeDatasource, type SciTreeNode} from './tree-datasource';
