@@ -40,6 +40,9 @@ module.exports = function (config) {
     jasmineHtmlReporter: {
       suppressAll: true, // removes the duplicated traces
     },
+    proxies: {
+      '/base/media/': '/media/', // Instruct Karma to load font files from correct URL
+    },
     coverageReporter: {
       dir: require('path').join(__dirname, '../../../coverage/scion/components'),
       subdir: '.',

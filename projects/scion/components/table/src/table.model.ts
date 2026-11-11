@@ -9,13 +9,14 @@
  */
 
 import {Injector, Signal, WritableSignal} from '@angular/core';
-import {SciTableDataLoaderFn, SciTableSortCriterion} from './table-datasource';
+import {SciTableDatasourceProvider, SciTableSortCriterion} from './table-datasource';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
-import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
 import {SciDateValue} from './table-date-column.model';
+import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
+import {MaybeArray} from '@scion/toolkit/types';
 import {Translatable} from '@scion/components/text';
 import {SciEnumValue} from './table-enum-column.model';
 
@@ -24,29 +25,114 @@ import {SciEnumValue} from './table-enum-column.model';
  */
 export type SciTableColumnType = 'string' | 'number' | 'boolean' | 'date' | 'icon' | 'enum' | 'component' | 'template';
 
-export interface SciTableDescriptor<T> {
-  datasource: Signal<T[]>;
+/**
+ * Represents a descriptor to configure {@link SciTableComponent}.
+ *
+ * Defines the columns, datasource, and display options. Requires at minimum a datasource and columns.
+ */
+export interface SciTableDescriptor<T, ID = T> {
   /**
-   * @docs-private Not public API. For internal use only.
-   * @experimental since 22.3.0; API and behavior may change in any version without notice.
+   * Specifies the datasource to provide data to {@link SciTable}.
+   *
+   * Create a datasource using the {@link provideTableDatasource} function and pass a signal containing the items.
+   * For a tree structure, additionally pass a child selector to the datasource.
+   *
+   * As a convenience for non-hierarchical tables, an array signal can be used directly as the datasource.
+   *
+   * @example - Usage
+   * ```ts
+   * import {table} from '@scion/components/table';
+   * import {httpResource} from '@angular/common/http';
+   *
+   * const users = httpResource<User[]>(() => '/api/users', {defaultValue: []});
+   *
+   * table({
+   *   datasource: users.value,
+   *   columns: table => table.addStringColumn('Name', user => user.name),
+   * });
+   * ```
+   *
+   * @example - Displaying hierarchical data
+   * ```ts
+   * import {table, provideTableDatasource} from '@scion/components/table';
+   * import {httpResource} from '@angular/common/http';
+   *
+   * const users = httpResource<User[]>(() => '/api/users', {defaultValue: []});
+   *
+   * table({
+   *   datasource: provideTableDatasource(users.value, user => user.children),
+   *   columns: table => table.addStringColumn('Name', user => user.name),
+   * });
+   * ```
+   *
+   * @see provideTableDatasource
    */
-  ɵdatasource?: Signal<T[]> | SciTableDataLoaderFn<T>;
-  columns: SciTableColumnFactoryFn<T>;
-  sortable?: boolean;
-  resizable?: boolean;
-  filterable?: boolean;
-  selectable?: 'single' | 'multi' | false;
-  showHeader?: boolean;
+  datasource: Signal<T[]> | SciTableDatasourceProvider<T, ID>;
+
   /**
-   * Defaults to false.
+   * Configures the table columns.
+   *
+   * @example
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table({
+   *   datasource: data,
+   *   columns: table => table
+   *     .addStringColumn('Name', item => item.name)
+   *     .addNumberColumn('Age', item => item.age),
+   * });
+   * ```
+   *
+   * The function:
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
+   */
+  columns: SciTableColumnFactoryFn<T>;
+
+  /**
+   * Controls whether the user can sort rows by clicking column headers. Defaults to `true`.
+   */
+  sortable?: boolean;
+
+  /**
+   * Controls whether the user can resize columns. Defaults to `true`.
+   */
+  resizable?: boolean;
+
+  /**
+   * Controls whether the column filters are displayed. Defaults to `false`.
+   *
+   * Does not affect filtering via {@link SciTable.filter}.
+   */
+  filterable?: boolean;
+
+  /**
+   * Controls whether the user can select a single row (`single`), multiple rows (`multi`), or no rows (`false`). Defaults to `multi`.
+   *
+   * Does not affect selection via {@link SciTable.select}.
+   */
+  selectable?: 'single' | 'multi' | false;
+
+  /**
+   * Controls whether column headers are displayed. Defaults to `true`.
+   */
+  showHeader?: boolean;
+
+  /**
+   * Controls whether column headers are wrapped if they overflow. Defaults to `false`.
+   *
+   * If not wrapped, the headers are truncated and ellipsis are shown on overflow.
    */
   wrapHeader?: boolean;
+
   /**
    * @internal Not Public API yet
    *
    * TODO [dwi] Consider renaming to initialSortOrder
    */
   sortBy?: Array<`column:${string}` | SciTableSortCriterion>;
+
   /**
    * Configures actions to show when hovering over a row.
    *
@@ -70,6 +156,7 @@ export interface SciTableDescriptor<T> {
    * - Can call `inject` to get required dependencies.
    */
   rowActions?: SciTableRowActionFactoryFn<T>;
+
   /**
    * Configures row bindings for table rows.
    *
@@ -108,40 +195,120 @@ export interface SciTableDescriptor<T> {
    * @param index - Index of the row, zero-based.
    */
   rowBindings?: SciTableRowBindingFactoryFn<T>;
+
   /**
    * Specifies the number of items to render before and after the viewport. Defaults to 10.
    */
   bufferSize?: number;
+
   /**
    * Specifies the number of items to load per page. Defaults to 50.
    */
   pageSize?: number;
-  trackBy?: (item: T) => unknown;
+  /**
+   * Computes a unique and stable identity for items in the table.
+   *
+   * Defaults to the item object reference. Used to identify items when loading data from the datasource and when tracking table selection.
+   */
+  trackBy?: (item: T) => ID;
+
+  /**
+   * Specifies an injector used to create the table. Defaults to the current injection context.
+   * The table is disposed when the passed injector is destroyed.
+   */
   injector?: Injector;
 }
 
-export interface SciTable<T> {
+/**
+ * Represents a table for {@link SciTableComponent}.
+ *
+ * Can be constructed using the {@link table} function.
+ * Use to bind to `<sci-table>` and interact with the table.
+ *
+ * @see table
+ * @see SciTableComponent
+ */
+export interface SciTable<ID = unknown> {
   /**
-   * Currently active item.
+   * Provides the active item, if any.
+   *
+   * The active item may differ from the selected items and is used as the target for keyboard navigation.
    */
-  readonly activeItem: Signal<T | undefined>;
+  readonly activeItem: Signal<ID | undefined>;
 
   /**
-   * Selected items.
+   * Provides the selected items.
    */
-  readonly selectedItems: Signal<Array<T>>;
+  readonly selectedItems: Signal<Array<ID>>;
 
+  /**
+   * Controls whether the column filters are displayed.
+   *
+   * Initialized from {@link SciTableDescriptor.filterable}. Defaults to `false`.
+   * Does not affect filtering via {@link SciTable.filter}.
+   */
   readonly filterable: WritableSignal<boolean>;
+
+  /**
+   * Controls whether column headers are displayed.
+   *
+   * Initialized from {@link SciTableDescriptor.showHeader}. Defaults to `true`.
+   */
   readonly showHeader: WritableSignal<boolean>;
+
+  /**
+   * Controls whether column headers are wrapped if they overflow.
+   *
+   * If not wrapped, the headers are truncated with an ellipsis on overflow.
+   * Initialized from {@link SciTableDescriptor.wrapHeader}. Defaults to `false`.
+   */
   readonly wrapHeader: WritableSignal<boolean>;
+
+  /**
+   * Controls whether the user can sort rows by clicking column headers.
+   *
+   * Initialized from {@link SciTableDescriptor.sortable}. Defaults to `true`.
+   */
   readonly sortable: WritableSignal<boolean>;
+
+  /**
+   * Controls whether the user can resize columns.
+   *
+   * Initialized from {@link SciTableDescriptor.resizable}. Defaults to `true`.
+   */
   readonly resizable: WritableSignal<boolean>;
+
+  /**
+   * Controls whether the user can select a single row (`single`), multiple rows (`multi`), or no rows (`false`).
+   *
+   * Initialized from {@link SciTableDescriptor.selectable}. Defaults to `multi`.
+   * Does not affect selection via {@link SciTable.select}.
+   */
   readonly selectable: WritableSignal<'single' | 'multi' | false>;
 
   /**
    * Filters items cross-column, ignoring {@link SciTableDescriptor.filterable} and {@link SciTableColumnDescriptor.filterable} settings.
    */
   filter(text: string | null): void;
+
+  /**
+   * Selects the specified rows, replacing the current selection.
+   *
+   * Expands parent rows for table tree (hierarchical) datasource.
+   *
+   * @param id - ID or IDs of the rows to select, or an empty array to clear the selection.
+   */
+  select(id: MaybeArray<ID>): void;
+
+  /**
+   * Expands all rows in the tree. Only for table tree (hierarchical) datasource.
+   */
+  expandAll(): void;
+
+  /**
+   * Collapses all rows in the tree. Only for table tree (hierarchical) datasource.
+   */
+  collapseAll(): void;
 }
 
 export interface SciTableColumn<T = unknown, VALUE = unknown, FILTER = VALUE> {
@@ -207,19 +374,24 @@ export interface SciTemplateColumn<T = unknown> extends SciTableColumn<T, void, 
 
 export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciDateColumn<T> | SciEnumColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
 
+export const skeletonRowId = Symbol('SKELETON_ROW');
+
 /**
  * Mapped row, used as display state.
  */
-export interface SciTableRow<T> {
+export interface SciTableRow<T, ID> {
   index: number;
-  item?: T;
-  id?: unknown;
-  cells?: SciTableCellLike[];
-  bindings?: SciTableRowBindings;
-  loading: boolean;
+  item: T;
+  id: ID | typeof skeletonRowId;
+  level?: number;
+  parentId?: ID;
+  cells: SciTableCellLike[];
+  bindings: SciTableRowBindings;
   active: Signal<boolean>;
   selected: Signal<boolean>;
   hovered: Signal<boolean>;
+  expanded: Signal<boolean>;
+  hasChildren: Signal<boolean>;
 }
 
 export interface SciStringCell {
@@ -279,7 +451,7 @@ export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T
 /**
  * Represents an event emitted by {@link SciTableComponent}.
  */
-export interface SciTableEvent<T> {
+export interface SciTableEvent<ID> {
   /**
    * The native browser event (`MouseEvent` or `KeyboardEvent`) that triggered the action.
    */
@@ -287,7 +459,7 @@ export interface SciTableEvent<T> {
   /**
    * The items associated with the action.
    */
-  items: T[];
+  items: ID[];
 }
 
 /**

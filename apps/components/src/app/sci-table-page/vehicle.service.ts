@@ -8,24 +8,26 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTablePageRequest, SciTablePageResponse, SciTableSortCriterion} from '@scion/components/table';
+import {SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableNode} from '@scion/components/table';
 import {computed, Service, Signal, signal} from '@angular/core';
-import {defer, Observable, of, timer} from 'rxjs';
+import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
-import {map, switchMap} from 'rxjs/operators';
+import {map} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
-import {Vehicle} from './vehicle.model';
+import {ClassTypeGroup, DepotGroup, OperatorGroup, Vehicle, VehicleNode} from './vehicle.model';
+import {filterArray, mapArray} from '@scion/toolkit/operators';
 
 @Service()
 export class VehicleService {
 
   private readonly _datasource = httpResource<Vehicle[]>(() => '/sample-vehicles-10k.json', {
-    parse: vehicles => (vehicles as Vehicle[]).map((vehicle, index) => ({...vehicle, id: index + 1})),
+    parse: vehicles => (vehicles as Vehicle[]).map((vehicle, index) => ({...vehicle, kind: 'vehicle', id: `${index + 1}`, label: vehicle.vehicleId})),
     defaultValue: [],
   });
 
   public readonly vehicleCount = signal(10_000);
   public readonly vehicles: Signal<Vehicle[]> = computed(() => this._datasource.value().slice(0, this.vehicleCount()));
+  public readonly operatorGroups = computed(() => createOperatorGroups(this.vehicles()));
 
   public updateVehicle(vehicle: Vehicle): void {
     this._datasource.update(vehicles => {
@@ -43,12 +45,12 @@ export class VehicleService {
   public addVehicle(vehicle: Vehicle): void {
     this._datasource.update(vehicles => {
       const copy = [...vehicles];
-      copy.push({...vehicle, id: vehicles.length + 1});
+      copy.push({...vehicle, id: `${vehicles.length + 1}`});
       return copy;
     });
   }
 
-  public deleteVehicle(id: number): void {
+  public deleteVehicle(id: string): void {
     this._datasource.update(vehicles => {
       const index = vehicles.findIndex(vehicle => vehicle.id === id);
       if (index === -1) {
@@ -60,17 +62,50 @@ export class VehicleService {
     });
   }
 
-  public getVehicles$(request: SciTablePageRequest, options?: {slowDatasource?: boolean}): Observable<SciTablePageResponse<Vehicle>> {
-    const vehicles$ = toObservable(this.vehicles);
-    return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
+  public getItems$(ids: string[]): Observable<Vehicle[]> {
+    return toObservable(computed(() => {
+      const vehicles = this.vehicles();
+      return ids
+        .map(id => vehicles.find(vehicle => vehicle.id === id))
+        .filter((vehicle): vehicle is Vehicle => !!vehicle);
+    }));
+  }
+
+  public getTreeTableNodes$(query: SciTableDatasourceQuery): Observable<SciTreeTableNode<string>[]> {
+    return toObservable(this.vehicles)
       .pipe(
-        switchMap(() => vehicles$),
-        map(vehicles => Vehicles.filter(vehicles, request.columnFilters, request.tableFilter)),
-        map(vehicles => Vehicles.sort(vehicles, request.sortCriteria)),
-        map(vehicles => ({
-          items: vehicles.slice(request.start, request.end),
-          totalCount: vehicles.length,
-        })),
+        map(vehicles => Vehicles.sort(vehicles, 'sortCriteria' in query ? query.sortCriteria : [])),
+        map(vehicles => createOperatorGroups(vehicles)),
+        map(operatorGroups => createVehicleNodes(operatorGroups)),
+        filterArray(vehicleNode => {
+          if (!query.tableFilter && query.columnFilters.length === 0) {
+            return true;
+          }
+
+          if (vehicleNode.item.kind === 'vehicle') {
+            return Vehicles.matches(vehicleNode.item, query);
+          }
+          return false;
+        }),
+        mapArray(vehicleNode => ({id: vehicleNode.item.id, parentId: vehicleNode.parentId})),
+      );
+  }
+
+  public getVehicleNodes$(ids: string[]): Observable<VehicleNode[]> {
+    return toObservable(this.operatorGroups)
+      .pipe(
+        map(operatorGroups => createVehicleNodes(operatorGroups)),
+        filterArray(vehicleNode => ids.includes(vehicleNode.item.id)),
+        mapArray(vehicleNode => vehicleNode.item),
+      );
+  }
+
+  public getVehicleIds$(query: SciTableDatasourceQuery): Observable<string[]> {
+    return toObservable(this.vehicles)
+      .pipe(
+        filterArray(vehicle => Vehicles.matches(vehicle, query)),
+        map(vehicles => Vehicles.sort(vehicles, 'sortCriteria' in query ? query.sortCriteria : [])),
+        mapArray(vehicle => vehicle.id),
       );
   }
 }
@@ -83,7 +118,7 @@ export namespace Vehicles {
         const ascendingComparison = (() => {
           switch (sortCriterion.columnName) {
             case 'column:id':
-              return a.id - b.id;
+              return a.id.localeCompare(b.id);
             case 'column:vehicleId':
               return a.vehicleId.localeCompare(b.vehicleId);
             case 'column:classType':
@@ -140,68 +175,228 @@ export namespace Vehicles {
     });
   }
 
-  export function filter(vehicles: Vehicle[], filterCriteria: SciTableColumnFilter[], tableFilter?: string): Vehicle[] {
-    let copy = [...vehicles];
-    for (const filterCriterion of filterCriteria) {
-      const filterText = `${filterCriterion.text}`.toLocaleLowerCase();
-      copy = copy.filter(vehicle => {
-        switch (filterCriterion.columnName) {
-          case 'column:id':
-            return vehicle.id.toString().toLocaleLowerCase().includes(filterText);
-          case 'column:vehicleId':
-            return vehicle.vehicleId.toLocaleLowerCase().includes(filterText);
-          case 'column:classType':
-            return vehicle.classType.toLocaleLowerCase().includes(filterText);
-          case 'column:operator':
-            return vehicle.operator.toLocaleLowerCase().includes(filterText);
-          case 'column:depot':
-            return vehicle.depot.toLocaleLowerCase().includes(filterText);
-          case 'column:status':
-            return vehicle.status.toLocaleLowerCase().includes(filterText);
-          case 'column:tps':
-            return vehicle.tps.toLocaleLowerCase().includes(filterText);
-          case 'column:operatingHours':
-            return vehicle.operatingHours.toString().includes(filterText);
-          case 'column:mileage':
-            return vehicle.mileageKm.toString().includes(filterText);
-          case 'column:maxSpeed':
-            return vehicle.maxSpeedKmh.toString().includes(filterText);
-          case 'column:serviceWeight':
-            return vehicle.serviceWeightT.toString().includes(filterText);
-          case 'column:seatingCapacity':
-            return vehicle.seatingCapacity.toString().includes(filterText);
-          case 'column:buildYear':
-            return vehicle.buildYear.toString().includes(filterText);
-          case 'column:isOperational':
-            return filterCriterion.text === (vehicle.status === 'In Operation');
-          case 'column:hasWifi':
-            return filterCriterion.text === vehicle.hasWifi;
-          case 'column:isMultiSystem':
-            return filterCriterion.text === vehicle.isMultiSystem;
-          case 'column:isTpsActive':
-            return filterCriterion.text === vehicle.isTpsActive;
-          case 'column:isOverhaulDue':
-            return filterCriterion.text === vehicle.isOverhaulDue;
-          case 'column:isNarrowGauge':
-            return filterCriterion.text === vehicle.isNarrowGauge;
-          case 'column:lastR2Expiry':
-            return vehicle.lastR2Expiry.toLocaleLowerCase().includes(filterText);
-          case 'column:nextRevision':
-            return vehicle.nextRevision.toLocaleLowerCase().includes(filterText);
-          case 'column:price':
-            return vehicle.price.toString().includes(filterText);
-          default:
-            return true;
-        }
-      });
+  export function matches(vehicle: Vehicle, query: SciTableDatasourceQuery): boolean {
+    for (const filterCriterion of query.columnFilters) {
+      const filterText = `${filterCriterion.text}`.toLowerCase();
+      switch (filterCriterion.columnName) {
+        case 'column:vehicle':
+          if (!vehicle.vehicleId.toLowerCase().includes(filterText) && !vehicle.operator.toLowerCase().includes(filterText) && !vehicle.classType.toLowerCase().includes(filterText) && !vehicle.depot.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:id':
+          if (!vehicle.id.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:vehicleId':
+          if (!vehicle.vehicleId.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:classType':
+          if (!vehicle.classType.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:operator':
+          if (!vehicle.operator.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:depot':
+          if (!vehicle.depot.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:status':
+          if (!vehicle.status.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:tps':
+          if (!vehicle.tps.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:operatingHours':
+          if (!vehicle.operatingHours.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:mileage':
+          if (!vehicle.mileageKm.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:maxSpeed':
+          if (!vehicle.maxSpeedKmh.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:serviceWeight':
+          if (!vehicle.serviceWeightT.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:seatingCapacity':
+          if (!vehicle.seatingCapacity.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:buildYear':
+          if (!vehicle.buildYear.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:isOperational':
+          if (filterCriterion.text !== (vehicle.status === 'In Operation')) {
+            return false;
+          }
+          continue;
+        case 'column:hasWifi':
+          if (filterCriterion.text !== vehicle.hasWifi) {
+            return false;
+          }
+          continue;
+        case 'column:isMultiSystem':
+          if (filterCriterion.text !== vehicle.isMultiSystem) {
+            return false;
+          }
+          continue;
+        case 'column:isTpsActive':
+          if (filterCriterion.text !== vehicle.isTpsActive) {
+            return false;
+          }
+          continue;
+        case 'column:isOverhaulDue':
+          if (filterCriterion.text !== vehicle.isOverhaulDue) {
+            return false;
+          }
+          continue;
+        case 'column:isNarrowGauge':
+          if (filterCriterion.text !== vehicle.isNarrowGauge) {
+            return false;
+          }
+          continue;
+        case 'column:lastR2Expiry':
+          if (!vehicle.lastR2Expiry.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:nextRevision':
+          if (!vehicle.nextRevision.toLowerCase().includes(filterText)) {
+            return false;
+          }
+          continue;
+        case 'column:price':
+          if (!vehicle.price.toString().toLowerCase().includes(filterText)) {
+            return false;
+          }
+      }
     }
 
-    if (tableFilter) {
-      copy = copy.filter(vehicle => {
-        return Object.values(vehicle).some(value => `${value}`.toLocaleLowerCase().includes(tableFilter.toLocaleLowerCase()));
-      });
+    if (query.tableFilter) {
+      return Object.values(vehicle).some(value => `${value}`.toLowerCase().includes(query.tableFilter!.toLowerCase()));
     }
-
-    return copy;
+    return true;
   }
+}
+
+function createOperatorGroups(vehicles: Vehicle[]): OperatorGroup[] {
+  const operators = new Map<string, Map<string, Map<string, Vehicle[]>>>();
+
+  for (const vehicle of vehicles) {
+    let classTypes = operators.get(vehicle.operator);
+    if (!classTypes) {
+      classTypes = new Map();
+      operators.set(vehicle.operator, classTypes);
+    }
+
+    let depots = classTypes.get(vehicle.classType);
+    if (!depots) {
+      depots = new Map();
+      classTypes.set(vehicle.classType, depots);
+    }
+
+    let vehiclesAtDepot = depots.get(vehicle.depot);
+    if (!vehiclesAtDepot) {
+      vehiclesAtDepot = [];
+      depots.set(vehicle.depot, vehiclesAtDepot);
+    }
+
+    vehiclesAtDepot.push(vehicle);
+  }
+
+  return [...operators].sort(([a], [b]) => a.localeCompare(b)).map(([operator, classes]): OperatorGroup => {
+    const vehicles = [...classes.values()].flatMap(depots => [...depots.values()].flat());
+    return ({
+      kind: 'operator',
+      id: operator.replaceAll(' ', '_'),
+      label: operator,
+      maxSpeedKmh: avg(vehicles, vehicle => vehicle.maxSpeedKmh),
+      mileageKm: sum(vehicles, vehicle => vehicle.mileageKm),
+      price: sum(vehicles, vehicle => vehicle.price),
+      seatingCapacity: sum(vehicles, vehicle => vehicle.seatingCapacity),
+      operatingHours: sum(vehicles, vehicle => vehicle.operatingHours),
+      children: [...classes].sort(([a], [b]) => a.localeCompare(b)).map(([classType, depots]): ClassTypeGroup => {
+        const vehicles = [...depots.values()].flat();
+        return ({
+          kind: 'classType',
+          id: `${operator}-${classType}`.replaceAll(' ', '_'),
+          label: classType,
+          maxSpeedKmh: avg(vehicles, vehicle => vehicle.maxSpeedKmh),
+          mileageKm: sum(vehicles, vehicle => vehicle.mileageKm),
+          price: sum(vehicles, vehicle => vehicle.price),
+          seatingCapacity: sum(vehicles, vehicle => vehicle.seatingCapacity),
+          operatingHours: sum(vehicles, vehicle => vehicle.operatingHours),
+          children: [...depots].sort(([a], [b]) => a.localeCompare(b)).map(([depot, vehicles]): DepotGroup => ({
+            kind: 'depot',
+            id: `${operator}-${classType}-${depot}`.replaceAll(' ', '_'),
+            label: depot,
+            maxSpeedKmh: avg(vehicles, vehicle => vehicle.maxSpeedKmh),
+            mileageKm: sum(vehicles, vehicle => vehicle.mileageKm),
+            price: sum(vehicles, vehicle => vehicle.price),
+            seatingCapacity: sum(vehicles, vehicle => vehicle.seatingCapacity),
+            operatingHours: sum(vehicles, vehicle => vehicle.operatingHours),
+            children: vehicles.sort((a, b) => a.vehicleId.localeCompare(b.vehicleId)),
+          })),
+        });
+      }),
+    });
+  });
+}
+
+function createVehicleNodes(operatorGroups: OperatorGroup[]): VehicleTreeNode[] {
+  const nodes: VehicleTreeNode[] = [];
+
+  for (const operator of operatorGroups) {
+    nodes.push({item: operator});
+
+    for (const classType of operator.children) {
+      nodes.push({item: classType, parentId: operator.id});
+
+      for (const depot of classType.children) {
+        nodes.push({item: depot, parentId: classType.id});
+
+        for (const vehicle of depot.children) {
+          nodes.push({item: vehicle, parentId: depot.id});
+        }
+      }
+    }
+  }
+  return nodes;
+}
+
+function avg(vehicles: Vehicle[], property: (vehicle: Vehicle) => number): number {
+  return Math.round(vehicles.reduce((sum, vehicle) => sum + property(vehicle), 0) / vehicles.length);
+}
+
+function sum(vehicles: Vehicle[], property: (vehicle: Vehicle) => number): number {
+  return vehicles.reduce((sum, vehicle) => sum + property(vehicle), 0);
+}
+
+export interface VehicleTreeNode {
+  item: VehicleNode;
+  parentId?: string;
 }

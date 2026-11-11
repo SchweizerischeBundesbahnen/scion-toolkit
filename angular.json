@@ -90,7 +90,8 @@
               ]
             },
             "styles": [
-              "projects/scion/components/_index.scss"
+              "projects/scion/components/_index.scss",
+              "resources/scion-icons/scion-icon-font.css"
             ]
           }
         },
@@ -109,7 +110,8 @@
               ]
             },
             "styles": [
-              "projects/scion/components/_index.scss"
+              "projects/scion/components/_index.scss",
+              "resources/scion-icons/scion-icon-font.css"
             ],
             "polyfills": [
               "zone.js",

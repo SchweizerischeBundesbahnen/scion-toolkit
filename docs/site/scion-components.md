@@ -26,7 +26,10 @@ Import required styles and icons in `src/styles.scss`.
 ***
 
 - [**Table**][link-tool-table]\
-  Provides a table for displaying tabular data.
+  Provides a table for displaying tabular or hierarchical data.
+
+- [**Tree**][link-tool-tree]\
+  Provides a tree for displaying a tree structure.
 
 - [**Viewport**][link-tool-viewport]\
   Provides a viewport component with scrollbars that sit on top of the viewport client.

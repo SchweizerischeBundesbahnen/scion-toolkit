@@ -8,8 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Directive, inject} from '@angular/core';
+import {Directive, inject, Signal} from '@angular/core';
 import {SciTableSelectionService} from './table-selection.service';
+import {isFromButton, isFromInput} from './common';
+import {skeletonRowId} from './table.model';
+import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 
 @Directive({
   selector: '[sciTableKeyboardNavigator]',
@@ -30,6 +33,10 @@ import {SciTableSelectionService} from './table-selection.service';
     '(keydown.shift.control.arrowDown)': 'isFromInput($event) || selectionService.onArrowDown($event)',
     '(keydown.shift.meta.arrowDown)': 'isFromInput($event) || selectionService.onArrowDown($event)',
 
+    '(keydown.arrowLeft)': 'isFromInput($event) || selectionService.onArrowLeft($event)',
+
+    '(keydown.arrowRight)': 'isFromInput($event) || selectionService.onArrowRight($event)',
+
     '(keydown.space)': 'isFromInput($event) || isFromButton($event) || selectionService.onSpace($event)',
     '(keydown.control.space)': 'isFromInput($event) || isFromButton($event) || selectionService.onSpace($event)',
     '(keydown.meta.space)': 'isFromInput($event) || isFromButton($event) || selectionService.onSpace($event)',
@@ -40,45 +47,81 @@ import {SciTableSelectionService} from './table-selection.service';
     '(keydown.pageUp)': 'isFromInput($event) || selectionService.onPageUp($event)',
     '(keydown.shift.pageUp)': 'isFromInput($event) || selectionService.onPageUp($event)',
     '(keydown.control.pageUp)': 'isFromInput($event) || selectionService.onPageUp($event)',
+    '(keydown.meta.pageUp)': 'isFromInput($event) || selectionService.onPageUp($event)',
     '(keydown.shift.control.pageUp)': 'isFromInput($event) || selectionService.onPageUp($event)',
+    '(keydown.shift.meta.pageUp)': 'isFromInput($event) || selectionService.onPageUp($event)',
 
     '(keydown.pageDown)': 'isFromInput($event) || selectionService.onPageDown($event)',
     '(keydown.shift.pageDown)': 'isFromInput($event) || selectionService.onPageDown($event)',
     '(keydown.control.pageDown)': 'isFromInput($event) || selectionService.onPageDown($event)',
+    '(keydown.meta.pageDown)': 'isFromInput($event) || selectionService.onPageDown($event)',
     '(keydown.shift.control.pageDown)': 'isFromInput($event) || selectionService.onPageDown($event)',
+    '(keydown.shift.meta.pageDown)': 'isFromInput($event) || selectionService.onPageDown($event)',
 
     '(keydown.home)': 'isFromInput($event) || selectionService.onHome($event)',
     '(keydown.shift.home)': 'isFromInput($event) || selectionService.onHome($event)',
     '(keydown.control.home)': 'isFromInput($event) || selectionService.onHome($event)',
+    '(keydown.meta.home)': 'isFromInput($event) || selectionService.onHome($event)',
     '(keydown.shift.control.home)': 'isFromInput($event) || selectionService.onHome($event)',
+    '(keydown.shift.meta.home)': 'isFromInput($event) || selectionService.onHome($event)',
 
     '(keydown.end)': 'isFromInput($event) || selectionService.onEnd($event)',
     '(keydown.shift.end)': 'isFromInput($event) || selectionService.onEnd($event)',
     '(keydown.control.end)': 'isFromInput($event) || selectionService.onEnd($event)',
+    '(keydown.meta.end)': 'isFromInput($event) || selectionService.onEnd($event)',
     '(keydown.shift.control.end)': 'isFromInput($event) || selectionService.onEnd($event)',
+    '(keydown.shift.meta.end)': 'isFromInput($event) || selectionService.onEnd($event)',
+
+    '(keydown)': 'isFromInput($event) || onKeydown($event)',
   },
 })
-export class SciTableKeyboardNavigatorDirective {
+export class SciTableKeyboardNavigatorDirective<T, ID> {
+
+  private readonly _table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
 
   protected readonly selectionService = inject(SciTableSelectionService);
 
-  /**
-   * Indicates whether the given keyboard event was triggered from an input element.
-   */
-  protected isFromInput(event: Event): boolean {
-    if (event.target instanceof Element && event.target.closest('input, textarea, select') !== null) {
-      return true;
+  protected readonly isFromInput = isFromInput;
+  protected readonly isFromButton = isFromButton;
+
+  public async onKeydown(event: KeyboardEvent): Promise<void> {
+    if (event.key === '+' && event.location === 3) { // NumpadAdd
+      void this.onNumpadAdd(event);
     }
-    if (event.target instanceof HTMLElement && event.target.isContentEditable) {
-      return true;
+    else if (event.key === '-' && event.location === 3) { // NumpadSubtract
+      void this.onNumpadSubtract(event);
     }
-    return false;
   }
 
-  /**
-   * Indicates whether the given keyboard event was triggered from a button.
-   */
-  protected isFromButton(event: Event): boolean {
-    return event.target instanceof Element && event.target.closest('button') !== null;
+  public async onNumpadAdd(event: KeyboardEvent): Promise<void> {
+    event.preventDefault();
+
+    const table = this._table();
+
+    if (event.ctrlKey || event.metaKey) {
+      table.expandAll();
+      return;
+    }
+
+    const activeRow = table.activeRow();
+    if (activeRow?.id !== skeletonRowId && activeRow?.hasChildren()) {
+      table.expand(activeRow.id);
+    }
+  }
+
+  public async onNumpadSubtract(event: KeyboardEvent): Promise<void> {
+    event.preventDefault();
+
+    const table = this._table();
+
+    if (event.ctrlKey || event.metaKey) {
+      table.collapseAll();
+      return;
+    }
+
+    const activeRow = table.activeRow();
+    if (activeRow?.id !== skeletonRowId && activeRow?.hasChildren()) {
+      table.collapse(activeRow.id);
+    }
   }
 }

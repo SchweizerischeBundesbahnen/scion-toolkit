@@ -8,11 +8,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {provideTableStorage as sciProvideTableStorage} from '@scion/components/table';
 import {EnvironmentProviders} from '@angular/core';
+import {provideComponentsStorage} from '@scion/components/common';
 
 export function provideTableStorage(storage: Storage): EnvironmentProviders {
-  return sciProvideTableStorage(class {
+  return provideComponentsStorage(class {
     public load(name: string): Promise<string | null> | string | null {
       return storage.getItem(name);
     }

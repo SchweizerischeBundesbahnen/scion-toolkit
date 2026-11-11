@@ -19,11 +19,10 @@ import {retryOnError} from '@scion/toolkit/testing';
 export const toBeVisibleCustomMatcher: jasmine.CustomAsyncMatcherFactories = {
   toBeVisible: (): CustomAsyncMatcher => {
     return {
-      async compare(actual: () => DebugElement | undefined | null, failOutput: string | undefined): Promise<CustomMatcherResult> {
+      async compare(actual: () => DebugElement | Element | undefined | null, failOutput: string | undefined): Promise<CustomMatcherResult> {
         try {
           await retryOnError(() => {
-            const nativeElement = actual()?.nativeElement as HTMLElement | undefined;
-            const visible = nativeElement?.checkVisibility({visibilityProperty: true}) ?? false;
+            const visible = coerceElement(actual())?.checkVisibility({visibilityProperty: true}) ?? false;
             if (!visible) {
               throw Error('[DOMAssertError Expected element to be visible, but was not.');
             }
@@ -46,8 +45,7 @@ export const toBeVisibleCustomMatcher: jasmine.CustomAsyncMatcherFactories = {
       async negativeCompare(actual: () => DebugElement | undefined | null, failOutput: string | undefined): Promise<CustomMatcherResult> {
         try {
           await retryOnError(() => {
-            const nativeElement = actual()?.nativeElement as HTMLElement | undefined;
-            const visible = nativeElement?.checkVisibility({visibilityProperty: true}) ?? false;
+            const visible = coerceElement(actual())?.checkVisibility({visibilityProperty: true}) ?? false;
             if (visible) {
               throw Error('[DOMAssertError Expected element not to be visible, but was.');
             }
@@ -70,3 +68,13 @@ export const toBeVisibleCustomMatcher: jasmine.CustomAsyncMatcherFactories = {
     };
   },
 };
+
+function coerceElement(elementLike: DebugElement | Element | undefined | null): Element | undefined {
+  if (elementLike instanceof Element) {
+    return elementLike;
+  }
+  if (elementLike instanceof DebugElement) {
+    return elementLike.nativeElement as Element;
+  }
+  return undefined;
+}

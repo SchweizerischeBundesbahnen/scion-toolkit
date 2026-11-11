@@ -14,7 +14,8 @@ import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/c
 import {createSciTableComponent} from './testing/testing.util';
 import {table, table as sciTable} from './table.factory';
 import {TablePO} from './table.po';
-import {ɵillegaldatasource} from './table-datasource';
+import {provideTableDatasource, SciTreeTableNode, ɵprovideTableDatasource} from './table-datasource';
+import {SciTable} from './table.model';
 
 describe('Table Factory', () => {
 
@@ -155,6 +156,86 @@ describe('Table Factory', () => {
     expect(destroyRefs[2]!.destroyed).toBeFalse();
   });
 
+  it('should infer data types for in-memory datasource (no type error)', () => {
+    interface Item {
+      id: number;
+    }
+    const data = signal<Item[]>([]);
+
+    // Without descriptor, infer ID generic from data signal.
+    expect(() => table(
+      data,
+      table => table.addNumberColumn(item => item.id),
+      {injector: TestBed.inject(Injector)},
+    ) satisfies SciTable<Item>).not.toThrow();
+
+    // With descriptor, infer ID generic from data signal.
+    expect(() => table({
+      datasource: data,
+      columns: table => table.addNumberColumn(item => item.id),
+      injector: TestBed.inject(Injector),
+    }) satisfies SciTable<Item>).not.toThrow();
+
+    // With descriptor, infer ID generic from trackBy.
+    expect(() => table({
+      datasource: data,
+      columns: table => table.addNumberColumn(item => item.id),
+      trackBy: item => item.id,
+      injector: TestBed.inject(Injector),
+    }) satisfies SciTable<number>).not.toThrow();
+
+    // With descriptor and datasource, infer ID generic from datasource.
+    expect(() => table({
+      datasource: provideTableDatasource(data),
+      columns: table => table.addNumberColumn(item => item.id),
+      injector: TestBed.inject(Injector),
+    }) satisfies SciTable<Item>).not.toThrow();
+
+    // With descriptor and datasource, infer ID generic from trackBy.
+    expect(() => table({
+      datasource: provideTableDatasource(data),
+      columns: table => table.addNumberColumn(item => item.id),
+      trackBy: item => item.id,
+      injector: TestBed.inject(Injector),
+    }) satisfies SciTable<number>).not.toThrow();
+  });
+
+  it('should infer data types for datasource (no type error)', () => {
+    interface Item {
+      id: number;
+    }
+
+    // Infer ID generic from datasource.
+    expect(() => table({
+      datasource: ɵprovideTableDatasource({getIds: () => new Array<Item>(), getItems: () => new Array<Item>()}),
+      columns: table => table.addNumberColumn(item => item.id),
+      injector: TestBed.inject(Injector),
+    }) satisfies SciTable<Item>).not.toThrow();
+
+    // Infer ID generic from datasource with trackBy.
+    expect(() => table({
+      datasource: ɵprovideTableDatasource({getIds: () => new Array<number>(), getItems: () => new Array<Item>()}),
+      columns: table => table.addNumberColumn(item => item.id),
+      trackBy: item => item.id,
+      injector: TestBed.inject(Injector),
+    }) satisfies SciTable<number>).not.toThrow();
+
+    // Tree datasource, infer ID generic from datasource.
+    expect(() => table({
+      datasource: ɵprovideTableDatasource({getTreeTableNodes: () => new Array<SciTreeTableNode<Item>>(), getItems: () => new Array<Item>()}),
+      columns: table => table.addNumberColumn(item => item.id),
+      injector: TestBed.inject(Injector),
+    }) satisfies SciTable<Item>).not.toThrow();
+
+    // Tree datasource, infer ID generic from datasource with trackBy.
+    expect(() => table({
+      datasource: ɵprovideTableDatasource({getTreeTableNodes: () => new Array<SciTreeTableNode<number>>(), getItems: () => new Array<Item>()}),
+      columns: table => table.addNumberColumn(item => item.id),
+      trackBy: item => item.id,
+      injector: TestBed.inject(Injector),
+    }) satisfies SciTable<number>).not.toThrow();
+  });
+
   describe('Validation', () => {
 
     it('should throw error if not called in injection context', () => {
@@ -174,8 +255,7 @@ describe('Table Factory', () => {
 
     it('should disallow sort comparator if using custom datasource', done => {
       createSciTableComponent(table({
-        ɵdatasource: () => ({totalCount: 0, items: []}),
-        datasource: ɵillegaldatasource(),
+        datasource: ɵprovideTableDatasource({getIds: () => [], getItems: () => []}),
         columns: table => {
           expect(() => table.addStringColumn({
             value: () => 'test',
@@ -189,8 +269,7 @@ describe('Table Factory', () => {
 
     it('should disallow filter matcher if using custom datasource', done => {
       createSciTableComponent(table({
-        ɵdatasource: () => ({totalCount: 0, items: []}),
-        datasource: ɵillegaldatasource(),
+        datasource: ɵprovideTableDatasource({getIds: () => [], getItems: () => []}),
         columns: table => {
           expect(() => table.addStringColumn({
             value: () => 'test',

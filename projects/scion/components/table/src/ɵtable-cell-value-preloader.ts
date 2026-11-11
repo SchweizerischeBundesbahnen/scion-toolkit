@@ -1,4 +1,4 @@
-import {computed, DestroyRef, inject, Injectable, Injector, onIdle, runInInjectionContext, signal} from '@angular/core';
+import {computed, DestroyRef, inject, Injectable, Injector, onIdle, runInInjectionContext, signal, untracked} from '@angular/core';
 import {LatestTaskExecutor} from '@scion/toolkit/common';
 import {SciTableCellValuePreloader} from './table-cell-value-preloader';
 
@@ -17,8 +17,7 @@ export class ɵSciTableCellValuePreloader implements SciTableCellValuePreloader 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
       this._executor.destroy();
-      this._queue.length = 0;
-      this._queueSize.set(0);
+      this.clear();
     });
   }
 
@@ -28,6 +27,12 @@ export class ɵSciTableCellValuePreloader implements SciTableCellValuePreloader 
     this._queueSize.update(size => size + 1);
 
     this._executor.submit(() => this.whenIdle().then(() => this.preloadQueuedBatch(PRELOAD_BATCH_SIZE)));
+  }
+
+  /** @inheritDoc */
+  public clear(): void {
+    this._queue.length = 0;
+    untracked(() => this._queueSize.set(0));
   }
 
   /**
