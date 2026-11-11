@@ -1,6 +1,6 @@
-# [2.4.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-2.3.0...toolkit-2.4.0) (2026-11-04)
+# [2.5.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/toolkit-2.4.0...toolkit-2.5.0) (2026-11-11)
 
 
 ### Features
 
-* **toolkit/util:** support passing a `Map` to `Objects.toMatrixNotation` ([3a31340](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/3a313401c3f8af665439627acd76488009b1bf3c))
+* **toolkit/types:** provide `MaybeAsync` type ([c96b52b](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/c96b52b0f263e9f567df6dad6abe8b6dc58395d4))
