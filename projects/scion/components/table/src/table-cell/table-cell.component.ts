@@ -37,10 +37,10 @@ import {SciNumberPipe} from './number.pipe';
     SciTooltipOnOverflowDirective,
   ],
 })
-export class SciTableCellComponent<T> {
+export class SciTableCellComponent<T, ID> {
 
   public readonly cell = input.required<SciTableCellLike>();
-  public readonly row = input.required<SciTableRow<T>>();
+  public readonly row = input.required<SciTableRow<T, ID>>();
 
   protected readonly template = this.computeTemplate();
   protected readonly templateContext = this.computeTemplateContext();
@@ -59,10 +59,10 @@ export class SciTableCellComponent<T> {
     });
   }
 
-  private computeTemplateContext(): Signal<{$implicit: NonNullable<T>} | null> {
+  private computeTemplateContext(): Signal<{$implicit: T} | null> {
     return computed(() => {
       const cell = this.cell();
-      const item = this.row().item!;
+      const item = this.row().item;
 
       if (cell.type !== 'template') {
         return null;
@@ -93,7 +93,7 @@ export class SciTableCellComponent<T> {
         // Enable row styling based on active state.
         this.row().active() ? 'row:active' : 'row:not:active',
         // Enable row styling based on row bindings.
-        ...Arrays.coerce(this.row().bindings?.parts()),
+        ...Arrays.coerce(this.row().bindings.parts()),
       ]).join(' ');
     });
   }

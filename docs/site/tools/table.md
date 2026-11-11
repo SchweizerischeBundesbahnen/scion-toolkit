@@ -5,7 +5,7 @@
 
 ## [SCION Toolkit][menu-home] > [@scion/components][link-scion-components] > Table
 
-The NPM sub-module `@scion/components/table` provides an Angular component for displaying tabular data in Angular applications.
+The NPM sub-module `@scion/components/table` provides an Angular component for displaying tabular or hierarchical data in Angular applications.
 
 ***
 **Content:**
@@ -20,8 +20,10 @@ The NPM sub-module `@scion/components/table` provides an Angular component for d
     - [Enum Column](#enum-column)
     - [Icon Column](#icon-column)
     - [Custom Columns](#custom-columns)
-- [Column Width](#column-width)
+    - [Column Width](#column-width)
 - [Table Configuration](#table-configuration)
+    - [Datasource](#datasource)
+    - [Item Identity](#item-identity)
     - [Filtering](#filtering)
     - [Sorting](#sorting)
     - [Selection](#selection)
@@ -42,11 +44,13 @@ Click [here](https://components.scion.vercel.app/#/sci-table) for a demo of the 
 ### Installation
 
 Install `@scion/components` and required dependencies from NPM:
+
 ```
 npm install @scion/components @scion/toolkit @angular/cdk
 ```
 
 Import required styles and icons in `src/styles.scss`.
+
 ```scss
 @use '@scion/components';
 @import url('https://cdn.jsdelivr.net/npm/@scion/icons/scion-icon-font.css');
@@ -61,7 +65,7 @@ import {SciTableComponent, table} from '@scion/components/table';
 import {httpResource} from '@angular/common/http';
 
 // Load data to display in the table.
-const users = httpResource<User[]>(() => 'users', {defaultValue: []});
+const users = httpResource<User[]>(() => '/api/users', {defaultValue: []});
 
 // Create the table and pass data.
 const userTable = table(users.value, table => table
@@ -72,18 +76,24 @@ const userTable = table(users.value, table => table
 );
 ```
 
-In the HTML, assign the table a name and bind it to the table instance returned by the `table()` function. The name must start with the `table:` prefix and is used to store user settings in the storage.
+> [!NOTE]
+> Examples in this guide use a `User` entity to showcase `sci-table` usage. User-related types and functions are illustrative and not part of the API.
+
+In the HTML, bind the table instance returned by the `table()` function to `<sci-table>` and assign it a name. The name must start with the `table:` prefix and is used to store user settings.
 
 ```html
-
 <sci-table name="table:users" [table]="userTable"/>
 ```
 
-The `table()` function requires two arguments: a signal containing the data to display in the table and a factory function to define the columns. The table calls the passed factory function with a factory that has methods for adding columns to the table.
+The `table()` function requires two arguments: a signal containing the data to display in the table and a factory function to define the columns. The table calls the passed function with a factory that has methods for adding columns to the table.
 
 > [!TIP]
 > - The passed factory function is executed in a reactive context, running again whenever tracked signals change.
 > - The passed factory function can call `inject` to get required dependencies. The injection context is destroyed each time the function is called anew.
+
+### Columns
+
+The table provides built-in columns for the following data types: `string`, `number`, `boolean`, `Date`, `enum`, and `icon`. Columns for other data types or custom cell rendering can be added as custom columns. See the [Custom Columns](#custom-columns) section for details.
 
 A column requires at minimum a value function to provide the cell label for an item. If displaying column headers, it also requires a column header.
 
@@ -103,14 +113,10 @@ table(users.value, table => table.addStringColumn({
   value: user => user.name,
   width: '2fr',
   minWidth: 200,
-  filterable: {matcher: (text, context) => matchesUser(context.item, text)}, // `matchesUser` is illustrative
-  sortable: {comparator: (a, b) => compareUsers(a.item, b.item)}, // `compareUsers` is illustrative
+  filterable: {matcher: (text, context) => matchesUser(context.item, text)},
+  sortable: {comparator: (a, b) => compareUsers(a.item, b.item)},
 }));
 ```
-
-### Columns
-
-The table provides built-in columns for the following data types: `string`, `number`, `boolean`, `Date`, `enum`, and `icon`. Columns for other data types or custom cell rendering can be added as custom columns. See the [Custom Columns](#custom-columns) section for details.
 
 #### String Column
 
@@ -133,8 +139,8 @@ import {table} from '@scion/components/table';
 table(users.value, table => table.addStringColumn({
   header: 'Name',
   value: user => user.name,
-  filterable: {matcher: (text, context) => matchesUser(context.item, text)}, // `matchesUser` is illustrative
-  sortable: {comparator: (a, b) => compareUsers(a.item, b.item)}, // `compareUsers` is illustrative
+  filterable: {matcher: (text, context) => matchesUser(context.item, text)},
+  sortable: {comparator: (a, b) => compareUsers(a.item, b.item)},
 }));
 ```
 
@@ -380,7 +386,6 @@ Displays values of an enumeration.
 
 An enumeration defines a fixed set of values, each with a label and an optional icon and tooltip.
 
-
 ```ts
 import {table} from '@scion/components/table';
 
@@ -417,11 +422,12 @@ table(users.value, table => table.addEnumColumn({
 ```
 
 ##### Enumeration
+
 Use the `values` property to define the enumeration. The array order determines the sort order of the enumeration.
 
 ##### Display Options
 
-Use the `format` property to configure the display of enumeration values. Defaults to displaying the label in cells, and both icon and label in the column filter menu. Defaults are unset when using a custom format.
+Use the `format` property to configure the display of enumeration values. Defaults to displaying the label in cells, and both icon and label in the column filter menu. Defaults are unset if using a custom format.
 
 ```ts
 import {table} from '@scion/components/table';
@@ -478,6 +484,7 @@ table(users.value, table => table.addIconColumn({
 ```
 
 ##### Icons
+
 Use the `values` property to specify the icons displayed in this column. The array order determines the sort order.
 
 
@@ -499,8 +506,8 @@ table(users.value, table => table.addComponentColumn({
       inputBinding('status', () => user.status),
     ],
   }),
-  filterable: {matcher: (text, context) => matchesStatus(context.item, text)}, // `matchesStatus` is illustrative
-  sortable: {comparator: (a, b) => compareStatus(a.item, b.item)}, // `compareStatus` is illustrative
+  filterable: {matcher: (text, context) => matchesStatus(context.item, text)},
+  sortable: {comparator: (a, b) => compareStatus(a.item, b.item)},
 }));
 ```
 
@@ -515,9 +522,9 @@ const statusTemplate = viewChild.required<TemplateRef<User>>('status');
 
 table(users.value, table => table.addTemplateColumn({
   header: 'Status',
-  template: () => ({template: statusTemplate}),  // <--- Set the template
-  filterable: {matcher: (text, context) => matchesStatus(context.item, text)}, // `matchesStatus` is illustrative
-  sortable: {comparator: (a, b) => compareStatus(a.item, b.item)}, // `compareStatus` is illustrative
+  template: () => ({template: statusTemplate}), // <--- Set the template
+  filterable: {matcher: (text, context) => matchesStatus(context.item, text)},
+  sortable: {comparator: (a, b) => compareStatus(a.item, b.item)},
 }));
 ```
 
@@ -534,7 +541,7 @@ An explicit binding is usually not required because the item is available via de
 > [!IMPORTANT]
 > In order to be filterable and sortable, custom columns require an explicit filter matcher and sort comparator.
 
-### Column Width
+#### Column Width
 
 By default, columns have an equal width of `1fr`. The available space is distributed equally among the columns.
 
@@ -550,7 +557,7 @@ The `table()` function provides an overload for passing a descriptor to configur
 import {table} from '@scion/components/table';
 import {httpResource} from '@angular/common/http';
 
-const users = httpResource<User[]>(() => 'users', {defaultValue: []});
+const users = httpResource<User[]>(() => '/api/users', {defaultValue: []});
 
 const userTable = table({
   datasource: users.value,
@@ -565,7 +572,65 @@ const userTable = table({
 });
 ```
 
-The descriptor contains options for configuring the table, such as whether the table can be filtered and sorted, whether rows can be selected (and if so, whether single or multiple), whether column headers should be displayed, as well as properties for configuring row actions and row bindings.
+The descriptor provides additional options for configuring the table, such as filtering, sorting, column headers, row selection, row actions, row bindings, and more.
+
+#### Datasource
+
+The table supports displaying tabular and hierarchical data.
+
+To display tabular data, provide a signal containing the data in the `datasource` property.
+
+```ts
+import {table} from '@scion/components/table';
+import {httpResource} from '@angular/common/http';
+
+const users = httpResource<User[]>(() => '/api/users', {defaultValue: []});
+
+const userTable = table({
+  datasource: users.value,
+  columns: table => table
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
+});
+```
+
+To display hierarchical data, use `provideTableDatasource()` to create a datasource. Pass a signal containing the root items and a function that returns the children of a given item.
+
+```ts
+import {table, provideTableDatasource} from '@scion/components/table';
+import {httpResource} from '@angular/common/http';
+
+const users = httpResource<User[]>(() => '/api/users', {defaultValue: []});
+
+table({
+  datasource: provideTableDatasource(users.value, user => user.children),
+  columns: table => table
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
+});
+```
+
+#### Item Identity
+
+Each item must have a unique and stable identity. Defaults to the item object reference. Use the `trackBy` property to specify the item identity instead.
+
+```ts
+import {table} from '@scion/components/table';
+
+table({
+  datasource: users.value,
+  columns: table => table
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
+  trackBy: user => user.id,
+});
+```
 
 #### Filtering
 
@@ -595,11 +660,11 @@ import {table} from '@scion/components/table';
 table(users.value, table => table
   .addComponentColumn({
     component: user => ({component: UserComponent, bindings: [inputBinding('user', () => user)]}),
-    filterable: {matcher: (text, context) => matchesUser(context.item, text)}, // `matchesUser` is illustrative
+    filterable: {matcher: (text, context) => matchesUser(context.item, text)},
   })
   .addTemplateColumn({
     template: () => ({template: userTemplate}),
-    filterable: {matcher: (text, context) => matchesUser(context.item, text)}, // `matchesUser` is illustrative
+    filterable: {matcher: (text, context) => matchesUser(context.item, text)},
   }),
 );
 ```
@@ -645,11 +710,11 @@ import {table} from '@scion/components/table';
 table(users.value, table => table
   .addComponentColumn({
     component: user => ({component: UserComponent, bindings: [inputBinding('user', () => user)]}),
-    sortable: {comparator: (a, b) => compareUsers(a.item, b.item)}, // `compareUsers` is illustrative
+    sortable: {comparator: (a, b) => compareUsers(a.item, b.item)},
   })
   .addTemplateColumn({
     template: () => ({template: userTemplate}),
-    sortable: {comparator: (a, b) => compareUsers(a.item, b.item)}, // `compareUsers` is illustrative
+    sortable: {comparator: (a, b) => compareUsers(a.item, b.item)},
   }),
 );
 ```
@@ -661,7 +726,7 @@ The table can be configured to support selection of a single row, multiple rows,
 ```ts
 import {table} from '@scion/components/table';
 
-const users = httpResource<User[]>(() => 'users', {defaultValue: []});
+const users = httpResource<User[]>(() => '/api/users', {defaultValue: []});
 
 const userTable = table({
   datasource: users.value,
@@ -678,7 +743,7 @@ The current selection and active row are available via the `SciTable` instance r
 
 ```ts
 import {table} from '@scion/components/table';
-import {effect, Signal} from '@angular/core';
+import {effect} from '@angular/core';
 
 const userTable = table(users.value, table => table
   .addNumberColumn('ID', user => user.id)
@@ -691,6 +756,25 @@ effect(() => {
   const selection = userTable.selectedItems();
   const activeItem = userTable.activeItem();
 });
+```
+
+Rows can be selected programmatically using the `select()` method. Pass a single ID or an array of IDs to select multiple rows.
+
+```ts
+import {table} from '@scion/components/table';
+
+const userTable = table(users.value, table => table
+  .addNumberColumn('ID', user => user.id)
+  .addStringColumn('Name', user => user.name)
+  .addBooleanColumn('Inactive', user => user.inactive)
+  .addDateColumn('Expiration', user => user.expiration),
+);
+
+// Select a single row
+userTable.select('123');
+
+// Select multiple rows
+userTable.select(['123', '456']);
 ```
 
 #### Row Actions
@@ -710,12 +794,12 @@ table({
     .addBooleanColumn('Inactive', user => user.inactive)
     .addDateColumn('Expiration', user => user.expiration),
   rowActions: (toolbar, user) => toolbar
-    .addToolbarButton({icon: 'user_attributes', onSelect: () => openProfile(user)}) // `openProfile` is illustrative
+    .addToolbarButton({icon: 'user_attributes', onSelect: () => openProfile(user)})
     .addToolbarMenu({icon: 'more_vert', visualMenuIndicator: false}, menu => menu
-      .addMenuItem({icon: 'edit', label: 'Edit user', onSelect: () => editUser(user)}) // `editUser` is illustrative
+      .addMenuItem({icon: 'edit', label: 'Edit user', onSelect: () => editUser(user)})
       .addGroup(group => group
-        .addMenuItem({icon: 'delete', label: 'Delete user', onSelect: () => deleteUser(user)}) // `deleteUser` is illustrative
-        .addMenuItem({icon: 'lock', label: 'Disable user', onSelect: () => lockUser(user)}), // `lockUser` is illustrative
+        .addMenuItem({icon: 'delete', label: 'Delete user', onSelect: () => deleteUser(user)})
+        .addMenuItem({icon: 'lock', label: 'Disable user', onSelect: () => lockUser(user)}),
       ),
     ),
 });
@@ -726,6 +810,7 @@ table({
 > Refer to the [Icon Documentation][link-scion-icons] for more information on how to provide an icon provider.
 
 #### Row Icon
+
 A row can display an icon in its first column by configuring a row binding.
 
 ```ts
@@ -741,7 +826,6 @@ table({
 > [!NOTE]
 > Icon ligatures are interpreted as Material icon font ligatures if no icon provider is configured. \
 > Refer to the [Icon Documentation][link-scion-icons] for more information on how to provide an icon provider.
-
 
 #### Row Bindings
 
@@ -777,7 +861,6 @@ HTML attribute bindings are useful for end-to-end testing. For example, they can
 document.querySelector('sci-table[name="table:testee"] sci-table-row[data-userid="123"]');
 ```
 
-
 ### Table Events
 
 The table has the following events:
@@ -805,15 +888,15 @@ userTable.showHeader.set(false);
 userTable.wrapHeader.set(true);
 ```
 
-User settings, such as the width of resized columns, are stored in local storage. A different storage can be configured using the `provideTableStorage()` function, for example, to write user settings to a database or disable storage.
+User settings, such as the width of resized columns, are stored in local storage. A different storage can be configured using the `provideComponentsStorage()` function, for example, to write user settings to a database or disable storage.
 
 ```ts
 import {bootstrapApplication} from '@angular/platform-browser';
-import {provideTableStorage} from '@scion/components/table';
+import {provideComponentsStorage} from '@scion/components/common';
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideTableStorage(CustomTableStorage),
+    provideComponentsStorage(CustomTableStorage),
   ],
 });
 ```
@@ -909,6 +992,7 @@ The following CSS variables are supported:
 - `--sci-table-header-text-color`
 - `--sci-table-header-column-divider`
 - `--sci-table-row-height`
+- `--sci-table-row-indent`
 - `--sci-table-row-background-color-hover`
 - `--sci-table-row-background-color-selected`
 - `--sci-table-row-border-radius`

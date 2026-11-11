@@ -15,6 +15,10 @@ export class CellPO {
     return this.locator.textContent();
   }
 
+  public value(): Promise<string | null> {
+    return this.locator.getAttribute('data-value');
+  }
+
   public paddingInline(): Promise<number> {
     return this.locator.evaluate(cell => Number.parseFloat(getComputedStyle(cell).borderLeft));
   }

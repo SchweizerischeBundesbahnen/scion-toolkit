@@ -19,4 +19,9 @@ export abstract class SciTableCellValuePreloader {
    * Queues specified cell value provider function for execution in the background the next time the browser is idle.
    */
   public abstract queue(cellValueFn: () => void): void;
+
+  /**
+   * Clears queued tasks.
+   */
+  public abstract clear(): void;
 }

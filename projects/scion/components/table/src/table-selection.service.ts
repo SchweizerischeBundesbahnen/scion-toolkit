@@ -11,43 +11,41 @@
 import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
-import {firstValueFrom, timer} from 'rxjs';
-import {SciTableRow} from './table.model';
+import {skeletonRowId} from './table.model';
+import {SciTreeTableNode} from './table-datasource';
 
 @Injectable()
-export class SciTableSelectionService<T> {
+export class SciTableSelectionService<T, ID> {
 
-  private readonly _table = inject<Signal<ɵSciTable<T>>>(ɵSCI_TABLE);
+  private readonly _table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
 
   public async onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();
-    const rowsByIndex = table.rowsByIndex();
-    const row = rowsByIndex.get(index);
-    const item = rowsByIndex.get(index)?.item;
-    const previousFocusedIndex = table.activeRow()?.index ?? -1;
+    const rowId = table.visibleRows()?.[index]?.id;
+    const previousActiveIndex = table.activeIndex();
 
-    table.activeItem.set(item);
+    table.setActiveItem(rowId);
 
-    if (item === undefined || !table.selectable()) {
+    if (rowId === undefined || !table.selectable()) {
       return;
     }
 
     if (table.selectable() === 'single') {
-      table.updateSelectedItems(() => new Map<unknown, T>().set(row!.id, item));
+      table.updateSelectedItems(() => new Set<ID>().add(rowId));
       return;
     }
 
-    if (event.shiftKey && previousFocusedIndex >= 0) {
-      const start = Math.min(previousFocusedIndex, index);
-      const end = Math.max(previousFocusedIndex, index);
+    if (event.shiftKey && previousActiveIndex >= 0) {
+      const start = Math.min(previousActiveIndex, index);
+      const end = Math.max(previousActiveIndex, index);
       await this.selectItems(start, end, {add: true});
     }
     else if (event.ctrlKey || event.metaKey) {
-      this.toggleSelectedItem(item);
+      this.toggleSelectedItem(rowId);
     }
     else {
       // If no modifier is pressed set the selection to the clicked row.
-      table.updateSelectedItems(() => new Map<unknown, T>().set(row!.id, item));
+      table.updateSelectedItems(() => new Set<ID>().add(rowId));
     }
   }
 
@@ -55,232 +53,114 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const activeIndex = table.activeIndex();
+    const targetIndex = Math.max(activeIndex - 1, 0);
 
-    if (activeIndex <= 0) {
-      return;
-    }
-
-    // Set active item.
-    const startIndex = activeIndex - 1;
-    await this.loadMissingItems(startIndex, startIndex);
-    const startItem = table.rowsByIndex().get(startIndex)?.item;
-    table.activeItem.set(startItem);
-
-    if (!table.selectable()) {
-      return;
-    }
-
-    const keyboardEvent = event as KeyboardEvent;
-    const shift = keyboardEvent.shiftKey;
-    const ctrlOrMeta = keyboardEvent.ctrlKey || keyboardEvent.metaKey;
-
-    if (shift && ctrlOrMeta) {
-      await this.ctrlShiftUp({startIndex, activeIndex});
-    }
-    else if (shift) {
-      await this.shiftUp({startIndex, activeIndex});
-    }
-    else if (ctrlOrMeta) {
-      // Selection remains unchanged.
-    }
-    else {
-      await this.selectItems(startIndex, startIndex);
-    }
+    await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
 
   public async onArrowDown(event: Event): Promise<void> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
-    const endIndex = Math.min(activeIndex + 1, table.totalCount()! - 1);
+    const activeIndex = table.activeIndex();
+    const targetIndex = Math.min(activeIndex + 1, table.visibleRowCount() - 1);
 
-    if (endIndex === activeIndex) {
+    await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
+  }
+
+  public async onArrowLeft(event: Event): Promise<void> {
+    event.preventDefault();
+
+    const table = this._table();
+    const activeRow = table.activeRow();
+
+    if (activeRow?.item === undefined || activeRow.id === skeletonRowId) {
       return;
     }
 
-    // Set active item.
-    await this.loadMissingItems(endIndex, endIndex);
-    const endItem = table.rowsByIndex().get(endIndex)?.item;
-    table.activeItem.set(endItem);
-
-    if (!table.selectable()) {
-      return;
+    if (activeRow.hasChildren() && activeRow.expanded()) {
+      table.collapse(activeRow.id);
     }
-
-    const keyboardEvent = event as KeyboardEvent;
-    const shift = keyboardEvent.shiftKey;
-    const ctrlOrMeta = keyboardEvent.ctrlKey || keyboardEvent.metaKey;
-
-    if (shift && ctrlOrMeta) {
-      await this.ctrlShiftDown({endIndex, activeIndex});
+    else if (activeRow.parentId !== undefined) {
+      const parentIndex = table.rowIndexById().get(activeRow.parentId) ?? -1;
+      await this.selectOnKeyboardNavigation(parentIndex, {shiftKey: false, ctrlKey: false, metaKey: false});
     }
-    else if (shift) {
-      await this.shiftDown({endIndex, activeIndex});
-    }
-    else if (ctrlOrMeta) {
-      // Selection remains unchanged.
-    }
+    // Root case
     else {
-      await this.selectItems(endIndex, endIndex);
+      const rows = table.visibleRows();
+      const row = findPreviousExpandedRow(activeRow.index - 1);
+
+      if (row !== undefined) {
+        const index = table.rowIndexById().get(row.id) ?? -1;
+        await this.selectOnKeyboardNavigation(index, {shiftKey: false, ctrlKey: false, metaKey: false});
+      }
+
+      function findPreviousExpandedRow(index: number): SciTreeTableNode<ID> | undefined {
+        while (index > 0) {
+          const row = rows?.[index];
+          // Get the row expansion state whether the row is already loaded or not.
+          if (row !== undefined && table.isExpanded(row.id)) {
+            return row;
+          }
+          index--;
+        }
+
+        // Return the first row if no previous row is expanded.
+        return rows?.[index];
+      }
     }
+  }
+
+  public async onArrowRight(event: Event): Promise<void> {
+    event.preventDefault();
+
+    const table = this._table();
+    const activeRow = table.activeRow();
+    const activeIndex = table.activeIndex();
+    const endIndex = Math.min(activeIndex + 1, table.visibleRowCount() - 1);
+
+    if (activeRow?.id !== skeletonRowId && activeRow?.hasChildren() && !activeRow.expanded()) {
+      table.expand(activeRow.id);
+      return;
+    }
+
+    await this.selectOnKeyboardNavigation(endIndex, {shiftKey: false, ctrlKey: false, metaKey: false});
   }
 
   public async onPageUp(event: Event): Promise<void> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const activeIndex = table.activeIndex();
+    const targetIndex = Math.max(activeIndex - table.viewportPageSize() + 1, 0);
 
-    if (activeIndex === 0) {
-      return;
-    }
-
-    // Set active item.
-    const startIndex = Math.max(activeIndex - table.viewportPageSize() + 1, 0);
-    await this.loadMissingItems(startIndex, startIndex);
-    const startItem = table.rowsByIndex().get(startIndex)?.item;
-    table.activeItem.set(startItem);
-
-    if (!table.selectable()) {
-      return;
-    }
-
-    const keyboardEvent = event as KeyboardEvent;
-    const shift = keyboardEvent.shiftKey;
-    const ctrlOrMeta = keyboardEvent.ctrlKey || keyboardEvent.metaKey;
-
-    if (shift && ctrlOrMeta) {
-      await this.ctrlShiftUp({startIndex, activeIndex});
-    }
-    else if (shift) {
-      await this.shiftUp({startIndex, activeIndex});
-    }
-    else if (ctrlOrMeta) {
-      // Selection remains unchanged.
-    }
-    else {
-      await this.selectItems(startIndex, startIndex);
-    }
+    await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
 
   public async onPageDown(event: Event): Promise<void> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
-    const endIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.totalCount()! - 1);
+    const activeIndex = table.activeIndex();
+    const targetIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.visibleRowCount() - 1);
 
-    if (endIndex === activeIndex) {
-      return;
-    }
-
-    // Set active item.
-    await this.loadMissingItems(endIndex, endIndex);
-    const endItem = table.rowsByIndex().get(endIndex)?.item;
-    table.activeItem.set(endItem);
-
-    if (!table.selectable()) {
-      return;
-    }
-
-    const keyboardEvent = event as KeyboardEvent;
-    const shift = keyboardEvent.shiftKey;
-    const ctrlOrMeta = keyboardEvent.ctrlKey || keyboardEvent.metaKey;
-
-    if (shift && ctrlOrMeta) {
-      await this.ctrlShiftDown({endIndex, activeIndex});
-    }
-    else if (shift) {
-      await this.shiftDown({endIndex, activeIndex});
-    }
-    else if (ctrlOrMeta) {
-      // Selection remains unchanged.
-    }
-    else {
-      await this.selectItems(endIndex, endIndex);
-    }
+    await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
 
   public async onHome(event: Event): Promise<void> {
     event.preventDefault();
 
-    const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
-
-    if (activeIndex <= 0) {
-      return;
-    }
-
-    // Set active item.
-    const startIndex = 0;
-    await this.loadMissingItems(startIndex, startIndex);
-    const startItem = table.rowsByIndex().get(startIndex)?.item;
-    table.activeItem.set(startItem);
-
-    if (!table.selectable()) {
-      return;
-    }
-
-    const keyboardEvent = event as KeyboardEvent;
-    const shift = keyboardEvent.shiftKey;
-    const ctrlOrMeta = keyboardEvent.ctrlKey || keyboardEvent.metaKey;
-
-    if (shift && ctrlOrMeta) {
-      await this.ctrlShiftUp({startIndex, activeIndex});
-    }
-    else if (shift) {
-      await this.shiftUp({startIndex, activeIndex});
-    }
-    else if (ctrlOrMeta) {
-      // Selection remains unchanged.
-    }
-    else {
-      await this.selectItems(startIndex, startIndex);
-    }
+    await this.selectOnKeyboardNavigation(0, event as KeyboardEvent);
   }
 
   public async onEnd(event: Event): Promise<void> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = this._table().activeRow()?.index ?? -1;
+    const targetIndex = table.visibleRowCount() - 1;
 
-    const endIndex = table.totalCount()! - 1;
-
-    if (endIndex === activeIndex) {
-      return;
-    }
-
-    // TODO [mmu] should active item be set before selection? this way, further methods cant rely on table.activeItem.
-    // But otherwise, loading and setting the active item needs to be done for each case, or once at the end.
-
-    // Set active item.
-    await this.loadMissingItems(endIndex, endIndex);
-    const endItem = table.rowsByIndex().get(endIndex)?.item;
-    table.activeItem.set(endItem);
-
-    if (!table.selectable()) {
-      return;
-    }
-
-    const keyboardEvent = event as KeyboardEvent;
-    const shift = keyboardEvent.shiftKey;
-    const ctrlOrMeta = keyboardEvent.ctrlKey || keyboardEvent.metaKey;
-
-    if (shift && ctrlOrMeta) {
-      await this.ctrlShiftDown({endIndex, activeIndex});
-    }
-    else if (shift) {
-      await this.shiftDown({endIndex, activeIndex});
-    }
-    else if (ctrlOrMeta) {
-      // Selection remains unchanged.
-    }
-    else {
-      await this.selectItems(endIndex, endIndex);
-    }
+    await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
 
   public onSpace(event: Event): void {
@@ -291,20 +171,19 @@ export class SciTableSelectionService<T> {
       return;
     }
 
-    const activeItem = table.activeItem();
-    if (!activeItem) {
+    const activeItemId = table.activeItem();
+    if (activeItemId === undefined) {
       return;
     }
 
     const keyboardEvent = event as KeyboardEvent;
     const ctrlOrMeta = keyboardEvent.ctrlKey || keyboardEvent.metaKey;
-    const activeItemId = table.trackBy(activeItem);
 
     if (ctrlOrMeta) {
-      this.toggleSelectedItem(activeItem);
+      this.toggleSelectedItem(activeItemId);
     }
     else {
-      table.updateSelectedItems(() => new Map<unknown, T>().set(activeItemId, activeItem));
+      table.updateSelectedItems(() => new Set<ID>().add(activeItemId));
     }
   }
 
@@ -312,191 +191,135 @@ export class SciTableSelectionService<T> {
     event.preventDefault();
 
     const table = this._table();
-    const totalCount = table.totalCount() ?? 0;
+    const totalCount = table.visibleRowCount();
 
     if (table.selectable() === 'multi' && totalCount >= 0) {
       await this.selectItems(0, totalCount - 1);
     }
   }
 
-  // TODO [mmu] Should we add overloads for all variants for better readability, but same logic?
-  // shiftArrowDown
-  // shiftPageDown
-  // ShiftEnd
-  private async shiftDown(options: {endIndex: number; activeIndex: number}): Promise<void> {
+  private async selectOnKeyboardNavigation(targetIndex: number, event: {shiftKey: boolean; ctrlKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();
-    const selectedIds = table.selectedIds();
-    const activeIndex = options.activeIndex;
+    const targetItem = table.visibleRows()?.[targetIndex]?.id;
+    const activeIndex = table.activeIndex();
+    const direction = activeIndex > targetIndex ? 'up' : 'down';
+    const [startIndex, endIndex] = direction === 'up' ? [targetIndex, activeIndex] : [activeIndex, targetIndex];
+    const shift = event.shiftKey;
+    const ctrlOrMeta = event.ctrlKey || event.metaKey;
 
-    const startIndex = activeIndex;
-    const endIndex = options.endIndex;
+    if (table.selectable() !== 'multi') {
+      // Don't modify selection when only ctrlOrMeta is pressed.
+      if (table.selectable() === 'single' && (shift || !ctrlOrMeta)) {
+        await this.selectItems(targetIndex, targetIndex);
+      }
 
-    const activeItem = table.rowsByIndex().get(activeIndex)!.item!;
-    const activeItemId = table.trackBy(activeItem)!;
-
-    if (table.selectable() === 'single') {
-      await this.selectItems(endIndex, endIndex);
+      table.setActiveItem(targetItem);
       return;
     }
 
-    if (!selectedIds.has(activeItemId)) {
-      await this.selectItems(startIndex, endIndex);
-      return;
-    }
-
-    if (this.isSelectionAtBlockStart(activeIndex)) {
-      await this.selectFromBlockStart(startIndex, endIndex);
-      return;
-    }
-
-    await this.selectItems(startIndex, endIndex, {add: true});
-  }
-
-  private async ctrlShiftDown(options: {endIndex: number; activeIndex: number}): Promise<void> {
-    const table = this._table();
-
-    const startIndex = options.activeIndex;
-    const endIndex = options.endIndex;
-
-    if (table.selectable() === 'single') {
-      await this.selectItems(endIndex, endIndex);
-    }
-    else {
+    if (shift && ctrlOrMeta) {
       await this.selectItems(startIndex, endIndex, {add: true});
     }
-  }
-
-  private async shiftUp(options: {startIndex: number; activeIndex: number}): Promise<void> {
-    const table = this._table();
-    const selectedIds = table.selectedIds();
-    const activeIndex = options.activeIndex;
-
-    const startIndex = options.startIndex;
-    const endIndex = activeIndex;
-
-    const activeItem = table.rowsByIndex().get(activeIndex)!.item!;
-    const activeItemId = table.trackBy(activeItem)!;
-
-    if (table.selectable() === 'single') {
-      await this.selectItems(startIndex, startIndex);
-      return;
+    else if (shift) {
+      await this.selectOnShiftNavigation(direction, startIndex, endIndex);
     }
-
-    if (!selectedIds.has(activeItemId)) {
-      await this.selectItems(startIndex, endIndex);
-      return;
-    }
-
-    if (this.isSelectionAtBlockEnd(activeIndex)) {
-      await this.selectFromBlockEnd(startIndex, endIndex);
-      return;
-    }
-
-    await this.selectItems(startIndex, endIndex, {add: true});
-  }
-
-  private async ctrlShiftUp(options: {startIndex: number; activeIndex: number}): Promise<void> {
-    const table = this._table();
-
-    const startIndex = options.startIndex;
-    const endIndex = options.activeIndex;
-
-    if (table.selectable() === 'single') {
-      await this.selectItems(startIndex, startIndex);
+    else if (ctrlOrMeta) {
+      // Selection remains unchanged.
     }
     else {
-      await this.selectItems(startIndex, endIndex, {add: true});
+      await this.selectItems(targetIndex, targetIndex);
     }
+
+    table.setActiveItem(targetItem);
+  }
+
+  private selectOnShiftNavigation(direction: 'up' | 'down', startIndex: number, endIndex: number): Promise<void> {
+    const table = this._table();
+    const activeIndex = table.activeIndex();
+    const selectedIds = table.selectedItems();
+
+    // If the active item is outside the selection, start a new selection.
+    if (!selectedIds.includes(table.activeItem()!)) {
+      return this.selectItems(startIndex, endIndex);
+    }
+
+    // Moving down from the block start shrinks the selection until the block end, then extends it.
+    if (direction === 'down' && this.isSelectionAtBlockStart(activeIndex)) {
+      return this.selectFromBlockStart(startIndex, endIndex);
+    }
+
+    // Moving up from the block end shrinks the selection until the block start, then extends it.
+    if (direction === 'up' && this.isSelectionAtBlockEnd(activeIndex)) {
+      return this.selectFromBlockEnd(startIndex, endIndex);
+    }
+
+    // In other cases, e.g. going down at the end of a selection block, select all items in the range.
+    return this.selectItems(startIndex, endIndex, {add: true});
   }
 
   private isSelectionAtBlockStart(activeIndex: number): boolean {
     const table = this._table();
-    const selectedIds = table.selectedIds();
+    const selectedIds = table.selectedItems();
 
-    const previousItem = table.rowsByIndex().get(activeIndex - 1)?.item;
-    const previousItemId = previousItem ? table.trackBy(previousItem) : undefined;
+    const previousItemId = table.visibleRows()?.[activeIndex - 1]?.id;
+    const nextItemId = table.visibleRows()?.[activeIndex + 1]?.id;
 
-    const nextItem = table.rowsByIndex().get(activeIndex + 1)?.item;
-    const nextItemId = nextItem ? table.trackBy(nextItem) : undefined;
-
-    return !selectedIds.has(previousItemId) && selectedIds.has(nextItemId);
+    return (previousItemId === undefined || !selectedIds.includes(previousItemId)) && nextItemId !== undefined && selectedIds.includes(nextItemId);
   }
 
   private isSelectionAtBlockEnd(activeIndex: number): boolean {
     const table = this._table();
-    const selectedIds = table.selectedIds();
+    const selectedIds = table.selectedItems();
 
-    const previousItem = table.rowsByIndex().get(activeIndex - 1)?.item;
-    const previousItemId = previousItem ? table.trackBy(previousItem) : undefined;
+    const previousItemId = table.visibleRows()?.[activeIndex - 1]?.id;
+    const nextItemId = table.visibleRows()?.[activeIndex + 1]?.id;
 
-    const nextItem = table.rowsByIndex().get(activeIndex + 1)?.item;
-    const nextItemId = nextItem ? table.trackBy(nextItem) : undefined;
-
-    return selectedIds.has(previousItemId) && !selectedIds.has(nextItemId);
-  }
-
-  private async loadMissingItems(startIndex: number, endIndex: number): Promise<void> {
-    const table = this._table();
-    const indices = rangeInclusive(startIndex, endIndex + 1);
-    const rows = indices.map(i => table.rowsByIndex().get(i));
-    if (rows.some(row => row?.id === undefined)) {
-      await Promise.race([
-        table.loadRange(startIndex, endIndex + 1),
-        firstValueFrom(timer(5_000)),
-      ]);
-    }
+    return previousItemId !== undefined && selectedIds.includes(previousItemId) && (nextItemId === undefined || !selectedIds.includes(nextItemId));
   }
 
   private async selectItems(startIndex: number, endIndex: number, options?: {add: boolean}): Promise<void> {
     const table = this._table();
-    const indices = rangeInclusive(startIndex, endIndex);
-    const add = options?.add ?? false;
-    let rows = indices.map(i => table.rowsByIndex().get(i));
-
-    if (rows.some(row => row?.id === undefined)) {
-      // If not all id's could be found load the missing items.
-      await Promise.race([
-        table.loadRange(startIndex, endIndex),
-        firstValueFrom(timer(5_000)),
-      ]);
-      rows = indices.map(i => table.rowsByIndex().get(i));
+    if (!table.selectable()) {
+      return;
     }
 
-    table.updateSelectedItems(existing => new Map<unknown, T>([
+    const indices = rangeInclusive(startIndex, endIndex);
+    const add = options?.add ?? false;
+    const rows = indices.map(i => table.visibleRows()?.[i]);
+
+    table.updateSelectedItems(existing => new Set<ID>([
       ...(add ? existing : []),
       ...rows
-        .filter((row): row is Required<SciTableRow<T>> => row?.id !== undefined && row.item !== undefined)
-        .map((row): [unknown, T] => [row.id, row.item]),
+        .filter((row): row is Required<SciTreeTableNode<ID>> => !!row)
+        .map(row => row.id),
     ]));
   }
 
   private async selectFromBlockStart(startIndex: number, endIndex: number): Promise<void> {
     const table = this._table();
-
-    await this.loadMissingItems(startIndex, endIndex);
     const indices = rangeInclusive(startIndex, endIndex);
 
     table.updateSelectedItems(selection => {
-      const newSelection = new Map(selection);
+      const newSelection = new Set(selection);
+      let shrinking = true;
 
       for (let i = 0; i < indices.length; i++) {
         const currentIndex = indices[i]!;
         const nextIndex = indices[i + 1]!;
+        const itemId = table.visibleRows()?.[currentIndex]?.id;
 
-        const item = table.rowsByIndex().get(currentIndex)?.item;
-        if (!item) {
+        if (itemId === undefined) {
           continue;
         }
 
-        const itemId = table.trackBy(item);
-        const nextItem = table.rowsByIndex().get(nextIndex)?.item;
-        const nextItemId = nextItem ? table.trackBy(nextItem) : undefined;
-
-        if (selection.has(nextItemId)) {
+        const nextItemId = table.visibleRows()?.[nextIndex]?.id;
+        if (shrinking && nextItemId !== undefined && selection.has(nextItemId)) {
           newSelection.delete(itemId);
         }
         else {
-          newSelection.set(itemId, item);
+          // Once outside the active block, only add items, even when crossing another selected block.
+          shrinking = false;
+          newSelection.add(itemId);
         }
       }
       return newSelection;
@@ -505,43 +328,40 @@ export class SciTableSelectionService<T> {
 
   private async selectFromBlockEnd(startIndex: number, endIndex: number): Promise<void> {
     const table = this._table();
-
-    await this.loadMissingItems(startIndex, endIndex);
     const indices = rangeInclusive(startIndex, endIndex);
 
     table.updateSelectedItems(selection => {
-      const newSelection = new Map(selection);
+      const newSelection = new Set(selection);
+      let shrinking = true;
 
       for (let i = indices.length - 1; i >= 0; i--) {
         const currentIndex = indices[i]!;
         const previousIndex = indices[i - 1]!;
+        const itemId = table.visibleRows()?.[currentIndex]?.id;
 
-        const item = table.rowsByIndex().get(currentIndex)?.item;
-        if (!item) {
+        if (itemId === undefined) {
           continue;
         }
 
-        const itemId = table.trackBy(item);
-        const previousItem = table.rowsByIndex().get(previousIndex)?.item;
-        const previousItemId = previousItem ? table.trackBy(previousItem) : undefined;
-
-        if (selection.has(previousItemId)) {
+        const previousItemId = table.visibleRows()?.[previousIndex]?.id;
+        if (shrinking && previousItemId !== undefined && selection.has(previousItemId)) {
           newSelection.delete(itemId);
         }
         else {
-          newSelection.set(itemId, item);
+          // Once outside the active block, only add items, even when crossing another selected block.
+          shrinking = false;
+          newSelection.add(itemId);
         }
       }
       return newSelection;
     });
   }
 
-  private toggleSelectedItem(item: T): void {
+  private toggleSelectedItem(id: ID): void {
     const table = this._table();
-    const id = table.trackBy(item);
 
     table.updateSelectedItems(selection => {
-      const next = new Map(selection);
+      const next = new Set(selection);
       if (next.has(id)) {
         next.delete(id);
       }
@@ -549,7 +369,7 @@ export class SciTableSelectionService<T> {
         if (table.selectable() === 'single') {
           next.clear();
         }
-        next.set(id, item);
+        next.add(id);
       }
       return next;
     });

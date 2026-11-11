@@ -517,7 +517,7 @@ export interface SciEnumColumnDescriptor<T = unknown> extends SciTableColumnDesc
   /**
    * Configures the display of enumeration values.
    *
-   * Defaults to displaying the label in cells, and both icon and label in the column filter menu. Defaults are unset when using a custom format.
+   * Defaults to displaying the label in cells, and both icon and label in the column filter menu. Defaults are unset if using a custom format.
    */
   format?: {
     /**

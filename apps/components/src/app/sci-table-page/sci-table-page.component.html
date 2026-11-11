@@ -35,6 +35,11 @@
           </label>
 
           <label>
+            <input [formField]="settingsForm.hierarchical" type="checkbox"/>
+            Hierarchical
+          </label>
+
+          <label>
             Selectable
             <select [ngModel]="selectable()" (ngModelChange)="updateSelectable($event)">
               <option value="multi">Multi</option>
@@ -72,6 +77,21 @@
 
           <app-design-token-form [form]="designTokenForm" [designTokenRootElement]="host"/>
         </section>
+      </ng-template>
+
+      <!-- Methods -->
+      <ng-template sciTab label="Methods">
+        <form>
+          <section class="methods">
+            <label>
+              <input [formField]="methodsForm.selectId"/>
+            </label>
+            <button type="button" (click)="onSelect()">Select</button>
+          </section>
+
+          <button type="button" (click)="onExpandAll()">Expand All</button>
+          <button type="button" (click)="onCollapseAll()">Collapse All</button>
+        </form>
       </ng-template>
 
       <!-- Visible Columns -->
@@ -189,7 +209,7 @@
         </section>
       </ng-template>
 
-      <!-- Data Source -->
+      <!-- Datasource -->
       <ng-template sciTab label="Datasource">
         <section>
           <label>
@@ -262,7 +282,7 @@
 
       <label>
         Active Id:
-        <output>{{table.activeItem()?.id ?? '-'}}</output>
+        <output>{{activeVehicleId() ?? '-'}}</output>
       </label>
 
       <label>

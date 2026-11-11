@@ -74,6 +74,10 @@ export class TablePO {
     return this.element.querySelector('sci-throbber.e2e-loading-indicator');
   }
 
+  public get retryButton(): HTMLButtonElement | null {
+    return this.element.querySelector<HTMLButtonElement>('.e2e-datasource-retry');
+  }
+
   public get scrollTop(): number {
     return this.viewport.scrollTop;
   }
@@ -183,7 +187,7 @@ export class ColumnPO {
   }
 
   public get sortable(): boolean {
-    return this.header?.sortButton !== null;
+    return (this.header?.sortButton ?? null) !== null;
   }
 
   public get filterable(): boolean {
@@ -214,6 +218,10 @@ export class RowPO {
 
   public select(): void {
     this.element.click();
+  }
+
+  public toggle(): void {
+    this.element.querySelector<HTMLButtonElement>('button.e2e-tree-node-handle')!.click();
   }
 
   public isSelected(): boolean {

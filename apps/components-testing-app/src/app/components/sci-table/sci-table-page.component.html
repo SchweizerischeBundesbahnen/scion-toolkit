@@ -286,7 +286,7 @@
         </label>
 
         <label>
-          <input [formField]="settingsForm.showRowIcon" type="checkbox"/>
+          <input [formField]="settingsForm.showRowIcon" type="checkbox" class="e2e-show-row-icon"/>
           Show Row Icon
         </label>
 
@@ -298,6 +298,11 @@
         <label>
           <input [formField]="settingsForm.customRowStyling" type="checkbox" class="e2e-custom-row-styling">
           Custom Row Styling
+        </label>
+
+        <label>
+          <input [formField]="settingsForm.hierarchical" type="checkbox" class="e2e-hierarchical"/>
+          Hierarchical
         </label>
 
         <label>
@@ -336,7 +341,7 @@
       </form>
     </ng-template>
 
-    <!-- Data Source -->
+    <!-- Datasource -->
     <ng-template sciTab label="Datasource" cssClass="e2e-datasource">
       <section>
         <label>
@@ -385,6 +390,20 @@
       </section>
     </ng-template>
 
+    <ng-template sciTab label="Methods" cssClass="e2e-methods">
+      <form>
+        <section class="methods">
+          <label>
+            <input [formField]="methodsForm.selectId" class="e2e-select-ids"/>
+          </label>
+          <button type="button" (click)="onSelect()" class="e2e-select">Select</button>
+        </section>
+
+        <button type="button" (click)="onExpandAll()" class="e2e-expand-all">Expand All</button>
+        <button type="button" (click)="onCollapseAll()" class="e2e-collapse-all">Collapse All</button>
+      </form>
+    </ng-template>
+
     <!-- Layout -->
     <ng-template sciTab label="Layout" cssClass="e2e-layout">
       <form>
@@ -417,7 +436,7 @@
   </sci-tabbar>
 
   <section class="table-state e2e-table-state">
-    <header #header>Table State</header>
+    <header>Table State</header>
 
     <label>
       Active Id:

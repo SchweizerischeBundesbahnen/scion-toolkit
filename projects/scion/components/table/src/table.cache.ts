@@ -9,79 +9,82 @@
  */
 
 import {computed, ResourceRef, signal, Signal} from '@angular/core';
-import {SciTableRow} from './table.model';
+import {SciTableRow, skeletonRowId} from './table.model';
 import {Objects} from '@scion/toolkit/util';
 
-export class SciTableCache<T> {
+export class SciTableCache<T, ID> {
 
-  private readonly _cache = signal(new Map<SciTableCacheKey, SciTableCacheEntry<T>>());
+  private readonly _entriesById = signal(new Map<ID, ResourceRef<SciTableRow<T, ID>[]>>());
 
-  public readonly loading: Signal<boolean> = computed(() => this.values().some(entry => entry.rows.isLoading()));
-  public readonly error: Signal<Error | undefined> = computed(() => this.values().find(entry => entry.rows.error())?.rows.error());
-  public readonly values: Signal<SciTableCacheEntry<T>[]> = computed(() => [...this._cache().values()]);
+  private readonly _idsByEntry = computed(() => [...this._entriesById().entries()].reduce((map, [id, entry]) => {
+    const ids = map.get(entry) ?? new Set();
+    ids.add(id);
+    return map.set(entry, ids);
+  }, new Map<ResourceRef<SciTableRow<T, ID>[]>, Set<ID>>()));
 
-  public readonly rowsByIndex: Signal<Map<number, SciTableRow<T>>> = computed(() => this.values()
-    .flatMap(page => page.rows.value())
-    .reduce((acc, row) => acc.set(row.index, row), new Map<number, SciTableRow<T>>()), {equal: Objects.isEqual});
+  public readonly rowsById: Signal<Map<ID, SciTableRow<T, ID>>> = computed(() => this._entries()
+    .flatMap(entry => entry.status() === 'error' ? [] : entry.value())
+    .reduce((acc, row) => row.id !== skeletonRowId ? acc.set(row.id, row) : acc, new Map<ID, SciTableRow<T, ID>>()), {equal: Objects.isEqual});
 
-  public readonly rowsById: Signal<Map<unknown, SciTableRow<T>>> = computed(() => this.values()
-    .flatMap(page => page.rows.value())
-    .reduce((acc, row) => row.id !== undefined ? acc.set(row.id, row) : acc, new Map<unknown, SciTableRow<T>>()), {equal: Objects.isEqual});
+  private readonly _entries = computed(() => [...new Set(this._entriesById().values())]);
 
-  public has(key: SciTableCacheKey): boolean {
-    return this._cache().has(key);
+  public readonly loading: Signal<boolean> = computed(() => this._entries().some(entry => entry.isLoading()));
+  public readonly error: Signal<boolean> = computed(() => this._entries().some(entry => entry.status() === 'error'));
+
+  public has(key: ID): boolean {
+    return this._entriesById().has(key);
   }
 
-  public get(key: SciTableCacheKey): SciTableCacheEntry<T> | undefined {
-    return this._cache().get(key);
+  public set(ids: ID[], entry: ResourceRef<SciTableRow<T, ID>[]>): void {
+    this._entriesById.update(cache => {
+      const newCache = new Map(cache);
+      for (const id of ids) {
+        newCache.set(id, entry);
+      }
+      return newCache;
+    });
   }
 
-  public set(key: SciTableCacheKey, entry: SciTableCacheEntry<T>): void {
-    this._cache.update(cache => {
+  public deleteIfLoading(ids: ID[]): void {
+    this._entriesById.update(cache => {
       const cacheCopy = new Map(cache);
-      const existing = cacheCopy.get(key);
-      if (existing) {
-        cacheCopy.delete(key);
-        existing.dispose();
+      const entries = new Set(ids.map(id => cacheCopy.get(id)));
+
+      for (const id of ids) {
+        if (cacheCopy.get(id)?.isLoading()) {
+          cacheCopy.delete(id);
+        }
       }
 
-      cacheCopy.set(key, entry);
+      // Dispose entries, which have no ids left pointing to them.
+      for (const entry of entries) {
+        if (!entry) {
+          continue;
+        }
+        const idsByEntry = this._idsByEntry().get(entry);
+        if (entry.isLoading() && [...(idsByEntry ?? [])].every(id => ids.includes(id))) {
+          entry.destroy();
+        }
+      }
+
       return cacheCopy;
     });
   }
 
-  /**
-   * Deletes the specified page from the cache, but only if still loading.
-   */
-  public deleteIfLoading(key: SciTableCacheKey): void {
-    const cacheEntry = this._cache().get(key);
-    if (!cacheEntry?.rows.isLoading()) {
-      return;
+  public reloadFailed(): void {
+    for (const entry of this._entries()) {
+      if (entry.status() === 'error') {
+        entry.reload();
+      }
     }
-
-    this._cache.update(cache => {
-      const cacheCopy = new Map(cache);
-      cacheCopy.delete(key);
-      cacheEntry.dispose();
-      return cacheCopy;
-    });
   }
 
   public clear(): void {
-    this._cache.update(cache => {
-      for (const entry of cache.values()) {
-        entry.dispose();
+    this._entriesById.update(cache => {
+      for (const entry of new Set(cache.values())) {
+        entry.destroy();
       }
       return new Map();
     });
   }
 }
-
-export interface SciTableCacheEntry<T> {
-  rows: ResourceRef<SciTableRow<T>[]>;
-  start: number;
-  end: number;
-  dispose: () => void;
-}
-
-type SciTableCacheKey = `${number}-${number}`;

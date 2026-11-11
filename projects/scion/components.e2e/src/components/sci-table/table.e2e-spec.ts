@@ -17,7 +17,6 @@ import {expectRow} from './row-matcher';
 import {fromRect, hasDefaultStackingLevel, setCaret, waitUntilAngularStable, waitUntilStable} from '../../helper/testing.utils';
 import {generateData, Product, provideHttpDatasource} from './datasource/table-http-datasource';
 import {firstValueFrom, Subject} from 'rxjs';
-import {SciTablePageResponse} from '@scion/components/table';
 import {CustomColumnPO} from './custom-column.po';
 import {CustomInputColumnPO} from './custom-input-column.po';
 import {CustomButtonColumnPO} from './custom-button-column.po';
@@ -3009,6 +3008,26 @@ test.describe('sci-table', () => {
         await page.keyboard.press('B');
         await expect(component.input).toHaveValue('A B');
       });
+
+      await test.step('Pressing NumpadAdd', async () => {
+        await component.input.clear();
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('A');
+        await page.keyboard.press('NumpadAdd');
+        await page.keyboard.press('B');
+        await expect(component.input).toHaveValue('A+B');
+      });
+
+      await test.step('Pressing NumpadSubtract', async () => {
+        await component.input.clear();
+        await setCaret(component.input, {start: 0});
+
+        await page.keyboard.press('A');
+        await page.keyboard.press('NumpadSubtract');
+        await page.keyboard.press('B');
+        await expect(component.input).toHaveValue('A-B');
+      });
     });
 
     test('should not prevent native keystrokes (Home, End, Ctrl+A, ...) in buttons of custom column', async ({page, consoleLogs}) => {
@@ -3160,7 +3179,8 @@ test.describe('sci-table', () => {
 
           await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
 
-          await table.row({nth: 0}).click();
+          await table.body.focus();
+          await page.keyboard.press('ArrowDown');
           await expect(tablePage.selection).toHaveText('0');
 
           await page.keyboard.press('ArrowDown');
@@ -3209,7 +3229,8 @@ test.describe('sci-table', () => {
 
           await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
 
-          await table.row({nth: 0}).click();
+          await table.body.focus();
+          await page.keyboard.press('Shift+ArrowDown');
           await expect(tablePage.selection).toHaveText('0');
 
           await page.keyboard.press('Shift+ArrowDown');
@@ -3258,7 +3279,8 @@ test.describe('sci-table', () => {
 
           await provideHttpDatasource(page, generateData(5, i => ({id: i})), {datasource: 'array-http'});
 
-          await table.row({nth: 0}).click();
+          await table.body.focus();
+          await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
           await expect(tablePage.selection).toHaveText('0');
 
           await page.keyboard.press('ControlOrMeta+Shift+ArrowDown');
@@ -4170,6 +4192,25 @@ test.describe('sci-table', () => {
           await expect(tablePage.activeItemId).toHaveText('0');
         });
 
+        test('should start selection on initial Shift+PageDown', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.body.focus();
+
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('0 1 2 3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+        });
+
         test('should expand selection on Shift+PageDown at end of block', async ({page}) => {
           const tablePage = new TablePagePO(page);
           const table = new TablePO(tablePage.table);
@@ -4278,6 +4319,56 @@ test.describe('sci-table', () => {
           await expect(tablePage.selection).toHaveText('2 3 4');
           await expect(tablePage.activeItemId).toHaveText('4');
 
+          await page.keyboard.press('Shift+PageUp');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should shrink then expand selection on Shift+PageDown at start of block  (multiple blocks)', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 3}).click();
+          await table.row({nth: 1}).click(['ControlOrMeta']);
+          await table.row({nth: 0}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('0 1 3');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          // Press Shift+PageDown at block start
+          await page.keyboard.press('Shift+PageDown');
+          await expect(tablePage.selection).toHaveText('1 2 3 4');
+          await expect(tablePage.activeItemId).toHaveText('4');
+        });
+
+        test('should shrink then expand selection on Shift+PageUp at end of block (multiple blocks)', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(100, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 0}).click();
+          await table.row({nth: 2}).click(['ControlOrMeta']);
+          await table.row({nth: 3}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('0 2 3');
+          await expect(tablePage.activeItemId).toHaveText('3');
+
+          // Press Shift+PageUp at block end
           await page.keyboard.press('Shift+PageUp');
           await expect(tablePage.selection).toHaveText('0 1 2');
           await expect(tablePage.activeItemId).toHaveText('0');
@@ -4488,6 +4579,25 @@ test.describe('sci-table', () => {
           await expect(tablePage.activeItemId).toHaveText('0');
         });
 
+        test('should select all on initial Shift+End', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          await table.body.focus();
+
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('0 1 2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
         test('should expand selection on Shift+End at end of block', async ({page}) => {
           const tablePage = new TablePagePO(page);
           const table = new TablePO(tablePage.table);
@@ -4568,6 +4678,56 @@ test.describe('sci-table', () => {
           await page.keyboard.press('Shift+ArrowDown');
           await page.keyboard.press('Shift+ArrowDown');
           await expect(tablePage.selection).toHaveText('2 3 4');
+
+          // Press Shift+Home at block end
+          await page.keyboard.press('Shift+Home');
+          await expect(tablePage.selection).toHaveText('0 1 2');
+          await expect(tablePage.activeItemId).toHaveText('0');
+        });
+
+        test('should shrink then expand selection on Shift+End at start of block (multiple blocks)', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 3}).click();
+          await table.row({nth: 1}).click(['ControlOrMeta']);
+          await table.row({nth: 0}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('0 1 3');
+          await expect(tablePage.activeItemId).toHaveText('0');
+
+          // Press Shift+End at block start
+          await page.keyboard.press('Shift+End');
+          await expect(tablePage.selection).toHaveText('1 2 3 4 5 6 7 8 9');
+          await expect(tablePage.activeItemId).toHaveText('9');
+        });
+
+        test('should shrink then expand selection on Shift+Home at end of block  (multiple blocks)', async ({page}) => {
+          const tablePage = new TablePagePO(page);
+          const table = new TablePO(tablePage.table);
+          await tablePage.navigate();
+          await tablePage.showHeader(false);
+          await tablePage.setFilterable(false);
+          await tablePage.setRowHeight(20);
+          await tablePage.setHeight(100);
+          await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+          await provideHttpDatasource(page, generateData(10, i => ({id: i})), {datasource: 'array-http'});
+
+          // Given
+          await table.row({nth: 0}).click();
+          await table.row({nth: 2}).click(['ControlOrMeta']);
+          await table.row({nth: 3}).click(['ControlOrMeta']);
+          await expect(tablePage.selection).toHaveText('0 2 3');
+          await expect(tablePage.activeItemId).toHaveText('3');
 
           // Press Shift+Home at block end
           await page.keyboard.press('Shift+Home');
@@ -6287,9 +6447,9 @@ test.describe('sci-table', () => {
 
       // Install HTTP endpoint that blocks the initial load.
       const onLoad$ = new Subject<void>();
-      await page.route('**/sci-table/products', async route => {
+      await page.route('**/sci-table/products/ids', async route => {
         await firstValueFrom(onLoad$);
-        await route.fulfill({json: {items: [], totalCount: 0} satisfies SciTablePageResponse<Product>});
+        return route.fulfill({json: []});
       });
 
       await tablePage.addColumn({name: 'column:testee', type: 'string'});
@@ -6349,8 +6509,6 @@ test.describe('sci-table', () => {
       await table.retry();
       await expect(table.locator).not.toContainText('Unable to load data.');
       await expect(table.rows).toHaveCount(10);
-
-      await expect.poll(() => consoleLogs.get({severity: 'error'})).toContainEqual(expect.stringContaining('[DatasourceError]'));
     });
 
     test(`should horizontally center 'Unable to load data' in viewport`, async ({page}) => {
@@ -6425,6 +6583,164 @@ test.describe('sci-table', () => {
 
       // Expect table to grow with "Unable to load data" message.
       await expect.poll(() => table.bounds().then(bounds => bounds.height)).toEqual(4 * 30); // "Unable to load data" message
+    });
+  });
+
+  test.describe('Custom Datasource', () => {
+
+    test('should load pages', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.setDatasource('loader-delayed');
+
+      // Wait for initial page to finish loading.
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
+
+      await table.scrollTo({y: 1500});
+
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
+    });
+
+    test('should load pages when scrolling with scrollbar', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.setRowCount(1000);
+      await tablePage.setDatasource('loader-delayed');
+
+      // Wait for initial page to finish loading.
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
+
+      await table.verticalScrollbar.scroll(10_000);
+
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 1000');
+    });
+
+    test('should load first and last row correctly', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.setRowCount(1000);
+      await tablePage.setDatasource('loader-delayed');
+
+      // Wait for initial page to finish loading.
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+
+      await table.scrollTo({y: 'end'});
+      await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 1000');
+    });
+
+    test('should show skeletons when applying sort while using async datasource', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.setDatasource('loader-delayed');
+
+      // Wait for initial page to finish loading.
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+
+      await table.column({name: 'column:name'}).sort();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+    });
+
+    test('should show skeletons when applying filter while using async datasource', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.setDatasource('loader-delayed');
+      await tablePage.setFilterable(true);
+
+      // Wait for initial page to finish loading.
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+
+      await table.column({name: 'column:name'}).filter('1');
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+    });
+
+    test('should not show skeletons when scrolling back to an already-loaded page', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.setDatasource('loader-delayed');
+
+      // Wait for initial page to finish loading.
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+
+      await table.scrollTo({y: 1500});
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+
+      await table.scrollTo({y: 0});
+      await expect.poll(() => table.rows.locator('div.e2e-skeleton').isVisible()).toBe(false);
+
+      await table.scrollTo({y: 1500});
+      await expect.poll(() => table.rows.locator('div.e2e-skeleton').isVisible()).toBe(false);
+    });
+
+    // TODO [table] fix flaky test.
+    test.fixme('should select over multiple pages', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.setRowCount(1000);
+      await tablePage.setDatasource('loader-delayed');
+
+      // Wait for initial page to finish loading.
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await table.rows.first().click();
+
+      await table.scrollTo({y: 'end'});
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await table.rows.last().click({modifiers: ['Shift']});
+
+      await expect(tablePage.selectionCount).toHaveText('1000', {timeout: 15_000}); // takes longer if under load on CI
+    });
+
+    test('should select all items with ctrl+a', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+      await tablePage.setDatasource('loader-delayed');
+
+      // Wait for initial page to finish loading.
+      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
+      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await table.locator.click();
+      await page.keyboard.press('Control+A');
+      await expect(tablePage.selectionCount).toHaveText('10000', {timeout: 15_000}); // takes longer if under load on CI
     });
   });
 });

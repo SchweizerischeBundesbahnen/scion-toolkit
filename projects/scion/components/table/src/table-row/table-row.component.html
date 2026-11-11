@@ -1,8 +1,19 @@
 @let row = this.row();
 
+<!-- Handle to expand or collapse a tree node -->
+@if (row.level !== undefined) {
+  <button class="tree-node-handle e2e-tree-node-handle" (click)="onTreeNodeHandle($event)" [attr.disabled]="!row.hasChildren() || null">
+    @if (row.expanded()) {
+      <sci-icon class="e2e-expanded">scion:chevron_down</sci-icon>
+    } @else {
+      <sci-icon class="e2e-collapsed">scion:chevron_right</sci-icon>
+    }
+  </button>
+}
+
 <!-- Row Icons -->
-@if (row.cells?.length) {
-  @for (icon of row.bindings?.icons(); track $index) {
+@if (row.cells.length) {
+  @for (icon of row.bindings.icons(); track $index) {
     <sci-icon>{{icon}}</sci-icon>
   }
 }
@@ -18,7 +29,7 @@
 
 <!--Row Actions -->
 @let hasRowActions = !!table().rowActions;
-@let isRowHovered = table().hoveredRow() === row;
+@let isRowHovered = table().hoveredIndex() === row.index;
 @let isRowActionMenuOpen = rowActionToolbar()?.menuOpen();
 
 @if (hasRowActions && (isRowHovered || isRowActionMenuOpen)) {

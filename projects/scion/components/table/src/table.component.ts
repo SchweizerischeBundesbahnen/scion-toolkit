@@ -27,6 +27,72 @@ import {SciAttributesDirective} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
 
 /**
+ * Provides a table to display tabular or hierarchical data.
+ *
+ * ### Usage
+ *
+ * Create a table using the `table()` function, passing a signal containing the items to display in the table and a factory function to define the columns.
+ * Alternatively, pass a descriptor to display a tree structure, configure a custom datasource, or set additional options.
+ *
+ * ```ts
+ * import {SciTableComponent, table} from '@scion/components/table';
+ * import {httpResource} from '@angular/common/http';
+ *
+ * // Load data to display in the table.
+ * const users = httpResource<User[]>(() => '/api/users', {defaultValue: []});
+ *
+ * // Create the table and pass data.
+ * const userTable = table(users.value, table => table
+ *   .addNumberColumn('ID', user => user.id)
+ *   .addStringColumn('Name', user => user.name)
+ *   .addBooleanColumn('Inactive', user => user.inactive)
+ *   .addDateColumn('Expiration', user => user.expiration),
+ * );
+ * ```
+ *
+ * In the HTML, bind the created table instance to `<sci-table>` and assign it a name.
+ * The name must start with the `table:` prefix and is used to store user settings.
+ *
+ * ```html
+ * <sci-table name="table:users" [table]="userTable"/>
+ * ```
+ *
+ * ### Fixed Row Height
+ *
+ * All rows in the table must have equal height, which is `2em` by default. The height can be changed per table using the CSS variable `--sci-table-row-height`.
+ *
+ * ```scss
+ * sci-table {
+ *   --sci-table-row-height: 30px;
+ * }
+ * ```
+ *
+ * ### Styling
+ *
+ * The appearance of the table can be customized using the following CSS variables, either globally in the `:root` or at the table level.
+ *
+ * - `--sci-table-gridline-color`
+ * - `--sci-table-header-height`
+ * - `--sci-table-header-cursor`
+ * - `--sci-table-header-background-color`
+ * - `--sci-table-header-background-color-hover`
+ * - `--sci-table-header-font-family`
+ * - `--sci-table-header-font-size`
+ * - `--sci-table-header-font-weight`
+ * - `--sci-table-header-text-color`
+ * - `--sci-table-header-column-divider`
+ * - `--sci-table-row-height`
+ * - `--sci-table-row-indent`
+ * - `--sci-table-row-background-color-hover`
+ * - `--sci-table-row-background-color-selected`
+ * - `--sci-table-row-border-radius`
+ * - `--sci-table-row-outline-color`
+ * - `--sci-table-row-outline-width`
+ * - `--sci-table-row-outline-style`
+ * - `--sci-table-row-action-background-color`
+ * - `--sci-table-row-action-background-color-selected`
+ * - `--sci-table-cell-padding-inline`
+ *
  * @experimental since 22.3.0; API and behavior may change in any version without notice.
  */
 @Component({
@@ -58,7 +124,7 @@ import {SciIconComponent} from '@scion/components/icon';
     SciTableSelectionService,
   ],
 })
-export class SciTableComponent<T = unknown> {
+export class SciTableComponent<T = unknown, ID = T> {
 
   /**
    * Specifies a unique table identifier, used as the key for storing user preferences.
@@ -68,12 +134,12 @@ export class SciTableComponent<T = unknown> {
   /**
    * Specifies the table definition and datasource.
    */
-  public readonly table = input.required({transform: (table: SciTable<T>) => table as ɵSciTable<T>});
+  public readonly table = input.required({transform: (table: SciTable<ID>) => table as ɵSciTable<T, ID>});
 
   /**
    * Emits when the user double-clicks a row or presses `Enter` on selected rows.
    */
-  public readonly primaryAction = output<SciTableEvent<T>>();
+  public readonly primaryAction = output<SciTableEvent<ID>>();
 
   private readonly _viewport = viewChild.required(SciTableViewportComponent, {read: ElementRef});
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
@@ -89,12 +155,13 @@ export class SciTableComponent<T = unknown> {
     this.scrollActiveRowIntoViewport();
   }
 
-  protected onRowPrimaryAction(event: SciTableEvent<T>): void {
+  protected onRowPrimaryAction(event: SciTableEvent<ID>): void {
     this.primaryAction.emit(event);
+    event.items.forEach(item => this.table().toggleRow(item));
   }
 
   protected onRetry(): void {
-    this.table().reset();
+    this.table().reloadFailed();
   }
 
   private connectToModel(): void {
@@ -129,8 +196,8 @@ export class SciTableComponent<T = unknown> {
 
   private scrollActiveRowIntoViewport(): void {
     effect(() => {
-      const activeRow = this.table().activeRow();
-      if (!activeRow) {
+      const activeItem = this.table().activeItem();
+      if (activeItem === undefined) {
         return;
       }
 
@@ -138,7 +205,9 @@ export class SciTableComponent<T = unknown> {
         const viewport = this._viewport().nativeElement as HTMLElement;
         const viewportHeight = this.table().tableViewRef()?.viewportHeight() ?? 0;
         const itemHeight = this.table().tableViewRef()?.itemHeight() ?? 0;
-        const activeRowTop = activeRow.index * itemHeight;
+        const activeIndex = this.table().rowIndexById().get(activeItem) ?? -1;
+
+        const activeRowTop = activeIndex * itemHeight;
         const activeRowBottom = activeRowTop + itemHeight;
         const scrollTop = viewport.scrollTop;
         const scrollBottom = scrollTop + viewportHeight;

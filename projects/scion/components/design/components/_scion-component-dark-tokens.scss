@@ -109,6 +109,7 @@ $sci-table: (
   --sci-table-header-text-color: inherit,
   --sci-table-header-column-divider: visible,
   --sci-table-row-height: 2em,
+  --sci-table-row-indent: 1em,
   --sci-table-row-background-color-hover: var(--sci-color-gray-100),
   --sci-table-row-background-color-selected: color-mix(in srgb, var(--sci-color-accent) 35%, var(--sci-color-gray-100)),
   --sci-table-row-border-radius: var(--sci-corner-small),
