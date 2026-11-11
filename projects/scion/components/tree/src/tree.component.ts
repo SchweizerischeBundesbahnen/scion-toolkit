@@ -69,7 +69,7 @@ import {SciTableComponent, SciTableEvent} from '@scion/components/table';
  * - `--sci-tree-node-action-background-color`
  * - `--sci-tree-node-action-background-color-selected`
  *
- * @experimental since 22.6.0; API and behavior may change in any version without notice.
+ * @experimental since 22.7.0; API and behavior may change in any version without notice.
  */
 @Component({
   selector: 'sci-tree',

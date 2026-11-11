@@ -49,7 +49,7 @@ import {ɵSciTree} from './ɵtree.model';
  * - Must be called in a non-reactive (non-tracking) context.
  *
  * @see SciTreeComponent
- * @experimental since 22.6.0; API and behavior may change in any version without notice.
+ * @experimental since 22.7.0; API and behavior may change in any version without notice.
  *
  * @param descriptor - Configures the tree. Requires a datasource and node label function.
  * @return Handle to bind to `<sci-tree>` and interact with the tree.
@@ -93,7 +93,7 @@ export function tree<T>(descriptor: SciTreeDescriptor<T>): SciTree<T>;
  * - Must be called in a non-reactive (non-tracking) context.
  *
  * @see SciTreeComponent
- * @experimental since 22.6.0; API and behavior may change in any version without notice.
+ * @experimental since 22.7.0; API and behavior may change in any version without notice.
  *
  * @param descriptor - Configures the tree. Requires a datasource and node label function.
  * @return Handle to bind to `<sci-tree>` and interact with the tree.

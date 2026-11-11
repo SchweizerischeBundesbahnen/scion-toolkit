@@ -77,7 +77,7 @@ export function provideTreeDatasource<T>(root: Signal<T[]>, children: (item: T) 
  * @param datasource - Specifies the datasource.
  *
  * @docs-private Not public API. For internal use only.
- * @experimental since 22.6.0; API and behavior may change in any version without notice.
+ * @experimental since 22.7.0; API and behavior may change in any version without notice.
  */
 export function ɵprovideTreeDatasource<T, ID>(datasource: SciTreeDatasource<T, ID>): SciTableDatasourceProvider<T, ID> {
   return ɵprovideTableDatasource({

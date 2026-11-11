@@ -67,7 +67,7 @@ export function provideTableDatasource<T>(data: Signal<T[]>, children?: (item: T
 
 /**
  * @docs-private Not public API. For internal use only.
- * @experimental since 22.6.0; API and behavior may change in any version without notice.
+ * @experimental since 22.7.0; API and behavior may change in any version without notice.
  */
 export function ɵprovideTableDatasource<T, ID = T>(tableDatasource: SciTableDatasource<T, ID>): SciTableDatasourceProvider<T, ID>;
 export function ɵprovideTableDatasource<T, ID = T>(treeTableDatasource: SciTreeTableDatasource<T, ID>): SciTableDatasourceProvider<T, ID>;
@@ -88,7 +88,7 @@ export interface SciTableDatasource<T, ID> {
 }
 
 /**
- * @experimental since 22.6.0; API and behavior may change in any version without notice.
+ * @experimental since 22.7.0; API and behavior may change in any version without notice.
  */
 export interface SciTreeTableDatasource<T, ID> {
   getTreeTableNodes(query: SciTableDatasourceQuery): MaybeAsync<SciTreeTableNode<ID>[]>;
