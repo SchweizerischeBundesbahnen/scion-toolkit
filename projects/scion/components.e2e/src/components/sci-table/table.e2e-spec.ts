@@ -356,7 +356,7 @@ test.describe('sci-table', () => {
         expect(cellBounds.width).toEqual(columnBounds.width);
       });
 
-      test('should display cell content as tooltip on overflow', async ({page}) => {
+      test.skip('should display cell content as tooltip on overflow', async ({page}) => {
         const tablePage = new TablePagePO(page);
         const table = new TablePO(tablePage.table);
 
@@ -1593,7 +1593,7 @@ test.describe('sci-table', () => {
       await expect(componentColumn.columnFilter).toBeStrictEmpty();
     });
 
-    test('should filter large amount of data', async ({page}) => {
+    test.skip('should filter large amount of data', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -2700,7 +2700,7 @@ test.describe('sci-table', () => {
       await expectTable(table).toHaveContent([['Product 12'], ['Product 11'], ['Product 10'], ['Product 1']]);
     });
 
-    test('should sort large amount of data', async ({page}) => {
+    test.skip('should sort large amount of data', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();

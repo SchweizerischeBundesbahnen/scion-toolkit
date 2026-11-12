@@ -140,65 +140,77 @@ export class SciTableTree<ID> {
   }
 
   private computeTree(): Signal<ɵSciTree<ID>> {
-    const nodes = computeNodes(this._datasource, this._sortCriteria);
-    const filteredNodes = computeFilteredNodes(this._datasource, this._columnFilters, this._tableFilter);
+    const nodesResource = computeNodes(this._datasource, this._sortCriteria);
+    const filteredNodesResource = computeFilteredNodes(this._datasource, this._columnFilters, this._tableFilter);
 
     return linkedSignal({
       source: () => undefined, // Linked signal to preserve node expansion state across tree updates
       computation: (_source, previous) => {
-        const previousTree = previous?.value;
+        let previousTree = previous?.value;
+        const nodes = nodesResource.value();
 
-        const tree: ɵSciTree<ID> = {
-          rootNodes: [],
-          nodeById: new Map<ID, ɵSciTreeNode<ID>>(),
-          indexById: computed(() => tree.visibleNodes().reduce((map, node, index) => map.set(node.id, index), new Map<ID, number>())),
-          nodeList: new Array<ɵSciTreeNode<ID>>(),
-          visibleNodes: computed(() => tree.nodeList.filter(node => node.visible())),
-          isLoading: computed(() => nodes.isLoading() || filteredNodes.isLoading()),
-          hasError: computed(() => nodes.status() === 'error' || filteredNodes.status() === 'error'),
-          requiresLevel: false,
-          reload: () => nodes.reload(),
-          reloadFailed: () => {
-            if (nodes.status() === 'error') {
-              nodes.reload();
-            }
-            if (filteredNodes.status() === 'error') {
-              filteredNodes.reload();
-            }
-          },
-        };
+        return untracked(() => {
+          const tree: ɵSciTree<ID> = {
+            rootNodes: [],
+            nodeById: new Map<ID, ɵSciTreeNode<ID>>(),
+            indexById: computed(() => tree.visibleNodes().reduce((map, node, index) => map.set(node.id, index), new Map<ID, number>())),
+            nodeList: new Array<ɵSciTreeNode<ID>>(),
+            visibleNodes: computed(() => tree.nodeList.filter(node => node.visible())),
+            expandedNodes: computed(() => new Set(tree.nodeList.filter(node => node.expanded()).map(node => node.id))),
+            isLoading: computed(() => nodesResource.isLoading() || filteredNodesResource.isLoading()),
+            hasError: computed(() => nodesResource.status() === 'error' || filteredNodesResource.status() === 'error'),
+            requiresLevel: false,
+            reload: () => nodesResource.reload(),
+            reloadFailed: () => {
+              if (nodesResource.status() === 'error') {
+                nodesResource.reload();
+              }
+              if (filteredNodesResource.status() === 'error') {
+                filteredNodesResource.reload();
+              }
+            },
+          };
 
-        if (tree.hasError()) {
+          if (tree.hasError()) {
+            return tree;
+          }
+
+          // Materialize tree.
+          console.time('build tree');
+          for (const node of nodes) {
+            const parentNode: ɵSciTreeNode<ID> | undefined = node.parentId !== undefined ? tree.nodeById.get(node.parentId) ?? createTreeNode(node.parentId, tree) : undefined;
+            const treeNode: ɵSciTreeNode<ID> = tree.nodeById.get(node.id) ?? createTreeNode(node.id, tree);
+            tree.nodeById.set(treeNode.id, treeNode);
+
+            if (parentNode) {
+              parentNode.children.push(treeNode);
+              treeNode.parent = parentNode;
+              tree.nodeById.set(parentNode.id, parentNode);
+              tree.requiresLevel = true;
+            }
+            else {
+              tree.rootNodes.push(treeNode);
+            }
+
+            // Preserve expansion state on data change.
+            if (previousTree?.expandedNodes().has(treeNode.id)) {
+              treeNode.expanded.set(true);
+            }
+          }
+          console.timeEnd('build tree');
+
+          // Compute flat node list.
+          console.time('flat list');
+          for (const rootNode of tree.rootNodes) {
+            rootNode.visitChildren(node => tree.nodeList.push(node), {includeSelf: true});
+          }
+          console.timeEnd('flat list');
+
+          previousTree = undefined; // free memory
           return tree;
-        }
-
-        // Materialize tree.
-        console.time('build tree')
-        nodes.value().forEach(node => {
-          const parentNode: ɵSciTreeNode<ID> | undefined = node.parentId !== undefined ? tree.nodeById.get(node.parentId) ?? createTreeNode(node.parentId, previousTree) : undefined;
-          const treeNode: ɵSciTreeNode<ID> = tree.nodeById.get(node.id) ?? createTreeNode(node.id, previousTree);
-          tree.nodeById.set(treeNode.id, treeNode);
-
-          if (parentNode) {
-            parentNode.children.push(treeNode);
-            treeNode.parent = parentNode;
-            tree.nodeById.set(parentNode.id, parentNode);
-            tree.requiresLevel = true;
-          }
-          else {
-            tree.rootNodes.push(treeNode);
-          }
         });
-        console.timeEnd('build tree')
 
-        // Compute flat node list.
-        console.time('flat list')
-        tree.rootNodes.forEach(rootNode => rootNode.visitChildren(node => tree.nodeList.push(node), {includeSelf: true}));
-        console.timeEnd('flat list')
-
-        return tree;
-
-        function createTreeNode(id: ID, previousTree: ɵSciTree<ID> | undefined): ɵSciTreeNode<ID> {
+        function createTreeNode(id: ID, tree: ɵSciTree<ID>): ɵSciTreeNode<ID> {
           const treeNode: ɵSciTreeNode<ID> = {
             id,
             children: [],
@@ -215,19 +227,18 @@ export class SciTableTree<ID> {
               return true;
             }),
             matchesFilter: computed(() => {
-              const filtered = filteredNodes.error() ? null : filteredNodes.value();
+              const filtered = filteredNodesResource.error() ? null : filteredNodesResource.value();
               return !filtered || filtered.has(id) || treeNode.getPathFromRoot().some(node => filtered.has(node.id)) || treeNode.children.some(child => child.matchesFilter());
             }),
             expanded: linkedSignal({
-              source: () => filteredNodes.error() ? null : filteredNodes.value(),
+              source: () => filteredNodesResource.error() ? null : filteredNodesResource.value(),
               computation: (filteredNodes, previous): boolean => {
                 // Expand node on filter.
                 if (filteredNodes) {
                   return true;
                 }
 
-                // Preserve node expansion state across tree updates.
-                return previous?.value ?? previousTree?.nodeById.get(id)?.expanded() ?? false;
+                return previous?.value ?? false;
               },
             }),
             level: computed(() => {
@@ -335,6 +346,7 @@ export interface ɵSciTree<ID> {
   nodeList: ɵSciTreeNode<ID>[];
   indexById: Signal<Map<ID, number>>;
   visibleNodes: Signal<ɵSciTreeNode<ID>[]>;
+  expandedNodes: Signal<Set<ID>>;
   isLoading: Signal<boolean>;
   hasError: Signal<boolean>;
   reload: () => void;
@@ -355,3 +367,33 @@ export interface ɵSciTreeNode<ID> {
   index: Signal<number>;
   level: Signal<number | undefined>;
 }
+
+// interface MySignal<T> {
+//   (): T;
+//
+//   set(value: T): void;
+// }
+//
+// export function computedPrimitive<T>(computation: () => T): MySignal<T> {
+//   return signalPrimitive(computation());
+// }
+//
+// function signalPrimitive<T>(value: T): MySignal<T> {
+//   const fun = (): T => {
+//     return value;
+//   }
+//   fun['set'] = (v: T): void => {
+//     value = v;
+//   }
+//   return fun;
+// }
+
+// function signalPrimitive<T>(value: T): MySignal<T> {
+//   const fun = (): T => {
+//     return value;
+//   }
+//   fun['set'] = (v: T): void => {
+//     value = v;
+//   }
+//   return fun;
+// }
