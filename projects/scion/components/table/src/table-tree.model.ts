@@ -156,6 +156,7 @@ export class SciTableTree<ID> {
           visibleNodes: computed(() => tree.nodeList.filter(node => node.visible())),
           isLoading: computed(() => nodes.isLoading() || filteredNodes.isLoading()),
           hasError: computed(() => nodes.status() === 'error' || filteredNodes.status() === 'error'),
+          requiresLevel: false,
           reload: () => nodes.reload(),
           reloadFailed: () => {
             if (nodes.status() === 'error') {
@@ -172,6 +173,7 @@ export class SciTableTree<ID> {
         }
 
         // Materialize tree.
+        console.time('build tree')
         nodes.value().forEach(node => {
           const parentNode: ɵSciTreeNode<ID> | undefined = node.parentId !== undefined ? tree.nodeById.get(node.parentId) ?? createTreeNode(node.parentId, previousTree) : undefined;
           const treeNode: ɵSciTreeNode<ID> = tree.nodeById.get(node.id) ?? createTreeNode(node.id, previousTree);
@@ -181,14 +183,18 @@ export class SciTableTree<ID> {
             parentNode.children.push(treeNode);
             treeNode.parent = parentNode;
             tree.nodeById.set(parentNode.id, parentNode);
+            tree.requiresLevel = true;
           }
           else {
             tree.rootNodes.push(treeNode);
           }
         });
+        console.timeEnd('build tree')
 
         // Compute flat node list.
+        console.time('flat list')
         tree.rootNodes.forEach(rootNode => rootNode.visitChildren(node => tree.nodeList.push(node), {includeSelf: true}));
+        console.timeEnd('flat list')
 
         return tree;
 
@@ -225,11 +231,10 @@ export class SciTableTree<ID> {
               },
             }),
             level: computed(() => {
-              if (!treeNode.parent) {
-                const isHierarchic = tree.rootNodes.some(rootNode => rootNode.children.length);
-                return isHierarchic ? 0 : undefined;
+              if (!tree.requiresLevel) {
+                return undefined;
               }
-              return treeNode.parent.level()! + 1;
+              return treeNode.parent ? treeNode.parent.level()! + 1 : 0;
             }),
             index: computed(() => tree.indexById().get(id)!),
             getPathFromRoot: () => (treeNode.parent?.getPathFromRoot() ?? []).concat(treeNode),
@@ -334,6 +339,7 @@ export interface ɵSciTree<ID> {
   hasError: Signal<boolean>;
   reload: () => void;
   reloadFailed: () => void;
+  requiresLevel: boolean;
 }
 
 export interface ɵSciTreeNode<ID> {
