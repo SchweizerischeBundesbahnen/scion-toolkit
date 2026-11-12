@@ -17,7 +17,6 @@ import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
 import {Router} from '@angular/router';
-import {SciViewportComponent} from '@scion/components/viewport';
 import {VehicleService} from './vehicle.service';
 import {Vehicle, VehicleNode} from './vehicle.model';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
@@ -40,7 +39,6 @@ import {timer} from 'rxjs';
     SciTabDirective,
     SciTabbarComponent,
     MinMaxDirective,
-    SciViewportComponent,
     SciFilterFieldComponent,
     DesignTokenFormComponent,
   ],
@@ -65,11 +63,6 @@ export default class SciTablePageComponent {
   protected readonly selectable = computed(() => {
     const selectable = this.table()?.selectable();
     return selectable === false ? 'false' : selectable;
-  });
-  protected readonly selection = computed(() => this.table()?.selectedItems().sort((a, b) => a.localeCompare(b)).join(' '));
-  protected readonly activeVehicleId = computed(() => {
-    const item = this.table()?.activeItem();
-    return item?.startsWith('operator') ? undefined : item;
   });
   protected readonly panelOpen = linkedSignal(() => !this._isMobile());
   protected readonly locale = inject(SCI_LOCALE);

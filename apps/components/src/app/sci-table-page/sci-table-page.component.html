@@ -276,27 +276,5 @@
         </ng-template>
       }
     </sci-tabbar>
-
-    <section class="table-state">
-      <header>Table State</header>
-
-      <label>
-        Active Id:
-        <output>{{activeVehicleId() ?? '-'}}</output>
-      </label>
-
-      <label>
-        Selection Count:
-        <output>{{table.selectedItems().length}}</output>
-      </label>
-
-      <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control-->
-      <label>
-        Selection:
-        <sci-viewport>
-          {{selection()}}
-        </sci-viewport>
-      </label>
-    </section>
   </aside>
 }
