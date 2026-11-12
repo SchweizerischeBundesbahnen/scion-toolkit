@@ -15,7 +15,7 @@
     > button.tab {
       all: unset;
       flex: none;
-      position: relative; // positioning context for div.outline
+      cursor: var(--sci-button-cursor); // Prevent text cursor when hovering over the button in Firefox.
 
       &:focus-visible > div.outline {
         display: unset;
