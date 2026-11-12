@@ -17,8 +17,6 @@
               <option value="false">False</option>
             </select>
           </label>
-
-          <button type="button" (click)="onUserSettingsReset()" class="reset">Reset User Settings</button>
         </section>
       </ng-template>
 
@@ -27,21 +25,6 @@
         <section class="design-tokens">
           <app-design-token-form [form]="designTokenForm" [designTokenRootElement]="host"/>
         </section>
-      </ng-template>
-
-      <!-- Methods -->
-      <ng-template sciTab label="Methods">
-        <form>
-          <section class="methods">
-            <label>
-              <input [formField]="methodsForm.selectId"/>
-            </label>
-            <button type="button" (click)="onSelect()">Select</button>
-          </section>
-
-          <button type="button" (click)="onExpandAll()">Expand All</button>
-          <button type="button" (click)="onCollapseAll()">Collapse All</button>
-        </form>
       </ng-template>
 
       <!-- Datasource -->
