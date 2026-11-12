@@ -13,7 +13,6 @@ import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField} from '@angular/forms/signals';
 import {ɵcreateDestroyableInjector} from '@scion/components/common';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
-import {Router} from '@angular/router';
 import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
 import {SciTableDatasourceProvider} from '@scion/components/table';
 import {fileExtensionIcons, FileNode, files} from './sci-tree-page.data';
@@ -40,13 +39,11 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 export default class SciTreePageComponent {
 
   private readonly _injector = inject(Injector);
-  private readonly _router = inject(Router);
   private readonly _treeElement: Signal<ElementRef<HTMLElement> | undefined> = viewChild(SciTreeComponent, {read: ElementRef});
   private readonly _isMobile = toSignal(inject(BreakpointObserver).observe('(max-width: 700px)').pipe(map(breakpoint => breakpoint.matches)));
   private readonly _files = signal(files);
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
-  protected readonly methodsForm: FieldTree<MethodsForm> = this.createMethodsForm();
   protected readonly designTokenForm: FieldTree<DesignTokenForm> = this.createDesignTokenForm();
 
   protected readonly tree = this.computeTree();
@@ -125,12 +122,6 @@ export default class SciTreePageComponent {
     ], this._treeElement, {designTokenRootElement: host});
   }
 
-  private createMethodsForm(): FieldTree<MethodsForm> {
-    return form(signal<MethodsForm>({
-      selectId: '',
-    }));
-  }
-
   private contributeMainToolbarMenu(): void {
     contributeMenu('toolbar:main', toolbar => toolbar
       .addToolbarButton({visible: this.panelOpen(), icon: 'right_panel_close', tooltip: 'Hide side panel', onSelect: () => this.panelOpen.set(false)})
@@ -138,26 +129,8 @@ export default class SciTreePageComponent {
     );
   }
 
-  protected onUserSettingsReset(): void {
-    localStorage.removeItem('scion.components:tree:files');
-    void this._router.navigate(['/']).then(() => this._router.navigate(['/sci-tree']));
-  }
-
   protected updateSelectable(selectable: 'multi' | 'single' | 'false'): void {
     this.tree()?.selectable.set(selectable === 'false' ? false : selectable);
-  }
-
-  protected onSelect(): void {
-    this.tree()?.select(this.methodsForm.selectId().value().split(' '));
-    this.methodsForm.selectId().reset('');
-  }
-
-  protected onExpandAll(): void {
-    this.tree()?.expandAll();
-  }
-
-  protected onCollapseAll(): void {
-    this.tree()?.collapseAll();
   }
 
   protected onTreeFilter(filter: string): void {
@@ -167,8 +140,4 @@ export default class SciTreePageComponent {
 
 interface SettingsForm {
   slowDatasource: boolean;
-}
-
-interface MethodsForm {
-  selectId: string;
 }
