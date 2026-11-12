@@ -14,7 +14,6 @@ import {FieldTree, form, FormField} from '@angular/forms/signals';
 import {ɵcreateDestroyableInjector} from '@scion/components/common';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {Router} from '@angular/router';
-import {SciViewportComponent} from '@scion/components/viewport';
 import {createDesignTokenForm, DesignTokenForm, DesignTokenFormComponent} from '../styles/design-token-form.component';
 import {SciTableDatasourceProvider} from '@scion/components/table';
 import {fileExtensionIcons, FileNode, files} from './sci-tree-page.data';
@@ -33,7 +32,6 @@ import {BreakpointObserver} from '@angular/cdk/layout';
     FormField,
     SciTabDirective,
     SciTabbarComponent,
-    SciViewportComponent,
     SciTreeComponent,
     DesignTokenFormComponent,
     SciFilterFieldComponent,
@@ -56,7 +54,6 @@ export default class SciTreePageComponent {
     const selectable = this.tree()?.selectable();
     return selectable === false ? 'false' : selectable;
   });
-  protected readonly selection = computed(() => this.tree()?.selectedItems().sort((a, b) => a.localeCompare(b)).join(' '));
   protected readonly panelOpen = linkedSignal(() => !this._isMobile());
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
 
