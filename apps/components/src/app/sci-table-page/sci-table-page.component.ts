@@ -492,7 +492,7 @@ export default class SciTablePageComponent {
 
   private contributeMainToolbarMenu(): void {
     contributeMenu('toolbar:main', toolbar => toolbar
-      .addToolbarButton({visible: this.panelOpen(), icon: 'right_panel_close', tooltip: 'Hide side panel', onSelect: () => this.panelOpen.set(false)})
+      .addToolbarButton({visible: this.panelOpen, icon: 'right_panel_close', tooltip: 'Hide side panel', onSelect: () => this.panelOpen.set(false)})
       .addToolbarButton({visible: computed(() => !this.panelOpen()), icon: 'right_panel_open', tooltip: 'Show side panel', onSelect: () => this.panelOpen.set(true)}),
     );
   }

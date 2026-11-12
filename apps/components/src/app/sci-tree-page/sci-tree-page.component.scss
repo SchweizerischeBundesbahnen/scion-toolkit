@@ -3,6 +3,10 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1em;
 
+  &:has(> aside.closed) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   > main {
     display: flex;
     flex-direction: column;
@@ -26,6 +30,10 @@
     border-radius: var(--sci-corner);
     background-color: var(--sci-color-background-secondary);
     padding: 1em;
+
+    &.closed {
+      display: none;
+    }
 
     > sci-tabbar {
       flex: auto;
