@@ -8,8 +8,8 @@
  *  SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTree, SciTreeDescriptor} from './tree.model';
-import {SciTableDescriptor, SciTableRowBindingFactory, ɵSciTable, ɵSciTableRowBindingFactory} from '@scion/components/table';
+import {SciTree, SciTreeDescriptor, SciTreeNodeBindingFactory} from './tree.model';
+import {SciTableDescriptor, SciTableRowBindingFactory, ɵSciTable} from '@scion/components/table';
 import {Signal, WritableSignal} from '@angular/core';
 import {MaybeArray} from '@scion/toolkit/types';
 
@@ -29,7 +29,7 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
       resizable: false,
       showHeader: false,
       rowActions: descriptor.nodeActions,
-      rowBindings: (bindings: SciTableRowBindingFactory, item, index) => descriptor.nodeBindings?.((bindings as ɵSciTableRowBindingFactory), item, index),
+      rowBindings: (bindings: SciTableRowBindingFactory, item, index) => descriptor.nodeBindings?.(createTreeNodeBindingFactory(bindings), item, index),
       bufferSize: descriptor.bufferSize,
       pageSize: descriptor.pageSize,
       trackBy: descriptor.trackBy,
@@ -91,4 +91,28 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
   public dispose(): void {
     this._table.dispose();
   }
+}
+
+/**
+ * Maps table row bindings to tree node bindings.
+ */
+function createTreeNodeBindingFactory(bindings: SciTableRowBindingFactory): SciTreeNodeBindingFactory {
+  return {
+    addIconBinding(icon: string) {
+      bindings.addIconBinding(icon);
+      return this;
+    },
+    addPartBinding(name: `node:${string}` | undefined) {
+      bindings.addPartBinding(name as `row:${string}`);
+      return this;
+    },
+    addAttributeBinding(name: string, value: unknown | undefined) {
+      bindings.addAttributeBinding(name, value);
+      return this;
+    },
+    addClassBinding(name: string | undefined) {
+      bindings.addClassBinding(name);
+      return this;
+    },
+  };
 }

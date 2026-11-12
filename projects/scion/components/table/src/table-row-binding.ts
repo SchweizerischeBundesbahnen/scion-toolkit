@@ -125,7 +125,7 @@ export interface SciTableRowBindingFactory {
   addClassBinding(name: string | undefined): this;
 }
 
-export class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
+class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
 
   public readonly icons = new Array<string>();
   public readonly parts = new Array<string>();
