@@ -11,6 +11,15 @@
 import {EnvironmentProviders, InjectionToken, makeEnvironmentProviders, Type} from '@angular/core';
 
 /**
+ * Provides a {@link ɵSCI_COMPONENTS_STORAGE} for dependency injection.
+ */
+export function provideComponentsStorage(storage: Type<SciComponentsStorage>): EnvironmentProviders {
+  return makeEnvironmentProviders([
+    {provide: ɵSCI_COMPONENTS_STORAGE, useClass: storage},
+  ]);
+}
+
+/**
  * Provides persistent storage interface.
  */
 export interface SciComponentsStorage {
@@ -26,17 +35,12 @@ export interface SciComponentsStorage {
   store(name: `scion.components:${string}`, value: string): Promise<void> | void;
 }
 
-export const SCI_COMPONENTS_STORAGE = new InjectionToken<SciComponentsStorage>('SCI_COMPONENTS_STORAGE', {factory: () => ({
+/**
+ * DI token to inject {@link SciComponentsStorage}.
+ *
+ * Defaults to local storage.
+ */
+export const ɵSCI_COMPONENTS_STORAGE = new InjectionToken<SciComponentsStorage>('ɵSCI_COMPONENTS_STORAGE', {factory: () => ({
   load: (name: `scion.components:${string}`) => localStorage.getItem(name),
   store: (name: `scion.components:${string}`, value: string) => localStorage.setItem(name, value),
 })});
-
-/**
- * Defaults to localStorage persistence.
- * @param storage
- */
-export function provideComponentsStorage(storage: Type<SciComponentsStorage>): EnvironmentProviders {
-  return makeEnvironmentProviders([
-    {provide: SCI_COMPONENTS_STORAGE, useClass: storage},
-  ]);
-}

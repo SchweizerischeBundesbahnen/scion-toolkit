@@ -12,7 +12,7 @@ import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSign
 import {eSCI_TABLE_DATASOURCE_PROVIDER, provideTableDatasource, SciTableColumnFilter, SciTableSortCriterion, SciTreeTableNode, SciTreeTableDatasource} from './table-datasource';
 import {SciEnumValueLike, SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn, skeletonRowId} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
-import {SCI_COMPONENTS_STORAGE, toLazyObservable, ɵcreateDestroyableInjector, ɵSingleActiveInjectorFactory} from '@scion/components/common';
+import {ɵSCI_COMPONENTS_STORAGE, toLazyObservable, ɵcreateDestroyableInjector, ɵSingleActiveInjectorFactory} from '@scion/components/common';
 import {SciTableCache} from './table.cache';
 import {rxResource} from '@angular/core/rxjs-interop';
 import {catchError, combineLatestWith, concat, finalize, fromEvent, of, switchMap, timer} from 'rxjs';
@@ -30,7 +30,7 @@ import {SciInMemoryTableDatasource} from './in-memory-table-datasource';
  */
 export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
 
-  private readonly _tableStorage = inject(SCI_COMPONENTS_STORAGE);
+  private readonly _tableStorage = inject(ɵSCI_COMPONENTS_STORAGE);
   private readonly _injector = inject(Injector);
 
   public readonly name = signal<`table:${string}` | undefined>(undefined);

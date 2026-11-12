@@ -2,7 +2,7 @@ import {booleanAttribute, EnvironmentProviders, makeEnvironmentProviders} from '
 import {provideComponentsStorage} from '@scion/components/common';
 
 /**
- * Provides a {@link SciTableStorage} which does nothing.
+ * Provides a {@link SciComponentsStorage} which does nothing.
  */
 export function provideNullTableStorage(): EnvironmentProviders {
   const tableStorageEnabled = booleanAttribute(new URL(window.location.href).searchParams.get('sci-table-storage'));
