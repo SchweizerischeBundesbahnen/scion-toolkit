@@ -55,7 +55,6 @@ export default class SciTablePageComponent {
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
   protected readonly designTokenForm: FieldTree<DesignTokenForm> = this.createDesignTokenForm();
-  protected readonly methodsForm: FieldTree<MethodsForm> = this.createMethodsForm();
   protected readonly vehicleForm: FieldTree<VehicleForm> = this.createVehicleForm();
 
   protected readonly table = this.computeTable();
@@ -412,12 +411,6 @@ export default class SciTablePageComponent {
     return form;
   }
 
-  private createMethodsForm(): FieldTree<MethodsForm> {
-    return form(signal<MethodsForm>({
-      selectId: '',
-    }));
-  }
-
   private createVehicleForm(): FieldTree<VehicleForm> {
     const vehicleService = inject(VehicleService);
 
@@ -489,19 +482,6 @@ export default class SciTablePageComponent {
       .addToolbarButton({visible: computed(() => !this.panelOpen()), icon: 'right_panel_open', tooltip: 'Show side panel', onSelect: () => this.panelOpen.set(true)}),
     );
   }
-
-  protected onSelect(): void {
-    this.table()?.select(this.methodsForm.selectId().value().split(' '));
-    this.methodsForm.selectId().reset('');
-  }
-
-  protected onExpandAll(): void {
-    this.table()?.expandAll();
-  }
-
-  protected onCollapseAll(): void {
-    this.table()?.collapseAll();
-  }
 }
 
 interface SettingsForm {
@@ -533,10 +513,6 @@ interface SettingsForm {
     nextRevision: boolean;
     price: boolean;
   };
-}
-
-interface MethodsForm {
-  selectId: string;
 }
 
 export interface VehicleForm {
