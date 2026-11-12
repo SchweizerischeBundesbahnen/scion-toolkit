@@ -12,7 +12,7 @@ export {table, type SciTableColumnFactoryFn} from './table.factory';
 export {SciTableComponent} from './table.component';
 export {ɵSciTable} from './ɵtable.model';
 export {type SciTable, type SciTableDescriptor, type SciTableRowActionFactoryFn, type SciTableColumnType, type SciTableEvent, type SciTableCellContext} from './table.model';
-export {type SciTableRowBindingFactory, provideTableRowBinding, ɵSciTableRowBindingFactory} from './table-row-binding';
+export {type SciTableRowBindingFactory, provideTableRowBinding} from './table-row-binding';
 export {provideTableDatasource, ɵprovideTableDatasource, type SciTableDatasourceProvider, type SciTableDatasource, type SciTreeTableDatasource, type SciTreeTableNode, type SciTableDatasourceQuery, type SciTableColumnFilter, type SciTableSortCriterion} from './table-datasource';
 export {type SciTableColumnFactory, type SciTableColumnDescriptor, type SciStringColumnDescriptor, type SciNumberColumnDescriptor, type SciBooleanColumnDescriptor, type SciDateColumnDescriptor, type SciComponentColumnDescriptor, type SciTemplateColumnDescriptor, type SciTableColumnSortComparatorFn, type SciTableColumnFilterMatcherFn} from './table-column.factory';
 export {type SciDateLike, type SciEnumValueLike, type SciEnumColumnValues, type SciIconColumnValues, type SciColumnHeaderLike} from './table.model';
