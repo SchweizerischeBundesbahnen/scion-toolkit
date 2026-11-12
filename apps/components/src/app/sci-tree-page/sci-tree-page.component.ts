@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: EPL-2.0
  */
-import {Component, computed, effect, ElementRef, inject, Injector, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
+import {Component, computed, effect, ElementRef, inject, Injector, linkedSignal, runInInjectionContext, Signal, signal, untracked, viewChild} from '@angular/core';
 import {ɵprovideTreeDatasource, provideTreeDatasource, SciTree, SciTreeComponent, tree} from '@scion/components/tree';
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField} from '@angular/forms/signals';
@@ -20,6 +20,9 @@ import {SciTableDatasourceProvider} from '@scion/components/table';
 import {fileExtensionIcons, FileNode, files} from './sci-tree-page.data';
 import {map, timer} from 'rxjs';
 import {SciFilterFieldComponent} from '@scion/components.internal/filter-field';
+import {contributeMenu} from '@scion/components/menu';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {BreakpointObserver} from '@angular/cdk/layout';
 
 @Component({
   selector: 'app-tree-page',
@@ -41,6 +44,7 @@ export default class SciTreePageComponent {
   private readonly _injector = inject(Injector);
   private readonly _router = inject(Router);
   private readonly _treeElement: Signal<ElementRef<HTMLElement> | undefined> = viewChild(SciTreeComponent, {read: ElementRef});
+  private readonly _isMobile = toSignal(inject(BreakpointObserver).observe('(max-width: 700px)').pipe(map(breakpoint => breakpoint.matches)));
   private readonly _files = signal(files);
 
   protected readonly settingsForm: FieldTree<SettingsForm> = this.createSettingsForm();
@@ -53,7 +57,12 @@ export default class SciTreePageComponent {
     return selectable === false ? 'false' : selectable;
   });
   protected readonly selection = computed(() => this.tree()?.selectedItems().sort((a, b) => a.localeCompare(b)).join(' '));
+  protected readonly panelOpen = linkedSignal(() => !this._isMobile());
   protected readonly host = inject(ElementRef).nativeElement as HTMLElement;
+
+  constructor() {
+    this.contributeMainToolbarMenu();
+  }
 
   private createTree(options: {slowDatasource: boolean}): SciTree<string> {
     return tree<FileNode, string>({
@@ -123,6 +132,13 @@ export default class SciTreePageComponent {
     return form(signal<MethodsForm>({
       selectId: '',
     }));
+  }
+
+  private contributeMainToolbarMenu(): void {
+    contributeMenu('toolbar:main', toolbar => toolbar
+      .addToolbarButton({visible: this.panelOpen(), icon: 'right_panel_close', tooltip: 'Hide side panel', onSelect: () => this.panelOpen.set(false)})
+      .addToolbarButton({visible: computed(() => !this.panelOpen()), icon: 'right_panel_open', tooltip: 'Show side panel', onSelect: () => this.panelOpen.set(true)}),
+    );
   }
 
   protected onUserSettingsReset(): void {
