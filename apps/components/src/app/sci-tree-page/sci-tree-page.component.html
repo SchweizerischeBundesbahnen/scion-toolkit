@@ -54,27 +54,5 @@
         </section>
       </ng-template>
     </sci-tabbar>
-
-    <section class="tree-state">
-      <header>Tree State</header>
-
-      <label class="active-id">
-        Active Id:
-        <output>{{tree.activeItem() ?? '-'}}</output>
-      </label>
-
-      <label>
-        Selection Count:
-        <output>{{tree.selectedItems().length}}</output>
-      </label>
-
-      <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control-->
-      <label>
-        Selection:
-        <sci-viewport>
-          {{selection()}}
-        </sci-viewport>
-      </label>
-    </section>
   </aside>
 }
