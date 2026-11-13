@@ -11,7 +11,7 @@
 import {SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableNode} from '@scion/components/table';
 import {computed, Service, Signal, signal} from '@angular/core';
 import {Observable} from 'rxjs';
-import {toObservable} from '@angular/core/rxjs-interop';
+import {toObservable, toSignal} from '@angular/core/rxjs-interop';
 import {map} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
 import {ClassTypeGroup, DepotGroup, OperatorGroup, Vehicle, VehicleNode} from './vehicle.model';
@@ -28,6 +28,7 @@ export class VehicleService {
   public readonly vehicleCount = signal(10_000);
   public readonly vehicles: Signal<Vehicle[]> = computed(() => this._datasource.value().slice(0, this.vehicleCount()));
   public readonly operatorGroups = computed(() => createOperatorGroups(this.vehicles()));
+  public readonly treeNodes = toSignal(this.getTreeTableNodes$({columnFilters: [], sortCriteria: []}), {initialValue: []});
 
   public updateVehicle(vehicle: Vehicle): void {
     this._datasource.update(vehicles => {

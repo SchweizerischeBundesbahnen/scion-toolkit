@@ -120,6 +120,7 @@
 @use './design/theming' as sci-theming;
 @use './design/themes/scion-light-theme';
 @use './design/themes/scion-dark-theme';
+@use './table/table';
 @use 'sass:map';
 
 // Install theme

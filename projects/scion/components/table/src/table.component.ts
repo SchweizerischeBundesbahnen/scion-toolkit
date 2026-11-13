@@ -23,8 +23,10 @@ import {SciTableViewportComponent} from './table-viewport.component';
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header/table-header.component';
-import {SciAttributesDirective} from '@scion/components/common';
+import {SciAttributesDirective, ɵSingleActiveInjectorFactory} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
+import {contributeMenu, installMenuAccelerators, SciMenuRef, SciMenuService} from '@scion/components/menu';
+import {UUID} from '@scion/toolkit/uuid';
 
 /**
  * Provides a table to display tabular or hierarchical data.
@@ -141,6 +143,10 @@ export class SciTableComponent<T = unknown, ID = T> {
    */
   public readonly primaryAction = output<SciTableEvent<ID>>();
 
+  private readonly _menuService = inject(SciMenuService);
+  private readonly _contextMenuName = `menu:${UUID.randomUUID()}` as const;
+  private _menuRef?: SciMenuRef;
+
   private readonly _viewport = viewChild.required(SciTableViewportComponent, {read: ElementRef});
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
   private readonly _tableHeader = viewChild(SciTableHeaderComponent, {read: ElementRef});
@@ -153,6 +159,7 @@ export class SciTableComponent<T = unknown, ID = T> {
   constructor() {
     this.connectToModel();
     this.scrollActiveRowIntoViewport();
+    this.installContextMenu();
   }
 
   protected onRowPrimaryAction(event: SciTableEvent<ID>): void {
@@ -162,6 +169,34 @@ export class SciTableComponent<T = unknown, ID = T> {
 
   protected onRetry(): void {
     this.table().reloadFailed();
+  }
+
+  protected onScroll(): void {
+    this._menuRef?.close();
+  }
+
+  protected onContextMenuOpen(event: PointerEvent): void {
+    if (!this.table().contextMenu) {
+      return;
+    }
+    event.preventDefault();
+
+    if (event.button >= 0) {
+      this._menuRef = this._menuService.open(this._contextMenuName, {anchor: event});
+      return;
+    }
+
+    // If context menu keyboard button is clicked, open the menu in the middle of the viewport.
+    const viewport = this._viewport().nativeElement as HTMLElement;
+    const {x, y, width, height} = viewport.getBoundingClientRect();
+
+    this._menuRef = this._menuService.open(this._contextMenuName, {
+      anchor: {
+        x: Math.round(x + (width / 2)),
+        y: Math.round(y + (height / 2)),
+      },
+      cssClass: 'sci-table-centered-menu',
+    });
   }
 
   private connectToModel(): void {
@@ -219,6 +254,21 @@ export class SciTableComponent<T = unknown, ID = T> {
           viewport.scrollTop = activeRowBottom - viewportHeight;
         }
       });
+    });
+  }
+
+  private installContextMenu(): void {
+    contributeMenu(this._contextMenuName, menu => this.table().contextMenu?.(menu, this.table().selectedItems()));
+
+    const factory = new ɵSingleActiveInjectorFactory();
+    effect(() => {
+      const body = this._tableBody().nativeElement as HTMLElement | undefined;
+      const injector = factory.create();
+      if (body === undefined) {
+        return;
+      }
+
+      untracked(() => installMenuAccelerators(this._contextMenuName, {target: body, injector}));
     });
   }
 }

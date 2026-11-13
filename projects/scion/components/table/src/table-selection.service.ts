@@ -49,6 +49,18 @@ export class SciTableSelectionService<T, ID> {
     }
   }
 
+  public async onRowContextMenuClick(id?: ID): Promise<void> {
+    const table = this._table();
+    table.setActiveItem(id);
+
+    if (id === undefined || !table.selectable()) {
+      return;
+    }
+
+    // Only change selection if the click is outside the current selection.
+    table.updateSelectedItems(selection => selection.has(id) ? selection : new Set<ID>().add(id));
+  }
+
   public async onArrowUp(event: Event): Promise<void> {
     event.preventDefault();
 

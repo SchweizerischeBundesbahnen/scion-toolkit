@@ -155,6 +155,11 @@ export class TablePagePO {
     await this.properties.locator('input.e2e-show-row-icon').setChecked(checked);
   }
 
+  public async showContextMenu(checked: boolean): Promise<void> {
+    await this.tabbar.locator('button.e2e-settings').click();
+    await this.properties.locator('input.e2e-show-context-menu').setChecked(checked);
+  }
+
   public async showTableFilter(checked: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('input.e2e-show-table-filter').setChecked(checked);

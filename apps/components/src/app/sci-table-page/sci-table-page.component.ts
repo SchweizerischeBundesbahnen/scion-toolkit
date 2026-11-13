@@ -12,7 +12,7 @@ import {provideTableDatasource, SciTable, SciTableComponent, SciTableDatasourceP
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
 import {SCI_LOCALE, ɵcreateDestroyableInjector} from '@scion/components/common';
-import {contributeMenu, SciToolbarFactory} from '@scion/components/menu';
+import {contributeMenu, SciMenuFactory, SciToolbarFactory} from '@scion/components/menu';
 import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
@@ -97,6 +97,7 @@ export default class SciTablePageComponent {
       },
       trackBy: (item): string => item.id,
       rowActions: (toolbar, item) => item.kind === 'vehicle' && addRowActions(toolbar, item),
+      contextMenu: createContextMenu,
       columns: table => {
         const visibleColumns = this.settingsForm.visibleColumns().value();
 
@@ -250,6 +251,80 @@ export default class SciTablePageComponent {
         });
       },
     });
+
+    function createContextMenu(menu: SciMenuFactory, selectedItems: string[]): void {
+      const treeNodes = vehicleService.treeNodes();
+      const vehicles = [...new Set(selectedItems.flatMap(id => {
+        const node = treeNodes.find(treeNode => treeNode.id === id)!;
+        const children = [node];
+        const leafs = [];
+        while (children.length > 0) {
+          const next = children.pop()!;
+          const vehicle = vehicleService.vehicles().find(vehicle => vehicle.id === next.id);
+          if (vehicle) {
+            leafs.push(vehicle);
+          }
+          else {
+            children.push(...treeNodes.filter(treeNode => treeNode.parentId === next.id));
+          }
+        }
+
+        return leafs;
+      }))];
+
+      const singleSelection = vehicles.length === 1;
+      const emptySelection = vehicles.length === 0;
+      menu
+        .addMenuItem({
+          label: 'Edit',
+          icon: 'scion:edit',
+          accelerator: {
+            key: 'E',
+            ctrl: true,
+          },
+          disabled: !singleSelection,
+          onSelect: () => {
+            vehicleForm().reset(vehicles[0]);
+            requestAnimationFrame(() => {
+              tabbar().activateTab('vehicle-editor');
+              panelOpen.set(true);
+            });
+          },
+        })
+        .addMenuItem({label: 'Duplicate', icon: 'scion:duplicate', disabled: !singleSelection, onSelect: () => vehicleService.addVehicle(vehicles[0]!)})
+        .addMenuItem({label: 'Delete', icon: 'scion:delete', disabled: emptySelection, onSelect: () => vehicles.forEach(vehicle => vehicleService.deleteVehicle(vehicle.id))})
+        .addGroup({disabled: emptySelection}, group => group
+          .addMenu({icon: 'alt_route', label: 'Change Status'}, menu => menu
+            .addMenuItem({icon: 'play_circle', label: 'In Operation', onSelect: () => updateStatus('In Operation'), disabled: vehicles.every(vehicle => vehicle.status === 'In Operation')})
+            .addGroup(group => group
+              .addMenuItem({icon: 'check_circle', label: 'Ready for Service', onSelect: () => updateStatus('Ready for Service'), disabled: vehicles.every(vehicle => vehicle.status === 'Ready for Service')})
+              .addMenuItem({icon: 'engineering', label: 'Maintenance', onSelect: () => updateStatus('Maintenance'), disabled: vehicles.every(vehicle => vehicle.status === 'Maintenance')})
+              .addMenuItem({icon: 'pause_circle', label: 'Stabled', onSelect: () => updateStatus('Stabled'), disabled: vehicles.every(vehicle => vehicle.status === 'Stabled')}),
+            ),
+          )
+          .addMenuItem({icon: 'location_on', label: 'Transfer Depot', onSelect: () => console.log('transfer to depot', vehicles)})
+          .addMenu({icon: 'analytics', label: 'Reports & History', disabled: !singleSelection}, menu => menu
+            .addMenuItem({icon: 'history', label: 'Overhaul History', onSelect: () => console.log('history', vehicles[0])})
+            .addMenuItem({icon: 'speed', label: 'Telemetry & Mileage', onSelect: () => console.log('telemetry & mileage', vehicles[0])}),
+          ),
+        )
+        .addGroup({disabled: emptySelection}, group => group
+          .addMenuItem({icon: 'content_copy', label: singleSelection ? 'Copy Vehicle ID' : 'Copy Vehicle IDs', onSelect: () => console.log('copy', vehicles.map(vehicle => vehicle.vehicleId))})
+          .addMenuItem({icon: 'code', label: 'Copy as JSON', onSelect: () => console.log('json', vehicles)})
+          .addMenuItem({icon: 'picture_as_pdf', label: 'Vehicle Datasheet (PDF)', disabled: !singleSelection, onSelect: () => console.log('pdf', vehicles[0])}),
+        )
+        .addGroup({disabled: emptySelection}, group => group
+          .addMenu({label: 'More'}, menu => menu
+            .addMenuItem({icon: 'share', label: 'Share', onSelect: () => console.log('share', vehicles)})
+            .addMenuItem({icon: 'download', label: 'Download', onSelect: () => console.log('download', vehicles)})
+            .addMenuItem({icon: 'print', label: 'Print', onSelect: () => console.log('print', vehicles)}),
+          ),
+        );
+
+      function updateStatus(status: Vehicle['status']): void {
+        vehicles.forEach(vehicle => vehicleService.updateVehicle({...vehicle, status}));
+      }
+    }
 
     function addRowActions(toolbar: SciToolbarFactory, vehicle: Vehicle): void {
       toolbar

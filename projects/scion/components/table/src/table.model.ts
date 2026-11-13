@@ -11,7 +11,7 @@
 import {Injector, Signal, WritableSignal} from '@angular/core';
 import {SciTableDatasourceProvider, SciTableSortCriterion} from './table-datasource';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
-import {SciToolbarFactory} from '@scion/components/menu';
+import {SciMenuFactory, SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
 import {SciDateValue} from './table-date-column.model';
@@ -156,6 +156,8 @@ export interface SciTableDescriptor<T, ID = T> {
    * - Can call `inject` to get required dependencies.
    */
   rowActions?: SciTableRowActionFactoryFn<T>;
+
+  contextMenu?: SciTableContextMenuFactoryFn<ID>;
 
   /**
    * Configures row bindings for table rows.
@@ -447,6 +449,8 @@ export interface SciTableCellContext<T = unknown, VALUE = unknown> {
  * - Can call `inject` to get required dependencies.
  */
 export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
+
+export type SciTableContextMenuFactoryFn<ID> = (menu: SciMenuFactory, selectedItems: ID[]) => void;
 
 /**
  * Represents an event emitted by {@link SciTableComponent}.

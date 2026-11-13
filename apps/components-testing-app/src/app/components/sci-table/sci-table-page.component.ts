@@ -85,7 +85,7 @@ export default class SciTablePageComponent {
     this.bindTableSettings();
   }
 
-  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; bufferSize: number; pageSize: number; hierarchical: boolean}): SciTable<number> {
+  private createTable(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showRowActions: boolean; showContextMenu: boolean; bufferSize: number; pageSize: number; hierarchical: boolean}): SciTable<number> {
     return table<Product, number>({
       datasource: (() => {
         if (options.datasource === 'array-http') {
@@ -146,6 +146,11 @@ export default class SciTablePageComponent {
             onSelect: () => console.log('edit', product.id),
           }),
         ) : undefined,
+      contextMenu: options.showContextMenu ? (menu, selectedItems) => menu.addMenuItem({
+        label: 'Log Selection',
+        accelerator: {key: 'Delete'},
+        onSelect: () => console.log(`[SciTablePageComponent] Context menu action: ${selectedItems.join(' ')}`),
+      }) : undefined,
       trackBy: product => product.id,
       bufferSize: options.bufferSize,
       pageSize: options.pageSize,
@@ -312,6 +317,7 @@ export default class SciTablePageComponent {
       const tableCount = this.settingsForm.tableCount().value();
       const datasource = this.datasourceForm.datasource().value();
       const showRowActions = this.settingsForm.showRowActions().value();
+      const showContextMenu = this.settingsForm.showContextMenu().value();
       const bufferSize = this.datasourceForm.bufferSize().value();
       const pageSize = this.datasourceForm.pageSize().value();
       const hierarchical = this.settingsForm.hierarchical().value();
@@ -319,7 +325,7 @@ export default class SciTablePageComponent {
       untracked(() => {
         const injector = ɵcreateDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, bufferSize, pageSize, hierarchical}))));
+        tables.set(Array.from(Array(tableCount), (_, i) => runInInjectionContext(injector, () => this.createTable({datasource, showRowActions, showContextMenu, bufferSize, pageSize, hierarchical}))));
       });
     });
 
@@ -416,6 +422,7 @@ export default class SciTablePageComponent {
       wrapHeader: false,
       showGridlines: false,
       showRowActions: false,
+      showContextMenu: false,
       showRowIcon: false,
       showTableFilter: true,
       customRowStyling: false,
@@ -548,6 +555,7 @@ interface SettingsForm {
   wrapHeader: boolean;
   showGridlines: boolean;
   showRowActions: boolean;
+  showContextMenu: boolean;
   showRowIcon: boolean;
   showTableFilter: boolean;
   customRowStyling: boolean;

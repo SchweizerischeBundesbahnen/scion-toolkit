@@ -6207,6 +6207,175 @@ describe('Table', () => {
     });
   });
 
+  describe('Context Menu', () => {
+
+    it('should open at the pointer position', async () => {
+      const onSelect = jasmine.createSpy<(items: number[]) => void>();
+      const {fixture, model} = createSciTableComponent(sciTable<{id: number}, number>({
+        datasource: signal([{id: 1}, {id: 2}, {id: 3}]),
+        trackBy: item => item.id,
+        columns: table => table.addNumberColumn(item => item.id),
+        contextMenu: (menu, selectedItems) => menu.addMenuItem({
+          label: 'Delete',
+          cssClass: 'testee',
+          onSelect: () => onSelect(selectedItems),
+        }),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      const event = new PointerEvent('contextmenu', {button: 2, clientX: 100, clientY: 150, bubbles: true});
+      table.row({index: 1}).cells[0]!.element.dispatchEvent(event);
+      await table.waitUntilStable();
+
+      const menu = document.querySelector('sci-menu');
+      expect(menu).not.toBeNull();
+      expect(menu!.matches(':popover-open')).toBeTrue();
+      expect(menu!.getBoundingClientRect().x).toBeCloseTo(100, 0);
+      expect(menu!.getBoundingClientRect().y).toBeCloseTo(150, 0);
+      expect(model.selectedItems()).toEqual([2]);
+      expect(model.activeItem()).toBe(2);
+
+      menu!.querySelector<HTMLButtonElement>('button.testee')!.click();
+      expect(onSelect).toHaveBeenCalledOnceWith([2]);
+    });
+
+    it('should preserve the native context menu when none is configured', async () => {
+      const {fixture} = createSciTableComponent(sciTable<number>({
+        datasource: signal([1, 2, 3]),
+        columns: table => table.addNumberColumn(item => item),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      const event = new PointerEvent('contextmenu', {button: 2, bubbles: true});
+      table.row({index: 1}).element.dispatchEvent(event);
+      await table.waitUntilStable();
+
+      expect(event.defaultPrevented).toBeFalse();
+      expect(document.querySelector<HTMLElement>('sci-menu')).toBeNull();
+    });
+
+    it('should preserve the selection when right-clicking a selected row', async () => {
+      const onSelect = jasmine.createSpy<(items: number[]) => void>();
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        datasource: signal([1, 2, 3]),
+        columns: table => table.addNumberColumn(item => item),
+        contextMenu: (menu, selectedItems) => menu.addMenuItem({
+          label: 'Delete',
+          cssClass: 'testee',
+          onSelect: () => onSelect(selectedItems),
+        }),
+        injector: TestBed.inject(Injector),
+      }));
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.select([1, 2]);
+      await table.waitUntilStable();
+      expect(table.rows.map(row => row.isSelected())).toEqual([true, true, false]);
+
+      table.row({index: 0}).element.dispatchEvent(new PointerEvent('contextmenu', {button: 2, bubbles: true}));
+      await table.waitUntilStable();
+      const menu = document.querySelector<HTMLElement>('sci-menu');
+      expect(model.selectedItems()).toEqual([1, 2]);
+      expect(model.activeItem()).toBe(1);
+      expect(table.rows.map(row => row.isSelected())).toEqual([true, true, false]);
+
+      menu!.querySelector<HTMLButtonElement>('button.testee')!.click();
+      expect(onSelect).toHaveBeenCalledOnceWith([1, 2]);
+    });
+
+    it('should replace the selection when right-clicking an unselected row', async () => {
+      const onSelect = jasmine.createSpy<(items: number[]) => void>();
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        datasource: signal([1, 2, 3]),
+        columns: table => table.addNumberColumn(item => item),
+        contextMenu: (menu, selectedItems) => menu.addMenuItem({
+          label: 'Delete',
+          cssClass: 'testee',
+          onSelect: () => onSelect(selectedItems),
+        }),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      model.select([1, 2]);
+      await table.waitUntilStable();
+      expect(table.rows.map(row => row.isSelected())).toEqual([true, true, false]);
+
+      table.row({index: 2}).element.dispatchEvent(new PointerEvent('contextmenu', {button: 2, bubbles: true}));
+      await table.waitUntilStable();
+      const menu = document.querySelector<HTMLElement>('sci-menu');
+      expect(model.selectedItems()).toEqual([3]);
+      expect(model.activeItem()).toBe(3);
+      expect(table.rows.map(row => row.isSelected())).toEqual([false, false, true]);
+
+      menu!.querySelector<HTMLButtonElement>('button.testee')!.click();
+      expect(onSelect).toHaveBeenCalledOnceWith([3]);
+    });
+
+    it('should use the current selection when opening from body', async () => {
+      const onSelect = jasmine.createSpy<(items: number[]) => void>();
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        datasource: signal([1, 2, 3]),
+        columns: table => table.addNumberColumn(item => item),
+        contextMenu: (menu, selectedItems) => menu.addMenuItem({
+          label: 'Delete',
+          cssClass: 'testee',
+          onSelect: () => onSelect(selectedItems),
+        }),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      model.select([1, 2]);
+      await table.waitUntilStable();
+
+      table.element.querySelector('sci-table-body')!.dispatchEvent(new PointerEvent('contextmenu', {button: 2, bubbles: true}));
+
+      const menu = document.querySelector<HTMLElement>('sci-menu');
+
+      menu!.querySelector<HTMLButtonElement>('button.testee')!.click();
+      expect(table.rows.map(row => row.isSelected())).toEqual([true, true, false]);
+      expect(onSelect).toHaveBeenCalledOnceWith([1, 2]);
+    });
+
+    it('should use the current selection when opening from column splitter', async () => {
+      const onSelect = jasmine.createSpy<(items: number[]) => void>();
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        datasource: signal([1, 2, 3]),
+        columns: table => table.addNumberColumn(item => item).addNumberColumn(item => item),
+        contextMenu: (menu, selectedItems) => menu.addMenuItem({
+          label: 'Delete',
+          cssClass: 'testee',
+          onSelect: () => onSelect(selectedItems),
+        }),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      model.select([1, 2]);
+      await table.waitUntilStable();
+
+      table.element.querySelector('sci-splitter')!.dispatchEvent(new PointerEvent('contextmenu', {button: 2, bubbles: true}));
+
+      const menu = document.querySelector<HTMLElement>('sci-menu');
+
+      menu!.querySelector<HTMLButtonElement>('button.testee')!.click();
+      expect(table.rows.map(row => row.isSelected())).toEqual([true, true, false]);
+      expect(onSelect).toHaveBeenCalledOnceWith([1, 2]);
+    });
+  });
+
   describe('Row Bindings', () => {
 
     it('should call row binding function in a reactive context', async () => {

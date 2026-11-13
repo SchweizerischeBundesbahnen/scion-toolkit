@@ -35,6 +35,7 @@ import {isFromButton, isFromInput} from '../common';
     '[attr.data-state]': `row().level !== undefined && row().hasChildren() ? (row().expanded() ? 'expanded' : 'collapsed') : null`,
     '[style.--ɵsci-table-row-level]': 'row().level', // only set if hierarchical
     '(click)': 'onRowClick($event)',
+    '(contextmenu)': 'onRowContextMenuClick()',
     '(dblclick)': 'onRowDblClick($event)',
     '(mouseenter)': 'onRowMouseEnter()',
     '(mouseleave)': 'onRowMouseLeave($event)',
@@ -62,6 +63,15 @@ export class SciTableRowComponent<T, ID> {
     }
     const index = this.table().rowIndexById().get(row.id) ?? -1;
     void this._selectionService.onRowClick(index, event);
+  }
+
+  protected onRowContextMenuClick(): void {
+    const row = this.row();
+    if (row.id === skeletonRowId) {
+      return;
+    }
+
+    void this._selectionService.onRowContextMenuClick(row.id);
   }
 
   protected onRowDblClick(event: MouseEvent): void {

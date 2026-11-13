@@ -10,7 +10,7 @@
 
 import {computed, effect, inject, InjectionToken, Injector, isSignal, linkedSignal, NgZone, resource, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
 import {eSCI_TABLE_DATASOURCE_PROVIDER, provideTableDatasource, SciTableColumnFilter, SciTableSortCriterion, SciTreeTableNode, SciTreeTableDatasource} from './table-datasource';
-import {SciEnumValueLike, SciTable, SciTableCellLike, SciTableColumnLike, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn, skeletonRowId} from './table.model';
+import {SciEnumValueLike, SciTable, SciTableCellLike, SciTableColumnLike, SciTableContextMenuFactoryFn, SciTableDescriptor, SciTableRow, SciTableRowActionFactoryFn, skeletonRowId} from './table.model';
 import {ɵSciTableColumnFactory} from './ɵtable-column.factory';
 import {SCI_COMPONENTS_STORAGE, toLazyObservable, ɵcreateDestroyableInjector, ɵSingleActiveInjectorFactory} from '@scion/components/common';
 import {SciTableCache} from './table.cache';
@@ -36,6 +36,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
   public readonly name = signal<`table:${string}` | undefined>(undefined);
   public readonly columns: Signal<SciTableColumnLike<T>[]>;
   public readonly rowActions?: SciTableRowActionFactoryFn<T>;
+  public readonly contextMenu?: SciTableContextMenuFactoryFn<ID>;
 
   private readonly _rowBindings: SciTableRowBindingFactoryFn<T>[];
   private readonly _datasource: SciTreeTableDatasource<T, ID>;
@@ -117,6 +118,7 @@ export class ɵSciTable<T = unknown, ID = T> implements SciTable<ID> {
     this.activeRow = this.computeActiveRow();
     this.columns = this.computeColumns(descriptor);
 
+    this.contextMenu = descriptor.contextMenu;
     this.rowActions = descriptor.rowActions;
     this._rowBindings = [
       ...descriptor.rowBindings ? [descriptor.rowBindings] : [],
