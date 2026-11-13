@@ -27,6 +27,7 @@ import {SciAttributesDirective, ɵSingleActiveInjectorFactory} from '@scion/comp
 import {SciIconComponent} from '@scion/components/icon';
 import {contributeMenu, installMenuAccelerators, SciMenuRef, SciMenuService} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
+import {isFromInput} from './common';
 
 /**
  * Provides a table to display tabular or hierarchical data.
@@ -176,7 +177,7 @@ export class SciTableComponent<T = unknown, ID = T> {
   }
 
   protected onContextMenuOpen(event: PointerEvent): void {
-    if (!this.table().contextMenu) {
+    if (!this.table().contextMenu || isFromInput(event)) {
       return;
     }
     event.preventDefault();

@@ -5655,6 +5655,25 @@ test.describe('sci-table', () => {
       }).toPass();
       await expect(tablePage.selection).toHaveText('0 1');
     });
+
+    // TODO [context-menu] Fix test
+    test.fixme('should not prevent context menu from opening inside input', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      const table = new TablePO(tablePage.table);
+      await tablePage.navigate();
+      await tablePage.showContextMenu(true);
+      await tablePage.addColumn({name: 'column:string', type: 'string'});
+      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {componentColumn: {component: 'component:custom-input-column'}}});
+
+      const cell = table.row({nth: 0}).cell('column:component');
+      const component = new CustomInputColumnPO(cell);
+
+      await component.input.click({button: 'right'});
+      await expect(page.locator('sci-menu')).not.toBeVisible();
+
+      await table.row({nth: 0}).cell('column:string').locator.click({button: 'right'});
+      await expect(page.locator('sci-menu')).toBeVisible();
+    });
   });
 
   test.describe('Scrollbar', () => {
