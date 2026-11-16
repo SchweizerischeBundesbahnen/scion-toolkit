@@ -5590,6 +5590,25 @@ test.describe('sci-table', () => {
       await expect(menu).not.toBeAttached();
     });
 
+    test('should open the context menu when moving outside of table during click', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      await tablePage.navigate();
+
+      await tablePage.showContextMenu(true);
+      await tablePage.setHeight(300);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      const table = new TablePO(tablePage.table);
+      await table.row({index: 5}).hover();
+
+      await page.mouse.down({button: 'right'});
+      const tabbarBoundingBox = await tablePage.tabbar.boundingBox();
+      await page.mouse.move(tabbarBoundingBox!.x, tabbarBoundingBox!.y);
+      await page.mouse.up({button: 'right'});
+
+      await expect(page.locator('sci-menu')).toBeVisible();
+    });
+
     test('should invoke accelerators with the current selection without opening the menu', async ({page, consoleLogs}) => {
       const tablePage = new TablePagePO(page);
       await tablePage.navigate();

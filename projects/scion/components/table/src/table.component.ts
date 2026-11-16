@@ -8,7 +8,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, effect, ElementRef, inject, input, output, Provider, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, output, Provider, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {SciTable, SciTableEvent} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {SciScrollbarComponent} from '@scion/components/viewport';
@@ -28,6 +29,7 @@ import {SciIconComponent} from '@scion/components/icon';
 import {contributeMenu, installMenuAccelerators, SciMenuRef, SciMenuService} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 import {isFromInput} from './common';
+import {firstValueFrom, fromEvent} from 'rxjs';
 
 /**
  * Provides a table to display tabular or hierarchical data.
@@ -144,6 +146,8 @@ export class SciTableComponent<T = unknown, ID = T> {
    */
   public readonly primaryAction = output<SciTableEvent<ID>>();
 
+  private readonly _document = inject(DOCUMENT);
+  private readonly _destroyRef = inject(DestroyRef);
   private readonly _menuService = inject(SciMenuService);
   private readonly _contextMenuName = `menu:${UUID.randomUUID()}` as const;
   private _menuRef?: SciMenuRef;
@@ -176,13 +180,25 @@ export class SciTableComponent<T = unknown, ID = T> {
     this._menuRef?.close();
   }
 
-  protected onContextMenuOpen(event: PointerEvent): void {
+  protected async onContextMenuOpen(event: PointerEvent): Promise<void> {
     if (!this.table().contextMenu || isFromInput(event)) {
       return;
     }
     event.preventDefault();
 
     if (event.button >= 0) {
+      // Some browsers dispatch the contextmenu event before mouseup.
+      // Wait for release to prevent the opening gesture from immediately dismissing the auto popover on pointerup.
+      // If the button is already released (buttons === 0), no mouseup is expected.
+      // See: https://github.com/whatwg/html/issues/10905
+      if (event.buttons !== 0) {
+        const mouseup$ = fromEvent(this._document, 'mouseup', {capture: true}).pipe(takeUntilDestroyed(this._destroyRef));
+        const mouseup = await firstValueFrom(mouseup$, {defaultValue: null});
+        // If the component is destroyed while the mouse button is pressed, don't open the menu.
+        if (mouseup === null) {
+          return;
+        }
+      }
       this._menuRef = this._menuService.open(this._contextMenuName, {anchor: event});
       return;
     }

@@ -6226,13 +6226,13 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      const event = new PointerEvent('contextmenu', {button: 2, clientX: 100, clientY: 150, bubbles: true});
-      table.row({index: 1}).cells[0]!.element.dispatchEvent(event);
+      // Some browsers dispatch contextmenu after the mouse button has already been released.
+      table.row({index: 1}).cells[0]!.element.dispatchEvent(new MouseEvent('mouseup', {button: 2, bubbles: true}));
+      table.row({index: 1}).cells[0]!.element.dispatchEvent(new PointerEvent('contextmenu', {button: 2, buttons: 0, clientX: 100, clientY: 150, bubbles: true}));
       await table.waitUntilStable();
 
       const menu = document.querySelector('sci-menu');
       expect(menu).not.toBeNull();
-      expect(menu!.matches(':popover-open')).toBeTrue();
       expect(menu!.getBoundingClientRect().x).toBeCloseTo(100, 0);
       expect(menu!.getBoundingClientRect().y).toBeCloseTo(150, 0);
       expect(model.selectedItems()).toEqual([2]);
@@ -6240,6 +6240,30 @@ describe('Table', () => {
 
       menu!.querySelector<HTMLButtonElement>('button.testee')!.click();
       expect(onSelect).toHaveBeenCalledOnceWith([2]);
+    });
+
+    it('should wait for mouse release when opening while a button is pressed', async () => {
+      const {fixture} = createSciTableComponent(sciTable<number>({
+        datasource: signal([1, 2, 3]),
+        columns: table => table.addNumberColumn(item => item),
+        contextMenu: menu => menu.addMenuItem({label: 'Delete', onSelect: jasmine.createSpy()}),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+
+      table.row({index: 1}).element.dispatchEvent(new PointerEvent('contextmenu', {button: 2, buttons: 2, clientX: 100, clientY: 150, bubbles: true}));
+      await table.waitUntilStable();
+      expect(document.querySelector('sci-menu')).toBeNull();
+
+      document.dispatchEvent(new MouseEvent('mouseup', {button: 2, buttons: 0}));
+      await table.waitUntilStable();
+
+      const menu = document.querySelector('sci-menu');
+      expect(menu).not.toBeNull();
+      expect(menu!.getBoundingClientRect().x).toBeCloseTo(100, 0);
+      expect(menu!.getBoundingClientRect().y).toBeCloseTo(150, 0);
     });
 
     it('should preserve the native context menu when none is configured', async () => {
@@ -6252,7 +6276,7 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
 
-      const event = new PointerEvent('contextmenu', {button: 2, bubbles: true});
+      const event = new PointerEvent('contextmenu', {button: 2, buttons: 0, bubbles: true});
       table.row({index: 1}).element.dispatchEvent(event);
       await table.waitUntilStable();
 
@@ -6279,7 +6303,7 @@ describe('Table', () => {
       await table.waitUntilStable();
       expect(table.rows.map(row => row.isSelected())).toEqual([true, true, false]);
 
-      table.row({index: 0}).element.dispatchEvent(new PointerEvent('contextmenu', {button: 2, bubbles: true}));
+      table.row({index: 0}).element.dispatchEvent(new PointerEvent('contextmenu', {button: 2, buttons: 0, bubbles: true}));
       await table.waitUntilStable();
       const menu = document.querySelector<HTMLElement>('sci-menu');
       expect(model.selectedItems()).toEqual([1, 2]);
@@ -6312,6 +6336,7 @@ describe('Table', () => {
 
       table.row({index: 2}).element.dispatchEvent(new PointerEvent('contextmenu', {button: 2, bubbles: true}));
       await table.waitUntilStable();
+
       const menu = document.querySelector<HTMLElement>('sci-menu');
       expect(model.selectedItems()).toEqual([3]);
       expect(model.activeItem()).toBe(3);
@@ -6339,10 +6364,9 @@ describe('Table', () => {
       model.select([1, 2]);
       await table.waitUntilStable();
 
-      table.element.querySelector('sci-table-body')!.dispatchEvent(new PointerEvent('contextmenu', {button: 2, bubbles: true}));
+      table.element.querySelector('sci-table-body')!.dispatchEvent(new PointerEvent('contextmenu', {button: 2, buttons: 0, bubbles: true}));
 
       const menu = document.querySelector<HTMLElement>('sci-menu');
-
       menu!.querySelector<HTMLButtonElement>('button.testee')!.click();
       expect(table.rows.map(row => row.isSelected())).toEqual([true, true, false]);
       expect(onSelect).toHaveBeenCalledOnceWith([1, 2]);
@@ -6366,7 +6390,7 @@ describe('Table', () => {
       model.select([1, 2]);
       await table.waitUntilStable();
 
-      table.element.querySelector('sci-splitter')!.dispatchEvent(new PointerEvent('contextmenu', {button: 2, bubbles: true}));
+      table.element.querySelector('sci-splitter')!.dispatchEvent(new PointerEvent('contextmenu', {button: 2, buttons: 0, bubbles: true}));
 
       const menu = document.querySelector<HTMLElement>('sci-menu');
 

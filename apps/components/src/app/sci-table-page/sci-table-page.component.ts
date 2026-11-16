@@ -254,7 +254,7 @@ export default class SciTablePageComponent {
 
     function createContextMenu(menu: SciMenuFactory, selectedItems: string[]): void {
       const treeNodes = vehicleService.treeNodes();
-      const vehicles = [...new Set(selectedItems.flatMap(id => {
+      const vehicles = selectedItems.flatMap(id => {
         const node = treeNodes.find(treeNode => treeNode.id === id)!;
         const children = [node];
         const leafs = [];
@@ -270,7 +270,7 @@ export default class SciTablePageComponent {
         }
 
         return leafs;
-      }))];
+      });
 
       const singleSelection = vehicles.length === 1;
       const emptySelection = vehicles.length === 0;
