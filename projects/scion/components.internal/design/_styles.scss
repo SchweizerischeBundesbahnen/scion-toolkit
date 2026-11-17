@@ -53,7 +53,7 @@
   font-weight: 500;
   border-radius: var(--sci-corner);
   text-align: center;
-  user-select: none;
+  cursor: var(--sci-button-cursor);
 
   &:hover:where(:not(:disabled)) {
     background-color: #{light-dark}(color-mix(in srgb, var(--sci-color-gray-100) 95%, var(--sci-static-color-white)), color-mix(in srgb, var(--sci-color-gray-100) 75%, var(--sci-static-color-black)));
