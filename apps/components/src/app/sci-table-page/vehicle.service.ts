@@ -27,7 +27,9 @@ export class VehicleService {
 
   public readonly vehicleCount = signal(10_000);
   public readonly vehicles: Signal<Vehicle[]> = computed(() => this._datasource.value().slice(0, this.vehicleCount()));
+  public readonly vehicles$ = toObservable(this.vehicles);
   public readonly operatorGroups = computed(() => createOperatorGroups(this.vehicles()));
+  public readonly operatorGroups$ = toObservable(this.operatorGroups);
 
   public updateVehicle(vehicle: Vehicle): void {
     this._datasource.update(vehicles => {
@@ -62,17 +64,17 @@ export class VehicleService {
     });
   }
 
-  public getItems$(ids: string[]): Observable<Vehicle[]> {
-    return toObservable(computed(() => {
-      const vehicles = this.vehicles();
-      return ids
+  public getVehicles$(ids: string[]): Observable<Vehicle[]> {
+    return this.vehicles$.pipe(
+      map(vehicles => ids
         .map(id => vehicles.find(vehicle => vehicle.id === id))
-        .filter((vehicle): vehicle is Vehicle => !!vehicle);
-    }));
+        .filter((vehicle): vehicle is Vehicle => !!vehicle),
+      ),
+    );
   }
 
   public getTreeTableNodes$(query: SciTableDatasourceQuery): Observable<SciTreeTableNode<string>[]> {
-    return toObservable(this.vehicles)
+    return this.vehicles$
       .pipe(
         map(vehicles => Vehicles.sort(vehicles, 'sortCriteria' in query ? query.sortCriteria : [])),
         map(vehicles => createOperatorGroups(vehicles)),
@@ -92,7 +94,7 @@ export class VehicleService {
   }
 
   public getVehicleNodes$(ids: string[]): Observable<VehicleNode[]> {
-    return toObservable(this.operatorGroups)
+    return this.operatorGroups$
       .pipe(
         map(operatorGroups => createVehicleNodes(operatorGroups)),
         filterArray(vehicleNode => ids.includes(vehicleNode.item.id)),
@@ -101,7 +103,7 @@ export class VehicleService {
   }
 
   public getVehicleIds$(query: SciTableDatasourceQuery): Observable<string[]> {
-    return toObservable(this.vehicles)
+    return this.vehicles$
       .pipe(
         filterArray(vehicle => Vehicles.matches(vehicle, query)),
         map(vehicles => Vehicles.sort(vehicles, 'sortCriteria' in query ? query.sortCriteria : [])),

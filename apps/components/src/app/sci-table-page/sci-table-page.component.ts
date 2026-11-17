@@ -328,7 +328,7 @@ export default class SciTablePageComponent {
     if (options.slowDatasource) {
       return ɵprovideTableDatasource<VehicleNode, string>({
         getIds: query => timer(1000).pipe(switchMap(() => this._vehicleService.getVehicleIds$(query))),
-        getItems: ids => timer(1000).pipe(switchMap(() => this._vehicleService.getItems$(ids))),
+        getItems: ids => timer(1000).pipe(switchMap(() => this._vehicleService.getVehicles$(ids))),
       });
     }
 
