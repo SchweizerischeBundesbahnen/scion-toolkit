@@ -104,6 +104,7 @@
   background-color: var(--sci-color-background-input);
   color: var(--sci-color-text);
   appearance: auto;
+  cursor: auto; // Ensure native element cursor.
 
   &:focus-within:not(:disabled):not(:has(input:disabled)):not(:has(select:disabled)) {
     border-color: var(--sci-color-accent);
