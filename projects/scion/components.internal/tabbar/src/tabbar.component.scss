@@ -16,6 +16,7 @@
       all: unset;
       flex: none;
       position: relative; // positioning context for div.outline
+      cursor: var(--sci-button-cursor);
 
       &:focus-visible > div.outline {
         display: unset;
