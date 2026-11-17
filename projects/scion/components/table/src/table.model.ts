@@ -150,6 +150,8 @@ export interface SciTableDescriptor<T, ID = T> {
    * });
    * ```
    *
+   * TODO: document disabled accelerators
+   *
    * The function:
    * - Is called per item with a {@link SciToolbarFactory} to contribute actions.
    * - Runs in a reactive context and re-evaluates when tracked signals change.
@@ -157,6 +159,29 @@ export interface SciTableDescriptor<T, ID = T> {
    */
   rowActions?: SciTableRowActionFactoryFn<T>;
 
+  /**
+   * Configures context menu for the selected items.
+   *
+   * @example
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table({
+   *   datasource: data,
+   *   columns: table => ...,
+   *   contextMenu: (menu, selectedItems) => menu.addMenuItem({
+   *     label: 'Delete',
+   *     icon: 'delete',
+   *     onSelect: () => ...,
+   *   }),
+   * });
+   * ```
+   *
+   * The function:
+   * - Is called when selected items change with a {@link SciMenuFactory} to contribute menu items.
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
+   */
   contextMenu?: SciTableContextMenuFactoryFn<ID>;
 
   /**

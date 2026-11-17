@@ -11,7 +11,7 @@
 import {SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableNode} from '@scion/components/table';
 import {computed, Service, Signal, signal} from '@angular/core';
 import {Observable} from 'rxjs';
-import {toObservable, toSignal} from '@angular/core/rxjs-interop';
+import {toObservable} from '@angular/core/rxjs-interop';
 import {map} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
 import {ClassTypeGroup, DepotGroup, OperatorGroup, Vehicle, VehicleNode} from './vehicle.model';
@@ -28,7 +28,36 @@ export class VehicleService {
   public readonly vehicleCount = signal(10_000);
   public readonly vehicles: Signal<Vehicle[]> = computed(() => this._datasource.value().slice(0, this.vehicleCount()));
   public readonly operatorGroups = computed(() => createOperatorGroups(this.vehicles()));
-  public readonly treeNodes = toSignal(this.getTreeTableNodes$({columnFilters: [], sortCriteria: []}), {initialValue: []});
+
+  /**
+   * Returns all vehicles which are descendants of an array of nodes.
+   */
+  public getVehiclesForNodes(ids: readonly string[]): Vehicle[] {
+    const treeNodes = createVehicleNodes(this.operatorGroups());
+    const nodesById = new Map(treeNodes.map(node => [node.item.id, node]));
+    const vehicles = ids.flatMap(id => {
+      const node = nodesById.get(id);
+      if (node === undefined) {
+        return [];
+      }
+      const children = [node];
+      const leafs = [];
+      while (children.length > 0) {
+        const next = children.pop()!;
+        const nextNode = nodesById.get(next.item.id)!;
+        if (nextNode.item.kind === 'vehicle') {
+          leafs.push(nextNode.item);
+        }
+        else {
+          children.push(...treeNodes.filter(treeNode => treeNode.parentId === next.item.id));
+        }
+      }
+
+      return leafs;
+    });
+
+    return [...new Set(vehicles)];
+  }
 
   public updateVehicle(vehicle: Vehicle): void {
     this._datasource.update(vehicles => {

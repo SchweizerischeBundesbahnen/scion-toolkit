@@ -26,7 +26,7 @@ import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header/table-header.component';
 import {SciAttributesDirective, ɵSingleActiveInjectorFactory} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
-import {contributeMenu, installMenuAccelerators, SciMenuRef, SciMenuService} from '@scion/components/menu';
+import {contributeMenu, installMenuAccelerators, SciMenuRef, ɵSciMenuService} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 import {isFromInput} from './common';
 import {firstValueFrom, fromEvent} from 'rxjs';
@@ -146,9 +146,10 @@ export class SciTableComponent<T = unknown, ID = T> {
    */
   public readonly primaryAction = output<SciTableEvent<ID>>();
 
+  // private readonly _vcr = inject(ViewContainerRef);
   private readonly _document = inject(DOCUMENT);
   private readonly _destroyRef = inject(DestroyRef);
-  private readonly _menuService = inject(SciMenuService);
+  private readonly _menuService = inject(ɵSciMenuService);
   private readonly _contextMenuName = `menu:${UUID.randomUUID()}` as const;
   private _menuRef?: SciMenuRef;
 
@@ -165,6 +166,8 @@ export class SciTableComponent<T = unknown, ID = T> {
     this.connectToModel();
     this.scrollActiveRowIntoViewport();
     this.installContextMenu();
+
+    inject(DestroyRef).onDestroy(() => this._menuRef?.close());
   }
 
   protected onRowPrimaryAction(event: SciTableEvent<ID>): void {
@@ -181,7 +184,7 @@ export class SciTableComponent<T = unknown, ID = T> {
   }
 
   protected async onContextMenuOpen(event: PointerEvent): Promise<void> {
-    if (!this.table().contextMenu || isFromInput(event)) {
+    if (this.table().contextMenu === undefined || isFromInput(event) || event.ctrlKey || event.metaKey || event.shiftKey) {
       return;
     }
     event.preventDefault();
@@ -205,14 +208,26 @@ export class SciTableComponent<T = unknown, ID = T> {
 
     // If context menu keyboard button is clicked, open the menu in the middle of the viewport.
     const viewport = this._viewport().nativeElement as HTMLElement;
+    const contextMenuId = UUID.randomUUID();
     const {x, y, width, height} = viewport.getBoundingClientRect();
+    const styleSheet = new CSSStyleSheet();
+    styleSheet.insertRule(`sci-menu[data-context-menu-id="${contextMenuId}"] {
+      translate: -50% -50%;
+    }`);
+    this._document.adoptedStyleSheets.push(styleSheet);
 
     this._menuRef = this._menuService.open(this._contextMenuName, {
       anchor: {
         x: Math.round(x + (width / 2)),
         y: Math.round(y + (height / 2)),
       },
-      cssClass: 'sci-table-centered-menu',
+      attributes: {
+        'data-context-menu-id': contextMenuId,
+      },
+    });
+
+    this._menuRef.onClose(() => {
+      this._document.adoptedStyleSheets.splice(this._document.adoptedStyleSheets.indexOf(styleSheet));
     });
   }
 

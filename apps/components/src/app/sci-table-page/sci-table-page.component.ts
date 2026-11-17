@@ -253,27 +253,10 @@ export default class SciTablePageComponent {
     });
 
     function createContextMenu(menu: SciMenuFactory, selectedItems: string[]): void {
-      const treeNodes = vehicleService.treeNodes();
-      const vehicles = selectedItems.flatMap(id => {
-        const node = treeNodes.find(treeNode => treeNode.id === id)!;
-        const children = [node];
-        const leafs = [];
-        while (children.length > 0) {
-          const next = children.pop()!;
-          const vehicle = vehicleService.vehicles().find(vehicle => vehicle.id === next.id);
-          if (vehicle) {
-            leafs.push(vehicle);
-          }
-          else {
-            children.push(...treeNodes.filter(treeNode => treeNode.parentId === next.id));
-          }
-        }
-
-        return leafs;
-      });
-
+      const vehicles = vehicleService.getVehiclesForNodes(selectedItems);
       const singleSelection = vehicles.length === 1;
       const emptySelection = vehicles.length === 0;
+
       menu
         .addMenuItem({
           label: 'Edit',
@@ -283,13 +266,7 @@ export default class SciTablePageComponent {
             ctrl: true,
           },
           disabled: !singleSelection,
-          onSelect: () => {
-            vehicleForm().reset(vehicles[0]);
-            requestAnimationFrame(() => {
-              tabbar().activateTab('vehicle-editor');
-              panelOpen.set(true);
-            });
-          },
+          onSelect: () => editVehicle(vehicles[0]!),
         })
         .addMenuItem({label: 'Duplicate', icon: 'scion:duplicate', disabled: !singleSelection, onSelect: () => vehicleService.addVehicle(vehicles[0]!)})
         .addMenuItem({label: 'Delete', icon: 'scion:delete', disabled: emptySelection, onSelect: () => vehicles.forEach(vehicle => vehicleService.deleteVehicle(vehicle.id))})
@@ -311,7 +288,7 @@ export default class SciTablePageComponent {
         .addGroup({disabled: emptySelection}, group => group
           .addMenuItem({icon: 'content_copy', label: singleSelection ? 'Copy Vehicle ID' : 'Copy Vehicle IDs', onSelect: () => console.log('copy', vehicles.map(vehicle => vehicle.vehicleId))})
           .addMenuItem({icon: 'code', label: 'Copy as JSON', onSelect: () => console.log('json', vehicles)})
-          .addMenuItem({icon: 'picture_as_pdf', label: 'Vehicle Datasheet (PDF)', disabled: !singleSelection, onSelect: () => console.log('pdf', vehicles[0])}),
+          .addMenuItem({icon: 'picture_as_pdf', label: 'Vehicle Datasheet (PDF) asdf sasdf sadf', disabled: !singleSelection, onSelect: () => console.log('pdf', vehicles[0])}),
         )
         .addGroup({disabled: emptySelection}, group => group
           .addMenu({label: 'More'}, menu => menu
@@ -328,17 +305,7 @@ export default class SciTablePageComponent {
 
     function addRowActions(toolbar: SciToolbarFactory, vehicle: Vehicle): void {
       toolbar
-        .addToolbarButton({
-          icon: 'scion:edit',
-          tooltip: 'Edit',
-          onSelect: () => {
-            vehicleForm().reset(vehicle);
-            requestAnimationFrame(() => {
-              tabbar().activateTab('vehicle-editor');
-              panelOpen.set(true);
-            });
-          },
-        })
+        .addToolbarButton({icon: 'scion:edit', tooltip: 'Edit', accelerator: {key: 'F2'}, onSelect: () => editVehicle(vehicle)})
         .addToolbarButton({icon: 'scion:duplicate', tooltip: 'Duplicate', onSelect: () => vehicleService.addVehicle(vehicle)})
         .addToolbarButton({icon: 'scion:delete', tooltip: 'Delete', onSelect: () => vehicleService.deleteVehicle(vehicle.id)})
         .addGroup(group => group
@@ -376,6 +343,14 @@ export default class SciTablePageComponent {
               .addMenuItem({icon: 'download', label: 'Download', onSelect: () => console.log('download', vehicle)})
               .addMenuItem({icon: 'print', label: 'Print', onSelect: () => console.log('print', vehicle)}),
             )));
+    }
+
+    function editVehicle(vehicle: Vehicle): void {
+      vehicleForm().reset(vehicle);
+      requestAnimationFrame(() => {
+        tabbar().activateTab('vehicle-editor');
+        panelOpen.set(true);
+      });
     }
   }
 

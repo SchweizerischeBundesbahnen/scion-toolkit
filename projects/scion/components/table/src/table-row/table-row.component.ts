@@ -8,12 +8,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, inject, input, output, Signal, viewChild} from '@angular/core';
+import {Component, DOCUMENT, inject, input, output, Signal, viewChild} from '@angular/core';
 import {SciTableEvent, SciTableRow, skeletonRowId} from '../table.model';
 import {SciTableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
 import {SciTableSelectionService} from '../table-selection.service';
-import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
+import {contributeMenu, provideMenuAcceleratorTargetProvider, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciIconComponent} from '@scion/components/icon';
 import {isFromButton, isFromInput} from '../common';
@@ -40,6 +40,10 @@ import {isFromButton, isFromInput} from '../common';
     '(mouseenter)': 'onRowMouseEnter()',
     '(mouseleave)': 'onRowMouseLeave($event)',
   },
+  providers: [
+    // Add a dummy accelerator target to prevent keyboard motions from triggering actions.
+    provideMenuAcceleratorTargetProvider(() => inject(DOCUMENT).createElement('div')),
+  ],
 })
 export class SciTableRowComponent<T, ID> {
 
@@ -67,7 +71,7 @@ export class SciTableRowComponent<T, ID> {
 
   protected onRowContextMenuClick(event: PointerEvent): void {
     const row = this.row();
-    if (row.id === skeletonRowId || isFromInput(event)) {
+    if (row.id === skeletonRowId || isFromInput(event) || this.table().contextMenu === undefined) {
       return;
     }
 
