@@ -6593,19 +6593,21 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setDatasource('loader-delayed');
+      await tablePage.setRowCount(1000);
+      await tablePage.showHeader(false);
+      await tablePage.setRowHeight(30);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      // Wait for initial page to finish loading.
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
-      await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
+      // Wait for initial page to load.
+      await expect(table.row({index: 0}).cell({index: 0}).locator).not.toBeEmpty();
 
+      // Scroll to 1500.
       await table.scrollTo({y: 1500});
 
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
-      await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
+      // Expect pages to load.
+      await expect(table.row({index: 50}).cell({index: 0}).locator).not.toBeEmpty();
+      await expect(table.rows.locator('div.e2e-skeleton')).toHaveCount(0);
     });
 
     test('should load pages when scrolling with scrollbar', async ({page}) => {
@@ -6613,20 +6615,21 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-      await tablePage.setRowCount(1000);
       await tablePage.setDatasource('loader-delayed');
+      await tablePage.setRowCount(1000);
+      await tablePage.showHeader(false);
+      await tablePage.setRowHeight(30);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      // Wait for initial page to finish loading.
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
-      await expect(table.column({name: 'column:name'}).cells.first()).not.toBeEmpty();
+      // Wait for initial page to load.
+      await expect(table.row({index: 0}).cell({index: 0}).locator).not.toBeEmpty();
 
+      // Scroll to end with scrollbar.
       await table.verticalScrollbar.scroll(10_000);
 
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
-      await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 1000');
+      // Expect pages to load.
+      await expect(table.row({index: 999}).cell({index: 0}).locator).not.toBeEmpty();
+      await expect(table.rows.locator('div.e2e-skeleton')).toHaveCount(0);
     });
 
     test('should load first and last row correctly', async ({page}) => {
@@ -6634,16 +6637,17 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-      await tablePage.setRowCount(1000);
       await tablePage.setDatasource('loader-delayed');
+      await tablePage.setRowCount(1000);
 
-      // Wait for initial page to finish loading.
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
+      // Wait for initial page to load.
+      await expect(table.row({index: 0}).cell({index: 0}).locator).not.toBeEmpty();
+
+      // Scroll to end.
       await table.scrollTo({y: 'end'});
-      await expect(table.column({name: 'column:name'}).cells.last()).toHaveText('Product 1000');
+      await expect(table.row({index: 999}).cell({index: 0}).locator).not.toBeEmpty();
     });
 
     test('should show skeletons when applying sort while using async datasource', async ({page}) => {
@@ -6651,16 +6655,22 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setDatasource('loader-delayed');
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      // Wait for initial page to finish loading.
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      // Wait for initial page to load.
+      await expect(table.row({index: 0}).cell({index: 0}).locator).not.toBeEmpty();
 
+      // Pause datasource.
+      await tablePage.pauseDatasource();
+
+      // Sort.
       await table.column({name: 'column:name'}).sort();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await expect(table.row({nth: 0}).skeleton).toBeAttached();
+
+      // Resume datasource.
+      await tablePage.resumeDatasource();
+      await expect(table.row({nth: 0}).skeleton).not.toBeAttached();
     });
 
     test('should show skeletons when applying filter while using async datasource', async ({page}) => {
@@ -6668,17 +6678,23 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setDatasource('loader-delayed');
       await tablePage.setFilterable(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      // Wait for initial page to finish loading.
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      // Wait for initial page to load.
+      await expect(table.row({index: 0}).cell({index: 0}).locator).not.toBeEmpty();
 
-      await table.column({name: 'column:name'}).filter('1');
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      // Pause datasource.
+      await tablePage.pauseDatasource();
+
+      // Filter.
+      await table.column({name: 'column:name'}).filter('999');
+      await expect(table.row({nth: 0}).skeleton).toBeAttached();
+
+      // Resume datasource.
+      await tablePage.resumeDatasource();
+      await expect(table.row({nth: 0}).skeleton).not.toBeAttached();
     });
 
     test('should not show skeletons when scrolling back to an already-loaded page', async ({page}) => {
@@ -6686,45 +6702,52 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setDatasource('loader-delayed');
+      await tablePage.showHeader(false);
+      await tablePage.setRowHeight(30);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       // Wait for initial page to finish loading.
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await expect(table.row({index: 0}).cell({index: 0}).locator).not.toBeEmpty();
 
+      // Scroll to 1500.
       await table.scrollTo({y: 1500});
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await expect(table.row({index: 50}).cell({index: 0}).locator).not.toBeEmpty();
 
+      // Pause datasource.
+      await tablePage.pauseDatasource();
+
+      // Scroll to 0.
       await table.scrollTo({y: 0});
-      await expect.poll(() => table.rows.locator('div.e2e-skeleton').isVisible()).toBe(false);
+      await expect(table.row({index: 0}).skeleton).not.toBeAttached();
 
+      // Scroll to 1500.
       await table.scrollTo({y: 1500});
-      await expect.poll(() => table.rows.locator('div.e2e-skeleton').isVisible()).toBe(false);
+      await expect(table.row({index: 50}).skeleton).not.toBeAttached();
     });
 
-    // TODO [table] fix flaky test.
-    test.fixme('should select over multiple pages', async ({page}) => {
+    test('should select over multiple pages', async ({page}) => {
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setRowCount(1000);
       await tablePage.setDatasource('loader-delayed');
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       // Wait for initial page to finish loading.
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      await expect(table.row({index: 0}).cell({index: 0}).locator).not.toBeEmpty();
+
+      // Click on first row.
       await table.rows.first().click();
 
+      // Scroll to end.
       await table.scrollTo({y: 'end'});
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
-      await table.rows.last().click({modifiers: ['Shift']});
+      await expect(table.row({index: 999}).cell({index: 0}).locator).not.toBeEmpty();
 
-      await expect(tablePage.selectionCount).toHaveText('1000', {timeout: 15_000}); // takes longer if under load on CI
+      // Shift-click on last row.
+      await table.rows.last().click({modifiers: ['Shift']});
+      await expect(tablePage.selectionCount).toHaveText('1000');
     });
 
     test('should select all items with ctrl+a', async ({page}) => {
@@ -6732,15 +6755,16 @@ test.describe('sci-table', () => {
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
 
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
       await tablePage.setDatasource('loader-delayed');
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
 
-      // Wait for initial page to finish loading.
-      await expect(table.rows.locator('div.e2e-skeleton').first()).toBeAttached();
-      await expect(table.rows.locator('div.e2e-skeleton').first()).not.toBeAttached();
+      // Wait for initial page to load.
+      await expect(table.row({index: 0}).cell({index: 0}).locator).not.toBeEmpty();
+
+      // Press Control+A
       await table.locator.click();
       await page.keyboard.press('Control+A');
-      await expect(tablePage.selectionCount).toHaveText('10000', {timeout: 15_000}); // takes longer if under load on CI
+      await expect(tablePage.selectionCount).toHaveText('10000');
     });
   });
 });

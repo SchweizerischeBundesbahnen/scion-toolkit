@@ -1,8 +1,8 @@
 import {SciTableColumnFilter, SciTableColumnType, SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableNode} from '@scion/components/table';
 import {computed, effect, inject, Injector, linkedSignal, Service, Signal, signal, untracked} from '@angular/core';
-import {defer, mergeWith, NEVER, Observable, of, tap, timer} from 'rxjs';
+import {defer, mergeWith, MonoTypeOperatorFunction, NEVER, Observable, of, tap, timer} from 'rxjs';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
-import {map, switchMap} from 'rxjs/operators';
+import {filter, map, switchMap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {filterArray, mapArray} from '@scion/toolkit/operators';
 import {Maps} from '@scion/toolkit/util';
@@ -33,14 +33,15 @@ export class ProductService {
       .pipe(mapArray(product => ({id: product.id, parentId: product.parentId})));
   }
 
-  public getProductsIds$(query: SciTableDatasourceQuery, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<number[]> {
+  public getProductsIds$(query: SciTableDatasourceQuery, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>; paused?: Signal<boolean>}): Observable<number[]> {
     return this.getProducts$(query, columnDataTypes, options).pipe(mapArray(product => product.id));
   }
 
-  public getProductsById$(ids: number[], options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<Product[]> {
+  public getProductsById$(ids: number[], options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>; paused?: Signal<boolean>}): Observable<Product[]> {
     return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
       .pipe(
         mergeWith(simulateError$(options?.simulateError)),
+        waitWhilePaused(options?.paused),
         switchMap(() => this._products$),
         filterArray(product => ids.includes(product.id)),
       );
@@ -58,10 +59,11 @@ export class ProductService {
       .subscribe(products => this.products.set(products));
   }
 
-  private getProducts$(query: SciTableDatasourceQuery, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>}): Observable<Product[]> {
+  private getProducts$(query: SciTableDatasourceQuery, columnDataTypes: Map<`column:${string}`, SciTableColumnType>, options?: {slowDatasource?: boolean; simulateError?: Signal<boolean>; paused?: Signal<boolean>}): Observable<Product[]> {
     return defer(() => options?.slowDatasource ? timer(1000) : of(undefined))
       .pipe(
         mergeWith(simulateError$(options?.simulateError)),
+        waitWhilePaused(options?.paused),
         switchMap(() => this._products$),
         map(products => Products.filter(products, query.columnFilters, query.tableFilter, columnDataTypes)),
         map(products => Products.sort(products, query.sortCriteria, columnDataTypes)),
@@ -164,6 +166,17 @@ export function simulateError$(simulateError: Signal<boolean> | undefined, optio
 
     return () => effectRef.destroy();
   });
+}
+
+function waitWhilePaused<T>(paused?: Signal<boolean>, options?: {injector?: Injector}): MonoTypeOperatorFunction<T> {
+  const injector = options?.injector ?? inject(Injector);
+
+  return source => source.pipe(
+    switchMap(value => (paused ? toObservable(paused, {injector}) : of(false)).pipe(
+      filter(paused => !paused),
+      map(() => value),
+    )),
+  );
 }
 
 function randomDate(): Date {

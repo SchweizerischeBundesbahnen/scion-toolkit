@@ -145,6 +145,16 @@ export class TablePagePO {
     await this.properties.locator('select.e2e-datasource').selectOption(datasource);
   }
 
+  public async pauseDatasource(): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-pause-datasource').setChecked(true);
+  }
+
+  public async resumeDatasource(): Promise<void> {
+    await this.tabbar.locator('button.e2e-datasource').click();
+    await this.properties.locator('input.e2e-pause-datasource').setChecked(false);
+  }
+
   public async showRowActions(checked: boolean): Promise<void> {
     await this.tabbar.locator('button.e2e-settings').click();
     await this.properties.locator('input.e2e-show-row-actions').setChecked(checked);

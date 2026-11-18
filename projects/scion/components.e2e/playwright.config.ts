@@ -16,6 +16,7 @@ const runHeadless = !!process.env['HEADLESS'];
 export default defineConfig({
   forbidOnly: runInCI,
   fullyParallel: true,
+  repeatEach: 5,
   webServer: [
     {
       command: runInCI ? 'npm run components-testing-app:dist-serve' : 'npm run components-testing-app:serve',
