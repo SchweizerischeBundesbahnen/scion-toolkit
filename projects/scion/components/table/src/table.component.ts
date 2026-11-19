@@ -8,8 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, output, Provider, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {Component, computed, DestroyRef, effect, ElementRef, inject, input, output, Provider, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciTable, SciTableEvent} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {SciScrollbarComponent} from '@scion/components/viewport';
@@ -29,7 +28,6 @@ import {SciIconComponent} from '@scion/components/icon';
 import {contributeMenu, installMenuAccelerators, SciMenuRef, ɵSciMenuService} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 import {isFromInput} from './common';
-import {firstValueFrom, fromEvent} from 'rxjs';
 
 /**
  * Provides a table to display tabular or hierarchical data.
@@ -146,9 +144,6 @@ export class SciTableComponent<T = unknown, ID = T> {
    */
   public readonly primaryAction = output<SciTableEvent<ID>>();
 
-  // private readonly _vcr = inject(ViewContainerRef);
-  private readonly _document = inject(DOCUMENT);
-  private readonly _destroyRef = inject(DestroyRef);
   private readonly _menuService = inject(ɵSciMenuService);
   private readonly _contextMenuName = `menu:${UUID.randomUUID()}` as const;
   private _menuRef?: SciMenuRef;
@@ -187,48 +182,12 @@ export class SciTableComponent<T = unknown, ID = T> {
     if (this.table().contextMenu === undefined || isFromInput(event) || event.ctrlKey || event.metaKey || event.shiftKey) {
       return;
     }
-    event.preventDefault();
 
-    if (event.button >= 0) {
-      // Some browsers dispatch the contextmenu event before mouseup.
-      // Wait for release to prevent the opening gesture from immediately dismissing the auto popover on pointerup.
-      // If the button is already released (buttons === 0), no mouseup is expected.
-      // See: https://github.com/whatwg/html/issues/10905
-      if (event.buttons !== 0) {
-        const mouseup$ = fromEvent(this._document, 'mouseup', {capture: true}).pipe(takeUntilDestroyed(this._destroyRef));
-        const mouseup = await firstValueFrom(mouseup$, {defaultValue: null});
-        // If the component is destroyed while the mouse button is pressed, don't open the menu.
-        if (mouseup === null) {
-          return;
-        }
-      }
-      this._menuRef = this._menuService.open(this._contextMenuName, {anchor: event});
-      return;
-    }
-
-    // If context menu keyboard button is clicked, open the menu in the middle of the viewport.
-    const viewport = this._viewport().nativeElement as HTMLElement;
-    const contextMenuId = UUID.randomUUID();
-    const {x, y, width, height} = viewport.getBoundingClientRect();
-    const styleSheet = new CSSStyleSheet();
-    styleSheet.insertRule(`sci-menu[data-context-menu-id="${contextMenuId}"] {
-      translate: -50% -50%;
-    }`);
-    this._document.adoptedStyleSheets.push(styleSheet);
-
-    this._menuRef = this._menuService.open(this._contextMenuName, {
-      anchor: {
-        x: Math.round(x + (width / 2)),
-        y: Math.round(y + (height / 2)),
-      },
-      attributes: {
-        'data-context-menu-id': contextMenuId,
-      },
-    });
-
-    this._menuRef.onClose(() => {
-      this._document.adoptedStyleSheets.splice(this._document.adoptedStyleSheets.indexOf(styleSheet));
-    });
+    const openedViaContextMenuKey = event.button === -1;
+    this._menuRef = this._menuService.open(this._contextMenuName, openedViaContextMenuKey ?
+      {anchor: this._viewport(), align: 'center'} :
+      {anchor: event},
+    );
   }
 
   private connectToModel(): void {

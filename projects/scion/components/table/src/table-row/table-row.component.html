@@ -33,5 +33,10 @@
 @let isRowActionMenuOpen = rowActionToolbar()?.menuOpen();
 
 @if (hasRowActions && (isRowHovered || isRowActionMenuOpen)) {
-  <sci-toolbar [name]="rowActionsToolbarName" (click)="onActionToolbarClick($event)" class="row-actions"/>
+  <!--
+    Accelerators should not trigger on hovered row but on selection.
+    Row actions accelerators can only trigger on the hovered row, that is why they are disabled.
+    To support actions with accelerators a context menu item with the accelerator has to be created.
+  -->
+  <sci-toolbar [name]="rowActionsToolbarName" (click)="onActionToolbarClick($event)" [acceleratorTarget]="[]" class="row-actions"/>
 }

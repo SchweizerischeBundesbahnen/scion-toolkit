@@ -80,7 +80,8 @@ export function ɵinstallMenuAccelerators(menuItems: SciMenuItemLike[], options?
 
   const injector = ɵcreateDestroyableInjector({parent: options?.injector ?? inject(Injector)});
   const zone = injector.get(NgZone);
-  const targets = coerceElements(options?.targets) ?? coerceElements(options?.environmentTargets) ?? [injector.get(DOCUMENT)];
+
+  const targets = coerceElements(options?.targets, {undefinedIfEmpty: false}) ?? coerceElements(options?.environmentTargets) ?? [injector.get(DOCUMENT)];
   const onSelectFn = options?.onSelect ?? (menuItem => menuItem.onSelect?.());
 
   merge(...targets.map(target => fromEvent<KeyboardEvent>(target, 'keydown')))
@@ -126,9 +127,11 @@ export function ɵinstallMenuAccelerators(menuItems: SciMenuItemLike[], options?
 /**
  * Returns given native elements, or `undefined` if empty.
  */
-function coerceElements(targets: MaybeArray<Element | ElementRef<Element>> | undefined): Element[] | undefined {
+function coerceElements(targets: MaybeArray<Element | ElementRef<Element>> | undefined, options?: {undefinedIfEmpty?: boolean}): Element[] | undefined {
   const elements = Arrays.coerce(targets).map(coerceElement);
-  return elements.length ? elements : undefined;
+  const undefinedIfEmpty = options?.undefinedIfEmpty ?? false;
+
+  return elements.length || !undefinedIfEmpty ? elements : undefined;
 }
 
 /**

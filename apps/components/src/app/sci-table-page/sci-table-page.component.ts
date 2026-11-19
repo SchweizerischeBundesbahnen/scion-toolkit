@@ -269,7 +269,7 @@ export default class SciTablePageComponent {
           onSelect: () => editVehicle(vehicles[0]!),
         })
         .addMenuItem({label: 'Duplicate', icon: 'scion:duplicate', disabled: !singleSelection, onSelect: () => vehicleService.addVehicle(vehicles[0]!)})
-        .addMenuItem({label: 'Delete', icon: 'scion:delete', disabled: emptySelection, onSelect: () => vehicles.forEach(vehicle => vehicleService.deleteVehicle(vehicle.id))})
+        .addMenuItem({label: 'Delete', icon: 'scion:delete', accelerator: {key: 'Delete'}, disabled: emptySelection, onSelect: () => vehicles.forEach(vehicle => vehicleService.deleteVehicle(vehicle.id))})
         .addGroup({disabled: emptySelection}, group => group
           .addMenu({icon: 'alt_route', label: 'Change Status'}, menu => menu
             .addMenuItem({icon: 'play_circle', label: 'In Operation', onSelect: () => updateStatus('In Operation'), disabled: vehicles.every(vehicle => vehicle.status === 'In Operation')})
@@ -305,9 +305,9 @@ export default class SciTablePageComponent {
 
     function addRowActions(toolbar: SciToolbarFactory, vehicle: Vehicle): void {
       toolbar
-        .addToolbarButton({icon: 'scion:edit', tooltip: 'Edit', accelerator: {key: 'F2'}, onSelect: () => editVehicle(vehicle)})
+        .addToolbarButton({icon: 'scion:edit', tooltip: 'Edit', accelerator: {key: 'E', ctrl: true}, onSelect: () => editVehicle(vehicle)})
         .addToolbarButton({icon: 'scion:duplicate', tooltip: 'Duplicate', onSelect: () => vehicleService.addVehicle(vehicle)})
-        .addToolbarButton({icon: 'scion:delete', tooltip: 'Delete', onSelect: () => vehicleService.deleteVehicle(vehicle.id)})
+        .addToolbarButton({icon: 'scion:delete', tooltip: 'Delete', accelerator: {key: 'Delete'}, onSelect: () => vehicleService.deleteVehicle(vehicle.id)})
         .addGroup(group => group
           .addToolbarButton({icon: 'play_circle', tooltip: 'In Operation', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'In Operation'}), disabled: computed(() => vehicle.status === 'In Operation')})
           .addToolbarButton({icon: 'pause_circle', tooltip: 'Stabled', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'Stabled'}), disabled: computed(() => vehicle.status === 'Stabled')}),

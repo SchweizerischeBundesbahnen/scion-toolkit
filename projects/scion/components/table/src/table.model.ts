@@ -172,6 +172,7 @@ export interface SciTableDescriptor<T, ID = T> {
    *   contextMenu: (menu, selectedItems) => menu.addMenuItem({
    *     label: 'Delete',
    *     icon: 'delete',
+   *     accelerator: {key: 'Delete'},
    *     onSelect: () => ...,
    *   }),
    * });

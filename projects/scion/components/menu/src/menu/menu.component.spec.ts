@@ -878,6 +878,40 @@ describe('Menu', () => {
         expect(console.log).not.toHaveBeenCalledWith('onSelect item');
         spy.calls.reset();
       });
+
+      it('should not install listener on empty accelerator targets', async () => {
+        const onSelect = jasmine.createSpy();
+
+        @Component({
+          selector: 'spec-testee',
+          template: `
+          `,
+        })
+        class SpecTesteeComponent {
+        }
+
+        TestBed.configureTestingModule({
+          providers: [
+            {provide: ComponentFixtureAutoDetect, useValue: true},
+          ],
+        });
+
+        const fixture = TestBed.createComponent(SpecTesteeComponent);
+
+        // Contribute to menu.
+        contributeMenu('menu:testee', menu => menu
+          .addMenuItem({label: 'label-1', cssClass: 'testee-1', accelerator: {alt: true, key: '1'}, onSelect}), {injector: TestBed.inject(Injector)});
+        await fixture.whenStable();
+
+        // Install accelerators.
+        installMenuAccelerators('menu:testee', {target: [], injector: TestBed.inject(Injector)});
+        await fixture.whenStable();
+
+        // Press alt-1 on document.
+        document.dispatchEvent(new KeyboardEvent('keydown', {key: '1', altKey: true}));
+
+        expect(onSelect).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -3163,6 +3197,24 @@ describe('Menu', () => {
   });
 
   describe('Menu Position', () => {
+
+    // TODO: Menu tests genauer anschauen und anpassen.
+    describe('Centered', () => {
+      it('should center on coordinates', async () => {
+        const fixture = TestBed.createComponent(SpecRootComponent);
+        contributeMenu('menu:testee', menu => menu.addMenuItem({label: 'label', onSelect: noop}), {injector: TestBed.inject(Injector)});
+        await fixture.whenStable();
+
+        const anchor = {x: document.documentElement.clientWidth / 2, y: document.documentElement.clientHeight / 2};
+        TestBed.inject(SciMenuService).open('menu:testee', {anchor, align: 'center'});
+        const menu = new MenuPO(fixture);
+        await expectAsync(() => menu.nativeElement).toBeVisible();
+
+        const rect = menu.nativeElement.getBoundingClientRect();
+        expect(rect.left + rect.width / 2).toBe(anchor.x);
+        expect(rect.top + rect.height / 2).toBe(anchor.y);
+      });
+    });
 
     describe('x/y coordinates', () => {
 

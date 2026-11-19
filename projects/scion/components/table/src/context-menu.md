@@ -6,9 +6,8 @@
 - Accelerators für row actions unterbinden (mit team anschauen)
 
 ### TODO
-- Besserer weg fürs Zentrieren bei context menu button (mit team anschauen)
-  - Option auf Menu API
-  - CSS Klasse in `menu.component.scss`
+- table specs
+- menu e2e specs
 - JSDoc
 - How-To Doc
 

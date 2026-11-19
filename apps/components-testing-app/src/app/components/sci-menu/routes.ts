@@ -10,7 +10,9 @@
 
 import {Routes} from '@angular/router';
 import {ViewportHoverPageComponent} from './viewport-hover/viewport-hover-page.component';
+import {ContextMenuPageComponent} from './context-menu/context-menu-page.component';
 
 export default [
   {path: 'viewport-hover', component: ViewportHoverPageComponent},
+  {path: 'context-menu', component: ContextMenuPageComponent},
 ] satisfies Routes;
