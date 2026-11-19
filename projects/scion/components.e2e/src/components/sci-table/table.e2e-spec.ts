@@ -2465,6 +2465,7 @@ test.describe('sci-table', () => {
         await expectTable(table).toHaveHorizontalOverflow();
 
         await table.scrollTo({x: 'end'});
+        await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
         await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
 
         await table.column({name: 'column:3'}).splitter.hover();
