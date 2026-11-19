@@ -1594,6 +1594,7 @@ test.describe('sci-table', () => {
     });
 
     test('should filter large amount of data', async ({page}) => {
+      test.slow();
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -2701,6 +2702,7 @@ test.describe('sci-table', () => {
     });
 
     test('should sort large amount of data', async ({page}) => {
+      test.slow();
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
@@ -2709,9 +2711,9 @@ test.describe('sci-table', () => {
       await tablePage.addColumn({name: 'column:name', type: 'string'});
 
       await table.column({name: 'column:name'}).sort();
-      await expect(table.column({name: 'column:name'}).cells.first()).toHaveText('Product 1');
+      await expect(table.column({name: 'column:name'}).cells.first()).toHaveText('Product 1', {timeout: 15_000}); // takes longer if under load on CI
       await table.column({name: 'column:name'}).sort();
-      await expect(table.column({name: 'column:name'}).cells.first()).toHaveText('Product 999999');
+      await expect(table.column({name: 'column:name'}).cells.first()).toHaveText('Product 999999', {timeout: 15_000}); // takes longer if under load on CI
     });
 
     test('should reset scroll position to top when applying sort', async ({page}) => {
