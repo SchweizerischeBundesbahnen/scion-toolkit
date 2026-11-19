@@ -44,7 +44,14 @@ export default defineConfig({
       ignoreDefaultArgs: ['--hide-scrollbars'],
     },
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    video: {
+      mode: 'retain-on-failure',
+      size: {
+        width: 1920,
+        height: 1200,
+      },
+      fps: 60,
+    },
   },
   testMatch: /.*\.e2e-spec\.ts/,
 });
