@@ -92,7 +92,7 @@
     "@angular/cli": "22.1.8",
     "@angular/compiler-cli": "22.1.7",
     "@eslint/js": "10.0.1",
-    "@playwright/test": "1.61.0",
+    "@playwright/test": "1.64.0",
     "@smarttools/eslint-plugin-rxjs": "1.0.22",
     "@stylistic/eslint-plugin": "5.10.0",
     "@types/jasmine": "6.0.0",
