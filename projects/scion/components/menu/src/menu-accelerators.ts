@@ -128,8 +128,12 @@ export function ɵinstallMenuAccelerators(menuItems: SciMenuItemLike[], options?
  * Returns given native elements, or `undefined` if empty.
  */
 function coerceElements(targets: MaybeArray<Element | ElementRef<Element>> | undefined, options?: {undefinedIfEmpty?: boolean}): Element[] | undefined {
+  if (!targets) {
+    return undefined;
+  }
+
   const elements = Arrays.coerce(targets).map(coerceElement);
-  const undefinedIfEmpty = options?.undefinedIfEmpty ?? false;
+  const undefinedIfEmpty = options?.undefinedIfEmpty ?? true;
 
   return elements.length || !undefinedIfEmpty ? elements : undefined;
 }

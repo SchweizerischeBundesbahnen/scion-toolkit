@@ -150,7 +150,10 @@ export interface SciTableDescriptor<T, ID = T> {
    * });
    * ```
    *
-   * TODO: document disabled accelerators
+   * Row actions always apply to a single hovered row.
+   * To prevent confusion about which rows are targeted, keyboard accelerators on row actions are disabled.
+   * To use keyboard accelerators for a selection create a {@link SciTableDescriptor.contextMenu}.
+   * You can still add the same accelerators to the row actions to display the keyboard motion when hovering over the row action.
    *
    * The function:
    * - Is called per item with a {@link SciToolbarFactory} to contribute actions.
@@ -476,6 +479,15 @@ export interface SciTableCellContext<T = unknown, VALUE = unknown> {
  */
 export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
 
+/**
+ * Signature of a function to contribute a context menu.
+ *
+ * Called with selected items and {@link SciMenuFactory} to contribute menu items.
+ *
+ * The function:
+ * - Runs in a reactive context and re-evaluates when tracked signals change.
+ * - Can call `inject` to get required dependencies.
+ */
 export type SciTableContextMenuFactoryFn<ID> = (menu: SciMenuFactory, selectedItems: ID[]) => void;
 
 /**

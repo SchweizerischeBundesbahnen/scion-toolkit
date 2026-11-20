@@ -6232,6 +6232,9 @@ describe('Table', () => {
     });
 
     it('should open at the pointer position', async () => {
+      // Synthetic contextmenu events don't register an active browser pointer.
+      spyOn(Element.prototype, 'setPointerCapture').and.stub();
+
       const onSelect = jasmine.createSpy<(items: number[]) => void>();
       const {fixture, model} = createSciTableComponent(sciTable<{id: number}, number>({
         datasource: signal([{id: 1}, {id: 2}, {id: 3}]),
@@ -6283,6 +6286,9 @@ describe('Table', () => {
     });
 
     it('should preserve the selection when right-clicking a selected row', async () => {
+      // Synthetic contextmenu events don't register an active browser pointer.
+      spyOn(Element.prototype, 'setPointerCapture').and.stub();
+
       const onSelect = jasmine.createSpy<(items: number[]) => void>();
       const {fixture, model} = createSciTableComponent(sciTable<number>({
         datasource: signal([1, 2, 3]),
@@ -6313,6 +6319,9 @@ describe('Table', () => {
     });
 
     it('should replace the selection when right-clicking an unselected row', async () => {
+      // Synthetic contextmenu events don't register an active browser pointer.
+      spyOn(Element.prototype, 'setPointerCapture').and.stub();
+
       const onSelect = jasmine.createSpy<(items: number[]) => void>();
       const {fixture, model} = createSciTableComponent(sciTable<number>({
         datasource: signal([1, 2, 3]),
@@ -6345,6 +6354,9 @@ describe('Table', () => {
     });
 
     it('should use the current selection when opening from body', async () => {
+      // Synthetic contextmenu events don't register an active browser pointer.
+      spyOn(Element.prototype, 'setPointerCapture').and.stub();
+
       const onSelect = jasmine.createSpy<(items: number[]) => void>();
       const {fixture, model} = createSciTableComponent(sciTable<number>({
         datasource: signal([1, 2, 3]),
@@ -6370,7 +6382,41 @@ describe('Table', () => {
       expect(onSelect).toHaveBeenCalledOnceWith([1, 2]);
     });
 
+    it('should invoke accelerators with the current selection without opening the menu', async () => {
+      const onSelect = jasmine.createSpy<(items: number[]) => void>();
+      const {fixture, model} = createSciTableComponent(sciTable<number>({
+        datasource: signal([1, 2, 3]),
+        columns: table => table.addNumberColumn(item => item),
+        contextMenu: (menu, selectedItems) => menu.addMenuItem({
+          label: 'Delete',
+          accelerator: {key: 'Delete'},
+          onSelect: () => onSelect(selectedItems),
+        }),
+        injector: TestBed.inject(Injector),
+      }));
+
+      const table = new TablePO(fixture);
+      await table.waitUntilStable();
+      model.select([1, 2]);
+      await table.waitUntilStable();
+
+      // Move the active row outside the selection without changing the selection.
+      table.body.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', ctrlKey: true}));
+      await table.waitUntilStable();
+      expect(model.activeItem()).toBe(3);
+      expect(model.selectedItems()).toEqual([1, 2]);
+      expect(document.querySelector('sci-menu')).toBeNull();
+
+      table.body.dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete'}));
+      await table.waitUntilStable();
+      expect(onSelect).toHaveBeenCalledOnceWith([1, 2]);
+      expect(document.querySelector('sci-menu')).toBeNull();
+    });
+
     it('should use the current selection when opening from column splitter', async () => {
+      // Synthetic contextmenu events don't register an active browser pointer.
+      spyOn(Element.prototype, 'setPointerCapture').and.stub();
+
       const onSelect = jasmine.createSpy<(items: number[]) => void>();
       const {fixture, model} = createSciTableComponent(sciTable<number>({
         datasource: signal([1, 2, 3]),

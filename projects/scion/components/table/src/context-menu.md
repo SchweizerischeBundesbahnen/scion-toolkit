@@ -5,9 +5,4 @@
 - Verstecken on scroll
 - Accelerators für row actions unterbinden (mit team anschauen)
 
-### TODO
-- table specs
-- menu e2e specs
-- JSDoc
-- How-To Doc
 

@@ -809,6 +809,33 @@ table({
 > Icon ligatures are interpreted as Material icon font ligatures if no icon provider is configured. \
 > Refer to the [Icon Documentation][link-scion-icons] for more information on how to provide an icon provider.
 
+
+#### Context Menu
+
+A context menu enables interaction with a selection.
+
+The context menu is configured via the `contextMenu` property on the table descriptor that is passed to the `table()` function.
+
+```ts
+import {table} from '@scion/components/table';
+
+table({
+  datasource: users.value,
+  columns: table => table
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
+  contextMenu: (menu, selection) => menu
+    .addMenuItem({icon: 'delete', accelerator: {key: 'Delete'}, label: 'Delete users', onSelect: () => deleteUsers(selection)})
+    .addMenuItem({icon: 'lock', label: 'Disable users', onSelect: () => lockUsers(selection)}),
+});
+```
+
+> [!NOTE]
+> Icon ligatures are interpreted as Material icon font ligatures if no icon provider is configured. \
+> Refer to the [Icon Documentation][link-scion-icons] for more information on how to provide an icon provider.
+
 #### Row Icon
 
 A row can display an icon in its first column by configuring a row binding.

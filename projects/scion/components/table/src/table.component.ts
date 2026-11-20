@@ -184,6 +184,13 @@ export class SciTableComponent<T = unknown, ID = T> {
     }
 
     const openedViaContextMenuKey = event.button === -1;
+    if (openedViaContextMenuKey) {
+      // The menuService prevents opening the native context menu.
+      // The event is not passed to the menuService, if opened via context menu key, so prevention needs to happen here.
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
     this._menuRef = this._menuService.open(this._contextMenuName, openedViaContextMenuKey ?
       {anchor: this._viewport(), align: 'center'} :
       {anchor: event},

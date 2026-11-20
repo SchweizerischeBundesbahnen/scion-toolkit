@@ -5590,6 +5590,23 @@ test.describe('sci-table', () => {
       await expect(menu).not.toBeAttached();
     });
 
+    test('should close the context menu when navigating away', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      await tablePage.navigate();
+
+      await tablePage.showContextMenu(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      const table = new TablePO(tablePage.table);
+      const menu = page.locator('sci-menu');
+
+      await table.row({index: 0}).locator.click({button: 'right'});
+      await expect(menu).toBeVisible();
+
+      await page.goto('/#');
+      await expect(menu).not.toBeAttached();
+    });
+
     test('should open the context menu when moving outside of table during click', async ({page}) => {
       const tablePage = new TablePagePO(page);
       await tablePage.navigate();
@@ -5606,91 +5623,6 @@ test.describe('sci-table', () => {
       await page.mouse.move(tabbarBoundingBox!.x, tabbarBoundingBox!.y);
       await page.mouse.up({button: 'right'});
 
-      await expect(page.locator('sci-menu')).toBeVisible();
-    });
-
-    test('should invoke accelerators with the current selection without opening the menu', async ({page, consoleLogs}) => {
-      const tablePage = new TablePagePO(page);
-      await tablePage.navigate();
-      await tablePage.showContextMenu(true);
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-      await provideHttpDatasource(page, generateData(3, i => ({id: i})), {datasource: 'array-http'});
-
-      const table = new TablePO(tablePage.table);
-      const menu = page.locator('sci-menu');
-
-      await table.row({index: 0}).click();
-      await table.row({index: 1}).click(['ControlOrMeta']);
-      await expect(tablePage.selection).toHaveText('0 1');
-
-      // Move the active row outside the selection: actions must still use selected IDs.
-      await page.keyboard.press('ControlOrMeta+ArrowDown');
-      await expect(tablePage.activeItemId).toHaveText('2');
-      await expect(tablePage.selection).toHaveText('0 1');
-      await expect(menu).not.toBeAttached();
-      consoleLogs.clear();
-
-      await page.keyboard.press('Delete');
-      await expect.poll(() => consoleLogs.get({message: '[SciTablePageComponent] Context menu action:'})).toEqual([
-        '[SciTablePageComponent] Context menu action: 0 1',
-      ]);
-      await expect(menu).not.toBeAttached();
-      consoleLogs.clear();
-
-      await table.row({nth: 2}).click();
-      await expect(tablePage.selection).toHaveText('2');
-
-      await page.keyboard.press('Delete');
-      await expect.poll(() => consoleLogs.get({message: '[SciTablePageComponent] Context menu action:'})).toEqual([
-        '[SciTablePageComponent] Context menu action: 2',
-      ]);
-      await expect(menu).not.toBeAttached();
-    });
-
-    test('should center the menu in the viewport when opened using the context menu key', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      await tablePage.navigate();
-      await tablePage.showContextMenu(true);
-      await tablePage.setWidth(600);
-      await tablePage.setHeight(400);
-      await tablePage.addColumn({name: 'column:name', type: 'string'});
-      await provideHttpDatasource(page, generateData(3, i => ({id: i})), {datasource: 'array-http'});
-
-      const table = new TablePO(tablePage.table);
-      const menu = page.locator('sci-menu');
-
-      await table.row({nth: 0}).click();
-      await table.row({nth: 1}).click(['ControlOrMeta']);
-      await expect(tablePage.selection).toHaveText('0 1');
-
-      await page.keyboard.press('ContextMenu');
-      await expect(menu).toBeVisible();
-
-      await expect(async () => {
-        const viewportBounds = fromRect(await table.viewport.boundingBox());
-        const menuBounds = fromRect(await menu.boundingBox());
-        expect(menuBounds.hcenter).toBeBetween(viewportBounds.hcenter - 1, viewportBounds.hcenter + 1);
-        expect(menuBounds.vcenter).toBeBetween(viewportBounds.vcenter - 1, viewportBounds.vcenter + 1);
-      }).toPass();
-      await expect(tablePage.selection).toHaveText('0 1');
-    });
-
-    // TODO [context-menu] Fix test
-    test.fixme('should not prevent context menu from opening inside input', async ({page}) => {
-      const tablePage = new TablePagePO(page);
-      const table = new TablePO(tablePage.table);
-      await tablePage.navigate();
-      await tablePage.showContextMenu(true);
-      await tablePage.addColumn({name: 'column:string', type: 'string'});
-      await tablePage.addColumn({name: 'column:component', type: 'component', extras: {componentColumn: {component: 'component:custom-input-column'}}});
-
-      const cell = table.row({nth: 0}).cell('column:component');
-      const component = new CustomInputColumnPO(cell);
-
-      await component.input.click({button: 'right'});
-      await expect(page.locator('sci-menu')).not.toBeVisible();
-
-      await table.row({nth: 0}).cell('column:string').locator.click({button: 'right'});
       await expect(page.locator('sci-menu')).toBeVisible();
     });
   });

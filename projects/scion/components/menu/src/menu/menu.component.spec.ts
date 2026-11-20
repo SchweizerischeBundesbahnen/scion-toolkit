@@ -3198,24 +3198,6 @@ describe('Menu', () => {
 
   describe('Menu Position', () => {
 
-    // TODO: Menu tests genauer anschauen und anpassen.
-    describe('Centered', () => {
-      it('should center on coordinates', async () => {
-        const fixture = TestBed.createComponent(SpecRootComponent);
-        contributeMenu('menu:testee', menu => menu.addMenuItem({label: 'label', onSelect: noop}), {injector: TestBed.inject(Injector)});
-        await fixture.whenStable();
-
-        const anchor = {x: document.documentElement.clientWidth / 2, y: document.documentElement.clientHeight / 2};
-        TestBed.inject(SciMenuService).open('menu:testee', {anchor, align: 'center'});
-        const menu = new MenuPO(fixture);
-        await expectAsync(() => menu.nativeElement).toBeVisible();
-
-        const rect = menu.nativeElement.getBoundingClientRect();
-        expect(rect.left + rect.width / 2).toBe(anchor.x);
-        expect(rect.top + rect.height / 2).toBe(anchor.y);
-      });
-    });
-
     describe('x/y coordinates', () => {
 
       it('should position menu (center)', async () => {
@@ -3628,6 +3610,143 @@ describe('Menu', () => {
           anchorY: 'bottom',
           anchorYOffset: SUB_MENU_VERTICAL_OFFSET,
           menuX: 'left',
+          menuY: 'bottom',
+        });
+      });
+
+      it('should position menu centered (center)', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            {provide: ComponentFixtureAutoDetect, useValue: true},
+          ],
+        });
+
+        const fixture = TestBed.createComponent(SpecRootComponent);
+
+        // Contribute to menu.
+        contributeMenu('menu:testee', menu => menu
+          .addMenuItem({label: 'label-1', onSelect: noop})
+          .addMenuItem({label: 'label-2', onSelect: noop})
+          .addMenuItem({label: 'label-3', onSelect: noop})
+          .addMenu({label: 'submenu-1', cssClass: 'submenu-1'}, menu => menu
+            .addMenuItem({label: 'label-1', onSelect: noop})
+            .addMenuItem({label: 'label-2', onSelect: noop})
+            .addMenuItem({label: 'label-3', onSelect: noop})), {injector: TestBed.inject(Injector)},
+        );
+        await fixture.whenStable();
+
+        const anchor = {x: document.documentElement.clientWidth / 2, y: document.documentElement.clientHeight / 2};
+        TestBed.inject(SciMenuService).open('menu:testee', {anchor, align: 'center'});
+        const menu = new MenuPO(fixture);
+        const submenu = await menu.openSubMenu({cssClass: 'submenu-1'});
+
+        // Expect menu.
+        await expectAsync(menu).toHaveMenuPosition({
+          anchor: anchor,
+          menuX: 'center',
+          menuY: 'center',
+        });
+
+        // Expect submenu.
+        const subMenuAnchor = menu.item({cssClass: 'submenu-1'}).nativeElement;
+        await expectAsync(submenu).toHaveMenuPosition({
+          anchor: subMenuAnchor,
+          menuX: 'left',
+          menuY: 'top',
+          anchorX: 'right',
+          anchorY: 'top',
+          anchorYOffset: -SUB_MENU_VERTICAL_OFFSET,
+        });
+      });
+
+      it('should position menu centered (top-left)', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            {provide: ComponentFixtureAutoDetect, useValue: true},
+          ],
+        });
+
+        const fixture = TestBed.createComponent(SpecRootComponent);
+
+        // Contribute to menu.
+        contributeMenu('menu:testee', menu => menu
+          .addMenuItem({label: 'label-1', onSelect: noop})
+          .addMenuItem({label: 'label-2', onSelect: noop})
+          .addMenuItem({label: 'label-3', onSelect: noop})
+          .addMenu({label: 'submenu-1', cssClass: 'submenu-1'}, menu => menu
+            .addMenuItem({label: 'label-1', onSelect: noop})
+            .addMenuItem({label: 'label-2', onSelect: noop})
+            .addMenuItem({label: 'label-3', onSelect: noop})), {injector: TestBed.inject(Injector)},
+        );
+        await fixture.whenStable();
+
+        // Open menu.
+        const anchor = {x: 0, y: 0};
+        TestBed.inject(SciMenuService).open('menu:testee', {anchor, align: 'center'});
+        const menu = new MenuPO(fixture);
+        const submenu = await menu.openSubMenu({cssClass: 'submenu-1'});
+
+        // Expect menu.
+        await expectAsync(menu).toHaveMenuPosition({
+          anchor: anchor,
+          menuX: 'left',
+          menuY: 'top',
+        });
+
+        // Expect submenu.
+        const subMenuAnchor = menu.item({cssClass: 'submenu-1'}).nativeElement;
+        await expectAsync(submenu).toHaveMenuPosition({
+          anchor: subMenuAnchor,
+          anchorX: 'right',
+          anchorY: 'top',
+          anchorYOffset: -SUB_MENU_VERTICAL_OFFSET,
+          menuX: 'left',
+          menuY: 'top',
+        });
+      });
+
+      it('should position menu centered (bottom-right)', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            {provide: ComponentFixtureAutoDetect, useValue: true},
+          ],
+        });
+
+        const fixture = TestBed.createComponent(SpecRootComponent);
+
+        // Contribute to menu.
+        contributeMenu('menu:testee', menu => menu
+          .addMenuItem({label: 'label-1', onSelect: noop})
+          .addMenuItem({label: 'label-2', onSelect: noop})
+          .addMenuItem({label: 'label-3', onSelect: noop})
+          .addMenu({label: 'submenu-1', cssClass: 'submenu-1'}, menu => menu
+            .addMenuItem({label: 'label-1', onSelect: noop})
+            .addMenuItem({label: 'label-2', onSelect: noop})
+            .addMenuItem({label: 'label-3', onSelect: noop})), {injector: TestBed.inject(Injector)},
+        );
+        await fixture.whenStable();
+
+        // Open menu.
+        const anchor = {x: document.documentElement.clientWidth, y: document.documentElement.clientHeight};
+        TestBed.inject(SciMenuService).open('menu:testee', {anchor, align: 'center'});
+        const menu = new MenuPO(fixture);
+        const submenu = await menu.openSubMenu({cssClass: 'submenu-1'});
+
+        // Expect menu.
+        await expectAsync(menu).toHaveMenuPosition({
+          anchor: anchor,
+          menuX: 'right',
+          menuY: 'bottom',
+        });
+
+        // Expect submenu.
+        const subMenuAnchor = menu.item({cssClass: 'submenu-1'}).nativeElement;
+        await expectAsync(submenu).toHaveMenuPosition({
+          anchor: subMenuAnchor,
+          anchorX: 'left',
+          anchorY: 'bottom',
+          anchorYOffset: SUB_MENU_VERTICAL_OFFSET,
+          menuX: 'right',
           menuY: 'bottom',
         });
       });
@@ -4418,6 +4537,174 @@ describe('Menu', () => {
           anchorY: 'bottom',
           anchorYOffset: SUB_MENU_VERTICAL_OFFSET,
           menuX: 'left',
+          menuY: 'bottom',
+        });
+      });
+
+      it('should position menu centered (center)', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            {provide: ComponentFixtureAutoDetect, useValue: true},
+          ],
+        });
+
+        const fixture = TestBed.createComponent(SpecRootComponent);
+
+        // Contribute to menu.
+        contributeMenu('menu:testee', menu => menu
+          .addMenuItem({label: 'label-1', onSelect: noop})
+          .addMenuItem({label: 'label-2', onSelect: noop})
+          .addMenuItem({label: 'label-3', onSelect: noop})
+          .addMenu({label: 'submenu-1', cssClass: 'submenu-1'}, menu => menu
+            .addMenuItem({label: 'label-1', onSelect: noop})
+            .addMenuItem({label: 'label-2', onSelect: noop})
+            .addMenuItem({label: 'label-3', onSelect: noop})), {injector: TestBed.inject(Injector)},
+        );
+        await fixture.whenStable();
+
+        // Create anchor.
+        const anchor = fixture.componentInstance.createAnchorElement('div', {
+          position: 'absolute',
+          width: '50px',
+          height: '20px',
+          top: '50%',
+          left: '50%',
+        });
+
+        // Open menu.
+        TestBed.inject(SciMenuService).open('menu:testee', {anchor, align: 'center'});
+        const menu = new MenuPO(fixture);
+        const submenu = await menu.openSubMenu({cssClass: 'submenu-1'});
+
+        // Expect menu.
+        await expectAsync(menu).toHaveMenuPosition({
+          anchor: anchor,
+          anchorX: 'center',
+          anchorY: 'center',
+          menuX: 'center',
+          menuY: 'center',
+        });
+
+        // Expect submenu.
+        const subMenuAnchor = menu.item({cssClass: 'submenu-1'}).nativeElement;
+        await expectAsync(submenu).toHaveMenuPosition({
+          anchor: subMenuAnchor,
+          anchorX: 'right',
+          anchorY: 'top',
+          anchorYOffset: -SUB_MENU_VERTICAL_OFFSET,
+          menuX: 'left',
+          menuY: 'top',
+        });
+      });
+
+      it('should position menu centered (top-left)', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            {provide: ComponentFixtureAutoDetect, useValue: true},
+          ],
+        });
+
+        const fixture = TestBed.createComponent(SpecRootComponent);
+
+        // Contribute to menu.
+        contributeMenu('menu:testee', menu => menu
+          .addMenuItem({label: 'label-1', onSelect: noop})
+          .addMenuItem({label: 'label-2', onSelect: noop})
+          .addMenuItem({label: 'label-3', onSelect: noop})
+          .addMenu({label: 'submenu-1', cssClass: 'submenu-1'}, menu => menu
+            .addMenuItem({label: 'label-1', onSelect: noop})
+            .addMenuItem({label: 'label-2', onSelect: noop})
+            .addMenuItem({label: 'label-3', onSelect: noop})), {injector: TestBed.inject(Injector)},
+        );
+        await fixture.whenStable();
+
+        // Create anchor.
+        const anchor = fixture.componentInstance.createAnchorElement('div', {
+          position: 'absolute',
+          width: '50px',
+          height: '20px',
+          top: '0',
+          left: '0',
+        });
+
+        // Open menu.
+        TestBed.inject(SciMenuService).open('menu:testee', {anchor, align: 'center'});
+        const menu = new MenuPO(fixture);
+        const submenu = await menu.openSubMenu({cssClass: 'submenu-1'});
+
+        // Expect menu.
+        await expectAsync(menu).toHaveMenuPosition({
+          anchor: anchor,
+          anchorX: 'left',
+          anchorY: 'top',
+          menuX: 'left',
+          menuY: 'top',
+        });
+
+        // Expect submenu.
+        const subMenuAnchor = menu.item({cssClass: 'submenu-1'}).nativeElement;
+        await expectAsync(submenu).toHaveMenuPosition({
+          anchor: subMenuAnchor,
+          anchorX: 'right',
+          anchorY: 'top',
+          anchorYOffset: -SUB_MENU_VERTICAL_OFFSET,
+          menuX: 'left',
+          menuY: 'top',
+        });
+      });
+
+      it('should position menu centered (bottom-right)', async () => {
+        TestBed.configureTestingModule({
+          providers: [
+            {provide: ComponentFixtureAutoDetect, useValue: true},
+          ],
+        });
+
+        const fixture = TestBed.createComponent(SpecRootComponent);
+
+        // Contribute to menu.
+        contributeMenu('menu:testee', menu => menu
+          .addMenuItem({label: 'label-1', onSelect: noop})
+          .addMenuItem({label: 'label-2', onSelect: noop})
+          .addMenuItem({label: 'label-3', onSelect: noop})
+          .addMenu({label: 'submenu-1', cssClass: 'submenu-1'}, menu => menu
+            .addMenuItem({label: 'label-1', onSelect: noop})
+            .addMenuItem({label: 'label-2', onSelect: noop})
+            .addMenuItem({label: 'label-3', onSelect: noop})), {injector: TestBed.inject(Injector)},
+        );
+        await fixture.whenStable();
+
+        // Create anchor.
+        const anchor = fixture.componentInstance.createAnchorElement('div', {
+          position: 'absolute',
+          width: '50px',
+          height: '20px',
+          bottom: '0',
+          right: '0',
+        });
+
+        // Open menu.
+        TestBed.inject(SciMenuService).open('menu:testee', {anchor, align: 'center'});
+        const menu = new MenuPO(fixture);
+        const submenu = await menu.openSubMenu({cssClass: 'submenu-1'});
+
+        // Expect menu.
+        await expectAsync(menu).toHaveMenuPosition({
+          anchor: anchor,
+          anchorX: 'right',
+          anchorY: 'bottom',
+          menuX: 'right',
+          menuY: 'bottom',
+        });
+
+        // Expect submenu.
+        const subMenuAnchor = menu.item({cssClass: 'submenu-1'}).nativeElement;
+        await expectAsync(submenu).toHaveMenuPosition({
+          anchor: subMenuAnchor,
+          anchorX: 'left',
+          anchorY: 'bottom',
+          anchorYOffset: SUB_MENU_VERTICAL_OFFSET,
+          menuX: 'right',
           menuY: 'bottom',
         });
       });
