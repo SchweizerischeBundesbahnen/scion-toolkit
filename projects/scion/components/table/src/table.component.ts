@@ -147,6 +147,7 @@ export class SciTableComponent<T = unknown, ID = T> {
   private readonly _contextMenuName = `menu:${UUID.randomUUID()}` as const;
   private _menuRef?: SciMenuRef;
 
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
   private readonly _viewport = viewChild.required(SciTableViewportComponent, {read: ElementRef});
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
   private readonly _tableHeader = viewChild(SciTableHeaderComponent, {read: ElementRef});
@@ -191,7 +192,7 @@ export class SciTableComponent<T = unknown, ID = T> {
     }
 
     this._menuRef = this._menuService.open(this._contextMenuName, openedViaContextMenuKey ?
-      {anchor: this._viewport(), align: 'center'} :
+      {anchor: this._host, align: 'center'} :
       {anchor: event},
     );
   }

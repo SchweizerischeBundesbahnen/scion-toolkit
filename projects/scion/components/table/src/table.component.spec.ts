@@ -6222,7 +6222,7 @@ describe('Table', () => {
       table.body.dispatchEvent(new PointerEvent('contextmenu', {button: -1, bubbles: true}));
       await table.waitUntilStable();
 
-      const menu = table.element.querySelector<HTMLElement>('sci-menu')!;
+      const menu = document.querySelector<HTMLElement>('sci-menu')!;
       expect(menu).not.toBeNull();
 
       const menuRect = menu.getBoundingClientRect();
