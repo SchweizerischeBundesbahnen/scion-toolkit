@@ -1,0 +1,34 @@
+{
+  "name": "SCION Toolkit · OpenCode",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "NODE_VERSION": "24-trixie",
+      "OPENCODE_VERSION": "latest"
+    }
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/scion-toolkit,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/scion-toolkit",
+  "remoteUser": "node",
+  "init": true,
+  "runArgs": ["--shm-size=2g"],
+  "containerEnv": {
+    "HEADLESS": "true",
+    "PLAYWRIGHT_BROWSERS_PATH": "0",
+    "NG_CLI_ANALYTICS": "false",
+    "NODE_OPTIONS": "--dns-result-order=ipv4first"
+  },
+  "mounts": [
+    "source=scion-toolkit-node-modules-${devcontainerId},target=/workspaces/scion-toolkit/node_modules,type=volume,volume-nocopy",
+    "source=scion-toolkit-opencode-config-${devcontainerId},target=/home/node/.config/opencode,type=volume",
+    "source=scion-toolkit-opencode-data-${devcontainerId},target=/home/node/.local/share/opencode,type=volume",
+    "source=scion-toolkit-opencode-state-${devcontainerId},target=/home/node/.local/state/opencode,type=volume"
+  ],
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "waitFor": "postCreateCommand",
+  "forwardPorts": [4200, 7500],
+  "portsAttributes": {
+    "4200": {"label": "Components app / E2E app", "onAutoForward": "notify"},
+    "7500": {"label": "Showcase App", "onAutoForward": "notify"}
+  }
+}
