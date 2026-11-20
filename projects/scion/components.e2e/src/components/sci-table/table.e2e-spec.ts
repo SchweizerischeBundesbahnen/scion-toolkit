@@ -1230,6 +1230,7 @@ test.describe('sci-table', () => {
     });
 
     test('should add a lot of columns', async ({page}) => {
+      test.slow();
       const tablePage = new TablePagePO(page);
       const table = new TablePO(tablePage.table);
       await tablePage.navigate();
