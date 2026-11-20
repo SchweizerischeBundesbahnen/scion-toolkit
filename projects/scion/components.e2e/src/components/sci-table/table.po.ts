@@ -103,8 +103,14 @@ export class TablePO {
         left: scroll.x === 'start' ? 0 : scroll.x === 'end' ? viewport.scrollWidth : scroll.x,
         top: scroll.y === 'start' ? 0 : scroll.y === 'end' ? viewport.scrollHeight : scroll.y,
       });
-      await new Promise(requestAnimationFrame); // Wait an animation frame for the browser to render the new scroll position.
+      // await new Promise(requestAnimationFrame); // Wait an animation frame for the browser to render the new scroll position.
     }, scrollTo);
+    if (scrollTo.x) {
+      await this.scrollLeft();
+    }
+    if (scrollTo.y) {
+      await this.scrollTop();
+    }
   }
 
   public async scrollTop(): Promise<number> {

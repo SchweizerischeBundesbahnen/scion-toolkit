@@ -41,7 +41,7 @@ export class ConsoleLogs {
   }
 
   public dispose(): void {
-    this._page.off('console', () => this.onConsole);
+    this._page.off('console', this.onConsole);
   }
 
   private onConsole = (message: ConsoleMessage): void => {

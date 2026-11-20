@@ -310,19 +310,25 @@ test.describe('sci-sashbox', () => {
 
     test('should not animate leaving of sash (animation disabled)', async ({page, consoleLogs}) => {
       const sashboxPage = new SashboxAnimationPagePO(page);
+      console.log('>>> 1', consoleLogs.get());
       await sashboxPage.navigate({
         sash1Visible: true, sash2Visible: true, sash3Visible: true,
         sash1Animated: false, sash2Animated: false, sash3Animated: false,
       });
+      console.log('>>> 2', consoleLogs.get());
 
       await test.step('Removing sash 1', async () => {
         await waitUntilStable(() => consoleLogs.get().length);
+        console.log('>>> 3', consoleLogs.get());
         consoleLogs.clear();
+        console.log('>>> 4', consoleLogs.get());
 
         await sashboxPage.setVisible('sash-1', false);
+        console.log('>>> 5', consoleLogs.get());
 
         // Expect sash content to remove immediately.
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual(['[SashContentComponent][sash-1] destroy']);
+        console.log('>>> 6', consoleLogs.get());
       });
 
       await test.step('Removing sash 2', async () => {
