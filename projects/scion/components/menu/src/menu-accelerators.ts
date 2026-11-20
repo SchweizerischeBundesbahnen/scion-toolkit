@@ -16,7 +16,7 @@ import {subscribeIn} from '@scion/toolkit/operators';
 import {Arrays} from '@scion/toolkit/util';
 import {ɵSciMenuService} from './ɵmenu.service';
 import {coerceElement} from '@angular/cdk/coercion';
-import {ɵcreateDestroyableInjector} from '@scion/components/common';
+import {isFromInput, ɵcreateDestroyableInjector} from '@scion/components/common';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {injectMenuAcceleratorTargets, injectMenuContext} from './menu-environment/menu-environment-providers';
 
@@ -101,6 +101,11 @@ export function ɵinstallMenuAccelerators(menuItems: SciMenuItemLike[], options?
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         case undefined:
           return;
+      }
+
+      // Skip events from text inputs.
+      if (isFromInput(event)) {
+        return;
       }
 
       // Skip if not pressing a modifier key. Accelerators must have a modifier key.

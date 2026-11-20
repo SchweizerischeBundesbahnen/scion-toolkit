@@ -23,11 +23,10 @@ import {SciTableViewportComponent} from './table-viewport.component';
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header/table-header.component';
-import {SciAttributesDirective, ɵSingleActiveInjectorFactory} from '@scion/components/common';
+import {isFromInput, SciAttributesDirective, ɵSingleActiveInjectorFactory} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
 import {contributeMenu, installMenuAccelerators, SciMenuRef, ɵSciMenuService} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
-import {isFromInput} from './common';
 
 /**
  * Provides a table to display tabular or hierarchical data.

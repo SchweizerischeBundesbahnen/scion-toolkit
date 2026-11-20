@@ -10,7 +10,7 @@
 
 import {Directive, inject, Signal} from '@angular/core';
 import {SciTableSelectionService} from './table-selection.service';
-import {isFromButton, isFromInput} from './common';
+import {isFromButton, isFromInput} from '@scion/components/common';
 import {skeletonRowId} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 

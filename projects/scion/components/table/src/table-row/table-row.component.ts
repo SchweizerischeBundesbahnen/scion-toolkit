@@ -16,7 +16,7 @@ import {SciTableSelectionService} from '../table-selection.service';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciIconComponent} from '@scion/components/icon';
-import {isFromButton, isFromInput} from '../common';
+import {isFromButton, isFromInput} from '@scion/components/common';
 
 @Component({
   selector: 'sci-table-row',
