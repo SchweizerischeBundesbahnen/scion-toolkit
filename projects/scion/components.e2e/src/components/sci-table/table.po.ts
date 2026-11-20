@@ -98,11 +98,12 @@ export class TablePO {
   }
 
   public async scrollTo(scrollTo: {x?: number | 'start' | 'end'; y?: number | 'start' | 'end'}): Promise<void> {
-    await this.viewport.evaluate((viewport, scroll) => {
+    await this.viewport.evaluate(async (viewport, scroll) => {
       viewport.scrollTo({
         left: scroll.x === 'start' ? 0 : scroll.x === 'end' ? viewport.scrollWidth : scroll.x,
         top: scroll.y === 'start' ? 0 : scroll.y === 'end' ? viewport.scrollHeight : scroll.y,
       });
+      await new Promise(requestAnimationFrame); // Wait an animation frame for the browser to render the new scroll position.
     }, scrollTo);
   }
 

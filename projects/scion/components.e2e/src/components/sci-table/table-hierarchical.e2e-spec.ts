@@ -932,14 +932,8 @@ test.describe('sci-table hierarchical', () => {
       await tablePage.expandAll();
       await expect(table.row({index: 4}).cell({index: 0}).locator).toHaveEllipsis();
 
-      // Capture splitter bounds.
-      const right = (await table.column({name: 'column:name'}).splitter.bounds()).right;
-
       // Double click splitter.
       await table.column({name: 'column:name'}).splitter.dblclick();
-
-      // Wait for column to be resized.
-      await expect.poll(() => table.column({name: 'column:name'}).splitter.bounds().then(bounds => bounds.right)).toBeGreaterThan(right);
 
       // Assert not to have ellipsis.
       await expect(table.row({index: 4}).cell({index: 0}).locator).not.toHaveEllipsis();

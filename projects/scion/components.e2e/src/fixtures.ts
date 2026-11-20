@@ -25,7 +25,7 @@ declare global {
   namespace PlaywrightTest {
     interface Matchers<R> {
       /**
-       * Tests the number to be between the expected numbers (inclusive).
+       * Tests the number to be between the expected numbers (inclusive). This matcher does not support negation using `.not`.
        */
       toBeBetween(expectedFrom: number, expectedTo: number): R;
 
@@ -35,12 +35,12 @@ declare global {
       toHaveEllipsis(): Promise<R>;
 
       /**
-       * Like Playwright's `toBeEmpty`, but additionally checks that the element has no child elements.
+       * Like Playwright's `toBeEmpty`, but additionally checks that the element has no child elements. This matcher does not support negation using `.not`.
        */
       toBeStrictEmpty(): Promise<R>;
 
       /**
-       * Tests an input element to have the expected text selection.
+       * Tests an input element to have the expected text selection. This matcher does not support negation using `.not`.
        */
       toHaveTextSelection(selection: RequireOne<{start: number; end: number}>): Promise<R>;
     }

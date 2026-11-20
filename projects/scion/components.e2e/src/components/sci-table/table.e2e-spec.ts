@@ -1945,7 +1945,6 @@ test.describe('sci-table', () => {
 
       // Scroll right to grab the splitter.
       await table.scrollTo({x: 'end'});
-      await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
 
       // Shrink column two. Columns to the left and right should stay the same.
       const dragHandle = await table.column({name: 'column:2'}).splitter.startDrag();
@@ -2465,7 +2464,6 @@ test.describe('sci-table', () => {
         await expectTable(table).toHaveHorizontalOverflow();
 
         await table.scrollTo({x: 'end'});
-        await expect.poll(() => table.scrollLeft()).toBeGreaterThan(0);
         await expect.poll(() => table.column({name: 'column:3'}).splitter.getDisplayMode()).toEqual('hidden');
 
         await table.column({name: 'column:3'}).splitter.hover();
