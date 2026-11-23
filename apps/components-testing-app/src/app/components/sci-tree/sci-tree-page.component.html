@@ -106,6 +106,16 @@
             </label>
           }
         }
+
+        @switch (datasourceForm.datasource().value()) {
+          @case ('loader')
+          @case ('loader-delayed') {
+            <label>
+              <input [formField]="datasourceForm.paused" type="checkbox" class="e2e-pause-datasource"/>
+              Pause Datasource
+            </label>
+          }
+        }
       </section>
     </ng-template>
 

@@ -4409,7 +4409,7 @@ describe('Table', () => {
       expect(model.visibleRowCount()).toBe(3);
       expect(table.rows).toHaveSize(3);
       expect(table.row({nth: 0}).cells[0]!.value).toContain('parent');
-      expect(table.row({nth: 1}).cells[0]!.isLoading()).toBeTrue();
+      expect(table.row({nth: 1}).isLoading()).toBeTrue();
       expect(table.row({nth: 2}).cells[0]!.value).toBe('sibling');
 
       children$.next(['child']);
@@ -5304,7 +5304,7 @@ describe('Table', () => {
       // Expect 10 rows displaying a skeleton.
       expect(table.rows.length).toEqual(10);
       for (const row of table.rows) {
-        expect(row.cells[0]!.isLoading()).toBeTrue();
+        expect(row.isLoading()).toBeTrue();
       }
       expect(getIds).toHaveBeenCalledTimes(1);
       expect(getItems).not.toHaveBeenCalled();

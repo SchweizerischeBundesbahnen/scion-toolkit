@@ -13,7 +13,7 @@ import {RequireOne} from '@scion/toolkit/types';
 import {retryOnError} from '@scion/toolkit/testing';
 
 /**
- * Provides the implementation of {@link CustomMatchers#toHaveTextSelection}.
+ * Provides the implementation for `toHaveTextSelection` custom matcher.
  */
 export async function toHaveTextSelection(locator: Locator, selection: RequireOne<{start: number; end: number}>): Promise<MatcherReturnType> {
   try {

@@ -104,6 +104,12 @@ export class TablePO {
         top: scroll.y === 'start' ? 0 : scroll.y === 'end' ? viewport.scrollHeight : scroll.y,
       });
     }, scrollTo);
+    if (scrollTo.x) {
+      await this.scrollLeft();
+    }
+    if (scrollTo.y) {
+      await this.scrollTop();
+    }
   }
 
   public async scrollTop(): Promise<number> {

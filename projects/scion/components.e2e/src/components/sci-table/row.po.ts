@@ -9,11 +9,13 @@ export class RowPO {
 
   public rowActions: Locator;
   public expansionControl: Locator;
+  public skeleton: Locator;
   public icons: Locator;
 
   constructor(public table: TablePO, public locator: Locator) {
     this.rowActions = this.locator.locator('sci-toolbar');
     this.expansionControl = this.locator.locator('button.e2e-tree-node-handle');
+    this.skeleton = this.locator.locator('div.e2e-skeleton');
     this.icons = this.locator.locator(':scope > sci-icon');
   }
 

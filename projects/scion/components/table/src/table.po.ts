@@ -248,6 +248,10 @@ export class RowPO {
     const icons = Array.from(this.element.querySelectorAll(':scope > sci-icon:has(~ sci-table-cell:first-of-type)'));
     return icons.map(icon => icon.getAttribute('icon')!);
   }
+
+  public isLoading(): boolean {
+    return this.element.querySelector('div.e2e-skeleton') !== null;
+  }
 }
 
 export class CellPO {
@@ -268,10 +272,6 @@ export class CellPO {
       icon: this.element.querySelector('sci-icon')?.getAttribute('icon') ?? null,
       iconTooltip: this.element.querySelector('sci-icon')?.getAttribute('title') ?? null,
     };
-  }
-
-  public isLoading(): boolean {
-    return this.row.element.querySelector(`div.e2e-skeleton[data-column="${this.column.name}"]`) !== null;
   }
 }
 
