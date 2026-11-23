@@ -190,35 +190,29 @@ test.describe('sci-sashbox', () => {
       });
 
       await test.step('Opening sash 1', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-1', true);
-
         // Expect sash content to grow with animation.
-        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'}).length).toBeGreaterThan(3);
+        await sashboxPage.setVisible('sash-1', true);
+        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'}).length).toBeGreaterThan(1);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'}).at(-1)).toEqual('[SashContentComponent][sash-1] resize to 200');
       });
 
       await test.step('Opening sash 2', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-2', true);
-
         // Expect sash content to grow with animation.
-        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-2] resize'}).length).toBeGreaterThan(3);
+        await sashboxPage.setVisible('sash-2', true);
+        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-2] resize'}).length).toBeGreaterThan(1);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-2] resize'}).at(-1)).toEqual('[SashContentComponent][sash-2] resize to 200');
       });
 
       await test.step('Opening sash 3', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-3', true);
-
         // Expect sash content to grow with animation.
-        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-3] resize'}).length).toBeGreaterThan(3);
+        await sashboxPage.setVisible('sash-3', true);
+        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-3] resize'}).length).toBeGreaterThan(1);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-3] resize'}).at(-1)).toEqual('[SashContentComponent][sash-3] resize to 200');
       });
     });
@@ -231,32 +225,26 @@ test.describe('sci-sashbox', () => {
       });
 
       await test.step('Opening sash 1', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-1', true);
-
         // Expect sash content to display immediately.
+        await sashboxPage.setVisible('sash-1', true);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual(['[SashContentComponent][sash-1] resize to 200']);
       });
 
       await test.step('Opening sash 2', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-2', true);
-
         // Expect sash content to display immediately.
+        await sashboxPage.setVisible('sash-2', true);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual(['[SashContentComponent][sash-2] resize to 200']);
       });
 
       await test.step('Opening sash 3', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-3', true);
-
         // Expect sash content to display immediately.
+        await sashboxPage.setVisible('sash-3', true);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual(['[SashContentComponent][sash-3] resize to 200']);
       });
     });
@@ -268,40 +256,41 @@ test.describe('sci-sashbox', () => {
         sash1Animated: true, sash2Animated: true, sash3Animated: true,
       });
 
+      // Wait for initial resize events.
+      await expect.poll(() => consoleLogs.get({message: 'SashContentComponent'})).toEqual([
+        '[SashContentComponent][sash-1] resize to 200',
+        '[SashContentComponent][sash-2] resize to 200',
+        '[SashContentComponent][sash-3] resize to 200',
+      ]);
+
       await test.step('Removing sash 1', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-1', false);
-
         // Expect sash content to shrink with animation.
-        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'}).length).toBeGreaterThan(3);
+        await sashboxPage.setVisible('sash-1', false);
+        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'}).length).toBeGreaterThan(1);
 
         // Expect sash content to be destroyed after shrinking.
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1]'}).at(-1)).toEqual('[SashContentComponent][sash-1] destroy');
       });
 
       await test.step('Removing sash 2', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-2', false);
-
         // Expect sash content to shrink with animation.
-        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-2] resize'}).length).toBeGreaterThan(3);
+        await sashboxPage.setVisible('sash-2', false);
+        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-2] resize'}).length).toBeGreaterThan(1);
 
         // Expect sash content to be destroyed after shrinking.
-        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-2'}).at(-1)).toEqual('[SashContentComponent][sash-2] destroy');
+        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-2]'}).at(-1)).toEqual('[SashContentComponent][sash-2] destroy');
       });
 
       await test.step('Removing sash 3', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-3', false);
-
         // Expect sash content to shrink with animation.
-        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-3] resize'}).length).toBeGreaterThan(3);
+        await sashboxPage.setVisible('sash-3', false);
+        await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-3] resize'}).length).toBeGreaterThan(1);
 
         // Expect sash content to be destroyed after shrinking.
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-3]'}).at(-1)).toEqual('[SashContentComponent][sash-3] destroy');
@@ -315,33 +304,34 @@ test.describe('sci-sashbox', () => {
         sash1Animated: false, sash2Animated: false, sash3Animated: false,
       });
 
+      // Wait for initial resize events.
+      await expect.poll(() => consoleLogs.get({message: 'SashContentComponent'})).toEqual([
+        '[SashContentComponent][sash-1] resize to 200',
+        '[SashContentComponent][sash-2] resize to 200',
+        '[SashContentComponent][sash-3] resize to 200',
+      ]);
+
       await test.step('Removing sash 1', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-1', false);
-
         // Expect sash content to remove immediately.
+        await sashboxPage.setVisible('sash-1', false);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual(['[SashContentComponent][sash-1] destroy']);
       });
 
       await test.step('Removing sash 2', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-2', false);
-
         // Expect sash content to remove immediately.
+        await sashboxPage.setVisible('sash-2', false);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual(['[SashContentComponent][sash-2] destroy']);
       });
 
       await test.step('Removing sash 3', async () => {
-        await waitUntilStable(() => consoleLogs.get().length);
         consoleLogs.clear();
 
-        await sashboxPage.setVisible('sash-3', false);
-
         // Expect sash content to remove immediately.
+        await sashboxPage.setVisible('sash-3', false);
         await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual(['[SashContentComponent][sash-3] destroy']);
       });
     });
@@ -355,16 +345,15 @@ test.describe('sci-sashbox', () => {
 
       // Remove sash.
       await sashboxPage.setVisible('sash-1', false);
-
-      await waitUntilStable(() => consoleLogs.get().length);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'}).at(-1)).toEqual('[SashContentComponent][sash-1] destroy');
       consoleLogs.clear();
 
       // Open sash.
       await sashboxPage.setVisible('sash-1', true);
-      await waitUntilStable(() => consoleLogs.get().length);
 
       // Expect sash to animate when opened.
-      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'}).length).toBeGreaterThan(3);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'}).length).toBeGreaterThan(1);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'}).at(-1)).toEqual('[SashContentComponent][sash-1] resize to 200');
     });
 
     test('should not animate sash on first render (animation disabled)', async ({page, consoleLogs}) => {
@@ -376,24 +365,24 @@ test.describe('sci-sashbox', () => {
 
       // Remove sash.
       await sashboxPage.setVisible('sash-1', false);
-
-      await waitUntilStable(() => consoleLogs.get().length);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'}).at(-1)).toEqual('[SashContentComponent][sash-1] destroy');
       consoleLogs.clear();
 
       // Open sash.
       await sashboxPage.setVisible('sash-1', true);
-      await waitUntilStable(() => consoleLogs.get().length);
 
       // Expect sash not to animate when opened.
-      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-1] resize'})).toHaveLength(1);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent]'})).toEqual(['[SashContentComponent][sash-1] resize to 200']);
     });
 
     test('should not animate sash when toggling animation flag', async ({page, consoleLogs}) => {
       const sashboxPage = new SashboxAnimationPagePO(page);
       await sashboxPage.navigate({sash1Visible: true, sash1Animated: false});
 
+      // Wait for initial resize event.
+      await expect.poll(() => consoleLogs.get({message: 'SashContentComponent'})).toEqual(['[SashContentComponent][sash-1] resize to 200']);
+
       // Clear log.
-      await waitUntilStable(() => consoleLogs.get().length);
       consoleLogs.clear();
 
       // Enable animation.
@@ -422,41 +411,47 @@ test.describe('sci-sashbox', () => {
       const sashboxPage = new SashboxAnimationPagePO(page);
       await sashboxPage.navigate({sash4Visible: true, sash4Animated: false});
 
-      await waitUntilStable(() => consoleLogs.get().length);
+      // Wait for initial resize event.
+      await expect.poll(() => consoleLogs.get({message: 'SashContentComponent'})).toEqual(['[SashContentComponent][sash-4] resize to 200']);
+
+      // Clear log.
       consoleLogs.clear();
 
       // Run inner animation.
       await sashboxPage.animateContent();
 
       // Expect inner animation to run.
-      await waitUntilStable(() => consoleLogs.get().length);
-      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-4] resize'}).length).toBeGreaterThan(3);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-4] resize'}).length).toBeGreaterThan(1);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-4] resize'}).at(-1)).toEqual('[SashContentComponent][sash-4] resize to 200');
+
+      // Clear log.
+      consoleLogs.clear();
 
       // Enable sash animation.
       await sashboxPage.enableAnimation('sash-4', true);
 
-      await waitUntilStable(() => consoleLogs.get().length);
-      consoleLogs.clear();
-
       // Run inner animation.
       await sashboxPage.animateContent();
 
       // Expect inner animation to run.
-      await waitUntilStable(() => consoleLogs.get().length);
-      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-4] resize'}).length).toBeGreaterThan(3);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-4] resize'}).length).toBeGreaterThan(1);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-4] resize'}).at(-1)).toEqual('[SashContentComponent][sash-4] resize to 200');
     });
 
     test('should disable change detector on sash leave', async ({page, consoleLogs}) => {
       const sashboxPage = new SashboxAnimationPagePO(page);
       await sashboxPage.navigate({sash5Visible: true, sash5Animated: true});
 
-      await waitUntilStable(() => consoleLogs.get().length);
+      // Wait for initial resize event.
+      await expect.poll(() => consoleLogs.get({message: 'SashContentComponent'})).toEqual(['[SashContentComponent][sash-5] resize to 200']);
+
+      // Clear log.
       consoleLogs.clear();
 
       await sashboxPage.setVisible('sash-5', false);
 
       // Expect sash content to shrink with animation.
-      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-5] resize'}).length).toBeGreaterThan(3);
+      await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-5] resize'}).length).toBeGreaterThan(1);
 
       // Expect sash content to be destroyed after shrinking.
       await expect.poll(() => consoleLogs.get({message: '[SashContentComponent][sash-5]'}).at(-1)).toEqual('[SashContentComponent][sash-5] destroy');

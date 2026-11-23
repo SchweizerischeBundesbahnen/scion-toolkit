@@ -95,7 +95,7 @@ export default class SciTablePageComponent {
         switch (options.datasource) {
           case 'loader':
           case 'loader-delayed': {
-            const requestOptions = {slowDatasource: options.datasource === 'loader-delayed', simulateError: this.datasourceForm.simulateError().value};
+            const requestOptions = {slowDatasource: options.datasource === 'loader-delayed', simulateError: this.datasourceForm.simulateError().value, paused: this.datasourceForm.paused().value};
             if (options.hierarchical) {
               return ɵprovideTableDatasource({
                 getTreeTableNodes: query => this._productService.getTreeTableNodes$(query, columnDataTypes(this.columns()), requestOptions),
@@ -432,6 +432,7 @@ export default class SciTablePageComponent {
       bufferSize: 10,
       pageSize: 50,
       simulateError: false,
+      paused: false,
     }));
   }
 
@@ -562,6 +563,7 @@ interface DatasourceForm {
   bufferSize: number;
   pageSize: number;
   simulateError: boolean;
+  paused: boolean;
 }
 
 interface MethodsForm {

@@ -15,7 +15,7 @@ import {ɵcreateDestroyableInjector} from '@scion/components/common';
 import {HttpClient} from '@angular/common/http';
 import {CustomColumnComponent} from './custom-column.component';
 import {SciViewportComponent} from '@scion/components/viewport';
-import {ɵprovideTreeDatasource, provideTreeDatasource, SciTree, SciTreeComponent, SciTreeNodeContext, tree, SciTreeNode} from '@scion/components/tree';
+import {provideTreeDatasource, SciTree, SciTreeComponent, SciTreeNode, SciTreeNodeContext, tree, ɵprovideTreeDatasource} from '@scion/components/tree';
 import {mergeWith, noop} from 'rxjs';
 import {Product, ProductService, simulateError$} from '../sci-table/sci-table-page.data';
 
@@ -75,14 +75,14 @@ export default class SciTreePageComponent {
             return provideTreeDatasource(this._productService.rootProducts, product => this._productService.childrenByProduct().get(product.id) ?? []);
           case 'loader':
           case 'loader-delayed': {
-            const delayed = options.datasource === 'loader-delayed';
+            const requestOptions = {slowDatasource: options.datasource === 'loader-delayed', simulateError: this.datasourceForm.simulateError().value, paused: this.datasourceForm.paused().value};
             return ɵprovideTreeDatasource({
               getTreeNodes: query => this._productService.getTreeTableNodes$(
                 {columnFilters: query.filter ? [{columnName: 'column:0', text: query.filter}] : [], sortCriteria: []},
                 new Map([['column:0', 'string']]),
-                {slowDatasource: delayed, simulateError: this.datasourceForm.simulateError().value},
+                requestOptions,
               ),
-              getItems: ids => this._productService.getProductsById$(ids, {slowDatasource: delayed, simulateError: this.datasourceForm.simulateError().value}),
+              getItems: ids => this._productService.getProductsById$(ids, requestOptions),
             });
           }
           case 'loader-http':
@@ -157,6 +157,7 @@ export default class SciTreePageComponent {
       bufferSize: 10,
       pageSize: 50,
       simulateError: false,
+      paused: false,
     }));
   }
 
@@ -212,6 +213,7 @@ interface DatasourceForm {
   bufferSize: number;
   pageSize: number;
   simulateError: boolean;
+  paused: boolean;
 }
 
 interface LayoutForm {

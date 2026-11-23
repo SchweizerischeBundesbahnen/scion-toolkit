@@ -8,36 +8,53 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import {MatcherReturnType} from 'playwright/types/test';
-import {Locator} from '@playwright/test';
+import {ExpectMatcherState, Locator} from '@playwright/test';
+import {retryOnError} from '@scion/toolkit/testing';
 
 /**
- * Provides the implementation of {@link CustomMatchers#toHaveEllipsis}.
+ * Provides the implementation for `toHaveEllipsis` custom matcher.
  */
-export async function toHaveEllipsis(locator: Locator): Promise<MatcherReturnType> {
-  return locator
-    .evaluate(element => {
-      const computedStyle = getComputedStyle(element);
+export async function toHaveEllipsis(this: ExpectMatcherState, locator: Locator): Promise<MatcherReturnType> {
+  try {
+    // Retry to behave like a Playwright web-first assertion.
+    await retryOnError(() => this.isNot ? assertNotToHaveEllipsis(locator) : assertToHaveEllipsis(locator));
+    return {pass: !this.isNot, message: () => 'passed'}; // Invert `pass` because negation is already handled by the assertion above, but Playwright still applies its own `.not` inversion.
+  }
+  catch (error) {
+    return {pass: this.isNot, message: () => error instanceof Error ? error.message : `${error}`}; // Invert `pass` because negation is already handled by the assertion above, but Playwright still applies its own `.not` inversion.
+  }
+}
 
-      if (computedStyle.display !== 'block' && computedStyle.display !== 'inline-block' && computedStyle.display !== 'inline') {
-        throw Error(`Expected element to have ellipsis. Ellipsis is only supported on block or inline-block elements.`);
-      }
+async function assertToHaveEllipsis(locator: Locator): Promise<void> {
+  await locator.evaluate(element => {
+    const computedStyle = getComputedStyle(element);
 
-      if (computedStyle.textOverflow !== 'ellipsis') {
-        throw Error(`Expected element to have ellipsis. Style 'text-overflow' must be set to 'ellipsis', not '${computedStyle.textOverflow}'.`);
-      }
+    if (computedStyle.display !== 'block' && computedStyle.display !== 'inline-block' && computedStyle.display !== 'inline') {
+      throw Error(`Expected element to have ellipsis. Ellipsis is only supported on block or inline-block elements.`);
+    }
 
-      if (computedStyle.overflow !== 'hidden') {
-        throw Error(`Expected element to have ellipsis. Style 'overflow' must be set to 'hidden', not '${computedStyle.overflow}'.`);
-      }
+    if (computedStyle.textOverflow !== 'ellipsis') {
+      throw Error(`Expected element to have ellipsis. Style 'text-overflow' must be set to 'ellipsis', not '${computedStyle.textOverflow}'.`);
+    }
 
-      if (computedStyle.whiteSpace !== 'nowrap') {
-        throw Error(`Expected element to have ellipsis. Style 'white-space' must be set to 'nowrap', not '${computedStyle.whiteSpace}'.`);
-      }
+    if (computedStyle.overflow !== 'hidden') {
+      throw Error(`Expected element to have ellipsis. Style 'overflow' must be set to 'hidden', not '${computedStyle.overflow}'.`);
+    }
 
-      if (element.scrollWidth <= element.clientWidth) {
-        throw Error(`Expected element to have ellipsis. Text does not overflow.`);
-      }
-    })
-    .then(() => ({pass: true, message: () => 'passed'}))
-    .catch((error: unknown) => ({pass: false, message: () => error instanceof Error ? error.message : `${error}`}));
+    if (computedStyle.whiteSpace !== 'nowrap') {
+      throw Error(`Expected element to have ellipsis. Style 'white-space' must be set to 'nowrap', not '${computedStyle.whiteSpace}'.`);
+    }
+
+    if (element.scrollWidth <= element.clientWidth) {
+      throw Error(`Expected element to have ellipsis. Text does not overflow.`);
+    }
+  });
+}
+
+async function assertNotToHaveEllipsis(locator: Locator): Promise<void> {
+  await locator.evaluate(element => {
+    if (element.scrollWidth > element.clientWidth) {
+      throw Error(`Expected element not to have ellipsis. Text overflows.`);
+    }
+  });
 }

@@ -11,7 +11,7 @@ import {MatcherReturnType} from 'playwright/types/test';
 import {Locator} from '@playwright/test';
 
 /**
- * Provides the implementation of {@link CustomMatchers#toBeEmpty}.
+ * Provides the implementation for `toBeStrictEmpty` custom matcher.
  */
 export async function toBeStrictEmpty(locator: Locator): Promise<MatcherReturnType> {
   return locator

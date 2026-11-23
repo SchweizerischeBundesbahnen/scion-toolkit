@@ -10,7 +10,7 @@
 import {MatcherReturnType} from 'playwright/types/test';
 
 /**
- * Provides the implementation of {@link CustomMatchers#toBeBetween}.
+ * Provides the implementation for `toBeBetween` custom matcher.
  */
 export function toBeBetween(actual: number, expectedFrom: number, expectedTo: number): MatcherReturnType {
   if (actual >= expectedFrom && actual <= expectedTo) {
