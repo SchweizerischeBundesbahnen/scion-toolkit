@@ -117,7 +117,7 @@ export class SciMenuOpener {
   /**
    * Positions the popover relative to the anchor element.
    */
-  private bindPopoverToAnchor(binding: {popoverElement: HTMLElement; anchorElement: HTMLElement; align: 'vertical' | 'horizontal'; offset?: {x?: number; y?: number}}): void {
+  private bindPopoverToAnchor(binding: {popoverElement: HTMLElement; anchorElement: HTMLElement; align: 'vertical' | 'horizontal' | 'center'; offset?: {x?: number; y?: number}}): void {
     const {popoverElement, anchorElement, align} = binding;
     const popoverId = `scimenu-${UUID.randomUUID().substring(0, 8)}`;
 
@@ -137,21 +137,29 @@ export class SciMenuOpener {
     });
 
     // Position popover relative to anchor.
-    if (align === 'horizontal') {
-      setStyles(popoverElement, {
-        'position-anchor': `--${popoverId}`,
-        'position-try-fallbacks': 'flip-inline, flip-block, flip-inline flip-block',
-        'top': `calc(anchor(top) - var(--ɵsci-menu-padding-block) + ${binding.offset?.y ?? 0}px)`,
-        'left': `calc(anchor(right) + ${binding.offset?.x ?? 0}px)`,
-      });
-    }
-    else {
-      setStyles(popoverElement, {
-        'position-anchor': `--${popoverId}`,
-        'position-try-fallbacks': 'flip-block',
-        'top': `calc(anchor(bottom) + ${binding.offset?.y ?? 0}px)`,
-        'left': `min(calc(anchor(left) + ${binding.offset?.x ?? 0}px), calc(100% - var(--ɵsci-menu-width)))`, // `calc(100% - var(--ɵsci-menu-width))` prevents pushing the popover out of the page viewport on the right
-      });
+    switch (align) {
+      case 'horizontal':
+        setStyles(popoverElement, {
+          'position-anchor': `--${popoverId}`,
+          'position-try-fallbacks': 'flip-inline, flip-block, flip-inline flip-block',
+          'top': `calc(anchor(top) - var(--ɵsci-menu-padding-block) + ${binding.offset?.y ?? 0}px)`,
+          'left': `calc(anchor(right) + ${binding.offset?.x ?? 0}px)`,
+        });
+        break;
+      case 'vertical':
+        setStyles(popoverElement, {
+          'position-anchor': `--${popoverId}`,
+          'position-try-fallbacks': 'flip-block',
+          'top': `calc(anchor(bottom) + ${binding.offset?.y ?? 0}px)`,
+          'left': `min(calc(anchor(left) + ${binding.offset?.x ?? 0}px), calc(100% - var(--ɵsci-menu-width)))`, // `calc(100% - var(--ɵsci-menu-width))` prevents pushing the popover out of the page viewport on the right
+        });
+        break;
+      case 'center':
+        setStyles(popoverElement, {
+          'position-anchor': `--${popoverId}`,
+          'position-area': 'center',
+        });
+        break;
     }
 
     // Mark the anchor as open to support opening the menu from a toolbar button, not a toolbar menu button, e.g., to support opening a menu via accelerator.

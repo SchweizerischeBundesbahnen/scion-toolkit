@@ -45,6 +45,7 @@ export const toHaveMenuPositionCustomMatcher: jasmine.CustomAsyncMatcherFactorie
 
 function assertMenuPosition(expected: ExpectedMenuPosition, actual: MenuPO): void {
   const menuRect = actual.nativeElement.getBoundingClientRect();
+  const menuCenter = getCenter(menuRect);
 
   const {anchor, menuX, menuY, anchorX, anchorY} = expected;
   const originXOffset = expected.anchorXOffset ?? 0;
@@ -64,6 +65,12 @@ function assertMenuPosition(expected: ExpectedMenuPosition, actual: MenuPO): voi
       }
     }
 
+    if (menuX === 'center') {
+      if (menuCenter.x !== anchor.x) {
+        throw Error(`[DOMAssertError] Menu's horizontal center expected to be '${anchor.x}' but was '${menuCenter.x}'`);
+      }
+    }
+
     if (menuY === 'top') {
       if (!isCloseTo(menuRect.top, anchor.y)) {
         throw Error(`[DOMAssertError] Menu's top position expected to be close to '${anchor.y}' but was '${menuRect.top}'`);
@@ -75,10 +82,17 @@ function assertMenuPosition(expected: ExpectedMenuPosition, actual: MenuPO): voi
         throw Error(`[DOMAssertError] Menu's bottom position expected to be close to '${anchor.y}' but was '${menuRect.bottom}'`);
       }
     }
+
+    if (menuY === 'center') {
+      if (!isCloseTo(menuCenter.y, anchor.y)) {
+        throw Error(`[DOMAssertError] Menu's vertical center expected to be close to '${anchor.y}' but was '${menuCenter.y}'`);
+      }
+    }
   }
   // Anchor is html element
   else {
     const elementRect = anchor.getBoundingClientRect();
+    const anchorCenter = getCenter(elementRect);
 
     if (menuX === 'left') {
       if (anchorX === 'left') {
@@ -108,6 +122,12 @@ function assertMenuPosition(expected: ExpectedMenuPosition, actual: MenuPO): voi
       }
     }
 
+    if (menuX === 'center' && anchorX === 'center') {
+      if (!isCloseTo(menuCenter.x, anchorCenter.x)) {
+        throw Error(`[DOMAssertError] Menu's horizontal center expected to be close to '${anchorCenter.x}' but was '${menuCenter.x}'`);
+      }
+    }
+
     if (menuY === 'top') {
       if (anchorY === 'top') {
         if (!isCloseTo(menuRect.top, elementRect.top + originYOffset)) {
@@ -133,17 +153,23 @@ function assertMenuPosition(expected: ExpectedMenuPosition, actual: MenuPO): voi
         }
       }
     }
+
+    if (menuY === 'center' && anchorY === 'center') {
+      if (!isCloseTo(menuCenter.y, anchorCenter.y)) {
+        throw Error(`[DOMAssertError] Menu's vertical center expected to be close to '${anchorCenter.y}' but was '${menuCenter.y}'`);
+      }
+    }
   }
 }
 
 export interface ExpectedMenuPosition {
   anchor: Point | HTMLElement;
-  anchorX?: 'left' | 'right';
-  anchorY?: 'top' | 'bottom';
+  anchorX?: 'left' | 'right' | 'center';
+  anchorY?: 'top' | 'bottom' | 'center';
   anchorXOffset?: number;
   anchorYOffset?: number;
-  menuX?: 'left' | 'right';
-  menuY?: 'top' | 'bottom';
+  menuX?: 'left' | 'right' | 'center';
+  menuY?: 'top' | 'bottom' | 'center';
 }
 
 export interface Point {
@@ -155,4 +181,11 @@ export const SUB_MENU_VERTICAL_OFFSET = 4; // --ɵsci-menu-padding-block
 
 function isCloseTo(actual: number, expected: number): boolean {
   return Math.abs(actual - expected) <= 1;
+}
+
+function getCenter(rect: DOMRect): Point {
+  return {
+    x: rect.x + rect.width / 2,
+    y: rect.y + rect.height / 2,
+  };
 }

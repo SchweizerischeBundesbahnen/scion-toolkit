@@ -72,7 +72,7 @@ export abstract class SciMenuService {
   /**
    * Opens a menu with items contributed to the specified menu.
    *
-   * The menu is positioned relative to the specified anchor, vertically or horizontally. The anchor can be a coordinate, a mouse event, or a DOM element.
+   * The menu is positioned relative to the specified anchor, vertically, horizontally, or centered. The anchor can be a coordinate, a mouse event, or a DOM element.
    *
    * ```ts
    * import {inject} from '@angular/core';
@@ -226,13 +226,13 @@ export interface SciMenuOptions {
    */
   context?: Map<string, unknown>;
   /**
-   * Controls whether to open the menu below or to the side of the anchor.
+   * Controls whether to open the menu below, to the side of, or centered on the anchor.
    */
-  align?: 'vertical' | 'horizontal';
+  align?: 'vertical' | 'horizontal' | 'center';
   /**
    * Sets the distance (in pixels) between the menu and its anchor element along the X and Y axes.
    *
-   * By default, the menu is aligned flush with the anchor.
+   * By default, the menu is aligned flush with the anchor. Not supported for alignment `center`.
    */
   offset?: {x?: number; y?: number};
   /**
