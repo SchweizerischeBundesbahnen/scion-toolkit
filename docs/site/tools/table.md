@@ -27,6 +27,7 @@ The NPM sub-module `@scion/components/table` provides an Angular component for d
     - [Filtering](#filtering)
     - [Sorting](#sorting)
     - [Selection](#selection)
+    - [Context Menu](#context-menu)
     - [Row Actions](#row-actions)
     - [Row Icon](#row-icon)
     - [Row Bindings](#row-bindings)
@@ -777,6 +778,32 @@ userTable.select('123');
 userTable.select(['123', '456']);
 ```
 
+#### Context Menu
+
+A context menu provides actions for interacting with the selected rows and opens when the user invokes the context menu on the table.
+
+The context menu is configured via the `contextMenu` property on the table descriptor that is passed to the `table()` function.
+
+```ts
+import {table} from '@scion/components/table';
+
+table({
+  datasource: users.value,
+  columns: table => table
+    .addNumberColumn('ID', user => user.id)
+    .addStringColumn('Name', user => user.name)
+    .addBooleanColumn('Inactive', user => user.inactive)
+    .addDateColumn('Expiration', user => user.expiration),
+  contextMenu: (menu, selection, activeItem) => menu
+    .addMenuItem({icon: 'edit', label: 'Edit', disabled: activeItem === undefined, onSelect: () => editUser(activeItem)})
+    .addMenuItem({icon: 'delete', label: 'Delete', disabled: selection.length === 0, onSelect: () => deleteUsers(selection), accelerator: {key: 'Delete'}}),
+});
+```
+
+> [!NOTE]
+> Icon ligatures are interpreted as Material icon font ligatures if no icon provider is configured. \
+> Refer to the [Icon Documentation][link-scion-icons] for more information on how to provide an icon provider.
+
 #### Row Actions
 
 Row actions enable interaction with a row and appear when the user hovers over a row. Row actions can be buttons or menus.
@@ -802,6 +829,21 @@ table({
         .addMenuItem({icon: 'lock', label: 'Disable user', onSelect: () => lockUser(user)}),
       ),
     ),
+});
+```
+
+Keyboard accelerators are not supported for row actions, as row actions are only available when hovering over a row. To make a row action accessible via keyboard accelerator, register the corresponding action in the context menu as well.
+
+```ts
+import {table} from '@scion/components/table';
+
+table({
+  datasource: users.value,
+  columns: table => table.addStringColumn('Name', user => user.name),
+  rowActions: (toolbar, user) => toolbar
+    .addToolbarButton({icon: 'delete', accelerator: {key: 'Delete'}, onSelect: () => deleteUsers(user)}),
+  contextMenu: (menu, selection) => menu
+    .addMenuItem({label: 'Delete', accelerator: {key: 'Delete'}, onSelect: () => deleteUsers(selection)}),
 });
 ```
 

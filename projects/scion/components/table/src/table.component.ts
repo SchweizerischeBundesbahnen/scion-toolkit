@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {Component, computed, effect, ElementRef, inject, input, output, Provider, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
+import {Component, computed, DestroyRef, effect, ElementRef, inject, input, output, Provider, untracked, viewChild, viewChildren, ViewEncapsulation} from '@angular/core';
 import {SciTable, SciTableEvent} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {SciScrollbarComponent} from '@scion/components/viewport';
@@ -23,8 +23,10 @@ import {SciTableViewportComponent} from './table-viewport.component';
 import {SciTableGridComponent} from './table-grid.component';
 import {SciTableBodyComponent} from './table-body.component';
 import {SciTableHeaderComponent} from './table-header/table-header.component';
-import {SciAttributesDirective} from '@scion/components/common';
+import {ɵisEventFromInput, SciAttributesDirective} from '@scion/components/common';
 import {SciIconComponent} from '@scion/components/icon';
+import {contributeMenu, installMenuAccelerators, SciMenuRef, SciMenuService} from '@scion/components/menu';
+import {UUID} from '@scion/toolkit/uuid';
 
 /**
  * Provides a table to display tabular or hierarchical data.
@@ -141,6 +143,12 @@ export class SciTableComponent<T = unknown, ID = T> {
    */
   public readonly primaryAction = output<SciTableEvent<ID>>();
 
+  private _contextMenuRef?: SciMenuRef;
+  private readonly _contextMenuName = `menu:${UUID.randomUUID()}` as const;
+
+  private readonly _menuService = inject(SciMenuService);
+  private readonly _host = inject(ElementRef).nativeElement as HTMLElement;
+
   private readonly _viewport = viewChild.required(SciTableViewportComponent, {read: ElementRef});
   private readonly _viewportClient = viewChild.required(SciTableGridComponent, {read: ElementRef});
   private readonly _tableHeader = viewChild(SciTableHeaderComponent, {read: ElementRef});
@@ -153,6 +161,7 @@ export class SciTableComponent<T = unknown, ID = T> {
   constructor() {
     this.connectToModel();
     this.scrollActiveRowIntoViewport();
+    this.installContextMenu();
   }
 
   protected onRowPrimaryAction(event: SciTableEvent<ID>): void {
@@ -162,6 +171,29 @@ export class SciTableComponent<T = unknown, ID = T> {
 
   protected onRetry(): void {
     this.table().reloadFailed();
+  }
+
+  protected async onContextMenuOpen(event: PointerEvent): Promise<void> {
+    if (this.table().contextMenu === undefined || ɵisEventFromInput(event) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const menuRef = this._contextMenuRef = this.openContextMenu(event);
+
+    menuRef.onClose(() => {
+      if (menuRef === this._contextMenuRef) {
+        this._contextMenuRef = undefined;
+      }
+    });
+  }
+
+  protected onBodyClick(event: PointerEvent): void {
+    if (event.target === this._tableBody().nativeElement) {
+      this.table().updateSelectedItems(() => new Set());
+    }
   }
 
   private connectToModel(): void {
@@ -220,6 +252,34 @@ export class SciTableComponent<T = unknown, ID = T> {
         }
       });
     });
+  }
+
+  private installContextMenu(): void {
+    contributeMenu(this._contextMenuName, menu => this.table().contextMenu?.(menu, this.table().selectedItems(), this.table().activeItem()));
+    installMenuAccelerators(this._contextMenuName, {target: this._tableBody});
+
+    // Close context menu when the table is destroyed.
+    inject(DestroyRef).onDestroy(() => this._contextMenuRef?.close());
+
+    // Close context menu on scroll.
+    effect(() => {
+      this.table().scrollTop();
+      untracked(() => this._contextMenuRef?.close());
+    });
+  }
+
+  private openContextMenu(event: PointerEvent): SciMenuRef {
+    const openedViaContextMenuKey = event.button === -1;
+
+    if (openedViaContextMenuKey) {
+      return this._menuService.open(this._contextMenuName, {anchor: this._host, align: 'center'});
+    }
+
+    if (event.target === this._tableBody().nativeElement) {
+      this.table().updateSelectedItems(() => new Set());
+    }
+
+    return this._menuService.open(this._contextMenuName, {anchor: event});
   }
 }
 

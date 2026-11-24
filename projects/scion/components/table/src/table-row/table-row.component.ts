@@ -35,6 +35,7 @@ import {ɵisEventFromButton, ɵisEventFromInput} from '@scion/components/common'
     '[attr.data-state]': `row().level !== undefined && row().hasChildren() ? (row().expanded() ? 'expanded' : 'collapsed') : null`,
     '[style.--ɵsci-table-row-level]': 'row().level', // only set if hierarchical
     '(click)': 'onRowClick($event)',
+    '(contextmenu)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick($event)',
     '(mouseenter)': 'onRowMouseEnter()',
     '(mouseleave)': 'onRowMouseLeave($event)',

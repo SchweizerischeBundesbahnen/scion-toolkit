@@ -11,7 +11,7 @@
 import {Injector, Signal, WritableSignal} from '@angular/core';
 import {SciTableDatasourceProvider, SciTableSortCriterion} from './table-datasource';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
-import {SciToolbarFactory} from '@scion/components/menu';
+import {SciMenuFactory, SciToolbarFactory} from '@scion/components/menu';
 import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
 import {SciDateValue} from './table-date-column.model';
@@ -150,12 +150,61 @@ export interface SciTableDescriptor<T, ID = T> {
    * });
    * ```
    *
+   * Keyboard accelerators are not supported for row actions, as row actions are only available when hovering over a row.
+   * To make a row action accessible via keyboard accelerator, register the corresponding action in the {@link SciTableDescriptor.contextMenu} as well.
+   *
+   * @example
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table({
+   *   datasource: data,
+   *   columns: table => ...,
+   *   rowActions: (toolbar, item) => toolbar.addToolbarButton({
+   *     icon: 'delete',
+   *     accelerator: {key: 'Delete'},
+   *     onSelect: () => ...,
+   *   }),
+   *   contextMenu: (menu, selection) => menu.addMenuItem({
+   *     label: 'Delete',
+   *     accelerator: {key: 'Delete'},
+   *     onSelect: () => ...,
+   *   }),
+   * });
+   * ```
+   *
    * The function:
    * - Is called per item with a {@link SciToolbarFactory} to contribute actions.
    * - Runs in a reactive context and re-evaluates when tracked signals change.
    * - Can call `inject` to get required dependencies.
    */
   rowActions?: SciTableRowActionFactoryFn<T>;
+
+  /**
+   * Configures a context menu displayed when right-clicking selected rows.
+   *
+   * @example
+   * ```ts
+   * import {table} from '@scion/components/table';
+   *
+   * table({
+   *   datasource: data,
+   *   columns: table => ...,
+   *   contextMenu: (menu, selection, activeItem) => menu.addMenuItem({
+   *     label: 'Delete',
+   *     icon: 'delete',
+   *     accelerator: {key: 'Delete'},
+   *     onSelect: () => ...,
+   *   }),
+   * });
+   * ```
+   *
+   * The function:
+   * - Is called when selected items change with a {@link SciMenuFactory} to contribute menu items.
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
+   */
+  contextMenu?: SciTableContextMenuFactoryFn<ID>;
 
   /**
    * Configures row bindings for table rows.
@@ -447,6 +496,17 @@ export interface SciTableCellContext<T = unknown, VALUE = unknown> {
  * - Can call `inject` to get required dependencies.
  */
 export type SciTableRowActionFactoryFn<T> = (toolbar: SciToolbarFactory, item: T, index: number) => void;
+
+/**
+ * Signature of a function to contribute menu items to a context menu.
+ *
+ * Called on selection change with a {@link SciMenuFactory} to contribute menu items to the context menu.
+ *
+ * The function:
+ * - Runs in a reactive context and re-evaluates when tracked signals change.
+ * - Can call `inject` to get required dependencies.
+ */
+export type SciTableContextMenuFactoryFn<ID> = (menu: SciMenuFactory, selection: ID[], activeItem: ID | undefined) => void;
 
 /**
  * Represents an event emitted by {@link SciTableComponent}.

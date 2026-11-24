@@ -33,5 +33,6 @@
 @let isRowActionMenuOpen = rowActionToolbar()?.menuOpen();
 
 @if (hasRowActions && (isRowHovered || isRowActionMenuOpen)) {
-  <sci-toolbar [name]="rowActionsToolbarName" (click)="onActionToolbarClick($event)" class="row-actions"/>
+  <!-- Disable keyboard accelerators for row actions, as triggering an action via accelerator on the hovered row is unexpected. -->
+  <sci-toolbar [name]="rowActionsToolbarName" (click)="onActionToolbarClick($event)" [acceleratorTarget]="[]" class="row-actions"/>
 }
