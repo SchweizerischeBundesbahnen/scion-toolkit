@@ -111,7 +111,7 @@
     "markdown-include": "0.4.3",
     "ng-packagr": "22.1.1",
     "npm-run-all2": "9.0.3",
-    "serve": "14.2.6",
+    "serve": "14.2.8",
     "typescript": "6.0.3",
     "typescript-eslint": "8.70.0",
     "vercel": "54.14.0"
