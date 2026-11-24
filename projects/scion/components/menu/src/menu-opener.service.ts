@@ -41,6 +41,14 @@ export class SciMenuOpener {
       const componentRef = this.createMenuPopover(menuItems, anchorElement, options);
       componentRef.onDestroy(() => injector.destroy());
 
+      if (options.anchor instanceof PointerEvent && options.anchor.type === 'contextmenu') {
+        const popover = componentRef.location.nativeElement as HTMLElement;
+
+        // Capture future pointer events to prevent light dismiss of the popover in Safari (caused by contextmenu event firing before pointerup).
+        // The capture is released on pointerup.
+        popover.setPointerCapture(options.anchor.pointerId);
+      }
+
       return {
         close: () => componentRef.destroy(),
         onClose: onClose => componentRef.hostView.destroyed ? onClose() : componentRef.onDestroy(onClose), // Call callback immediately if already destroyed.
