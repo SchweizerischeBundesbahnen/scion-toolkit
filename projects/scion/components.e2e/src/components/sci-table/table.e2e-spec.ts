@@ -5555,6 +5555,75 @@ test.describe('sci-table', () => {
     });
   });
 
+  test.describe('Context Menu', () => {
+
+    test('should close the context menu when scrolling the table', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      await tablePage.navigate();
+
+      await tablePage.showContextMenu(true);
+      await tablePage.setHeight(300);
+      await tablePage.setRowCount(100);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      const table = new TablePO(tablePage.table);
+      const menu = page.locator('sci-menu');
+      await expectTable(table).toHaveVerticalOverflow();
+
+      await table.row({index: 0}).locator.click({button: 'right'});
+      await expect(menu).toBeVisible();
+
+      // Wheel over the table, outside the menu, without dismissing it by clicking.
+      await table.row({index: 5}).hover();
+      await expect(menu).toBeVisible();
+      await page.mouse.wheel(0, 100);
+
+      await expect.poll(() => table.scrollTop()).toBeGreaterThan(0);
+      await expect(menu).not.toBeAttached();
+    });
+
+    test('should close the context menu when navigating away', async ({page}) => {
+      const tablePage = new TablePagePO(page);
+      await tablePage.navigate();
+
+      await tablePage.showContextMenu(true);
+      await tablePage.addColumn({name: 'column:name', type: 'string'});
+
+      const table = new TablePO(tablePage.table);
+      const menu = page.locator('sci-menu');
+
+      await table.row({index: 0}).locator.click({button: 'right'});
+      await expect(menu).toBeVisible();
+
+      await page.goto('/#');
+      await expect(menu).not.toBeAttached();
+    });
+
+    test('should not trigger accelerator on input', async ({page, consoleLogs}) => {
+      const tablePage = new TablePagePO(page);
+      await tablePage.navigate();
+
+      await tablePage.showContextMenu(true);
+      await tablePage.addColumn({name: 'column:string', type: 'string'});
+      await tablePage.addColumn({name: 'column:input', type: 'component', extras: {componentColumn: {component: 'component:custom-input-column'}}});
+
+      const table = new TablePO(tablePage.table);
+      const inputCell = new CustomInputColumnPO(table.row({index: 9}).cell({name: 'column:input'}));
+
+      // Press delete on input.
+      await inputCell.input.focus();
+      await page.keyboard.press('Delete');
+
+      // Press delete on string column.
+      await table.row({index: 9}).cell({name: 'column:string'}).locator.click();
+      await expect(tablePage.selection).toHaveText('10'); // Wait for selection.
+      await page.keyboard.press('Delete');
+
+      // Should only call action once.
+      await expect.poll(() => consoleLogs.get({message: '[SciTablePageComponent]'})).toEqual(['[SciTablePageComponent] Context menu action: 10']);
+    });
+  });
+
   test.describe('Scrollbar', () => {
 
     /**

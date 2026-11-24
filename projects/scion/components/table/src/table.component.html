@@ -9,7 +9,7 @@
     }
 
     <!-- Table body -->
-    <sci-table-body sciTableKeyboardNavigator>
+    <sci-table-body (contextmenu)="onContextMenuOpen($event)" (click)="onBodyClick($event)" sciTableKeyboardNavigator>
       @if (!table.error()) {
         <!-- Track index to reuse the table row elements -->
         @for (row of table.rows(); track $index) {
@@ -35,7 +35,7 @@
     </sci-table-body>
 
     <!-- Render column splitters. -->
-    <sci-table-columns [rows]="rows()"/>
+    <sci-table-columns (contextmenu)="onContextMenuOpen($event)" [rows]="rows()"/>
   </sci-table-grid>
 </sci-table-viewport>
 

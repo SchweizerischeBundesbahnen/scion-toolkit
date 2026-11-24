@@ -19,7 +19,7 @@ export class SciTableSelectionService<T, ID> {
 
   private readonly _table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
 
-  public async onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): Promise<void> {
+  public async onRowClick(index: number, event: PointerEvent): Promise<void> {
     const table = this._table();
     const rowId = table.visibleRows()?.[index]?.id;
     const previousActiveIndex = table.activeIndex();
@@ -27,6 +27,12 @@ export class SciTableSelectionService<T, ID> {
     table.setActiveItem(rowId);
 
     if (rowId === undefined || !table.selectable()) {
+      return;
+    }
+
+    // Retain selection when right-clicking on an already selected row.
+    if (event.type === 'contextmenu') {
+      table.updateSelectedItems(selection => selection.has(rowId) ? selection : new Set<ID>().add(rowId));
       return;
     }
 

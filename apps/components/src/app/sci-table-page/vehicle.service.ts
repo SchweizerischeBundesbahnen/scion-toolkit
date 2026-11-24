@@ -9,24 +9,26 @@
  */
 
 import {SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableNode} from '@scion/components/table';
-import {computed, Service, Signal, signal} from '@angular/core';
+import {computed, linkedSignal, Service, signal} from '@angular/core';
 import {Observable} from 'rxjs';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {map} from 'rxjs/operators';
 import {httpResource} from '@angular/common/http';
 import {ClassTypeGroup, DepotGroup, OperatorGroup, Vehicle, VehicleNode} from './vehicle.model';
 import {filterArray, mapArray} from '@scion/toolkit/operators';
+import {UUID} from '@scion/toolkit/uuid';
 
 @Service()
 export class VehicleService {
 
   private readonly _datasource = httpResource<Vehicle[]>(() => '/sample-vehicles-10k.json', {
-    parse: vehicles => (vehicles as Vehicle[]).map((vehicle, index) => ({...vehicle, kind: 'vehicle', id: `${index + 1}`, label: vehicle.vehicleId})),
+    parse: vehicles => (vehicles as Vehicle[]).map(vehicle => ({...vehicle, kind: 'vehicle', id: UUID.randomUUID().substring(0, 8), label: vehicle.vehicleId})),
     defaultValue: [],
   });
+  private readonly _vehicles = linkedSignal(() => this._datasource.value().slice(0, this.vehicleCount()));
 
   public readonly vehicleCount = signal(10_000);
-  public readonly vehicles: Signal<Vehicle[]> = computed(() => this._datasource.value().slice(0, this.vehicleCount()));
+  public readonly vehicles = this._vehicles.asReadonly();
   public readonly vehicles$ = toObservable(this.vehicles);
   public readonly operatorGroups = computed(() => createOperatorGroups(this.vehicles()));
   public readonly operatorGroups$ = toObservable(this.operatorGroups);
@@ -45,15 +47,16 @@ export class VehicleService {
   }
 
   public addVehicle(vehicle: Vehicle): void {
-    this._datasource.update(vehicles => {
+    this._vehicles.update(vehicles => {
       const copy = [...vehicles];
-      copy.push({...vehicle, id: `${vehicles.length + 1}`});
+      const index = copy.findIndex(item => item === vehicle) + 1;
+      copy.splice(index, 0, {...vehicle, id: UUID.randomUUID().substring(0, 8)});
       return copy;
     });
   }
 
   public deleteVehicle(id: string): void {
-    this._datasource.update(vehicles => {
+    this._vehicles.update(vehicles => {
       const index = vehicles.findIndex(vehicle => vehicle.id === id);
       if (index === -1) {
         return vehicles;
@@ -109,6 +112,36 @@ export class VehicleService {
         map(vehicles => Vehicles.sort(vehicles, 'sortCriteria' in query ? query.sortCriteria : [])),
         mapArray(vehicle => vehicle.id),
       );
+  }
+
+  /**
+   * Returns all vehicles which are descendants of an array of nodes.
+   */
+  public getVehicles(nodeIds: readonly string[]): Vehicle[] {
+    const treeNodes = createVehicleNodes(this.operatorGroups());
+    const nodesById = new Map(treeNodes.map(node => [node.item.id, node]));
+    const vehicles = nodeIds.flatMap(id => {
+      const node = nodesById.get(id);
+      if (node === undefined) {
+        return [];
+      }
+      const children = [node];
+      const leafs = [];
+      while (children.length > 0) {
+        const next = children.pop()!;
+        const nextNode = nodesById.get(next.item.id)!;
+        if (nextNode.item.kind === 'vehicle') {
+          leafs.push(nextNode.item);
+        }
+        else {
+          children.push(...treeNodes.filter(treeNode => treeNode.parentId === next.item.id));
+        }
+      }
+
+      return leafs;
+    });
+
+    return [...new Set(vehicles)];
   }
 }
 

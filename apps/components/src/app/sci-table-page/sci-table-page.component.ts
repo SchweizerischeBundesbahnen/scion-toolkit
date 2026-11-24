@@ -12,7 +12,7 @@ import {provideTableDatasource, SciTable, SciTableComponent, SciTableDatasourceP
 import {FormsModule} from '@angular/forms';
 import {FieldTree, form, FormField, FormRoot, readonly, required} from '@angular/forms/signals';
 import {SCI_LOCALE, ɵcreateDestroyableInjector} from '@scion/components/common';
-import {contributeMenu, SciToolbarFactory} from '@scion/components/menu';
+import {contributeMenu, SciMenuFactory, SciToolbarFactory} from '@scion/components/menu';
 import {FieldValidationDirective} from '../common/field-validation.directive';
 import {SciTabbarComponent, SciTabDirective} from '@scion/components.internal/tabbar';
 import {MinMaxDirective} from '../common/min-max.directive';
@@ -89,6 +89,7 @@ export default class SciTablePageComponent {
       },
       trackBy: (item): string => item.id,
       rowActions: (toolbar, item) => item.kind === 'vehicle' && addRowActions(toolbar, item),
+      contextMenu: createContextMenu,
       columns: table => {
         const visibleColumns = this.settingsForm.visibleColumns().value();
 
@@ -243,56 +244,61 @@ export default class SciTablePageComponent {
       },
     });
 
-    function addRowActions(toolbar: SciToolbarFactory, vehicle: Vehicle): void {
-      toolbar
-        .addToolbarButton({
-          icon: 'scion:edit',
-          tooltip: 'Edit',
-          onSelect: () => {
-            vehicleForm().reset(vehicle);
-            requestAnimationFrame(() => {
-              tabbar().activateTab('vehicle-editor');
-              panelOpen.set(true);
-            });
-          },
-        })
-        .addToolbarButton({icon: 'scion:duplicate', tooltip: 'Duplicate', onSelect: () => vehicleService.addVehicle(vehicle)})
-        .addToolbarButton({icon: 'scion:delete', tooltip: 'Delete', onSelect: () => vehicleService.deleteVehicle(vehicle.id)})
+    function createContextMenu(menu: SciMenuFactory, selection: string[], activeItem: string | undefined): void {
+      const vehicles = vehicleService.getVehicles(selection);
+      const activeVehicle = vehicleService.vehicles().find(vehicle => vehicle.id === activeItem);
+      const emptySelection = vehicles.length === 0;
+      const noActiveVehicle = activeVehicle === undefined;
+
+      menu
+        .addMenuItem({label: 'Edit', icon: 'scion:edit', accelerator: {key: 'E', ctrl: true}, disabled: noActiveVehicle, onSelect: () => editVehicle(activeVehicle!)})
+        .addMenuItem({label: 'Duplicate', icon: 'scion:duplicate', accelerator: {key: 'D', ctrl: true}, disabled: noActiveVehicle, onSelect: () => vehicleService.addVehicle(activeVehicle!)})
+        .addMenuItem({label: 'Delete', icon: 'scion:delete', accelerator: {key: 'Delete'}, disabled: emptySelection, onSelect: () => vehicles.forEach(vehicle => vehicleService.deleteVehicle(vehicle.id))})
         .addGroup(group => group
-          .addToolbarButton({icon: 'play_circle', tooltip: 'In Operation', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'In Operation'}), disabled: computed(() => vehicle.status === 'In Operation')})
-          .addToolbarButton({icon: 'pause_circle', tooltip: 'Stabled', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'Stabled'}), disabled: computed(() => vehicle.status === 'Stabled')}),
-        )
-        .addToolbarSplitButton({icon: 'content_copy', menu: {filter: true}, onSelect: () => console.log('copy into clipboard')}, menu => menu
-          .addMenuItem({icon: 'content_copy', label: 'Copy Vehicle ID', onSelect: () => console.log('copy to clipboard', vehicle)})
-          .addMenuItem({icon: 'code', label: 'Copy as JSON', onSelect: () => console.log('copy as json', vehicle)})
-          .addMenuItem({icon: 'picture_as_pdf', label: 'Vehicle Datasheet (PDF)', onSelect: () => console.log('download as pdf', vehicle)}),
-        )
-        .addToolbarMenu({icon: 'scion:more_vertical', visualMenuIndicator: false}, menu => menu
-          .addMenu({icon: 'alt_route', label: 'Change Status'}, menu => menu
-            .addMenuItem({icon: 'play_circle', label: 'In Operation', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'In Operation'}), disabled: computed(() => vehicle.status === 'In Operation')})
+          .addMenu({icon: 'alt_route', label: 'Change Status', disabled: emptySelection}, menu => menu
+            .addMenuItem({icon: 'play_circle', label: 'In Operation', onSelect: () => updateStatus('In Operation'), disabled: vehicles.every(vehicle => vehicle.status === 'In Operation')})
             .addGroup(group => group
-              .addMenuItem({icon: 'check_circle', label: 'Ready for Service', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'Ready for Service'}), disabled: computed(() => vehicle.status === 'Ready for Service')})
-              .addMenuItem({icon: 'engineering', label: 'Maintenance', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'Maintenance'}), disabled: computed(() => vehicle.status === 'Maintenance')})
-              .addMenuItem({icon: 'pause_circle', label: 'Stabled', onSelect: () => vehicleService.updateVehicle({...vehicle, status: 'Stabled'}), disabled: computed(() => vehicle.status === 'Stabled')}),
+              .addMenuItem({icon: 'check_circle', label: 'Ready for Service', onSelect: () => updateStatus('Ready for Service'), disabled: vehicles.every(vehicle => vehicle.status === 'Ready for Service')})
+              .addMenuItem({icon: 'engineering', label: 'Maintenance', onSelect: () => updateStatus('Maintenance'), disabled: vehicles.every(vehicle => vehicle.status === 'Maintenance')})
+              .addMenuItem({icon: 'pause_circle', label: 'Stabled', onSelect: () => updateStatus('Stabled'), disabled: vehicles.every(vehicle => vehicle.status === 'Stabled')}),
             ),
           )
-          .addMenuItem({icon: 'location_on', label: 'Transfer Depot', onSelect: () => console.log('transfer to depot', vehicle)})
-          .addMenu({icon: 'analytics', label: 'Reports & History'}, menu => menu
-            .addMenuItem({icon: 'history', label: 'Overhaul History', onSelect: () => console.log('history', vehicle)})
-            .addMenuItem({icon: 'speed', label: 'Telemetry & Mileage', onSelect: () => console.log('telemetry & mileage', vehicle)})
-            .addMenuItem({icon: 'assignment_late', label: 'Fault Reports (ETCS/TPS)', onSelect: () => console.log('fault reports', vehicle)}),
-          )
-          .addGroup(group => group
-            .addMenuItem({icon: 'content_copy', label: 'Copy Vehicle ID', onSelect: () => console.log('copy', vehicle)})
-            .addMenuItem({icon: 'code', label: 'Copy as JSON', onSelect: () => console.log('json', vehicle)})
-            .addMenuItem({icon: 'picture_as_pdf', label: 'Vehicle Datasheet (PDF)', onSelect: () => console.log('pdf', vehicle)}),
-          )
-          .addGroup(group => group
-            .addMenu({label: 'More'}, menu => menu
-              .addMenuItem({icon: 'share', label: 'Share', onSelect: () => console.log('share', vehicle)})
-              .addMenuItem({icon: 'download', label: 'Download', onSelect: () => console.log('download', vehicle)})
-              .addMenuItem({icon: 'print', label: 'Print', onSelect: () => console.log('print', vehicle)}),
-            )));
+          .addMenuItem({icon: 'location_on', label: 'Transfer Depot', disabled: emptySelection, onSelect: () => console.log('transfer to depot', vehicles)})
+          .addMenu({icon: 'analytics', label: 'Reports & History', disabled: noActiveVehicle}, menu => menu
+            .addMenuItem({icon: 'history', label: 'Overhaul History', onSelect: () => console.log('history', activeVehicle)})
+            .addMenuItem({icon: 'speed', label: 'Telemetry & Mileage', onSelect: () => console.log('telemetry & mileage', activeVehicle)}),
+          ),
+        )
+        .addGroup(group => group
+          .addMenuItem({icon: 'content_copy', label: vehicles.length === 1 ? 'Copy Vehicle ID' : 'Copy Vehicle IDs', disabled: emptySelection, onSelect: () => console.log('copy', vehicles.map(vehicle => vehicle.vehicleId))})
+          .addMenuItem({icon: 'code', label: 'Copy as JSON', disabled: emptySelection, onSelect: () => console.log('json', vehicles)})
+          .addMenuItem({icon: 'picture_as_pdf', label: 'Vehicle Datasheet (PDF)', disabled: noActiveVehicle, onSelect: () => console.log('pdf', activeVehicle)}),
+        )
+        .addGroup({disabled: emptySelection}, group => group
+          .addMenu({label: 'More'}, menu => menu
+            .addMenuItem({icon: 'share', label: 'Share', onSelect: () => console.log('share', vehicles)})
+            .addMenuItem({icon: 'download', label: 'Download', onSelect: () => console.log('download', vehicles)})
+            .addMenuItem({icon: 'print', label: 'Print', onSelect: () => console.log('print', vehicles)}),
+          ),
+        );
+
+      function updateStatus(status: Vehicle['status']): void {
+        vehicles.forEach(vehicle => vehicleService.updateVehicle({...vehicle, status}));
+      }
+    }
+
+    function addRowActions(toolbar: SciToolbarFactory, vehicle: Vehicle): void {
+      toolbar
+        .addToolbarButton({icon: 'scion:edit', tooltip: 'Edit', accelerator: {key: 'E', ctrl: true}, onSelect: () => editVehicle(vehicle)})
+        .addToolbarButton({icon: 'scion:delete', tooltip: 'Delete', accelerator: {key: 'Delete'}, onSelect: () => vehicleService.deleteVehicle(vehicle.id)});
+    }
+
+    function editVehicle(vehicle: Vehicle): void {
+      vehicleForm().reset(vehicle);
+      requestAnimationFrame(() => {
+        tabbar().activateTab('vehicle-editor');
+        panelOpen.set(true);
+      });
     }
   }
 
@@ -342,7 +348,7 @@ export default class SciTablePageComponent {
       slowDatasource: false,
       hierarchical: true,
       visibleColumns: {
-        id: true,
+        id: false,
         vehicleId: true,
         classType: true,
         operator: true,
