@@ -878,6 +878,40 @@ describe('Menu', () => {
         expect(console.log).not.toHaveBeenCalledWith('onSelect item');
         spy.calls.reset();
       });
+
+      it('should not install listener on empty accelerator targets', async () => {
+        const onSelect = jasmine.createSpy();
+
+        @Component({
+          selector: 'spec-testee',
+          template: `
+          `,
+        })
+        class SpecTesteeComponent {
+        }
+
+        TestBed.configureTestingModule({
+          providers: [
+            {provide: ComponentFixtureAutoDetect, useValue: true},
+          ],
+        });
+
+        const fixture = TestBed.createComponent(SpecTesteeComponent);
+
+        // Contribute to menu.
+        contributeMenu('menu:testee', menu => menu
+          .addMenuItem({label: 'label-1', cssClass: 'testee-1', accelerator: {alt: true, key: '1'}, onSelect}), {injector: TestBed.inject(Injector)});
+        await fixture.whenStable();
+
+        // Install accelerators.
+        installMenuAccelerators('menu:testee', {target: [], injector: TestBed.inject(Injector)});
+        await fixture.whenStable();
+
+        // Press alt-1 on document.
+        document.dispatchEvent(new KeyboardEvent('keydown', {key: '1', altKey: true}));
+
+        expect(onSelect).not.toHaveBeenCalled();
+      });
     });
   });
 

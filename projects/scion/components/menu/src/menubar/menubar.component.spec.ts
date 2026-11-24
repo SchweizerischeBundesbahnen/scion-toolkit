@@ -1213,7 +1213,7 @@ describe('Menubar', () => {
           ],
         })
         class SpecTesteeComponent {
-          public acceleratorTargets = signal<Element[]>([]);
+          public acceleratorTargets = signal<Element[] | null>(null);
         }
 
         TestBed.configureTestingModule({
