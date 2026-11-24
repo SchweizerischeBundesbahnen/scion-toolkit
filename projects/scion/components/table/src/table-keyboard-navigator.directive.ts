@@ -10,7 +10,7 @@
 
 import {Directive, inject, Signal} from '@angular/core';
 import {SciTableSelectionService} from './table-selection.service';
-import {isFromButton, isFromInput} from './common';
+import {ɵisEventFromButton, ɵisEventFromInput} from '@scion/components/common';
 import {skeletonRowId} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 
@@ -81,8 +81,8 @@ export class SciTableKeyboardNavigatorDirective<T, ID> {
 
   protected readonly selectionService = inject(SciTableSelectionService);
 
-  protected readonly isFromInput = isFromInput;
-  protected readonly isFromButton = isFromButton;
+  protected readonly isFromInput = ɵisEventFromInput;
+  protected readonly isFromButton = ɵisEventFromButton;
 
   public async onKeydown(event: KeyboardEvent): Promise<void> {
     if (event.key === '+' && event.location === 3) { // NumpadAdd

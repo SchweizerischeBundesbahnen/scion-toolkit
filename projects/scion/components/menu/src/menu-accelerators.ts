@@ -16,7 +16,7 @@ import {subscribeIn} from '@scion/toolkit/operators';
 import {Arrays} from '@scion/toolkit/util';
 import {ɵSciMenuService} from './ɵmenu.service';
 import {coerceElement} from '@angular/cdk/coercion';
-import {ɵcreateDestroyableInjector} from '@scion/components/common';
+import {coerceSignal, ɵisEventFromInput, MaybeSignal, ɵcreateDestroyableInjector} from '@scion/components/common';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {injectMenuAcceleratorTargets, injectMenuContext} from './menu-environment/menu-environment-providers';
 
@@ -49,11 +49,12 @@ export function installMenuAccelerators(location: `menu:${string}` | `toolbar:${
       const tracked = {
         menuItems: menuItems(),
         environmentTargets: environmentTargets(),
+        target: coerceSignal(options?.target, {coerceUndefined: true})(),
       };
 
       untracked(() => {
         const accelerators = ɵinstallMenuAccelerators(tracked.menuItems, {
-          targets: options?.target,
+          targets: tracked.target,
           environmentTargets: tracked.environmentTargets,
           injector,
         });
@@ -100,6 +101,11 @@ export function ɵinstallMenuAccelerators(menuItems: SciMenuItemLike[], options?
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         case undefined:
           return;
+      }
+
+      // Skip events from text inputs.
+      if (ɵisEventFromInput(event)) {
+        return;
       }
 
       // Skip if not pressing a modifier key. Accelerators must have a modifier key.
@@ -208,7 +214,7 @@ export interface SciMenuAcceleratorOptions {
    * Alternatively, accelerator targets can be provided at the injector level using {@link provideMenuAcceleratorTargetProvider}, for example, at the component, route, or application level,
    * and are available to accelerators installed in the scope of this injector. Inherited targets can be overridden.
    */
-  target?: MaybeArray<Element | ElementRef<Element>>;
+  target?: MaybeSignal<MaybeArray<Element | ElementRef<Element>>>;
   /**
    * Controls in which context to install menu accelerators.
    *

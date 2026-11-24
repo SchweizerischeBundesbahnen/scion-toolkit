@@ -913,6 +913,45 @@ describe('Menu', () => {
       expect(console.log).toHaveBeenCalledWith('onSelect item');
     });
 
+    it('should not invoke onSelect when pressing an accelerator in an input element', async () => {
+      @Component({
+        template: `
+          <input/>
+          <textarea></textarea>
+          <select></select>
+          <div contenteditable="true">
+            <span>Editable text</span>
+          </div>
+        `,
+      })
+      class SpecTesteeComponent {
+      }
+
+      const fixture = TestBed.createComponent(SpecTesteeComponent);
+      const host = fixture.nativeElement as HTMLElement;
+      const onSelect = jasmine.createSpy('onSelect');
+
+      contributeMenu('menu:testee', menu => menu
+        .addMenuItem({label: 'Test', accelerator: {key: 'Delete'}, onSelect}), {injector: TestBed.inject(Injector)});
+      installMenuAccelerators('menu:testee', {target: host, injector: TestBed.inject(Injector)});
+      await fixture.whenStable();
+
+      host.querySelector('input')!.dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete'}));
+      expect(onSelect).not.toHaveBeenCalled();
+
+      host.querySelector('textarea')!.dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete'}));
+      expect(onSelect).not.toHaveBeenCalled();
+
+      host.querySelector('select')!.dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete'}));
+      expect(onSelect).not.toHaveBeenCalled();
+
+      host.querySelector('[contenteditable] span')!.dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete'}));
+      expect(onSelect).not.toHaveBeenCalled();
+
+      host.dispatchEvent(new KeyboardEvent('keydown', {key: 'Delete'}));
+      expect(onSelect).toHaveBeenCalledTimes(1);
+    });
+
     it('should invoke onSelect callback when pressing accelerator (menu closed)', async () => {
       TestBed.configureTestingModule({
         providers: [
