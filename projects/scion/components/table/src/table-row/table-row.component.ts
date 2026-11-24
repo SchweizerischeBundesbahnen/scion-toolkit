@@ -16,7 +16,7 @@ import {SciTableSelectionService} from '../table-selection.service';
 import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciIconComponent} from '@scion/components/icon';
-import {isFromButton, isFromInput} from '../common';
+import {ɵisEventFromButton, ɵisEventFromInput} from '@scion/components/common';
 
 @Component({
   selector: 'sci-table-row',
@@ -66,7 +66,7 @@ export class SciTableRowComponent<T, ID> {
 
   protected onRowDblClick(event: MouseEvent): void {
     const row = this.row();
-    if (row.id === skeletonRowId || isFromInput(event) || isFromButton(event)) {
+    if (row.id === skeletonRowId || ɵisEventFromInput(event) || ɵisEventFromButton(event)) {
       return;
     }
     this.primaryAction.emit({sourceEvent: event, items: [row.id]});
