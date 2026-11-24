@@ -81,7 +81,7 @@ export function ɵinstallMenuAccelerators(menuItems: SciMenuItemLike[], options?
 
   const injector = ɵcreateDestroyableInjector({parent: options?.injector ?? inject(Injector)});
   const zone = injector.get(NgZone);
-  const targets = coerceElements(options?.targets) ?? coerceElements(options?.environmentTargets) ?? [injector.get(DOCUMENT)];
+  const targets = coerceElements(options?.targets, {undefinedIfEmpty: false}) ?? coerceElements(options?.environmentTargets) ?? [injector.get(DOCUMENT)];
   const onSelectFn = options?.onSelect ?? (menuItem => menuItem.onSelect?.());
 
   merge(...targets.map(target => fromEvent<KeyboardEvent>(target, 'keydown')))
@@ -130,11 +130,21 @@ export function ɵinstallMenuAccelerators(menuItems: SciMenuItemLike[], options?
 }
 
 /**
- * Returns given native elements, or `undefined` if empty.
+ * Returns given native elements.
+ *
+ * @param targets - Array of elements or elementRefs to be coerced.
+ * @param options - Controls coercion.
+ * @param options.undefinedIfEmpty - If `true`, returns `undefined` for an empty array. Defaults to `true`.
  */
-function coerceElements(targets: MaybeArray<Element | ElementRef<Element>> | undefined): Element[] | undefined {
+function coerceElements(targets: MaybeArray<Element | ElementRef<Element>> | undefined, options?: {undefinedIfEmpty?: boolean}): Element[] | undefined {
+  if (!targets) {
+    return undefined;
+  }
+
   const elements = Arrays.coerce(targets).map(coerceElement);
-  return elements.length ? elements : undefined;
+  const undefinedIfEmpty = options?.undefinedIfEmpty ?? true;
+
+  return elements.length || !undefinedIfEmpty ? elements : undefined;
 }
 
 /**
