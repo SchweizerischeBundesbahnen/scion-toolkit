@@ -9,13 +9,14 @@
  */
 
 import {Component, computed, inject, input, Signal, TemplateRef} from '@angular/core';
-import {SciTableCellLike, SciTableRow} from '../table.model';
+import {SciTableCellLike} from '../table.model';
 import {NgTemplateOutlet} from '@angular/common';
 import {coerceSignal, SciComponentOutletDirective, SciTooltipOnOverflowDirective} from '@scion/components/common';
 import {Arrays, Objects} from '@scion/toolkit/util';
 import {SciIconComponent} from '@scion/components/icon';
 import {ɵSCI_TABLE} from '../ɵtable.model';
 import {SciNumberPipe} from './number.pipe';
+import {SciTreeTableRow} from '../table-tree.model';
 
 @Component({
   selector: 'sci-table-cell',
@@ -41,7 +42,7 @@ import {SciNumberPipe} from './number.pipe';
 export class SciTableCellComponent<T, ID> {
 
   public readonly cell = input.required<SciTableCellLike>();
-  public readonly row = input.required<SciTableRow<T, ID>>();
+  public readonly row = input.required<SciTreeTableRow<T, ID>>();
 
   private readonly _table = inject(ɵSCI_TABLE);
 
@@ -65,7 +66,7 @@ export class SciTableCellComponent<T, ID> {
   private computeTemplateContext(): Signal<{$implicit: T} | null> {
     return computed(() => {
       const cell = this.cell();
-      const item = this.row().item;
+      const item = this.row().item()!;
 
       if (cell.type !== 'template') {
         return null;
@@ -97,7 +98,7 @@ export class SciTableCellComponent<T, ID> {
         // Enable row styling based on active state.
         this.row().active() ? `${partType}:active` : `${partType}:not:active`,
         // Enable row styling based on row bindings.
-        ...Arrays.coerce(this.row().bindings.parts()),
+        ...Arrays.coerce(this.row().bindings()?.parts()),
       ]).join(' ');
     });
   }

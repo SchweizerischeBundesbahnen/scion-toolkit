@@ -106,7 +106,7 @@
           display: none;
         }
 
-        > span.message {
+        > span.message, > sci-throbber {
           grid-column: 1/-1;
           grid-row: auto / span 2;
           justify-self: center;
@@ -139,6 +139,10 @@
             right: 50%;
             width: 0; // Required to horizontally center the message.
           }
+        }
+
+        > sci-throbber {
+          --sci-throbber-size: 2.5em;
         }
 
         &:has(> span.message) {

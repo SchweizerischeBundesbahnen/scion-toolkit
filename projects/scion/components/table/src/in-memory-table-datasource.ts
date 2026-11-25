@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {SciTableColumnFilter, SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableNode, SciTreeTableDatasource} from './table-datasource';
+import {SciTableColumnFilter, SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableDatasource, SciTreeTableNode} from './table-datasource';
 import {SciTableColumn} from './table.model';
 import {computed, inject, runInInjectionContext, Signal, untracked} from '@angular/core';
 import {toObservable} from '@angular/core/rxjs-interop';
@@ -64,14 +64,21 @@ export class SciInMemoryTableDatasource<T, ID> implements SciTreeTableDatasource
 
   public getTreeTableNodes(query: SciTableDatasourceQuery): MaybeAsync<SciTreeTableNode<ID>[]> {
     return toObservable(computed(() => {
+      console.time('serve');
       const rows = this._rows();
 
       // PERF: Do not track signals inside `Array.sort` to avoid Angular signal tracking overhead as the comparator runs repeatedly, degrading performance otherwise.
-      return untracked(() => [...rows.values()]
-        .filter(row => matchesRow(row, query.columnFilters, {coerceEnumValueToArray: true}) && matchesGlobalFilter(row, query.tableFilter, {coerceEnumValueToArray: false}))
-        .sort((a, b) => compareRows(a, b, query.sortCriteria))
-        .map(row => ({id: row.id, parentId: row.parentId})));
+      try {
+        return untracked(() => [...rows.values()]
+          .filter(row => matchesRow(row, query.columnFilters, {coerceEnumValueToArray: true}) && matchesGlobalFilter(row, query.tableFilter, {coerceEnumValueToArray: false}))
+          .sort((a, b) => compareRows(a, b, query.sortCriteria))
+          .map(row => ({id: row.id, parentId: row.parentId})));
+      }
+      finally {
+        console.timeEnd('serve');
+      }
     }));
+    // }, {equal: Objects.isEqual}));
   }
 
   public getItems(ids: ID[]): MaybeAsync<T[]> {

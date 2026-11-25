@@ -44,9 +44,11 @@
     align-items: center;
 
     > div.skeleton {
+      $indent: calc(var(--ɵsci-table-cell-padding-inline)  + var(--ɵsci-table-row-level, 0) * var(--sci-table-row-indent));
       @include common.skeleton($fade-in-duration: 500ms);
       height: 1em;
-      margin-inline: var(--ɵsci-table-cell-padding-inline);
+      margin-left: $indent;
+      margin-right: var(--ɵsci-table-cell-padding-inline);
     }
   }
 

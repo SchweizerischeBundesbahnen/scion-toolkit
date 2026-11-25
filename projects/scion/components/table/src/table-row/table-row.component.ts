@@ -9,7 +9,7 @@
  */
 
 import {Component, inject, input, output, Signal, viewChild} from '@angular/core';
-import {SciTableEvent, SciTableRow, skeletonRowId} from '../table.model';
+import {SciTableEvent} from '../table.model';
 import {SciTableCellComponent} from '../table-cell/table-cell.component';
 import {ɵSCI_TABLE, ɵSciTable} from '../ɵtable.model';
 import {SciTableSelectionService} from '../table-selection.service';
@@ -17,6 +17,7 @@ import {contributeMenu, SciToolbarComponent} from '@scion/components/menu';
 import {UUID} from '@scion/toolkit/uuid';
 import {SciIconComponent} from '@scion/components/icon';
 import {isFromButton, isFromInput} from '../common';
+import {SciTreeTableRow} from '../table-tree.model';
 
 @Component({
   selector: 'sci-table-row',
@@ -31,9 +32,9 @@ import {isFromButton, isFromInput} from '../common';
     '[attr.data-active]': `row().active() ? '' : null`,
     '[attr.data-selected]': `row().selected() ? '' : null`,
     '[attr.data-hovered]': `row().hovered() ? '' : null`,
-    '[attr.data-level]': 'row().level',
-    '[attr.data-state]': `row().level !== undefined && row().hasChildren() ? (row().expanded() ? 'expanded' : 'collapsed') : null`,
-    '[style.--ɵsci-table-row-level]': 'row().level', // only set if hierarchical
+    '[attr.data-level]': 'row().level()',
+    '[attr.data-state]': `row().level() !== undefined && row().children.length ? (row().expanded() ? 'expanded' : 'collapsed') : null`,
+    '[style.--ɵsci-table-row-level]': 'row().level()', // only set if hierarchical
     '(click)': 'onRowClick($event)',
     '(dblclick)': 'onRowDblClick($event)',
     '(mouseenter)': 'onRowMouseEnter()',
@@ -42,7 +43,7 @@ import {isFromButton, isFromInput} from '../common';
 })
 export class SciTableRowComponent<T, ID> {
 
-  public readonly row = input.required<SciTableRow<T, ID>>();
+  public readonly row = input.required<SciTreeTableRow<T, ID>>();
   public readonly primaryAction = output<SciTableEvent<ID>>();
 
   protected readonly table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
@@ -57,16 +58,15 @@ export class SciTableRowComponent<T, ID> {
 
   protected onRowClick(event: PointerEvent): void {
     const row = this.row();
-    if (row.id === skeletonRowId) {
+    if (row.loading()) {
       return;
     }
-    const index = this.table().rowIndexById().get(row.id) ?? -1;
-    void this._selectionService.onRowClick(index, event);
+    void this._selectionService.onRowClick(row, event);
   }
 
   protected onRowDblClick(event: MouseEvent): void {
     const row = this.row();
-    if (row.id === skeletonRowId || isFromInput(event) || isFromButton(event)) {
+    if (row.loading() || isFromInput(event) || isFromButton(event)) {
       return;
     }
     this.primaryAction.emit({sourceEvent: event, items: [row.id]});
@@ -74,11 +74,10 @@ export class SciTableRowComponent<T, ID> {
 
   protected onRowMouseEnter(): void {
     const row = this.row();
-    if (row.id === skeletonRowId) {
+    if (row.loading()) {
       return;
     }
-    const index = this.table().rowIndexById().get(row.id) ?? -1;
-    this.table().hoveredIndex.set(index);
+    this.table().setHoveredItem(row.id);
   }
 
   protected onRowMouseLeave(event: MouseEvent): void {
@@ -88,12 +87,12 @@ export class SciTableRowComponent<T, ID> {
       return;
     }
 
-    this.table().hoveredIndex.set(-1);
+    this.table().setHoveredItem(undefined);
   }
 
   protected onActionToolbarClick(event: PointerEvent): void {
     const row = this.row();
-    if (row.id === skeletonRowId) {
+    if (row.loading()) {
       return;
     }
     event.stopPropagation(); // prevent selecting the row
@@ -102,7 +101,7 @@ export class SciTableRowComponent<T, ID> {
 
   protected onTreeNodeHandle(event: PointerEvent): void {
     const row = this.row();
-    if (row.id === skeletonRowId) {
+    if (row.loading()) {
       return;
     }
     event.stopPropagation(); // prevent selecting the row
@@ -111,8 +110,9 @@ export class SciTableRowComponent<T, ID> {
 
   private contributeRowActions(): void {
     contributeMenu(this.rowActionsToolbarName, toolbar => {
-      if (this.row().id !== skeletonRowId) {
-        this.table().rowActions?.(toolbar, this.row().item, this.row().index);
+      const row = this.row();
+      if (!row.loading()) {
+        this.table().rowActions?.(toolbar, row.item()!, row.index());
       }
     });
   }

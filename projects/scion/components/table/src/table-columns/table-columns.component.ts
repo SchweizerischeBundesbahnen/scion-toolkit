@@ -50,7 +50,7 @@ export class SciTableColumnsComponent<T> {
 
     // Clear the hovered row when resizing ends outside the splitter (for example, above or below it).
     if (!this._hovered()) {
-      this.table().hoveredIndex.set(-1);
+      this.table().setHoveredItem(undefined);
     }
   }
 
@@ -73,7 +73,7 @@ export class SciTableColumnsComponent<T> {
     // Do not clear the hovered row while dragging the resize handle, or quick movements will accidentally clear it.
     // If the mouse leaves the splitter during drag (above or below), the hovered row is unset when resizing ends.
     if (!this.table().resizing()) {
-      this.table().hoveredIndex.set(-1);
+      this.table().setHoveredItem(undefined);
     }
   }
 }

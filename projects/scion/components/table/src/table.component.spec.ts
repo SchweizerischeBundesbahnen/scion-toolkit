@@ -2015,7 +2015,7 @@ describe('Table', () => {
       }));
 
       await fixture.whenStable();
-      expect(model.error()).toBeFalse();
+      expect(model.isError()).toBeFalse();
     });
 
     it('should destroy previous column value function injection context', async () => {
@@ -2129,7 +2129,7 @@ describe('Table', () => {
 
     it('should be in state loading while preloading cell values', async () => {
       const preloader = new class implements SciTableCellValuePreloader {
-        public readonly loading = signal(false);
+        public readonly isLoading = signal(false);
         public readonly queue = noop;
         public readonly clear = noop;
       }();
@@ -2143,16 +2143,16 @@ describe('Table', () => {
       const table = new TablePO(fixture);
 
       // Simulate preloading cell values.
-      preloader.loading.set(true);
+      preloader.isLoading.set(true);
       await fixture.whenStable();
-      expect(model.loading()).toEqual(true);
+      expect(model.isLoading()).toEqual(true);
       expect(table.loadingIndicator).toBeDefined();
 
       // Simulate completed preloading cell values.
-      preloader.loading.set(false);
+      preloader.isLoading.set(false);
       await fixture.whenStable();
 
-      expect(model.loading()).toEqual(false);
+      expect(model.isLoading()).toEqual(false);
       expect(table.loadingIndicator).toBeNull();
     });
 
@@ -4349,7 +4349,7 @@ describe('Table', () => {
       await table.waitUntilStable();
       model.expand('parent');
       await table.waitUntilStable();
-      expect(model.error()).toBeTrue();
+      expect(model.isError()).toBeTrue();
       fixture.detectChanges();
       expect(table.retryButton).not.toBeNull();
 
@@ -4359,7 +4359,7 @@ describe('Table', () => {
       await table.waitUntilStable();
       expect(getTreeTableNodes).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledOnceWith(['child']);
-      expect(model.error()).toBeFalse();
+      expect(model.isError()).toBeFalse();
       expect(await table.column({index: 0})!.values()).toEqual(['parent', 'child']);
     });
 
@@ -4373,7 +4373,7 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      expect(model.error()).toBeTrue();
+      expect(model.isError()).toBeTrue();
       fixture.detectChanges();
       expect(table.retryButton).not.toBeNull();
 
@@ -4381,7 +4381,7 @@ describe('Table', () => {
       table.retryButton!.click();
       await table.waitUntilStable();
       expect(getTreeTableNodes).toHaveBeenCalledTimes(2);
-      expect(model.error()).toBeFalse();
+      expect(model.isError()).toBeFalse();
       expect(await table.column({index: 0})!.values()).toEqual(['test']);
     });
 
@@ -4406,7 +4406,7 @@ describe('Table', () => {
       await table.waitUntilStable();
 
       expect(getItems).toHaveBeenCalledOnceWith(['child']);
-      expect(model.visibleRowCount()).toBe(3);
+      expect(model.rowCount()).toBe(3);
       expect(table.rows).toHaveSize(3);
       expect(table.row({nth: 0}).cells[0]!.value).toContain('parent');
       expect(table.row({nth: 1}).isLoading()).toBeTrue();
@@ -4415,7 +4415,7 @@ describe('Table', () => {
       children$.next(['child']);
       await table.waitUntilStable();
 
-      expect(model.visibleRowCount()).toBe(3);
+      expect(model.rowCount()).toBe(3);
       expect(table.rows).toHaveSize(3);
       expect(table.row({nth: 1}).cells[0]!.value).toBe('child');
       expect(table.row({nth: 2}).cells[0]!.value).toBe('sibling');
@@ -4508,7 +4508,7 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      expect(model.visibleRowCount()).toBe(10);
+      expect(model.rowCount()).toBe(10);
       expect(getTreeTableNodes).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledOnceWith(roots);
 
@@ -4516,21 +4516,21 @@ describe('Table', () => {
       await table.waitUntilStable();
       expect(getItems).toHaveBeenCalledWith([10, 11]);
       expect(getItems).toHaveBeenCalledTimes(2);
-      expect(model.visibleRowCount()).toBe(12);
+      expect(model.rowCount()).toBe(12);
       await table.scrollY({y: 2 * 30});
       expect(table.row({nth: table.rows.length - 1}).cells[0]!.value).toBe('11');
       expect(getItems).toHaveBeenCalledTimes(2);
 
       model.collapse(9);
       await table.waitUntilStable();
-      expect(model.visibleRowCount()).toBe(10);
+      expect(model.rowCount()).toBe(10);
       expect(table.scrollTop).toBe(0);
       expect(getTreeTableNodes).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledTimes(2);
 
       model.expand(9);
       await table.waitUntilStable();
-      expect(model.visibleRowCount()).toBe(12);
+      expect(model.rowCount()).toBe(12);
       expect(getTreeTableNodes).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledTimes(2);
     });
@@ -4579,15 +4579,15 @@ describe('Table', () => {
       const table = new TablePO(fixture);
       await table.waitUntilStable();
       expect(table.loadingIndicator).toBeDefined();
-      expect(model.loading()).toBeTrue();
+      expect(model.isLoading()).toBeTrue();
 
       model.filter('test');
       await table.waitUntilStable();
-      expect(model.loading()).toBeTrue();
+      expect(model.isLoading()).toBeTrue();
 
       ids$.next([{id: '1'}, {id: '2', parentId: '1'}, {id: '3', parentId: '2'}]);
       await table.waitUntilStable();
-      expect(model.loading()).toBeFalse();
+      expect(model.isLoading()).toBeFalse();
       expect(await table.column({index: 0})?.values()).toEqual(['1', '2', '3']);
     });
   });
@@ -4637,12 +4637,12 @@ describe('Table', () => {
 
       const table = new TablePO(fixture);
       await table.waitUntilStable();
-      expect(model.visibleRowCount()).toBe(5);
+      expect(model.rowCount()).toBe(5);
       expect(getItems).toHaveBeenCalledOnceWith([0, 1]);
 
       ids$.next([0, 1, 2, 3]);
       await table.waitUntilStable();
-      expect(model.visibleRowCount()).toBe(4);
+      expect(model.rowCount()).toBe(4);
       expect(getIds).toHaveBeenCalledTimes(1);
       expect(getItems).toHaveBeenCalledTimes(1);
     });
@@ -5354,7 +5354,7 @@ describe('Table', () => {
       }));
 
       await fixture.whenStable();
-      expect(model.error()).toBeFalse();
+      expect(model.isError()).toBeFalse();
     });
 
     it('should destroy previous getIds function injection context', async () => {
@@ -5617,13 +5617,13 @@ describe('Table', () => {
       getIds.and.returnValue(ids$);
       model.reload();
       await table.waitUntilStable();
-      expect(model.loading()).toBeTrue();
+      expect(model.isLoading()).toBeTrue();
       expect(model.selectedItems()).toEqual([1, 2]);
 
       ids$.next([1, 2, 3, 4]);
       await table.waitUntilStable();
 
-      expect(model.loading()).toBeFalse();
+      expect(model.isLoading()).toBeFalse();
       expect(model.selectedItems()).toEqual([1, 2]);
       expect(table.rows.map(row => row.isSelected())).toEqual([true, true, false, false]);
     });
@@ -5647,12 +5647,12 @@ describe('Table', () => {
       getIds.and.returnValue(ids$);
       model.reload();
       await table.waitUntilStable();
-      expect(model.loading()).toBeTrue();
+      expect(model.isLoading()).toBeTrue();
       expect(model.activeItem()).toBe(1);
 
       ids$.next([1, 2, 3, 4]);
       await table.waitUntilStable();
-      expect(model.loading()).toBeFalse();
+      expect(model.isLoading()).toBeFalse();
       expect(model.activeItem()).toBe(1);
       expect(table.rows.map(row => row.isActive())).toEqual([true, false, false, false]);
     });
@@ -5677,7 +5677,7 @@ describe('Table', () => {
 
       getItems.and.returnValue(throwError(() => new Error('Page load failed')));
       await table.scrollY({y: 60 * 30});
-      expect(model.error()).toBeTrue();
+      expect(model.isError()).toBeTrue();
 
       // The error and retry button must be visible.
       const retryBounds = table.retryButton!.getBoundingClientRect();
@@ -5689,7 +5689,7 @@ describe('Table', () => {
       getItems.and.callFake((ids: number[]) => ids);
       table.retryButton!.click();
       await table.waitUntilStable();
-      expect(model.error()).toBeFalse();
+      expect(model.isError()).toBeFalse();
 
       // Verify scrolling works after retry.
       await table.scrollY({y: 60 * 30});

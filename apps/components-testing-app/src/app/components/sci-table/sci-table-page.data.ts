@@ -14,7 +14,13 @@ export class ProductService {
 
   public readonly products = linkedSignal(() => {
     const count = this.productCount();
-    return untracked(() => Products.generate(count));
+    return untracked(() => {
+      console.log('>>> generate start');
+      console.time('generate');
+      const products = Products.generate(count);
+      console.timeEnd('generate');
+      return products;
+    });
   });
 
   public readonly rootProducts = computed(() => this.products().filter(p => p.parentId === undefined));

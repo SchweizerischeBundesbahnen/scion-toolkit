@@ -10,12 +10,16 @@
 
     <!-- Table body -->
     <sci-table-body sciTableKeyboardNavigator>
-      @if (!table.error()) {
+      @if (!table.isError()) {
         <!-- Track index to reuse the table row elements -->
-        @for (row of table.rows(); track $index) {
-          <sci-table-row [row]="row" [sciAttributes]="row.bindings.attributes()" [class]="row.bindings.classes()" (primaryAction)="onRowPrimaryAction($event)"/>
+        @for (row of table.viewportRows(); track $index) {
+          <sci-table-row [row]="row" [sciAttributes]="row.bindings()?.attributes()" [class]="row.bindings()?.classes()" (primaryAction)="onRowPrimaryAction($event)"/>
         } @empty {
-          <span class="message e2e-no-data">{{('%scion:components:no_items.message' | sciText)()}}</span>
+          @if (table.isLoading()) {
+            <sci-throbber type="roller"/>
+          } @else {
+            <span class="message e2e-no-data">{{('%scion:components:no_items.message' | sciText)()}}</span>
+          }
         }
       } @else {
         <span class="message e2e-datasource">
@@ -43,8 +47,8 @@
 <sci-scrollbar direction="hscroll" [viewport]="viewport.host"/>
 <sci-scrollbar direction="vscroll" [viewport]="viewport.host"/>
 
-@if (table.loading()) {
-  <sci-throbber type="spinner" class="loading-indicator e2e-loading-indicator"/>
+@if (table.isLoading()) {
+  <sci-throbber type="roller" class="loading-indicator e2e-loading-indicator"/>
 }
 
 <!-- Synthetic element to compute the absolute pixel value of the `--sci-table-row-height`, relative to the table's font size if em-based. -->

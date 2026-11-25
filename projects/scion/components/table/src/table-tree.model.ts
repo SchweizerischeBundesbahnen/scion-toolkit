@@ -1,10 +1,15 @@
-import {computed, inject, Injector, linkedSignal, ResourceRef, runInInjectionContext, Signal, untracked, WritableSignal} from '@angular/core';
-import {SciTableColumnFilter, SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableNode, SciTreeTableDatasource} from './table-datasource';
-import {catchError, Observable} from 'rxjs';
+import {computed, DestroyableInjector, effect, inject, Injector, ResourceRef, runInInjectionContext, signal, Signal, untracked, WritableSignal} from '@angular/core';
+import {SciTableColumnFilter, SciTableDatasourceQuery, SciTableSortCriterion, SciTreeTableDatasource, SciTreeTableNode} from './table-datasource';
+import {catchError, Observable, of} from 'rxjs';
 import {Arrays, Observables} from '@scion/toolkit/util';
-import {rxResource, toObservable} from '@angular/core/rxjs-interop';
-import {ɵSingleActiveInjectorFactory} from '@scion/components/common';
+import {rxResource} from '@angular/core/rxjs-interop';
+import {ɵcreateDestroyableInjector, ɵSingleActiveInjectorFactory} from '@scion/components/common';
 import {MaybeArray} from '@scion/toolkit/types';
+import {map} from 'rxjs/operators';
+import {mapArray} from '@scion/toolkit/operators';
+import {SciTableCellLike, SciTableColumnLike} from './table.model';
+import {coerceTableRowBindings, SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
+import {SciTableItemLoader} from './table-item-loader';
 
 /**
  * Loads and builds the table's hierarchy using item IDs and parent relationships, without loading full items.
@@ -38,137 +43,221 @@ import {MaybeArray} from '@scion/toolkit/types';
  * ];
  * ```
  */
-export class SciTableTree<ID> {
 
-  private readonly _injector = inject(Injector);
+export class ɵSciTableTree<T, ID> implements SciTableTree<T, ID> {
 
-  private readonly _datasource: SciTreeTableDatasource<unknown, ID>;
-  private readonly _sortCriteria: Signal<SciTableSortCriterion[]>;
-  private readonly _columnFilters: Signal<SciTableColumnFilter[]>;
-  private readonly _tableFilter: Signal<string | null>;
+  private readonly _rootRows = signal(new Array<SciTreeTableRow<T, ID>>());
+  private readonly _rowById = signal(new Map<ID, SciTreeTableRow<T, ID>>());
+  private readonly _rowList = signal(new Array<SciTreeTableRow<T, ID>>());
+  private readonly _itemLoader: SciTableItemLoader<T, ID>;
 
-  private readonly _activeNode = this.computeActiveNode();
-  private readonly _selectedNodes = this.computeSelectedNodes();
-  private readonly _expandedNodes = this.computeExpandedNodes();
+  private readonly _indexById = computed(() => this.rows().reduce((map, row, index) => map.set(row.id, index), new Map<ID, number>()));
+  private readonly _expandedRowIds = signal(new Set<ID>());
+  private readonly _hoveredRowId = signal<ID | undefined>(undefined);
+  private readonly _requiresLevel = signal(false);
+  private readonly _injector: DestroyableInjector;
 
-  private readonly _unfilteredNodes = this.computeUnfilteredNodes();
-  private readonly _filteredNodes = this.computeFilteredNodes();
-  private readonly _tree = this.computeTree();
+  private readonly _nodesResource: ResourceRef<SciTreeTableNode<ID>[]>;
+  private readonly _filteredNodesResource: ResourceRef<Set<ID> | null>;
 
-  public readonly expandedNodes = this._expandedNodes.asReadonly();
-  public readonly selectedNodes = this._selectedNodes.asReadonly();
-  public readonly activeNode = this._activeNode.asReadonly();
+  public readonly rows = computed(() => this._rowList().filter(row => row.visible()));
+  public readonly activeRow = computed(() => this.activeRowId() !== undefined ? this._rowById().get(this.activeRowId()!) : undefined);
+  public readonly selectedRowIds = signal(new Set<ID>());
+  public readonly activeRowId = signal<ID | undefined>(undefined);
+  public readonly isLoading = computed(() => this._nodesResource.isLoading() || this._filteredNodesResource.isLoading() || this._itemLoader.isLoading());
+  // TODO [ask Etienne] Is it correct to also include items error? I mean, if loading an item failed, should we display nothing?
+  public readonly isError = computed(() => this._nodesResource.status() === 'error' || this._filteredNodesResource.status() === 'error' || this._itemLoader.isError());
 
-  public readonly error = computed(() => this._unfilteredNodes.status() === 'error' || this._filteredNodes.status() === 'error');
-  public readonly loading = computed(() => this._unfilteredNodes.isLoading() || this._filteredNodes.isLoading());
-  public readonly unfilteredNodesById = computed(() => this._unfilteredNodes.status() === 'error' ? new Map<ID, SciTreeTableNode<ID>>() : this._unfilteredNodes.value().reduce((acc, node) => acc.set(node.id, node), new Map<ID, SciTreeTableNode<ID>>()));
-  public readonly nodes = computed(() => this._tree().nodes);
-  public readonly nodesById = computed(() => this._tree().nodesById);
-  public readonly childrenIdsByParent = computed(() => this._tree().childrenIdsByParent);
+  constructor(private options: TableTreeOptions<T, ID>) {
+    this._injector = ɵcreateDestroyableInjector({parent: options.injector ?? inject(Injector)});
+    this._nodesResource = this.computeNodes(options.datasource, {sortCriteria: options.sortCriteria, injector: options.injector});
+    this._filteredNodesResource = this.computeFilteredNodes(options.datasource, {columnFilters: options.columnFilters, tableFilter: options.tableFilter, injector: options.injector});
+    this._itemLoader = new SciTableItemLoader(options.datasource, {trackBy: options.trackBy, injector: this._injector});
 
-  public readonly visibleNodes = this.computeVisibleNodes();
-  public readonly nodeIndexById = computed(() => this.visibleNodes().reduce((map, node, index) => map.set(node.id, index), new Map<ID, number>()));
-  public readonly visibleNodeCount = computed(() => this.visibleNodes().length);
-
-  constructor(options: {
-    sortCriteria: Signal<SciTableSortCriterion[]>;
-    columnFilters: Signal<SciTableColumnFilter[]>;
-    tableFilter: Signal<string | null>;
-    datasource: SciTreeTableDatasource<unknown, ID>;
-  }) {
-    this._datasource = options.datasource;
-    this._columnFilters = options.columnFilters;
-    this._tableFilter = options.tableFilter;
-    this._sortCriteria = options.sortCriteria;
+    this.computeRowsOnTreeChange();
+    this.expandRowsOnFilter();
   }
 
-  public reload(): void {
-    this._unfilteredNodes.reload();
-  }
-
-  public reloadFailed(): void {
-    if (this._unfilteredNodes.status() === 'error') {
-      this._unfilteredNodes.reload();
-    }
-
-    if (this._filteredNodes.status() === 'error') {
-      this._filteredNodes.reload();
-    }
-  }
-
-  public expand(id: MaybeArray<ID>): void {
-    const ids = Arrays.coerce(id);
-    this._expandedNodes.update(toggledRows => new Set([...toggledRows, ...ids]));
-  }
-
-  public expandAll(): void {
-    this._expandedNodes.set(new Set([...this.childrenIdsByParent().keys()].filter((id): id is ID => id !== undefined)));
-  }
-
-  public collapse(id: MaybeArray<ID>): void {
-    const ids = Arrays.coerce(id);
-    this._expandedNodes.update(toggledRows => {
-      const newToggledRows = new Set(toggledRows);
-      ids.forEach(id => newToggledRows.delete(id));
-      return newToggledRows;
-    });
-  }
-
-  public collapseAll(): void {
-    this._expandedNodes.set(new Set());
-  }
-
-  public toggleRow(id: ID): void {
-    this._expandedNodes.update(toggledRows => {
-      if (toggledRows.has(id)) {
-        const newToggledRows = new Set(toggledRows);
-        newToggledRows.delete(id);
-        return newToggledRows;
+  public computeRowsOnTreeChange(): void {
+    effect(() => {
+      console.log('>>> COMPUTE TREE');
+      if (this._nodesResource.status() === 'error') {
+        return;
       }
-      else {
-        return new Set(toggledRows).add(id);
-      }
+
+      const nodes = this._nodesResource.value();
+
+      untracked(() => {
+        // Clear state.
+        const newTree = {
+          rootRows: new Array<SciTreeTableRow<T, ID>>(),
+          rowById: new Map<ID, SciTreeTableRow<T, ID>>(),
+          rowList: new Array<SciTreeTableRow<T, ID>>(),
+          requiresLevel: false,
+        };
+
+        // Materialize tree.
+        console.time('materialize tree');
+        for (const node of nodes) {
+          const parentRow: SciTreeTableRow<T, ID> | undefined = node.parentId !== undefined ? newTree.rowById.get(node.parentId) ?? this.createTreeTableRow(node.parentId) : undefined;
+          const row: SciTreeTableRow<T, ID> = newTree.rowById.get(node.id) ?? this.createTreeTableRow(node.id);
+          newTree.rowById.set(row.id, row);
+
+          if (parentRow) {
+            parentRow.children.push(row);
+            row.parent = parentRow;
+            newTree.rowById.set(parentRow.id, parentRow);
+            newTree.requiresLevel = true;
+          }
+          else {
+            newTree.rootRows.push(row);
+          }
+        }
+        console.timeEnd('materialize tree');
+
+        // Compute flat row list.
+        console.time('flat list');
+        for (const rootRow of newTree.rootRows) {
+          rootRow.visitChildren(row => newTree.rowList.push(row), {includeSelf: true});
+        }
+        console.timeEnd('flat list');
+
+        // Update state.
+        console.time('state');
+        this._rootRows.set(newTree.rootRows);
+        this._rowById.set(newTree.rowById);
+        this._rowList.set(newTree.rowList);
+        this._requiresLevel.set(newTree.requiresLevel);
+
+        this.selectedRowIds.update(previousRowIds => new Set([...previousRowIds].filter(previousRowId => newTree.rowById.has(previousRowId))));
+        this.activeRowId.update(previousRowId => previousRowId !== undefined && newTree.rowById.has(previousRowId) ? previousRowId : undefined);
+        this._expandedRowIds.update(previousRowIds => new Set([...previousRowIds].filter(previousRowId => newTree.rowById.has(previousRowId))));
+        this._hoveredRowId.update(previousRowId => previousRowId !== undefined && newTree.rowById.has(previousRowId) ? previousRowId : undefined);
+        // TODO [dwie/etienne] Clenaup items in loader?
+        // this._itemById.update(previousItems => new Map([...previousItems.entries()].filter(([id]) => newTree.rowById.has(id))));
+        console.timeEnd('state');
+      });
+    }, {injector: this.options.injector});
+  }
+
+  private createTreeTableRow(id: ID): SciTreeTableRow<T, ID> {
+    const rowInjectorFactory = new ɵSingleActiveInjectorFactory({parent: this._injector});
+    const row: SciTreeTableRow<T, ID> = {
+      id,
+      index: () => this._indexById().get(id)!,
+      children: [],
+      visible: () => {
+        if (row.parent && !row.parent.visible()) {
+          return false;
+        }
+        if (row.parent && !row.parent.expanded()) {
+          return false;
+        }
+        if (!row.matchesFilter()) {
+          return false;
+        }
+        return true;
+      },
+      level: () => {
+        if (!this._requiresLevel()) {
+          return undefined;
+        }
+        return row.parent ? row.parent.level()! + 1 : 0;
+      },
+      expanded: () => this._expandedRowIds().has(id),
+      selected: () => this.selectedRowIds().has(id),
+      active: () => this.activeRowId() === id,
+      hovered: () => this._hoveredRowId() === id,
+      matchesFilter: computed(() => {
+        const filtered = this._filteredNodesResource.error() ? null : this._filteredNodesResource.value();
+        return !filtered || filtered.has(id) || row.getPathFromRoot().some(row => filtered.has(row.id)) || row.children.some(child => child.matchesFilter());
+      }),
+      getPathFromRoot: () => (row.parent?.getPathFromRoot() ?? []).concat(row),
+      visitParents: (visitor, options) => {
+        if (options?.includeSelf) {
+          visitor(row);
+        }
+        row.parent?.visitParents(visitor, {includeSelf: true});
+      },
+      visitChildren: (visitor, options) => {
+        if (options?.includeSelf) {
+          visitor(row);
+        }
+        row.children.forEach(child => child.visitChildren(visitor, {includeSelf: true}));
+      },
+      // expand: (expand: boolean) => treeNode.state.update(state => ({...state, expand})),
+      expand: (expand: boolean) => {
+        this._expandedRowIds.update(rowIds => {
+          const copy = new Set(rowIds);
+          expand ? copy.add(id) : copy.delete(id);
+          return copy;
+        });
+      },
+      bindings: () => tableRow()?.bindings,
+      cells: () => tableRow()?.cells,
+      item: () => tableRow()?.item,
+      loading: () => !tableRow(),
+    };
+
+    const itemRef = this._itemLoader.getItem(id);
+    const tableRow = computed(() => {
+      const item = itemRef();
+      const columns = this.options.columns();
+
+      return untracked(() => item && {
+        item,
+        bindings: coerceTableRowBindings(this.options.rowBindings, item, computed(() => row.index())),
+        cells: runInInjectionContext(rowInjectorFactory.create(), () => columns.map(column => ({
+          value: 'value' in column ? column.value(item) : undefined,
+          component: column.type === 'component' ? column.component(item) : undefined,
+          template: column.type === 'template' ? column.template(item) : undefined,
+          type: column.type,
+          column,
+        } as SciTableCellLike))),
+      });
+    });
+
+    return row;
+  }
+
+  private computeNodes(datasource: SciTreeTableDatasource<unknown, ID>, options: {sortCriteria: Signal<SciTableSortCriterion[]>; injector?: Injector}): ResourceRef<SciTreeTableNode<ID>[]> {
+    // Create separate injection context per resource invocation to clean up allocated resources.
+    const injectorFactory = new ɵSingleActiveInjectorFactory();
+
+    return rxResource({
+      params: () => options.sortCriteria(),
+      stream: ({params: sortCriteria}) => {
+        console.log('>>> FETCH getTreeNodes$ (Standleitung)', sortCriteria);
+        return this.getTreeNodes$(datasource, {sortCriteria}, {injector: injectorFactory.create()});
+      },
+      defaultValue: [],
+      injector: options.injector,
     });
   }
 
-  public setActiveNode(id: ID | undefined): void {
-    this._activeNode.set(id);
-  }
+  private computeFilteredNodes(datasource: SciTreeTableDatasource<unknown, ID>, options: {columnFilters: Signal<SciTableColumnFilter[]>; tableFilter: Signal<string | null>; injector?: Injector}): ResourceRef<Set<ID> | null> {
+    // Create separate injection context per resource invocation to clean up allocated resources.
+    const injectorFactory = new ɵSingleActiveInjectorFactory();
 
-  public updateSelectedNodes(updateFn: (ids: Set<ID>) => Set<ID>): void {
-    this._selectedNodes.update(updateFn);
-  }
-
-  public select(ids: MaybeArray<ID>): void {
-    // Prevents selecting nodes which do not exist.
-    // Check against unfiltered nodes, to allow selecting nodes, which are filtered out.
-    const nodesById = this.unfilteredNodesById();
-    const nodeIds = Arrays.coerce(ids).filter(id => nodesById.has(id));
-
-    // Expand nodes.
-    nodeIds.forEach(id => {
-      const node = nodesById.get(id);
-
-      if (node?.parentId !== undefined && nodesById.has(node.parentId)) {
-        // Expand all nodes before the selected ones.
-        this.expand(getPathFromRoot(nodesById.get(node.parentId)!, nodesById));
-      }
-    });
-
-    // Wait for viewport height to update after expanding nodes.
-    // Else scrollActiveRowIntoViewport operates on an old viewport height.
-    requestAnimationFrame(() => {
-      this._selectedNodes.set(new Set(nodeIds));
-
-      // Find and activate last item based on the visual index.
-      const lastItemIndex = Math.max(...nodeIds.map(id => this.nodeIndexById().get(id) ?? -1));
-      const lastItem = this.visibleNodes()[lastItemIndex]?.id;
-      this._activeNode.set(lastItem);
+    return rxResource({
+      params: () => ({
+        columnFilters: options.columnFilters(),
+        tableFilter: options.tableFilter() ?? undefined,
+      }),
+      stream: ({params}) => {
+        const injector = injectorFactory.create();
+        if (params.columnFilters.length === 0 && params.tableFilter === undefined) {
+          return of(null);
+        }
+        return this.getTreeNodes$(datasource, {columnFilters: params.columnFilters, tableFilter: params.tableFilter}, {injector}).pipe(mapArray(node => node.id), map(nodes => new Set(nodes)));
+      },
+      defaultValue: null,
+      injector: options.injector,
     });
   }
 
-  private getIds$(query: Partial<SciTableDatasourceQuery>, options: {injector: Injector}): Observable<SciTreeTableNode<ID>[]> {
-    return runInInjectionContext(options.injector, () => Observables.coerce(this._datasource.getTreeTableNodes({
+  private getTreeNodes$(datasource: SciTreeTableDatasource<unknown, ID>, query: Partial<SciTableDatasourceQuery>, options: {injector: Injector}): Observable<SciTreeTableNode<ID>[]> {
+    return runInInjectionContext(options.injector, () => Observables.coerce(datasource.getTreeTableNodes({
       columnFilters: query.columnFilters ?? [],
       sortCriteria: query.sortCriteria ?? [],
       tableFilter: query.tableFilter,
@@ -178,212 +267,191 @@ export class SciTableTree<ID> {
     })));
   }
 
-  private computeUnfilteredNodes(): ResourceRef<SciTreeTableNode<ID>[]> {
-    // Create separate injection context per resource invocation to clean up allocated resources.
-    const injectorFactory = new ɵSingleActiveInjectorFactory({parent: this._injector});
-
-    return rxResource({
-      params: () => this._sortCriteria(),
-      stream: ({params: sortCriteria}) => this.getIds$({sortCriteria}, {injector: injectorFactory.create()}),
-      defaultValue: [],
-    });
+  public loadItems(ids: ID[]): {cancel: () => void} {
+    return this._itemLoader.loadItems(ids);
   }
 
-  private computeFilteredNodes(): ResourceRef<SciTreeTableNode<ID>[]> {
-    // Create separate injection context per resource invocation to clean up allocated resources.
-    const injectorFactory = new ɵSingleActiveInjectorFactory({parent: this._injector});
-
-    return rxResource({
-      params: () => ({
-        columnFilters: this._columnFilters(),
-        tableFilter: this._tableFilter() ?? undefined,
-      }),
-      stream: ({params}) => {
-        const injector = injectorFactory.create();
-        if (params.columnFilters.length === 0 && params.tableFilter === undefined) {
-          return runInInjectionContext(injector, () => toObservable(this._unfilteredNodes.value));
-        }
-        return this.getIds$({columnFilters: params.columnFilters, tableFilter: params.tableFilter}, {injector});
-      },
-      defaultValue: [],
-    });
+  public reload(): void {
+    this._nodesResource.reload();
+    this._itemLoader.clear();
   }
 
-  private computeTree(): Signal<TreeData<ID>> {
-    return computed(() => {
-      if (this.error()) {
-        return {
-          nodes: [],
-          nodesById: new Map(),
-          childrenIdsByParent: new Map(),
-        };
-      }
-
-      const filteredNodes = this._filteredNodes.value();
-      const unfilteredNodes = this._unfilteredNodes.value();
-
-      return untracked(() => createTree(filteredNodes, unfilteredNodes));
-    });
-  }
-
-  private computeExpandedNodes(): WritableSignal<Set<ID>> {
-    return linkedSignal({
-      source: () => ({unfilteredNodesById: this.unfilteredNodesById(), loading: this._unfilteredNodes.isLoading(), columnFilters: this._columnFilters(), tableFilter: this._tableFilter()}),
-      computation: ({unfilteredNodesById, loading, tableFilter, columnFilters}, previous): Set<ID> => {
-        // Wait until resource finished loading before changing the expanded nodes.
-        if (loading) {
-          return previous?.value ?? new Set<ID>();
-        }
-
-        // Expand all items if filter is set.
-        if (columnFilters.length > 0 || tableFilter?.trim()) {
-          return new Set(unfilteredNodesById.keys());
-        }
-
-        const expandedNodeIds = previous?.value ?? new Set<ID>();
-        return new Set([...expandedNodeIds].filter(id => unfilteredNodesById.has(id)));
-      },
-    });
-  }
-
-  private computeSelectedNodes(): WritableSignal<Set<ID>> {
-    return linkedSignal({
-      source: () => ({unfilteredNodesById: this.unfilteredNodesById(), loading: this._unfilteredNodes.isLoading()}),
-      computation: ({unfilteredNodesById, loading}, previous): Set<ID> => {
-        // Wait until resource finished loading before changing the selected nodes.
-        if (loading) {
-          return previous?.value ?? new Set<ID>();
-        }
-
-        const selectedNodeIds = previous?.value ?? new Set<ID>();
-        return new Set([...selectedNodeIds].filter(id => unfilteredNodesById.has(id)));
-      },
-    });
-  }
-
-  private computeActiveNode(): WritableSignal<ID | undefined> {
-    return linkedSignal({
-      source: () => ({unfilteredNodesById: this.unfilteredNodesById(), loading: this._unfilteredNodes.isLoading()}),
-      computation: ({unfilteredNodesById, loading}, previous): ID | undefined => {
-        // Wait until resource finished loading before changing the active nodes.
-        if (loading) {
-          return previous?.value;
-        }
-
-        return previous?.value !== undefined && unfilteredNodesById.has(previous.value) ? previous.value : undefined;
-      },
-    });
-  }
-
-  private computeVisibleNodes(): Signal<SciTreeTableNode<ID>[]> {
-    return computed(() => {
-      if (this.error()) {
-        return [];
-      }
-
-      const expandedNodes = this._expandedNodes();
-      const nodesById = this.nodesById();
-      const nodes = this.nodes();
-
-      const allAncestorsExpanded = (node?: SciTreeTableNode<ID>): boolean => {
-        if (node?.parentId === undefined) {
-          return true;
-        }
-
-        if (!expandedNodes.has(node.parentId)) {
-          return false;
-        }
-
-        return allAncestorsExpanded(nodesById.get(node.parentId));
-      };
-
-      return untracked(() => nodes.filter(allAncestorsExpanded));
-    });
-  }
-}
-
-export interface TreeData<ID> {
-  nodes: SciTreeTableNode<ID>[];
-  nodesById: Map<ID, SciTreeTableNode<ID>>;
-  childrenIdsByParent: Map<ID | undefined, ID[]>;
-}
-
-function createTree<ID>(filteredNodes: SciTreeTableNode<ID>[], unfilteredNodes: SciTreeTableNode<ID>[]): TreeData<ID> {
-  const nodesById = includeParentsAndChildren(unfilteredNodes, filteredNodes);
-  const sortedNodes = unfilteredNodes.filter(node => nodesById.has(node.id));
-
-  const childrenIdsByParent = groupChildrenByParent(sortedNodes);
-  const nodes = flattenTree(nodesById, childrenIdsByParent);
-
-  return ({nodes, nodesById, childrenIdsByParent});
-}
-
-function includeParentsAndChildren<ID>(unfilteredNodes: SciTreeTableNode<ID>[], filteredNodes: SciTreeTableNode<ID>[]): Map<ID, SciTreeTableNode<ID>> {
-  const nodesById = new Map(unfilteredNodes.map(node => [node.id, node]));
-  const filteredIds = new Set(filteredNodes.map(node => node.id));
-
-  return unfilteredNodes.reduce((acc, node) => {
-    const path = getPathFromRoot(node, nodesById);
-
-    // Include the full path (parents and children) of any filtered node.
-    // This ensures that all parents and children are displayed, even if they don't match the filter.
-    if (path.some(id => filteredIds.has(id))) {
-      path.forEach(id => acc.set(id, nodesById.get(id)!));
+  public reloadFailed(): void {
+    if (this._nodesResource.status() === 'error') {
+      this._nodesResource.reload();
     }
+    if (this._filteredNodesResource.status() === 'error') {
+      this._filteredNodesResource.reload();
+    }
+    this._itemLoader.reloadFailed();
+  }
 
-    return acc;
-  }, new Map<ID, SciTreeTableNode<ID>>());
-}
+  public expand(id: MaybeArray<ID>): void {
+    const rowById = untracked(() => this._rowById());
+    Arrays.coerce(id).forEach(id => rowById.get(id)?.expand(true));
+  }
 
-function groupChildrenByParent<ID>(nodes: SciTreeTableNode<ID>[]): Map<ID | undefined, ID[]> {
-  return nodes.reduce((acc, node) => {
-    const values = acc.get(node.parentId) ?? [];
-    values.push(node.id);
-    return acc.set(node.parentId, values);
-  }, new Map<ID | undefined, ID[]>());
-}
+  public expandAll(): void {
+    untracked(() => this._expandedRowIds.set(new Set(this._rowById().keys())));
+  }
 
-/**
- * Flattens the tree in depth-first order, placing each parent before its descendants and preserving sibling order.
- * Includes all nodes regardless of expansion state.
- *
- * Example:
- * ```
- * [
- *   {id: '1'},
- *   {id: '1.1', parentId: '1'},
- *   {id: '1.2', parentId: '1'},
- *   {id: '1.2.1', parentId: '1.2'},
- *   {id: '1.3', parentId: '1'},
- *   {id: '2'},
- * ]
- * ```
- */
-function flattenTree<ID>(nodesById: Map<ID, SciTreeTableNode<ID>>, childrenIdsByParent: Map<ID | undefined, ID[]>): SciTreeTableNode<ID>[] {
-  const nodes: SciTreeTableNode<ID>[] = [];
-  const roots = childrenIdsByParent.get(undefined) ?? [];
-  const stack = roots.slice().reverse();
+  public collapse(id: MaybeArray<ID>): void {
+    const rowById = untracked(() => this._rowById());
+    Arrays.coerce(id).forEach(id => rowById.get(id)?.expand(false));
+  }
 
-  // Don't use recursion, to avoid stack overflow on large amount of root nodes (e.g. flat table).
-  while (stack.length > 0) {
-    const id = stack.pop()!;
+  public collapseAll(): void {
+    untracked(() => this._expandedRowIds.set(new Set()));
+  }
 
-    nodes.push(nodesById.get(id)!);
-
-    // Push children in reverse order so the first child is visited next.
-    const children = childrenIdsByParent.get(id) ?? [];
-    for (let i = children.length - 1; i >= 0; i--) {
-      if (children[i] !== undefined) {
-        stack.push(children[i]!);
-      }
+  public toggleExpand(id: ID): void {
+    const row = untracked(() => this._rowById()).get(id);
+    if (row) {
+      row.expand(untracked(() => !row.expanded()));
     }
   }
 
-  return nodes;
+  public setActiveRow(id: ID | undefined): void {
+    this.activeRowId.set(id);
+  }
+
+  public setHoveredRow(id: ID | undefined): void {
+    this._hoveredRowId.set(id);
+  }
+
+  // previously selectNodes
+  public setSelectedRows(ids: MaybeArray<ID>): void {
+    const rowById = untracked(() => this._rowById());
+
+    // Prevent selecting nodes which do not exist.
+    // TODO [ask team] brauch wir den check here? Haben wir bei den anderen Methoden auch nicht, z.b. setHoveredRow
+    const rowIds = Arrays.coerce(ids).filter(id => rowById.has(id));
+
+    // Expand all nodes before the selected ones.
+    // nodeIds.forEach(id => nodes.get(id)?.getPathFromRoot().forEach(node => node.expanded.set(true)));
+    rowIds.forEach(id => rowById.get(id)?.visitParents(row => row.expand(true)));
+
+    // TODO [ask team] Why should the viewport height change?
+    // Wait for viewport height to update after expanding nodes.
+    // Else scrollActiveRowIntoViewport operates on an old viewport height.
+    requestAnimationFrame(() => {
+      this.selectedRowIds.set(new Set(rowIds));
+
+      // Find and activate last item based on the visual index.
+      const lastItemIndex = Math.max(...rowIds.map(id => this._indexById().get(id) ?? -1));
+      const lastRowId = this.rows()[lastItemIndex]?.id;
+      this.activeRowId.set(lastRowId);
+    });
+  }
+
+  public updateSelectedRows(updateFn: (ids: Set<ID>) => Set<ID>): void {
+    this.selectedRowIds.update(updateFn);
+  }
+
+  private expandRowsOnFilter(): void {
+    effect(() => {
+      if (this._filteredNodesResource.status() === 'error') {
+        return;
+      }
+
+      // Expand all nodes on filter
+      if (this._filteredNodesResource.value() !== null) {
+        untracked(() => this._expandedRowIds.set(new Set(this._rowById().keys())));
+      }
+    }, {injector: this._injector});
+  }
+
+  public dispose(): void {
+    this._injector.destroy();
+    this._itemLoader.clear();
+
+    this._rootRows.set([]);
+    this._rowById.set(new Map());
+    this._rowList.set([]);
+
+    this.selectedRowIds.set(new Set());
+    this.activeRowId.set(undefined);
+    this._expandedRowIds.set(new Set());
+    this._hoveredRowId.set(undefined);
+  }
 }
 
-export function getPathFromRoot<ID>(node: SciTreeTableNode<ID>, nodesById: Map<ID, SciTreeTableNode<ID>>): ID[] {
-  const parent = node.parentId !== undefined ? nodesById.get(node.parentId) : undefined;
-  const pathFromRoot = parent ? getPathFromRoot(parent, nodesById) : [];
-  return pathFromRoot.concat(node.id);
+export interface TableTreeOptions<T, ID> {
+  sortCriteria: Signal<SciTableSortCriterion[]>;
+  columnFilters: Signal<SciTableColumnFilter[]>;
+  tableFilter: Signal<string | null>;
+  columns: Signal<SciTableColumnLike<T>[]>;
+  trackBy: (item: T) => ID;
+  rowBindings: SciTableRowBindingFactoryFn<T>[];
+  datasource: SciTreeTableDatasource<T, ID>;
+  injector?: Injector;
+}
+
+export interface SciTableTree<T, ID> {
+  rows: Signal<SciTreeTableRow<T, ID>[]>;
+  activeRow: Signal<SciTreeTableRow<T, ID> | undefined>;
+  selectedRowIds: WritableSignal<Set<ID>>;
+  activeRowId: WritableSignal<ID | undefined>;
+  isLoading: Signal<boolean>;
+  isError: Signal<boolean>;
+
+  reload(): void;
+
+  reloadFailed(): void;
+
+  expand(id: MaybeArray<ID>): void;
+
+  expandAll(): void;
+
+  collapse(id: MaybeArray<ID>): void;
+
+  collapseAll(): void;
+
+  toggleExpand(id: ID): void;
+
+  setActiveRow(id: ID | undefined): void;
+
+  setHoveredRow(id: ID | undefined): void;
+
+  // previously selectNodes
+  setSelectedRows: (ids: MaybeArray<ID>) => void;
+
+  updateSelectedRows(updateFn: (ids: Set<ID>) => Set<ID>): void;
+
+  loadItems(ids: ID[]): {cancel: () => void};
+
+  dispose(): void;
+}
+
+export interface SciTreeTableRow<T, ID> {
+  id: ID;
+  // This function is reactive.
+  index: () => number;
+  parent?: SciTreeTableRow<T, ID>;
+  getPathFromRoot: () => SciTreeTableRow<T, ID>[];
+  visitParents: (visitor: (row: SciTreeTableRow<T, ID>) => void, options?: {includeSelf?: true}) => void;
+  visitChildren: (visitor: (row: SciTreeTableRow<T, ID>) => void, options?: {includeSelf?: true}) => void;
+  children: SciTreeTableRow<T, ID>[];
+  // This function is reactive.
+  visible: () => boolean;
+  // This function is reactive.
+  level: () => number | undefined;
+  // This function is reactive.
+  expanded: () => boolean;
+  // This function is reactive.
+  selected: () => boolean;
+  // This function is reactive.
+  active: () => boolean;
+  // This function is reactive.
+  hovered: () => boolean;
+  matchesFilter: Signal<boolean>;
+  // This function is reactive.
+  bindings: () => SciTableRowBindings | undefined;
+  // This function is reactive.
+  cells: () => SciTableCellLike[] | undefined;
+  // This function is reactive.
+  item: () => T | undefined;
+  expand: (expand: boolean) => void;
+  // This function is reactive.
+  loading: () => boolean;
 }

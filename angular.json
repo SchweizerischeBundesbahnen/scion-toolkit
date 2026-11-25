@@ -413,6 +413,7 @@
             },
             "development": {
               "buildTarget": "components-testing-app:build:development",
+              "port": 4300,
               "headers": {
                 "Content-Security-Policy": "default-src 'self'; connect-src 'self' blob: localhost:*; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/@scion/icons/; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/@scion/icons/ 'nonce-STATIC_NONCE'; script-src 'self' 'nonce-STATIC_NONCE';"
               }
@@ -467,5 +468,8 @@
     "@schematics/angular:resolver": {
       "typeSeparator": "."
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

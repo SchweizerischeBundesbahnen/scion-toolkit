@@ -19,7 +19,7 @@ export default defineConfig({
   webServer: [
     {
       command: runInCI ? 'npm run components-testing-app:dist-serve' : 'npm run components-testing-app:serve',
-      port: 4200,
+      port: 4300,
       reuseExistingServer: !runInCI,
     },
     {
@@ -37,7 +37,7 @@ export default defineConfig({
     browserName: 'chromium',
     headless: runHeadless,
     viewport: runInCI || runHeadless ? {width: 1920, height: 1200} : null,
-    baseURL: 'http://localhost:4200',
+    baseURL: 'http://localhost:4300',
     launchOptions: {
       // By default, Playwright hides scrollbars in headless mode, causing problems with tests using `sci-scrollbar`, e.g., to check whether content overflows.
       // Therefore, we instruct Playwright to ignore this default. Refer to https://github.com/microsoft/playwright/issues/5778#issuecomment-796264504 for more details.

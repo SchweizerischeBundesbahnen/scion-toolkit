@@ -11,7 +11,6 @@
 import {Directive, inject, Signal} from '@angular/core';
 import {SciTableSelectionService} from './table-selection.service';
 import {isFromButton, isFromInput} from './common';
-import {skeletonRowId} from './table.model';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 
 @Directive({
@@ -104,7 +103,7 @@ export class SciTableKeyboardNavigatorDirective<T, ID> {
     }
 
     const activeRow = table.activeRow();
-    if (activeRow?.id !== skeletonRowId && activeRow?.hasChildren()) {
+    if (activeRow?.children.length) {
       table.expand(activeRow.id);
     }
   }
@@ -120,7 +119,7 @@ export class SciTableKeyboardNavigatorDirective<T, ID> {
     }
 
     const activeRow = table.activeRow();
-    if (activeRow?.id !== skeletonRowId && activeRow?.hasChildren()) {
+    if (activeRow?.children.length) {
       table.collapse(activeRow.id);
     }
   }

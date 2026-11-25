@@ -12,7 +12,7 @@ export class ɵSciTableCellValuePreloader implements SciTableCellValuePreloader 
   private readonly _injector = inject(Injector);
 
   /** @inheritDoc */
-  public readonly loading = computed(() => this._queueSize() > 0);
+  public readonly isLoading = computed(() => this._queueSize() > 0);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {

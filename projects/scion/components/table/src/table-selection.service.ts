@@ -11,41 +11,39 @@
 import {inject, Injectable, Signal} from '@angular/core';
 import {ɵSCI_TABLE, ɵSciTable} from './ɵtable.model';
 import {rangeInclusive} from './common';
-import {skeletonRowId} from './table.model';
-import {SciTreeTableNode} from './table-datasource';
+import {SciTreeTableRow} from './table-tree.model';
 
 @Injectable()
 export class SciTableSelectionService<T, ID> {
 
   private readonly _table = inject<Signal<ɵSciTable<T, ID>>>(ɵSCI_TABLE);
 
-  public async onRowClick(index: number, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): Promise<void> {
+  public async onRowClick(row: SciTreeTableRow<T, ID>, event: {ctrlKey: boolean; shiftKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();
-    const rowId = table.visibleRows()?.[index]?.id;
-    const previousActiveIndex = table.activeIndex();
+    const previousActiveRowIndex = table.activeRow()?.index();
 
-    table.setActiveItem(rowId);
+    table.setActiveItem(row.id);
 
-    if (rowId === undefined || !table.selectable()) {
+    if (row.id === undefined || !table.selectable()) {
       return;
     }
 
     if (table.selectable() === 'single') {
-      table.updateSelectedItems(() => new Set<ID>().add(rowId));
+      table.updateSelectedItems(() => new Set<ID>().add(row.id));
       return;
     }
 
-    if (event.shiftKey && previousActiveIndex >= 0) {
-      const start = Math.min(previousActiveIndex, index);
-      const end = Math.max(previousActiveIndex, index);
+    if (event.shiftKey && previousActiveRowIndex !== undefined) {
+      const start = Math.min(previousActiveRowIndex, row.index());
+      const end = Math.max(previousActiveRowIndex, row.index());
       await this.selectItems(start, end, {add: true});
     }
     else if (event.ctrlKey || event.metaKey) {
-      this.toggleSelectedItem(rowId);
+      this.toggleSelectedItem(row.id);
     }
     else {
       // If no modifier is pressed set the selection to the clicked row.
-      table.updateSelectedItems(() => new Set<ID>().add(rowId));
+      table.updateSelectedItems(() => new Set<ID>().add(row.id));
     }
   }
 
@@ -53,8 +51,8 @@ export class SciTableSelectionService<T, ID> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.activeIndex();
-    const targetIndex = Math.max(activeIndex - 1, 0);
+    const activeRowIndex = table.activeRow()?.index() ?? -1;
+    const targetIndex = Math.max(activeRowIndex - 1, 0);
 
     await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
@@ -63,51 +61,51 @@ export class SciTableSelectionService<T, ID> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.activeIndex();
-    const targetIndex = Math.min(activeIndex + 1, table.visibleRowCount() - 1);
+    const activeRowIndex = table.activeRow()?.index() ?? -1;
+    const targetIndex = Math.min(activeRowIndex + 1, table.rowCount() - 1);
 
     await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
 
+  // TODO [marc] Mix zwischen rows und nodes
   public async onArrowLeft(event: Event): Promise<void> {
     event.preventDefault();
 
     const table = this._table();
     const activeRow = table.activeRow();
 
-    if (activeRow?.item === undefined || activeRow.id === skeletonRowId) {
+    if (!activeRow || activeRow.loading()) {
       return;
     }
 
-    if (activeRow.hasChildren() && activeRow.expanded()) {
+    if (activeRow.children.length && activeRow.expanded()) {
       table.collapse(activeRow.id);
     }
-    else if (activeRow.parentId !== undefined) {
-      const parentIndex = table.rowIndexById().get(activeRow.parentId) ?? -1;
-      await this.selectOnKeyboardNavigation(parentIndex, {shiftKey: false, ctrlKey: false, metaKey: false});
+    else if (activeRow.parent) {
+      await this.selectOnKeyboardNavigation(activeRow.parent.index(), {shiftKey: false, ctrlKey: false, metaKey: false});
     }
     // Root case
     else {
-      const rows = table.visibleRows();
-      const row = findPreviousExpandedRow(activeRow.index - 1);
+      const rows = table.rows();
+      const row = findPreviousExpandedRow(activeRow.index() - 1);
 
       if (row !== undefined) {
-        const index = table.rowIndexById().get(row.id) ?? -1;
-        await this.selectOnKeyboardNavigation(index, {shiftKey: false, ctrlKey: false, metaKey: false});
+        await this.selectOnKeyboardNavigation(row.index(), {shiftKey: false, ctrlKey: false, metaKey: false});
       }
 
-      function findPreviousExpandedRow(index: number): SciTreeTableNode<ID> | undefined {
+      // TODO [dwie] über parent
+      function findPreviousExpandedRow(index: number): SciTreeTableRow<T, ID> | undefined {
         while (index > 0) {
-          const row = rows?.[index];
+          const row = rows[index];
           // Get the row expansion state whether the row is already loaded or not.
-          if (row !== undefined && table.isExpanded(row.id)) {
+          if (row?.expanded()) {
             return row;
           }
           index--;
         }
 
         // Return the first row if no previous row is expanded.
-        return rows?.[index];
+        return rows[index];
       }
     }
   }
@@ -117,10 +115,10 @@ export class SciTableSelectionService<T, ID> {
 
     const table = this._table();
     const activeRow = table.activeRow();
-    const activeIndex = table.activeIndex();
-    const endIndex = Math.min(activeIndex + 1, table.visibleRowCount() - 1);
+    const activeRowIndex = table.activeRow()?.index() ?? -1;
+    const endIndex = Math.min(activeRowIndex + 1, table.rowCount() - 1);
 
-    if (activeRow?.id !== skeletonRowId && activeRow?.hasChildren() && !activeRow.expanded()) {
+    if (activeRow?.children.length && !activeRow.expanded()) {
       table.expand(activeRow.id);
       return;
     }
@@ -132,8 +130,8 @@ export class SciTableSelectionService<T, ID> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.activeIndex();
-    const targetIndex = Math.max(activeIndex - table.viewportPageSize() + 1, 0);
+    const activeRowIndex = table.activeRow()?.index() ?? -1;
+    const targetIndex = Math.max(activeRowIndex - table.viewportPageSize() + 1, 0);
 
     await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
@@ -142,8 +140,8 @@ export class SciTableSelectionService<T, ID> {
     event.preventDefault();
 
     const table = this._table();
-    const activeIndex = table.activeIndex();
-    const targetIndex = Math.min(activeIndex + table.viewportPageSize() - 1, table.visibleRowCount() - 1);
+    const activeRowIndex = table.activeRow()?.index() ?? -1;
+    const targetIndex = Math.min(activeRowIndex + table.viewportPageSize() - 1, table.rowCount() - 1);
 
     await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
@@ -158,7 +156,7 @@ export class SciTableSelectionService<T, ID> {
     event.preventDefault();
 
     const table = this._table();
-    const targetIndex = table.visibleRowCount() - 1;
+    const targetIndex = table.rowCount() - 1;
 
     await this.selectOnKeyboardNavigation(targetIndex, event as KeyboardEvent);
   }
@@ -191,7 +189,7 @@ export class SciTableSelectionService<T, ID> {
     event.preventDefault();
 
     const table = this._table();
-    const totalCount = table.visibleRowCount();
+    const totalCount = table.rowCount();
 
     if (table.selectable() === 'multi' && totalCount >= 0) {
       await this.selectItems(0, totalCount - 1);
@@ -200,10 +198,10 @@ export class SciTableSelectionService<T, ID> {
 
   private async selectOnKeyboardNavigation(targetIndex: number, event: {shiftKey: boolean; ctrlKey: boolean; metaKey: boolean}): Promise<void> {
     const table = this._table();
-    const targetItem = table.visibleRows()?.[targetIndex]?.id;
-    const activeIndex = table.activeIndex();
-    const direction = activeIndex > targetIndex ? 'up' : 'down';
-    const [startIndex, endIndex] = direction === 'up' ? [targetIndex, activeIndex] : [activeIndex, targetIndex];
+    const targetItem = table.rows()[targetIndex]?.id;
+    const activeRowIndex = table.activeRow()?.index() ?? -1;
+    const direction = activeRowIndex > targetIndex ? 'up' : 'down';
+    const [startIndex, endIndex] = direction === 'up' ? [targetIndex, activeRowIndex] : [activeRowIndex, targetIndex];
     const shift = event.shiftKey;
     const ctrlOrMeta = event.ctrlKey || event.metaKey;
 
@@ -235,7 +233,7 @@ export class SciTableSelectionService<T, ID> {
 
   private selectOnShiftNavigation(direction: 'up' | 'down', startIndex: number, endIndex: number): Promise<void> {
     const table = this._table();
-    const activeIndex = table.activeIndex();
+    const activeRowIndex = table.activeRow()?.index() ?? -1;
     const selectedIds = table.selectedItems();
 
     // If the active item is outside the selection, start a new selection.
@@ -244,12 +242,12 @@ export class SciTableSelectionService<T, ID> {
     }
 
     // Moving down from the block start shrinks the selection until the block end, then extends it.
-    if (direction === 'down' && this.isSelectionAtBlockStart(activeIndex)) {
+    if (direction === 'down' && this.isSelectionAtBlockStart(activeRowIndex)) {
       return this.selectFromBlockStart(startIndex, endIndex);
     }
 
     // Moving up from the block end shrinks the selection until the block start, then extends it.
-    if (direction === 'up' && this.isSelectionAtBlockEnd(activeIndex)) {
+    if (direction === 'up' && this.isSelectionAtBlockEnd(activeRowIndex)) {
       return this.selectFromBlockEnd(startIndex, endIndex);
     }
 
@@ -261,8 +259,8 @@ export class SciTableSelectionService<T, ID> {
     const table = this._table();
     const selectedIds = table.selectedItems();
 
-    const previousItemId = table.visibleRows()?.[activeIndex - 1]?.id;
-    const nextItemId = table.visibleRows()?.[activeIndex + 1]?.id;
+    const previousItemId = table.rows()[activeIndex - 1]?.id;
+    const nextItemId = table.rows()[activeIndex + 1]?.id;
 
     return (previousItemId === undefined || !selectedIds.includes(previousItemId)) && nextItemId !== undefined && selectedIds.includes(nextItemId);
   }
@@ -271,8 +269,8 @@ export class SciTableSelectionService<T, ID> {
     const table = this._table();
     const selectedIds = table.selectedItems();
 
-    const previousItemId = table.visibleRows()?.[activeIndex - 1]?.id;
-    const nextItemId = table.visibleRows()?.[activeIndex + 1]?.id;
+    const previousItemId = table.rows()[activeIndex - 1]?.id;
+    const nextItemId = table.rows()[activeIndex + 1]?.id;
 
     return previousItemId !== undefined && selectedIds.includes(previousItemId) && (nextItemId === undefined || !selectedIds.includes(nextItemId));
   }
@@ -285,13 +283,11 @@ export class SciTableSelectionService<T, ID> {
 
     const indices = rangeInclusive(startIndex, endIndex);
     const add = options?.add ?? false;
-    const rows = indices.map(i => table.visibleRows()?.[i]);
+    const rows = indices.map(i => table.rows()[i]);
 
-    table.updateSelectedItems(existing => new Set<ID>([
-      ...(add ? existing : []),
-      ...rows
-        .filter((row): row is Required<SciTreeTableNode<ID>> => !!row)
-        .map(row => row.id),
+    table.updateSelectedItems(selection => new Set<ID>([
+      ...(add ? selection : []),
+      ...rows.flatMap(row => row?.id ?? []),
     ]));
   }
 
@@ -306,13 +302,13 @@ export class SciTableSelectionService<T, ID> {
       for (let i = 0; i < indices.length; i++) {
         const currentIndex = indices[i]!;
         const nextIndex = indices[i + 1]!;
-        const itemId = table.visibleRows()?.[currentIndex]?.id;
+        const itemId = table.rows()[currentIndex]?.id;
 
         if (itemId === undefined) {
           continue;
         }
 
-        const nextItemId = table.visibleRows()?.[nextIndex]?.id;
+        const nextItemId = table.rows()[nextIndex]?.id;
         if (shrinking && nextItemId !== undefined && selection.has(nextItemId)) {
           newSelection.delete(itemId);
         }
@@ -337,13 +333,13 @@ export class SciTableSelectionService<T, ID> {
       for (let i = indices.length - 1; i >= 0; i--) {
         const currentIndex = indices[i]!;
         const previousIndex = indices[i - 1]!;
-        const itemId = table.visibleRows()?.[currentIndex]?.id;
+        const itemId = table.rows()[currentIndex]?.id;
 
         if (itemId === undefined) {
           continue;
         }
 
-        const previousItemId = table.visibleRows()?.[previousIndex]?.id;
+        const previousItemId = table.rows()[previousIndex]?.id;
         if (shrinking && previousItemId !== undefined && selection.has(previousItemId)) {
           newSelection.delete(itemId);
         }

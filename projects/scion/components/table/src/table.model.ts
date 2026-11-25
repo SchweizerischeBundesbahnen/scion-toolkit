@@ -12,7 +12,7 @@ import {Injector, Signal, WritableSignal} from '@angular/core';
 import {SciTableDatasourceProvider, SciTableSortCriterion} from './table-datasource';
 import {SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {SciToolbarFactory} from '@scion/components/menu';
-import {SciTableRowBindingFactoryFn, SciTableRowBindings} from './table-row-binding';
+import {SciTableRowBindingFactoryFn} from './table-row-binding';
 import {SciTableColumnFactoryFn} from './table.factory';
 import {SciDateValue} from './table-date-column.model';
 import {SciTableColumnFilterMatcherFn, SciTableColumnSortComparatorFn} from './table-column.factory';
@@ -373,26 +373,6 @@ export interface SciTemplateColumn<T = unknown> extends SciTableColumn<T, void, 
 }
 
 export type SciTableColumnLike<T = unknown> = SciStringColumn<T> | SciNumberColumn<T> | SciDateColumn<T> | SciEnumColumn<T> | SciComponentColumn<T> | SciTemplateColumn<T>;
-
-export const skeletonRowId = Symbol('SKELETON_ROW');
-
-/**
- * Mapped row, used as display state.
- */
-export interface SciTableRow<T, ID> {
-  index: number;
-  item: T;
-  id: ID | typeof skeletonRowId;
-  level?: number;
-  parentId?: ID;
-  cells: SciTableCellLike[];
-  bindings: SciTableRowBindings;
-  active: Signal<boolean>;
-  selected: Signal<boolean>;
-  hovered: Signal<boolean>;
-  expanded: Signal<boolean>;
-  hasChildren: Signal<boolean>;
-}
 
 export interface SciStringCell {
   type: 'string';

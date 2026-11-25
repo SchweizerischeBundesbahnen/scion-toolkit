@@ -161,10 +161,10 @@ class ɵSciTableRowBindingFactory implements SciTableRowBindingFactory {
   }
 }
 
-export function coerceTableRowBindings<T>(bindingsFn: SciTableRowBindingFactoryFn<T>[], item: T, index: number): SciTableRowBindings {
+export function coerceTableRowBindings<T>(bindingsFn: SciTableRowBindingFactoryFn<T>[], item: T, index: Signal<number>): SciTableRowBindings {
   const factory = computed(() => {
     const factory = new ɵSciTableRowBindingFactory();
-    bindingsFn.forEach(fn => fn(factory, item, index));
+    bindingsFn.forEach(fn => fn(factory, item, index()));
     return factory;
   });
 

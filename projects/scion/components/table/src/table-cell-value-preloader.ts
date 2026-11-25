@@ -13,7 +13,7 @@ export abstract class SciTableCellValuePreloader {
   /**
    * Indicates whether cell values are currently preloading.
    */
-  public abstract readonly loading: Signal<boolean>;
+  public abstract readonly isLoading: Signal<boolean>;
 
   /**
    * Queues specified cell value provider function for execution in the background the next time the browser is idle.

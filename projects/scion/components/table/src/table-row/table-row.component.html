@@ -1,8 +1,8 @@
 @let row = this.row();
 
 <!-- Handle to expand or collapse a tree node -->
-@if (row.level !== undefined) {
-  <button class="tree-node-handle e2e-tree-node-handle" (click)="onTreeNodeHandle($event)" [attr.disabled]="!row.hasChildren() || null">
+@if (row.level() !== undefined) {
+  <button class="tree-node-handle e2e-tree-node-handle" (click)="onTreeNodeHandle($event)" [attr.disabled]="row.loading() || !row.children.length || null">
     @if (row.expanded()) {
       <sci-icon class="e2e-expanded">scion:chevron_down</sci-icon>
     } @else {
@@ -12,14 +12,15 @@
 }
 
 <!-- Row Icons -->
-@if (row.cells.length) {
-  @for (icon of row.bindings.icons(); track $index) {
+@if (row.cells()?.length) {
+  @for (icon of row.bindings()?.icons(); track $index) {
     <sci-icon>{{icon}}</sci-icon>
   }
 }
 
 <!-- Table Cells -->
-@for (cell of row.cells; track cell.column.name) {
+<!-- TODO [ASK TEAM] Should we move skeleton to cell? Cell are always present, but row in state loading -->
+@for (cell of row.cells(); track cell.column.name) {
   <sci-table-cell [cell]="cell" [row]="row"/>
 } @empty {
   @for (column of table().columns(); track column.name) {
@@ -29,7 +30,7 @@
 
 <!--Row Actions -->
 @let hasRowActions = !!table().rowActions;
-@let isRowHovered = table().hoveredIndex() === row.index;
+@let isRowHovered = row.hovered();
 @let isRowActionMenuOpen = rowActionToolbar()?.menuOpen();
 
 @if (hasRowActions && (isRowHovered || isRowActionMenuOpen)) {
