@@ -1,6 +1,6 @@
 import {MaybeSignal, SciComponentDescriptor, SciTemplateDescriptor} from '@scion/components/common';
 import {Injector, Signal, WritableSignal} from '@angular/core';
-import {SciTableCellContext, SciTableEvent, SciTableRowActionFactoryFn} from '@scion/components/table';
+import {SciTableCellContext, SciTableEvent, SciTableRowActionFactoryFn, SciTableContextMenuFactoryFn} from '@scion/components/table';
 import {MaybeArray} from '@scion/toolkit/types';
 import {SciTreeDatasourceProvider} from './tree-datasource';
 import {Translatable} from '@scion/components/text';
@@ -79,12 +79,61 @@ export interface SciTreeDescriptor<T, ID = T> {
    * });
    * ```
    *
+   * Keyboard accelerators are not supported for node actions, as node actions are only available when hovering over a node.
+   * To make a node action accessible via keyboard accelerator, register the corresponding action in the {@link SciTreeDescriptor.contextMenu} as well.
+   *
+   * @example
+   * ```ts
+   * import {tree} from '@scion/components/tree';
+   *
+   * tree({
+   *   datasource: provideTreeDatasource(data, item => item.children),
+   *   label: item => item.name,
+   *   rowActions: (toolbar, item) => toolbar.addToolbarButton({
+   *     icon: 'delete',
+   *     accelerator: {key: 'Delete'},
+   *     onSelect: () => ...,
+   *   }),
+   *   contextMenu: (menu, selection, activeItem) => menu.addMenuItem({
+   *     label: 'Delete',
+   *     accelerator: {key: 'Delete'},
+   *     onSelect: () => ...,
+   *   }),
+   * });
+   * ```
+   *
    * The function:
    * - Is called per item with a {@link SciToolbarFactory} to contribute actions.
    * - Runs in a reactive context and re-evaluates when tracked signals change.
    * - Can call `inject` to get required dependencies.
    */
   nodeActions?: SciTreeNodeActionFactoryFn<T>;
+
+  /**
+   * Configures a context menu displayed when right-clicking selected nodes.
+   *
+   * @example
+   * ```ts
+   * import {tree} from '@scion/components/tree';
+   *
+   * tree({
+   *   datasource: provideTreeDatasource(data, item => item.children),
+   *   label: item => item.name,
+   *   contextMenu: (menu, selection) => menu.addMenuItem({
+   *     label: 'Delete',
+   *     icon: 'delete',
+   *     accelerator: {key: 'Delete'},
+   *     onSelect: () => ...,
+   *   }),
+   * });
+   * ```
+   *
+   * The function:
+   * - Is called when selected items change with a {@link SciMenuFactory} to contribute menu items.
+   * - Runs in a reactive context and re-evaluates when tracked signals change.
+   * - Can call `inject` to get required dependencies.
+   */
+  contextMenu?: SciTreeContextMenuFactoryFn<ID>;
 
   /**
    * Configures node bindings for tree nodes.
@@ -213,6 +262,7 @@ export interface SciTree<ID = unknown> {
 export type SciTreeNodeContext<T> = SciTableCellContext<T, string | void>;
 export type SciTreeEvent<ID> = SciTableEvent<ID>;
 export type SciTreeNodeActionFactoryFn<T> = SciTableRowActionFactoryFn<T>;
+export type SciTreeContextMenuFactoryFn<T> = SciTableContextMenuFactoryFn<T>;
 export type SciTreeNodeBindingFactoryFn<T> = (node: SciTreeNodeBindingFactory, item: T, index: number) => void;
 
 export interface SciTreeNodeBindingFactory {

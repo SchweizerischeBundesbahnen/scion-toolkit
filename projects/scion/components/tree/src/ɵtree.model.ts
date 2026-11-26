@@ -29,6 +29,7 @@ export class ɵSciTree<T = unknown, ID = T> implements SciTree<ID> {
       resizable: false,
       showHeader: false,
       rowActions: descriptor.nodeActions,
+      contextMenu: descriptor.contextMenu,
       rowBindings: (bindings: SciTableRowBindingFactory, item, index) => descriptor.nodeBindings?.(createTreeNodeBindingFactory(bindings), item, index),
       bufferSize: descriptor.bufferSize,
       pageSize: descriptor.pageSize,
