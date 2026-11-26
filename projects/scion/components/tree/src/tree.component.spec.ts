@@ -310,6 +310,32 @@ describe('Tree', () => {
       expect(onSelect).toHaveBeenCalledOnceWith('Beta');
     });
 
+    it('should apply context-menu', async () => {
+      // Synthetic contextmenu events don't register an active browser pointer.
+      spyOn(Element.prototype, 'setPointerCapture').and.stub();
+
+      const onSelect = jasmine.createSpy();
+      const {fixture} = createSciTreeComponent(sciTree<string>({
+        datasource: provideTreeDatasource(signal(['Alpha', 'Beta']), () => []),
+        label: item => item,
+        contextMenu: (menu, items) => menu.addMenuItem({
+          label: 'Delete',
+          cssClass: 'testee',
+          onSelect: () => {
+            onSelect(items);
+          },
+        }),
+        injector: TestBed.inject(Injector),
+      }));
+      const tree = new TablePO(fixture, 'sci-tree');
+      await tree.waitUntilStable();
+
+      tree.row({index: 1}).cells[0]!.element.dispatchEvent(new PointerEvent('contextmenu', {button: 2, buttons: 0, clientX: 100, clientY: 150, bubbles: true}));
+      const menu = document.querySelector('sci-menu');
+      menu!.querySelector<HTMLButtonElement>('button.testee')!.click();
+      expect(onSelect).toHaveBeenCalledOnceWith(['Beta']);
+    });
+
     it('should apply node bindings', async () => {
       const {fixture, model} = createSciTreeComponent(sciTree<string>({
         datasource: provideTreeDatasource(signal(['parent']), item => item === 'parent' ? ['child'] : []),

@@ -39,3 +39,32 @@
     </sci-tabbar>
   </aside>
 }
+
+<dialog #fileRenameDialog>
+  <form [formRoot]="renameFileForm" class="file">
+    <label>
+      Name
+      <input [formField]="renameFileForm.name" appFieldValidation/>
+    </label>
+
+    <div class="button-bar">
+      <button type="submit" [disabled]="renameFileForm().invalid()">Rename</button>
+      <button type="button" (click)="onFileRenameCancel()">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog #newFileDialog>
+  <form [formRoot]="newFileForm" class="file">
+    <span>New {{newFileForm.type().value() === 'file' ? 'File' : 'Folder'}}</span>
+
+    <label>
+      <input [formField]="newFileForm.name" appFieldValidation/>
+    </label>
+
+    <div class="button-bar">
+      <button type="submit" [disabled]="newFileForm().invalid()">Create</button>
+      <button type="button" (click)="onNewFileCancel()">Cancel</button>
+    </div>
+  </form>
+</dialog>

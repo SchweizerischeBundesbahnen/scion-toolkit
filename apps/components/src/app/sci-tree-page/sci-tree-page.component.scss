@@ -62,4 +62,25 @@
       }
     }
   }
+
+  form.file {
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+
+    div.button-bar {
+      display: flex;
+      gap: .5em;
+
+      > button {
+        flex: 1;
+      }
+    }
+  }
+
+  dialog {
+    border: 1px solid var(--sci-color-border);
+    border-radius: var(--sci-corner);
+    background-color: var(--sci-color-background-secondary);
+  }
 }

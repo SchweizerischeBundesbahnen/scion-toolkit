@@ -18,6 +18,7 @@ The NPM sub-module `@scion/components/tree` provides an Angular component for di
     - [Item Identity](#item-identity)
     - [Filtering](#filtering)
     - [Selection](#selection)
+    - [Context Menu](#context-menu)
     - [Node Actions](#node-actions)
     - [Node Icon](#node-icon)
     - [Node Bindings](#node-bindings)
@@ -308,6 +309,28 @@ fileTree.expandAll();
 fileTree.collapseAll();
 ```
 
+#### Context Menu
+
+A context menu provides actions for interacting with the selected nodes and opens when the user invokes the context menu on the tree.
+
+The context menu is configured via the `contextMenu` property on the tree descriptor that is passed to the `tree()` function.
+
+```ts
+import {tree, provideTreeDatasource} from '@scion/components/tree';
+
+tree({
+  label: file => file.name,
+  datasource: provideTreeDatasource(files.value, file => file.children),
+  contextMenu: (menu, selection, activeItem) => menu
+    .addMenuItem({icon: 'edit', label: 'Rename', disabled: activeItem === undefined, onSelect: () => renameFile(activeItem)})
+    .addMenuItem({icon: 'delete', label: 'Delete', disabled: selection.length === 0, onSelect: () => deleteFiles(selection), accelerator: {key: 'Delete'}}),
+});
+```
+
+> [!NOTE]
+> Icon ligatures are interpreted as Material icon font ligatures if no icon provider is configured. \
+> Refer to the [Icon Documentation][link-scion-icons] for more information on how to provide an icon provider.
+
 #### Node Actions
 
 Node actions enable interaction with a node and appear when the user hovers over a node. Node actions can be buttons or menus.
@@ -331,6 +354,22 @@ tree({
     ),
 });
 ```
+
+Keyboard accelerators are not supported for node actions, as node actions are only available when hovering over a node. To make a node action accessible via keyboard accelerator, register the corresponding action in the context menu as well.
+
+```ts
+import {tree, provideTreeDatasource} from '@scion/components/tree';
+
+tree({
+  label: file => file.name,
+  datasource: provideTreeDatasource(files.value, file => file.children),
+  nodeActions: (toolbar, file) => toolbar
+    .addToolbarButton({icon: 'delete', accelerator: {key: 'Delete'}, onSelect: () => deleteFiles(file)}),
+  contextMenu: (menu, selection) => menu
+    .addMenuItem({label: 'Delete', accelerator: {key: 'Delete'}, onSelect: () => deleteFiles(selection)}),
+});
+```
+
 
 > [!NOTE]
 > Icon ligatures are interpreted as Material icon font ligatures if no icon provider is configured. \

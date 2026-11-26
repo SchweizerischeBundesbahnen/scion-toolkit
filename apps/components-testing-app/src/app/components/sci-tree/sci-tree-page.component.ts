@@ -63,7 +63,7 @@ export default class SciTreePageComponent {
     this.bindTreeSettings();
   }
 
-  private createTree(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showNodeActions: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTree<number> {
+  private createTree(options: {datasource: 'array' | 'array-http' | 'loader' | 'loader-delayed' | 'loader-http'; showNodeActions: boolean; showContextMenu: boolean; customRowStyling: boolean; bufferSize: number; pageSize: number}): SciTree<number> {
     return tree({
       label: product => product.name,
       datasource: (() => {
@@ -96,16 +96,20 @@ export default class SciTreePageComponent {
       })(),
       matcher: this.settingsForm.customFilter().value() ? customFilter : undefined,
       nodeActions: options.showNodeActions ? (toolbar, product) => toolbar
-        .addToolbarButton({icon: 'scion.edit', onSelect: noop})
-        .addToolbarButton({icon: 'scion.delete', onSelect: noop})
-        .addToolbarButton({icon: 'scion.pin', onSelect: noop})
-        .addToolbarButton({icon: 'scion.search', onSelect: noop})
-        .addToolbarMenu({icon: 'scion.more_vertical', visualMenuIndicator: false, cssClass: 'e2e-more'}, menu => menu
+        .addToolbarButton({icon: 'scion:edit', onSelect: noop})
+        .addToolbarButton({icon: 'scion:delete', onSelect: noop})
+        .addToolbarButton({icon: 'scion:pin', onSelect: noop})
+        .addToolbarButton({icon: 'scion:search', onSelect: noop})
+        .addToolbarMenu({icon: 'scion:more_vertical', visualMenuIndicator: false, cssClass: 'e2e-more'}, menu => menu
           .addMenuItem({
             label: 'Edit',
             onSelect: () => console.log('edit', product.id),
           }),
         ) : undefined,
+      contextMenu: options.showContextMenu ? menu => menu
+        .addMenuItem({label: 'Edit', icon: 'scion:edit', onSelect: noop})
+        .addMenuItem({label: 'Delete', icon: 'scion:delete', onSelect: noop})
+        .addMenuItem({label: 'Pin', icon: 'scion:pin', onSelect: noop}) : undefined,
       trackBy: product => product.id,
       bufferSize: options.bufferSize,
       pageSize: options.pageSize,
@@ -119,6 +123,7 @@ export default class SciTreePageComponent {
       const treeCount = this.settingsForm.treeCount().value();
       const datasource = this.datasourceForm.datasource().value();
       const showNodeActions = this.settingsForm.showNodeActions().value();
+      const showContextMenu = this.settingsForm.showContextMenu().value();
       const customRowStyling = this.settingsForm.customRowStyling().value();
       const bufferSize = this.datasourceForm.bufferSize().value();
       const pageSize = this.datasourceForm.pageSize().value();
@@ -126,7 +131,7 @@ export default class SciTreePageComponent {
       untracked(() => {
         const injector = ɵcreateDestroyableInjector({parent: this._injector});
         onCleanup(() => injector.destroy());
-        trees.set(Array.from(Array(treeCount), (_, i) => runInInjectionContext(injector, () => this.createTree({datasource, showNodeActions: showNodeActions, customRowStyling, bufferSize, pageSize}))));
+        trees.set(Array.from(Array(treeCount), (_, i) => runInInjectionContext(injector, () => this.createTree({datasource, showNodeActions, showContextMenu, customRowStyling, bufferSize, pageSize}))));
       });
     });
 
@@ -138,6 +143,7 @@ export default class SciTreePageComponent {
       filterable: false,
       selectable: 'multi',
       showNodeActions: false,
+      showContextMenu: false,
       customRowStyling: false,
       nodeHeight: 30,
       treeCount: 1,
@@ -198,6 +204,7 @@ interface SettingsForm {
   filterable: boolean;
   selectable: 'false' | 'single' | 'multi';
   showNodeActions: boolean;
+  showContextMenu: boolean;
   customRowStyling: boolean;
   nodeHeight: number | null;
   treeCount: number;
