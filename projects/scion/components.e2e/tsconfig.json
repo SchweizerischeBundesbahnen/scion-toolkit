@@ -2,7 +2,7 @@
 /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "compilerOptions": {
-    "rootDir": "../../../",
+    "rootDir": "..",
     "outDir": "../../../out-tsc/components.e2e",
     "sourceMap": true,
     "strict": true,
