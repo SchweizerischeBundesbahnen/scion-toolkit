@@ -1,18 +1,15 @@
-# [22.7.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-22.6.0...components-22.7.0) (2026-11-11)
+# [22.8.0](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/compare/components-22.7.0...components-22.8.0) (2026-11-27)
 
 
 ### Features
 
-* **components/table:** support displaying hierarchical data ([c96b52b](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/c96b52b0f263e9f567df6dad6abe8b6dc58395d4))
-* **components/tree:** provide tree component to display a tree structure ([2fcfcbe](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/2fcfcbe2d8e9949e55a2fa2951554483e1cb63a1))
+* **components/table:** support opening context menu ([179c65d](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/179c65ddee66a1d2336dcb80bcd7dda94ae21b2c))
+* **components/tree:** support opening context menu ([f529eb4](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/f529eb43d9476d74422e8fc3657fece3c7ebd96e))
+* **components/menu:** support positioning menu centered on anchor ([fd4d7ac](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/fd4d7ac68e0aa5c70b9644dbac1c9cc11e94234e))
+* **components/menu:** support disabling accelerators ([4614653](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/46146536d7c4f3b4467ba084cbcd472bcceaf063))
 
-### Dependencies
+### Bug Fixes
 
-* **components:** SCION Components requires `@scion/toolkit` `v2.5.0` or higher.
-
-### BREAKING CHANGES
-
-* **components/table:** Changed the type of `SciTableEvent.items`, `SciTable.activeItem`, and `SciTable.selectedItems` from item instances (`T`) to item identities (`ID`).
-  - `SciTableEvent.items`: `T[]` -> `ID[]`
-  - `SciTable.activeItem`: `Signal<T | undefined>` -> `Signal<ID | undefined>`
-  - `SciTable.selectedItems`: `Signal<T[]>` -> `Signal<ID[]>`
+* **components/table:** support selecting items before they exist ([a992f4a](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/a992f4a472245e8f5c71518bfac0c99cdab7eb1e))
+* **components/menu:** ignore accelerator keystrokes from input controls ([1de9c4e](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/1de9c4ecc94fa16f7174b22d111e501a7a63ed41))
+* **components/menu:** prevent context menus from closing immediately in Safari ([62aeece](https://github.com/SchweizerischeBundesbahnen/scion-toolkit/commit/62aeecec39dc8d2341cdba132c3ee2ef097e24f5))
