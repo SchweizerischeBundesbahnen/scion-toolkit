@@ -140,10 +140,8 @@ export class SciTableTree<ID> {
   }
 
   public select(ids: MaybeArray<ID>): void {
-    // Prevents selecting nodes which do not exist.
-    // Check against unfiltered nodes, to allow selecting nodes, which are filtered out.
     const nodesById = this.unfilteredNodesById();
-    const nodeIds = Arrays.coerce(ids).filter(id => nodesById.has(id));
+    const nodeIds = Arrays.coerce(ids);
 
     // Expand nodes.
     nodeIds.forEach(id => {

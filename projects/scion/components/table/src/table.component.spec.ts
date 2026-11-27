@@ -6921,7 +6921,7 @@ describe('Table', () => {
       expect(model.selectedItems().length).toBe(0);
     });
 
-    it('should not select unknown item', async () => {
+    it('should select unknown item', async () => {
       const {fixture, model} = createSciTableComponent(sciTable({
         datasource: signal<number[]>([1, 2, 3]),
         columns: table => table.addNumberColumn(item => item),
@@ -6939,7 +6939,7 @@ describe('Table', () => {
       // Select unknown item.
       model.select(99);
       await table.waitUntilStable();
-      expect(model.selectedItems()).toEqual([]);
+      expect(model.selectedItems()).toEqual([99]);
     });
 
     it('should select filtered out item', async () => {
